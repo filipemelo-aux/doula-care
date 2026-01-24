@@ -35,7 +35,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, TrendingUp, Search, Trash2, Edit2, Zap, Check, X, CheckCircle, CreditCard, Banknote, Building2, QrCode, FileText } from "lucide-react";
+import { Plus, TrendingUp, Search, Trash2, Zap, Check, X, CheckCircle, CreditCard, Banknote, Building2, QrCode, FileText } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -96,8 +96,10 @@ export default function Financial() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [transactionToDelete, setTransactionToDelete] = useState<string | null>(null);
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
-  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingReceivedId, setEditingReceivedId] = useState<string | null>(null);
   const [editingReceivedValue, setEditingReceivedValue] = useState<string>("");
+  const [editingInstallmentsId, setEditingInstallmentsId] = useState<string | null>(null);
+  const [editingInstallmentsValue, setEditingInstallmentsValue] = useState<string>("");
 
   const queryClient = useQueryClient();
 
@@ -255,10 +257,28 @@ export default function Financial() {
       queryClient.invalidateQueries({ queryKey: ["transactions"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
       toast.success("Valor recebido atualizado!");
-      setEditingId(null);
+      setEditingReceivedId(null);
     },
     onError: () => {
       toast.error("Erro ao atualizar valor");
+    },
+  });
+
+  const updateInstallmentsMutation = useMutation({
+    mutationFn: async ({ id, installments, installmentValue }: { id: string; installments: number; installmentValue: number }) => {
+      const { error } = await supabase
+        .from("transactions")
+        .update({ installments, installment_value: installmentValue })
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["transactions"] });
+      toast.success("Parcelas atualizadas!");
+      setEditingInstallmentsId(null);
+    },
+    onError: () => {
+      toast.error("Erro ao atualizar parcelas");
     },
   });
 
@@ -280,8 +300,10 @@ export default function Financial() {
   });
 
   const handleStartEditReceived = (transaction: Transaction) => {
-    setEditingId(transaction.id);
+    setEditingReceivedId(transaction.id);
     setEditingReceivedValue(String(Number(transaction.amount_received) || 0));
+    // Cancel any other editing
+    setEditingInstallmentsId(null);
   };
 
   const handleSaveReceived = (transactionId: string, totalAmount: number) => {
@@ -291,8 +313,26 @@ export default function Financial() {
   };
 
   const handleCancelEditReceived = () => {
-    setEditingId(null);
+    setEditingReceivedId(null);
     setEditingReceivedValue("");
+  };
+
+  const handleStartEditInstallments = (transaction: Transaction) => {
+    setEditingInstallmentsId(transaction.id);
+    setEditingInstallmentsValue(String(Number(transaction.installments) || 1));
+    // Cancel any other editing
+    setEditingReceivedId(null);
+  };
+
+  const handleSaveInstallments = (transactionId: string, totalAmount: number) => {
+    const installments = Math.max(1, Math.min(24, parseInt(editingInstallmentsValue) || 1));
+    const installmentValue = totalAmount / installments;
+    updateInstallmentsMutation.mutate({ id: transactionId, installments, installmentValue });
+  };
+
+  const handleCancelEditInstallments = () => {
+    setEditingInstallmentsId(null);
+    setEditingInstallmentsValue("");
   };
 
   const handleMarkAsPaid = (transactionId: string, totalAmount: number) => {
@@ -309,27 +349,6 @@ export default function Financial() {
     } else {
       createMutation.mutate(data);
     }
-  };
-
-  const handleEdit = (transaction: Transaction) => {
-    setSelectedTransaction(transaction);
-    const installments = Number(transaction.installments) || 1;
-    const totalAmount = Number(transaction.amount) || 0;
-    const installmentValue = Number(transaction.installment_value) || (totalAmount / installments);
-    
-    form.reset({
-      description: transaction.description,
-      amount: totalAmount,
-      date: transaction.date,
-      client_id: transaction.client_id || undefined,
-      plan_id: transaction.plan_id || undefined,
-      payment_method: (transaction.payment_method as "pix" | "cartao" | "dinheiro" | "transferencia" | "boleto") || "pix",
-      payment_status: "recebido",
-      notes: transaction.notes || "",
-      installments: installments,
-      installment_value: installmentValue,
-    });
-    setDialogOpen(true);
   };
 
   const handleDelete = (id: string) => {
@@ -476,6 +495,9 @@ export default function Financial() {
                   const receivedAmount = Number(transaction.amount_received) || 0;
                   const pendingAmount = Math.max(0, totalAmount - receivedAmount);
                   const currentMethod = (transaction.payment_method as keyof typeof paymentMethodLabels) || "pix";
+                  const installments = Number(transaction.installments) || 1;
+                  const isEditingReceivedMobile = editingReceivedId === transaction.id;
+                  const isEditingInstallmentsMobile = editingInstallmentsId === transaction.id;
 
                   const formatCompact = (value: number) => {
                     return new Intl.NumberFormat("pt-BR", {
@@ -507,14 +529,6 @@ export default function Financial() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            onClick={() => handleEdit(transaction)}
-                            className="h-6 w-6"
-                          >
-                            <Edit2 className="h-3 w-3" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
                             onClick={() => handleDelete(transaction.id)}
                             className="h-6 w-6 text-destructive"
                           >
@@ -536,13 +550,67 @@ export default function Financial() {
                             <span className="font-semibold text-[11px]">{formatCompact(totalAmount)}</span>
                           </div>
                           <div>
+                            <span className="text-[9px] text-muted-foreground block">Parc.</span>
+                            {isEditingInstallmentsMobile ? (
+                              <div className="flex items-center gap-0.5">
+                                <Input
+                                  type="number"
+                                  value={editingInstallmentsValue}
+                                  onChange={(e) => setEditingInstallmentsValue(e.target.value)}
+                                  className="w-10 h-5 text-center text-[10px] p-0.5"
+                                  min={1}
+                                  max={24}
+                                  autoFocus
+                                  onKeyDown={(e) => {
+                                    if (e.key === "Enter") {
+                                      handleSaveInstallments(transaction.id, totalAmount);
+                                    } else if (e.key === "Escape") {
+                                      handleCancelEditInstallments();
+                                    }
+                                  }}
+                                  onBlur={() => handleSaveInstallments(transaction.id, totalAmount)}
+                                />
+                              </div>
+                            ) : (
+                              <span 
+                                className="text-[11px] font-medium cursor-pointer"
+                                onClick={() => handleStartEditInstallments(transaction)}
+                              >
+                                {installments}x
+                              </span>
+                            )}
+                          </div>
+                          <div>
                             <span className="text-[9px] text-muted-foreground block">Receb.</span>
-                            <span 
-                              className="text-[11px] text-success font-medium cursor-pointer"
-                              onClick={() => handleStartEditReceived(transaction)}
-                            >
-                              {formatCompact(receivedAmount)}
-                            </span>
+                            {isEditingReceivedMobile ? (
+                              <div className="flex items-center gap-0.5">
+                                <Input
+                                  type="number"
+                                  value={editingReceivedValue}
+                                  onChange={(e) => setEditingReceivedValue(e.target.value)}
+                                  className="w-14 h-5 text-right text-[10px] p-0.5"
+                                  min={0}
+                                  max={totalAmount}
+                                  step="0.01"
+                                  autoFocus
+                                  onKeyDown={(e) => {
+                                    if (e.key === "Enter") {
+                                      handleSaveReceived(transaction.id, totalAmount);
+                                    } else if (e.key === "Escape") {
+                                      handleCancelEditReceived();
+                                    }
+                                  }}
+                                  onBlur={() => handleSaveReceived(transaction.id, totalAmount)}
+                                />
+                              </div>
+                            ) : (
+                              <span 
+                                className="text-[11px] text-success font-medium cursor-pointer"
+                                onClick={() => handleStartEditReceived(transaction)}
+                              >
+                                {formatCompact(receivedAmount)}
+                              </span>
+                            )}
                           </div>
                           <div>
                             <span className="text-[9px] text-muted-foreground block">Pend.</span>
@@ -622,10 +690,11 @@ export default function Financial() {
                       <TableHead className="min-w-[150px]">Descrição</TableHead>
                       <TableHead className="min-w-[100px]">Cliente</TableHead>
                       <TableHead className="text-right w-[100px]">Valor</TableHead>
+                      <TableHead className="text-center w-[80px]">Parcelas</TableHead>
                       <TableHead className="text-right w-[110px]">Recebido</TableHead>
                       <TableHead className="text-right w-[110px]">A Receber</TableHead>
                       <TableHead className="w-[140px]">Pagamento</TableHead>
-                      <TableHead className="text-right w-[80px]">Ações</TableHead>
+                      <TableHead className="text-right w-[60px]"></TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -633,8 +702,10 @@ export default function Financial() {
                       const totalAmount = Number(transaction.amount) || 0;
                       const receivedAmount = Number(transaction.amount_received) || 0;
                       const pendingAmount = Math.max(0, totalAmount - receivedAmount);
-                      const isEditing = editingId === transaction.id;
+                      const isEditingReceived = editingReceivedId === transaction.id;
+                      const isEditingInstallments = editingInstallmentsId === transaction.id;
                       const currentMethod = (transaction.payment_method as keyof typeof paymentMethodLabels) || "pix";
+                      const installments = Number(transaction.installments) || 1;
 
                       return (
                         <TableRow key={transaction.id} className="table-row-hover">
@@ -657,8 +728,54 @@ export default function Financial() {
                           <TableCell className="text-right whitespace-nowrap">
                             <span className="font-medium">{formatCurrency(totalAmount)}</span>
                           </TableCell>
+                          <TableCell className="text-center">
+                            {isEditingInstallments ? (
+                              <div className="flex items-center justify-center gap-1">
+                                <Input
+                                  type="number"
+                                  value={editingInstallmentsValue}
+                                  onChange={(e) => setEditingInstallmentsValue(e.target.value)}
+                                  className="w-14 h-7 text-center text-sm"
+                                  min={1}
+                                  max={24}
+                                  autoFocus
+                                  onKeyDown={(e) => {
+                                    if (e.key === "Enter") {
+                                      handleSaveInstallments(transaction.id, totalAmount);
+                                    } else if (e.key === "Escape") {
+                                      handleCancelEditInstallments();
+                                    }
+                                  }}
+                                />
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => handleSaveInstallments(transaction.id, totalAmount)}
+                                  className="h-6 w-6 text-success hover:text-success"
+                                >
+                                  <Check className="h-3 w-3" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={handleCancelEditInstallments}
+                                  className="h-6 w-6 text-destructive hover:text-destructive"
+                                >
+                                  <X className="h-3 w-3" />
+                                </Button>
+                              </div>
+                            ) : (
+                              <Badge 
+                                className="bg-muted hover:bg-muted/80 cursor-pointer text-xs"
+                                onClick={() => handleStartEditInstallments(transaction)}
+                                title="Clique para editar parcelas"
+                              >
+                                {installments}x
+                              </Badge>
+                            )}
+                          </TableCell>
                           <TableCell className="text-right">
-                            {isEditing ? (
+                            {isEditingReceived ? (
                               <div className="flex items-center justify-end gap-1">
                                 <Input
                                   type="number"
@@ -776,26 +893,15 @@ export default function Financial() {
                             </div>
                           </TableCell>
                           <TableCell className="text-right">
-                            <div className="flex items-center justify-end gap-0.5">
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => handleEdit(transaction)}
-                                className="h-7 w-7"
-                                title="Editar receita"
-                              >
-                                <Edit2 className="h-3.5 w-3.5" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => handleDelete(transaction.id)}
-                                className="h-7 w-7 text-destructive hover:text-destructive"
-                                title="Excluir receita"
-                              >
-                                <Trash2 className="h-3.5 w-3.5" />
-                              </Button>
-                            </div>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleDelete(transaction.id)}
+                              className="h-7 w-7 text-destructive hover:text-destructive"
+                              title="Excluir receita"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </Button>
                           </TableCell>
                         </TableRow>
                       );
