@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Prata&family=Source+Sans+3:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -7,6 +7,7 @@
 /* Doula Dashboard Design System
    Warm, nurturing palette inspired by maternal care
    Colors: Rose blush, terracotta, sage, warm neutrals
+   Fonts: Modern sans-serif for readability
 */
 
 @layer base {
@@ -145,12 +146,12 @@
 
   body {
     @apply bg-background text-foreground antialiased;
-    font-family: 'Source Sans 3', system-ui, sans-serif;
+    font-family: 'DM Sans', 'Inter', system-ui, sans-serif;
   }
 
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'Prata', serif;
-    @apply font-normal tracking-tight;
+    font-family: 'DM Sans', 'Inter', system-ui, sans-serif;
+    @apply font-semibold tracking-tight;
   }
 }
 

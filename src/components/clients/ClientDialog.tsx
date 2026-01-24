@@ -30,6 +30,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { maskPhone, maskCPF, maskCEP } from "@/lib/masks";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Client = Tables<"clients">;
@@ -248,7 +249,13 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
                       <FormItem>
                         <FormLabel>Telefone *</FormLabel>
                         <FormControl>
-                          <Input {...field} className="input-field" placeholder="(11) 99999-9999" />
+                          <Input
+                            {...field}
+                            className="input-field"
+                            placeholder="(11) 99999-9999"
+                            onChange={(e) => field.onChange(maskPhone(e.target.value))}
+                            maxLength={16}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -261,7 +268,13 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
                       <FormItem>
                         <FormLabel>CPF</FormLabel>
                         <FormControl>
-                          <Input {...field} className="input-field" placeholder="000.000.000-00" />
+                          <Input
+                            {...field}
+                            className="input-field"
+                            placeholder="000.000.000-00"
+                            onChange={(e) => field.onChange(maskCPF(e.target.value))}
+                            maxLength={14}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -348,7 +361,13 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
                       <FormItem className="md:col-span-2">
                         <FormLabel>CEP</FormLabel>
                         <FormControl>
-                          <Input {...field} className="input-field" placeholder="00000-000" />
+                          <Input
+                            {...field}
+                            className="input-field"
+                            placeholder="00000-000"
+                            onChange={(e) => field.onChange(maskCEP(e.target.value))}
+                            maxLength={9}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -383,7 +402,13 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
                       <FormItem>
                         <FormLabel>Telefone do(a) Acompanhante</FormLabel>
                         <FormControl>
-                          <Input {...field} className="input-field" placeholder="(11) 99999-9999" />
+                          <Input
+                            {...field}
+                            className="input-field"
+                            placeholder="(11) 99999-9999"
+                            onChange={(e) => field.onChange(maskPhone(e.target.value))}
+                            maxLength={16}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
