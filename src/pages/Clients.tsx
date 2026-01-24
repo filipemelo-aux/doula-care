@@ -50,7 +50,7 @@ const paymentStatusLabels = {
   parcial: "Parcial",
 };
 
-const formatClientName = (fullName: string, maxLength = 25) => {
+const formatClientName = (fullName: string, maxLength = 28) => {
   if (fullName.length <= maxLength) return fullName;
   return `${fullName.slice(0, maxLength)}...`;
 };
