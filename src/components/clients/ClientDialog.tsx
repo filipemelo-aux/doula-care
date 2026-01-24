@@ -1,9 +1,10 @@
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { calculateCurrentPregnancyWeeks } from "@/lib/pregnancy";
 import {
   Dialog,
   DialogContent,
@@ -168,11 +169,6 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
 
   const mutation = useMutation({
     mutationFn: async (data: ClientFormData) => {
-      // Check if pregnancy weeks changed to update the reference date
-      const pregnancyWeeksChanged = client 
-        ? data.pregnancy_weeks !== client.pregnancy_weeks 
-        : true;
-
       const payload = {
         full_name: data.full_name,
         phone: data.phone,
@@ -186,9 +182,11 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
         companion_name: data.companion_name || null,
         companion_phone: data.companion_phone || null,
         status: data.status,
-        pregnancy_weeks: data.status === "gestante" ? data.pregnancy_weeks : null,
+        pregnancy_weeks: data.status === "gestante" && data.dpp 
+          ? calculateCurrentPregnancyWeeks(null, null, data.dpp) 
+          : null,
         dpp: data.status === "gestante" ? data.dpp || null : null,
-        pregnancy_weeks_set_at: pregnancyWeeksChanged && data.status === "gestante" 
+        pregnancy_weeks_set_at: data.status === "gestante" && data.dpp
           ? new Date().toISOString() 
           : undefined,
         plan: data.plan,
@@ -492,44 +490,41 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
                     <>
                       <FormField
                         control={form.control}
-                        name="pregnancy_weeks"
-                        render={({ field }) => (
-                          <FormItem className="space-y-1">
-                            <FormLabel className="text-xs">Semanas de Gravidez</FormLabel>
-                            <FormControl>
-                              <Input
-                                type="number"
-                                min={0}
-                                max={42}
-                                {...field}
-                                value={field.value ?? ""}
-                                onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : null)}
-                                className="input-field h-8 text-sm"
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
                         name="dpp"
-                        render={({ field }) => (
-                          <FormItem className="space-y-1">
-                            <FormLabel className="text-xs">DPP (Data Prevista Parto)</FormLabel>
-                            <FormControl>
-                              <Input
-                                type="date"
-                                {...field}
-                                value={field.value ?? ""}
-                                onChange={(e) => field.onChange(e.target.value || null)}
-                                className="input-field h-8 text-sm"
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
+                        render={({ field }) => {
+                          const calculatedWeeks = field.value 
+                            ? calculateCurrentPregnancyWeeks(null, null, field.value)
+                            : null;
+                          
+                          return (
+                            <FormItem className="space-y-1">
+                              <FormLabel className="text-xs">DPP (Data Prevista Parto)</FormLabel>
+                              <FormControl>
+                                <Input
+                                  type="date"
+                                  {...field}
+                                  value={field.value ?? ""}
+                                  onChange={(e) => field.onChange(e.target.value || null)}
+                                  className="input-field h-8 text-sm"
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          );
+                        }}
                       />
+                      <div className="space-y-1">
+                        <label className="text-xs font-medium">Semanas Atuais</label>
+                        <div className="input-field h-8 text-sm flex items-center px-3 bg-muted/50">
+                          {(() => {
+                            const dppValue = form.watch("dpp");
+                            const weeks = dppValue 
+                              ? calculateCurrentPregnancyWeeks(null, null, dppValue)
+                              : null;
+                            return weeks !== null ? `${weeks} semanas` : "Defina a DPP";
+                          })()}
+                        </div>
+                      </div>
                     </>
                   )}
                 </div>
