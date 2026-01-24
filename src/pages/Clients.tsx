@@ -172,13 +172,13 @@ export default function Clients() {
               {/* Mobile Cards */}
               <div className="block lg:hidden space-y-3 p-4 sm:p-0">
                 {filteredClients.map((client) => (
-                  <Card key={client.id} className="p-3 space-y-2">
+                  <Card key={client.id} className="p-3 space-y-2 overflow-hidden">
                     <div className="flex items-start justify-between gap-2">
-                      <div className="flex-1 min-w-0">
+                      <div className="flex-1 min-w-0 overflow-hidden">
                         <p className="font-medium text-sm truncate">{client.full_name}</p>
-                        <p className="text-xs text-muted-foreground">{client.phone}</p>
+                        <p className="text-xs text-muted-foreground truncate">{client.phone}</p>
                       </div>
-                      <div className="flex items-center gap-1 flex-shrink-0">
+                      <div className="flex items-center gap-0.5 flex-shrink-0">
                         <Button
                           variant="ghost"
                           size="icon"
@@ -205,19 +205,19 @@ export default function Clients() {
                         </Button>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2 flex-wrap">
+                    <div className="flex items-center gap-1.5 flex-wrap">
                       <Badge
                         variant="outline"
-                        className={cn("badge-status border-0 text-xs", `badge-${client.status}`)}
+                        className={cn("badge-status border-0 text-[10px] px-1.5 h-5", `badge-${client.status}`)}
                       >
                         {statusLabels[client.status as keyof typeof statusLabels]}
                       </Badge>
-                      <Badge variant="outline" className="text-xs">
+                      <Badge variant="outline" className="text-[10px] px-1.5 h-5">
                         {planLabels[client.plan as keyof typeof planLabels]}
                       </Badge>
                       <Badge
                         variant="outline"
-                        className={cn("badge-status border-0 text-xs", `badge-${client.payment_status}`)}
+                        className={cn("badge-status border-0 text-[10px] px-1.5 h-5", `badge-${client.payment_status}`)}
                       >
                         {paymentStatusLabels[client.payment_status as keyof typeof paymentStatusLabels]}
                       </Badge>
