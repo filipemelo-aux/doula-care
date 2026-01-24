@@ -210,24 +210,28 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
           .eq("id", client.id);
         if (error) throw error;
       } else {
-        // Create client and get the ID
+        // Create client and get the ID and created_at
         const { data: newClient, error: clientError } = await supabase
           .from("clients")
           .insert(payload)
-          .select("id")
+          .select("id, created_at")
           .single();
         if (clientError) throw clientError;
 
         // Get plan settings to find the plan ID
         const planSetting = planSettings?.find((p) => p.plan_type === data.plan);
 
-        // Create automatic income transaction for the new client
+        // Create automatic income transaction for the new client using client's created_at date
         const planName = data.plan === "basico" ? "Básico" : data.plan === "intermediario" ? "Intermediário" : "Completo";
+        const clientCreatedDate = newClient.created_at 
+          ? new Date(newClient.created_at).toISOString().split("T")[0]
+          : new Date().toISOString().split("T")[0];
+        
         const transactionPayload = {
           type: "receita" as const,
           description: `Contrato - ${data.full_name} - Plano ${planName}`,
           amount: data.plan_value || 0,
-          date: new Date().toISOString().split("T")[0],
+          date: clientCreatedDate,
           client_id: newClient.id,
           plan_id: planSetting?.id || null,
           payment_method: data.payment_method as "pix" | "cartao" | "dinheiro" | "transferencia" | "boleto",
