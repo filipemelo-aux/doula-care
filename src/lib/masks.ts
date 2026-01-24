@@ -51,3 +51,59 @@ export function unmask(value: string): string {
 export function toUpperCase(value: string): string {
   return value.toUpperCase();
 }
+
+// Mask for baby weight in kg (format: X.XXX)
+export function maskWeight(value: string): string {
+  // Remove all non-digits
+  const digits = value.replace(/\D/g, "");
+  
+  if (digits.length === 0) return "";
+  
+  // Pad with leading zeros if needed to have at least 4 digits
+  const padded = digits.slice(0, 5);
+  
+  if (padded.length <= 3) {
+    // Less than 1kg - format as 0.XXX
+    return `0.${padded.padStart(3, "0").slice(-3)}`;
+  } else {
+    // 1kg or more - format as X.XXX or XX.XXX
+    const intPart = padded.slice(0, -3);
+    const decPart = padded.slice(-3);
+    return `${intPart}.${decPart}`;
+  }
+}
+
+// Mask for baby height in cm (format: XX.XX)
+export function maskHeight(value: string): string {
+  // Remove all non-digits
+  const digits = value.replace(/\D/g, "");
+  
+  if (digits.length === 0) return "";
+  
+  // Limit to 4 digits max
+  const padded = digits.slice(0, 4);
+  
+  if (padded.length <= 2) {
+    // Less than 1cm - format as 0.XX
+    return `0.${padded.padStart(2, "0").slice(-2)}`;
+  } else {
+    // 1cm or more - format as X.XX or XX.XX
+    const intPart = padded.slice(0, -2);
+    const decPart = padded.slice(-2);
+    return `${intPart}.${decPart}`;
+  }
+}
+
+// Parse masked weight to number
+export function parseWeight(value: string): number | null {
+  if (!value) return null;
+  const num = parseFloat(value);
+  return isNaN(num) ? null : num;
+}
+
+// Parse masked height to number
+export function parseHeight(value: string): number | null {
+  if (!value) return null;
+  const num = parseFloat(value);
+  return isNaN(num) ? null : num;
+}
