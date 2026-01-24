@@ -192,15 +192,44 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
           .eq("id", client.id);
         if (error) throw error;
       } else {
-        const { error } = await supabase.from("clients").insert(payload);
-        if (error) throw error;
+        // Create client and get the ID
+        const { data: newClient, error: clientError } = await supabase
+          .from("clients")
+          .insert(payload)
+          .select("id")
+          .single();
+        if (clientError) throw clientError;
+
+        // Get plan settings to find the plan ID
+        const planSetting = planSettings?.find((p) => p.plan_type === data.plan);
+
+        // Create automatic income transaction for the new client
+        const planName = data.plan === "basico" ? "Básico" : data.plan === "intermediario" ? "Intermediário" : "Completo";
+        const transactionPayload = {
+          type: "receita" as const,
+          description: `Contrato - ${data.full_name} - Plano ${planName}`,
+          amount: data.plan_value || 0,
+          date: new Date().toISOString().split("T")[0],
+          client_id: newClient.id,
+          plan_id: planSetting?.id || null,
+          payment_method: data.payment_method as "pix" | "cartao" | "dinheiro" | "transferencia" | "boleto",
+          is_auto_generated: true,
+          notes: `Receita gerada automaticamente ao cadastrar cliente`,
+        };
+
+        const { error: transactionError } = await supabase
+          .from("transactions")
+          .insert([transactionPayload]);
+        if (transactionError) throw transactionError;
       }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["clients"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
       queryClient.invalidateQueries({ queryKey: ["recent-clients"] });
-      toast.success(client ? "Cliente atualizada!" : "Cliente cadastrada!");
+      queryClient.invalidateQueries({ queryKey: ["transactions"] });
+      queryClient.invalidateQueries({ queryKey: ["financial-summary"] });
+      toast.success(client ? "Cliente atualizada!" : "Cliente cadastrada com receita!");
       onOpenChange(false);
     },
     onError: () => {
