@@ -298,21 +298,21 @@ export default function Expenses() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 overflow-x-hidden">
       {/* Header */}
       <div className="page-header flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
+        <div className="min-w-0">
           <h1 className="page-title">Despesas</h1>
           <p className="page-description">Controle suas despesas e gastos</p>
         </div>
-        <Button onClick={handleOpenDialog} className="gap-2">
+        <Button onClick={handleOpenDialog} className="gap-2 flex-shrink-0">
           <Plus className="w-4 h-4" />
           Nova Despesa
         </Button>
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-6">
         <StatCard
           title="Despesas Total"
           value={formatCurrency(totalExpenses)}
@@ -332,16 +332,23 @@ export default function Expenses() {
           subtitle="Total de despesas"
           icon={TrendingDown}
         />
-        {topCategory && (
-          <Card className="stat-card">
-            <div className="space-y-2">
-              <p className="text-sm text-muted-foreground">Maior Categoria</p>
-              <p className="text-lg font-semibold text-foreground">
+        {topCategory ? (
+          <Card className="stat-card overflow-hidden">
+            <div className="space-y-2 min-w-0">
+              <p className="text-xs lg:text-sm text-muted-foreground truncate">Maior Categoria</p>
+              <p className="text-sm lg:text-lg font-semibold text-foreground truncate">
                 {expenseCategories[topCategory[0] as keyof typeof expenseCategories] || topCategory[0]}
               </p>
-              <p className="text-2xl font-bold text-primary">
+              <p className="text-lg lg:text-2xl font-bold text-primary truncate">
                 {formatCurrency(topCategory[1])}
               </p>
+            </div>
+          </Card>
+        ) : (
+          <Card className="stat-card overflow-hidden">
+            <div className="space-y-2 min-w-0">
+              <p className="text-xs lg:text-sm text-muted-foreground">Maior Categoria</p>
+              <p className="text-sm lg:text-lg font-semibold text-foreground">—</p>
             </div>
           </Card>
         )}

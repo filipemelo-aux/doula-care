@@ -52,10 +52,10 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 lg:space-y-8 overflow-x-hidden">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <div className="page-header mb-0">
+        <div className="page-header mb-0 min-w-0">
           <h1 className="page-title">Visão Geral</h1>
           <p className="page-description">
             Acompanhe suas clientes e o desempenho do seu negócio
@@ -65,7 +65,7 @@ export default function Dashboard() {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-6">
         <StatCard
           title="Total de Clientes"
           value={stats?.totalClients || 0}
@@ -98,7 +98,7 @@ export default function Dashboard() {
       <FinancialOverview period={period} />
 
       {/* Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
         <RecentClients />
         <TopPlansCard />
       </div>

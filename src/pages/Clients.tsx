@@ -125,16 +125,16 @@ export default function Clients() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 overflow-x-hidden">
       {/* Header */}
       <div className="page-header flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
+        <div className="min-w-0">
           <h1 className="page-title">Clientes</h1>
           <p className="page-description">
             Gerencie suas clientes e acompanhamentos
           </p>
         </div>
-        <Button onClick={() => setDialogOpen(true)} className="gap-2">
+        <Button onClick={() => setDialogOpen(true)} className="gap-2 flex-shrink-0">
           <Plus className="w-4 h-4" />
           Nova Cliente
         </Button>
