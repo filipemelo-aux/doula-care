@@ -49,6 +49,7 @@ const clientSchema = z.object({
   companion_phone: z.string().optional(),
   status: z.enum(["tentante", "gestante", "lactante"]),
   pregnancy_weeks: z.number().min(0).max(45).optional().nullable(),
+  dpp: z.string().optional().nullable(),
   plan: z.enum(["basico", "intermediario", "completo"]),
   payment_method: z.enum(["pix", "cartao", "dinheiro", "transferencia"]),
   payment_status: z.enum(["pendente", "pago", "parcial"]),
@@ -94,6 +95,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
       companion_phone: "",
       status: "gestante",
       pregnancy_weeks: null,
+      dpp: null,
       plan: "basico",
       payment_method: "pix",
       payment_status: "pendente",
@@ -132,6 +134,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
         companion_phone: client.companion_phone || "",
         status: client.status as "tentante" | "gestante" | "lactante",
         pregnancy_weeks: client.pregnancy_weeks,
+        dpp: (client as any).dpp || null,
         plan: client.plan as "basico" | "intermediario" | "completo",
         payment_method: client.payment_method as "pix" | "cartao" | "dinheiro" | "transferencia",
         payment_status: client.payment_status as "pendente" | "pago" | "parcial",
@@ -153,6 +156,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
         companion_phone: "",
         status: "gestante",
         pregnancy_weeks: null,
+        dpp: null,
         plan: "basico",
         payment_method: "pix",
         payment_status: "pendente",
@@ -183,6 +187,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
         companion_phone: data.companion_phone || null,
         status: data.status,
         pregnancy_weeks: data.status === "gestante" ? data.pregnancy_weeks : null,
+        dpp: data.status === "gestante" ? data.dpp || null : null,
         pregnancy_weeks_set_at: pregnancyWeeksChanged && data.status === "gestante" 
           ? new Date().toISOString() 
           : undefined,
@@ -483,27 +488,48 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
                     )}
                   />
                   {status === "gestante" && (
-                    <FormField
-                      control={form.control}
-                      name="pregnancy_weeks"
-                      render={({ field }) => (
-                        <FormItem className="space-y-1">
-                          <FormLabel className="text-xs">Semanas de Gravidez</FormLabel>
-                          <FormControl>
-                            <Input
-                              type="number"
-                              min={0}
-                              max={45}
-                              {...field}
-                              value={field.value ?? ""}
-                              onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : null)}
-                              className="input-field h-8 text-sm"
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                    <>
+                      <FormField
+                        control={form.control}
+                        name="pregnancy_weeks"
+                        render={({ field }) => (
+                          <FormItem className="space-y-1">
+                            <FormLabel className="text-xs">Semanas de Gravidez</FormLabel>
+                            <FormControl>
+                              <Input
+                                type="number"
+                                min={0}
+                                max={45}
+                                {...field}
+                                value={field.value ?? ""}
+                                onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : null)}
+                                className="input-field h-8 text-sm"
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="dpp"
+                        render={({ field }) => (
+                          <FormItem className="space-y-1">
+                            <FormLabel className="text-xs">DPP (Data Prevista Parto)</FormLabel>
+                            <FormControl>
+                              <Input
+                                type="date"
+                                {...field}
+                                value={field.value ?? ""}
+                                onChange={(e) => field.onChange(e.target.value || null)}
+                                className="input-field h-8 text-sm"
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </>
                   )}
                 </div>
               </div>

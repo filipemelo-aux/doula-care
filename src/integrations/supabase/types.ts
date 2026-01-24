@@ -21,6 +21,7 @@ export type Database = {
           companion_phone: string | null
           cpf: string | null
           created_at: string
+          dpp: string | null
           full_name: string
           id: string
           neighborhood: string | null
@@ -45,6 +46,7 @@ export type Database = {
           companion_phone?: string | null
           cpf?: string | null
           created_at?: string
+          dpp?: string | null
           full_name: string
           id?: string
           neighborhood?: string | null
@@ -69,6 +71,7 @@ export type Database = {
           companion_phone?: string | null
           cpf?: string | null
           created_at?: string
+          dpp?: string | null
           full_name?: string
           id?: string
           neighborhood?: string | null

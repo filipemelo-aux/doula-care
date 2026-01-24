@@ -17,9 +17,8 @@ export function BirthAlert() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("clients")
-        .select("id, full_name, pregnancy_weeks, pregnancy_weeks_set_at, phone")
+        .select("id, full_name, pregnancy_weeks, pregnancy_weeks_set_at, dpp, phone")
         .eq("status", "gestante")
-        .not("pregnancy_weeks", "is", null)
         .order("pregnancy_weeks", { ascending: false });
 
       if (error) throw error;
@@ -30,7 +29,8 @@ export function BirthAlert() {
           ...client,
           current_weeks: calculateCurrentPregnancyWeeks(
             client.pregnancy_weeks,
-            client.pregnancy_weeks_set_at
+            client.pregnancy_weeks_set_at,
+            (client as any).dpp
           )
         }))
         .filter(client => client.current_weeks !== null && client.current_weeks >= 37)
