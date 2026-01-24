@@ -95,6 +95,8 @@ export function BirthRegistrationDialog({
 
   if (!client) return null;
 
+  const babyNames = (client as any).baby_names as string[] | null;
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
@@ -107,6 +109,11 @@ export function BirthRegistrationDialog({
         <div className="mb-4 p-3 bg-muted/50 rounded-lg">
           <p className="text-sm font-medium">{client.full_name}</p>
           <p className="text-xs text-muted-foreground">{client.phone}</p>
+          {babyNames && babyNames.length > 0 && (
+            <p className="text-xs text-primary mt-1">
+              👶 {babyNames.length > 1 ? "Bebês: " : "Bebê: "}{babyNames.join(", ")}
+            </p>
+          )}
         </div>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">

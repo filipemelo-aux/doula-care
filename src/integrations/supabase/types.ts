@@ -16,6 +16,7 @@ export type Database = {
     Tables: {
       clients: {
         Row: {
+          baby_names: string[] | null
           birth_date: string | null
           birth_height: number | null
           birth_occurred: boolean | null
@@ -46,6 +47,7 @@ export type Database = {
           zip_code: string | null
         }
         Insert: {
+          baby_names?: string[] | null
           birth_date?: string | null
           birth_height?: number | null
           birth_occurred?: boolean | null
@@ -76,6 +78,7 @@ export type Database = {
           zip_code?: string | null
         }
         Update: {
+          baby_names?: string[] | null
           birth_date?: string | null
           birth_height?: number | null
           birth_occurred?: boolean | null

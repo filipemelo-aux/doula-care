@@ -51,6 +51,7 @@ const clientSchema = z.object({
   status: z.enum(["tentante", "gestante", "lactante"]),
   pregnancy_weeks: z.number().min(0).max(42).optional().nullable(),
   dpp: z.string().optional().nullable(),
+  baby_names: z.string().optional(),
   plan: z.enum(["basico", "intermediario", "completo"]),
   payment_method: z.enum(["pix", "cartao", "dinheiro", "transferencia"]),
   payment_status: z.enum(["pendente", "pago", "parcial"]),
@@ -97,6 +98,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
       status: "gestante",
       pregnancy_weeks: null,
       dpp: null,
+      baby_names: "",
       plan: "basico",
       payment_method: "pix",
       payment_status: "pendente",
@@ -135,7 +137,8 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
         companion_phone: client.companion_phone || "",
         status: client.status as "tentante" | "gestante" | "lactante",
         pregnancy_weeks: client.pregnancy_weeks,
-        dpp: (client as any).dpp || null,
+        dpp: client.dpp || null,
+        baby_names: (client as any).baby_names?.join(", ") || "",
         plan: client.plan as "basico" | "intermediario" | "completo",
         payment_method: client.payment_method as "pix" | "cartao" | "dinheiro" | "transferencia",
         payment_status: client.payment_status as "pendente" | "pago" | "parcial",
@@ -158,6 +161,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
         status: "gestante",
         pregnancy_weeks: null,
         dpp: null,
+        baby_names: "",
         plan: "basico",
         payment_method: "pix",
         payment_status: "pendente",
@@ -186,6 +190,9 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
           ? calculateCurrentPregnancyWeeks(null, null, data.dpp) 
           : null,
         dpp: data.status === "gestante" ? data.dpp || null : null,
+        baby_names: data.baby_names 
+          ? data.baby_names.split(",").map(n => n.trim()).filter(n => n.length > 0)
+          : [],
         pregnancy_weeks_set_at: data.status === "gestante" && data.dpp
           ? new Date().toISOString() 
           : undefined,
@@ -525,6 +532,23 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
                           })()}
                         </div>
                       </div>
+                      <FormField
+                        control={form.control}
+                        name="baby_names"
+                        render={({ field }) => (
+                          <FormItem className="md:col-span-2 space-y-1">
+                            <FormLabel className="text-xs">Nome(s) do Bebê</FormLabel>
+                            <FormControl>
+                              <Input
+                                {...field}
+                                className="input-field h-8 text-sm"
+                                placeholder="Separe por vírgula se gêmeos (ex: João, Maria)"
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
                     </>
                   )}
                 </div>
