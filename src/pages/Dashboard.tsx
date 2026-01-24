@@ -1,11 +1,16 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { RecentClients } from "@/components/dashboard/RecentClients";
-import { FinancialSummary } from "@/components/dashboard/FinancialSummary";
+import { FinancialOverview } from "@/components/dashboard/FinancialOverview";
+import { TopPlansCard } from "@/components/dashboard/TopPlansCard";
+import { PeriodFilter, PeriodOption } from "@/components/dashboard/PeriodFilter";
 import { Users, Baby, Heart, Wallet } from "lucide-react";
 
 export default function Dashboard() {
+  const [period, setPeriod] = useState<PeriodOption>("month");
+
   const { data: stats } = useQuery({
     queryKey: ["dashboard-stats"],
     queryFn: async () => {
@@ -49,11 +54,14 @@ export default function Dashboard() {
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div className="page-header">
-        <h1 className="page-title">Visão Geral</h1>
-        <p className="page-description">
-          Acompanhe suas clientes e o desempenho do seu negócio
-        </p>
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div className="page-header mb-0">
+          <h1 className="page-title">Visão Geral</h1>
+          <p className="page-description">
+            Acompanhe suas clientes e o desempenho do seu negócio
+          </p>
+        </div>
+        <PeriodFilter selected={period} onChange={setPeriod} />
       </div>
 
       {/* Stats Grid */}
@@ -86,10 +94,13 @@ export default function Dashboard() {
         />
       </div>
 
+      {/* Financial Overview with Period Filter */}
+      <FinancialOverview period={period} />
+
       {/* Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <RecentClients />
-        <FinancialSummary />
+        <TopPlansCard />
       </div>
     </div>
   );
