@@ -125,16 +125,16 @@ export default function Clients() {
   };
 
   return (
-    <div className="space-y-6 w-full max-w-full overflow-hidden">
+    <div className="space-y-6 lg:space-y-8 overflow-x-hidden">
       {/* Header */}
-      <div className="page-header flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div className="min-w-0">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div className="page-header mb-0 min-w-0">
           <h1 className="page-title">Clientes</h1>
           <p className="page-description">
             Gerencie suas clientes e acompanhamentos
           </p>
         </div>
-        <Button onClick={() => setDialogOpen(true)} className="gap-2 flex-shrink-0">
+        <Button onClick={() => setDialogOpen(true)} className="gap-2 flex-shrink-0 w-full md:w-auto">
           <Plus className="w-4 h-4" />
           Nova Cliente
         </Button>
@@ -142,7 +142,7 @@ export default function Clients() {
 
       {/* Search */}
       <Card className="card-glass">
-        <CardContent className="pt-6">
+        <CardContent className="p-4 lg:pt-6 lg:p-6">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
@@ -156,13 +156,13 @@ export default function Clients() {
       </Card>
 
       {/* Clients List */}
-      <Card className="card-glass overflow-hidden">
-        <CardHeader>
+      <Card className="card-glass">
+        <CardHeader className="p-4 lg:p-6">
           <CardTitle className="text-lg font-semibold text-foreground">
             Lista de Clientes ({filteredClients?.length || 0})
           </CardTitle>
         </CardHeader>
-        <CardContent className="p-0 sm:p-6">
+        <CardContent className="p-0">
           {isLoading ? (
             <div className="text-center py-8 text-muted-foreground">
               Carregando...
@@ -170,7 +170,7 @@ export default function Clients() {
           ) : filteredClients && filteredClients.length > 0 ? (
             <>
               {/* Mobile Cards */}
-              <div className="block lg:hidden space-y-3 p-4 sm:p-0">
+              <div className="block lg:hidden space-y-2 p-4">
                 {filteredClients.map((client) => (
                   <Card key={client.id} className="p-3 space-y-2 overflow-hidden">
                     <div className="flex items-start justify-between gap-2">
@@ -227,7 +227,7 @@ export default function Clients() {
               </div>
 
               {/* Desktop Table */}
-              <div className="hidden lg:block overflow-x-auto">
+              <div className="hidden lg:block overflow-x-auto p-6 pt-0">
                 <Table className="min-w-full">
                   <TableHeader>
                     <TableRow>
