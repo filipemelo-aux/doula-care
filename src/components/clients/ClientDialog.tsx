@@ -238,11 +238,18 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
         // Get plan settings to find the plan ID
         const planSetting = planSettings?.find((p) => p.plan_type === data.plan);
 
-        // Create automatic income transaction for the new client using client's created_at date
+        // Create automatic income transaction for the new client using client's created_at date in local timezone
         const planName = data.plan === "basico" ? "Básico" : data.plan === "intermediario" ? "Intermediário" : "Completo";
+        const getLocalDate = (dateString: string) => {
+          const date = new Date(dateString);
+          const year = date.getFullYear();
+          const month = String(date.getMonth() + 1).padStart(2, '0');
+          const day = String(date.getDate()).padStart(2, '0');
+          return `${year}-${month}-${day}`;
+        };
         const clientCreatedDate = newClient.created_at 
-          ? new Date(newClient.created_at).toISOString().split("T")[0]
-          : new Date().toISOString().split("T")[0];
+          ? getLocalDate(newClient.created_at)
+          : getLocalDate(new Date().toISOString());
         
         const transactionPayload = {
           type: "receita" as const,
