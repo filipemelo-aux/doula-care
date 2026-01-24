@@ -378,48 +378,48 @@ export default function Settings() {
         </Card>
 
         <Card className="card-glass">
-          <CardHeader>
+          <CardHeader className="pb-2">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-info/10 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-lg bg-info/10 flex items-center justify-center shrink-0">
                 <Database className="w-5 h-5 text-info" />
               </div>
-              <div>
-                <CardTitle className="text-lg">Backup de Dados</CardTitle>
-                <CardDescription>
-                  Exportar e importar dados
+              <div className="min-w-0">
+                <CardTitle className="text-lg">Backup</CardTitle>
+                <CardDescription className="truncate">
+                  Exportar dados
                 </CardDescription>
               </div>
             </div>
           </CardHeader>
           <CardContent>
-            <p className="text-sm text-muted-foreground mb-4">
-              Faça backup dos seus dados ou exporte relatórios em diferentes formatos.
+            <p className="text-xs text-muted-foreground mb-3 line-clamp-2">
+              Faça backup ou exporte relatórios.
             </p>
-            <Button variant="outline" disabled>
+            <Button variant="outline" size="sm" disabled>
               Em breve
             </Button>
           </CardContent>
         </Card>
 
         <Card className="card-glass">
-          <CardHeader>
+          <CardHeader className="pb-2">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-warning/10 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-lg bg-warning/10 flex items-center justify-center shrink-0">
                 <Bell className="w-5 h-5 text-warning" />
               </div>
-              <div>
+              <div className="min-w-0">
                 <CardTitle className="text-lg">Notificações</CardTitle>
-                <CardDescription>
+                <CardDescription className="truncate">
                   Alertas e lembretes
                 </CardDescription>
               </div>
             </div>
           </CardHeader>
           <CardContent>
-            <p className="text-sm text-muted-foreground mb-4">
-              Configure lembretes de consultas, vencimentos e alertas importantes.
+            <p className="text-xs text-muted-foreground mb-3 line-clamp-2">
+              Configure lembretes e alertas.
             </p>
-            <Button variant="outline" disabled>
+            <Button variant="outline" size="sm" disabled>
               Em breve
             </Button>
           </CardContent>
@@ -428,61 +428,67 @@ export default function Settings() {
 
       {/* Users List (Admin only) */}
       {isAdmin && (
-        <Card className="card-glass">
-          <CardHeader>
+        <Card className="card-glass overflow-hidden">
+          <CardHeader className="pb-2">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
                 <Users className="w-5 h-5 text-primary" />
               </div>
-              <div>
-                <CardTitle className="text-lg">Usuários do Sistema</CardTitle>
-                <CardDescription>
-                  Gerencie os usuários e suas permissões
+              <div className="min-w-0">
+                <CardTitle className="text-lg">Usuários</CardTitle>
+                <CardDescription className="truncate">
+                  Gerencie permissões
                 </CardDescription>
               </div>
             </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="px-2 sm:px-6">
             {loadingUsers ? (
               <div className="flex items-center justify-center py-8">
                 <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
               </div>
             ) : usersWithRoles && usersWithRoles.length > 0 ? (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Usuário</TableHead>
-                    <TableHead>Permissões</TableHead>
-                    <TableHead>Criado em</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {usersWithRoles.map((userProfile) => (
-                    <TableRow key={userProfile.id} className="table-row-hover">
-                      <TableCell>
-                        <div>
-                          <p className="font-medium">{userProfile.full_name || "Sem nome"}</p>
-                          <p className="text-xs text-muted-foreground">{userProfile.user_id}</p>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex flex-wrap gap-1">
-                          {userProfile.roles.length > 0 ? (
-                            userProfile.roles.map((role) => (
-                              <span key={role}>{getRoleBadge(role)}</span>
-                            ))
-                          ) : (
-                            getRoleBadge("user")
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-muted-foreground">
-                        {format(new Date(userProfile.created_at), "dd/MM/yyyy", { locale: ptBR })}
-                      </TableCell>
+              <div className="overflow-x-auto -mx-2 sm:mx-0">
+                <Table className="text-sm">
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="whitespace-nowrap px-2">Usuário</TableHead>
+                      <TableHead className="whitespace-nowrap px-2">Papel</TableHead>
+                      <TableHead className="whitespace-nowrap px-2">Data</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {usersWithRoles.map((userProfile) => (
+                      <TableRow key={userProfile.id} className="table-row-hover">
+                        <TableCell className="px-2 py-2">
+                          <div className="min-w-0">
+                            <p className="font-medium truncate max-w-[120px] sm:max-w-none">
+                              {userProfile.full_name || "Sem nome"}
+                            </p>
+                            <p className="text-xs text-muted-foreground truncate max-w-[100px] sm:max-w-[180px]">
+                              {userProfile.user_id.slice(0, 8)}...
+                            </p>
+                          </div>
+                        </TableCell>
+                        <TableCell className="px-2 py-2">
+                          <div className="flex flex-wrap gap-1">
+                            {userProfile.roles.length > 0 ? (
+                              userProfile.roles.map((role) => (
+                                <span key={role}>{getRoleBadge(role)}</span>
+                              ))
+                            ) : (
+                              getRoleBadge("user")
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-muted-foreground whitespace-nowrap px-2 py-2 text-xs">
+                          {format(new Date(userProfile.created_at), "dd/MM/yy", { locale: ptBR })}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
             ) : (
               <p className="text-center text-muted-foreground py-8">
                 Nenhum usuário cadastrado
