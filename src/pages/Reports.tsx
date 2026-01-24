@@ -421,36 +421,68 @@ export default function Reports() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Mês</TableHead>
-                    <TableHead className="text-right">Receitas</TableHead>
-                    <TableHead className="text-right">Despesas</TableHead>
-                    <TableHead className="text-right">Saldo</TableHead>
-                    <TableHead className="text-right">Transações</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {monthlyTableData?.map((row) => (
-                    <TableRow key={row.month} className="table-row-hover">
-                      <TableCell className="font-medium capitalize">{row.month}</TableCell>
-                      <TableCell className="text-right text-success">
-                        {formatCurrency(row.income)}
-                      </TableCell>
-                      <TableCell className="text-right text-destructive">
-                        {formatCurrency(row.expenses)}
-                      </TableCell>
-                      <TableCell className={`text-right font-medium ${row.balance >= 0 ? "text-success" : "text-destructive"}`}>
-                        {formatCurrency(row.balance)}
-                      </TableCell>
-                      <TableCell className="text-right text-muted-foreground">
-                        {row.transactionCount}
-                      </TableCell>
+              {/* Mobile Cards */}
+              <div className="block lg:hidden space-y-3">
+                {monthlyTableData?.map((row) => (
+                  <Card key={row.month} className="p-3 space-y-2">
+                    <p className="font-medium text-sm capitalize">{row.month}</p>
+                    <div className="grid grid-cols-2 gap-2 text-xs">
+                      <div>
+                        <span className="text-muted-foreground block">Receitas</span>
+                        <span className="font-medium text-success">{formatCurrency(row.income)}</span>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground block">Despesas</span>
+                        <span className="font-medium text-destructive">{formatCurrency(row.expenses)}</span>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground block">Saldo</span>
+                        <span className={`font-semibold ${row.balance >= 0 ? "text-success" : "text-destructive"}`}>
+                          {formatCurrency(row.balance)}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground block">Transações</span>
+                        <span className="font-medium">{row.transactionCount}</span>
+                      </div>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+
+              {/* Desktop Table */}
+              <div className="hidden lg:block">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Mês</TableHead>
+                      <TableHead className="text-right">Receitas</TableHead>
+                      <TableHead className="text-right">Despesas</TableHead>
+                      <TableHead className="text-right">Saldo</TableHead>
+                      <TableHead className="text-right">Transações</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {monthlyTableData?.map((row) => (
+                      <TableRow key={row.month} className="table-row-hover">
+                        <TableCell className="font-medium capitalize">{row.month}</TableCell>
+                        <TableCell className="text-right text-success">
+                          {formatCurrency(row.income)}
+                        </TableCell>
+                        <TableCell className="text-right text-destructive">
+                          {formatCurrency(row.expenses)}
+                        </TableCell>
+                        <TableCell className={`text-right font-medium ${row.balance >= 0 ? "text-success" : "text-destructive"}`}>
+                          {formatCurrency(row.balance)}
+                        </TableCell>
+                        <TableCell className="text-right text-muted-foreground">
+                          {row.transactionCount}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>

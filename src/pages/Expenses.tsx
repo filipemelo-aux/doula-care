@@ -362,7 +362,7 @@ export default function Expenses() {
         </CardContent>
       </Card>
 
-      {/* Table */}
+      {/* Expenses List */}
       <Card className="card-glass">
         <CardHeader>
           <CardTitle className="text-lg font-semibold text-foreground">
@@ -373,69 +373,121 @@ export default function Expenses() {
           {isLoading ? (
             <div className="text-center py-8 text-muted-foreground">Carregando...</div>
           ) : filteredExpenses && filteredExpenses.length > 0 ? (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Data</TableHead>
-                    <TableHead>Descrição</TableHead>
-                    <TableHead>Tipo</TableHead>
-                    <TableHead>Categoria</TableHead>
-                    <TableHead>Pagamento</TableHead>
-                    <TableHead className="text-right">Valor</TableHead>
-                    <TableHead className="text-right">Ações</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredExpenses.map((expense) => (
-                    <TableRow key={expense.id} className="table-row-hover">
-                      <TableCell>{format(new Date(expense.date), "dd/MM/yyyy")}</TableCell>
-                      <TableCell className="font-medium">{expense.description}</TableCell>
-                      <TableCell>
-                        <Badge variant="secondary">
-                          {expenseTypeLabels[(expense.expense_type as keyof typeof expenseTypeLabels)] || "—"}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="outline">
-                          {expenseCategories[(expense.expense_category as keyof typeof expenseCategories)] || "—"}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="outline">
-                          {paymentMethodLabels[(expense.payment_method as keyof typeof paymentMethodLabels)] || "—"}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <Badge className="bg-destructive/15 text-destructive hover:bg-destructive/20">
+            <>
+              {/* Mobile Cards */}
+              <div className="block lg:hidden space-y-3">
+                {filteredExpenses.map((expense) => (
+                  <Card key={expense.id} className="p-3 space-y-2">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-sm truncate">{expense.description}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {format(new Date(expense.date), "dd/MM/yyyy")}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-1 flex-shrink-0">
+                        <Badge className="bg-destructive/15 text-destructive text-xs">
                           -{formatCurrency(Number(expense.amount))}
                         </Badge>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex items-center justify-end gap-1">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleEdit(expense)}
-                            className="h-8 w-8"
-                          >
-                            <Edit2 className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleDelete(expense.id)}
-                            className="h-8 w-8 text-destructive hover:text-destructive"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-1 flex-wrap">
+                        <Badge variant="secondary" className="text-xs">
+                          {expenseTypeLabels[(expense.expense_type as keyof typeof expenseTypeLabels)] || "—"}
+                        </Badge>
+                        <Badge variant="outline" className="text-xs">
+                          {expenseCategories[(expense.expense_category as keyof typeof expenseCategories)] || "—"}
+                        </Badge>
+                      </div>
+                      <div className="flex items-center gap-1 flex-shrink-0">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleEdit(expense)}
+                          className="h-7 w-7"
+                        >
+                          <Edit2 className="h-3.5 w-3.5" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleDelete(expense.id)}
+                          className="h-7 w-7 text-destructive hover:text-destructive"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+
+              {/* Desktop Table */}
+              <div className="hidden lg:block">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Data</TableHead>
+                      <TableHead>Descrição</TableHead>
+                      <TableHead>Tipo</TableHead>
+                      <TableHead>Categoria</TableHead>
+                      <TableHead>Pagamento</TableHead>
+                      <TableHead className="text-right">Valor</TableHead>
+                      <TableHead className="text-right">Ações</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredExpenses.map((expense) => (
+                      <TableRow key={expense.id} className="table-row-hover">
+                        <TableCell>{format(new Date(expense.date), "dd/MM/yyyy")}</TableCell>
+                        <TableCell className="font-medium">{expense.description}</TableCell>
+                        <TableCell>
+                          <Badge variant="secondary">
+                            {expenseTypeLabels[(expense.expense_type as keyof typeof expenseTypeLabels)] || "—"}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline">
+                            {expenseCategories[(expense.expense_category as keyof typeof expenseCategories)] || "—"}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline">
+                            {paymentMethodLabels[(expense.payment_method as keyof typeof paymentMethodLabels)] || "—"}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Badge className="bg-destructive/15 text-destructive hover:bg-destructive/20">
+                            -{formatCurrency(Number(expense.amount))}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex items-center justify-end gap-1">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleEdit(expense)}
+                              className="h-8 w-8"
+                            >
+                              <Edit2 className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleDelete(expense.id)}
+                              className="h-8 w-8 text-destructive hover:text-destructive"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </>
           ) : (
             <div className="text-center py-12">
               <p className="text-muted-foreground mb-4">Nenhuma despesa encontrada</p>
