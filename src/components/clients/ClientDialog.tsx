@@ -209,6 +209,23 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
           .update(payload)
           .eq("id", client.id);
         if (error) throw error;
+
+        // Update auto-generated transaction description if client name or plan changed
+        const planName = data.plan === "basico" ? "Básico" : data.plan === "intermediario" ? "Intermediário" : "Completo";
+        const newDescription = `Contrato - ${data.full_name} - Plano ${planName}`;
+        
+        const { error: transactionError } = await supabase
+          .from("transactions")
+          .update({ 
+            description: newDescription,
+            amount: data.plan_value || 0,
+          })
+          .eq("client_id", client.id)
+          .eq("is_auto_generated", true);
+        
+        if (transactionError) {
+          console.error("Error updating transaction:", transactionError);
+        }
       } else {
         // Create client and get the ID and created_at
         const { data: newClient, error: clientError } = await supabase

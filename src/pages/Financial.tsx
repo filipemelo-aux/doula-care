@@ -40,7 +40,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
-import { format } from "date-fns";
+import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { Wallet, Calendar, Clock } from "lucide-react";
@@ -537,7 +537,7 @@ export default function Financial() {
 
                       {/* Info: Client + Date */}
                       <p className="text-xs text-muted-foreground truncate">
-                        {transaction.clients?.full_name || "—"} • {format(new Date(transaction.date), "dd/MM/yy")}
+                        {transaction.clients?.full_name || "—"} • {format(parseISO(transaction.date), "dd/MM/yy")}
                       </p>
 
                       {/* Values: Grid layout - compact */}
@@ -702,7 +702,7 @@ export default function Financial() {
                       return (
                         <TableRow key={transaction.id} className="table-row-hover">
                           <TableCell className="whitespace-nowrap">
-                            {format(new Date(transaction.date), "dd/MM/yyyy")}
+                            {format(parseISO(transaction.date), "dd/MM/yyyy")}
                           </TableCell>
                           <TableCell className="font-medium max-w-[200px]">
                             <div className="flex items-center gap-2">
