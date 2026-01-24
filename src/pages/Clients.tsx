@@ -53,10 +53,7 @@ const paymentStatusLabels = {
 const formatClientName = (fullName: string) => {
   const names = fullName.split(" ").filter(n => n.length > 0);
   if (names.length <= 2) return fullName;
-  
-  const firstTwo = names.slice(0, 2).join(" ");
-  const abbreviated = names.slice(2).map(n => `${n[0]}.`).join(" ");
-  return `${firstTwo} ${abbreviated}`;
+  return `${names[0]} ${names[1]}...`;
 };
 
 export default function Clients() {
