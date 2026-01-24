@@ -35,7 +35,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, TrendingDown, Search, Trash2 } from "lucide-react";
+import { Plus, TrendingDown, Search, Trash2, Edit2 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -54,21 +54,54 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import type { Tables } from "@/integrations/supabase/types";
+
+type Transaction = Tables<"transactions">;
+
+const expenseTypeLabels = {
+  material_trabalho: "Material de Trabalho",
+  servicos_contratados: "Serviços Contratados",
+};
 
 const expenseCategories = {
-  materiais: "Materiais",
-  transporte: "Transporte",
+  social_media: "Social Media",
+  filmmaker: "Filmmaker",
   marketing: "Marketing",
+  material_hospitalar: "Material Hospitalar",
+  material_escritorio: "Material de Escritório",
+  transporte: "Transporte",
   formacao: "Formação",
   equipamentos: "Equipamentos",
+  servicos_terceiros: "Serviços Terceiros",
   outros: "Outros",
+};
+
+const paymentMethodLabels = {
+  pix: "Pix",
+  cartao: "Cartão",
+  dinheiro: "Dinheiro",
+  transferencia: "Transferência",
+  boleto: "Boleto",
 };
 
 const expenseSchema = z.object({
   description: z.string().min(2, "Descrição obrigatória").max(200),
   amount: z.number().min(0.01, "Valor deve ser maior que zero"),
   date: z.string().min(1, "Data obrigatória"),
-  expense_category: z.enum(["materiais", "transporte", "marketing", "formacao", "equipamentos", "outros"]),
+  expense_type: z.enum(["material_trabalho", "servicos_contratados"]),
+  expense_category: z.enum([
+    "social_media",
+    "filmmaker",
+    "marketing",
+    "material_hospitalar",
+    "material_escritorio",
+    "transporte",
+    "formacao",
+    "equipamentos",
+    "servicos_terceiros",
+    "outros",
+  ]),
+  payment_method: z.enum(["pix", "cartao", "dinheiro", "transferencia", "boleto"]),
   notes: z.string().optional(),
 });
 
@@ -79,6 +112,7 @@ export default function Expenses() {
   const [search, setSearch] = useState("");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [expenseToDelete, setExpenseToDelete] = useState<string | null>(null);
+  const [selectedExpense, setSelectedExpense] = useState<Transaction | null>(null);
 
   const queryClient = useQueryClient();
 
@@ -88,7 +122,9 @@ export default function Expenses() {
       description: "",
       amount: 0,
       date: format(new Date(), "yyyy-MM-dd"),
+      expense_type: "material_trabalho",
       expense_category: "outros",
+      payment_method: "pix",
       notes: "",
     },
   });
@@ -110,11 +146,13 @@ export default function Expenses() {
   const createMutation = useMutation({
     mutationFn: async (data: ExpenseFormData) => {
       const { error } = await supabase.from("transactions").insert({
-        type: "despesa",
+        type: "despesa" as const,
         description: data.description,
         amount: data.amount,
         date: data.date,
+        expense_type: data.expense_type,
         expense_category: data.expense_category,
+        payment_method: data.payment_method,
         notes: data.notes || null,
       });
       if (error) throw error;
@@ -125,9 +163,39 @@ export default function Expenses() {
       toast.success("Despesa registrada!");
       setDialogOpen(false);
       form.reset();
+      setSelectedExpense(null);
     },
     onError: () => {
       toast.error("Erro ao registrar despesa");
+    },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: async ({ id, ...data }: ExpenseFormData & { id: string }) => {
+      const { error } = await supabase
+        .from("transactions")
+        .update({
+          description: data.description,
+          amount: data.amount,
+          date: data.date,
+          expense_type: data.expense_type,
+          expense_category: data.expense_category,
+          payment_method: data.payment_method,
+          notes: data.notes || null,
+        })
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["transactions"] });
+      queryClient.invalidateQueries({ queryKey: ["monthly-transactions"] });
+      toast.success("Despesa atualizada!");
+      setDialogOpen(false);
+      form.reset();
+      setSelectedExpense(null);
+    },
+    onError: () => {
+      toast.error("Erro ao atualizar despesa");
     },
   });
 
@@ -147,7 +215,25 @@ export default function Expenses() {
   });
 
   const onSubmit = (data: ExpenseFormData) => {
-    createMutation.mutate(data);
+    if (selectedExpense) {
+      updateMutation.mutate({ ...data, id: selectedExpense.id });
+    } else {
+      createMutation.mutate(data);
+    }
+  };
+
+  const handleEdit = (expense: Transaction) => {
+    setSelectedExpense(expense);
+    form.reset({
+      description: expense.description,
+      amount: Number(expense.amount),
+      date: expense.date,
+      expense_type: (expense.expense_type as "material_trabalho" | "servicos_contratados") || "material_trabalho",
+      expense_category: (expense.expense_category as keyof typeof expenseCategories) || "outros",
+      payment_method: (expense.payment_method as keyof typeof paymentMethodLabels) || "pix",
+      notes: expense.notes || "",
+    });
+    setDialogOpen(true);
   };
 
   const handleDelete = (id: string) => {
@@ -163,12 +249,25 @@ export default function Expenses() {
     }
   };
 
+  const handleOpenDialog = () => {
+    setSelectedExpense(null);
+    form.reset({
+      description: "",
+      amount: 0,
+      date: format(new Date(), "yyyy-MM-dd"),
+      expense_type: "material_trabalho",
+      expense_category: "outros",
+      payment_method: "pix",
+      notes: "",
+    });
+    setDialogOpen(true);
+  };
+
   const filteredExpenses = expenses?.filter((e) =>
     e.description.toLowerCase().includes(search.toLowerCase())
   );
 
-  const totalExpenses =
-    expenses?.reduce((sum, e) => sum + Number(e.amount), 0) || 0;
+  const totalExpenses = expenses?.reduce((sum, e) => sum + Number(e.amount), 0) || 0;
 
   const thisMonthExpenses =
     expenses
@@ -181,6 +280,15 @@ export default function Expenses() {
         );
       })
       .reduce((sum, e) => sum + Number(e.amount), 0) || 0;
+
+  // Group by category for summary
+  const categoryTotals = expenses?.reduce((acc, e) => {
+    const cat = e.expense_category || "outros";
+    acc[cat] = (acc[cat] || 0) + Number(e.amount);
+    return acc;
+  }, {} as Record<string, number>) || {};
+
+  const topCategory = Object.entries(categoryTotals).sort((a, b) => b[1] - a[1])[0];
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("pt-BR", {
@@ -195,16 +303,16 @@ export default function Expenses() {
       <div className="page-header flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="page-title">Despesas</h1>
-          <p className="page-description">Controle suas despesas</p>
+          <p className="page-description">Controle suas despesas e gastos</p>
         </div>
-        <Button onClick={() => setDialogOpen(true)} className="gap-2">
+        <Button onClick={handleOpenDialog} className="gap-2">
           <Plus className="w-4 h-4" />
           Nova Despesa
         </Button>
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <StatCard
           title="Despesas Total"
           value={formatCurrency(totalExpenses)}
@@ -224,6 +332,19 @@ export default function Expenses() {
           subtitle="Total de despesas"
           icon={TrendingDown}
         />
+        {topCategory && (
+          <Card className="stat-card">
+            <div className="space-y-2">
+              <p className="text-sm text-muted-foreground">Maior Categoria</p>
+              <p className="text-lg font-semibold text-foreground">
+                {expenseCategories[topCategory[0] as keyof typeof expenseCategories] || topCategory[0]}
+              </p>
+              <p className="text-2xl font-bold text-primary">
+                {formatCurrency(topCategory[1])}
+              </p>
+            </div>
+          </Card>
+        )}
       </div>
 
       {/* Search */}
@@ -250,9 +371,7 @@ export default function Expenses() {
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <div className="text-center py-8 text-muted-foreground">
-              Carregando...
-            </div>
+            <div className="text-center py-8 text-muted-foreground">Carregando...</div>
           ) : filteredExpenses && filteredExpenses.length > 0 ? (
             <div className="overflow-x-auto">
               <Table>
@@ -260,7 +379,9 @@ export default function Expenses() {
                   <TableRow>
                     <TableHead>Data</TableHead>
                     <TableHead>Descrição</TableHead>
+                    <TableHead>Tipo</TableHead>
                     <TableHead>Categoria</TableHead>
+                    <TableHead>Pagamento</TableHead>
                     <TableHead className="text-right">Valor</TableHead>
                     <TableHead className="text-right">Ações</TableHead>
                   </TableRow>
@@ -268,15 +389,21 @@ export default function Expenses() {
                 <TableBody>
                   {filteredExpenses.map((expense) => (
                     <TableRow key={expense.id} className="table-row-hover">
+                      <TableCell>{format(new Date(expense.date), "dd/MM/yyyy")}</TableCell>
+                      <TableCell className="font-medium">{expense.description}</TableCell>
                       <TableCell>
-                        {format(new Date(expense.date), "dd/MM/yyyy")}
-                      </TableCell>
-                      <TableCell className="font-medium">
-                        {expense.description}
+                        <Badge variant="secondary">
+                          {expenseTypeLabels[(expense.expense_type as keyof typeof expenseTypeLabels)] || "—"}
+                        </Badge>
                       </TableCell>
                       <TableCell>
                         <Badge variant="outline">
-                          {expenseCategories[expense.expense_category as keyof typeof expenseCategories] || "—"}
+                          {expenseCategories[(expense.expense_category as keyof typeof expenseCategories)] || "—"}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline">
+                          {paymentMethodLabels[(expense.payment_method as keyof typeof paymentMethodLabels)] || "—"}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right">
@@ -285,14 +412,24 @@ export default function Expenses() {
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleDelete(expense.id)}
-                          className="h-8 w-8 text-destructive hover:text-destructive"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                        <div className="flex items-center justify-end gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleEdit(expense)}
+                            className="h-8 w-8"
+                          >
+                            <Edit2 className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleDelete(expense.id)}
+                            className="h-8 w-8 text-destructive hover:text-destructive"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -301,10 +438,8 @@ export default function Expenses() {
             </div>
           ) : (
             <div className="text-center py-12">
-              <p className="text-muted-foreground mb-4">
-                Nenhuma despesa encontrada
-              </p>
-              <Button onClick={() => setDialogOpen(true)} variant="outline">
+              <p className="text-muted-foreground mb-4">Nenhuma despesa encontrada</p>
+              <Button onClick={handleOpenDialog} variant="outline">
                 <Plus className="w-4 h-4 mr-2" />
                 Registrar primeira despesa
               </Button>
@@ -315,10 +450,10 @@ export default function Expenses() {
 
       {/* Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent>
+        <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle className="font-display text-xl">
-              Nova Despesa
+              {selectedExpense ? "Editar Despesa" : "Nova Despesa"}
             </DialogTitle>
           </DialogHeader>
           <Form {...form}>
@@ -336,6 +471,58 @@ export default function Expenses() {
                   </FormItem>
                 )}
               />
+
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="expense_type"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Tipo de Despesa *</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger className="input-field">
+                            <SelectValue />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {Object.entries(expenseTypeLabels).map(([value, label]) => (
+                            <SelectItem key={value} value={value}>
+                              {label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="expense_category"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Categoria *</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger className="input-field">
+                            <SelectValue />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {Object.entries(expenseCategories).map(([value, label]) => (
+                            <SelectItem key={value} value={value}>
+                              {label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
               <div className="grid grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
@@ -371,12 +558,13 @@ export default function Expenses() {
                   )}
                 />
               </div>
+
               <FormField
                 control={form.control}
-                name="expense_category"
+                name="payment_method"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Categoria *</FormLabel>
+                    <FormLabel>Forma de Pagamento *</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger className="input-field">
@@ -384,7 +572,7 @@ export default function Expenses() {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {Object.entries(expenseCategories).map(([value, label]) => (
+                        {Object.entries(paymentMethodLabels).map(([value, label]) => (
                           <SelectItem key={value} value={value}>
                             {label}
                           </SelectItem>
@@ -395,6 +583,7 @@ export default function Expenses() {
                   </FormItem>
                 )}
               />
+
               <FormField
                 control={form.control}
                 name="notes"
@@ -402,25 +591,26 @@ export default function Expenses() {
                   <FormItem>
                     <FormLabel>Observações</FormLabel>
                     <FormControl>
-                      <Textarea
-                        {...field}
-                        className="min-h-[80px] resize-none"
-                      />
+                      <Textarea {...field} className="min-h-[80px] resize-none" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
+
               <div className="flex justify-end gap-3 pt-4">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setDialogOpen(false)}
-                >
+                <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
                   Cancelar
                 </Button>
-                <Button type="submit" disabled={createMutation.isPending}>
-                  {createMutation.isPending ? "Salvando..." : "Registrar"}
+                <Button
+                  type="submit"
+                  disabled={createMutation.isPending || updateMutation.isPending}
+                >
+                  {createMutation.isPending || updateMutation.isPending
+                    ? "Salvando..."
+                    : selectedExpense
+                    ? "Atualizar"
+                    : "Registrar"}
                 </Button>
               </div>
             </form>
@@ -434,8 +624,7 @@ export default function Expenses() {
           <AlertDialogHeader>
             <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
             <AlertDialogDescription>
-              Tem certeza que deseja excluir esta despesa? Esta ação não pode
-              ser desfeita.
+              Tem certeza que deseja excluir esta despesa? Esta ação não pode ser desfeita.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

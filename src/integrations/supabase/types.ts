@@ -93,6 +93,7 @@ export type Database = {
           description: string | null
           features: string[] | null
           id: string
+          is_active: boolean
           name: string
           plan_type: Database["public"]["Enums"]["plan_type"]
           updated_at: string
@@ -103,6 +104,7 @@ export type Database = {
           description?: string | null
           features?: string[] | null
           id?: string
+          is_active?: boolean
           name: string
           plan_type: Database["public"]["Enums"]["plan_type"]
           updated_at?: string
@@ -113,6 +115,7 @@ export type Database = {
           description?: string | null
           features?: string[] | null
           id?: string
+          is_active?: boolean
           name?: string
           plan_type?: Database["public"]["Enums"]["plan_type"]
           updated_at?: string
@@ -129,8 +132,14 @@ export type Database = {
           expense_category:
             | Database["public"]["Enums"]["expense_category"]
             | null
+          expense_type: Database["public"]["Enums"]["expense_type"] | null
           id: string
+          is_auto_generated: boolean | null
           notes: string | null
+          payment_method:
+            | Database["public"]["Enums"]["transaction_payment_method"]
+            | null
+          plan_id: string | null
           type: Database["public"]["Enums"]["transaction_type"]
           updated_at: string
         }
@@ -143,8 +152,14 @@ export type Database = {
           expense_category?:
             | Database["public"]["Enums"]["expense_category"]
             | null
+          expense_type?: Database["public"]["Enums"]["expense_type"] | null
           id?: string
+          is_auto_generated?: boolean | null
           notes?: string | null
+          payment_method?:
+            | Database["public"]["Enums"]["transaction_payment_method"]
+            | null
+          plan_id?: string | null
           type: Database["public"]["Enums"]["transaction_type"]
           updated_at?: string
         }
@@ -157,8 +172,14 @@ export type Database = {
           expense_category?:
             | Database["public"]["Enums"]["expense_category"]
             | null
+          expense_type?: Database["public"]["Enums"]["expense_type"] | null
           id?: string
+          is_auto_generated?: boolean | null
           notes?: string | null
+          payment_method?:
+            | Database["public"]["Enums"]["transaction_payment_method"]
+            | null
+          plan_id?: string | null
           type?: Database["public"]["Enums"]["transaction_type"]
           updated_at?: string
         }
@@ -168,6 +189,13 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transactions_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "plan_settings"
             referencedColumns: ["id"]
           },
         ]
@@ -182,15 +210,26 @@ export type Database = {
     Enums: {
       client_status: "tentante" | "gestante" | "lactante"
       expense_category:
-        | "materiais"
-        | "transporte"
+        | "social_media"
+        | "filmmaker"
         | "marketing"
+        | "material_hospitalar"
+        | "material_escritorio"
+        | "transporte"
         | "formacao"
         | "equipamentos"
+        | "servicos_terceiros"
         | "outros"
+      expense_type: "material_trabalho" | "servicos_contratados"
       payment_method: "pix" | "cartao" | "dinheiro" | "transferencia"
       payment_status: "pendente" | "pago" | "parcial"
       plan_type: "basico" | "intermediario" | "completo"
+      transaction_payment_method:
+        | "pix"
+        | "cartao"
+        | "dinheiro"
+        | "transferencia"
+        | "boleto"
       transaction_type: "receita" | "despesa"
     }
     CompositeTypes: {
@@ -321,16 +360,28 @@ export const Constants = {
     Enums: {
       client_status: ["tentante", "gestante", "lactante"],
       expense_category: [
-        "materiais",
-        "transporte",
+        "social_media",
+        "filmmaker",
         "marketing",
+        "material_hospitalar",
+        "material_escritorio",
+        "transporte",
         "formacao",
         "equipamentos",
+        "servicos_terceiros",
         "outros",
       ],
+      expense_type: ["material_trabalho", "servicos_contratados"],
       payment_method: ["pix", "cartao", "dinheiro", "transferencia"],
       payment_status: ["pendente", "pago", "parcial"],
       plan_type: ["basico", "intermediario", "completo"],
+      transaction_payment_method: [
+        "pix",
+        "cartao",
+        "dinheiro",
+        "transferencia",
+        "boleto",
+      ],
       transaction_type: ["receita", "despesa"],
     },
   },
