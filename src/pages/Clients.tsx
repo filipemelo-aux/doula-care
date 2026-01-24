@@ -155,7 +155,7 @@ export default function Clients() {
         </CardContent>
       </Card>
 
-      {/* Table */}
+      {/* Clients List */}
       <Card className="card-glass">
         <CardHeader>
           <CardTitle className="text-lg font-semibold text-foreground">
@@ -168,77 +168,137 @@ export default function Clients() {
               Carregando...
             </div>
           ) : filteredClients && filteredClients.length > 0 ? (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Nome</TableHead>
-                    <TableHead>Telefone</TableHead>
-                    <TableHead>Situação</TableHead>
-                    <TableHead>Plano</TableHead>
-                    <TableHead>Pagamento</TableHead>
-                    <TableHead className="text-right">Ações</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredClients.map((client) => (
-                    <TableRow key={client.id} className="table-row-hover">
-                      <TableCell className="font-medium">
-                        {client.full_name}
-                      </TableCell>
-                      <TableCell>{client.phone}</TableCell>
-                      <TableCell>
-                        <Badge
-                          variant="outline"
-                          className={cn("badge-status border-0", `badge-${client.status}`)}
+            <>
+              {/* Mobile Cards */}
+              <div className="block lg:hidden space-y-3">
+                {filteredClients.map((client) => (
+                  <Card key={client.id} className="p-3 space-y-2">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-sm truncate">{client.full_name}</p>
+                        <p className="text-xs text-muted-foreground">{client.phone}</p>
+                      </div>
+                      <div className="flex items-center gap-1 flex-shrink-0">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleView(client)}
+                          className="h-7 w-7"
                         >
-                          {statusLabels[client.status as keyof typeof statusLabels]}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
+                          <Eye className="h-3.5 w-3.5" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleEdit(client)}
+                          className="h-7 w-7"
+                        >
+                          <Edit2 className="h-3.5 w-3.5" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleDelete(client)}
+                          className="h-7 w-7 text-destructive hover:text-destructive"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <Badge
+                        variant="outline"
+                        className={cn("badge-status border-0 text-xs", `badge-${client.status}`)}
+                      >
+                        {statusLabels[client.status as keyof typeof statusLabels]}
+                      </Badge>
+                      <Badge variant="outline" className="text-xs">
                         {planLabels[client.plan as keyof typeof planLabels]}
-                      </TableCell>
-                      <TableCell>
-                        <Badge
-                          variant="outline"
-                          className={cn("badge-status border-0", `badge-${client.payment_status}`)}
-                        >
-                          {paymentStatusLabels[client.payment_status as keyof typeof paymentStatusLabels]}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleView(client)}
-                            className="h-8 w-8"
-                          >
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleEdit(client)}
-                            className="h-8 w-8"
-                          >
-                            <Edit2 className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleDelete(client)}
-                            className="h-8 w-8 text-destructive hover:text-destructive"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
+                      </Badge>
+                      <Badge
+                        variant="outline"
+                        className={cn("badge-status border-0 text-xs", `badge-${client.payment_status}`)}
+                      >
+                        {paymentStatusLabels[client.payment_status as keyof typeof paymentStatusLabels]}
+                      </Badge>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+
+              {/* Desktop Table */}
+              <div className="hidden lg:block">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Nome</TableHead>
+                      <TableHead>Telefone</TableHead>
+                      <TableHead>Situação</TableHead>
+                      <TableHead>Plano</TableHead>
+                      <TableHead>Pagamento</TableHead>
+                      <TableHead className="text-right">Ações</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredClients.map((client) => (
+                      <TableRow key={client.id} className="table-row-hover">
+                        <TableCell className="font-medium">
+                          {client.full_name}
+                        </TableCell>
+                        <TableCell>{client.phone}</TableCell>
+                        <TableCell>
+                          <Badge
+                            variant="outline"
+                            className={cn("badge-status border-0", `badge-${client.status}`)}
+                          >
+                            {statusLabels[client.status as keyof typeof statusLabels]}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          {planLabels[client.plan as keyof typeof planLabels]}
+                        </TableCell>
+                        <TableCell>
+                          <Badge
+                            variant="outline"
+                            className={cn("badge-status border-0", `badge-${client.payment_status}`)}
+                          >
+                            {paymentStatusLabels[client.payment_status as keyof typeof paymentStatusLabels]}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex items-center justify-end gap-2">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleView(client)}
+                              className="h-8 w-8"
+                            >
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleEdit(client)}
+                              className="h-8 w-8"
+                            >
+                              <Edit2 className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleDelete(client)}
+                              className="h-8 w-8 text-destructive hover:text-destructive"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </>
           ) : (
             <div className="text-center py-12">
               <p className="text-muted-foreground mb-4">
