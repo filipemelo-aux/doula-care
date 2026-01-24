@@ -20,7 +20,7 @@ export function calculateCurrentPregnancyWeeks(
     // 40 weeks = 280 days, current days = 280 - daysUntilDpp
     const currentDays = 280 - daysUntilDpp;
     const currentWeeks = Math.floor(currentDays / 7);
-    return Math.max(0, Math.min(45, currentWeeks)); // Clamp between 0 and 45
+    return Math.max(0, Math.min(42, currentWeeks)); // Clamp between 0 and 42
   }
 
   // Fallback to calculation based on initial weeks and set date
