@@ -11,6 +11,7 @@ interface StatCardProps {
     value: number;
     isPositive: boolean;
   };
+  onClick?: () => void;
 }
 
 export function StatCard({
@@ -20,14 +21,27 @@ export function StatCard({
   icon: Icon,
   variant = "default",
   trend,
+  onClick,
 }: StatCardProps) {
+  const isClickable = !!onClick;
+
   return (
     <div
       className={cn(
         "stat-card overflow-hidden",
         variant === "primary" && "stat-card-primary",
-        variant === "success" && "stat-card-success"
+        variant === "success" && "stat-card-success",
+        isClickable && "cursor-pointer transition-all hover:scale-[1.02] hover:shadow-lg active:scale-[0.98]"
       )}
+      onClick={onClick}
+      role={isClickable ? "button" : undefined}
+      tabIndex={isClickable ? 0 : undefined}
+      onKeyDown={isClickable ? (e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onClick?.();
+        }
+      } : undefined}
     >
       <div className="flex items-start justify-between mb-3 lg:mb-4">
         <div

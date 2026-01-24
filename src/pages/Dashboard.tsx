@@ -7,10 +7,13 @@ import { FinancialOverview } from "@/components/dashboard/FinancialOverview";
 import { TopPlansCard } from "@/components/dashboard/TopPlansCard";
 import { BirthAlert } from "@/components/dashboard/BirthAlert";
 import { PeriodFilter, PeriodOption } from "@/components/dashboard/PeriodFilter";
+import { ClientsListDialog } from "@/components/dashboard/ClientsListDialog";
 import { Users, Baby, Heart, Wallet } from "lucide-react";
 
 export default function Dashboard() {
   const [period, setPeriod] = useState<PeriodOption>("month");
+  const [gestantesDialogOpen, setGestantesDialogOpen] = useState(false);
+  const [lactantesDialogOpen, setLactantesDialogOpen] = useState(false);
 
   const { data: stats } = useQuery({
     queryKey: ["dashboard-stats"],
@@ -79,12 +82,14 @@ export default function Dashboard() {
           value={stats?.gestantes || 0}
           subtitle="Em acompanhamento"
           icon={Baby}
+          onClick={() => setGestantesDialogOpen(true)}
         />
         <StatCard
           title="Lactantes"
           value={stats?.lactantes || 0}
           subtitle="Pós-parto"
           icon={Heart}
+          onClick={() => setLactantesDialogOpen(true)}
         />
         <StatCard
           title="Receita Total"
@@ -106,6 +111,18 @@ export default function Dashboard() {
         <RecentClients />
         <TopPlansCard />
       </div>
+
+      {/* Dialogs */}
+      <ClientsListDialog
+        open={gestantesDialogOpen}
+        onOpenChange={setGestantesDialogOpen}
+        status="gestante"
+      />
+      <ClientsListDialog
+        open={lactantesDialogOpen}
+        onOpenChange={setLactantesDialogOpen}
+        status="lactante"
+      />
     </div>
   );
 }
