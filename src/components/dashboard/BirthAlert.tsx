@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AlertTriangle, Baby } from "lucide-react";
+import { calculateCurrentPregnancyWeeks } from "@/lib/pregnancy";
 
 const formatClientName = (fullName: string, maxLength = 20) => {
   if (fullName.length <= maxLength) return fullName;
@@ -16,13 +17,24 @@ export function BirthAlert() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("clients")
-        .select("id, full_name, pregnancy_weeks, phone")
+        .select("id, full_name, pregnancy_weeks, pregnancy_weeks_set_at, phone")
         .eq("status", "gestante")
-        .gte("pregnancy_weeks", 37)
+        .not("pregnancy_weeks", "is", null)
         .order("pregnancy_weeks", { ascending: false });
 
       if (error) throw error;
-      return data;
+      
+      // Calculate current weeks and filter those >= 37
+      return data
+        .map(client => ({
+          ...client,
+          current_weeks: calculateCurrentPregnancyWeeks(
+            client.pregnancy_weeks,
+            client.pregnancy_weeks_set_at
+          )
+        }))
+        .filter(client => client.current_weeks !== null && client.current_weeks >= 37)
+        .sort((a, b) => (b.current_weeks || 0) - (a.current_weeks || 0));
     },
   });
 
@@ -81,12 +93,12 @@ export function BirthAlert() {
               <Badge 
                 variant="outline" 
                 className={`flex-shrink-0 text-[10px] px-1.5 h-5 border-0 ${
-                  client.pregnancy_weeks >= 40 
+                  (client.current_weeks || 0) >= 40 
                     ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400" 
                     : "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400"
                 }`}
               >
-                {client.pregnancy_weeks} sem
+                {client.current_weeks} sem
               </Badge>
             </div>
           ))}

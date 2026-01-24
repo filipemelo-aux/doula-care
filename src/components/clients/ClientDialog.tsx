@@ -164,6 +164,11 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
 
   const mutation = useMutation({
     mutationFn: async (data: ClientFormData) => {
+      // Check if pregnancy weeks changed to update the reference date
+      const pregnancyWeeksChanged = client 
+        ? data.pregnancy_weeks !== client.pregnancy_weeks 
+        : true;
+
       const payload = {
         full_name: data.full_name,
         phone: data.phone,
@@ -178,6 +183,9 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
         companion_phone: data.companion_phone || null,
         status: data.status,
         pregnancy_weeks: data.status === "gestante" ? data.pregnancy_weeks : null,
+        pregnancy_weeks_set_at: pregnancyWeeksChanged && data.status === "gestante" 
+          ? new Date().toISOString() 
+          : undefined,
         plan: data.plan,
         payment_method: data.payment_method,
         payment_status: data.payment_status,
