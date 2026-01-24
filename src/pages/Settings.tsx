@@ -181,7 +181,7 @@ export default function Settings() {
       {/* Current User Info */}
       <Card className="card-glass border-primary/20">
         <CardContent className="pt-6">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-4">
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center">
                 <User className="w-6 h-6 text-primary-foreground" />
@@ -195,7 +195,7 @@ export default function Settings() {
                 </p>
               </div>
             </div>
-            <Button variant="outline" onClick={signOut} className="gap-2">
+            <Button variant="outline" onClick={signOut} className="gap-2 w-full sm:w-auto">
               <LogOut className="w-4 h-4" />
               Sair
             </Button>
