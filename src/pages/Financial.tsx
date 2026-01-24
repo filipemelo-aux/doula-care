@@ -486,6 +486,13 @@ export default function Financial() {
                     }).format(value);
                   };
 
+                  // Get first name only
+                  const firstName = transaction.clients?.full_name?.split(" ")[0]?.toUpperCase() || "";
+                  const planName = transaction.plan_settings?.name || "";
+                  const compactDesc = firstName && planName 
+                    ? `Contrato - ${firstName} - ${planName}`
+                    : transaction.description;
+
                   return (
                     <Card key={transaction.id} className="p-2.5 space-y-1.5 w-full max-w-full">
                       {/* Header: Description + Actions */}
@@ -494,7 +501,7 @@ export default function Financial() {
                           {transaction.is_auto_generated && (
                             <Zap className="w-3 h-3 text-warning flex-shrink-0" />
                           )}
-                          <p className="font-medium text-xs truncate">{transaction.description}</p>
+                          <p className="font-medium text-xs truncate">{compactDesc}</p>
                         </div>
                         <div className="flex items-center flex-shrink-0">
                           <Button
