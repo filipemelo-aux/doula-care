@@ -1,4 +1,4 @@
-import { NavLink, useLocation } from "react-router-dom";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
   Users,
@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button";
 interface SidebarProps {
   isOpen: boolean;
   onToggle: () => void;
+  onNavigate?: () => void;
 }
 
 const navItems = [
@@ -28,8 +29,17 @@ const navItems = [
   { to: "/configuracoes", icon: Settings, label: "Configurações" },
 ];
 
-export function Sidebar({ isOpen, onToggle }: SidebarProps) {
+export function Sidebar({ isOpen, onToggle, onNavigate }: SidebarProps) {
   const location = useLocation();
+  const navigate = useNavigate();
+
+  const handleNavClick = (to: string) => {
+    navigate(to);
+    // Collapse sidebar on mobile after navigation
+    if (onNavigate) {
+      onNavigate();
+    }
+  };
 
   return (
     <aside
@@ -77,11 +87,11 @@ export function Sidebar({ isOpen, onToggle }: SidebarProps) {
         {navItems.map((item) => {
           const isActive = location.pathname === item.to;
           return (
-            <NavLink
+            <button
               key={item.to}
-              to={item.to}
+              onClick={() => handleNavClick(item.to)}
               className={cn(
-                "nav-link",
+                "nav-link w-full text-left",
                 isActive && "active",
                 !isOpen && "lg:justify-center lg:px-0"
               )}
@@ -91,7 +101,7 @@ export function Sidebar({ isOpen, onToggle }: SidebarProps) {
               <span className={cn("transition-opacity", !isOpen && "lg:hidden")}>
                 {item.label}
               </span>
-            </NavLink>
+            </button>
           );
         })}
       </nav>
