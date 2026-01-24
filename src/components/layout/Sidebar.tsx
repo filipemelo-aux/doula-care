@@ -73,12 +73,20 @@ export function Sidebar({ isOpen, onToggle, onNavigate }: SidebarProps) {
         </Button>
       </div>
 
-      {/* Collapsed Logo */}
+      {/* Collapsed Logo and Expand Button */}
       {!isOpen && (
-        <div className="hidden lg:flex h-20 absolute top-0 left-0 w-20 items-center justify-center">
+        <div className="hidden lg:flex h-20 absolute top-0 left-0 w-20 items-center justify-between px-2">
           <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center">
             <Heart className="w-5 h-5 text-primary-foreground" />
           </div>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onToggle}
+            className="h-8 w-8 text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent"
+          >
+            <ChevronLeft className="h-4 w-4 rotate-180" />
+          </Button>
         </div>
       )}
 

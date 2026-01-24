@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,7 +13,9 @@ import type { Tables } from "@/integrations/supabase/types";
 
 type Client = Tables<"clients">;
 
-const formatClientName = (fullName: string, maxLength = 20) => {
+const formatClientName = (fullName: string, isMobile: boolean) => {
+  if (!isMobile) return fullName;
+  const maxLength = 20;
   if (fullName.length <= maxLength) return fullName;
   return `${fullName.slice(0, maxLength)}...`;
 };
@@ -20,6 +23,7 @@ const formatClientName = (fullName: string, maxLength = 20) => {
 export function BirthAlert() {
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [birthDialogOpen, setBirthDialogOpen] = useState(false);
+  const isMobile = useIsMobile();
 
   const { data: clients, isLoading } = useQuery({
     queryKey: ["birth-alert-clients"],
@@ -132,16 +136,16 @@ export function BirthAlert() {
                     }`} />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-foreground truncate">
-                      {formatClientName(client.full_name)}
+                    <p className="text-sm font-medium text-foreground truncate lg:whitespace-normal">
+                      {formatClientName(client.full_name, isMobile)}
                     </p>
                     <p className="text-xs text-muted-foreground">{client.phone}</p>
                   </div>
                 </div>
-                <div className="flex items-center justify-end gap-2 mt-2">
+                <div className="flex items-center justify-end gap-2 lg:gap-3 mt-2">
                   <Badge 
                     variant="outline" 
-                    className={`text-[10px] px-1.5 h-5 border-0 ${
+                    className={`text-[10px] lg:text-xs px-1.5 lg:px-2.5 h-5 lg:h-6 border-0 ${
                       client.is_post_term
                         ? "bg-red-200 text-red-800 dark:bg-red-800/50 dark:text-red-300"
                         : (client.current_weeks || 0) >= 40 
@@ -155,10 +159,10 @@ export function BirthAlert() {
                   <Button
                     size="sm"
                     variant="ghost"
-                    className="h-6 px-2 text-xs hover:bg-primary/10"
+                    className="h-6 lg:h-8 px-2 lg:px-3 text-xs lg:text-sm hover:bg-primary/10"
                     onClick={() => handleRegisterBirth(client as Client)}
                   >
-                    <CheckCircle className="h-3 w-3 mr-1" />
+                    <CheckCircle className="h-3 w-3 lg:h-4 lg:w-4 mr-1" />
                     Nasceu
                   </Button>
                 </div>
