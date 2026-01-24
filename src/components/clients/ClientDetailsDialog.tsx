@@ -117,6 +117,11 @@ export function ClientDetailsDialog({
                       {client.pregnancy_weeks} semanas
                     </span>
                   )}
+                  {client.status === "gestante" && (client as any).dpp && (
+                    <span className="text-sm text-muted-foreground">
+                      DPP: {format(new Date((client as any).dpp), "dd/MM/yyyy")}
+                    </span>
+                  )}
                 </div>
               </div>
             </div>
