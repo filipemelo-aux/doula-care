@@ -32,6 +32,7 @@ export type Database = {
           plan: Database["public"]["Enums"]["plan_type"]
           plan_value: number | null
           pregnancy_weeks: number | null
+          pregnancy_weeks_set_at: string | null
           state: string | null
           status: Database["public"]["Enums"]["client_status"]
           street: string | null
@@ -55,6 +56,7 @@ export type Database = {
           plan?: Database["public"]["Enums"]["plan_type"]
           plan_value?: number | null
           pregnancy_weeks?: number | null
+          pregnancy_weeks_set_at?: string | null
           state?: string | null
           status?: Database["public"]["Enums"]["client_status"]
           street?: string | null
@@ -78,6 +80,7 @@ export type Database = {
           plan?: Database["public"]["Enums"]["plan_type"]
           plan_value?: number | null
           pregnancy_weeks?: number | null
+          pregnancy_weeks_set_at?: string | null
           state?: string | null
           status?: Database["public"]["Enums"]["client_status"]
           street?: string | null
