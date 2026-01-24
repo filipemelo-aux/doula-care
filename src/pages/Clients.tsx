@@ -171,13 +171,11 @@ export default function Clients() {
             <>
               {/* Mobile Cards */}
               <div className="block lg:hidden space-y-1.5 p-3">
-                {filteredClients.map((client) => {
-                  const firstName = client.full_name.split(" ")[0].toUpperCase();
-                  return (
+                {filteredClients.map((client) => (
                     <Card key={client.id} className="p-2 space-y-1 w-full max-w-full overflow-hidden">
                       <div className="flex items-center justify-between gap-1">
                         <div className="flex-1 min-w-0 overflow-hidden">
-                          <p className="font-medium text-xs truncate">{firstName}</p>
+                          <p className="font-medium text-xs truncate">{client.full_name}</p>
                           <p className="text-[10px] text-muted-foreground truncate">{client.phone}</p>
                         </div>
                         <div className="flex items-center gap-0 flex-shrink-0">
@@ -225,8 +223,7 @@ export default function Clients() {
                         </Badge>
                       </div>
                     </Card>
-                  );
-                })}
+                ))}
               </div>
 
               {/* Desktop Table */}
