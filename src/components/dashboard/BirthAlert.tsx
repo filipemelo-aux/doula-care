@@ -1,10 +1,16 @@
-import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { AlertTriangle, Baby } from "lucide-react";
-import { calculateCurrentPregnancyWeeks } from "@/lib/pregnancy";
+import { AlertTriangle, Baby, CheckCircle } from "lucide-react";
+import { calculateCurrentPregnancyWeeks, calculateCurrentPregnancyDays, isPostTerm } from "@/lib/pregnancy";
+import { BirthRegistrationDialog } from "@/components/clients/BirthRegistrationDialog";
+import type { Tables } from "@/integrations/supabase/types";
+
+type Client = Tables<"clients">;
 
 const formatClientName = (fullName: string, maxLength = 20) => {
   if (fullName.length <= maxLength) return fullName;
@@ -12,13 +18,17 @@ const formatClientName = (fullName: string, maxLength = 20) => {
 };
 
 export function BirthAlert() {
+  const [selectedClient, setSelectedClient] = useState<Client | null>(null);
+  const [birthDialogOpen, setBirthDialogOpen] = useState(false);
+
   const { data: clients, isLoading } = useQuery({
     queryKey: ["birth-alert-clients"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("clients")
-        .select("id, full_name, pregnancy_weeks, pregnancy_weeks_set_at, dpp, phone")
+        .select("*")
         .eq("status", "gestante")
+        .eq("birth_occurred", false)
         .order("pregnancy_weeks", { ascending: false });
 
       if (error) throw error;
@@ -30,13 +40,25 @@ export function BirthAlert() {
           current_weeks: calculateCurrentPregnancyWeeks(
             client.pregnancy_weeks,
             client.pregnancy_weeks_set_at,
-            (client as any).dpp
-          )
+            client.dpp
+          ),
+          current_days: calculateCurrentPregnancyDays(client.dpp),
+          is_post_term: isPostTerm(client.dpp)
         }))
         .filter(client => client.current_weeks !== null && client.current_weeks >= 37)
-        .sort((a, b) => (b.current_weeks || 0) - (a.current_weeks || 0));
+        .sort((a, b) => {
+          // Sort by post-term first, then by weeks
+          if (a.is_post_term && !b.is_post_term) return -1;
+          if (!a.is_post_term && b.is_post_term) return 1;
+          return (b.current_weeks || 0) - (a.current_weeks || 0);
+        });
     },
   });
+
+  const handleRegisterBirth = (client: Client) => {
+    setSelectedClient(client);
+    setBirthDialogOpen(true);
+  };
 
   if (isLoading) {
     return (
@@ -66,44 +88,89 @@ export function BirthAlert() {
     return null;
   }
 
+  // Check if any client is post-term
+  const hasPostTerm = clients.some(c => c.is_post_term);
+
   return (
-    <Card className="border-orange-200 bg-orange-50/50 dark:border-orange-900 dark:bg-orange-950/20">
-      <CardHeader className="pb-2">
-        <CardTitle className="text-base font-semibold text-orange-700 dark:text-orange-400 flex items-center gap-2">
-          <AlertTriangle className="h-4 w-4" />
-          Parto se Aproximando
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-2">
-          {clients.map((client) => (
-            <div
-              key={client.id}
-              className="flex items-center gap-3 p-2 rounded-lg bg-white/60 dark:bg-background/40"
-            >
-              <div className="h-8 w-8 rounded-full bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center flex-shrink-0">
-                <Baby className="h-4 w-4 text-orange-600 dark:text-orange-400" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-foreground truncate">
-                  {formatClientName(client.full_name)}
-                </p>
-                <p className="text-xs text-muted-foreground">{client.phone}</p>
-              </div>
-              <Badge 
-                variant="outline" 
-                className={`flex-shrink-0 text-[10px] px-1.5 h-5 border-0 ${
-                  (client.current_weeks || 0) >= 41 
-                    ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400" 
-                    : "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400"
+    <>
+      <Card className={`border-2 transition-colors ${
+        hasPostTerm 
+          ? "border-red-300 bg-red-50/70 dark:border-red-800 dark:bg-red-950/30" 
+          : "border-orange-200 bg-orange-50/50 dark:border-orange-900 dark:bg-orange-950/20"
+      }`}>
+        <CardHeader className="pb-2">
+          <CardTitle className={`text-base font-semibold flex items-center gap-2 ${
+            hasPostTerm 
+              ? "text-red-700 dark:text-red-400" 
+              : "text-orange-700 dark:text-orange-400"
+          }`}>
+            <AlertTriangle className="h-4 w-4" />
+            {hasPostTerm ? "Atenção: Gestação Pós-Data" : "Parto se Aproximando"}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-2">
+            {clients.map((client) => (
+              <div
+                key={client.id}
+                className={`flex items-center gap-3 p-2 rounded-lg ${
+                  client.is_post_term 
+                    ? "bg-red-100/80 dark:bg-red-900/30" 
+                    : "bg-white/60 dark:bg-background/40"
                 }`}
               >
-                {client.current_weeks} sem
-              </Badge>
-            </div>
-          ))}
-        </div>
-      </CardContent>
-    </Card>
+                <div className={`h-8 w-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+                  client.is_post_term 
+                    ? "bg-red-200 dark:bg-red-800/50" 
+                    : "bg-orange-100 dark:bg-orange-900/30"
+                }`}>
+                  <Baby className={`h-4 w-4 ${
+                    client.is_post_term 
+                      ? "text-red-600 dark:text-red-400" 
+                      : "text-orange-600 dark:text-orange-400"
+                  }`} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-foreground truncate">
+                    {formatClientName(client.full_name)}
+                  </p>
+                  <p className="text-xs text-muted-foreground">{client.phone}</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Badge 
+                    variant="outline" 
+                    className={`flex-shrink-0 text-[10px] px-1.5 h-5 border-0 ${
+                      client.is_post_term
+                        ? "bg-red-200 text-red-800 dark:bg-red-800/50 dark:text-red-300"
+                        : (client.current_weeks || 0) >= 40 
+                          ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400" 
+                          : "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400"
+                    }`}
+                  >
+                    {client.current_weeks}s{client.current_days > 0 ? `${client.current_days}d` : ""}
+                    {client.is_post_term && " - Pós-Data"}
+                  </Badge>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="h-6 px-2 text-xs hover:bg-primary/10"
+                    onClick={() => handleRegisterBirth(client as Client)}
+                  >
+                    <CheckCircle className="h-3 w-3 mr-1" />
+                    Nasceu
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      <BirthRegistrationDialog
+        open={birthDialogOpen}
+        onOpenChange={setBirthDialogOpen}
+        client={selectedClient}
+      />
+    </>
   );
 }
