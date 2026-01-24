@@ -35,7 +35,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, TrendingUp, Search, Trash2, Edit2, Zap, Check, X } from "lucide-react";
+import { Plus, TrendingUp, Search, Trash2, Edit2, Zap, Check, X, CheckCircle, CreditCard, Banknote, Building2, QrCode, FileText } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -258,6 +258,23 @@ export default function Financial() {
     },
   });
 
+  const updatePaymentMethodMutation = useMutation({
+    mutationFn: async ({ id, paymentMethod }: { id: string; paymentMethod: "pix" | "cartao" | "dinheiro" | "transferencia" | "boleto" }) => {
+      const { error } = await supabase
+        .from("transactions")
+        .update({ payment_method: paymentMethod })
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["transactions"] });
+      toast.success("Forma de pagamento atualizada!");
+    },
+    onError: () => {
+      toast.error("Erro ao atualizar forma de pagamento");
+    },
+  });
+
   const handleStartEditReceived = (transaction: Transaction) => {
     setEditingId(transaction.id);
     setEditingReceivedValue(String(Number(transaction.amount_received) || 0));
@@ -272,6 +289,14 @@ export default function Financial() {
   const handleCancelEditReceived = () => {
     setEditingId(null);
     setEditingReceivedValue("");
+  };
+
+  const handleMarkAsPaid = (transactionId: string, totalAmount: number) => {
+    updateReceivedMutation.mutate({ id: transactionId, amountReceived: totalAmount });
+  };
+
+  const handleChangePaymentMethod = (transactionId: string, method: "pix" | "cartao" | "dinheiro" | "transferencia" | "boleto") => {
+    updatePaymentMethodMutation.mutate({ id: transactionId, paymentMethod: method });
   };
 
   const onSubmit = (data: TransactionFormData) => {
@@ -440,10 +465,10 @@ export default function Financial() {
                     <TableHead>Data</TableHead>
                     <TableHead>Descrição</TableHead>
                     <TableHead>Cliente</TableHead>
-                    <TableHead>Pagamento</TableHead>
-                    <TableHead className="text-right">Valor Total</TableHead>
+                    <TableHead className="text-right">Valor</TableHead>
                     <TableHead className="text-right">Recebido</TableHead>
                     <TableHead className="text-right">A Receber</TableHead>
+                    <TableHead>Pagamento</TableHead>
                     <TableHead className="text-right">Ações</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -453,29 +478,28 @@ export default function Financial() {
                     const receivedAmount = Number(transaction.amount_received) || 0;
                     const pendingAmount = Math.max(0, totalAmount - receivedAmount);
                     const isEditing = editingId === transaction.id;
+                    const isPaid = pendingAmount === 0;
+                    const currentMethod = (transaction.payment_method as keyof typeof paymentMethodLabels) || "pix";
 
                     return (
                       <TableRow key={transaction.id} className="table-row-hover">
-                        <TableCell>
+                        <TableCell className="whitespace-nowrap">
                           {format(new Date(transaction.date), "dd/MM/yyyy")}
                         </TableCell>
-                        <TableCell className="font-medium">
+                        <TableCell className="font-medium max-w-[200px]">
                           <div className="flex items-center gap-2">
                             {transaction.is_auto_generated && (
                               <span title="Gerado automaticamente">
-                                <Zap className="w-3 h-3 text-warning" />
+                                <Zap className="w-3 h-3 text-warning flex-shrink-0" />
                               </span>
                             )}
-                            {transaction.description}
+                            <span className="truncate">{transaction.description}</span>
                           </div>
                         </TableCell>
-                        <TableCell>{transaction.clients?.full_name || "—"}</TableCell>
-                        <TableCell>
-                          <Badge variant="outline">
-                            {paymentMethodLabels[(transaction.payment_method as keyof typeof paymentMethodLabels) || "pix"]}
-                          </Badge>
+                        <TableCell className="max-w-[120px]">
+                          <span className="truncate block">{transaction.clients?.full_name || "—"}</span>
                         </TableCell>
-                        <TableCell className="text-right">
+                        <TableCell className="text-right whitespace-nowrap">
                           <span className="font-medium">{formatCurrency(totalAmount)}</span>
                         </TableCell>
                         <TableCell className="text-right">
@@ -485,7 +509,7 @@ export default function Financial() {
                                 type="number"
                                 value={editingReceivedValue}
                                 onChange={(e) => setEditingReceivedValue(e.target.value)}
-                                className="w-24 h-8 text-right text-sm"
+                                className="w-24 h-7 text-right text-sm"
                                 min={0}
                                 max={totalAmount}
                                 step="0.01"
@@ -502,24 +526,24 @@ export default function Financial() {
                                 variant="ghost"
                                 size="icon"
                                 onClick={() => handleSaveReceived(transaction.id, totalAmount)}
-                                className="h-7 w-7 text-success hover:text-success"
+                                className="h-6 w-6 text-success hover:text-success"
                               >
-                                <Check className="h-4 w-4" />
+                                <Check className="h-3 w-3" />
                               </Button>
                               <Button
                                 variant="ghost"
                                 size="icon"
                                 onClick={handleCancelEditReceived}
-                                className="h-7 w-7 text-destructive hover:text-destructive"
+                                className="h-6 w-6 text-destructive hover:text-destructive"
                               >
-                                <X className="h-4 w-4" />
+                                <X className="h-3 w-3" />
                               </Button>
                             </div>
                           ) : (
                             <Badge 
-                              className="bg-success/15 text-success hover:bg-success/20 cursor-pointer"
+                              className="bg-success/15 text-success hover:bg-success/20 cursor-pointer text-xs"
                               onClick={() => handleStartEditReceived(transaction)}
-                              title="Clique para editar"
+                              title="Clique para editar valor recebido"
                             >
                               {formatCurrency(receivedAmount)}
                             </Badge>
@@ -527,32 +551,94 @@ export default function Financial() {
                         </TableCell>
                         <TableCell className="text-right">
                           {pendingAmount > 0 ? (
-                            <Badge className="bg-warning/15 text-warning hover:bg-warning/20">
-                              {formatCurrency(pendingAmount)}
-                            </Badge>
+                            <div className="flex items-center justify-end gap-1">
+                              <Badge className="bg-warning/15 text-warning text-xs">
+                                {formatCurrency(pendingAmount)}
+                              </Badge>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleMarkAsPaid(transaction.id, totalAmount)}
+                                className="h-6 w-6 text-success hover:text-success hover:bg-success/10"
+                                title="Marcar como quitado"
+                              >
+                                <CheckCircle className="h-3.5 w-3.5" />
+                              </Button>
+                            </div>
                           ) : (
-                            <Badge className="bg-muted text-muted-foreground">
+                            <Badge className="bg-success/15 text-success text-xs">
                               Quitado
                             </Badge>
                           )}
                         </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-0.5">
+                            <Button
+                              variant={currentMethod === "pix" ? "secondary" : "ghost"}
+                              size="icon"
+                              onClick={() => handleChangePaymentMethod(transaction.id, "pix")}
+                              className="h-6 w-6"
+                              title="Pix"
+                            >
+                              <QrCode className="h-3 w-3" />
+                            </Button>
+                            <Button
+                              variant={currentMethod === "cartao" ? "secondary" : "ghost"}
+                              size="icon"
+                              onClick={() => handleChangePaymentMethod(transaction.id, "cartao")}
+                              className="h-6 w-6"
+                              title="Cartão"
+                            >
+                              <CreditCard className="h-3 w-3" />
+                            </Button>
+                            <Button
+                              variant={currentMethod === "dinheiro" ? "secondary" : "ghost"}
+                              size="icon"
+                              onClick={() => handleChangePaymentMethod(transaction.id, "dinheiro")}
+                              className="h-6 w-6"
+                              title="Dinheiro"
+                            >
+                              <Banknote className="h-3 w-3" />
+                            </Button>
+                            <Button
+                              variant={currentMethod === "transferencia" ? "secondary" : "ghost"}
+                              size="icon"
+                              onClick={() => handleChangePaymentMethod(transaction.id, "transferencia")}
+                              className="h-6 w-6"
+                              title="Transferência"
+                            >
+                              <Building2 className="h-3 w-3" />
+                            </Button>
+                            <Button
+                              variant={currentMethod === "boleto" ? "secondary" : "ghost"}
+                              size="icon"
+                              onClick={() => handleChangePaymentMethod(transaction.id, "boleto")}
+                              className="h-6 w-6"
+                              title="Boleto"
+                            >
+                              <FileText className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        </TableCell>
                         <TableCell className="text-right">
-                          <div className="flex items-center justify-end gap-1">
+                          <div className="flex items-center justify-end gap-0.5">
                             <Button
                               variant="ghost"
                               size="icon"
                               onClick={() => handleEdit(transaction)}
-                              className="h-8 w-8"
+                              className="h-7 w-7"
+                              title="Editar receita"
                             >
-                              <Edit2 className="h-4 w-4" />
+                              <Edit2 className="h-3.5 w-3.5" />
                             </Button>
                             <Button
                               variant="ghost"
                               size="icon"
                               onClick={() => handleDelete(transaction.id)}
-                              className="h-8 w-8 text-destructive hover:text-destructive"
+                              className="h-7 w-7 text-destructive hover:text-destructive"
+                              title="Excluir receita"
                             >
-                              <Trash2 className="h-4 w-4" />
+                              <Trash2 className="h-3.5 w-3.5" />
                             </Button>
                           </div>
                         </TableCell>
