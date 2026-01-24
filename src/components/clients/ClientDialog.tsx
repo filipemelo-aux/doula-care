@@ -242,6 +242,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
       queryClient.invalidateQueries({ queryKey: ["recent-clients"] });
       queryClient.invalidateQueries({ queryKey: ["transactions"] });
       queryClient.invalidateQueries({ queryKey: ["financial-summary"] });
+      queryClient.invalidateQueries({ queryKey: ["birth-alert-clients"] });
       toast.success(client ? "Cliente atualizada!" : "Cliente cadastrada com receita!");
       onOpenChange(false);
     },
