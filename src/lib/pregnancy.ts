@@ -1,4 +1,4 @@
-import { differenceInWeeks } from "date-fns";
+import { differenceInDays } from "date-fns";
 
 /**
  * Calculate current pregnancy weeks based on DPP or initial weeks
@@ -16,8 +16,10 @@ export function calculateCurrentPregnancyWeeks(
   if (dpp) {
     const dppDate = new Date(dpp);
     const now = new Date();
-    const weeksUntilDpp = differenceInWeeks(dppDate, now);
-    const currentWeeks = 40 - weeksUntilDpp;
+    const daysUntilDpp = differenceInDays(dppDate, now);
+    // 40 weeks = 280 days, current days = 280 - daysUntilDpp
+    const currentDays = 280 - daysUntilDpp;
+    const currentWeeks = Math.floor(currentDays / 7);
     return Math.max(0, Math.min(45, currentWeeks)); // Clamp between 0 and 45
   }
 
@@ -26,7 +28,8 @@ export function calculateCurrentPregnancyWeeks(
 
   const setAtDate = new Date(setAt);
   const now = new Date();
-  const weeksElapsed = differenceInWeeks(now, setAtDate);
+  const daysElapsed = differenceInDays(now, setAtDate);
+  const weeksElapsed = Math.floor(daysElapsed / 7);
 
   return initialWeeks + weeksElapsed;
 }
