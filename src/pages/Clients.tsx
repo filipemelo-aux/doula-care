@@ -50,6 +50,15 @@ const paymentStatusLabels = {
   parcial: "Parcial",
 };
 
+const formatClientName = (fullName: string) => {
+  const names = fullName.split(" ").filter(n => n.length > 0);
+  if (names.length <= 2) return fullName;
+  
+  const firstTwo = names.slice(0, 2).join(" ");
+  const abbreviated = names.slice(2).map(n => `${n[0]}.`).join(" ");
+  return `${firstTwo} ${abbreviated}`;
+};
+
 export default function Clients() {
   const [search, setSearch] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -174,8 +183,8 @@ export default function Clients() {
                 {filteredClients.map((client) => (
                     <Card key={client.id} className="p-2 space-y-1 w-full max-w-full overflow-hidden">
                       <div className="flex items-center justify-between gap-1">
-                        <div className="flex-1 min-w-0 overflow-hidden max-w-[120px]">
-                          <p className="font-medium text-xs truncate">{client.full_name}</p>
+                        <div className="flex-1 min-w-0 overflow-hidden">
+                          <p className="font-medium text-xs truncate">{formatClientName(client.full_name)}</p>
                           <p className="text-[10px] text-muted-foreground truncate">{client.phone}</p>
                         </div>
                         <div className="flex items-center gap-0 flex-shrink-0">
