@@ -245,10 +245,10 @@ export default function Clients() {
                   <TableBody>
                     {filteredClients.map((client) => (
                       <TableRow key={client.id} className="table-row-hover">
-                        <TableCell className="font-medium">
-                          {client.full_name}
+                        <TableCell className="font-medium max-w-[200px]">
+                          <span className="block truncate">{client.full_name}</span>
                         </TableCell>
-                        <TableCell>{client.phone}</TableCell>
+                        <TableCell className="whitespace-nowrap">{client.phone}</TableCell>
                         <TableCell>
                           <Badge
                             variant="outline"
