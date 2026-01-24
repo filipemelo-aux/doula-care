@@ -35,7 +35,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, TrendingUp, Search, Trash2, Edit2, Zap } from "lucide-react";
+import { Plus, TrendingUp, Search, Trash2, Edit2, Zap, Check, X } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -94,6 +94,8 @@ export default function Financial() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [transactionToDelete, setTransactionToDelete] = useState<string | null>(null);
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingReceivedValue, setEditingReceivedValue] = useState<string>("");
 
   const queryClient = useQueryClient();
 
@@ -237,6 +239,41 @@ export default function Financial() {
     },
   });
 
+  const updateReceivedMutation = useMutation({
+    mutationFn: async ({ id, amountReceived }: { id: string; amountReceived: number }) => {
+      const { error } = await supabase
+        .from("transactions")
+        .update({ amount_received: amountReceived })
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["transactions"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
+      toast.success("Valor recebido atualizado!");
+      setEditingId(null);
+    },
+    onError: () => {
+      toast.error("Erro ao atualizar valor");
+    },
+  });
+
+  const handleStartEditReceived = (transaction: Transaction) => {
+    setEditingId(transaction.id);
+    setEditingReceivedValue(String(Number(transaction.amount_received) || 0));
+  };
+
+  const handleSaveReceived = (transactionId: string, totalAmount: number) => {
+    const value = parseFloat(editingReceivedValue.replace(",", ".")) || 0;
+    const clampedValue = Math.min(Math.max(0, value), totalAmount);
+    updateReceivedMutation.mutate({ id: transactionId, amountReceived: clampedValue });
+  };
+
+  const handleCancelEditReceived = () => {
+    setEditingId(null);
+    setEditingReceivedValue("");
+  };
+
   const onSubmit = (data: TransactionFormData) => {
     if (selectedTransaction) {
       updateMutation.mutate({ ...data, id: selectedTransaction.id });
@@ -306,9 +343,16 @@ export default function Financial() {
       })
       .reduce((sum, t) => sum + Number(t.amount), 0) || 0;
 
-  const pendingIncome = clients
-    ?.filter((c) => c.plan_value && Number(c.plan_value) > 0)
-    .reduce((sum, c) => sum + Number(c.plan_value || 0), 0) || 0;
+  // Calculate pending income from transactions (amount - amount_received)
+  const pendingIncome = transactions
+    ?.reduce((sum, t) => {
+      const total = Number(t.amount) || 0;
+      const received = Number(t.amount_received) || 0;
+      return sum + Math.max(0, total - received);
+    }, 0) || 0;
+
+  // Total received
+  const totalReceived = transactions?.reduce((sum, t) => sum + (Number(t.amount_received) || 0), 0) || 0;
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("pt-BR", {
@@ -336,20 +380,20 @@ export default function Financial() {
         <StatCard
           title="Receita Total"
           value={formatCurrency(totalIncome)}
-          subtitle="Todas as receitas"
+          subtitle="Valor total contratado"
           icon={Wallet}
-          variant="success"
         />
         <StatCard
-          title="Este Mês"
-          value={formatCurrency(thisMonthIncome)}
-          subtitle={format(new Date(), "MMMM yyyy", { locale: ptBR })}
+          title="Recebido"
+          value={formatCurrency(totalReceived)}
+          subtitle="Já recebido"
           icon={Calendar}
+          variant="success"
         />
         <StatCard
           title="A Receber"
           value={formatCurrency(pendingIncome)}
-          subtitle="Planos contratados"
+          subtitle="Pagamentos pendentes"
           icon={Clock}
           variant="warning"
         />
@@ -396,62 +440,125 @@ export default function Financial() {
                     <TableHead>Data</TableHead>
                     <TableHead>Descrição</TableHead>
                     <TableHead>Cliente</TableHead>
-                    <TableHead>Plano</TableHead>
                     <TableHead>Pagamento</TableHead>
-                    <TableHead className="text-right">Valor</TableHead>
+                    <TableHead className="text-right">Valor Total</TableHead>
+                    <TableHead className="text-right">Recebido</TableHead>
+                    <TableHead className="text-right">A Receber</TableHead>
                     <TableHead className="text-right">Ações</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredTransactions.map((transaction) => (
-                    <TableRow key={transaction.id} className="table-row-hover">
-                      <TableCell>
-                        {format(new Date(transaction.date), "dd/MM/yyyy")}
-                      </TableCell>
-                      <TableCell className="font-medium">
-                        <div className="flex items-center gap-2">
-                          {transaction.is_auto_generated && (
-                            <span title="Gerado automaticamente">
-                              <Zap className="w-3 h-3 text-warning" />
-                            </span>
+                  {filteredTransactions.map((transaction) => {
+                    const totalAmount = Number(transaction.amount) || 0;
+                    const receivedAmount = Number(transaction.amount_received) || 0;
+                    const pendingAmount = Math.max(0, totalAmount - receivedAmount);
+                    const isEditing = editingId === transaction.id;
+
+                    return (
+                      <TableRow key={transaction.id} className="table-row-hover">
+                        <TableCell>
+                          {format(new Date(transaction.date), "dd/MM/yyyy")}
+                        </TableCell>
+                        <TableCell className="font-medium">
+                          <div className="flex items-center gap-2">
+                            {transaction.is_auto_generated && (
+                              <span title="Gerado automaticamente">
+                                <Zap className="w-3 h-3 text-warning" />
+                              </span>
+                            )}
+                            {transaction.description}
+                          </div>
+                        </TableCell>
+                        <TableCell>{transaction.clients?.full_name || "—"}</TableCell>
+                        <TableCell>
+                          <Badge variant="outline">
+                            {paymentMethodLabels[(transaction.payment_method as keyof typeof paymentMethodLabels) || "pix"]}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <span className="font-medium">{formatCurrency(totalAmount)}</span>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          {isEditing ? (
+                            <div className="flex items-center justify-end gap-1">
+                              <Input
+                                type="number"
+                                value={editingReceivedValue}
+                                onChange={(e) => setEditingReceivedValue(e.target.value)}
+                                className="w-24 h-8 text-right text-sm"
+                                min={0}
+                                max={totalAmount}
+                                step="0.01"
+                                autoFocus
+                                onKeyDown={(e) => {
+                                  if (e.key === "Enter") {
+                                    handleSaveReceived(transaction.id, totalAmount);
+                                  } else if (e.key === "Escape") {
+                                    handleCancelEditReceived();
+                                  }
+                                }}
+                              />
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleSaveReceived(transaction.id, totalAmount)}
+                                className="h-7 w-7 text-success hover:text-success"
+                              >
+                                <Check className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={handleCancelEditReceived}
+                                className="h-7 w-7 text-destructive hover:text-destructive"
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          ) : (
+                            <Badge 
+                              className="bg-success/15 text-success hover:bg-success/20 cursor-pointer"
+                              onClick={() => handleStartEditReceived(transaction)}
+                              title="Clique para editar"
+                            >
+                              {formatCurrency(receivedAmount)}
+                            </Badge>
                           )}
-                          {transaction.description}
-                        </div>
-                      </TableCell>
-                      <TableCell>{transaction.clients?.full_name || "—"}</TableCell>
-                      <TableCell>{transaction.plan_settings?.name || "—"}</TableCell>
-                      <TableCell>
-                        <Badge variant="outline">
-                          {paymentMethodLabels[(transaction.payment_method as keyof typeof paymentMethodLabels) || "pix"]}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <Badge className="bg-success/15 text-success hover:bg-success/20">
-                          {formatCurrency(Number(transaction.amount))}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex items-center justify-end gap-1">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleEdit(transaction)}
-                            className="h-8 w-8"
-                          >
-                            <Edit2 className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleDelete(transaction.id)}
-                            className="h-8 w-8 text-destructive hover:text-destructive"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          {pendingAmount > 0 ? (
+                            <Badge className="bg-warning/15 text-warning hover:bg-warning/20">
+                              {formatCurrency(pendingAmount)}
+                            </Badge>
+                          ) : (
+                            <Badge className="bg-muted text-muted-foreground">
+                              Quitado
+                            </Badge>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex items-center justify-end gap-1">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleEdit(transaction)}
+                              className="h-8 w-8"
+                            >
+                              <Edit2 className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleDelete(transaction.id)}
+                              className="h-8 w-8 text-destructive hover:text-destructive"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
                 </TableBody>
               </Table>
             </div>
