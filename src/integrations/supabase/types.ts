@@ -155,6 +155,7 @@ export type Database = {
           amount_received: number | null
           client_id: string | null
           created_at: string
+          current_installment: number | null
           date: string
           description: string
           expense_category:
@@ -162,6 +163,8 @@ export type Database = {
             | null
           expense_type: Database["public"]["Enums"]["expense_type"] | null
           id: string
+          installment_value: number | null
+          installments: number | null
           is_auto_generated: boolean | null
           notes: string | null
           payment_method:
@@ -176,6 +179,7 @@ export type Database = {
           amount_received?: number | null
           client_id?: string | null
           created_at?: string
+          current_installment?: number | null
           date?: string
           description: string
           expense_category?:
@@ -183,6 +187,8 @@ export type Database = {
             | null
           expense_type?: Database["public"]["Enums"]["expense_type"] | null
           id?: string
+          installment_value?: number | null
+          installments?: number | null
           is_auto_generated?: boolean | null
           notes?: string | null
           payment_method?:
@@ -197,6 +203,7 @@ export type Database = {
           amount_received?: number | null
           client_id?: string | null
           created_at?: string
+          current_installment?: number | null
           date?: string
           description?: string
           expense_category?:
@@ -204,6 +211,8 @@ export type Database = {
             | null
           expense_type?: Database["public"]["Enums"]["expense_type"] | null
           id?: string
+          installment_value?: number | null
+          installments?: number | null
           is_auto_generated?: boolean | null
           notes?: string | null
           payment_method?:
