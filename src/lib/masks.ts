@@ -55,43 +55,35 @@ export function toUpperCase(value: string): string {
 // Mask for baby weight in kg (format: X.XXX)
 export function maskWeight(value: string): string {
   // Remove all non-digits
-  const digits = value.replace(/\D/g, "");
+  const digits = value.replace(/\D/g, "").slice(0, 5);
   
   if (digits.length === 0) return "";
   
-  // Pad with leading zeros if needed to have at least 4 digits
-  const padded = digits.slice(0, 5);
+  // Pad with leading zeros to ensure at least 4 characters for proper formatting
+  const padded = digits.padStart(4, "0");
   
-  if (padded.length <= 3) {
-    // Less than 1kg - format as 0.XXX
-    return `0.${padded.padStart(3, "0").slice(-3)}`;
-  } else {
-    // 1kg or more - format as X.XXX or XX.XXX
-    const intPart = padded.slice(0, -3);
-    const decPart = padded.slice(-3);
-    return `${intPart}.${decPart}`;
-  }
+  // Split into integer and decimal parts (last 3 digits are decimal)
+  const intPart = padded.slice(0, -3).replace(/^0+/, "") || "0";
+  const decPart = padded.slice(-3);
+  
+  return `${intPart}.${decPart}`;
 }
 
 // Mask for baby height in cm (format: XX.XX)
 export function maskHeight(value: string): string {
   // Remove all non-digits
-  const digits = value.replace(/\D/g, "");
+  const digits = value.replace(/\D/g, "").slice(0, 4);
   
   if (digits.length === 0) return "";
   
-  // Limit to 4 digits max
-  const padded = digits.slice(0, 4);
+  // Pad with leading zeros to ensure at least 3 characters for proper formatting
+  const padded = digits.padStart(3, "0");
   
-  if (padded.length <= 2) {
-    // Less than 1cm - format as 0.XX
-    return `0.${padded.padStart(2, "0").slice(-2)}`;
-  } else {
-    // 1cm or more - format as X.XX or XX.XX
-    const intPart = padded.slice(0, -2);
-    const decPart = padded.slice(-2);
-    return `${intPart}.${decPart}`;
-  }
+  // Split into integer and decimal parts (last 2 digits are decimal)
+  const intPart = padded.slice(0, -2).replace(/^0+/, "") || "0";
+  const decPart = padded.slice(-2);
+  
+  return `${intPart}.${decPart}`;
 }
 
 // Parse masked weight to number
