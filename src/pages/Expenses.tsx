@@ -451,37 +451,37 @@ export default function Expenses() {
       {/* Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle className="font-display text-xl">
+          <DialogHeader className="pb-2">
+            <DialogTitle className="font-display text-lg">
               {selectedExpense ? "Editar Despesa" : "Nova Despesa"}
             </DialogTitle>
           </DialogHeader>
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
               <FormField
                 control={form.control}
                 name="description"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Descrição *</FormLabel>
+                  <FormItem className="space-y-1">
+                    <FormLabel className="text-xs">Descrição *</FormLabel>
                     <FormControl>
-                      <Input {...field} className="input-field" />
+                      <Input {...field} className="input-field h-8 text-sm" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-2">
                 <FormField
                   control={form.control}
                   name="expense_type"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Tipo de Despesa *</FormLabel>
+                    <FormItem className="space-y-1">
+                      <FormLabel className="text-xs">Tipo de Despesa *</FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
-                          <SelectTrigger className="input-field">
+                          <SelectTrigger className="input-field h-8 text-sm">
                             <SelectValue />
                           </SelectTrigger>
                         </FormControl>
@@ -501,11 +501,11 @@ export default function Expenses() {
                   control={form.control}
                   name="expense_category"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Categoria *</FormLabel>
+                    <FormItem className="space-y-1">
+                      <FormLabel className="text-xs">Categoria *</FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
-                          <SelectTrigger className="input-field">
+                          <SelectTrigger className="input-field h-8 text-sm">
                             <SelectValue />
                           </SelectTrigger>
                         </FormControl>
@@ -523,13 +523,13 @@ export default function Expenses() {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-2">
                 <FormField
                   control={form.control}
                   name="amount"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Valor (R$) *</FormLabel>
+                    <FormItem className="space-y-1">
+                      <FormLabel className="text-xs">Valor (R$) *</FormLabel>
                       <FormControl>
                         <Input
                           type="number"
@@ -537,7 +537,7 @@ export default function Expenses() {
                           min={0}
                           {...field}
                           onChange={(e) => field.onChange(Number(e.target.value))}
-                          className="input-field"
+                          className="input-field h-8 text-sm"
                         />
                       </FormControl>
                       <FormMessage />
@@ -548,10 +548,10 @@ export default function Expenses() {
                   control={form.control}
                   name="date"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Data *</FormLabel>
+                    <FormItem className="space-y-1">
+                      <FormLabel className="text-xs">Data *</FormLabel>
                       <FormControl>
-                        <Input type="date" {...field} className="input-field" />
+                        <Input type="date" {...field} className="input-field h-8 text-sm" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -563,11 +563,11 @@ export default function Expenses() {
                 control={form.control}
                 name="payment_method"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Forma de Pagamento *</FormLabel>
+                  <FormItem className="space-y-1">
+                    <FormLabel className="text-xs">Forma de Pagamento *</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
-                        <SelectTrigger className="input-field">
+                        <SelectTrigger className="input-field h-8 text-sm">
                           <SelectValue />
                         </SelectTrigger>
                       </FormControl>
@@ -588,22 +588,23 @@ export default function Expenses() {
                 control={form.control}
                 name="notes"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Observações</FormLabel>
+                  <FormItem className="space-y-1">
+                    <FormLabel className="text-xs">Observações</FormLabel>
                     <FormControl>
-                      <Textarea {...field} className="min-h-[80px] resize-none" />
+                      <Textarea {...field} className="min-h-[50px] resize-none text-sm" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
 
-              <div className="flex justify-end gap-3 pt-4">
-                <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
+              <div className="flex justify-end gap-2 pt-2">
+                <Button type="button" variant="outline" size="sm" onClick={() => setDialogOpen(false)}>
                   Cancelar
                 </Button>
                 <Button
                   type="submit"
+                  size="sm"
                   disabled={createMutation.isPending || updateMutation.isPending}
                 >
                   {createMutation.isPending || updateMutation.isPending
