@@ -22,6 +22,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Baby } from "lucide-react";
 import type { Tables } from "@/integrations/supabase/types";
+import { maskWeight, maskHeight, parseWeight, parseHeight } from "@/lib/masks";
 
 type Client = Tables<"clients">;
 
@@ -67,8 +68,8 @@ export function BirthRegistrationDialog({
           birth_occurred: true,
           birth_date: data.birth_date,
           birth_time: data.birth_time || null,
-          birth_weight: data.birth_weight ? parseFloat(data.birth_weight) : null,
-          birth_height: data.birth_height ? parseFloat(data.birth_height) : null,
+          birth_weight: parseWeight(data.birth_weight),
+          birth_height: parseHeight(data.birth_height),
           status: "lactante", // Automatically change status to lactante
         })
         .eq("id", client.id);
@@ -162,11 +163,13 @@ export function BirthRegistrationDialog({
                     <FormLabel className="text-xs">Peso (kg)</FormLabel>
                     <FormControl>
                       <Input
-                        type="number"
-                        step="0.001"
-                        min="0"
+                        type="text"
+                        inputMode="numeric"
                         placeholder="3.500"
                         {...field}
+                        onChange={(e) => {
+                          field.onChange(maskWeight(e.target.value));
+                        }}
                         className="input-field h-8 text-sm"
                       />
                     </FormControl>
@@ -182,11 +185,13 @@ export function BirthRegistrationDialog({
                     <FormLabel className="text-xs">Estatura (cm)</FormLabel>
                     <FormControl>
                       <Input
-                        type="number"
-                        step="0.01"
-                        min="0"
+                        type="text"
+                        inputMode="numeric"
                         placeholder="50.00"
                         {...field}
+                        onChange={(e) => {
+                          field.onChange(maskHeight(e.target.value));
+                        }}
                         className="input-field h-8 text-sm"
                       />
                     </FormControl>
