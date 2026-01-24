@@ -470,129 +470,134 @@ export default function Financial() {
           ) : filteredTransactions && filteredTransactions.length > 0 ? (
             <>
               {/* Mobile Cards */}
-              <div className="block lg:hidden space-y-2 p-4">
+              <div className="block lg:hidden space-y-2 px-3 py-2">
                 {filteredTransactions.map((transaction) => {
                   const totalAmount = Number(transaction.amount) || 0;
                   const receivedAmount = Number(transaction.amount_received) || 0;
                   const pendingAmount = Math.max(0, totalAmount - receivedAmount);
                   const currentMethod = (transaction.payment_method as keyof typeof paymentMethodLabels) || "pix";
-                  const isPaid = pendingAmount === 0;
+
+                  const formatCompact = (value: number) => {
+                    return new Intl.NumberFormat("pt-BR", {
+                      style: "currency",
+                      currency: "BRL",
+                      minimumFractionDigits: 0,
+                      maximumFractionDigits: 0,
+                    }).format(value);
+                  };
 
                   return (
-                    <Card key={transaction.id} className="p-3 space-y-2 overflow-hidden">
-                      {/* Header row */}
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="flex-1 min-w-0 overflow-hidden">
-                          <div className="flex items-center gap-1.5 min-w-0">
-                            {transaction.is_auto_generated && (
-                              <Zap className="w-3 h-3 text-warning flex-shrink-0" />
-                            )}
-                            <p className="font-medium text-sm truncate">{transaction.description}</p>
-                          </div>
-                          <p className="text-xs text-muted-foreground truncate">
-                            {transaction.clients?.full_name || "Sem cliente"} • {format(new Date(transaction.date), "dd/MM/yy")}
-                          </p>
+                    <Card key={transaction.id} className="p-2.5 space-y-1.5 w-full max-w-full">
+                      {/* Header: Description + Actions */}
+                      <div className="flex items-center justify-between gap-1">
+                        <div className="flex items-center gap-1 min-w-0 flex-1">
+                          {transaction.is_auto_generated && (
+                            <Zap className="w-3 h-3 text-warning flex-shrink-0" />
+                          )}
+                          <p className="font-medium text-xs truncate">{transaction.description}</p>
                         </div>
-                        <div className="flex items-center gap-0.5 flex-shrink-0">
+                        <div className="flex items-center flex-shrink-0">
                           <Button
                             variant="ghost"
                             size="icon"
                             onClick={() => handleEdit(transaction)}
-                            className="h-7 w-7"
+                            className="h-6 w-6"
                           >
-                            <Edit2 className="h-3.5 w-3.5" />
+                            <Edit2 className="h-3 w-3" />
                           </Button>
                           <Button
                             variant="ghost"
                             size="icon"
                             onClick={() => handleDelete(transaction.id)}
-                            className="h-7 w-7 text-destructive hover:text-destructive"
+                            className="h-6 w-6 text-destructive"
                           >
-                            <Trash2 className="h-3.5 w-3.5" />
+                            <Trash2 className="h-3 w-3" />
                           </Button>
                         </div>
                       </div>
 
-                      {/* Values row */}
-                      <div className="grid grid-cols-3 gap-1 text-xs">
-                        <div className="min-w-0 overflow-hidden">
-                          <span className="text-muted-foreground block text-[10px]">Valor</span>
-                          <span className="font-semibold text-xs truncate block">{formatCurrency(totalAmount)}</span>
-                        </div>
-                        <div className="min-w-0 overflow-hidden">
-                          <span className="text-muted-foreground block text-[10px]">Recebido</span>
-                          <Badge 
-                            className="bg-success/15 text-success cursor-pointer text-[10px] px-1 h-5"
-                            onClick={() => handleStartEditReceived(transaction)}
-                          >
-                            {formatCurrency(receivedAmount)}
-                          </Badge>
-                        </div>
-                        <div className="min-w-0 overflow-hidden">
-                          <span className="text-muted-foreground block text-[10px]">Pendente</span>
-                          {pendingAmount > 0 ? (
-                            <div className="flex items-center gap-0.5">
-                              <Badge className="bg-warning/15 text-warning text-[10px] px-1 h-5">
-                                {formatCurrency(pendingAmount)}
-                              </Badge>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => handleMarkAsPaid(transaction.id, totalAmount)}
-                                className="h-5 w-5 text-success hover:text-success flex-shrink-0"
-                              >
-                                <CheckCircle className="h-3 w-3" />
-                              </Button>
-                            </div>
-                          ) : (
-                            <Badge className="bg-success/15 text-success text-[10px] px-1 h-5">Quitado</Badge>
-                          )}
-                        </div>
-                      </div>
+                      {/* Info: Client + Date */}
+                      <p className="text-[10px] text-muted-foreground truncate">
+                        {transaction.clients?.full_name || "—"} • {format(new Date(transaction.date), "dd/MM/yy")}
+                      </p>
 
-                      {/* Payment methods row */}
-                      <div className="flex items-center justify-between pt-1 border-t border-border gap-1">
-                        <span className="text-[10px] text-muted-foreground flex-shrink-0">Pagamento:</span>
-                        <div className="flex items-center gap-0">
+                      {/* Values: Stacked layout */}
+                      <div className="flex items-center justify-between gap-2 pt-1 border-t border-border/50">
+                        <div className="flex items-center gap-2">
+                          <div>
+                            <span className="text-[9px] text-muted-foreground block">Total</span>
+                            <span className="font-semibold text-[11px]">{formatCompact(totalAmount)}</span>
+                          </div>
+                          <div>
+                            <span className="text-[9px] text-muted-foreground block">Receb.</span>
+                            <span 
+                              className="text-[11px] text-success font-medium cursor-pointer"
+                              onClick={() => handleStartEditReceived(transaction)}
+                            >
+                              {formatCompact(receivedAmount)}
+                            </span>
+                          </div>
+                          <div>
+                            <span className="text-[9px] text-muted-foreground block">Pend.</span>
+                            {pendingAmount > 0 ? (
+                              <div className="flex items-center gap-0.5">
+                                <span className="text-[11px] text-warning font-medium">{formatCompact(pendingAmount)}</span>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => handleMarkAsPaid(transaction.id, totalAmount)}
+                                  className="h-4 w-4 text-success p-0"
+                                >
+                                  <CheckCircle className="h-3 w-3" />
+                                </Button>
+                              </div>
+                            ) : (
+                              <span className="text-[11px] text-success font-medium">OK</span>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Payment method icons */}
+                        <div className="flex items-center">
                           <Button
                             variant={currentMethod === "pix" ? "secondary" : "ghost"}
                             size="icon"
                             onClick={() => handleChangePaymentMethod(transaction.id, "pix")}
-                            className="h-6 w-6"
+                            className="h-5 w-5"
                           >
-                            <QrCode className="h-3 w-3" />
+                            <QrCode className="h-2.5 w-2.5" />
                           </Button>
                           <Button
                             variant={currentMethod === "cartao" ? "secondary" : "ghost"}
                             size="icon"
                             onClick={() => handleChangePaymentMethod(transaction.id, "cartao")}
-                            className="h-6 w-6"
+                            className="h-5 w-5"
                           >
-                            <CreditCard className="h-3 w-3" />
+                            <CreditCard className="h-2.5 w-2.5" />
                           </Button>
                           <Button
                             variant={currentMethod === "dinheiro" ? "secondary" : "ghost"}
                             size="icon"
                             onClick={() => handleChangePaymentMethod(transaction.id, "dinheiro")}
-                            className="h-6 w-6"
+                            className="h-5 w-5"
                           >
-                            <Banknote className="h-3 w-3" />
+                            <Banknote className="h-2.5 w-2.5" />
                           </Button>
                           <Button
                             variant={currentMethod === "transferencia" ? "secondary" : "ghost"}
                             size="icon"
                             onClick={() => handleChangePaymentMethod(transaction.id, "transferencia")}
-                            className="h-6 w-6"
+                            className="h-5 w-5"
                           >
-                            <Building2 className="h-3 w-3" />
+                            <Building2 className="h-2.5 w-2.5" />
                           </Button>
                           <Button
                             variant={currentMethod === "boleto" ? "secondary" : "ghost"}
                             size="icon"
                             onClick={() => handleChangePaymentMethod(transaction.id, "boleto")}
-                            className="h-6 w-6"
+                            className="h-5 w-5"
                           >
-                            <FileText className="h-3 w-3" />
+                            <FileText className="h-2.5 w-2.5" />
                           </Button>
                         </div>
                       </div>
