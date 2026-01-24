@@ -174,7 +174,7 @@ export default function Clients() {
                 {filteredClients.map((client) => (
                     <Card key={client.id} className="p-2 space-y-1 w-full max-w-full overflow-hidden">
                       <div className="flex items-center justify-between gap-1">
-                        <div className="flex-1 min-w-0 overflow-hidden">
+                        <div className="flex-1 min-w-0 overflow-hidden max-w-[120px]">
                           <p className="font-medium text-xs truncate">{client.full_name}</p>
                           <p className="text-[10px] text-muted-foreground truncate">{client.phone}</p>
                         </div>
