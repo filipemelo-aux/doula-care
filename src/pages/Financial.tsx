@@ -84,6 +84,8 @@ const transactionSchema = z.object({
   payment_method: z.enum(["pix", "cartao", "dinheiro", "transferencia", "boleto"]),
   payment_status: z.enum(["recebido", "a_receber", "parcial"]),
   notes: z.string().optional(),
+  installments: z.number().min(1).max(24).default(1),
+  installment_value: z.number().min(0).default(0),
 });
 
 type TransactionFormData = z.infer<typeof transactionSchema>;
@@ -108,6 +110,8 @@ export default function Financial() {
       payment_method: "pix",
       payment_status: "a_receber",
       notes: "",
+      installments: 1,
+      installment_value: 0,
     },
   });
 
@@ -199,13 +203,12 @@ export default function Financial() {
       const { error } = await supabase
         .from("transactions")
         .update({
-          description: data.description,
           amount: data.amount,
           date: data.date,
-          client_id: data.client_id || null,
-          plan_id: data.plan_id || null,
           payment_method: data.payment_method,
           notes: data.notes || null,
+          installments: data.installments,
+          installment_value: data.installment_value,
         })
         .eq("id", id);
       if (error) throw error;
@@ -213,6 +216,7 @@ export default function Financial() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["transactions"] });
       queryClient.invalidateQueries({ queryKey: ["monthly-transactions"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
       toast.success("Receita atualizada!");
       setDialogOpen(false);
       form.reset();
@@ -309,15 +313,21 @@ export default function Financial() {
 
   const handleEdit = (transaction: Transaction) => {
     setSelectedTransaction(transaction);
+    const installments = Number(transaction.installments) || 1;
+    const totalAmount = Number(transaction.amount) || 0;
+    const installmentValue = Number(transaction.installment_value) || (totalAmount / installments);
+    
     form.reset({
       description: transaction.description,
-      amount: Number(transaction.amount),
+      amount: totalAmount,
       date: transaction.date,
       client_id: transaction.client_id || undefined,
       plan_id: transaction.plan_id || undefined,
       payment_method: (transaction.payment_method as "pix" | "cartao" | "dinheiro" | "transferencia" | "boleto") || "pix",
       payment_status: "recebido",
       notes: transaction.notes || "",
+      installments: installments,
+      installment_value: installmentValue,
     });
     setDialogOpen(true);
   };
@@ -672,90 +682,120 @@ export default function Financial() {
           </DialogHeader>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <FormField
-                control={form.control}
-                name="client_id"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Cliente</FormLabel>
-                    <Select
-                      onValueChange={(value) => handleClientChange(value)}
-                      value={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger className="input-field">
-                          <SelectValue placeholder="Selecione uma cliente" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {clients?.map((client) => (
-                          <SelectItem key={client.id} value={client.id}>
-                            {client.full_name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <p className="text-xs text-muted-foreground">
-                      Ao selecionar uma cliente, o plano e valor são preenchidos automaticamente
-                    </p>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              {/* Info da transação (apenas visualização quando editando) */}
+              {selectedTransaction && (
+                <div className="bg-muted/50 rounded-lg p-4 space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Cliente:</span>
+                    <span className="font-medium">{selectedTransaction.clients?.full_name || "—"}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Plano:</span>
+                    <span className="font-medium">{selectedTransaction.plan_settings?.name || "—"}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Descrição:</span>
+                    <span className="font-medium truncate max-w-[200px]">{selectedTransaction.description}</span>
+                  </div>
+                </div>
+              )}
 
-              <FormField
-                control={form.control}
-                name="plan_id"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Plano</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger className="input-field">
-                          <SelectValue placeholder="Selecione um plano" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {plans?.map((plan) => (
-                          <SelectItem key={plan.id} value={plan.id}>
-                            {plan.name} - {formatCurrency(Number(plan.default_value))}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              {/* Campos para nova receita */}
+              {!selectedTransaction && (
+                <>
+                  <FormField
+                    control={form.control}
+                    name="client_id"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Cliente</FormLabel>
+                        <Select
+                          onValueChange={(value) => handleClientChange(value)}
+                          value={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger className="input-field">
+                              <SelectValue placeholder="Selecione uma cliente" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {clients?.map((client) => (
+                              <SelectItem key={client.id} value={client.id}>
+                                {client.full_name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <p className="text-xs text-muted-foreground">
+                          Ao selecionar uma cliente, o plano e valor são preenchidos automaticamente
+                        </p>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-              <FormField
-                control={form.control}
-                name="description"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Descrição *</FormLabel>
-                    <FormControl>
-                      <Input {...field} className="input-field" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                  <FormField
+                    control={form.control}
+                    name="plan_id"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Plano</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger className="input-field">
+                              <SelectValue placeholder="Selecione um plano" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {plans?.map((plan) => (
+                              <SelectItem key={plan.id} value={plan.id}>
+                                {plan.name} - {formatCurrency(Number(plan.default_value))}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
+                  <FormField
+                    control={form.control}
+                    name="description"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Descrição *</FormLabel>
+                        <FormControl>
+                          <Input {...field} className="input-field" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </>
+              )}
+
+              {/* Campos editáveis */}
               <div className="grid grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
                   name="amount"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Valor (R$) *</FormLabel>
+                      <FormLabel>Valor Total (R$) *</FormLabel>
                       <FormControl>
                         <Input
                           type="number"
                           step="0.01"
                           min={0}
                           {...field}
-                          onChange={(e) => field.onChange(Number(e.target.value))}
+                          onChange={(e) => {
+                            const value = Number(e.target.value);
+                            field.onChange(value);
+                            // Atualiza o valor da parcela automaticamente
+                            const installments = form.getValues("installments") || 1;
+                            form.setValue("installment_value", value / installments);
+                          }}
                           className="input-field"
                         />
                       </FormControl>
@@ -771,6 +811,56 @@ export default function Financial() {
                       <FormLabel>Data *</FormLabel>
                       <FormControl>
                         <Input type="date" {...field} className="input-field" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              {/* Parcelamento */}
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="installments"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Nº de Parcelas</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          min={1}
+                          max={24}
+                          {...field}
+                          onChange={(e) => {
+                            const installments = Math.max(1, Number(e.target.value));
+                            field.onChange(installments);
+                            // Atualiza o valor da parcela automaticamente
+                            const amount = form.getValues("amount") || 0;
+                            form.setValue("installment_value", amount / installments);
+                          }}
+                          className="input-field"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="installment_value"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Valor da Parcela (R$)</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          min={0}
+                          {...field}
+                          onChange={(e) => field.onChange(Number(e.target.value))}
+                          className="input-field"
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -803,30 +893,32 @@ export default function Financial() {
                     </FormItem>
                   )}
                 />
-                <FormField
-                  control={form.control}
-                  name="payment_status"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Status *</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
-                        <FormControl>
-                          <SelectTrigger className="input-field">
-                            <SelectValue />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {Object.entries(paymentStatusLabels).map(([value, label]) => (
-                            <SelectItem key={value} value={value}>
-                              {label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                {!selectedTransaction && (
+                  <FormField
+                    control={form.control}
+                    name="payment_status"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Status *</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger className="input-field">
+                              <SelectValue />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {Object.entries(paymentStatusLabels).map(([value, label]) => (
+                              <SelectItem key={value} value={value}>
+                                {label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
               </div>
 
               <FormField
@@ -836,7 +928,7 @@ export default function Financial() {
                   <FormItem>
                     <FormLabel>Observações</FormLabel>
                     <FormControl>
-                      <Textarea {...field} className="min-h-[80px] resize-none" />
+                      <Textarea {...field} className="min-h-[60px] resize-none" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
