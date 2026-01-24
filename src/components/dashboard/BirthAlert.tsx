@@ -113,33 +113,35 @@ export function BirthAlert() {
             {clients.map((client) => (
               <div
                 key={client.id}
-                className={`flex items-center gap-3 p-2 rounded-lg ${
+                className={`p-2 rounded-lg ${
                   client.is_post_term 
                     ? "bg-red-100/80 dark:bg-red-900/30" 
                     : "bg-white/60 dark:bg-background/40"
                 }`}
               >
-                <div className={`h-8 w-8 rounded-full flex items-center justify-center flex-shrink-0 ${
-                  client.is_post_term 
-                    ? "bg-red-200 dark:bg-red-800/50" 
-                    : "bg-orange-100 dark:bg-orange-900/30"
-                }`}>
-                  <Baby className={`h-4 w-4 ${
+                <div className="flex items-center gap-3">
+                  <div className={`h-8 w-8 rounded-full flex items-center justify-center flex-shrink-0 ${
                     client.is_post_term 
-                      ? "text-red-600 dark:text-red-400" 
-                      : "text-orange-600 dark:text-orange-400"
-                  }`} />
+                      ? "bg-red-200 dark:bg-red-800/50" 
+                      : "bg-orange-100 dark:bg-orange-900/30"
+                  }`}>
+                    <Baby className={`h-4 w-4 ${
+                      client.is_post_term 
+                        ? "text-red-600 dark:text-red-400" 
+                        : "text-orange-600 dark:text-orange-400"
+                    }`} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-foreground truncate">
+                      {formatClientName(client.full_name)}
+                    </p>
+                    <p className="text-xs text-muted-foreground">{client.phone}</p>
+                  </div>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-foreground truncate">
-                    {formatClientName(client.full_name)}
-                  </p>
-                  <p className="text-xs text-muted-foreground">{client.phone}</p>
-                </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center justify-end gap-2 mt-2">
                   <Badge 
                     variant="outline" 
-                    className={`flex-shrink-0 text-[10px] px-1.5 h-5 border-0 ${
+                    className={`text-[10px] px-1.5 h-5 border-0 ${
                       client.is_post_term
                         ? "bg-red-200 text-red-800 dark:bg-red-800/50 dark:text-red-300"
                         : (client.current_weeks || 0) >= 40 
