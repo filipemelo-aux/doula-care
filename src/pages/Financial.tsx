@@ -479,21 +479,21 @@ export default function Financial() {
                   const isPaid = pendingAmount === 0;
 
                   return (
-                    <Card key={transaction.id} className="p-3 space-y-2">
+                    <Card key={transaction.id} className="p-3 space-y-2 overflow-hidden">
                       {/* Header row */}
                       <div className="flex items-start justify-between gap-2">
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-1.5">
+                        <div className="flex-1 min-w-0 overflow-hidden">
+                          <div className="flex items-center gap-1.5 min-w-0">
                             {transaction.is_auto_generated && (
                               <Zap className="w-3 h-3 text-warning flex-shrink-0" />
                             )}
                             <p className="font-medium text-sm truncate">{transaction.description}</p>
                           </div>
-                          <p className="text-xs text-muted-foreground">
+                          <p className="text-xs text-muted-foreground truncate">
                             {transaction.clients?.full_name || "Sem cliente"} • {format(new Date(transaction.date), "dd/MM/yy")}
                           </p>
                         </div>
-                        <div className="flex items-center gap-1 flex-shrink-0">
+                        <div className="flex items-center gap-0.5 flex-shrink-0">
                           <Button
                             variant="ghost"
                             size="icon"
@@ -514,46 +514,46 @@ export default function Financial() {
                       </div>
 
                       {/* Values row */}
-                      <div className="grid grid-cols-3 gap-2 text-xs">
-                        <div>
-                          <span className="text-muted-foreground block">Valor</span>
-                          <span className="font-semibold">{formatCurrency(totalAmount)}</span>
+                      <div className="grid grid-cols-3 gap-1 text-xs">
+                        <div className="min-w-0 overflow-hidden">
+                          <span className="text-muted-foreground block text-[10px]">Valor</span>
+                          <span className="font-semibold text-xs truncate block">{formatCurrency(totalAmount)}</span>
                         </div>
-                        <div>
-                          <span className="text-muted-foreground block">Recebido</span>
+                        <div className="min-w-0 overflow-hidden">
+                          <span className="text-muted-foreground block text-[10px]">Recebido</span>
                           <Badge 
-                            className="bg-success/15 text-success cursor-pointer text-xs px-1.5"
+                            className="bg-success/15 text-success cursor-pointer text-[10px] px-1 h-5"
                             onClick={() => handleStartEditReceived(transaction)}
                           >
                             {formatCurrency(receivedAmount)}
                           </Badge>
                         </div>
-                        <div>
-                          <span className="text-muted-foreground block">Pendente</span>
+                        <div className="min-w-0 overflow-hidden">
+                          <span className="text-muted-foreground block text-[10px]">Pendente</span>
                           {pendingAmount > 0 ? (
-                            <div className="flex items-center gap-1">
-                              <Badge className="bg-warning/15 text-warning text-xs px-1.5">
+                            <div className="flex items-center gap-0.5">
+                              <Badge className="bg-warning/15 text-warning text-[10px] px-1 h-5">
                                 {formatCurrency(pendingAmount)}
                               </Badge>
                               <Button
                                 variant="ghost"
                                 size="icon"
                                 onClick={() => handleMarkAsPaid(transaction.id, totalAmount)}
-                                className="h-5 w-5 text-success hover:text-success"
+                                className="h-5 w-5 text-success hover:text-success flex-shrink-0"
                               >
                                 <CheckCircle className="h-3 w-3" />
                               </Button>
                             </div>
                           ) : (
-                            <Badge className="bg-success/15 text-success text-xs px-1.5">Quitado</Badge>
+                            <Badge className="bg-success/15 text-success text-[10px] px-1 h-5">Quitado</Badge>
                           )}
                         </div>
                       </div>
 
                       {/* Payment methods row */}
-                      <div className="flex items-center justify-between pt-1 border-t border-border">
-                        <span className="text-xs text-muted-foreground">Pagamento:</span>
-                        <div className="flex items-center gap-0.5">
+                      <div className="flex items-center justify-between pt-1 border-t border-border gap-1">
+                        <span className="text-[10px] text-muted-foreground flex-shrink-0">Pagamento:</span>
+                        <div className="flex items-center gap-0">
                           <Button
                             variant={currentMethod === "pix" ? "secondary" : "ghost"}
                             size="icon"
