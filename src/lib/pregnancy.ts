@@ -12,13 +12,13 @@ export function calculateCurrentPregnancyWeeks(
   setAt: string | null,
   dpp?: string | null
 ): number | null {
-  // If DPP is provided, calculate based on it (40 weeks - weeks until DPP)
+  // If DPP is provided, calculate based on it (42 weeks - weeks until DPP)
   if (dpp) {
     const dppDate = new Date(dpp);
     const now = new Date();
     const daysUntilDpp = differenceInDays(dppDate, now);
-    // 40 weeks = 280 days, current days = 280 - daysUntilDpp
-    const currentDays = 280 - daysUntilDpp;
+    // 42 weeks = 294 days, current days = 294 - daysUntilDpp
+    const currentDays = 294 - daysUntilDpp;
     const currentWeeks = Math.floor(currentDays / 7);
     return Math.max(0, Math.min(42, currentWeeks)); // Clamp between 0 and 42
   }
