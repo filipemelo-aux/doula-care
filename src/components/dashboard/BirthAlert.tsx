@@ -93,7 +93,7 @@ export function BirthAlert() {
               <Badge 
                 variant="outline" 
                 className={`flex-shrink-0 text-[10px] px-1.5 h-5 border-0 ${
-                  (client.current_weeks || 0) >= 40 
+                  (client.current_weeks || 0) >= 41 
                     ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400" 
                     : "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400"
                 }`}
