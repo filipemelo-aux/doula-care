@@ -397,7 +397,7 @@ export default function Financial() {
   };
 
   return (
-    <div className="space-y-6 overflow-x-hidden">
+    <div className="space-y-6 w-full max-w-full overflow-hidden">
       {/* Header */}
       <div className="page-header flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="min-w-0">
@@ -456,13 +456,13 @@ export default function Financial() {
       </Card>
 
       {/* Revenues List */}
-      <Card className="card-glass">
+      <Card className="card-glass overflow-hidden">
         <CardHeader>
           <CardTitle className="text-lg font-semibold text-foreground">
             Receitas ({filteredTransactions?.length || 0})
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-0 sm:p-6">
           {isLoading ? (
             <div className="text-center py-8 text-muted-foreground">
               Carregando...
@@ -470,7 +470,7 @@ export default function Financial() {
           ) : filteredTransactions && filteredTransactions.length > 0 ? (
             <>
               {/* Mobile Cards */}
-              <div className="block lg:hidden space-y-3">
+              <div className="block lg:hidden space-y-3 p-4 sm:p-0">
                 {filteredTransactions.map((transaction) => {
                   const totalAmount = Number(transaction.amount) || 0;
                   const receivedAmount = Number(transaction.amount_received) || 0;
@@ -602,18 +602,18 @@ export default function Financial() {
               </div>
 
               {/* Desktop Table */}
-              <div className="hidden lg:block">
-                <Table>
+              <div className="hidden lg:block overflow-x-auto">
+                <Table className="min-w-[900px]">
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Data</TableHead>
-                      <TableHead>Descrição</TableHead>
-                      <TableHead>Cliente</TableHead>
-                      <TableHead className="text-right">Valor</TableHead>
-                      <TableHead className="text-right">Recebido</TableHead>
-                      <TableHead className="text-right">A Receber</TableHead>
-                      <TableHead>Pagamento</TableHead>
-                      <TableHead className="text-right">Ações</TableHead>
+                      <TableHead className="w-[90px]">Data</TableHead>
+                      <TableHead className="min-w-[150px]">Descrição</TableHead>
+                      <TableHead className="min-w-[100px]">Cliente</TableHead>
+                      <TableHead className="text-right w-[100px]">Valor</TableHead>
+                      <TableHead className="text-right w-[110px]">Recebido</TableHead>
+                      <TableHead className="text-right w-[110px]">A Receber</TableHead>
+                      <TableHead className="w-[140px]">Pagamento</TableHead>
+                      <TableHead className="text-right w-[80px]">Ações</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
