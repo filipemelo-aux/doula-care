@@ -675,27 +675,27 @@ export default function Financial() {
       {/* Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle className="font-display text-xl">
+          <DialogHeader className="pb-2">
+            <DialogTitle className="font-display text-lg">
               {selectedTransaction ? "Editar Receita" : "Nova Receita"}
             </DialogTitle>
           </DialogHeader>
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
               {/* Info da transação (apenas visualização quando editando) */}
               {selectedTransaction && (
-                <div className="bg-muted/50 rounded-lg p-4 space-y-2">
-                  <div className="flex justify-between text-sm">
+                <div className="bg-muted/50 rounded-md p-3 space-y-1 text-xs">
+                  <div className="flex justify-between">
                     <span className="text-muted-foreground">Cliente:</span>
                     <span className="font-medium">{selectedTransaction.clients?.full_name || "—"}</span>
                   </div>
-                  <div className="flex justify-between text-sm">
+                  <div className="flex justify-between">
                     <span className="text-muted-foreground">Plano:</span>
                     <span className="font-medium">{selectedTransaction.plan_settings?.name || "—"}</span>
                   </div>
-                  <div className="flex justify-between text-sm">
+                  <div className="flex justify-between">
                     <span className="text-muted-foreground">Descrição:</span>
-                    <span className="font-medium truncate max-w-[200px]">{selectedTransaction.description}</span>
+                    <span className="font-medium truncate max-w-[180px]">{selectedTransaction.description}</span>
                   </div>
                 </div>
               )}
@@ -776,13 +776,13 @@ export default function Financial() {
               )}
 
               {/* Campos editáveis */}
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-2">
                 <FormField
                   control={form.control}
                   name="amount"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Valor Total (R$) *</FormLabel>
+                    <FormItem className="space-y-1">
+                      <FormLabel className="text-xs">Valor Total (R$) *</FormLabel>
                       <FormControl>
                         <Input
                           type="number"
@@ -792,11 +792,10 @@ export default function Financial() {
                           onChange={(e) => {
                             const value = Number(e.target.value);
                             field.onChange(value);
-                            // Atualiza o valor da parcela automaticamente
                             const installments = form.getValues("installments") || 1;
                             form.setValue("installment_value", value / installments);
                           }}
-                          className="input-field"
+                          className="input-field h-8 text-sm"
                         />
                       </FormControl>
                       <FormMessage />
@@ -807,10 +806,10 @@ export default function Financial() {
                   control={form.control}
                   name="date"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Data *</FormLabel>
+                    <FormItem className="space-y-1">
+                      <FormLabel className="text-xs">Data *</FormLabel>
                       <FormControl>
-                        <Input type="date" {...field} className="input-field" />
+                        <Input type="date" {...field} className="input-field h-8 text-sm" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -819,13 +818,13 @@ export default function Financial() {
               </div>
 
               {/* Parcelamento */}
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-2">
                 <FormField
                   control={form.control}
                   name="installments"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Nº de Parcelas</FormLabel>
+                    <FormItem className="space-y-1">
+                      <FormLabel className="text-xs">Nº de Parcelas</FormLabel>
                       <FormControl>
                         <Input
                           type="number"
@@ -835,11 +834,10 @@ export default function Financial() {
                           onChange={(e) => {
                             const installments = Math.max(1, Number(e.target.value));
                             field.onChange(installments);
-                            // Atualiza o valor da parcela automaticamente
                             const amount = form.getValues("amount") || 0;
                             form.setValue("installment_value", amount / installments);
                           }}
-                          className="input-field"
+                          className="input-field h-8 text-sm"
                         />
                       </FormControl>
                       <FormMessage />
@@ -850,8 +848,8 @@ export default function Financial() {
                   control={form.control}
                   name="installment_value"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Valor da Parcela (R$)</FormLabel>
+                    <FormItem className="space-y-1">
+                      <FormLabel className="text-xs">Valor da Parcela (R$)</FormLabel>
                       <FormControl>
                         <Input
                           type="number"
@@ -859,7 +857,7 @@ export default function Financial() {
                           min={0}
                           {...field}
                           onChange={(e) => field.onChange(Number(e.target.value))}
-                          className="input-field"
+                          className="input-field h-8 text-sm"
                         />
                       </FormControl>
                       <FormMessage />
@@ -868,16 +866,16 @@ export default function Financial() {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-2">
                 <FormField
                   control={form.control}
                   name="payment_method"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Forma de Pagamento *</FormLabel>
+                    <FormItem className="space-y-1">
+                      <FormLabel className="text-xs">Forma de Pagamento *</FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
-                          <SelectTrigger className="input-field">
+                          <SelectTrigger className="input-field h-8 text-sm">
                             <SelectValue />
                           </SelectTrigger>
                         </FormControl>
@@ -898,11 +896,11 @@ export default function Financial() {
                     control={form.control}
                     name="payment_status"
                     render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Status *</FormLabel>
+                      <FormItem className="space-y-1">
+                        <FormLabel className="text-xs">Status *</FormLabel>
                         <Select onValueChange={field.onChange} value={field.value}>
                           <FormControl>
-                            <SelectTrigger className="input-field">
+                            <SelectTrigger className="input-field h-8 text-sm">
                               <SelectValue />
                             </SelectTrigger>
                           </FormControl>
@@ -925,26 +923,28 @@ export default function Financial() {
                 control={form.control}
                 name="notes"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Observações</FormLabel>
+                  <FormItem className="space-y-1">
+                    <FormLabel className="text-xs">Observações</FormLabel>
                     <FormControl>
-                      <Textarea {...field} className="min-h-[60px] resize-none" />
+                      <Textarea {...field} className="min-h-[50px] resize-none text-sm" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
 
-              <div className="flex justify-end gap-3 pt-4">
+              <div className="flex justify-end gap-2 pt-2">
                 <Button
                   type="button"
                   variant="outline"
+                  size="sm"
                   onClick={() => setDialogOpen(false)}
                 >
                   Cancelar
                 </Button>
                 <Button
                   type="submit"
+                  size="sm"
                   disabled={createMutation.isPending || updateMutation.isPending}
                 >
                   {createMutation.isPending || updateMutation.isPending
