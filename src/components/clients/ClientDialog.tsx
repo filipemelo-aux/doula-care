@@ -48,7 +48,7 @@ const clientSchema = z.object({
   companion_name: z.string().optional(),
   companion_phone: z.string().optional(),
   status: z.enum(["tentante", "gestante", "lactante"]),
-  pregnancy_weeks: z.number().min(0).max(45).optional().nullable(),
+  pregnancy_weeks: z.number().min(0).max(42).optional().nullable(),
   dpp: z.string().optional().nullable(),
   plan: z.enum(["basico", "intermediario", "completo"]),
   payment_method: z.enum(["pix", "cartao", "dinheiro", "transferencia"]),
@@ -500,7 +500,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
                               <Input
                                 type="number"
                                 min={0}
-                                max={45}
+                                max={42}
                                 {...field}
                                 value={field.value ?? ""}
                                 onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : null)}
