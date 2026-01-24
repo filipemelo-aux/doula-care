@@ -170,60 +170,63 @@ export default function Clients() {
           ) : filteredClients && filteredClients.length > 0 ? (
             <>
               {/* Mobile Cards */}
-              <div className="block lg:hidden space-y-2 p-4">
-                {filteredClients.map((client) => (
-                  <Card key={client.id} className="p-3 space-y-2 overflow-hidden">
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex-1 min-w-0 overflow-hidden">
-                        <p className="font-medium text-sm truncate">{client.full_name}</p>
-                        <p className="text-xs text-muted-foreground truncate">{client.phone}</p>
+              <div className="block lg:hidden space-y-1.5 p-3">
+                {filteredClients.map((client) => {
+                  const firstName = client.full_name.split(" ")[0].toUpperCase();
+                  return (
+                    <Card key={client.id} className="p-2 space-y-1 w-full max-w-full overflow-hidden">
+                      <div className="flex items-center justify-between gap-1">
+                        <div className="flex-1 min-w-0 overflow-hidden">
+                          <p className="font-medium text-xs truncate">{firstName}</p>
+                          <p className="text-[10px] text-muted-foreground truncate">{client.phone}</p>
+                        </div>
+                        <div className="flex items-center gap-0 flex-shrink-0">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleView(client)}
+                            className="h-6 w-6"
+                          >
+                            <Eye className="h-3 w-3" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleEdit(client)}
+                            className="h-6 w-6"
+                          >
+                            <Edit2 className="h-3 w-3" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleDelete(client)}
+                            className="h-6 w-6 text-destructive hover:text-destructive"
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-0.5 flex-shrink-0">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleView(client)}
-                          className="h-7 w-7"
+                      <div className="flex items-center gap-1 flex-wrap">
+                        <Badge
+                          variant="outline"
+                          className={cn("badge-status border-0 text-[9px] px-1 h-4", `badge-${client.status}`)}
                         >
-                          <Eye className="h-3.5 w-3.5" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleEdit(client)}
-                          className="h-7 w-7"
+                          {statusLabels[client.status as keyof typeof statusLabels]}
+                        </Badge>
+                        <Badge variant="outline" className="text-[9px] px-1 h-4">
+                          {planLabels[client.plan as keyof typeof planLabels]}
+                        </Badge>
+                        <Badge
+                          variant="outline"
+                          className={cn("badge-status border-0 text-[9px] px-1 h-4", `badge-${client.payment_status}`)}
                         >
-                          <Edit2 className="h-3.5 w-3.5" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleDelete(client)}
-                          className="h-7 w-7 text-destructive hover:text-destructive"
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </Button>
+                          {paymentStatusLabels[client.payment_status as keyof typeof paymentStatusLabels]}
+                        </Badge>
                       </div>
-                    </div>
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      <Badge
-                        variant="outline"
-                        className={cn("badge-status border-0 text-[10px] px-1.5 h-5", `badge-${client.status}`)}
-                      >
-                        {statusLabels[client.status as keyof typeof statusLabels]}
-                      </Badge>
-                      <Badge variant="outline" className="text-[10px] px-1.5 h-5">
-                        {planLabels[client.plan as keyof typeof planLabels]}
-                      </Badge>
-                      <Badge
-                        variant="outline"
-                        className={cn("badge-status border-0 text-[10px] px-1.5 h-5", `badge-${client.payment_status}`)}
-                      >
-                        {paymentStatusLabels[client.payment_status as keyof typeof paymentStatusLabels]}
-                      </Badge>
-                    </div>
-                  </Card>
-                ))}
+                    </Card>
+                  );
+                })}
               </div>
 
               {/* Desktop Table */}
