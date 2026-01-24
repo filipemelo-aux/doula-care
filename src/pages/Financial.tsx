@@ -516,165 +516,157 @@ export default function Financial() {
                     : transaction.description;
 
                   return (
-                    <Card key={transaction.id} className="p-2.5 space-y-1.5 w-full max-w-full">
+                    <Card key={transaction.id} className="p-3 space-y-2 w-full max-w-full">
                       {/* Header: Description + Actions */}
-                      <div className="flex items-center justify-between gap-1">
-                        <div className="flex items-center gap-1 min-w-0 flex-1">
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-1.5 min-w-0 flex-1">
                           {transaction.is_auto_generated && (
-                            <Zap className="w-3 h-3 text-warning flex-shrink-0" />
+                            <Zap className="w-3.5 h-3.5 text-warning flex-shrink-0" />
                           )}
-                          <p className="font-medium text-xs truncate">{compactDesc}</p>
+                          <p className="font-medium text-sm truncate">{compactDesc}</p>
                         </div>
-                        <div className="flex items-center flex-shrink-0">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleDelete(transaction.id)}
-                            className="h-6 w-6 text-destructive"
-                          >
-                            <Trash2 className="h-3 w-3" />
-                          </Button>
-                        </div>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleDelete(transaction.id)}
+                          className="h-7 w-7 text-destructive flex-shrink-0"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
                       </div>
 
                       {/* Info: Client + Date */}
-                      <p className="text-[10px] text-muted-foreground truncate">
+                      <p className="text-xs text-muted-foreground truncate">
                         {transaction.clients?.full_name || "—"} • {format(new Date(transaction.date), "dd/MM/yy")}
                       </p>
 
-                      {/* Values: Stacked layout */}
-                      <div className="flex items-center justify-between gap-2 pt-1 border-t border-border/50">
-                        <div className="flex items-center gap-2">
-                          <div>
-                            <span className="text-[9px] text-muted-foreground block">Total</span>
-                            <span className="font-semibold text-[11px]">{formatCompact(totalAmount)}</span>
-                          </div>
-                          <div>
-                            <span className="text-[9px] text-muted-foreground block">Parc.</span>
-                            {isEditingInstallmentsMobile ? (
-                              <div className="flex items-center gap-0.5">
-                                <Input
-                                  type="number"
-                                  value={editingInstallmentsValue}
-                                  onChange={(e) => setEditingInstallmentsValue(e.target.value)}
-                                  className="w-10 h-5 text-center text-[10px] p-0.5"
-                                  min={1}
-                                  max={24}
-                                  autoFocus
-                                  onKeyDown={(e) => {
-                                    if (e.key === "Enter") {
-                                      handleSaveInstallments(transaction.id, totalAmount);
-                                    } else if (e.key === "Escape") {
-                                      handleCancelEditInstallments();
-                                    }
-                                  }}
-                                  onBlur={() => handleSaveInstallments(transaction.id, totalAmount)}
-                                />
-                              </div>
-                            ) : (
-                              <span 
-                                className="text-[11px] font-medium cursor-pointer"
-                                onClick={() => handleStartEditInstallments(transaction)}
-                              >
-                                {installments}x
-                              </span>
-                            )}
-                          </div>
-                          <div>
-                            <span className="text-[9px] text-muted-foreground block">Receb.</span>
-                            {isEditingReceivedMobile ? (
-                              <div className="flex items-center gap-0.5">
-                                <Input
-                                  type="number"
-                                  value={editingReceivedValue}
-                                  onChange={(e) => setEditingReceivedValue(e.target.value)}
-                                  className="w-14 h-5 text-right text-[10px] p-0.5"
-                                  min={0}
-                                  max={totalAmount}
-                                  step="0.01"
-                                  autoFocus
-                                  onKeyDown={(e) => {
-                                    if (e.key === "Enter") {
-                                      handleSaveReceived(transaction.id, totalAmount);
-                                    } else if (e.key === "Escape") {
-                                      handleCancelEditReceived();
-                                    }
-                                  }}
-                                  onBlur={() => handleSaveReceived(transaction.id, totalAmount)}
-                                />
-                              </div>
-                            ) : (
-                              <span 
-                                className="text-[11px] text-success font-medium cursor-pointer"
-                                onClick={() => handleStartEditReceived(transaction)}
-                              >
-                                {formatCompact(receivedAmount)}
-                              </span>
-                            )}
-                          </div>
-                          <div>
-                            <span className="text-[9px] text-muted-foreground block">Pend.</span>
-                            {pendingAmount > 0 ? (
-                              <div className="flex items-center gap-0.5">
-                                <span className="text-[11px] text-warning font-medium">{formatCompact(pendingAmount)}</span>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={() => handleMarkAsPaid(transaction.id, totalAmount)}
-                                  className="h-4 w-4 text-success p-0"
-                                >
-                                  <CheckCircle className="h-3 w-3" />
-                                </Button>
-                              </div>
-                            ) : (
-                              <span className="text-[11px] text-success font-medium">OK</span>
-                            )}
-                          </div>
+                      {/* Values: Grid layout for better spacing */}
+                      <div className="grid grid-cols-4 gap-3 pt-2 border-t border-border/50">
+                        <div className="text-center">
+                          <span className="text-[10px] text-muted-foreground block mb-0.5">Total</span>
+                          <span className="font-semibold text-sm">{formatCompact(totalAmount)}</span>
                         </div>
+                        <div className="text-center">
+                          <span className="text-[10px] text-muted-foreground block mb-0.5">Parc.</span>
+                          {isEditingInstallmentsMobile ? (
+                            <Input
+                              type="number"
+                              value={editingInstallmentsValue}
+                              onChange={(e) => setEditingInstallmentsValue(e.target.value)}
+                              className="w-full h-6 text-center text-sm p-1"
+                              min={1}
+                              max={24}
+                              autoFocus
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") {
+                                  handleSaveInstallments(transaction.id, totalAmount);
+                                } else if (e.key === "Escape") {
+                                  handleCancelEditInstallments();
+                                }
+                              }}
+                              onBlur={() => handleSaveInstallments(transaction.id, totalAmount)}
+                            />
+                          ) : (
+                            <span 
+                              className="text-sm font-medium cursor-pointer hover:text-primary"
+                              onClick={() => handleStartEditInstallments(transaction)}
+                            >
+                              {installments}x
+                            </span>
+                          )}
+                        </div>
+                        <div className="text-center">
+                          <span className="text-[10px] text-muted-foreground block mb-0.5">Receb.</span>
+                          {isEditingReceivedMobile ? (
+                            <Input
+                              type="number"
+                              value={editingReceivedValue}
+                              onChange={(e) => setEditingReceivedValue(e.target.value)}
+                              className="w-full h-6 text-center text-sm p-1"
+                              min={0}
+                              max={totalAmount}
+                              step="0.01"
+                              autoFocus
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") {
+                                  handleSaveReceived(transaction.id, totalAmount);
+                                } else if (e.key === "Escape") {
+                                  handleCancelEditReceived();
+                                }
+                              }}
+                              onBlur={() => handleSaveReceived(transaction.id, totalAmount)}
+                            />
+                          ) : (
+                            <span 
+                              className="text-sm text-success font-medium cursor-pointer hover:text-success/80"
+                              onClick={() => handleStartEditReceived(transaction)}
+                            >
+                              {formatCompact(receivedAmount)}
+                            </span>
+                          )}
+                        </div>
+                        <div className="text-center">
+                          <span className="text-[10px] text-muted-foreground block mb-0.5">Pend.</span>
+                          {pendingAmount > 0 ? (
+                            <div className="flex items-center justify-center gap-1">
+                              <span className="text-sm text-warning font-medium">{formatCompact(pendingAmount)}</span>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleMarkAsPaid(transaction.id, totalAmount)}
+                                className="h-5 w-5 text-success p-0"
+                              >
+                                <CheckCircle className="h-3.5 w-3.5" />
+                              </Button>
+                            </div>
+                          ) : (
+                            <span className="text-sm text-success font-medium">OK</span>
+                          )}
+                        </div>
+                      </div>
 
-                        {/* Payment method icons */}
-                        <div className="flex items-center">
-                          <Button
-                            variant={currentMethod === "pix" ? "secondary" : "ghost"}
-                            size="icon"
-                            onClick={() => handleChangePaymentMethod(transaction.id, "pix")}
-                            className="h-5 w-5"
-                          >
-                            <QrCode className="h-2.5 w-2.5" />
-                          </Button>
-                          <Button
-                            variant={currentMethod === "cartao" ? "secondary" : "ghost"}
-                            size="icon"
-                            onClick={() => handleChangePaymentMethod(transaction.id, "cartao")}
-                            className="h-5 w-5"
-                          >
-                            <CreditCard className="h-2.5 w-2.5" />
-                          </Button>
-                          <Button
-                            variant={currentMethod === "dinheiro" ? "secondary" : "ghost"}
-                            size="icon"
-                            onClick={() => handleChangePaymentMethod(transaction.id, "dinheiro")}
-                            className="h-5 w-5"
-                          >
-                            <Banknote className="h-2.5 w-2.5" />
-                          </Button>
-                          <Button
-                            variant={currentMethod === "transferencia" ? "secondary" : "ghost"}
-                            size="icon"
-                            onClick={() => handleChangePaymentMethod(transaction.id, "transferencia")}
-                            className="h-5 w-5"
-                          >
-                            <Building2 className="h-2.5 w-2.5" />
-                          </Button>
-                          <Button
-                            variant={currentMethod === "boleto" ? "secondary" : "ghost"}
-                            size="icon"
-                            onClick={() => handleChangePaymentMethod(transaction.id, "boleto")}
-                            className="h-5 w-5"
-                          >
-                            <FileText className="h-2.5 w-2.5" />
-                          </Button>
-                        </div>
+                      {/* Payment method icons */}
+                      <div className="flex items-center justify-center gap-1 pt-2 border-t border-border/50">
+                        <Button
+                          variant={currentMethod === "pix" ? "secondary" : "ghost"}
+                          size="icon"
+                          onClick={() => handleChangePaymentMethod(transaction.id, "pix")}
+                          className="h-7 w-7"
+                        >
+                          <QrCode className="h-3.5 w-3.5" />
+                        </Button>
+                        <Button
+                          variant={currentMethod === "cartao" ? "secondary" : "ghost"}
+                          size="icon"
+                          onClick={() => handleChangePaymentMethod(transaction.id, "cartao")}
+                          className="h-7 w-7"
+                        >
+                          <CreditCard className="h-3.5 w-3.5" />
+                        </Button>
+                        <Button
+                          variant={currentMethod === "dinheiro" ? "secondary" : "ghost"}
+                          size="icon"
+                          onClick={() => handleChangePaymentMethod(transaction.id, "dinheiro")}
+                          className="h-7 w-7"
+                        >
+                          <Banknote className="h-3.5 w-3.5" />
+                        </Button>
+                        <Button
+                          variant={currentMethod === "transferencia" ? "secondary" : "ghost"}
+                          size="icon"
+                          onClick={() => handleChangePaymentMethod(transaction.id, "transferencia")}
+                          className="h-7 w-7"
+                        >
+                          <Building2 className="h-3.5 w-3.5" />
+                        </Button>
+                        <Button
+                          variant={currentMethod === "boleto" ? "secondary" : "ghost"}
+                          size="icon"
+                          onClick={() => handleChangePaymentMethod(transaction.id, "boleto")}
+                          className="h-7 w-7"
+                        >
+                          <FileText className="h-3.5 w-3.5" />
+                        </Button>
                       </div>
                     </Card>
                   );
