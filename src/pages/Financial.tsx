@@ -516,12 +516,12 @@ export default function Financial() {
                     : transaction.description;
 
                   return (
-                    <Card key={transaction.id} className="p-3 space-y-2 w-full max-w-full">
+                    <Card key={transaction.id} className="p-2 space-y-1.5 w-full max-w-full overflow-hidden">
                       {/* Header: Description + Actions */}
-                      <div className="flex items-center justify-between gap-2">
-                        <div className="flex items-center gap-1.5 min-w-0 flex-1">
+                      <div className="flex items-center justify-between gap-1">
+                        <div className="flex items-center gap-1 min-w-0 flex-1">
                           {transaction.is_auto_generated && (
-                            <Zap className="w-3.5 h-3.5 text-warning flex-shrink-0" />
+                            <Zap className="w-3 h-3 text-warning flex-shrink-0" />
                           )}
                           <p className="font-medium text-sm truncate">{compactDesc}</p>
                         </div>
@@ -529,9 +529,9 @@ export default function Financial() {
                           variant="ghost"
                           size="icon"
                           onClick={() => handleDelete(transaction.id)}
-                          className="h-7 w-7 text-destructive flex-shrink-0"
+                          className="h-6 w-6 text-destructive flex-shrink-0"
                         >
-                          <Trash2 className="h-3.5 w-3.5" />
+                          <Trash2 className="h-3 w-3" />
                         </Button>
                       </div>
 
@@ -540,20 +540,20 @@ export default function Financial() {
                         {transaction.clients?.full_name || "—"} • {format(new Date(transaction.date), "dd/MM/yy")}
                       </p>
 
-                      {/* Values: Grid layout for better spacing */}
-                      <div className="grid grid-cols-4 gap-3 pt-2 border-t border-border/50">
-                        <div className="text-center">
-                          <span className="text-[10px] text-muted-foreground block mb-0.5">Total</span>
+                      {/* Values: Grid layout - compact */}
+                      <div className="grid grid-cols-4 gap-1 pt-1.5 border-t border-border/50">
+                        <div className="text-center min-w-0">
+                          <span className="text-[10px] text-muted-foreground block">Total</span>
                           <span className="font-semibold text-sm">{formatCompact(totalAmount)}</span>
                         </div>
-                        <div className="text-center">
-                          <span className="text-[10px] text-muted-foreground block mb-0.5">Parc.</span>
+                        <div className="text-center min-w-0">
+                          <span className="text-[10px] text-muted-foreground block">Parc.</span>
                           {isEditingInstallmentsMobile ? (
                             <Input
                               type="number"
                               value={editingInstallmentsValue}
                               onChange={(e) => setEditingInstallmentsValue(e.target.value)}
-                              className="w-full h-6 text-center text-sm p-1"
+                              className="w-full h-6 text-center text-sm px-0.5"
                               min={1}
                               max={24}
                               autoFocus
@@ -568,21 +568,21 @@ export default function Financial() {
                             />
                           ) : (
                             <span 
-                              className="text-sm font-medium cursor-pointer hover:text-primary"
+                              className="text-sm font-medium cursor-pointer"
                               onClick={() => handleStartEditInstallments(transaction)}
                             >
                               {installments}x
                             </span>
                           )}
                         </div>
-                        <div className="text-center">
-                          <span className="text-[10px] text-muted-foreground block mb-0.5">Receb.</span>
+                        <div className="text-center min-w-0">
+                          <span className="text-[10px] text-muted-foreground block">Receb.</span>
                           {isEditingReceivedMobile ? (
                             <Input
                               type="number"
                               value={editingReceivedValue}
                               onChange={(e) => setEditingReceivedValue(e.target.value)}
-                              className="w-full h-6 text-center text-sm p-1"
+                              className="w-full h-6 text-center text-sm px-0.5"
                               min={0}
                               max={totalAmount}
                               step="0.01"
@@ -598,25 +598,25 @@ export default function Financial() {
                             />
                           ) : (
                             <span 
-                              className="text-sm text-success font-medium cursor-pointer hover:text-success/80"
+                              className="text-sm text-success font-medium cursor-pointer"
                               onClick={() => handleStartEditReceived(transaction)}
                             >
                               {formatCompact(receivedAmount)}
                             </span>
                           )}
                         </div>
-                        <div className="text-center">
-                          <span className="text-[10px] text-muted-foreground block mb-0.5">Pend.</span>
+                        <div className="text-center min-w-0">
+                          <span className="text-[10px] text-muted-foreground block">Pend.</span>
                           {pendingAmount > 0 ? (
-                            <div className="flex items-center justify-center gap-1">
+                            <div className="flex items-center justify-center gap-0.5">
                               <span className="text-sm text-warning font-medium">{formatCompact(pendingAmount)}</span>
                               <Button
                                 variant="ghost"
                                 size="icon"
                                 onClick={() => handleMarkAsPaid(transaction.id, totalAmount)}
-                                className="h-5 w-5 text-success p-0"
+                                className="h-4 w-4 text-success p-0"
                               >
-                                <CheckCircle className="h-3.5 w-3.5" />
+                                <CheckCircle className="h-3 w-3" />
                               </Button>
                             </div>
                           ) : (
@@ -626,46 +626,46 @@ export default function Financial() {
                       </div>
 
                       {/* Payment method icons */}
-                      <div className="flex items-center justify-center gap-1 pt-2 border-t border-border/50">
+                      <div className="flex items-center justify-center gap-0 pt-1.5 border-t border-border/50">
                         <Button
                           variant={currentMethod === "pix" ? "secondary" : "ghost"}
                           size="icon"
                           onClick={() => handleChangePaymentMethod(transaction.id, "pix")}
-                          className="h-7 w-7"
+                          className="h-6 w-6"
                         >
-                          <QrCode className="h-3.5 w-3.5" />
+                          <QrCode className="h-3 w-3" />
                         </Button>
                         <Button
                           variant={currentMethod === "cartao" ? "secondary" : "ghost"}
                           size="icon"
                           onClick={() => handleChangePaymentMethod(transaction.id, "cartao")}
-                          className="h-7 w-7"
+                          className="h-6 w-6"
                         >
-                          <CreditCard className="h-3.5 w-3.5" />
+                          <CreditCard className="h-3 w-3" />
                         </Button>
                         <Button
                           variant={currentMethod === "dinheiro" ? "secondary" : "ghost"}
                           size="icon"
                           onClick={() => handleChangePaymentMethod(transaction.id, "dinheiro")}
-                          className="h-7 w-7"
+                          className="h-6 w-6"
                         >
-                          <Banknote className="h-3.5 w-3.5" />
+                          <Banknote className="h-3 w-3" />
                         </Button>
                         <Button
                           variant={currentMethod === "transferencia" ? "secondary" : "ghost"}
                           size="icon"
                           onClick={() => handleChangePaymentMethod(transaction.id, "transferencia")}
-                          className="h-7 w-7"
+                          className="h-6 w-6"
                         >
-                          <Building2 className="h-3.5 w-3.5" />
+                          <Building2 className="h-3 w-3" />
                         </Button>
                         <Button
                           variant={currentMethod === "boleto" ? "secondary" : "ghost"}
                           size="icon"
                           onClick={() => handleChangePaymentMethod(transaction.id, "boleto")}
-                          className="h-7 w-7"
+                          className="h-6 w-6"
                         >
-                          <FileText className="h-3.5 w-3.5" />
+                          <FileText className="h-3 w-3" />
                         </Button>
                       </div>
                     </Card>
