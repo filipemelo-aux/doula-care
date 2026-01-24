@@ -397,21 +397,21 @@ export default function Financial() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 overflow-x-hidden">
       {/* Header */}
       <div className="page-header flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
+        <div className="min-w-0">
           <h1 className="page-title">Financeiro - Receitas</h1>
           <p className="page-description">Controle suas receitas e recebimentos</p>
         </div>
-        <Button onClick={handleOpenDialog} className="gap-2">
+        <Button onClick={handleOpenDialog} className="gap-2 flex-shrink-0">
           <Plus className="w-4 h-4" />
           Nova Receita
         </Button>
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-6">
         <StatCard
           title="Receita Total"
           value={formatCurrency(totalIncome)}

@@ -24,15 +24,15 @@ export function StatCard({
   return (
     <div
       className={cn(
-        "stat-card",
+        "stat-card overflow-hidden",
         variant === "primary" && "stat-card-primary",
         variant === "success" && "stat-card-success"
       )}
     >
-      <div className="flex items-start justify-between mb-4">
+      <div className="flex items-start justify-between mb-3 lg:mb-4">
         <div
           className={cn(
-            "w-12 h-12 rounded-xl flex items-center justify-center",
+            "w-10 h-10 lg:w-12 lg:h-12 rounded-xl flex items-center justify-center flex-shrink-0",
             variant === "default" && "bg-primary/10",
             variant === "primary" && "bg-primary-foreground/20",
             variant === "success" && "bg-success-foreground/20",
@@ -41,7 +41,7 @@ export function StatCard({
         >
           <Icon
             className={cn(
-              "w-6 h-6",
+              "w-5 h-5 lg:w-6 lg:h-6",
               variant === "default" && "text-primary",
               variant === "primary" && "text-primary-foreground",
               variant === "success" && "text-success-foreground",
@@ -52,7 +52,7 @@ export function StatCard({
         {trend && (
           <div
             className={cn(
-              "px-2.5 py-1 rounded-full text-xs font-medium",
+              "px-2 py-0.5 lg:px-2.5 lg:py-1 rounded-full text-xs font-medium flex-shrink-0",
               trend.isPositive
                 ? "bg-success/15 text-success"
                 : "bg-destructive/15 text-destructive"
@@ -62,10 +62,10 @@ export function StatCard({
           </div>
         )}
       </div>
-      <div>
+      <div className="min-w-0">
         <h3
           className={cn(
-            "text-sm font-medium mb-1",
+            "text-xs lg:text-sm font-medium mb-1 truncate",
             variant === "default" && "text-muted-foreground",
             (variant === "primary" || variant === "success") && "text-current opacity-80"
           )}
@@ -74,7 +74,7 @@ export function StatCard({
         </h3>
         <p
           className={cn(
-            "text-3xl font-semibold tracking-tight font-sans",
+            "text-lg lg:text-2xl xl:text-3xl font-semibold tracking-tight font-sans truncate",
             variant === "default" && "text-foreground"
           )}
         >
@@ -83,7 +83,7 @@ export function StatCard({
         {subtitle && (
           <p
             className={cn(
-              "text-sm mt-1",
+              "text-xs lg:text-sm mt-1 truncate",
               variant === "default" && "text-muted-foreground",
               (variant === "primary" || variant === "success") && "opacity-70"
             )}

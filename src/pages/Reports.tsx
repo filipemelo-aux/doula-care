@@ -260,10 +260,10 @@ export default function Reports() {
   ) || { income: 0, expenses: 0 };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 overflow-x-hidden">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <div className="page-header mb-0">
+        <div className="page-header mb-0 min-w-0">
           <h1 className="page-title">Relatórios</h1>
           <p className="page-description">
             Visualize o desempenho do seu negócio em detalhes
@@ -273,50 +273,50 @@ export default function Reports() {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="card-glass">
-          <CardContent className="flex items-center gap-4 p-4">
-            <div className="w-12 h-12 rounded-xl bg-success/15 flex items-center justify-center">
-              <TrendingUp className="w-6 h-6 text-success" />
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
+        <Card className="card-glass overflow-hidden">
+          <CardContent className="flex items-center gap-3 p-3 lg:p-4">
+            <div className="w-10 h-10 lg:w-12 lg:h-12 rounded-xl bg-success/15 flex items-center justify-center flex-shrink-0">
+              <TrendingUp className="w-5 h-5 lg:w-6 lg:h-6 text-success" />
             </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Receitas</p>
-              <p className="text-xl font-semibold text-success">{formatCurrency(totals.income)}</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="card-glass">
-          <CardContent className="flex items-center gap-4 p-4">
-            <div className="w-12 h-12 rounded-xl bg-destructive/15 flex items-center justify-center">
-              <TrendingDown className="w-6 h-6 text-destructive" />
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Despesas</p>
-              <p className="text-xl font-semibold text-destructive">{formatCurrency(totals.expenses)}</p>
+            <div className="min-w-0">
+              <p className="text-xs lg:text-sm text-muted-foreground">Receitas</p>
+              <p className="text-base lg:text-xl font-semibold text-success truncate">{formatCurrency(totals.income)}</p>
             </div>
           </CardContent>
         </Card>
-        <Card className="card-glass">
-          <CardContent className="flex items-center gap-4 p-4">
-            <div className="w-12 h-12 rounded-xl bg-primary/15 flex items-center justify-center">
-              <DollarSign className="w-6 h-6 text-primary" />
+        <Card className="card-glass overflow-hidden">
+          <CardContent className="flex items-center gap-3 p-3 lg:p-4">
+            <div className="w-10 h-10 lg:w-12 lg:h-12 rounded-xl bg-destructive/15 flex items-center justify-center flex-shrink-0">
+              <TrendingDown className="w-5 h-5 lg:w-6 lg:h-6 text-destructive" />
             </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Saldo</p>
-              <p className={`text-xl font-semibold ${totals.income - totals.expenses >= 0 ? "text-success" : "text-destructive"}`}>
+            <div className="min-w-0">
+              <p className="text-xs lg:text-sm text-muted-foreground">Despesas</p>
+              <p className="text-base lg:text-xl font-semibold text-destructive truncate">{formatCurrency(totals.expenses)}</p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="card-glass overflow-hidden">
+          <CardContent className="flex items-center gap-3 p-3 lg:p-4">
+            <div className="w-10 h-10 lg:w-12 lg:h-12 rounded-xl bg-primary/15 flex items-center justify-center flex-shrink-0">
+              <DollarSign className="w-5 h-5 lg:w-6 lg:h-6 text-primary" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-xs lg:text-sm text-muted-foreground">Saldo</p>
+              <p className={`text-base lg:text-xl font-semibold truncate ${totals.income - totals.expenses >= 0 ? "text-success" : "text-destructive"}`}>
                 {formatCurrency(totals.income - totals.expenses)}
               </p>
             </div>
           </CardContent>
         </Card>
-        <Card className="card-glass">
-          <CardContent className="flex items-center gap-4 p-4">
-            <div className="w-12 h-12 rounded-xl bg-info/15 flex items-center justify-center">
-              <Users className="w-6 h-6 text-info" />
+        <Card className="card-glass overflow-hidden">
+          <CardContent className="flex items-center gap-3 p-3 lg:p-4">
+            <div className="w-10 h-10 lg:w-12 lg:h-12 rounded-xl bg-info/15 flex items-center justify-center flex-shrink-0">
+              <Users className="w-5 h-5 lg:w-6 lg:h-6 text-info" />
             </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Clientes</p>
-              <p className="text-xl font-semibold text-foreground">{clientStats?.total || 0}</p>
+            <div className="min-w-0">
+              <p className="text-xs lg:text-sm text-muted-foreground">Clientes</p>
+              <p className="text-base lg:text-xl font-semibold text-foreground">{clientStats?.total || 0}</p>
             </div>
           </CardContent>
         </Card>
