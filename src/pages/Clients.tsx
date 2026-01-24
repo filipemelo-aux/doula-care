@@ -50,10 +50,9 @@ const paymentStatusLabels = {
   parcial: "Parcial",
 };
 
-const formatClientName = (fullName: string) => {
-  const names = fullName.split(" ").filter(n => n.length > 0);
-  if (names.length <= 2) return fullName;
-  return `${names[0]} ${names[1]}...`;
+const formatClientName = (fullName: string, maxLength = 25) => {
+  if (fullName.length <= maxLength) return fullName;
+  return `${fullName.slice(0, maxLength)}...`;
 };
 
 export default function Clients() {
