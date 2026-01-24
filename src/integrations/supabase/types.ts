@@ -16,6 +16,11 @@ export type Database = {
     Tables: {
       clients: {
         Row: {
+          birth_date: string | null
+          birth_height: number | null
+          birth_occurred: boolean | null
+          birth_time: string | null
+          birth_weight: number | null
           city: string | null
           companion_name: string | null
           companion_phone: string | null
@@ -41,6 +46,11 @@ export type Database = {
           zip_code: string | null
         }
         Insert: {
+          birth_date?: string | null
+          birth_height?: number | null
+          birth_occurred?: boolean | null
+          birth_time?: string | null
+          birth_weight?: number | null
           city?: string | null
           companion_name?: string | null
           companion_phone?: string | null
@@ -66,6 +76,11 @@ export type Database = {
           zip_code?: string | null
         }
         Update: {
+          birth_date?: string | null
+          birth_height?: number | null
+          birth_occurred?: boolean | null
+          birth_time?: string | null
+          birth_weight?: number | null
           city?: string | null
           companion_name?: string | null
           companion_phone?: string | null
