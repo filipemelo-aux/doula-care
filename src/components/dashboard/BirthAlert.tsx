@@ -147,13 +147,13 @@ export function BirthAlert() {
 
                     {/* Content */}
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
+                      <div className="flex items-center gap-3 flex-wrap">
                         <span className="text-sm font-medium text-foreground truncate max-w-[180px] lg:max-w-none">
                           {client.full_name}
                         </span>
                         <Badge 
                           variant="outline" 
-                          className={`text-[10px] px-1.5 h-4 border-0 flex-shrink-0 ${
+                          className={`text-sm font-semibold px-2.5 py-1 h-auto border-0 flex-shrink-0 ${
                             client.is_post_term
                               ? "bg-destructive/20 text-destructive"
                               : isHighPriority
@@ -161,8 +161,8 @@ export function BirthAlert() {
                               : "bg-warning/15 text-warning/90"
                           }`}
                         >
-                          {client.current_weeks}s{client.current_days > 0 ? `${client.current_days}d` : ""}
-                          {client.is_post_term && " Pós-Data"}
+                          {client.current_weeks}s {client.current_days > 0 ? `${client.current_days}d` : ""}
+                          {client.is_post_term && " • Pós-Data"}
                         </Badge>
                       </div>
                       <div className="flex items-center gap-2 mt-0.5">
