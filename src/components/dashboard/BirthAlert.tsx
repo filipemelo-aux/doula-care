@@ -126,46 +126,46 @@ export function BirthAlert() {
                 return (
                   <div
                     key={client.id}
-                    className={`flex items-center gap-2 px-2 py-2.5 transition-colors hover:bg-muted/30 overflow-hidden ${
+                    className={`px-2 py-2 transition-colors hover:bg-muted/30 overflow-hidden ${
                       client.is_post_term ? "bg-destructive/5" : ""
                     }`}
                   >
-                    {/* Icon */}
-                    <div className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 ${
-                      client.is_post_term
-                        ? "bg-destructive/15"
-                        : isHighPriority
-                        ? "bg-warning/15"
-                        : "bg-warning/10"
-                    }`}>
-                      {client.is_post_term ? (
-                        <AlertTriangle className="h-3.5 w-3.5 text-destructive" />
-                      ) : (
-                        <Baby className={`h-3.5 w-3.5 ${isHighPriority ? "text-warning" : "text-warning/80"}`} />
-                      )}
+                    {/* Row 1: Icon + Name + Badge */}
+                    <div className="flex items-center gap-2">
+                      <div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 ${
+                        client.is_post_term
+                          ? "bg-destructive/15"
+                          : isHighPriority
+                          ? "bg-warning/15"
+                          : "bg-warning/10"
+                      }`}>
+                        {client.is_post_term ? (
+                          <AlertTriangle className="h-3 w-3 text-destructive" />
+                        ) : (
+                          <Baby className={`h-3 w-3 ${isHighPriority ? "text-warning" : "text-warning/80"}`} />
+                        )}
+                      </div>
+                      <span className="text-sm font-medium text-foreground truncate flex-1 min-w-0">
+                        {client.full_name}
+                      </span>
+                      <Badge 
+                        variant="outline" 
+                        className={`text-[9px] px-1 h-4 border-0 flex-shrink-0 ${
+                          client.is_post_term
+                            ? "bg-destructive/20 text-destructive"
+                            : isHighPriority
+                            ? "bg-warning/20 text-warning"
+                            : "bg-warning/15 text-warning/90"
+                        }`}
+                      >
+                        {client.current_weeks}s{client.current_days > 0 ? `${client.current_days}d` : ""}
+                        {client.is_post_term && " Pós"}
+                      </Badge>
                     </div>
 
-                    {/* Content */}
-                    <div className="flex-1 min-w-0 overflow-hidden">
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-sm font-medium text-foreground truncate">
-                          {client.full_name}
-                        </span>
-                        <Badge 
-                          variant="outline" 
-                          className={`text-[9px] px-1 h-4 border-0 flex-shrink-0 ${
-                            client.is_post_term
-                              ? "bg-destructive/20 text-destructive"
-                              : isHighPriority
-                              ? "bg-warning/20 text-warning"
-                              : "bg-warning/15 text-warning/90"
-                          }`}
-                        >
-                          {client.current_weeks}s{client.current_days > 0 ? `${client.current_days}d` : ""}
-                          {client.is_post_term && " Pós"}
-                        </Badge>
-                      </div>
-                      <div className="flex items-center gap-1.5 mt-0.5 text-[11px] text-muted-foreground truncate">
+                    {/* Row 2: Status + DPP + Nasceu button */}
+                    <div className="flex items-center justify-between mt-1 pl-8">
+                      <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground min-w-0">
                         <span className="truncate">
                           {client.is_post_term ? "Pós-data" : "Parto próximo"}
                         </span>
@@ -179,18 +179,16 @@ export function BirthAlert() {
                           </>
                         )}
                       </div>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-5 px-1.5 text-[10px] hover:bg-primary/10 flex-shrink-0"
+                        onClick={() => handleRegisterBirth(client as Client)}
+                      >
+                        <CheckCircle className="h-3 w-3 mr-0.5" />
+                        Nasceu
+                      </Button>
                     </div>
-
-                    {/* Action */}
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      className="h-6 px-1.5 text-[10px] hover:bg-primary/10 flex-shrink-0"
-                      onClick={() => handleRegisterBirth(client as Client)}
-                    >
-                      <CheckCircle className="h-3 w-3 mr-0.5" />
-                      Nasceu
-                    </Button>
                   </div>
                 );
               })}
