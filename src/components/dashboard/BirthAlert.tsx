@@ -189,7 +189,7 @@ export function BirthAlert() {
                       onClick={() => handleRegisterBirth(client as Client)}
                     >
                       <CheckCircle className="h-3 w-3 mr-1" />
-                      <span className="hidden sm:inline">Nasceu</span>
+                      Nasceu
                     </Button>
                   </div>
                 );
