@@ -568,7 +568,7 @@ export default function Financial() {
                             />
                           ) : (
                             <span 
-                              className="text-sm font-medium cursor-pointer"
+                              className="text-sm font-medium cursor-pointer px-1.5 py-0.5 rounded border border-dashed border-muted-foreground/40 hover:border-primary hover:bg-primary/5 transition-colors"
                               onClick={() => handleStartEditInstallments(transaction)}
                             >
                               {installments}x
@@ -598,7 +598,7 @@ export default function Financial() {
                             />
                           ) : (
                             <span 
-                              className="text-sm text-success font-medium cursor-pointer"
+                              className="text-sm text-success font-medium cursor-pointer px-1.5 py-0.5 rounded border border-dashed border-success/40 hover:border-success hover:bg-success/5 transition-colors"
                               onClick={() => handleStartEditReceived(transaction)}
                             >
                               {formatCompact(receivedAmount)}
@@ -755,7 +755,7 @@ export default function Financial() {
                               </div>
                             ) : (
                               <span 
-                                className="text-xs text-muted-foreground cursor-pointer hover:text-foreground transition-colors"
+                                className="text-xs text-muted-foreground cursor-pointer px-1.5 py-0.5 rounded border border-dashed border-muted-foreground/40 hover:border-primary hover:bg-primary/5 transition-colors"
                                 onClick={() => handleStartEditInstallments(transaction)}
                               >
                                 {installments}x
@@ -793,7 +793,7 @@ export default function Financial() {
                               </div>
                             ) : (
                               <span 
-                                className="text-xs text-success font-medium cursor-pointer hover:underline"
+                                className="text-xs text-success font-medium cursor-pointer px-1.5 py-0.5 rounded border border-dashed border-success/40 hover:border-success hover:bg-success/5 transition-colors"
                                 onClick={() => handleStartEditReceived(transaction)}
                               >
                                 {formatCurrency(receivedAmount)}
