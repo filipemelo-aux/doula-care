@@ -165,7 +165,7 @@ export function BirthAlert() {
                           {client.is_post_term && " Pós-Data"}
                         </Badge>
                       </div>
-                      <div className="flex items-center gap-2 mt-0.5">
+                      <div className="flex items-center gap-2 mt-0.5 whitespace-nowrap">
                         <span className="text-xs text-muted-foreground">
                           {client.is_post_term ? "Gestação pós-data" : "Parto se aproximando"}
                         </span>
