@@ -130,7 +130,7 @@ export function BirthAlert() {
                       client.is_post_term ? "bg-destructive/5" : ""
                     }`}
                   >
-                    {/* Row 1: Icon + Name + Badge */}
+                    {/* Row 1: Icon + Name */}
                     <div className="flex items-center gap-2">
                       <div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 ${
                         client.is_post_term
@@ -148,22 +148,9 @@ export function BirthAlert() {
                       <span className="text-sm font-medium text-foreground truncate flex-1 min-w-0">
                         {client.full_name}
                       </span>
-                      <Badge 
-                        variant="outline" 
-                        className={`text-[9px] px-1 h-4 border-0 flex-shrink-0 ${
-                          client.is_post_term
-                            ? "bg-destructive/20 text-destructive"
-                            : isHighPriority
-                            ? "bg-warning/20 text-warning"
-                            : "bg-warning/15 text-warning/90"
-                        }`}
-                      >
-                        {client.current_weeks}s{client.current_days > 0 ? `${client.current_days}d` : ""}
-                        {client.is_post_term && " Pós"}
-                      </Badge>
                     </div>
 
-                    {/* Row 2: Status + DPP + Nasceu button */}
+                    {/* Row 2: Status + DPP + Badge + Nasceu button */}
                     <div className="flex items-center justify-between mt-1 pl-8">
                       <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground min-w-0">
                         <span className="truncate">
@@ -178,6 +165,19 @@ export function BirthAlert() {
                             </span>
                           </>
                         )}
+                        <Badge 
+                          variant="outline" 
+                          className={`text-[9px] px-1 h-4 border-0 flex-shrink-0 ${
+                            client.is_post_term
+                              ? "bg-destructive/20 text-destructive"
+                              : isHighPriority
+                              ? "bg-warning/20 text-warning"
+                              : "bg-warning/15 text-warning/90"
+                          }`}
+                        >
+                          {client.current_weeks}s{client.current_days > 0 ? `${client.current_days}d` : ""}
+                          {client.is_post_term && " Pós"}
+                        </Badge>
                       </div>
                       <Button
                         size="sm"
