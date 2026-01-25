@@ -674,19 +674,18 @@ export default function Financial() {
               </div>
 
               {/* Desktop Table */}
-              <div className="hidden lg:block overflow-x-auto p-6 pt-0">
-                <Table className="min-w-[900px]">
+              <div className="hidden lg:block p-4 pt-0">
+                <Table>
                   <TableHeader>
-                    <TableRow>
-                      <TableHead className="w-[90px]">Data</TableHead>
-                      <TableHead className="min-w-[150px]">Descrição</TableHead>
-                      <TableHead className="min-w-[100px]">Cliente</TableHead>
-                      <TableHead className="text-right w-[100px]">Valor</TableHead>
-                      <TableHead className="text-center w-[80px]">Parcelas</TableHead>
-                      <TableHead className="text-right w-[110px]">Recebido</TableHead>
-                      <TableHead className="text-right w-[110px]">A Receber</TableHead>
-                      <TableHead className="w-[140px]">Pagamento</TableHead>
-                      <TableHead className="text-right w-[60px]"></TableHead>
+                    <TableRow className="hover:bg-transparent border-b border-border/50">
+                      <TableHead className="w-[75px] text-xs font-medium text-muted-foreground py-2">Data</TableHead>
+                      <TableHead className="text-xs font-medium text-muted-foreground py-2">Cliente / Descrição</TableHead>
+                      <TableHead className="text-right w-[90px] text-xs font-medium text-muted-foreground py-2">Valor</TableHead>
+                      <TableHead className="text-center w-[55px] text-xs font-medium text-muted-foreground py-2">Parc.</TableHead>
+                      <TableHead className="text-right w-[90px] text-xs font-medium text-muted-foreground py-2">Recebido</TableHead>
+                      <TableHead className="text-right w-[90px] text-xs font-medium text-muted-foreground py-2">Pendente</TableHead>
+                      <TableHead className="w-[130px] text-xs font-medium text-muted-foreground py-2 text-center">Pagamento</TableHead>
+                      <TableHead className="w-[36px] py-2"></TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -698,36 +697,42 @@ export default function Financial() {
                       const isEditingInstallments = editingInstallmentsId === transaction.id;
                       const currentMethod = (transaction.payment_method as keyof typeof paymentMethodLabels) || "pix";
                       const installments = Number(transaction.installments) || 1;
+                      const isPaid = pendingAmount === 0;
 
                       return (
-                        <TableRow key={transaction.id} className="table-row-hover">
-                          <TableCell className="whitespace-nowrap">
-                            {format(parseISO(transaction.date), "dd/MM/yyyy")}
+                        <TableRow 
+                          key={transaction.id} 
+                          className="group hover:bg-muted/30 border-b border-border/30 transition-colors"
+                        >
+                          <TableCell className="py-2.5 text-xs text-muted-foreground">
+                            {format(parseISO(transaction.date), "dd/MM/yy")}
                           </TableCell>
-                          <TableCell className="font-medium max-w-[200px]">
-                            <div className="flex items-center gap-2">
-                              {transaction.is_auto_generated && (
-                                <span title="Gerado automaticamente">
+                          <TableCell className="py-2.5">
+                            <div className="flex flex-col gap-0.5">
+                              <div className="flex items-center gap-1.5">
+                                {transaction.is_auto_generated && (
                                   <Zap className="w-3 h-3 text-warning flex-shrink-0" />
+                                )}
+                                <span className="font-medium text-sm text-foreground truncate max-w-[280px]">
+                                  {transaction.clients?.full_name || "—"}
                                 </span>
-                              )}
-                              <span className="truncate">{transaction.description}</span>
+                              </div>
+                              <span className="text-xs text-muted-foreground truncate max-w-[280px]">
+                                {transaction.plan_settings?.name || transaction.description}
+                              </span>
                             </div>
                           </TableCell>
-                          <TableCell className="max-w-[120px]">
-                            <span className="truncate block">{transaction.clients?.full_name || "—"}</span>
+                          <TableCell className="text-right py-2.5">
+                            <span className="font-semibold text-sm">{formatCurrency(totalAmount)}</span>
                           </TableCell>
-                          <TableCell className="text-right whitespace-nowrap">
-                            <span className="font-medium">{formatCurrency(totalAmount)}</span>
-                          </TableCell>
-                          <TableCell className="text-center">
+                          <TableCell className="text-center py-2.5">
                             {isEditingInstallments ? (
-                              <div className="flex items-center justify-center gap-1">
+                              <div className="flex items-center justify-center gap-0.5">
                                 <Input
                                   type="number"
                                   value={editingInstallmentsValue}
                                   onChange={(e) => setEditingInstallmentsValue(e.target.value)}
-                                  className="w-14 h-7 text-center text-sm"
+                                  className="w-10 h-6 text-center text-xs px-1"
                                   min={1}
                                   max={24}
                                   autoFocus
@@ -743,37 +748,28 @@ export default function Financial() {
                                   variant="ghost"
                                   size="icon"
                                   onClick={() => handleSaveInstallments(transaction.id, totalAmount)}
-                                  className="h-6 w-6 text-success hover:text-success"
+                                  className="h-5 w-5 text-success"
                                 >
                                   <Check className="h-3 w-3" />
                                 </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={handleCancelEditInstallments}
-                                  className="h-6 w-6 text-destructive hover:text-destructive"
-                                >
-                                  <X className="h-3 w-3" />
-                                </Button>
                               </div>
                             ) : (
-                              <Badge 
-                                className="bg-muted hover:bg-muted/80 cursor-pointer text-xs"
+                              <span 
+                                className="text-xs text-muted-foreground cursor-pointer hover:text-foreground transition-colors"
                                 onClick={() => handleStartEditInstallments(transaction)}
-                                title="Clique para editar parcelas"
                               >
                                 {installments}x
-                              </Badge>
+                              </span>
                             )}
                           </TableCell>
-                          <TableCell className="text-right">
+                          <TableCell className="text-right py-2.5">
                             {isEditingReceived ? (
-                              <div className="flex items-center justify-end gap-1">
+                              <div className="flex items-center justify-end gap-0.5">
                                 <Input
                                   type="number"
                                   value={editingReceivedValue}
                                   onChange={(e) => setEditingReceivedValue(e.target.value)}
-                                  className="w-24 h-7 text-right text-sm"
+                                  className="w-20 h-6 text-right text-xs px-1"
                                   min={0}
                                   max={totalAmount}
                                   step="0.01"
@@ -790,107 +786,69 @@ export default function Financial() {
                                   variant="ghost"
                                   size="icon"
                                   onClick={() => handleSaveReceived(transaction.id, totalAmount)}
-                                  className="h-6 w-6 text-success hover:text-success"
+                                  className="h-5 w-5 text-success"
                                 >
                                   <Check className="h-3 w-3" />
                                 </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={handleCancelEditReceived}
-                                  className="h-6 w-6 text-destructive hover:text-destructive"
-                                >
-                                  <X className="h-3 w-3" />
-                                </Button>
                               </div>
                             ) : (
-                              <Badge 
-                                className="bg-success/15 text-success hover:bg-success/20 cursor-pointer text-xs"
+                              <span 
+                                className="text-xs text-success font-medium cursor-pointer hover:underline"
                                 onClick={() => handleStartEditReceived(transaction)}
-                                title="Clique para editar valor recebido"
                               >
                                 {formatCurrency(receivedAmount)}
-                              </Badge>
+                              </span>
                             )}
                           </TableCell>
-                          <TableCell className="text-right">
+                          <TableCell className="text-right py-2.5">
                             {pendingAmount > 0 ? (
                               <div className="flex items-center justify-end gap-1">
-                                <Badge className="bg-warning/15 text-warning text-xs">
+                                <span className="text-xs text-warning font-medium">
                                   {formatCurrency(pendingAmount)}
-                                </Badge>
+                                </span>
                                 <Button
                                   variant="ghost"
                                   size="icon"
                                   onClick={() => handleMarkAsPaid(transaction.id, totalAmount)}
-                                  className="h-6 w-6 text-success hover:text-success hover:bg-success/10"
+                                  className="h-5 w-5 text-success hover:bg-success/10"
                                   title="Marcar como quitado"
                                 >
                                   <CheckCircle className="h-3.5 w-3.5" />
                                 </Button>
                               </div>
                             ) : (
-                              <Badge className="bg-success/15 text-success text-xs">
-                                Quitado
-                              </Badge>
+                              <span className="text-xs text-success/70 font-medium">Quitado</span>
                             )}
                           </TableCell>
-                          <TableCell>
-                            <div className="flex items-center gap-0.5">
-                              <Button
-                                variant={currentMethod === "pix" ? "secondary" : "ghost"}
-                                size="icon"
-                                onClick={() => handleChangePaymentMethod(transaction.id, "pix")}
-                                className="h-6 w-6"
-                                title="Pix"
-                              >
-                                <QrCode className="h-3 w-3" />
-                              </Button>
-                              <Button
-                                variant={currentMethod === "cartao" ? "secondary" : "ghost"}
-                                size="icon"
-                                onClick={() => handleChangePaymentMethod(transaction.id, "cartao")}
-                                className="h-6 w-6"
-                                title="Cartão"
-                              >
-                                <CreditCard className="h-3 w-3" />
-                              </Button>
-                              <Button
-                                variant={currentMethod === "dinheiro" ? "secondary" : "ghost"}
-                                size="icon"
-                                onClick={() => handleChangePaymentMethod(transaction.id, "dinheiro")}
-                                className="h-6 w-6"
-                                title="Dinheiro"
-                              >
-                                <Banknote className="h-3 w-3" />
-                              </Button>
-                              <Button
-                                variant={currentMethod === "transferencia" ? "secondary" : "ghost"}
-                                size="icon"
-                                onClick={() => handleChangePaymentMethod(transaction.id, "transferencia")}
-                                className="h-6 w-6"
-                                title="Transferência"
-                              >
-                                <Building2 className="h-3 w-3" />
-                              </Button>
-                              <Button
-                                variant={currentMethod === "boleto" ? "secondary" : "ghost"}
-                                size="icon"
-                                onClick={() => handleChangePaymentMethod(transaction.id, "boleto")}
-                                className="h-6 w-6"
-                                title="Boleto"
-                              >
-                                <FileText className="h-3 w-3" />
-                              </Button>
+                          <TableCell className="py-2.5">
+                            <div className="flex items-center justify-center gap-0">
+                              {[
+                                { method: "pix", icon: QrCode, label: "Pix" },
+                                { method: "cartao", icon: CreditCard, label: "Cartão" },
+                                { method: "dinheiro", icon: Banknote, label: "Dinheiro" },
+                                { method: "transferencia", icon: Building2, label: "Transf." },
+                                { method: "boleto", icon: FileText, label: "Boleto" },
+                              ].map(({ method, icon: Icon, label }) => (
+                                <Button
+                                  key={method}
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => handleChangePaymentMethod(transaction.id, method as any)}
+                                  className={`h-6 w-6 ${currentMethod === method ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground"}`}
+                                  title={label}
+                                >
+                                  <Icon className="h-3 w-3" />
+                                </Button>
+                              ))}
                             </div>
                           </TableCell>
-                          <TableCell className="text-right">
+                          <TableCell className="py-2.5">
                             <Button
                               variant="ghost"
                               size="icon"
                               onClick={() => handleDelete(transaction.id)}
-                              className="h-7 w-7 text-destructive hover:text-destructive"
-                              title="Excluir receita"
+                              className="h-6 w-6 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+                              title="Excluir"
                             >
                               <Trash2 className="h-3.5 w-3.5" />
                             </Button>
