@@ -89,7 +89,7 @@ export function BirthAlert() {
           ? "border-warning/30" 
           : ""
       }`}>
-        <CardHeader className="py-3 px-4 border-b border-border/50">
+        <CardHeader className="py-3 px-3 border-b border-border/50">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <div className="relative">
@@ -126,7 +126,7 @@ export function BirthAlert() {
                 return (
                   <div
                     key={client.id}
-                    className={`flex items-center gap-3 px-4 py-3 transition-colors hover:bg-muted/30 ${
+                    className={`flex items-center gap-2 px-3 py-3 transition-colors hover:bg-muted/30 ${
                       client.is_post_term ? "bg-destructive/5" : ""
                     }`}
                   >
@@ -185,7 +185,7 @@ export function BirthAlert() {
                     <Button
                       size="sm"
                       variant="ghost"
-                      className="h-7 px-2 text-xs hover:bg-primary/10 flex-shrink-0"
+                      className="h-6 px-1.5 text-[11px] hover:bg-primary/10 flex-shrink-0"
                       onClick={() => handleRegisterBirth(client as Client)}
                     >
                       <CheckCircle className="h-3 w-3 mr-1" />
