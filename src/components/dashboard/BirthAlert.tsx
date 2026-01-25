@@ -182,10 +182,10 @@ export function BirthAlert() {
                       <Button
                         size="sm"
                         variant="outline"
-                        className="h-5 px-2 text-[10px] border-dashed border-primary/50 text-primary hover:bg-primary hover:text-primary-foreground hover:border-solid flex-shrink-0 transition-all"
+                        className="h-4 px-1 text-[10px] border-dashed border-primary/50 text-primary hover:bg-primary hover:text-primary-foreground hover:border-solid flex-shrink-0 transition-all"
                         onClick={() => handleRegisterBirth(client as Client)}
                       >
-                        <CheckCircle className="h-3 w-3 mr-0.5" />
+                        <CheckCircle className="h-2.5 w-2.5 mr-0.5" />
                         Registrar Nascimento
                       </Button>
                     </div>
