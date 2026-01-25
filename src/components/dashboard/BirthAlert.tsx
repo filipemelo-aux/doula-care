@@ -82,7 +82,7 @@ export function BirthAlert() {
 
   return (
     <>
-      <Card className={`card-glass overflow-hidden ${
+      <Card className={`card-glass overflow-hidden max-w-full ${
         hasPostTerm 
           ? "border-destructive/30" 
           : hasNotifications 
@@ -107,9 +107,9 @@ export function BirthAlert() {
             )}
           </div>
         </CardHeader>
-        <CardContent className="p-0">
+        <CardContent className="p-0 overflow-hidden">
           {!hasNotifications ? (
-            <div className="flex items-center gap-3 px-4 py-4">
+            <div className="flex items-center gap-3 px-3 py-4">
               <div className="w-8 h-8 rounded-full bg-muted/50 flex items-center justify-center flex-shrink-0">
                 <Bell className="h-4 w-4 text-muted-foreground" />
               </div>
@@ -126,12 +126,12 @@ export function BirthAlert() {
                 return (
                   <div
                     key={client.id}
-                    className={`flex items-center gap-2 px-3 py-3 transition-colors hover:bg-muted/30 ${
+                    className={`flex items-center gap-2 px-2 py-2.5 transition-colors hover:bg-muted/30 overflow-hidden ${
                       client.is_post_term ? "bg-destructive/5" : ""
                     }`}
                   >
                     {/* Icon */}
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+                    <div className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 ${
                       client.is_post_term
                         ? "bg-destructive/15"
                         : isHighPriority
@@ -139,21 +139,21 @@ export function BirthAlert() {
                         : "bg-warning/10"
                     }`}>
                       {client.is_post_term ? (
-                        <AlertTriangle className="h-4 w-4 text-destructive" />
+                        <AlertTriangle className="h-3.5 w-3.5 text-destructive" />
                       ) : (
-                        <Baby className={`h-4 w-4 ${isHighPriority ? "text-warning" : "text-warning/80"}`} />
+                        <Baby className={`h-3.5 w-3.5 ${isHighPriority ? "text-warning" : "text-warning/80"}`} />
                       )}
                     </div>
 
                     {/* Content */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-sm font-medium text-foreground truncate max-w-[180px] lg:max-w-none">
+                    <div className="flex-1 min-w-0 overflow-hidden">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-sm font-medium text-foreground truncate">
                           {client.full_name}
                         </span>
                         <Badge 
                           variant="outline" 
-                          className={`text-[10px] px-1.5 h-4 border-0 flex-shrink-0 ${
+                          className={`text-[9px] px-1 h-4 border-0 flex-shrink-0 ${
                             client.is_post_term
                               ? "bg-destructive/20 text-destructive"
                               : isHighPriority
@@ -162,19 +162,19 @@ export function BirthAlert() {
                           }`}
                         >
                           {client.current_weeks}s{client.current_days > 0 ? `${client.current_days}d` : ""}
-                          {client.is_post_term && " Pós-Data"}
+                          {client.is_post_term && " Pós"}
                         </Badge>
                       </div>
-                      <div className="flex items-center gap-2 mt-0.5 whitespace-nowrap">
-                        <span className="text-xs text-muted-foreground">
-                          {client.is_post_term ? "Gestação pós-data" : "Parto se aproximando"}
+                      <div className="flex items-center gap-1.5 mt-0.5 text-[11px] text-muted-foreground truncate">
+                        <span className="truncate">
+                          {client.is_post_term ? "Pós-data" : "Parto próximo"}
                         </span>
                         {client.dpp && (
                           <>
                             <span className="text-muted-foreground/50">•</span>
-                            <span className="text-xs text-muted-foreground flex items-center gap-1">
-                              <Calendar className="h-3 w-3" />
-                              DPP {format(parseISO(client.dpp), "dd/MM")}
+                            <span className="flex items-center gap-0.5 flex-shrink-0">
+                              <Calendar className="h-2.5 w-2.5" />
+                              {format(parseISO(client.dpp), "dd/MM")}
                             </span>
                           </>
                         )}
@@ -185,10 +185,10 @@ export function BirthAlert() {
                     <Button
                       size="sm"
                       variant="ghost"
-                      className="h-6 px-1.5 text-[11px] hover:bg-primary/10 flex-shrink-0"
+                      className="h-6 px-1.5 text-[10px] hover:bg-primary/10 flex-shrink-0"
                       onClick={() => handleRegisterBirth(client as Client)}
                     >
-                      <CheckCircle className="h-3 w-3 mr-1" />
+                      <CheckCircle className="h-3 w-3 mr-0.5" />
                       Nasceu
                     </Button>
                   </div>
