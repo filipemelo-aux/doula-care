@@ -6,9 +6,8 @@ import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 export function DashboardLayout() {
-  const isMobile = useIsMobile();
-  // Start collapsed on mobile, expanded on desktop
-  const [sidebarOpen, setSidebarOpen] = useState(!isMobile);
+  // Always start with sidebar collapsed after login
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const handleNavigate = () => {
     // Always close sidebar after navigation (both mobile and desktop)
