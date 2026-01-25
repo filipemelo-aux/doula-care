@@ -713,11 +713,11 @@ export default function Financial() {
                                 {transaction.is_auto_generated && (
                                   <Zap className="w-3 h-3 text-warning flex-shrink-0" />
                                 )}
-                                <span className="font-medium text-sm text-foreground truncate max-w-[280px]">
+                                <span className="font-medium text-sm text-foreground">
                                   {transaction.clients?.full_name || "—"}
                                 </span>
                               </div>
-                              <span className="text-xs text-muted-foreground truncate max-w-[280px]">
+                              <span className="text-xs text-muted-foreground">
                                 {transaction.plan_settings?.name || transaction.description}
                               </span>
                             </div>
