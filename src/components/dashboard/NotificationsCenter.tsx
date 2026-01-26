@@ -39,7 +39,7 @@ interface ContractionEntry {
 
 interface ChildNotification {
   id: string;
-  type: "labor_started" | "new_contraction";
+  type: "labor_started" | "new_contraction" | "new_diary_entry";
   title: string;
   description: string;
   timestamp?: string;
@@ -251,7 +251,11 @@ export function NotificationsCenter() {
   // Build parent notifications with children
   const parentNotifications: ParentNotification[] = [];
 
-  // Parent: Birth approaching/Post-term with children (labor, contractions)
+  // Track which clients have birth alerts
+  const clientsWithBirthAlert = new Set<string>();
+  birthAlertClients?.forEach(client => clientsWithBirthAlert.add(client.id));
+
+  // Parent: Birth approaching/Post-term with children (labor, contractions, diary)
   birthAlertClients?.forEach(client => {
     const children: ChildNotification[] = [];
     
@@ -291,6 +295,25 @@ export function NotificationsCenter() {
       contractionsByClient.delete(client.id);
     }
 
+    // Child: Diary entries (add as child when client has birth alert)
+    const clientDiary = diaryByClient.get(client.id);
+    if (clientDiary) {
+      const count = clientDiary.entries.length;
+      const latestEntry = clientDiary.entries[0];
+
+      children.push({
+        id: `diary-child-${client.id}`,
+        type: "new_diary_entry",
+        title: count > 1 ? `${count} Registros no Diário` : "Registro no Diário",
+        description: "Novo registro disponível",
+        timestamp: latestEntry.created_at,
+        priority: "medium"
+      });
+
+      // Remove from map so we don't duplicate as parent
+      diaryByClient.delete(client.id);
+    }
+
     // Determine parent type
     const parentType = client.is_post_term ? "post_term" : "birth_approaching";
     const hasHighPriorityChild = children.some(c => c.priority === "high");
@@ -307,7 +330,7 @@ export function NotificationsCenter() {
     });
   });
 
-  // Parent: New diary entries (standalone, no children from other clients)
+  // Parent: New diary entries (standalone - only for clients WITHOUT birth alert)
   diaryByClient.forEach(({ entries, clientName }, clientId) => {
     const latestEntry = entries[0];
     const count = entries.length;
