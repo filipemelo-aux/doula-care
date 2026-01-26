@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Bell, Baby, CheckCircle, AlertTriangle, Calendar } from "lucide-react";
+import { Bell, Baby, CheckCircle, AlertTriangle, Calendar, Clock, Activity } from "lucide-react";
 import { calculateCurrentPregnancyWeeks, calculateCurrentPregnancyDays, isPostTerm } from "@/lib/pregnancy";
 import { BirthRegistrationDialog } from "@/components/clients/BirthRegistrationDialog";
 import { format, parseISO } from "date-fns";
@@ -17,13 +17,14 @@ type Client = Tables<"clients">;
 
 interface Notification {
   id: string;
-  type: "birth_approaching" | "post_term" | "payment_pending";
+  type: "birth_approaching" | "post_term" | "payment_pending" | "labor_started";
   title: string;
   description: string;
   client?: Client & { current_weeks?: number | null; current_days?: number; is_post_term?: boolean };
   priority: "high" | "medium" | "low";
   icon: typeof Baby;
   color: string;
+  timestamp?: string;
 }
 
 export function NotificationsCenter() {
@@ -42,21 +43,31 @@ export function NotificationsCenter() {
 
       if (error) throw error;
       
-      return data
-        .map(client => ({
-          ...client,
-          current_weeks: calculateCurrentPregnancyWeeks(
-            client.pregnancy_weeks,
-            client.pregnancy_weeks_set_at,
-            client.dpp
-          ),
-          current_days: calculateCurrentPregnancyDays(client.dpp),
-          is_post_term: isPostTerm(client.dpp)
-        }))
-        .filter(client => client.current_weeks !== null && client.current_weeks >= 37)
+      const enrichedClients = data.map(client => ({
+        ...client,
+        current_weeks: calculateCurrentPregnancyWeeks(
+          client.pregnancy_weeks,
+          client.pregnancy_weeks_set_at,
+          client.dpp
+        ),
+        current_days: calculateCurrentPregnancyDays(client.dpp),
+        is_post_term: isPostTerm(client.dpp)
+      }));
+
+      // Return clients with 37+ weeks OR those in labor
+      return enrichedClients
+        .filter(client => 
+          (client.current_weeks !== null && client.current_weeks >= 37) || 
+          client.labor_started_at
+        )
         .sort((a, b) => {
+          // Labor started comes first
+          if (a.labor_started_at && !b.labor_started_at) return -1;
+          if (!a.labor_started_at && b.labor_started_at) return 1;
+          // Then post-term
           if (a.is_post_term && !b.is_post_term) return -1;
           if (!a.is_post_term && b.is_post_term) return 1;
+          // Then by weeks
           return (b.current_weeks || 0) - (a.current_weeks || 0);
         });
     },
@@ -69,6 +80,23 @@ export function NotificationsCenter() {
 
   // Build notifications list
   const notifications: Notification[] = [];
+
+  // Add labor started notifications (highest priority)
+  birthAlertClients?.forEach(client => {
+    if (client.labor_started_at) {
+      notifications.push({
+        id: `labor-${client.id}`,
+        type: "labor_started",
+        title: "Trabalho de Parto Iniciado",
+        description: client.full_name,
+        client,
+        priority: "high",
+        icon: Activity,
+        color: "destructive",
+        timestamp: client.labor_started_at
+      });
+    }
+  });
 
   // Add birth approaching notifications
   birthAlertClients?.forEach(client => {
@@ -97,8 +125,12 @@ export function NotificationsCenter() {
     }
   });
 
-  // Sort by priority
+  // Sort by priority and type (labor_started first)
   notifications.sort((a, b) => {
+    // Labor started always comes first
+    if (a.type === "labor_started" && b.type !== "labor_started") return -1;
+    if (a.type !== "labor_started" && b.type === "labor_started") return 1;
+    
     const priorityOrder = { high: 0, medium: 1, low: 2 };
     return priorityOrder[a.priority] - priorityOrder[b.priority];
   });
@@ -198,7 +230,7 @@ export function NotificationsCenter() {
                           }`}>
                             {notification.title}
                           </span>
-                          {notification.client && (
+                          {notification.client && notification.type !== "labor_started" && (
                             <Badge 
                               variant="outline" 
                               className={`text-[10px] px-1.5 h-4 border-0 ${
@@ -214,7 +246,13 @@ export function NotificationsCenter() {
                         <p className="text-sm font-medium text-foreground truncate">
                           {notification.description}
                         </p>
-                        {notification.client?.dpp && (
+                        {notification.type === "labor_started" && notification.timestamp && (
+                          <p className="text-xs text-destructive mt-0.5 flex items-center gap-1 font-medium">
+                            <Clock className="h-3 w-3" />
+                            Início: {format(parseISO(notification.timestamp), "dd/MM 'às' HH:mm", { locale: ptBR })}
+                          </p>
+                        )}
+                        {notification.client?.dpp && notification.type !== "labor_started" && (
                           <p className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1">
                             <Calendar className="h-3 w-3" />
                             DPP: {format(parseISO(notification.client.dpp), "dd/MM/yyyy")}
