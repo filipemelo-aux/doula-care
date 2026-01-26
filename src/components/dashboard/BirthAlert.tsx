@@ -145,7 +145,7 @@ export function BirthAlert() {
                         : ""
                     }`}
                   >
-                    {/* Row 1: Icon + Name + Labor Badge */}
+                    {/* Row 1: Icon + Name */}
                     <div className="flex items-center gap-2">
                       <div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 ${
                         client.is_in_labor
@@ -167,14 +167,15 @@ export function BirthAlert() {
                       <span className="text-sm font-medium text-foreground truncate flex-1 min-w-0">
                         {client.full_name}
                       </span>
-                      {client.is_in_labor && (
+                      {/* Desktop: Labor badge on row 1 */}
+                      {!isMobile && client.is_in_labor && (
                         <Badge className="bg-destructive text-destructive-foreground text-[9px] px-1.5 h-4 animate-pulse">
                           🚨 EM TRABALHO DE PARTO
                         </Badge>
                       )}
                     </div>
 
-                    {/* Row 2: Status + DPP + Badge + Nasceu button */}
+                    {/* Row 2: Status + DPP + Badge + (Desktop: Nasceu button) */}
                     <div className="flex items-center justify-between mt-1 pl-8">
                       <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground min-w-0">
                         <span className="truncate">
@@ -205,16 +206,41 @@ export function BirthAlert() {
                           {client.is_post_term && " Pós"}
                         </Badge>
                       </div>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="h-4 px-1 text-[10px] border-dashed border-primary/50 text-primary hover:bg-primary hover:text-primary-foreground hover:border-solid flex-shrink-0 transition-all"
-                        onClick={() => handleRegisterBirth(client as Client)}
-                      >
-                        <CheckCircle className="h-2.5 w-2.5 mr-0.5" />
-                        Registrar Nascimento
-                      </Button>
+                      {/* Desktop: Button on row 2 */}
+                      {!isMobile && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-4 px-1 text-[10px] border-dashed border-primary/50 text-primary hover:bg-primary hover:text-primary-foreground hover:border-solid flex-shrink-0 transition-all"
+                          onClick={() => handleRegisterBirth(client as Client)}
+                        >
+                          <CheckCircle className="h-2.5 w-2.5 mr-0.5" />
+                          Registrar Nascimento
+                        </Button>
+                      )}
                     </div>
+
+                    {/* Row 3 (Mobile only): Labor badge + Nasceu button */}
+                    {isMobile && (
+                      <div className="flex items-center justify-between mt-1.5 pl-8 gap-2">
+                        {client.is_in_labor ? (
+                          <Badge className="bg-destructive text-destructive-foreground text-[9px] px-1.5 h-4 animate-pulse">
+                            🚨 EM TRABALHO DE PARTO
+                          </Badge>
+                        ) : (
+                          <span />
+                        )}
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-5 px-1.5 text-[10px] border-dashed border-primary/50 text-primary hover:bg-primary hover:text-primary-foreground hover:border-solid flex-shrink-0 transition-all"
+                          onClick={() => handleRegisterBirth(client as Client)}
+                        >
+                          <CheckCircle className="h-2.5 w-2.5 mr-0.5" />
+                          Registrar Nascimento
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 );
               })}
