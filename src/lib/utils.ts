@@ -1,6 +1,10 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
-import { parseISO } from "date-fns";
+import { parseISO, format as dateFnsFormat } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { toZonedTime, format as tzFormat } from "date-fns-tz";
+
+const BRAZIL_TIMEZONE = "America/Sao_Paulo";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -15,6 +19,46 @@ export function getLocalDate(dateString: string): Date {
   const parsed = parseISO(dateString);
   // Create a new date using local year/month/day to avoid timezone issues
   return new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate());
+}
+
+/**
+ * Convert a date to Brazil timezone (America/Sao_Paulo)
+ */
+export function toBrazilTime(date: Date | string): Date {
+  const dateObj = typeof date === "string" ? parseISO(date) : date;
+  return toZonedTime(dateObj, BRAZIL_TIMEZONE);
+}
+
+/**
+ * Format a date in Brazil timezone with the given format pattern
+ */
+export function formatBrazilDate(
+  date: Date | string,
+  formatStr: string = "dd/MM/yyyy"
+): string {
+  const dateObj = typeof date === "string" ? parseISO(date) : date;
+  const brazilDate = toZonedTime(dateObj, BRAZIL_TIMEZONE);
+  return tzFormat(brazilDate, formatStr, { locale: ptBR, timeZone: BRAZIL_TIMEZONE });
+}
+
+/**
+ * Format a datetime in Brazil timezone with full date and time
+ */
+export function formatBrazilDateTime(
+  date: Date | string,
+  formatStr: string = "dd/MM/yyyy 'às' HH:mm"
+): string {
+  return formatBrazilDate(date, formatStr);
+}
+
+/**
+ * Format just the time portion in Brazil timezone
+ */
+export function formatBrazilTime(
+  date: Date | string,
+  formatStr: string = "HH:mm"
+): string {
+  return formatBrazilDate(date, formatStr);
 }
 
 /**

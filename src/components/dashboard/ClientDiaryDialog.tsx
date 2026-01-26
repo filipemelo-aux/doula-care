@@ -23,8 +23,7 @@ import {
   Loader2,
   Eye
 } from "lucide-react";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
+import { formatBrazilDate, formatBrazilTime } from "@/lib/utils";
 import { Tables } from "@/integrations/supabase/types";
 
 type Client = Tables<"clients">;
@@ -117,7 +116,7 @@ export function ClientDiaryDialog({
     const grouped: Record<string, DiaryEntry[]> = {};
     
     entries.forEach(entry => {
-      const dateKey = format(new Date(entry.created_at), "yyyy-MM-dd");
+      const dateKey = formatBrazilDate(entry.created_at, "yyyy-MM-dd");
       if (!grouped[dateKey]) {
         grouped[dateKey] = [];
       }
@@ -154,7 +153,7 @@ export function ClientDiaryDialog({
                   <div className="flex items-center gap-2 mb-2 sticky top-0 bg-background/80 backdrop-blur-sm py-1">
                     <Calendar className="h-4 w-4 text-muted-foreground" />
                     <span className="text-sm font-medium text-muted-foreground">
-                      {format(new Date(dateKey), "EEEE, dd 'de' MMMM", { locale: ptBR })}
+                      {formatBrazilDate(dateKey, "EEEE, dd 'de' MMMM")}
                     </span>
                   </div>
                   
@@ -168,7 +167,7 @@ export function ClientDiaryDialog({
                           <div className="flex items-start justify-between gap-2 mb-2">
                             <div className="flex items-center gap-2">
                               <span className="text-xs text-muted-foreground">
-                                {format(new Date(entry.created_at), "HH:mm")}
+                                {formatBrazilTime(entry.created_at)}
                               </span>
                               {!entry.read_by_admin && (
                                 <Badge variant="outline" className="text-[10px] h-4 px-1.5 bg-primary/10 text-primary border-primary/30">

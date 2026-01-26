@@ -19,8 +19,7 @@ import {
   AlertCircle
 } from "lucide-react";
 import { toast } from "sonner";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
+import { formatBrazilDate, formatBrazilTime } from "@/lib/utils";
 import { DiaryEntryDialog } from "@/components/gestante/DiaryEntryDialog";
 
 interface DiaryEntry {
@@ -91,7 +90,7 @@ export default function GestanteDiary() {
     const grouped: Record<string, DiaryEntry[]> = {};
     
     entries.forEach(entry => {
-      const dateKey = format(new Date(entry.created_at), "yyyy-MM-dd");
+      const dateKey = formatBrazilDate(entry.created_at, "yyyy-MM-dd");
       if (!grouped[dateKey]) {
         grouped[dateKey] = [];
       }
@@ -151,7 +150,7 @@ export default function GestanteDiary() {
                   <div className="flex items-center gap-2 mb-3 sticky top-0 bg-background/80 backdrop-blur-sm py-2">
                     <Calendar className="h-4 w-4 text-muted-foreground" />
                     <span className="text-sm font-medium text-muted-foreground">
-                      {format(new Date(dateKey), "EEEE, dd 'de' MMMM", { locale: ptBR })}
+                      {formatBrazilDate(dateKey, "EEEE, dd 'de' MMMM")}
                     </span>
                   </div>
                   
@@ -161,7 +160,7 @@ export default function GestanteDiary() {
                         <CardContent className="p-4">
                           <div className="flex items-start justify-between gap-3 mb-3">
                             <span className="text-xs text-muted-foreground">
-                              {format(new Date(entry.created_at), "HH:mm")}
+                              {formatBrazilTime(entry.created_at)}
                             </span>
                             {getEmotionDisplay(entry.emotion)}
                           </div>

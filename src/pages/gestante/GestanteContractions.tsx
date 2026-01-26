@@ -15,9 +15,8 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useGestanteAuth } from "@/contexts/GestanteAuthContext";
 import { toast } from "sonner";
-import { format, differenceInSeconds, differenceInMinutes } from "date-fns";
-import { ptBR } from "date-fns/locale";
-import { cn } from "@/lib/utils";
+import { differenceInSeconds, differenceInMinutes } from "date-fns";
+import { cn, formatBrazilTime } from "@/lib/utils";
 
 interface Contraction {
   id: string;
@@ -333,7 +332,7 @@ export default function GestanteContractions() {
                       </div>
                       <div>
                         <p className="font-medium text-sm">
-                          {format(new Date(contraction.started_at), "HH:mm", { locale: ptBR })}
+                          {formatBrazilTime(contraction.started_at)}
                         </p>
                         <p className="text-xs text-muted-foreground">
                           Duração: {formatDuration(contraction.duration_seconds || 0)}

@@ -12,8 +12,7 @@ import { calculateCurrentPregnancyWeeks, calculateCurrentPregnancyDays, isPostTe
 import { BirthRegistrationDialog } from "@/components/clients/BirthRegistrationDialog";
 import { ClientDiaryDialog } from "@/components/dashboard/ClientDiaryDialog";
 import { ClientContractionsDialog } from "@/components/dashboard/ClientContractionsDialog";
-import { format, parseISO } from "date-fns";
-import { ptBR } from "date-fns/locale";
+import { formatBrazilDate, formatBrazilDateTime } from "@/lib/utils";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Client = Tables<"clients">;
@@ -593,13 +592,13 @@ export function NotificationsCenter() {
                                 {notification.client?.dpp && notification.type !== "new_diary_entry" && (
                                   <p className="text-[10px] lg:text-xs text-muted-foreground mt-0.5 flex items-center gap-1">
                                     <Calendar className="h-2.5 w-2.5 lg:h-3 lg:w-3 flex-shrink-0" />
-                                    DPP: {format(parseISO(notification.client.dpp), "dd/MM/yyyy")}
+                                    DPP: {formatBrazilDate(notification.client.dpp)}
                                   </p>
                                 )}
                                 {notification.type === "new_diary_entry" && notification.timestamp && (
                                   <p className="text-[10px] lg:text-xs text-primary mt-0.5 flex items-center gap-1">
                                     <Clock className="h-2.5 w-2.5 lg:h-3 lg:w-3 flex-shrink-0" />
-                                    {format(parseISO(notification.timestamp), "dd/MM 'às' HH:mm", { locale: ptBR })}
+                                    {formatBrazilDateTime(notification.timestamp, "dd/MM 'às' HH:mm")}
                                   </p>
                                 )}
                                 {/* Button on mobile - below content */}
@@ -708,7 +707,7 @@ export function NotificationsCenter() {
                                           : "text-emerald-600"
                                       }`}>
                                         <Clock className="h-2.5 w-2.5 flex-shrink-0" />
-                                        <span className="truncate">{format(parseISO(child.timestamp), "dd/MM HH:mm", { locale: ptBR })}</span>
+                                        <span className="truncate">{formatBrazilDateTime(child.timestamp, "dd/MM HH:mm")}</span>
                                         {child.extraInfo && (
                                           <Badge 
                                             variant="outline" 

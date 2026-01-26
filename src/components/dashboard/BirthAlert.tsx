@@ -7,10 +7,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Bell, Baby, CheckCircle, AlertTriangle, Calendar } from "lucide-react";
-import { abbreviateName } from "@/lib/utils";
+import { abbreviateName, formatBrazilDate } from "@/lib/utils";
 import { calculateCurrentPregnancyWeeks, calculateCurrentPregnancyDays, isPostTerm } from "@/lib/pregnancy";
 import { BirthRegistrationDialog } from "@/components/clients/BirthRegistrationDialog";
-import { format, parseISO } from "date-fns";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Client = Tables<"clients">;
@@ -180,7 +179,7 @@ export function BirthAlert() {
                           <span className="text-muted-foreground/50 text-[11px]">•</span>
                           <span className="flex items-center gap-0.5 text-[11px] text-muted-foreground">
                             <Calendar className="h-2.5 w-2.5" />
-                            {format(parseISO(client.dpp), "dd/MM")}
+                            {formatBrazilDate(client.dpp, "dd/MM")}
                           </span>
                         </>
                       )}

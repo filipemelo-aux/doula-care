@@ -12,8 +12,7 @@ import {
   Clock
 } from "lucide-react";
 import { toast } from "sonner";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
+import { formatBrazilDateTime } from "@/lib/utils";
 import { Tables } from "@/integrations/supabase/types";
 
 type Notification = Tables<"client_notifications">;
@@ -129,7 +128,7 @@ export default function GestanteMessages() {
                           {notification.message}
                         </p>
                         <p className="text-xs text-muted-foreground mt-3">
-                          {format(new Date(notification.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+                          {formatBrazilDateTime(notification.created_at, "dd/MM/yyyy 'às' HH:mm")}
                         </p>
                       </div>
                     </div>
