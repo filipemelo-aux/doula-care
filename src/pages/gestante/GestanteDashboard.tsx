@@ -25,6 +25,7 @@ import { format, differenceInDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Tables } from "@/integrations/supabase/types";
 import { EditContactDialog } from "@/components/gestante/EditContactDialog";
+import { getLocalDate } from "@/lib/utils";
 
 type Client = Tables<"clients">;
 type Notification = Tables<"client_notifications">;
@@ -102,8 +103,10 @@ export default function GestanteDashboard() {
   const calculateGestationalAge = () => {
     if (!clientData?.dpp) return null;
     
-    const dppDate = new Date(clientData.dpp);
+    // Use getLocalDate to avoid timezone issues
+    const dppDate = getLocalDate(clientData.dpp);
     const today = new Date();
+    today.setHours(0, 0, 0, 0); // Normalize to midnight for accurate day comparison
     const daysUntilDpp = differenceInDays(dppDate, today);
     const totalDays = 280;
     const daysPregnant = totalDays - daysUntilDpp;
@@ -196,7 +199,7 @@ export default function GestanteDashboard() {
                   <span className="text-muted-foreground">DPP:</span>
                 </div>
                 <span className="font-medium">
-                  {clientData?.dpp && format(new Date(clientData.dpp), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
+                  {clientData?.dpp && format(getLocalDate(clientData.dpp), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
                 </span>
               </div>
 

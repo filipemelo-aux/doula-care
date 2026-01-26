@@ -39,6 +39,20 @@ export default function Login() {
           navigate("/admin", { replace: true });
           return;
         }
+        
+        // If logged in but not admin, sign out first to allow admin login
+        // This prevents redirect loops when switching from gestante to admin
+        const { data: clientRole } = await supabase
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", session.user.id)
+          .eq("role", "client")
+          .maybeSingle();
+          
+        if (clientRole) {
+          // Sign out the client user so admin can log in
+          await supabase.auth.signOut({ scope: 'local' });
+        }
       }
       
       if (isMounted) {
