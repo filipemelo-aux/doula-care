@@ -194,31 +194,31 @@ export function ClientsListDialog({
                             DPP: {formatDate(client.dpp)}
                           </span>
                           {isMobile && (
-                            <div className="flex gap-1.5">
+                            <div className="flex gap-1">
                               <Button
                                 size="sm"
                                 variant="outline"
-                                className="h-6 px-2 text-[10px]"
+                                className="h-5 px-1.5 text-[9px]"
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   setSelectedClient(client);
                                   setDiaryDialogOpen(true);
                                 }}
                               >
-                                <BookHeart className="h-3 w-3 mr-1 text-pink-500" />
+                                <BookHeart className="h-2.5 w-2.5 mr-0.5 text-pink-500" />
                                 Diário
                               </Button>
                               <Button
                                 size="sm"
                                 variant="outline"
-                                className="h-6 px-2 text-[10px]"
+                                className="h-5 px-1.5 text-[9px]"
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   setSelectedClient(client);
                                   setNotificationDialogOpen(true);
                                 }}
                               >
-                                <MessageCircle className="h-3 w-3 mr-1 text-primary" />
+                                <MessageCircle className="h-2.5 w-2.5 mr-0.5 text-primary" />
                                 Mensagem
                               </Button>
                             </div>
