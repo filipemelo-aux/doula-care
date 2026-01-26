@@ -122,51 +122,54 @@ export default function GestanteDashboard() {
       </header>
 
       <div className="container mx-auto px-4 py-6 space-y-6">
-        {/* Pregnancy Progress Card */}
+        {/* Pregnancy Progress + Labor Button Row */}
         {gestationalAge && (
-          <Card className="overflow-hidden bg-gradient-to-br from-primary/10 to-accent/10 border-primary/20">
-            <CardContent className="p-6">
-              <div className="flex items-center gap-3 mb-4">
-                <Baby className="h-6 w-6 text-primary" />
-                <h2 className="font-display font-semibold text-lg">Sua Gestação</h2>
-              </div>
-              
-              <div className="text-center py-6">
-                <p className="text-5xl font-display font-bold text-primary">
-                  {gestationalAge.weeks}
-                  <span className="text-3xl">s</span>
-                  {gestationalAge.days > 0 && (
-                    <span className="text-3xl">{gestationalAge.days}d</span>
-                  )}
-                </p>
-                <p className="text-muted-foreground mt-2">semanas de gestação</p>
-              </div>
-
-              <div className="flex items-center justify-between bg-background/60 rounded-lg p-4">
-                <div className="flex items-center gap-2">
-                  <Calendar className="h-5 w-5 text-primary" />
-                  <span className="text-sm text-muted-foreground">DPP:</span>
+          <div className={`grid gap-4 ${gestationalAge.weeks >= 37 ? 'grid-cols-2' : 'grid-cols-1'}`}>
+            {/* Pregnancy Progress Card */}
+            <Card className="overflow-hidden bg-gradient-to-br from-primary/10 to-accent/10 border-primary/20">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <Baby className="h-5 w-5 text-primary" />
+                  <h2 className="font-display font-semibold text-base">Sua Gestação</h2>
                 </div>
-                <span className="font-semibold">
-                  {clientData?.dpp && format(getLocalDate(clientData.dpp), "dd/MM/yyyy", { locale: ptBR })}
-                </span>
-              </div>
-
-              {gestationalAge.daysUntilDpp > 0 && gestationalAge.daysUntilDpp <= 60 && (
-                <div className="text-center mt-4 text-sm text-muted-foreground">
-                  🎉 Faltam apenas <span className="font-semibold text-primary">{gestationalAge.daysUntilDpp}</span> dias!
+                
+                <div className="text-center py-3">
+                  <p className="text-4xl font-display font-bold text-primary">
+                    {gestationalAge.weeks}
+                    <span className="text-2xl">s</span>
+                    {gestationalAge.days > 0 && (
+                      <span className="text-2xl">{gestationalAge.days}d</span>
+                    )}
+                  </p>
+                  <p className="text-muted-foreground text-sm mt-1">semanas de gestação</p>
                 </div>
-              )}
-            </CardContent>
-          </Card>
-        )}
 
-        {/* Labor Start Button - Show for gestantes 37+ weeks */}
-        {gestationalAge && gestationalAge.weeks >= 37 && (
-          <LaborStartButton 
-            laborStarted={!!clientData?.labor_started_at}
-            onLaborStarted={fetchFullClientData}
-          />
+                <div className="flex items-center justify-between bg-background/60 rounded-lg p-3 text-sm">
+                  <div className="flex items-center gap-2">
+                    <Calendar className="h-4 w-4 text-primary" />
+                    <span className="text-muted-foreground">DPP:</span>
+                  </div>
+                  <span className="font-semibold">
+                    {clientData?.dpp && format(getLocalDate(clientData.dpp), "dd/MM/yyyy", { locale: ptBR })}
+                  </span>
+                </div>
+
+                {gestationalAge.daysUntilDpp > 0 && gestationalAge.daysUntilDpp <= 60 && (
+                  <div className="text-center mt-3 text-xs text-muted-foreground">
+                    🎉 Faltam apenas <span className="font-semibold text-primary">{gestationalAge.daysUntilDpp}</span> dias!
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Labor Start Button - Show for gestantes 37+ weeks */}
+            {gestationalAge.weeks >= 37 && (
+              <LaborStartButton 
+                laborStarted={!!clientData?.labor_started_at}
+                onLaborStarted={fetchFullClientData}
+              />
+            )}
+          </div>
         )}
 
         {/* Quick Actions */}
