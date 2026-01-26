@@ -10,7 +10,8 @@ import {
   BookHeart,
   MessageCircle,
   ChevronRight,
-  Timer
+  Timer,
+  LogOut
 } from "lucide-react";
 import { toast } from "sonner";
 import { format, differenceInDays } from "date-fns";
@@ -27,7 +28,7 @@ export default function GestanteDashboard() {
   const [clientData, setClientData] = useState<Client | null>(null);
   const [loading, setLoading] = useState(true);
   const [unreadMessages, setUnreadMessages] = useState(0);
-  const { client, user } = useGestanteAuth();
+  const { client, user, signOut } = useGestanteAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -109,14 +110,23 @@ export default function GestanteDashboard() {
       {/* Header */}
       <header className="bg-gradient-to-br from-primary/20 via-primary/10 to-accent/10 border-b">
         <div className="container mx-auto px-4 py-6">
-          <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-lg">
-              <Heart className="w-7 h-7 text-primary-foreground" />
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="w-14 h-14 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-lg">
+                <Heart className="w-7 h-7 text-primary-foreground" />
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Olá,</p>
+                <h1 className="font-display font-bold text-xl">{client?.full_name?.split(" ")[0]}!</h1>
+              </div>
             </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Olá,</p>
-              <h1 className="font-display font-bold text-xl">{client?.full_name?.split(" ")[0]}!</h1>
-            </div>
+            <button
+              onClick={signOut}
+              className="p-2 rounded-full hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
+              title="Sair"
+            >
+              <LogOut className="h-5 w-5" />
+            </button>
           </div>
         </div>
       </header>
