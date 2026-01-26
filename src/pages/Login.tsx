@@ -19,8 +19,12 @@ export default function Login() {
 
   // Check if already logged in as admin
   useEffect(() => {
+    let isMounted = true;
+    
     const checkSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!isMounted) return;
       
       if (session) {
         // Check if admin/moderator
@@ -31,16 +35,22 @@ export default function Login() {
           .in("role", ["admin", "moderator"])
           .maybeSingle();
 
-        if (adminRole) {
+        if (isMounted && adminRole) {
           navigate("/admin", { replace: true });
           return;
         }
       }
       
-      setCheckingSession(false);
+      if (isMounted) {
+        setCheckingSession(false);
+      }
     };
 
     checkSession();
+    
+    return () => {
+      isMounted = false;
+    };
   }, [navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {

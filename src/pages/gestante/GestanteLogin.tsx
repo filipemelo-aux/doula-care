@@ -18,8 +18,12 @@ export default function GestanteLogin() {
 
   // Check if already logged in
   useEffect(() => {
+    let isMounted = true;
+    
     const checkSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!isMounted) return;
       
       if (session) {
         // Check user role and redirect accordingly
@@ -29,6 +33,8 @@ export default function GestanteLogin() {
           .eq("user_id", session.user.id)
           .in("role", ["admin", "moderator"])
           .maybeSingle();
+
+        if (!isMounted) return;
 
         if (adminRole) {
           navigate("/admin", { replace: true });
@@ -42,16 +48,24 @@ export default function GestanteLogin() {
           .eq("role", "client")
           .maybeSingle();
 
+        if (!isMounted) return;
+
         if (clientRole) {
           navigate("/gestante", { replace: true });
           return;
         }
       }
       
-      setCheckingSession(false);
+      if (isMounted) {
+        setCheckingSession(false);
+      }
     };
 
     checkSession();
+    
+    return () => {
+      isMounted = false;
+    };
   }, [navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
