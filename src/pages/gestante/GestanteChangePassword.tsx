@@ -42,23 +42,31 @@ export default function GestanteChangePassword() {
     setLoading(true);
 
     try {
+      // First update first_login flag BEFORE changing password
+      // This prevents the redirect loop
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { error: updateError } = await supabase
+          .from("clients")
+          .update({ first_login: false })
+          .eq("user_id", user.id);
+        
+        if (updateError) {
+          console.error("Error updating first_login:", updateError);
+        }
+      }
+
+      // Then update the password
       const { error } = await supabase.auth.updateUser({
         password: newPassword,
       });
 
       if (error) throw error;
 
-      // Update first_login flag
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        await supabase
-          .from("clients")
-          .update({ first_login: false })
-          .eq("user_id", user.id);
-      }
-
       toast.success("Senha alterada com sucesso!");
-      navigate("/gestante");
+      
+      // Use replace to prevent back navigation to this page
+      navigate("/gestante", { replace: true });
     } catch (error) {
       toast.error("Erro ao alterar senha", {
         description: error instanceof Error ? error.message : "Tente novamente",
