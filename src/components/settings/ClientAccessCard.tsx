@@ -79,7 +79,7 @@ const generatePassword = (dpp: string): string => {
 export function ClientAccessCard({ clientsWithAccounts, loadingClients }: ClientAccessCardProps) {
   const queryClient = useQueryClient();
   const [showPasswords, setShowPasswords] = useState<Record<string, boolean>>({});
-
+  const [resettingClientId, setResettingClientId] = useState<string | null>(null);
   const provisionMutation = useMutation({
     mutationFn: async () => {
       const { data, error } = await supabase.functions.invoke("provision-existing-clients");
@@ -118,6 +118,7 @@ export function ClientAccessCard({ clientsWithAccounts, loadingClients }: Client
 
   const resetPasswordMutation = useMutation({
     mutationFn: async (clientId: string) => {
+      setResettingClientId(clientId);
       const { data, error } = await supabase.functions.invoke("reset-client-password", {
         body: { clientId },
       });
@@ -130,11 +131,13 @@ export function ClientAccessCard({ clientsWithAccounts, loadingClients }: Client
         description: data.hint,
       });
       queryClient.invalidateQueries({ queryKey: ["clients-with-accounts"] });
+      setResettingClientId(null);
     },
     onError: (error) => {
       toast.error("Erro ao resetar senha", {
         description: error.message,
       });
+      setResettingClientId(null);
     },
   });
 
@@ -287,9 +290,9 @@ export function ClientAccessCard({ clientsWithAccounts, loadingClients }: Client
                               size="icon"
                               className="h-6 w-6"
                               onClick={() => handleResetPassword(client.id, client.full_name)}
-                              disabled={resetPasswordMutation.isPending}
+                              disabled={resettingClientId === client.id}
                             >
-                              {resetPasswordMutation.isPending ? (
+                              {resettingClientId === client.id ? (
                                 <Loader2 className="h-3 w-3 animate-spin" />
                               ) : (
                                 <RotateCcw className="h-3 w-3" />
