@@ -11,6 +11,7 @@ export function ProtectedRoute({ children, requireAdmin = false }: ProtectedRout
   const { user, loading, isAdmin } = useAuth();
   const location = useLocation();
 
+  // Show loading only during initial auth check
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -22,12 +23,19 @@ export function ProtectedRoute({ children, requireAdmin = false }: ProtectedRout
     );
   }
 
+  // No user means not authenticated - redirect to admin login
   if (!user) {
-    return <Navigate to="/admin/login" state={{ from: location }} replace />;
+    return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
+  // Check if admin access is required but user is not admin
   if (requireAdmin && !isAdmin) {
     return <Navigate to="/admin" replace />;
+  }
+
+  // User must be admin/moderator to access admin routes
+  if (!isAdmin) {
+    return <Navigate to="/" replace />;
   }
 
   return <>{children}</>;
