@@ -443,7 +443,7 @@ export function NotificationsCenter() {
               <p className="text-xs text-muted-foreground/70 mt-1">Tudo em dia!</p>
             </div>
           ) : (
-            <ScrollArea className="h-full max-h-[300px] lg:max-h-[400px] px-4 pb-4">
+            <ScrollArea className="h-full max-h-[300px] lg:max-h-[400px] px-4 pb-4 [&>[data-radix-scroll-area-viewport]]:!overflow-y-scroll">
               <div className="space-y-2">
                 {parentNotifications.map((notification) => {
                   const hasChildren = notification.children.length > 0;
@@ -534,15 +534,15 @@ export function NotificationsCenter() {
                                 {notification.client && (
                                   <Button
                                     size="sm"
-                                    variant="ghost"
-                                    className="h-7 px-2 text-xs hover:bg-primary/10"
+                                    variant="outline"
+                                    className="h-7 px-2 text-xs border-dashed hover:bg-primary/10"
                                     onClick={(e) => {
                                       e.stopPropagation();
                                       handleRegisterBirth(notification.client as Client);
                                     }}
                                   >
                                     <CheckCircle className="h-3 w-3 mr-1" />
-                                    Nasceu
+                                    Registrar nascimento
                                   </Button>
                                 )}
                                 {hasChildren && (
