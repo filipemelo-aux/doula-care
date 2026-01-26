@@ -187,6 +187,47 @@ export type Database = {
         }
         Relationships: []
       }
+      pregnancy_diary: {
+        Row: {
+          client_id: string
+          content: string
+          created_at: string
+          emotion: string | null
+          id: string
+          observations: string | null
+          symptoms: string[] | null
+          updated_at: string
+        }
+        Insert: {
+          client_id: string
+          content: string
+          created_at?: string
+          emotion?: string | null
+          id?: string
+          observations?: string | null
+          symptoms?: string[] | null
+          updated_at?: string
+        }
+        Update: {
+          client_id?: string
+          content?: string
+          created_at?: string
+          emotion?: string | null
+          id?: string
+          observations?: string | null
+          symptoms?: string[] | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pregnancy_diary_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null

@@ -22,6 +22,10 @@ import NotFound from "./pages/NotFound";
 import GestanteLogin from "./pages/gestante/GestanteLogin";
 import GestanteChangePassword from "./pages/gestante/GestanteChangePassword";
 import GestanteDashboard from "./pages/gestante/GestanteDashboard";
+import GestanteDiary from "./pages/gestante/GestanteDiary";
+import GestanteMessages from "./pages/gestante/GestanteMessages";
+import GestanteProfile from "./pages/gestante/GestanteProfile";
+import GestanteContractions from "./pages/gestante/GestanteContractions";
 
 const queryClient = new QueryClient();
 
@@ -50,6 +54,38 @@ const App = () => (
                 element={
                   <GestanteProtectedRoute>
                     <GestanteDashboard />
+                  </GestanteProtectedRoute>
+                }
+              />
+              <Route
+                path="/gestante/diario"
+                element={
+                  <GestanteProtectedRoute>
+                    <GestanteDiary />
+                  </GestanteProtectedRoute>
+                }
+              />
+              <Route
+                path="/gestante/mensagens"
+                element={
+                  <GestanteProtectedRoute>
+                    <GestanteMessages />
+                  </GestanteProtectedRoute>
+                }
+              />
+              <Route
+                path="/gestante/contracoes"
+                element={
+                  <GestanteProtectedRoute>
+                    <GestanteContractions />
+                  </GestanteProtectedRoute>
+                }
+              />
+              <Route
+                path="/gestante/perfil"
+                element={
+                  <GestanteProtectedRoute>
+                    <GestanteProfile />
                   </GestanteProtectedRoute>
                 }
               />
