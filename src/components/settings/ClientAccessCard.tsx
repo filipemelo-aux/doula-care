@@ -12,8 +12,13 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Baby, Copy, Eye, EyeOff, Loader2, UserPlus } from "lucide-react";
+import { Baby, Copy, Eye, EyeOff, Loader2, UserPlus, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface Client {
   id: string;
@@ -110,6 +115,34 @@ export function ClientAccessCard({ clientsWithAccounts, loadingClients }: Client
     setShowPasswords(prev => ({ ...prev, [clientId]: !prev[clientId] }));
   };
 
+  const resetPasswordMutation = useMutation({
+    mutationFn: async (clientId: string) => {
+      const { data, error } = await supabase.functions.invoke("reset-client-password", {
+        body: { clientId },
+      });
+      if (error) throw error;
+      if (data.error) throw new Error(data.error);
+      return data;
+    },
+    onSuccess: (data) => {
+      toast.success("Senha resetada com sucesso!", {
+        description: data.hint,
+      });
+      queryClient.invalidateQueries({ queryKey: ["clients-with-accounts"] });
+    },
+    onError: (error) => {
+      toast.error("Erro ao resetar senha", {
+        description: error.message,
+      });
+    },
+  });
+
+  const handleResetPassword = (clientId: string, clientName: string) => {
+    if (confirm(`Deseja resetar a senha de ${clientName}?\n\nA nova senha será o dia e mês da DPP (formato DDMM).`)) {
+      resetPasswordMutation.mutate(clientId);
+    }
+  };
+
   return (
     <Card className="card-glass">
       <CardHeader className="pb-2 px-3 sm:px-6">
@@ -156,6 +189,7 @@ export function ClientAccessCard({ clientsWithAccounts, loadingClients }: Client
                   <TableHead className="px-2 hidden sm:table-cell">Usuário</TableHead>
                   <TableHead className="px-2">Senha</TableHead>
                   <TableHead className="px-2 w-16">Status</TableHead>
+                  <TableHead className="px-2 w-10"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -228,6 +262,28 @@ export function ClientAccessCard({ clientsWithAccounts, loadingClients }: Client
                             Ativo
                           </Badge>
                         )}
+                      </TableCell>
+                      <TableCell className="px-2 py-1.5">
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-6 w-6"
+                              onClick={() => handleResetPassword(client.id, client.full_name)}
+                              disabled={resetPasswordMutation.isPending}
+                            >
+                              {resetPasswordMutation.isPending ? (
+                                <Loader2 className="h-3 w-3 animate-spin" />
+                              ) : (
+                                <RotateCcw className="h-3 w-3" />
+                              )}
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Resetar senha</p>
+                          </TooltipContent>
+                        </Tooltip>
                       </TableCell>
                     </TableRow>
                   );
