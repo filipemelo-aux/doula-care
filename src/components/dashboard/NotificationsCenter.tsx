@@ -492,15 +492,15 @@ export function NotificationsCenter() {
                         {/* Parent notification */}
                         <CollapsibleTrigger asChild disabled={!hasChildren}>
                           <div className={`p-3 ${hasChildren ? "cursor-pointer hover:bg-black/5" : ""}`}>
-                            <div className="flex items-start gap-3">
-                              <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+                            <div className="flex items-start gap-2">
+                              <div className={`w-7 h-7 lg:w-8 lg:h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
                                 isPostTerm
                                   ? "bg-destructive/15"
                                   : notification.type === "new_diary_entry"
                                   ? "bg-primary/15"
                                   : "bg-warning/15"
                               }`}>
-                                <notification.icon className={`h-4 w-4 ${
+                                <notification.icon className={`h-3.5 w-3.5 lg:h-4 lg:w-4 ${
                                   isPostTerm
                                     ? "text-destructive"
                                     : notification.type === "new_diary_entry"
@@ -508,9 +508,9 @@ export function NotificationsCenter() {
                                     : "text-warning"
                                 }`} />
                               </div>
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-2 mb-0.5">
-                                  <span className={`text-xs font-medium ${
+                              <div className="flex-1 min-w-0 overflow-hidden">
+                                <div className="flex items-center flex-wrap gap-1 mb-0.5">
+                                  <span className={`text-[11px] lg:text-xs font-medium ${
                                     isPostTerm
                                       ? "text-destructive"
                                       : notification.type === "new_diary_entry"
@@ -522,7 +522,7 @@ export function NotificationsCenter() {
                                   {notification.client && (
                                     <Badge 
                                       variant="outline" 
-                                      className={`text-[10px] px-1.5 h-4 border-0 ${
+                                      className={`text-[9px] lg:text-[10px] px-1 lg:px-1.5 h-4 border-0 ${
                                         notification.client.is_post_term
                                           ? "bg-destructive/20 text-destructive"
                                           : "bg-warning/20 text-warning"
@@ -532,103 +532,131 @@ export function NotificationsCenter() {
                                     </Badge>
                                   )}
                                   {hasChildren && (
-                                    <Badge variant="secondary" className="text-[10px] px-1.5 h-4">
+                                    <Badge variant="secondary" className="text-[9px] lg:text-[10px] px-1 lg:px-1.5 h-4">
                                       {notification.children.length}
                                     </Badge>
                                   )}
+                                  {hasChildren && (
+                                    isExpanded ? (
+                                      <ChevronDown className="h-3.5 w-3.5 text-muted-foreground ml-auto flex-shrink-0" />
+                                    ) : (
+                                      <ChevronRight className="h-3.5 w-3.5 text-muted-foreground ml-auto flex-shrink-0" />
+                                    )
+                                  )}
                                 </div>
-                                <p className="text-sm font-medium text-foreground truncate">
+                                <p className="text-xs lg:text-sm font-medium text-foreground truncate">
                                   {notification.description}
                                 </p>
                                 {notification.client?.dpp && notification.type !== "new_diary_entry" && (
-                                  <p className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1">
-                                    <Calendar className="h-3 w-3" />
+                                  <p className="text-[10px] lg:text-xs text-muted-foreground mt-0.5 flex items-center gap-1">
+                                    <Calendar className="h-2.5 w-2.5 lg:h-3 lg:w-3 flex-shrink-0" />
                                     DPP: {format(parseISO(notification.client.dpp), "dd/MM/yyyy")}
                                   </p>
                                 )}
                                 {notification.type === "new_diary_entry" && notification.timestamp && (
-                                  <p className="text-xs text-primary mt-0.5 flex items-center gap-1">
-                                    <Clock className="h-3 w-3" />
+                                  <p className="text-[10px] lg:text-xs text-primary mt-0.5 flex items-center gap-1">
+                                    <Clock className="h-2.5 w-2.5 lg:h-3 lg:w-3 flex-shrink-0" />
                                     {format(parseISO(notification.timestamp), "dd/MM 'às' HH:mm", { locale: ptBR })}
                                   </p>
                                 )}
-                              </div>
-                              <div className="flex items-center gap-1 flex-shrink-0">
+                                {/* Button on mobile - below content */}
                                 {notification.client && (
                                   <Button
                                     size="sm"
                                     variant="outline"
-                                    className="h-7 px-2 text-xs border-dashed hover:bg-primary/10"
+                                    className="h-6 px-2 text-[10px] lg:text-xs border-dashed hover:bg-primary/10 mt-1.5 w-full lg:hidden"
                                     onClick={(e) => {
                                       e.stopPropagation();
                                       handleRegisterBirth(notification.client as Client);
                                     }}
                                   >
-                                    <CheckCircle className="h-3 w-3 mr-1" />
+                                    <CheckCircle className="h-3 w-3 mr-1 flex-shrink-0" />
                                     Registrar nascimento
                                   </Button>
                                 )}
-                                {hasChildren && (
-                                  isExpanded ? (
-                                    <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                                  ) : (
-                                    <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                                  )
-                                )}
                               </div>
+                              {/* Button on desktop - right side */}
+                              {notification.client && (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="h-7 px-2 text-xs border-dashed hover:bg-primary/10 hidden lg:flex flex-shrink-0"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleRegisterBirth(notification.client as Client);
+                                  }}
+                                >
+                                  <CheckCircle className="h-3 w-3 mr-1" />
+                                  Registrar nascimento
+                                </Button>
+                              )}
                             </div>
                           </div>
                         </CollapsibleTrigger>
 
                         {/* Child notifications */}
                         <CollapsibleContent>
-                          <div className="border-t border-border/50 mx-3 mb-3 pt-2 space-y-2">
+                          <div className="border-t border-border/50 mx-2 lg:mx-3 mb-2 lg:mb-3 pt-2 space-y-1.5 lg:space-y-2">
                             {notification.children.map((child) => (
                               <div
                                 key={child.id}
-                                className={`p-2 rounded-md ml-6 border-l-2 ${
+                                className={`p-1.5 lg:p-2 rounded-md ml-4 lg:ml-6 border-l-2 ${
                                   child.priority === "high"
                                     ? "bg-destructive/10 border-l-destructive"
                                     : child.type === "new_contraction"
                                     ? "bg-orange-500/10 border-l-orange-500"
+                                    : child.type === "new_diary_entry"
+                                    ? "bg-primary/10 border-l-primary"
                                     : "bg-muted/50 border-l-muted-foreground"
                                 }`}
                               >
-                                <div className="flex items-start gap-2">
-                                  <div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 ${
+                                <div className="flex items-start gap-1.5 lg:gap-2">
+                                  <div className={`w-5 h-5 lg:w-6 lg:h-6 rounded-full flex items-center justify-center flex-shrink-0 ${
                                     child.priority === "high"
                                       ? "bg-destructive/20"
+                                      : child.type === "new_diary_entry"
+                                      ? "bg-primary/20"
                                       : "bg-orange-500/20"
                                   }`}>
                                     {child.type === "labor_started" ? (
-                                      <Activity className={`h-3 w-3 ${
+                                      <Activity className={`h-2.5 w-2.5 lg:h-3 lg:w-3 ${
                                         child.priority === "high" ? "text-destructive" : "text-orange-500"
                                       }`} />
+                                    ) : child.type === "new_diary_entry" ? (
+                                      <BookHeart className="h-2.5 w-2.5 lg:h-3 lg:w-3 text-primary" />
                                     ) : (
-                                      <Timer className={`h-3 w-3 ${
+                                      <Timer className={`h-2.5 w-2.5 lg:h-3 lg:w-3 ${
                                         child.priority === "high" ? "text-destructive" : "text-orange-500"
                                       }`} />
                                     )}
                                   </div>
-                                  <div className="flex-1 min-w-0">
-                                    <span className={`text-xs font-medium ${
-                                      child.priority === "high" ? "text-destructive" : "text-orange-600"
+                                  <div className="flex-1 min-w-0 overflow-hidden">
+                                    <span className={`text-[10px] lg:text-xs font-medium ${
+                                      child.priority === "high" 
+                                        ? "text-destructive" 
+                                        : child.type === "new_diary_entry"
+                                        ? "text-primary"
+                                        : "text-orange-600"
                                     }`}>
                                       {child.title}
                                     </span>
-                                    <p className="text-xs text-muted-foreground">
+                                    <p className="text-[10px] lg:text-xs text-muted-foreground truncate">
                                       {child.description}
                                     </p>
                                     {child.timestamp && (
-                                      <p className={`text-xs mt-0.5 flex items-center gap-1 ${
-                                        child.priority === "high" ? "text-destructive" : "text-orange-500"
+                                      <p className={`text-[10px] lg:text-xs mt-0.5 flex items-center flex-wrap gap-1 ${
+                                        child.priority === "high" 
+                                          ? "text-destructive" 
+                                          : child.type === "new_diary_entry"
+                                          ? "text-primary"
+                                          : "text-orange-500"
                                       }`}>
-                                        <Clock className="h-3 w-3" />
-                                        {format(parseISO(child.timestamp), "dd/MM 'às' HH:mm", { locale: ptBR })}
+                                        <Clock className="h-2.5 w-2.5 lg:h-3 lg:w-3 flex-shrink-0" />
+                                        <span className="truncate">{format(parseISO(child.timestamp), "dd/MM 'às' HH:mm", { locale: ptBR })}</span>
                                         {child.extraInfo && (
                                           <Badge 
                                             variant="outline" 
-                                            className={`ml-1 text-[10px] h-4 px-1.5 ${
+                                            className={`text-[9px] lg:text-[10px] h-3.5 lg:h-4 px-1 lg:px-1.5 ${
                                               child.priority === "high" 
                                                 ? "border-destructive/50 text-destructive bg-destructive/10"
                                                 : "border-orange-300 text-orange-600 bg-orange-50"
