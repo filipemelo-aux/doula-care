@@ -66,6 +66,7 @@ export type Database = {
           first_login: boolean | null
           full_name: string
           id: string
+          labor_started_at: string | null
           neighborhood: string | null
           notes: string | null
           number: string | null
@@ -99,6 +100,7 @@ export type Database = {
           first_login?: boolean | null
           full_name: string
           id?: string
+          labor_started_at?: string | null
           neighborhood?: string | null
           notes?: string | null
           number?: string | null
@@ -132,6 +134,7 @@ export type Database = {
           first_login?: boolean | null
           full_name?: string
           id?: string
+          labor_started_at?: string | null
           neighborhood?: string | null
           notes?: string | null
           number?: string | null
@@ -150,6 +153,41 @@ export type Database = {
           zip_code?: string | null
         }
         Relationships: []
+      }
+      contractions: {
+        Row: {
+          client_id: string
+          created_at: string
+          duration_seconds: number | null
+          ended_at: string | null
+          id: string
+          started_at: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          duration_seconds?: number | null
+          ended_at?: string | null
+          id?: string
+          started_at?: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          duration_seconds?: number | null
+          ended_at?: string | null
+          id?: string
+          started_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contractions_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       plan_settings: {
         Row: {

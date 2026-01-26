@@ -9,7 +9,8 @@ import {
   Loader2,
   BookHeart,
   MessageCircle,
-  ChevronRight
+  ChevronRight,
+  Timer
 } from "lucide-react";
 import { toast } from "sonner";
 import { format, differenceInDays } from "date-fns";
@@ -18,6 +19,7 @@ import { Tables } from "@/integrations/supabase/types";
 import { getLocalDate } from "@/lib/utils";
 import { GestanteLayout } from "@/components/gestante/GestanteLayout";
 import { useNavigate } from "react-router-dom";
+import { LaborStartButton } from "@/components/gestante/LaborStartButton";
 
 type Client = Tables<"clients">;
 
@@ -159,6 +161,14 @@ export default function GestanteDashboard() {
           </Card>
         )}
 
+        {/* Labor Start Button - Show for gestantes 37+ weeks */}
+        {gestationalAge && gestationalAge.weeks >= 37 && (
+          <LaborStartButton 
+            laborStarted={!!clientData?.labor_started_at}
+            onLaborStarted={fetchFullClientData}
+          />
+        )}
+
         {/* Quick Actions */}
         <div className="grid grid-cols-2 gap-3">
           <Card 
@@ -198,6 +208,25 @@ export default function GestanteDashboard() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Contractions Quick Access - Show if labor started */}
+        {clientData?.labor_started_at && (
+          <Card 
+            className="cursor-pointer hover:shadow-md transition-shadow active:scale-[0.98] bg-gradient-to-br from-orange-50 to-amber-50 border-orange-200"
+            onClick={() => navigate("/gestante/contracoes")}
+          >
+            <CardContent className="p-4 flex items-center gap-3">
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-orange-400 to-amber-500 flex items-center justify-center">
+                <Timer className="h-6 w-6 text-white" />
+              </div>
+              <div className="flex-1">
+                <p className="font-medium text-sm text-orange-800">Contador de Contrações</p>
+                <p className="text-xs text-orange-600">Registre suas contrações agora</p>
+              </div>
+              <ChevronRight className="h-4 w-4 text-orange-400" />
+            </CardContent>
+          </Card>
+        )}
 
         {/* Welcome Message for new users */}
         {clientData && !clientData.dpp && (
