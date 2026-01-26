@@ -122,10 +122,27 @@ export function ClientsListDialog({
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
+                          {/* Badge before name on mobile */}
+                          {isMobile && status === "gestante" && currentWeeks !== null && (
+                            <Badge 
+                              variant="outline" 
+                              className={`text-[10px] h-5 ${
+                                postTerm
+                                  ? "bg-red-200 text-red-800 border-red-300 dark:bg-red-800/50 dark:text-red-300"
+                                  : currentWeeks >= 40
+                                    ? "bg-orange-100 text-orange-700 border-orange-200"
+                                    : "bg-primary/10 text-primary border-primary/20"
+                              }`}
+                            >
+                              {currentWeeks}s{currentDays > 0 ? `${currentDays}d` : ""}
+                              {postTerm && " - Pós-Data"}
+                            </Badge>
+                          )}
                           <h4 className="font-medium text-sm truncate">
                             {isMobile ? abbreviateName(client.full_name) : client.full_name}
                           </h4>
-                          {status === "gestante" && currentWeeks !== null && (
+                          {/* Badge after name on desktop */}
+                          {!isMobile && status === "gestante" && currentWeeks !== null && (
                             <Badge 
                               variant="outline" 
                               className={`text-[10px] h-5 ${
@@ -151,8 +168,8 @@ export function ClientsListDialog({
                         )}
                       </div>
 
-                      {/* Action buttons for gestantes */}
-                      {status === "gestante" && (
+                      {/* Action buttons for gestantes - desktop only inline */}
+                      {status === "gestante" && !isMobile && (
                         <div className="flex gap-1 shrink-0">
                           <Button
                             size="icon"
@@ -183,6 +200,38 @@ export function ClientsListDialog({
                         </div>
                       )}
                     </div>
+
+                    {/* Action buttons for gestantes - mobile only (new row) */}
+                    {status === "gestante" && isMobile && (
+                      <div className="flex gap-2 mt-2 pt-2 border-t border-border/50">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="flex-1 h-8 text-xs"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedClient(client);
+                            setDiaryDialogOpen(true);
+                          }}
+                        >
+                          <BookHeart className="h-3.5 w-3.5 mr-1.5 text-pink-500" />
+                          Diário
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="flex-1 h-8 text-xs"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedClient(client);
+                            setNotificationDialogOpen(true);
+                          }}
+                        >
+                          <MessageCircle className="h-3.5 w-3.5 mr-1.5 text-primary" />
+                          Mensagem
+                        </Button>
+                      </div>
+                    )}
 
                     {/* Gestante Info */}
                     {status === "gestante" && client.dpp && (
