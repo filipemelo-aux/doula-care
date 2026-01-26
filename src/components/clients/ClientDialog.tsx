@@ -30,7 +30,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { ScrollArea } from "@/components/ui/scroll-area";
+
 import { maskPhone, maskCPF, maskCEP } from "@/lib/masks";
 import type { Tables } from "@/integrations/supabase/types";
 
@@ -312,13 +312,13 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh]">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden">
         <DialogHeader className="pb-2">
           <DialogTitle className="font-display text-lg">
             {client ? "Editar Cliente" : "Nova Cliente"}
           </DialogTitle>
         </DialogHeader>
-        <ScrollArea className="max-h-[calc(90vh-100px)] pr-4">
+        <div className="max-h-[calc(90vh-100px)] overflow-y-auto pr-4">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               {/* Dados Pessoais */}
@@ -735,7 +735,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
               </div>
             </form>
           </Form>
-        </ScrollArea>
+        </div>
       </DialogContent>
     </Dialog>
   );
