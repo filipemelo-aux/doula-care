@@ -516,7 +516,7 @@ export function NotificationsCenter() {
                       onOpenChange={() => hasChildren && toggleExpanded(notification.id)}
                     >
                       <div
-                        className={`rounded-lg border transition-colors ${
+                        className={`rounded-lg border transition-colors overflow-hidden ${
                           notification.isInLabor
                             ? "bg-destructive/10 border-destructive/30 ring-1 ring-destructive/20"
                             : isPostTerm
@@ -529,7 +529,7 @@ export function NotificationsCenter() {
                         {/* Parent notification */}
                         <CollapsibleTrigger asChild disabled={!hasChildren}>
                           <div className={`p-2 lg:p-3 ${hasChildren ? "cursor-pointer hover:bg-black/5" : ""}`}>
-                            <div className="flex items-start gap-2">
+                            <div className="flex items-start gap-1.5 lg:gap-2 overflow-hidden">
                               <div className={`w-7 h-7 lg:w-8 lg:h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
                                 isPostTerm
                                   ? "bg-destructive/15"
@@ -546,8 +546,8 @@ export function NotificationsCenter() {
                                 }`} />
                               </div>
                               <div className="flex-1 min-w-0 overflow-hidden">
-                                <div className="flex items-center flex-wrap gap-1 mb-0.5">
-                                  <span className={`text-[11px] lg:text-xs font-medium ${
+                                <div className="flex items-center gap-1 mb-0.5 overflow-hidden">
+                                  <span className={`text-[11px] lg:text-xs font-medium truncate ${
                                     isPostTerm
                                       ? "text-destructive"
                                       : notification.type === "new_diary_entry"
