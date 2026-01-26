@@ -41,14 +41,11 @@ import {
   Users,
   Crown,
   User,
-  Baby,
-  Copy,
-  Eye,
-  EyeOff,
 } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { ClientAccessCard } from "@/components/settings/ClientAccessCard";
 
 export default function Settings() {
   const { user, isAdmin, signOut } = useAuth();
@@ -65,8 +62,6 @@ export default function Settings() {
     newPassword: "",
     confirmPassword: "",
   });
-
-  const [showPasswords, setShowPasswords] = useState<Record<string, boolean>>({});
 
   // Fetch users with roles (admin only)
   const { data: usersWithRoles, isLoading: loadingUsers } = useQuery({
@@ -177,34 +172,6 @@ export default function Settings() {
       return;
     }
     changePasswordMutation.mutate(passwordData.newPassword);
-  };
-
-  // Generate email from full name
-  const generateEmail = (fullName: string): string => {
-    const normalized = fullName
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "")
-      .toLowerCase()
-      .trim();
-    const parts = normalized.split(/\s+/);
-    if (parts.length < 2) {
-      return `${parts[0]}@gestante.doula.app`;
-    }
-    return `${parts[0]}.${parts[parts.length - 1]}@gestante.doula.app`;
-  };
-
-  // Generate password from DPP
-  const generatePassword = (dpp: string): string => {
-    return dpp.replace(/\D/g, "");
-  };
-
-  const copyToClipboard = (text: string, label: string) => {
-    navigator.clipboard.writeText(text);
-    toast.success(`${label} copiado!`);
-  };
-
-  const togglePasswordVisibility = (clientId: string) => {
-    setShowPasswords(prev => ({ ...prev, [clientId]: !prev[clientId] }));
   };
 
   const getRoleBadge = (role: string) => {
@@ -550,115 +517,10 @@ export default function Settings() {
 
       {/* Client Users (Gestantes) - Admin only */}
       {isAdmin && (
-        <Card className="card-glass overflow-hidden">
-          <CardHeader className="pb-2">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-accent/10 flex items-center justify-center shrink-0">
-                <Baby className="w-5 h-5 text-accent" />
-              </div>
-              <div className="min-w-0">
-                <CardTitle className="text-lg">Acessos das Gestantes</CardTitle>
-                <CardDescription className="truncate">
-                  Credenciais de login das clientes
-                </CardDescription>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent className="px-2 sm:px-6">
-            {loadingClients ? (
-              <div className="flex items-center justify-center py-8">
-                <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
-              </div>
-            ) : clientsWithAccounts && clientsWithAccounts.length > 0 ? (
-              <div className="overflow-x-auto -mx-2 sm:mx-0">
-                <Table className="text-sm">
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="whitespace-nowrap px-2">Cliente</TableHead>
-                      <TableHead className="whitespace-nowrap px-2">Email</TableHead>
-                      <TableHead className="whitespace-nowrap px-2">Senha Inicial</TableHead>
-                      <TableHead className="whitespace-nowrap px-2">Status</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {clientsWithAccounts.map((client) => {
-                      const email = generateEmail(client.full_name);
-                      const password = client.dpp ? generatePassword(client.dpp) : "N/A";
-                      const isPasswordVisible = showPasswords[client.id];
-                      
-                      return (
-                        <TableRow key={client.id} className="table-row-hover">
-                          <TableCell className="px-2 py-2">
-                            <p className="font-medium truncate max-w-[120px] sm:max-w-none">
-                              {client.full_name}
-                            </p>
-                          </TableCell>
-                          <TableCell className="px-2 py-2">
-                            <div className="flex items-center gap-1">
-                              <span className="text-xs truncate max-w-[100px] sm:max-w-[180px]">
-                                {email}
-                              </span>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-6 w-6 flex-shrink-0"
-                                onClick={() => copyToClipboard(email, "Email")}
-                              >
-                                <Copy className="h-3 w-3" />
-                              </Button>
-                            </div>
-                          </TableCell>
-                          <TableCell className="px-2 py-2">
-                            <div className="flex items-center gap-1">
-                              <span className="text-xs font-mono">
-                                {isPasswordVisible ? password : "••••••••"}
-                              </span>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-6 w-6 flex-shrink-0"
-                                onClick={() => togglePasswordVisibility(client.id)}
-                              >
-                                {isPasswordVisible ? (
-                                  <EyeOff className="h-3 w-3" />
-                                ) : (
-                                  <Eye className="h-3 w-3" />
-                                )}
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-6 w-6 flex-shrink-0"
-                                onClick={() => copyToClipboard(password, "Senha")}
-                              >
-                                <Copy className="h-3 w-3" />
-                              </Button>
-                            </div>
-                          </TableCell>
-                          <TableCell className="px-2 py-2">
-                            {client.first_login ? (
-                              <Badge variant="outline" className="text-xs bg-warning/10 text-warning border-warning/30">
-                                Aguardando
-                              </Badge>
-                            ) : (
-                              <Badge variant="outline" className="text-xs bg-success/10 text-success border-success/30">
-                                Ativo
-                              </Badge>
-                            )}
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
-                  </TableBody>
-                </Table>
-              </div>
-            ) : (
-              <p className="text-center text-muted-foreground py-8">
-                Nenhuma gestante com acesso criado
-              </p>
-            )}
-          </CardContent>
-        </Card>
+        <ClientAccessCard 
+          clientsWithAccounts={clientsWithAccounts}
+          loadingClients={loadingClients}
+        />
       )}
 
       {/* Info */}

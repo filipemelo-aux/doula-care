@@ -1,11 +1,11 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Heart, Loader2 } from "lucide-react";
+import { Heart, Loader2, Shield } from "lucide-react";
 import { toast } from "sonner";
 
 export default function Login() {
@@ -30,7 +30,7 @@ export default function Login() {
     }
 
     toast.success("Login realizado com sucesso!");
-    navigate("/");
+    navigate("/admin");
   };
 
   return (
@@ -38,11 +38,11 @@ export default function Login() {
       <Card className="w-full max-w-md card-glass">
         <CardHeader className="text-center space-y-4">
           <div className="mx-auto w-16 h-16 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center">
-            <Heart className="w-8 h-8 text-primary-foreground" />
+            <Shield className="w-8 h-8 text-primary-foreground" />
           </div>
           <div>
-            <CardTitle className="text-2xl font-display">Doula Care</CardTitle>
-            <CardDescription>Entre com suas credenciais para acessar o dashboard</CardDescription>
+            <CardTitle className="text-2xl font-display">Área Administrativa</CardTitle>
+            <CardDescription>Entre com suas credenciais de administrador</CardDescription>
           </div>
         </CardHeader>
         <CardContent>
@@ -82,6 +82,16 @@ export default function Login() {
               )}
             </Button>
           </form>
+          
+          <div className="mt-6 pt-4 border-t border-border">
+            <Link 
+              to="/" 
+              className="flex items-center justify-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <Heart className="h-4 w-4" />
+              Entrar como gestante
+            </Link>
+          </div>
         </CardContent>
       </Card>
     </div>
