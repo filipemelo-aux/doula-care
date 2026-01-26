@@ -22,6 +22,8 @@ import {
   BookHeart
 } from "lucide-react";
 import { calculateCurrentPregnancyWeeks, calculateCurrentPregnancyDays, isPostTerm } from "@/lib/pregnancy";
+import { abbreviateName } from "@/lib/utils";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Tables } from "@/integrations/supabase/types";
@@ -45,6 +47,7 @@ export function ClientsListDialog({
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [notificationDialogOpen, setNotificationDialogOpen] = useState(false);
   const [diaryDialogOpen, setDiaryDialogOpen] = useState(false);
+  const isMobile = useIsMobile();
 
   const { data: clients, isLoading } = useQuery({
     queryKey: ["clients-list-dialog", status],
@@ -119,7 +122,9 @@ export function ClientsListDialog({
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <h4 className="font-medium text-sm truncate">{client.full_name}</h4>
+                          <h4 className="font-medium text-sm truncate">
+                            {isMobile ? abbreviateName(client.full_name) : client.full_name}
+                          </h4>
                           {status === "gestante" && currentWeeks !== null && (
                             <Badge 
                               variant="outline" 
