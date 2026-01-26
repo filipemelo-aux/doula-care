@@ -8,11 +8,11 @@ interface ProtectedRouteProps {
 }
 
 export function ProtectedRoute({ children, requireAdmin = false }: ProtectedRouteProps) {
-  const { user, loading, isAdmin } = useAuth();
+  const { user, loading, isAdmin, roleChecked } = useAuth();
   const location = useLocation();
 
-  // Show loading only during initial auth check
-  if (loading) {
+  // Show loading during initial auth check or while role check is pending
+  if (loading || (user && !roleChecked)) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-4">
@@ -25,17 +25,17 @@ export function ProtectedRoute({ children, requireAdmin = false }: ProtectedRout
 
   // No user means not authenticated - redirect to admin login
   if (!user) {
-    return <Navigate to="/login" state={{ from: location }} replace />;
+    return <Navigate to="/admin/login" state={{ from: location }} replace />;
+  }
+
+  // Role check completed but user is not admin - redirect to admin login
+  if (roleChecked && !isAdmin) {
+    return <Navigate to="/admin/login" replace />;
   }
 
   // Check if admin access is required but user is not admin
   if (requireAdmin && !isAdmin) {
     return <Navigate to="/admin" replace />;
-  }
-
-  // User must be admin/moderator to access admin routes
-  if (!isAdmin) {
-    return <Navigate to="/" replace />;
   }
 
   return <>{children}</>;
