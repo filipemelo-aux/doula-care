@@ -57,6 +57,7 @@ interface ParentNotification {
   icon: typeof Baby;
   timestamp?: string;
   children: ChildNotification[];
+  isInLabor?: boolean;
 }
 
 export function NotificationsCenter() {
@@ -314,9 +315,16 @@ export function NotificationsCenter() {
       diaryByClient.delete(client.id);
     }
 
+    // Sort children by timestamp descending (most recent first)
+    children.sort((a, b) => {
+      if (!a.timestamp || !b.timestamp) return 0;
+      return new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime();
+    });
+
     // Determine parent type
     const parentType = client.is_post_term ? "post_term" : "birth_approaching";
     const hasHighPriorityChild = children.some(c => c.priority === "high");
+    const isInLabor = !!client.labor_started_at;
     
     parentNotifications.push({
       id: `birth-${client.id}`,
@@ -326,7 +334,8 @@ export function NotificationsCenter() {
       client,
       priority: hasHighPriorityChild || client.is_post_term || (client.current_weeks && client.current_weeks >= 39) ? "high" : "medium",
       icon: client.is_post_term ? AlertTriangle : Baby,
-      children
+      children,
+      isInLabor
     });
   });
 
@@ -482,7 +491,9 @@ export function NotificationsCenter() {
                     >
                       <div
                         className={`rounded-lg border transition-colors ${
-                          isPostTerm
+                          notification.isInLabor
+                            ? "bg-destructive/10 border-destructive/30 ring-1 ring-destructive/20"
+                            : isPostTerm
                             ? "bg-destructive/5 border-destructive/20"
                             : notification.type === "new_diary_entry"
                             ? "bg-primary/5 border-primary/20"
@@ -547,6 +558,12 @@ export function NotificationsCenter() {
                                 <p className="text-xs lg:text-sm font-medium text-foreground truncate">
                                   {notification.description}
                                 </p>
+                                {/* Labor badge - pulsing */}
+                                {notification.isInLabor && (
+                                  <Badge className="bg-destructive text-destructive-foreground text-[9px] lg:text-[10px] px-1.5 h-4 lg:h-5 mt-1 animate-pulse">
+                                    🚨 EM TRABALHO DE PARTO
+                                  </Badge>
+                                )}
                                 {notification.client?.dpp && notification.type !== "new_diary_entry" && (
                                   <p className="text-[10px] lg:text-xs text-muted-foreground mt-0.5 flex items-center gap-1">
                                     <Calendar className="h-2.5 w-2.5 lg:h-3 lg:w-3 flex-shrink-0" />
