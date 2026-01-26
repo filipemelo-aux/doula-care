@@ -11,6 +11,7 @@ import { Bell, Baby, CheckCircle, AlertTriangle, Calendar, Clock, Activity, Book
 import { calculateCurrentPregnancyWeeks, calculateCurrentPregnancyDays, isPostTerm } from "@/lib/pregnancy";
 import { BirthRegistrationDialog } from "@/components/clients/BirthRegistrationDialog";
 import { ClientDiaryDialog } from "@/components/dashboard/ClientDiaryDialog";
+import { ClientContractionsDialog } from "@/components/dashboard/ClientContractionsDialog";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import type { Tables } from "@/integrations/supabase/types";
@@ -68,6 +69,8 @@ export function NotificationsCenter() {
   const [birthDialogOpen, setBirthDialogOpen] = useState(false);
   const [diaryDialogOpen, setDiaryDialogOpen] = useState(false);
   const [diaryClient, setDiaryClient] = useState<Client | null>(null);
+  const [contractionsDialogOpen, setContractionsDialogOpen] = useState(false);
+  const [contractionsClient, setContractionsClient] = useState<Client | null>(null);
   const [expandedNotifications, setExpandedNotifications] = useState<Set<string>>(new Set());
   const queryClient = useQueryClient();
 
@@ -636,7 +639,7 @@ export function NotificationsCenter() {
 
                         {/* Child notifications */}
                         <CollapsibleContent>
-                          <div className="border-t border-border/50 mx-2 lg:mx-3 mb-2 lg:mb-3 pt-2 space-y-1.5 lg:space-y-2">
+                          <div className="border-t border-border/50 mx-2 lg:mx-3 mb-2 lg:mb-3 pt-2 space-y-1.5 lg:space-y-2 overflow-hidden">
                             {notification.children.map((child) => (
                               <div
                                 key={child.id}
@@ -644,9 +647,12 @@ export function NotificationsCenter() {
                                   if (child.type === "new_diary_entry" && notification.client) {
                                     setDiaryClient(notification.client);
                                     setDiaryDialogOpen(true);
+                                  } else if (child.type === "new_contraction" && notification.client) {
+                                    setContractionsClient(notification.client);
+                                    setContractionsDialogOpen(true);
                                   }
                                 }}
-                                className={`p-1.5 lg:p-2 rounded-md ml-4 lg:ml-6 border-l-2 ${
+                                className={`p-1.5 rounded-md ml-2 lg:ml-4 border-l-2 ${
                                   child.type === "labor_started"
                                     ? "bg-destructive/10 border-l-destructive"
                                     : child.type === "new_contraction" && child.priority === "high"
@@ -654,10 +660,10 @@ export function NotificationsCenter() {
                                     : child.type === "new_contraction"
                                     ? "bg-orange-500/10 border-l-orange-500"
                                     : "bg-emerald-500/10 border-l-emerald-500"
-                                } ${child.type === "new_diary_entry" ? "cursor-pointer hover:bg-emerald-500/20 transition-colors" : ""}`}
+                                } ${child.type === "new_diary_entry" ? "cursor-pointer hover:bg-emerald-500/20 transition-colors" : ""} ${child.type === "new_contraction" ? "cursor-pointer hover:bg-orange-500/20 transition-colors" : ""}`}
                               >
-                                <div className="flex items-start gap-1.5 lg:gap-2">
-                                  <div className={`w-5 h-5 lg:w-6 lg:h-6 rounded-full flex items-center justify-center flex-shrink-0 ${
+                                <div className="flex items-start gap-1.5">
+                                  <div className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 ${
                                     child.type === "labor_started"
                                       ? "bg-destructive/20"
                                       : child.type === "new_contraction" && child.priority === "high"
@@ -667,17 +673,17 @@ export function NotificationsCenter() {
                                       : "bg-emerald-500/20"
                                   }`}>
                                     {child.type === "labor_started" ? (
-                                      <Activity className="h-2.5 w-2.5 lg:h-3 lg:w-3 text-destructive" />
+                                      <Activity className="h-2.5 w-2.5 text-destructive" />
                                     ) : child.type === "new_diary_entry" ? (
-                                      <BookHeart className="h-2.5 w-2.5 lg:h-3 lg:w-3 text-emerald-600" />
+                                      <BookHeart className="h-2.5 w-2.5 text-emerald-600" />
                                     ) : (
-                                      <Timer className={`h-2.5 w-2.5 lg:h-3 lg:w-3 ${
+                                      <Timer className={`h-2.5 w-2.5 ${
                                         child.priority === "high" ? "text-destructive" : "text-orange-500"
                                       }`} />
                                     )}
                                   </div>
-                                  <div className="flex-1 min-w-0 overflow-hidden">
-                                    <span className={`text-[10px] lg:text-xs font-medium ${
+                                  <div className="flex-1 min-w-0">
+                                    <span className={`text-[10px] font-medium block truncate ${
                                       child.type === "labor_started"
                                         ? "text-destructive" 
                                         : child.type === "new_contraction" && child.priority === "high"
@@ -688,11 +694,11 @@ export function NotificationsCenter() {
                                     }`}>
                                       {child.title}
                                     </span>
-                                    <p className="text-[10px] lg:text-xs text-muted-foreground truncate">
+                                    <p className="text-[10px] text-muted-foreground truncate">
                                       {child.description}
                                     </p>
                                     {child.timestamp && (
-                                      <p className={`text-[10px] lg:text-xs mt-0.5 flex items-center flex-wrap gap-1 ${
+                                      <div className={`text-[10px] mt-0.5 flex items-center gap-1 ${
                                         child.type === "labor_started"
                                           ? "text-destructive" 
                                           : child.type === "new_contraction" && child.priority === "high"
@@ -701,12 +707,12 @@ export function NotificationsCenter() {
                                           ? "text-orange-500"
                                           : "text-emerald-600"
                                       }`}>
-                                        <Clock className="h-2.5 w-2.5 lg:h-3 lg:w-3 flex-shrink-0" />
-                                        <span className="truncate">{format(parseISO(child.timestamp), "dd/MM 'às' HH:mm", { locale: ptBR })}</span>
+                                        <Clock className="h-2.5 w-2.5 flex-shrink-0" />
+                                        <span className="truncate">{format(parseISO(child.timestamp), "dd/MM HH:mm", { locale: ptBR })}</span>
                                         {child.extraInfo && (
                                           <Badge 
                                             variant="outline" 
-                                            className={`text-[9px] lg:text-[10px] h-3.5 lg:h-4 px-1 lg:px-1.5 ${
+                                            className={`text-[9px] h-3.5 px-1 flex-shrink-0 ${
                                               child.priority === "high" 
                                                 ? "border-destructive/50 text-destructive bg-destructive/10"
                                                 : child.type === "new_contraction"
@@ -717,7 +723,7 @@ export function NotificationsCenter() {
                                             {child.extraInfo}
                                           </Badge>
                                         )}
-                                      </p>
+                                      </div>
                                     )}
                                   </div>
                                 </div>
@@ -745,6 +751,12 @@ export function NotificationsCenter() {
         open={diaryDialogOpen}
         onOpenChange={setDiaryDialogOpen}
         client={diaryClient}
+      />
+
+      <ClientContractionsDialog
+        open={contractionsDialogOpen}
+        onOpenChange={setContractionsDialogOpen}
+        client={contractionsClient}
       />
     </>
   );
