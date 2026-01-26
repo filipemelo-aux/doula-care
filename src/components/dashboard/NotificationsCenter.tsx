@@ -240,22 +240,39 @@ export function NotificationsCenter() {
     }
   });
 
-  // Add contraction notifications (medium priority - important for labor tracking)
+  // Add contraction notifications - grouped by client (show most recent + count)
+  const contractionsByClient = new Map<string, { entries: ContractionEntry[]; clientName: string }>();
   recentContractions?.forEach(entry => {
-    const durationText = entry.duration_seconds 
-      ? `${entry.duration_seconds}s de duração` 
+    const existing = contractionsByClient.get(entry.client_id);
+    if (existing) {
+      existing.entries.push(entry);
+    } else {
+      contractionsByClient.set(entry.client_id, {
+        entries: [entry],
+        clientName: entry.client_name || "Cliente"
+      });
+    }
+  });
+
+  contractionsByClient.forEach(({ entries, clientName }, clientId) => {
+    const latestEntry = entries[0]; // Already sorted by started_at DESC
+    const count = entries.length;
+    const isActiveLabor = count >= 3; // 3+ contractions in 24h suggests active labor
+    
+    const durationText = latestEntry.duration_seconds 
+      ? `${latestEntry.duration_seconds}s` 
       : "Em andamento";
     
     notifications.push({
-      id: `contraction-${entry.id}`,
+      id: `contraction-${clientId}`,
       type: "new_contraction",
-      title: "Nova Contração Registrada",
-      description: entry.client_name || "Cliente",
-      priority: "medium",
+      title: isActiveLabor ? "Contrações Frequentes" : "Nova Contração",
+      description: clientName,
+      priority: isActiveLabor ? "high" : "medium",
       icon: Timer,
-      color: "warning",
-      timestamp: entry.started_at,
-      extraInfo: durationText
+      color: isActiveLabor ? "destructive" : "warning",
+      timestamp: latestEntry.started_at,
+      extraInfo: count > 1 ? `${count} contrações (última: ${durationText})` : durationText
     });
   });
 
@@ -434,13 +451,22 @@ export function NotificationsCenter() {
                           </p>
                         )}
                         {notification.type === "new_contraction" && notification.timestamp && (
-                          <div className="flex items-center gap-2 mt-0.5">
-                            <p className="text-xs text-orange-500 flex items-center gap-1">
+                          <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                            <p className={`text-xs flex items-center gap-1 ${
+                              notification.priority === "high" ? "text-destructive" : "text-orange-500"
+                            }`}>
                               <Clock className="h-3 w-3" />
                               {format(parseISO(notification.timestamp), "dd/MM 'às' HH:mm", { locale: ptBR })}
                             </p>
                             {notification.extraInfo && (
-                              <Badge variant="outline" className="text-[10px] h-4 px-1.5 border-orange-300 text-orange-600 bg-orange-50">
+                              <Badge 
+                                variant="outline" 
+                                className={`text-[10px] h-4 px-1.5 ${
+                                  notification.priority === "high" 
+                                    ? "border-destructive/50 text-destructive bg-destructive/10"
+                                    : "border-orange-300 text-orange-600 bg-orange-50"
+                                }`}
+                              >
                                 {notification.extraInfo}
                               </Badge>
                             )}
