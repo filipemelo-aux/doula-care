@@ -276,17 +276,33 @@ export function NotificationsCenter() {
     });
   });
 
-  // Add diary entry notifications
+  // Add diary entry notifications - grouped by client
+  const diaryByClient = new Map<string, { entries: DiaryEntry[]; clientName: string }>();
   recentDiaryEntries?.forEach(entry => {
+    const existing = diaryByClient.get(entry.client_id);
+    if (existing) {
+      existing.entries.push(entry);
+    } else {
+      diaryByClient.set(entry.client_id, {
+        entries: [entry],
+        clientName: entry.client_name || "Cliente"
+      });
+    }
+  });
+
+  diaryByClient.forEach(({ entries, clientName }, clientId) => {
+    const latestEntry = entries[0]; // Already sorted by created_at DESC
+    const count = entries.length;
+    
     notifications.push({
-      id: `diary-${entry.id}`,
+      id: `diary-${clientId}`,
       type: "new_diary_entry",
-      title: "Novo Registro no Diário",
-      description: entry.client_name || "Cliente",
-      priority: "low",
+      title: count > 1 ? `${count} Novos Registros no Diário` : "Novo Registro no Diário",
+      description: clientName,
+      priority: "medium", // Elevated priority for visibility
       icon: BookHeart,
       color: "primary",
-      timestamp: entry.created_at
+      timestamp: latestEntry.created_at
     });
   });
 
