@@ -191,16 +191,20 @@ export function GestanteAuthProvider({ children }: { children: ReactNode }) {
     setClient(null);
     setIsClient(false);
     sessionStorage.removeItem(SESSION_KEY);
+    
+    // Clear any stored auth data
+    localStorage.removeItem("sb-gjnvxzsforfrxjanxqnq-auth-token");
 
     try {
-      // Sign out from Supabase (global to invalidate all sessions)
-      await supabase.auth.signOut({ scope: "global" });
+      // Sign out from Supabase - use local scope to avoid errors when session is already invalid
+      await supabase.auth.signOut({ scope: "local" });
     } catch (error) {
-      console.error("Error during sign out:", error);
+      // Ignore errors - session might already be invalid on server
+      console.log("Sign out completed (session may have been already invalid)");
     }
 
     // Force full page reload to clear all state
-    window.location.replace("/gestante/login");
+    window.location.href = "/gestante/login";
   };
 
   const refreshClientData = async (): Promise<void> => {
