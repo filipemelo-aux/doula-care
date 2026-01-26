@@ -88,10 +88,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    setIsAdmin(false);
     setUser(null);
     setSession(null);
-    setIsAdmin(false);
+    await supabase.auth.signOut();
+    // Force navigation to gestante login (root)
+    window.location.href = "/";
   };
 
   return (
