@@ -62,18 +62,18 @@ const generateUsername = (fullName: string): string => {
   return `${parts[0]}.${parts[parts.length - 1]}`;
 };
 
-// Generate password from DPP (day and month only - ddmm format + suffix for min 6 chars)
+// Generate password from DPP (DDMMAA format - day, month, year last 2 digits)
 const generatePassword = (dpp: string): string => {
-  // DPP format is YYYY-MM-DD, extract day and month
+  // DPP format is YYYY-MM-DD
   const parts = dpp.split("-");
   if (parts.length === 3) {
-    const day = parts[2];
+    const year = parts[0].slice(-2); // last 2 digits of year
     const month = parts[1];
-    // Add "gg" suffix to ensure 6+ characters (gestante)
-    return `${day}${month}gg`;
+    const day = parts[2];
+    return `${day}${month}${year}`;
   }
-  // Fallback: extract only numbers (first 4 digits for ddmm) + suffix
-  return dpp.replace(/\D/g, "").slice(0, 4) + "gg";
+  // Fallback
+  return dpp.replace(/\D/g, "").slice(0, 6);
 };
 
 export function ClientAccessCard({ clientsWithAccounts, loadingClients }: ClientAccessCardProps) {
