@@ -111,17 +111,17 @@ export function ClientAccessCard({ clientsWithAccounts, loadingClients }: Client
   };
 
   return (
-    <Card className="card-glass overflow-hidden">
-      <CardHeader className="pb-2">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <Card className="card-glass">
+      <CardHeader className="pb-2 px-3 sm:px-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-accent/10 flex items-center justify-center shrink-0">
-              <Baby className="w-5 h-5 text-accent" />
+            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-accent/10 flex items-center justify-center shrink-0">
+              <Baby className="w-4 h-4 sm:w-5 sm:h-5 text-accent" />
             </div>
             <div className="min-w-0">
-              <CardTitle className="text-lg">Acessos das Gestantes</CardTitle>
-              <CardDescription className="truncate">
-                Credenciais de login das clientes
+              <CardTitle className="text-base sm:text-lg">Acessos Gestantes</CardTitle>
+              <CardDescription className="text-xs truncate">
+                Credenciais das clientes
               </CardDescription>
             </div>
           </div>
@@ -130,31 +130,32 @@ export function ClientAccessCard({ clientsWithAccounts, loadingClients }: Client
             size="sm"
             onClick={() => provisionMutation.mutate()}
             disabled={provisionMutation.isPending}
-            className="gap-2"
+            className="gap-1.5 text-xs h-8"
           >
             {provisionMutation.isPending ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
+              <Loader2 className="h-3 w-3 animate-spin" />
             ) : (
-              <UserPlus className="h-4 w-4" />
+              <UserPlus className="h-3 w-3" />
             )}
-            Criar Usuários Pendentes
+            <span className="hidden sm:inline">Criar Pendentes</span>
+            <span className="sm:hidden">Criar</span>
           </Button>
         </div>
       </CardHeader>
-      <CardContent className="px-2 sm:px-6">
+      <CardContent className="px-2 sm:px-6 pt-0">
         {loadingClients ? (
           <div className="flex items-center justify-center py-8">
             <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
           </div>
         ) : clientsWithAccounts && clientsWithAccounts.length > 0 ? (
-          <div className="overflow-x-auto -mx-2 sm:mx-0">
-            <Table className="text-sm">
+          <div className="-mx-2 sm:mx-0">
+            <Table className="text-xs sm:text-sm">
               <TableHeader>
                 <TableRow>
-                  <TableHead className="whitespace-nowrap px-2">Cliente</TableHead>
-                  <TableHead className="whitespace-nowrap px-2">Usuário</TableHead>
-                  <TableHead className="whitespace-nowrap px-2">Senha Inicial</TableHead>
-                  <TableHead className="whitespace-nowrap px-2">Status</TableHead>
+                  <TableHead className="px-2">Cliente</TableHead>
+                  <TableHead className="px-2 hidden sm:table-cell">Usuário</TableHead>
+                  <TableHead className="px-2">Senha</TableHead>
+                  <TableHead className="px-2 w-16">Status</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -165,35 +166,40 @@ export function ClientAccessCard({ clientsWithAccounts, loadingClients }: Client
                   
                   return (
                     <TableRow key={client.id} className="table-row-hover">
-                      <TableCell className="px-2 py-2">
-                        <p className="font-medium truncate max-w-[120px] sm:max-w-none">
-                          {client.full_name}
-                        </p>
+                      <TableCell className="px-2 py-1.5">
+                        <div className="min-w-0">
+                          <p className="font-medium truncate text-xs sm:text-sm max-w-[80px] sm:max-w-[120px]">
+                            {client.full_name.split(' ')[0]}
+                          </p>
+                          <p className="text-[10px] text-muted-foreground truncate sm:hidden">
+                            {username}
+                          </p>
+                        </div>
                       </TableCell>
-                      <TableCell className="px-2 py-2">
+                      <TableCell className="px-2 py-1.5 hidden sm:table-cell">
                         <div className="flex items-center gap-1">
-                          <span className="text-xs font-mono truncate max-w-[100px] sm:max-w-[180px]">
+                          <span className="text-xs font-mono truncate max-w-[100px]">
                             {username}
                           </span>
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-6 w-6 flex-shrink-0"
+                            className="h-5 w-5 shrink-0"
                             onClick={() => copyToClipboard(username, "Usuário")}
                           >
                             <Copy className="h-3 w-3" />
                           </Button>
                         </div>
                       </TableCell>
-                      <TableCell className="px-2 py-2">
-                        <div className="flex items-center gap-1">
-                          <span className="text-xs font-mono">
-                            {isPasswordVisible ? password : "••••••••"}
+                      <TableCell className="px-2 py-1.5">
+                        <div className="flex items-center gap-0.5">
+                          <span className="text-xs font-mono w-10">
+                            {isPasswordVisible ? password : "••••"}
                           </span>
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-6 w-6 flex-shrink-0"
+                            className="h-5 w-5 shrink-0"
                             onClick={() => togglePasswordVisibility(client.id)}
                           >
                             {isPasswordVisible ? (
@@ -205,20 +211,20 @@ export function ClientAccessCard({ clientsWithAccounts, loadingClients }: Client
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-6 w-6 flex-shrink-0"
+                            className="h-5 w-5 shrink-0"
                             onClick={() => copyToClipboard(password, "Senha")}
                           >
                             <Copy className="h-3 w-3" />
                           </Button>
                         </div>
                       </TableCell>
-                      <TableCell className="px-2 py-2">
+                      <TableCell className="px-2 py-1.5">
                         {client.first_login ? (
-                          <Badge variant="outline" className="text-xs bg-warning/10 text-warning border-warning/30">
-                            Aguardando
+                          <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-warning/10 text-warning border-warning/30">
+                            Aguard.
                           </Badge>
                         ) : (
-                          <Badge variant="outline" className="text-xs bg-success/10 text-success border-success/30">
+                          <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-success/10 text-success border-success/30">
                             Ativo
                           </Badge>
                         )}
