@@ -90,12 +90,12 @@ export default function GestanteLogin() {
               <Input
                 id="username"
                 type="text"
-                placeholder="NOME.SOBRENOME"
+                placeholder="nome.sobrenome"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 required
                 autoComplete="username"
-                className="input-field"
+                className="input-field lowercase"
               />
               <p className="text-xs text-muted-foreground">
                 Seu usuário é seu nome.sobrenome (ex: maria.silva)
