@@ -1,15 +1,15 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Heart, Loader2, Eye, EyeOff } from "lucide-react";
+import { Heart, Loader2, Eye, EyeOff, Shield } from "lucide-react";
 import { toast } from "sonner";
 
 export default function GestanteLogin() {
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -20,6 +20,12 @@ export default function GestanteLogin() {
     setLoading(true);
 
     try {
+      // Normalize username and append domain if needed
+      let email = username.trim().toLowerCase();
+      if (!email.includes("@")) {
+        email = `${email}@gestante.doula.app`;
+      }
+
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -27,7 +33,7 @@ export default function GestanteLogin() {
 
       if (error) {
         toast.error("Erro ao fazer login", {
-          description: "Email ou senha incorretos",
+          description: "Usuário ou senha incorretos",
         });
         setLoading(false);
         return;
@@ -86,16 +92,19 @@ export default function GestanteLogin() {
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="username">Usuário</Label>
               <Input
-                id="email"
-                type="email"
-                placeholder="seu.nome@gestante.doula.app"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                id="username"
+                type="text"
+                placeholder="nome.sobrenome"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
                 required
                 className="input-field lowercase"
               />
+              <p className="text-xs text-muted-foreground">
+                Seu usuário é seu nome.sobrenome (ex: maria.silva)
+              </p>
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">Senha</Label>
@@ -138,6 +147,16 @@ export default function GestanteLogin() {
               )}
             </Button>
           </form>
+          
+          <div className="mt-6 pt-4 border-t border-border">
+            <Link 
+              to="/login" 
+              className="flex items-center justify-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <Shield className="h-4 w-4" />
+              Entrar como administrador
+            </Link>
+          </div>
         </CardContent>
       </Card>
     </div>

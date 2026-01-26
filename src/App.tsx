@@ -32,25 +32,8 @@ const App = () => (
       <BrowserRouter>
         <AuthProvider>
           <Routes>
-            {/* Admin routes */}
-            <Route path="/login" element={<Login />} />
-            <Route
-              element={
-                <ProtectedRoute>
-                  <DashboardLayout />
-                </ProtectedRoute>
-              }
-            >
-              <Route path="/" element={<Dashboard />} />
-              <Route path="/clientes" element={<Clients />} />
-              <Route path="/planos" element={<Plans />} />
-              <Route path="/financeiro" element={<Financial />} />
-              <Route path="/despesas" element={<Expenses />} />
-              <Route path="/relatorios" element={<Reports />} />
-              <Route path="/configuracoes" element={<Settings />} />
-            </Route>
-
-            {/* Gestante routes */}
+            {/* Gestante routes - Main entry point */}
+            <Route path="/" element={<GestanteLogin />} />
             <Route path="/gestante/login" element={<GestanteLogin />} />
             <Route
               path="/gestante/alterar-senha"
@@ -68,6 +51,28 @@ const App = () => (
                 </GestanteProtectedRoute>
               }
             />
+
+            {/* Admin routes */}
+            <Route path="/login" element={<Login />} />
+            <Route path="/admin/login" element={<Login />} />
+            <Route
+              element={
+                <ProtectedRoute>
+                  <DashboardLayout />
+                </ProtectedRoute>
+              }
+            >
+              <Route path="/admin" element={<Dashboard />} />
+              <Route path="/clientes" element={<Clients />} />
+              <Route path="/planos" element={<Plans />} />
+              <Route path="/financeiro" element={<Financial />} />
+              <Route path="/despesas" element={<Expenses />} />
+              <Route path="/relatorios" element={<Reports />} />
+              <Route path="/configuracoes" element={<Settings />} />
+            </Route>
+
+
+            
 
             <Route path="*" element={<NotFound />} />
           </Routes>
