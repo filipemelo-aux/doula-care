@@ -5,17 +5,9 @@ import {
   MessageCircle, 
   Baby, 
   Timer, 
-  User,
-  LogOut
+  User 
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useGestanteAuth } from "@/contexts/GestanteAuthContext";
-import { Button } from "@/components/ui/button";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 
 interface GestanteLayoutProps {
   children: ReactNode;
@@ -32,35 +24,11 @@ const navItems = [
 export function GestanteLayout({ children }: GestanteLayoutProps) {
   const navigate = useNavigate();
   const location = useLocation();
-  const { signOut } = useGestanteAuth();
-
-  const handleLogout = async () => {
-    await signOut();
-  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 pb-28">
-      {/* Header with Logout Button */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-md border-b h-12 flex items-center justify-end px-4">
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handleLogout}
-              className="h-8 w-8 text-muted-foreground hover:text-destructive"
-            >
-              <LogOut className="h-4 w-4" />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>
-            <p>Sair</p>
-          </TooltipContent>
-        </Tooltip>
-      </header>
-
       {/* Main Content */}
-      <main className="min-h-[calc(100vh-5rem)] pt-12">
+      <main className="min-h-[calc(100vh-5rem)]">
         {children}
       </main>
 
