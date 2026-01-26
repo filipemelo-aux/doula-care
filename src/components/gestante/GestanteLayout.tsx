@@ -26,14 +26,14 @@ export function GestanteLayout({ children }: GestanteLayoutProps) {
   const location = useLocation();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 pb-20">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 pb-28">
       {/* Main Content */}
       <main className="min-h-[calc(100vh-5rem)]">
         {children}
       </main>
 
-      {/* Bottom Navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-md border-t safe-area-bottom">
+      {/* Bottom Navigation - elevated above Lovable branding */}
+      <nav className="fixed bottom-10 left-0 right-0 z-50 bg-background/95 backdrop-blur-md border-t border-b safe-area-bottom shadow-lg">
         <div className="flex items-center justify-around h-16 max-w-lg mx-auto px-2">
           {navItems.map((item) => {
             const isActive = location.pathname === item.to;
