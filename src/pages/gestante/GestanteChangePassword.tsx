@@ -1,11 +1,12 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { useGestanteAuth } from "@/contexts/GestanteAuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Heart, Loader2, Eye, EyeOff, Lock } from "lucide-react";
+import { Loader2, Eye, EyeOff, Lock } from "lucide-react";
 import { toast } from "sonner";
 
 export default function GestanteChangePassword() {
@@ -14,17 +15,7 @@ export default function GestanteChangePassword() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-
-  useEffect(() => {
-    // Check if user is authenticated
-    const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        navigate("/gestante/login");
-      }
-    };
-    checkAuth();
-  }, [navigate]);
+  const { user, setFirstLoginComplete, refreshClientData } = useGestanteAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,7 +35,6 @@ export default function GestanteChangePassword() {
     try {
       // First update first_login flag BEFORE changing password
       // This prevents the redirect loop
-      const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         const { error: updateError } = await supabase
           .from("clients")
@@ -53,8 +43,12 @@ export default function GestanteChangePassword() {
         
         if (updateError) {
           console.error("Error updating first_login:", updateError);
+          throw updateError;
         }
       }
+
+      // Update local state immediately to prevent redirect loop
+      setFirstLoginComplete();
 
       // Then update the password
       const { error } = await supabase.auth.updateUser({
@@ -62,6 +56,9 @@ export default function GestanteChangePassword() {
       });
 
       if (error) throw error;
+
+      // Refresh client data to sync state
+      await refreshClientData();
 
       toast.success("Senha alterada com sucesso!");
       
@@ -103,6 +100,7 @@ export default function GestanteChangePassword() {
                   onChange={(e) => setNewPassword(e.target.value)}
                   required
                   minLength={6}
+                  autoComplete="new-password"
                   className="input-field pr-10"
                 />
                 <Button
@@ -130,6 +128,7 @@ export default function GestanteChangePassword() {
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
                 minLength={6}
+                autoComplete="new-password"
                 className="input-field"
               />
             </div>

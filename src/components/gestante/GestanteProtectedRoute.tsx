@@ -1,6 +1,5 @@
-import { useEffect, useState } from "react";
 import { Navigate, useLocation } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
+import { useGestanteAuth } from "@/contexts/GestanteAuthContext";
 import { Loader2 } from "lucide-react";
 
 interface GestanteProtectedRouteProps {
@@ -8,59 +7,8 @@ interface GestanteProtectedRouteProps {
 }
 
 export function GestanteProtectedRoute({ children }: GestanteProtectedRouteProps) {
-  const [loading, setLoading] = useState(true);
-  const [isClient, setIsClient] = useState(false);
-  const [isFirstLogin, setIsFirstLogin] = useState(false);
+  const { loading, isAuthenticated, isFirstLogin } = useGestanteAuth();
   const location = useLocation();
-
-  useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        
-        if (!session) {
-          setLoading(false);
-          return;
-        }
-
-        // Check if user has client role
-        const { data: roleData } = await supabase
-          .from("user_roles")
-          .select("role")
-          .eq("user_id", session.user.id)
-          .eq("role", "client")
-          .maybeSingle();
-
-        if (!roleData) {
-          setLoading(false);
-          return;
-        }
-
-        setIsClient(true);
-
-        // Check if first login
-        const { data: clientData } = await supabase
-          .from("clients")
-          .select("first_login")
-          .eq("user_id", session.user.id)
-          .maybeSingle();
-
-        setIsFirstLogin(clientData?.first_login ?? false);
-      } catch (error) {
-        console.error("Error checking auth:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    checkAuth();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {
-      checkAuth();
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
 
   if (loading) {
     return (
@@ -73,7 +21,7 @@ export function GestanteProtectedRoute({ children }: GestanteProtectedRouteProps
     );
   }
 
-  if (!isClient) {
+  if (!isAuthenticated) {
     return <Navigate to="/gestante/login" state={{ from: location }} replace />;
   }
 

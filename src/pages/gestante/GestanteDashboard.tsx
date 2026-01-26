@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { useGestanteAuth } from "@/contexts/GestanteAuthContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -30,25 +30,23 @@ type Client = Tables<"clients">;
 type Notification = Tables<"client_notifications">;
 
 export default function GestanteDashboard() {
-  const [client, setClient] = useState<Client | null>(null);
+  const [clientData, setClientData] = useState<Client | null>(null);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const navigate = useNavigate();
+  const { client, user, signOut } = useGestanteAuth();
 
   useEffect(() => {
-    fetchClientData();
-    fetchNotifications();
-  }, []);
+    if (client?.id) {
+      fetchFullClientData();
+      fetchNotifications();
+    }
+  }, [client?.id]);
 
-  const fetchClientData = async () => {
+  const fetchFullClientData = async () => {
+    if (!user) return;
+    
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        navigate("/gestante/login");
-        return;
-      }
-
       const { data, error } = await supabase
         .from("clients")
         .select("*")
@@ -56,14 +54,7 @@ export default function GestanteDashboard() {
         .maybeSingle();
 
       if (error) throw error;
-      if (!data) {
-        toast.error("Dados não encontrados");
-        await supabase.auth.signOut();
-        navigate("/gestante/login");
-        return;
-      }
-
-      setClient(data);
+      setClientData(data);
     } catch (error) {
       console.error("Error fetching client:", error);
       toast.error("Erro ao carregar dados");
@@ -73,22 +64,13 @@ export default function GestanteDashboard() {
   };
 
   const fetchNotifications = async () => {
+    if (!client?.id) return;
+
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      const { data: clientData } = await supabase
-        .from("clients")
-        .select("id")
-        .eq("user_id", user.id)
-        .maybeSingle();
-
-      if (!clientData) return;
-
       const { data, error } = await supabase
         .from("client_notifications")
         .select("*")
-        .eq("client_id", clientData.id)
+        .eq("client_id", client.id)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
@@ -114,20 +96,13 @@ export default function GestanteDashboard() {
   };
 
   const handleSignOut = async () => {
-    try {
-      await supabase.auth.signOut({ scope: 'local' });
-    } catch (error) {
-      console.error("Error signing out:", error);
-    } finally {
-      // Force a full page reload to clear all state
-      window.location.replace("/");
-    }
+    await signOut();
   };
 
   const calculateGestationalAge = () => {
-    if (!client?.dpp) return null;
+    if (!clientData?.dpp) return null;
     
-    const dppDate = new Date(client.dpp);
+    const dppDate = new Date(clientData.dpp);
     const today = new Date();
     const daysUntilDpp = differenceInDays(dppDate, today);
     const totalDays = 280;
@@ -184,7 +159,7 @@ export default function GestanteDashboard() {
               <Heart className="w-5 h-5 text-primary-foreground" />
             </div>
             <div>
-              <h1 className="font-display font-semibold">Olá, {client?.full_name.split(" ")[0]}!</h1>
+              <h1 className="font-display font-semibold">Olá, {client?.full_name?.split(" ")[0]}!</h1>
               <p className="text-xs text-muted-foreground">Área da Gestante</p>
             </div>
           </div>
@@ -221,7 +196,7 @@ export default function GestanteDashboard() {
                   <span className="text-muted-foreground">DPP:</span>
                 </div>
                 <span className="font-medium">
-                  {client?.dpp && format(new Date(client.dpp), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
+                  {clientData?.dpp && format(new Date(clientData.dpp), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
                 </span>
               </div>
 
@@ -242,21 +217,21 @@ export default function GestanteDashboard() {
                 <CreditCard className="h-5 w-5 text-primary" />
                 <CardTitle className="text-lg">Seu Plano</CardTitle>
               </div>
-              <Badge variant={getPaymentStatusBadge(client?.payment_status || "pendente").variant}>
-                {getPaymentStatusBadge(client?.payment_status || "pendente").label}
+              <Badge variant={getPaymentStatusBadge(clientData?.payment_status || "pendente").variant}>
+                {getPaymentStatusBadge(clientData?.payment_status || "pendente").label}
               </Badge>
             </div>
           </CardHeader>
           <CardContent>
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-2xl font-semibold">{getPlanLabel(client?.plan || "basico")}</p>
+                <p className="text-2xl font-semibold">{getPlanLabel(clientData?.plan || "basico")}</p>
                 <p className="text-sm text-muted-foreground">Plano contratado</p>
               </div>
-              {client?.plan_value && (
+              {clientData?.plan_value && (
                 <div className="text-right">
                   <p className="text-xl font-semibold text-primary">
-                    R$ {client.plan_value.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                    R$ {clientData.plan_value.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
                   </p>
                   <p className="text-sm text-muted-foreground">Valor total</p>
                 </div>
@@ -282,26 +257,26 @@ export default function GestanteDashboard() {
           <CardContent className="space-y-3">
             <div className="flex items-center gap-3">
               <Phone className="h-4 w-4 text-muted-foreground" />
-              <span>{client?.phone || "Não informado"}</span>
+              <span>{clientData?.phone || "Não informado"}</span>
             </div>
-            {client?.street && (
+            {clientData?.street && (
               <div className="flex items-start gap-3">
                 <MapPin className="h-4 w-4 text-muted-foreground mt-0.5" />
                 <div>
-                  <p>{client.street}{client.number && `, ${client.number}`}</p>
-                  {client.neighborhood && <p className="text-sm text-muted-foreground">{client.neighborhood}</p>}
-                  {client.city && client.state && (
-                    <p className="text-sm text-muted-foreground">{client.city} - {client.state}</p>
+                  <p>{clientData.street}{clientData.number && `, ${clientData.number}`}</p>
+                  {clientData.neighborhood && <p className="text-sm text-muted-foreground">{clientData.neighborhood}</p>}
+                  {clientData.city && clientData.state && (
+                    <p className="text-sm text-muted-foreground">{clientData.city} - {clientData.state}</p>
                   )}
                 </div>
               </div>
             )}
-            {client?.companion_name && (
+            {clientData?.companion_name && (
               <div className="mt-4 p-3 bg-muted/50 rounded-lg">
                 <p className="text-sm font-medium mb-1">Acompanhante</p>
-                <p>{client.companion_name}</p>
-                {client.companion_phone && (
-                  <p className="text-sm text-muted-foreground">{client.companion_phone}</p>
+                <p>{clientData.companion_name}</p>
+                {clientData.companion_phone && (
+                  <p className="text-sm text-muted-foreground">{clientData.companion_phone}</p>
                 )}
               </div>
             )}
@@ -365,8 +340,8 @@ export default function GestanteDashboard() {
       <EditContactDialog
         open={editDialogOpen}
         onOpenChange={setEditDialogOpen}
-        client={client}
-        onUpdate={fetchClientData}
+        client={clientData}
+        onUpdate={fetchFullClientData}
       />
     </div>
   );
