@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -13,7 +13,46 @@ export default function GestanteLogin() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [checkingSession, setCheckingSession] = useState(true);
   const navigate = useNavigate();
+
+  // Check if already logged in
+  useEffect(() => {
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (session) {
+        // Check user role and redirect accordingly
+        const { data: adminRole } = await supabase
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", session.user.id)
+          .in("role", ["admin", "moderator"])
+          .maybeSingle();
+
+        if (adminRole) {
+          navigate("/admin", { replace: true });
+          return;
+        }
+
+        const { data: clientRole } = await supabase
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", session.user.id)
+          .eq("role", "client")
+          .maybeSingle();
+
+        if (clientRole) {
+          navigate("/gestante", { replace: true });
+          return;
+        }
+      }
+      
+      setCheckingSession(false);
+    };
+
+    checkSession();
+  }, [navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -77,6 +116,14 @@ export default function GestanteLogin() {
     }
   };
 
+  if (checkingSession) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-primary/5 p-4">
       <Card className="w-full max-w-md card-glass">
@@ -133,7 +180,7 @@ export default function GestanteLogin() {
                 </Button>
               </div>
               <p className="text-xs text-muted-foreground">
-                Primeira vez? Sua senha é a data prevista do parto (somente números)
+                Primeira vez? Sua senha é dia e mês da DPP (formato DDMM)
               </p>
             </div>
             <Button type="submit" className="w-full" disabled={loading}>
