@@ -227,30 +227,32 @@ export function ClientAccessCard({ clientsWithAccounts, loadingClients }: Client
                         </div>
                       </TableCell>
                       <TableCell className="px-2 py-1.5">
-                        <div className="flex items-center gap-0.5">
-                          <span className="text-xs font-mono w-10">
-                            {isPasswordVisible ? password : "••••"}
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-xs font-mono min-w-[52px]">
+                            {isPasswordVisible ? password : "••••••"}
                           </span>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-5 w-5 shrink-0"
-                            onClick={() => togglePasswordVisibility(client.id)}
-                          >
-                            {isPasswordVisible ? (
-                              <EyeOff className="h-3 w-3" />
-                            ) : (
-                              <Eye className="h-3 w-3" />
-                            )}
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-5 w-5 shrink-0"
-                            onClick={() => copyToClipboard(password, "Senha")}
-                          >
-                            <Copy className="h-3 w-3" />
-                          </Button>
+                          <div className="flex items-center">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-6 w-6 shrink-0"
+                              onClick={() => togglePasswordVisibility(client.id)}
+                            >
+                              {isPasswordVisible ? (
+                                <EyeOff className="h-3.5 w-3.5" />
+                              ) : (
+                                <Eye className="h-3.5 w-3.5" />
+                              )}
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-6 w-6 shrink-0"
+                              onClick={() => copyToClipboard(password, "Senha")}
+                            >
+                              <Copy className="h-3 w-3" />
+                            </Button>
+                          </div>
                         </div>
                       </TableCell>
                       <TableCell className="px-2 py-1.5">
