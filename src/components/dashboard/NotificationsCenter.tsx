@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Bell, Baby, CheckCircle, AlertTriangle, Calendar, Clock, Activity } from "lucide-react";
+import { Bell, Baby, CheckCircle, AlertTriangle, Calendar, Clock, Activity, BookHeart } from "lucide-react";
 import { calculateCurrentPregnancyWeeks, calculateCurrentPregnancyDays, isPostTerm } from "@/lib/pregnancy";
 import { BirthRegistrationDialog } from "@/components/clients/BirthRegistrationDialog";
 import { format, parseISO } from "date-fns";
@@ -15,9 +15,16 @@ import type { Tables } from "@/integrations/supabase/types";
 
 type Client = Tables<"clients">;
 
+interface DiaryEntry {
+  id: string;
+  client_id: string;
+  created_at: string;
+  client_name?: string;
+}
+
 interface Notification {
   id: string;
-  type: "birth_approaching" | "post_term" | "payment_pending" | "labor_started";
+  type: "birth_approaching" | "post_term" | "payment_pending" | "labor_started" | "new_diary_entry";
   title: string;
   description: string;
   client?: Client & { current_weeks?: number | null; current_days?: number; is_post_term?: boolean };
@@ -73,6 +80,31 @@ export function NotificationsCenter() {
     },
   });
 
+  // Fetch recent diary entries (last 24 hours)
+  const { data: recentDiaryEntries, isLoading: loadingDiary } = useQuery({
+    queryKey: ["recent-diary-entries"],
+    queryFn: async () => {
+      const twentyFourHoursAgo = new Date();
+      twentyFourHoursAgo.setHours(twentyFourHoursAgo.getHours() - 24);
+
+      const { data, error } = await supabase
+        .from("pregnancy_diary")
+        .select("id, client_id, created_at, clients(full_name)")
+        .gte("created_at", twentyFourHoursAgo.toISOString())
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      
+      return data.map(entry => ({
+        id: entry.id,
+        client_id: entry.client_id,
+        created_at: entry.created_at,
+        client_name: (entry.clients as { full_name: string } | null)?.full_name || "Cliente"
+      })) as DiaryEntry[];
+    },
+    refetchInterval: 60000, // Refetch every minute
+  });
+
   const handleRegisterBirth = (client: Client) => {
     setSelectedClient(client);
     setBirthDialogOpen(true);
@@ -125,6 +157,20 @@ export function NotificationsCenter() {
     }
   });
 
+  // Add diary entry notifications
+  recentDiaryEntries?.forEach(entry => {
+    notifications.push({
+      id: `diary-${entry.id}`,
+      type: "new_diary_entry",
+      title: "Novo Registro no Diário",
+      description: entry.client_name || "Cliente",
+      priority: "low",
+      icon: BookHeart,
+      color: "primary",
+      timestamp: entry.created_at
+    });
+  });
+
   // Sort by priority and type (labor_started first)
   notifications.sort((a, b) => {
     // Labor started always comes first
@@ -135,7 +181,7 @@ export function NotificationsCenter() {
     return priorityOrder[a.priority] - priorityOrder[b.priority];
   });
 
-  const isLoading = loadingBirth;
+  const isLoading = loadingBirth || loadingDiary;
   const hasNotifications = notifications.length > 0;
   const highPriorityCount = notifications.filter(n => n.priority === "high").length;
 
@@ -209,6 +255,8 @@ export function NotificationsCenter() {
                           ? "bg-destructive/15"
                           : notification.priority === "medium"
                           ? "bg-warning/15"
+                          : notification.type === "new_diary_entry"
+                          ? "bg-primary/15"
                           : "bg-muted"
                       }`}>
                         <notification.icon className={`h-4 w-4 ${
@@ -216,6 +264,8 @@ export function NotificationsCenter() {
                             ? "text-destructive"
                             : notification.priority === "medium"
                             ? "text-warning"
+                            : notification.type === "new_diary_entry"
+                            ? "text-primary"
                             : "text-muted-foreground"
                         }`} />
                       </div>
@@ -226,6 +276,8 @@ export function NotificationsCenter() {
                               ? "text-destructive"
                               : notification.priority === "medium"
                               ? "text-warning"
+                              : notification.type === "new_diary_entry"
+                              ? "text-primary"
                               : "text-muted-foreground"
                           }`}>
                             {notification.title}
@@ -252,10 +304,16 @@ export function NotificationsCenter() {
                             Início: {format(parseISO(notification.timestamp), "dd/MM 'às' HH:mm", { locale: ptBR })}
                           </p>
                         )}
-                        {notification.client?.dpp && notification.type !== "labor_started" && (
+                        {notification.client?.dpp && notification.type !== "labor_started" && notification.type !== "new_diary_entry" && (
                           <p className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1">
                             <Calendar className="h-3 w-3" />
                             DPP: {format(parseISO(notification.client.dpp), "dd/MM/yyyy")}
+                          </p>
+                        )}
+                        {notification.type === "new_diary_entry" && notification.timestamp && (
+                          <p className="text-xs text-primary mt-0.5 flex items-center gap-1">
+                            <Clock className="h-3 w-3" />
+                            {format(parseISO(notification.timestamp), "dd/MM 'às' HH:mm", { locale: ptBR })}
                           </p>
                         )}
                       </div>
