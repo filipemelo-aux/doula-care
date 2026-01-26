@@ -272,31 +272,47 @@ export function NotificationsCenter() {
       });
     }
 
-    // Child: Contractions
+    // Child: Contractions - check if intervals are less than 2 minutes
     const clientContractions = contractionsByClient.get(client.id);
     if (clientContractions) {
       const count = clientContractions.entries.length;
       const latestEntry = clientContractions.entries[0];
-      const isActiveLabor = count >= 3;
       const durationText = latestEntry.duration_seconds 
         ? `${latestEntry.duration_seconds}s` 
         : "Em andamento";
 
+      // Calculate if last intervals are less than 2 minutes (urgent)
+      let isUrgentContractions = false;
+      if (count >= 2) {
+        const sortedEntries = [...clientContractions.entries].sort(
+          (a, b) => new Date(b.started_at).getTime() - new Date(a.started_at).getTime()
+        );
+        // Check last 2 intervals
+        const intervals: number[] = [];
+        for (let i = 0; i < Math.min(sortedEntries.length - 1, 2); i++) {
+          const interval = (new Date(sortedEntries[i].started_at).getTime() - 
+                           new Date(sortedEntries[i + 1].started_at).getTime()) / 1000 / 60;
+          intervals.push(interval);
+        }
+        // If all recent intervals are less than 2 minutes, it's urgent
+        isUrgentContractions = intervals.length > 0 && intervals.every(interval => interval < 2);
+      }
+
       children.push({
         id: `contraction-${client.id}`,
         type: "new_contraction",
-        title: isActiveLabor ? "Contrações Frequentes" : "Nova Contração",
+        title: isUrgentContractions ? "Contrações Urgentes" : count >= 3 ? "Contrações Frequentes" : "Nova Contração",
         description: count > 1 ? `${count} contrações nas últimas 24h` : "1 contração registrada",
         timestamp: latestEntry.started_at,
         extraInfo: durationText,
-        priority: isActiveLabor ? "high" : "medium"
+        priority: isUrgentContractions ? "high" : "medium"
       });
 
       // Remove from map so we don't duplicate
       contractionsByClient.delete(client.id);
     }
 
-    // Child: Diary entries (add as child when client has birth alert)
+    // Child: Diary entries (add as child when client has birth alert) - always medium priority
     const clientDiary = diaryByClient.get(client.id);
     if (clientDiary) {
       const count = clientDiary.entries.length;
@@ -465,7 +481,7 @@ export function NotificationsCenter() {
             )}
           </div>
         </CardHeader>
-        <CardContent className="flex-1 overflow-hidden p-0">
+        <CardContent className="p-0 overflow-hidden">
           {!hasNotifications ? (
             <div className="flex flex-col items-center justify-center h-full text-center px-6 py-8">
               <div className="w-12 h-12 rounded-full bg-muted/50 flex items-center justify-center mb-3">
@@ -475,8 +491,8 @@ export function NotificationsCenter() {
               <p className="text-xs text-muted-foreground/70 mt-1">Tudo em dia!</p>
             </div>
           ) : (
-            <ScrollArea className="h-full max-h-[300px] lg:max-h-[400px] px-4 pb-4 [&>[data-radix-scroll-area-viewport]]:!overflow-y-scroll">
-              <div className="space-y-2">
+            <div className="max-h-[300px] lg:max-h-[400px] overflow-y-auto px-4 pb-4">
+              <div className="space-y-2 pt-2">
                 {parentNotifications.map((notification) => {
                   const hasChildren = notification.children.length > 0;
                   const isExpanded = expandedNotifications.has(notification.id);
@@ -695,7 +711,7 @@ export function NotificationsCenter() {
                   );
                 })}
               </div>
-            </ScrollArea>
+            </div>
           )}
         </CardContent>
       </Card>
