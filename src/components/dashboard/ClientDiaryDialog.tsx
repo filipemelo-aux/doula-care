@@ -1,0 +1,178 @@
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
+import { 
+  BookHeart, 
+  Smile, 
+  Frown, 
+  Meh, 
+  Heart, 
+  Sparkles, 
+  AlertCircle,
+  Calendar,
+  Loader2
+} from "lucide-react";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { Tables } from "@/integrations/supabase/types";
+
+type Client = Tables<"clients">;
+type DiaryEntry = Tables<"pregnancy_diary">;
+
+interface ClientDiaryDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  client: Client | null;
+}
+
+const emotionIcons: Record<string, { icon: typeof Smile; color: string; label: string }> = {
+  feliz: { icon: Smile, color: "text-green-500", label: "Feliz" },
+  triste: { icon: Frown, color: "text-blue-500", label: "Triste" },
+  ansiosa: { icon: AlertCircle, color: "text-yellow-500", label: "Ansiosa" },
+  calma: { icon: Heart, color: "text-pink-500", label: "Calma" },
+  animada: { icon: Sparkles, color: "text-purple-500", label: "Animada" },
+  cansada: { icon: Meh, color: "text-gray-500", label: "Cansada" },
+};
+
+export function ClientDiaryDialog({
+  open,
+  onOpenChange,
+  client,
+}: ClientDiaryDialogProps) {
+  const { data: entries, isLoading } = useQuery({
+    queryKey: ["client-diary", client?.id],
+    queryFn: async () => {
+      if (!client?.id) return [];
+      
+      const { data, error } = await supabase
+        .from("pregnancy_diary")
+        .select("*")
+        .eq("client_id", client.id)
+        .order("created_at", { ascending: false })
+        .limit(20);
+
+      if (error) throw error;
+      return data as DiaryEntry[];
+    },
+    enabled: open && !!client?.id,
+  });
+
+  const getEmotionDisplay = (emotion: string | null) => {
+    if (!emotion) return null;
+    const emotionData = emotionIcons[emotion];
+    if (!emotionData) return null;
+    
+    const Icon = emotionData.icon;
+    return (
+      <div className={`flex items-center gap-1 ${emotionData.color}`}>
+        <Icon className="h-4 w-4" />
+        <span className="text-xs">{emotionData.label}</span>
+      </div>
+    );
+  };
+
+  const groupEntriesByDate = (entries: DiaryEntry[]) => {
+    const grouped: Record<string, DiaryEntry[]> = {};
+    
+    entries.forEach(entry => {
+      const dateKey = format(new Date(entry.created_at), "yyyy-MM-dd");
+      if (!grouped[dateKey]) {
+        grouped[dateKey] = [];
+      }
+      grouped[dateKey].push(entry);
+    });
+    
+    return grouped;
+  };
+
+  const groupedEntries = entries ? groupEntriesByDate(entries) : {};
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-2xl max-h-[85vh]">
+        <DialogHeader className="pb-2">
+          <DialogTitle className="font-display text-lg flex items-center gap-2">
+            <BookHeart className="h-5 w-5 text-primary" />
+            Diário da Gestação
+          </DialogTitle>
+          <DialogDescription>
+            Registros de {client?.full_name}
+          </DialogDescription>
+        </DialogHeader>
+
+        <ScrollArea className="max-h-[60vh] pr-4">
+          {isLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+          ) : entries && entries.length > 0 ? (
+            <div className="space-y-4">
+              {Object.entries(groupedEntries).map(([dateKey, dayEntries]) => (
+                <div key={dateKey}>
+                  <div className="flex items-center gap-2 mb-2 sticky top-0 bg-background/80 backdrop-blur-sm py-1">
+                    <Calendar className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm font-medium text-muted-foreground">
+                      {format(new Date(dateKey), "EEEE, dd 'de' MMMM", { locale: ptBR })}
+                    </span>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    {dayEntries.map((entry) => (
+                      <Card key={entry.id} className="overflow-hidden">
+                        <CardContent className="p-3">
+                          <div className="flex items-start justify-between gap-2 mb-2">
+                            <span className="text-xs text-muted-foreground">
+                              {format(new Date(entry.created_at), "HH:mm")}
+                            </span>
+                            {getEmotionDisplay(entry.emotion)}
+                          </div>
+                          
+                          <p className="text-sm whitespace-pre-wrap mb-2">
+                            {entry.content}
+                          </p>
+                          
+                          {entry.symptoms && entry.symptoms.length > 0 && (
+                            <div className="flex flex-wrap gap-1 mb-2">
+                              {entry.symptoms.map((symptom, idx) => (
+                                <Badge key={idx} variant="secondary" className="text-xs">
+                                  {symptom}
+                                </Badge>
+                              ))}
+                            </div>
+                          )}
+                          
+                          {entry.observations && (
+                            <div className="mt-2 pt-2 border-t">
+                              <p className="text-xs text-muted-foreground italic">
+                                {entry.observations}
+                              </p>
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8 text-muted-foreground">
+              <BookHeart className="h-12 w-12 mx-auto mb-3 opacity-30" />
+              <p>Nenhum registro encontrado</p>
+              <p className="text-xs mt-1">A gestante ainda não fez registros no diário</p>
+            </div>
+          )}
+        </ScrollArea>
+      </DialogContent>
+    </Dialog>
+  );
+}
