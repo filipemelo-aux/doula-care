@@ -6,9 +6,17 @@ const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
   ({ className, type, onChange, ...props }, ref) => {
     // Check if lowercase class is present
     const shouldBeLowercase = className?.includes("lowercase");
-    const shouldTransform = type !== "number" && type !== "email" && type !== "password" && !shouldBeLowercase;
+    // Never transform password, number, or email fields
+    const isExemptType = type === "number" || type === "email" || type === "password";
+    const shouldTransform = !isExemptType && !shouldBeLowercase;
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      // Never transform password fields, regardless of other conditions
+      if (type === "password") {
+        onChange?.(e);
+        return;
+      }
+      
       // Transform text to uppercase for text inputs (unless lowercase class is present)
       if (shouldTransform) {
         e.target.value = e.target.value.toUpperCase();
