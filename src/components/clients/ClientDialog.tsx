@@ -310,6 +310,10 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
     mutation.mutate(data);
   };
 
+  const handleSubmitClick = () => {
+    form.handleSubmit(onSubmit)();
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
@@ -723,7 +727,12 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
               >
                 Cancelar
               </Button>
-              <Button type="submit" size="sm" disabled={mutation.isPending}>
+              <Button 
+                type="button" 
+                size="sm" 
+                disabled={mutation.isPending}
+                onClick={handleSubmitClick}
+              >
                 {mutation.isPending ? "Salvando..." : client ? "Atualizar" : "Cadastrar"}
               </Button>
             </div>
