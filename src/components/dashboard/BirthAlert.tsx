@@ -175,39 +175,40 @@ export function BirthAlert() {
                       )}
                     </div>
 
-                    {/* Row 2: Status + DPP + Badge + Nasceu button */}
-                    <div className="flex items-center justify-between mt-1 pl-8">
-                      <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground min-w-0">
-                        <span className="truncate">
-                          {client.is_in_labor ? "Trabalho de parto" : client.is_post_term ? "Pós-data" : "Parto próximo"}
-                        </span>
-                        {client.dpp && (
-                          <>
-                            <span className="text-muted-foreground/50">•</span>
-                            <span className="flex items-center gap-0.5 flex-shrink-0">
-                              <Calendar className="h-2.5 w-2.5" />
-                              {format(parseISO(client.dpp), "dd/MM")}
-                            </span>
-                          </>
-                        )}
-                        <Badge 
-                          variant="outline" 
-                          className={`text-[9px] px-1 h-4 border-0 flex-shrink-0 ${
-                            client.is_in_labor
-                              ? "bg-destructive/20 text-destructive"
-                              : client.is_post_term
-                              ? "bg-destructive/20 text-destructive"
-                              : isHighPriority
-                              ? "bg-warning/20 text-warning"
-                              : "bg-warning/15 text-warning/90"
-                          }`}
-                        >
-                          {client.current_weeks}s{client.current_days > 0 ? `${client.current_days}d` : ""}
-                          {client.is_post_term && " Pós"}
-                        </Badge>
-                      </div>
-                      {/* Button - desktop only inline */}
-                      {!isMobile && (
+                    {/* Row 2: Status + DPP + Badge */}
+                    <div className="flex items-center flex-wrap gap-1 mt-1 pl-8 pr-1">
+                      <span className="text-[11px] text-muted-foreground truncate max-w-[100px]">
+                        {client.is_in_labor ? "Trabalho de parto" : client.is_post_term ? "Pós-data" : "Parto próximo"}
+                      </span>
+                      {client.dpp && (
+                        <>
+                          <span className="text-muted-foreground/50 text-[11px]">•</span>
+                          <span className="flex items-center gap-0.5 text-[11px] text-muted-foreground">
+                            <Calendar className="h-2.5 w-2.5" />
+                            {format(parseISO(client.dpp), "dd/MM")}
+                          </span>
+                        </>
+                      )}
+                      <Badge 
+                        variant="outline" 
+                        className={`text-[9px] px-1 h-4 border-0 ${
+                          client.is_in_labor
+                            ? "bg-destructive/20 text-destructive"
+                            : client.is_post_term
+                            ? "bg-destructive/20 text-destructive"
+                            : isHighPriority
+                            ? "bg-warning/20 text-warning"
+                            : "bg-warning/15 text-warning/90"
+                        }`}
+                      >
+                        {client.current_weeks}s{client.current_days > 0 ? `${client.current_days}d` : ""}
+                        {client.is_post_term && " Pós"}
+                      </Badge>
+                    </div>
+
+                    {/* Button - desktop only inline */}
+                    {!isMobile && (
+                      <div className="mt-1 pl-8">
                         <Button
                           size="sm"
                           variant="outline"
@@ -217,8 +218,8 @@ export function BirthAlert() {
                           <CheckCircle className="h-2.5 w-2.5 mr-0.5" />
                           Registrar Nascimento
                         </Button>
-                      )}
-                    </div>
+                      </div>
+                    )}
 
                     {/* Row 3: Labor badge - mobile only */}
                     {client.is_in_labor && isMobile && (
