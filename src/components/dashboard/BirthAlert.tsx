@@ -206,15 +206,18 @@ export function BirthAlert() {
                           {client.is_post_term && " Pós"}
                         </Badge>
                       </div>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="h-4 px-1 text-[10px] border-dashed border-primary/50 text-primary hover:bg-primary hover:text-primary-foreground hover:border-solid flex-shrink-0 transition-all"
-                        onClick={() => handleRegisterBirth(client as Client)}
-                      >
-                        <CheckCircle className="h-2.5 w-2.5 mr-0.5" />
-                        Registrar Nascimento
-                      </Button>
+                      {/* Button - desktop only inline */}
+                      {!isMobile && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-4 px-1 text-[10px] border-dashed border-primary/50 text-primary hover:bg-primary hover:text-primary-foreground hover:border-solid flex-shrink-0 transition-all"
+                          onClick={() => handleRegisterBirth(client as Client)}
+                        >
+                          <CheckCircle className="h-2.5 w-2.5 mr-0.5" />
+                          Registrar Nascimento
+                        </Button>
+                      )}
                     </div>
 
                     {/* Row 3: Labor badge - mobile only */}
@@ -223,6 +226,21 @@ export function BirthAlert() {
                         <Badge className="bg-destructive text-destructive-foreground text-[9px] px-1.5 h-4 animate-pulse">
                           🚨 EM TRABALHO DE PARTO
                         </Badge>
+                      </div>
+                    )}
+
+                    {/* Row 4: Button - mobile only (below everything) */}
+                    {isMobile && (
+                      <div className="mt-2 pl-8">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-5 px-2 text-[10px] border-dashed border-primary/50 text-primary hover:bg-primary hover:text-primary-foreground hover:border-solid transition-all w-full"
+                          onClick={() => handleRegisterBirth(client as Client)}
+                        >
+                          <CheckCircle className="h-2.5 w-2.5 mr-0.5" />
+                          Registrar Nascimento
+                        </Button>
                       </div>
                     )}
                   </div>
