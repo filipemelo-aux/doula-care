@@ -145,7 +145,7 @@ export function BirthAlert() {
                         : ""
                     }`}
                   >
-                    {/* Row 1: Icon + Name + Labor Badge */}
+                    {/* Row 1: Icon + Name */}
                     <div className="flex items-center gap-2">
                       <div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 ${
                         client.is_in_labor
@@ -167,7 +167,8 @@ export function BirthAlert() {
                       <span className="text-sm font-medium text-foreground truncate flex-1 min-w-0">
                         {client.full_name}
                       </span>
-                      {client.is_in_labor && (
+                      {/* Labor badge - desktop only inline */}
+                      {client.is_in_labor && !isMobile && (
                         <Badge className="bg-destructive text-destructive-foreground text-[9px] px-1.5 h-4 animate-pulse">
                           🚨 EM TRABALHO DE PARTO
                         </Badge>
@@ -215,6 +216,15 @@ export function BirthAlert() {
                         Registrar Nascimento
                       </Button>
                     </div>
+
+                    {/* Row 3: Labor badge - mobile only */}
+                    {client.is_in_labor && isMobile && (
+                      <div className="mt-1.5 pl-8">
+                        <Badge className="bg-destructive text-destructive-foreground text-[9px] px-1.5 h-4 animate-pulse">
+                          🚨 EM TRABALHO DE PARTO
+                        </Badge>
+                      </div>
+                    )}
                   </div>
                 );
               })}
