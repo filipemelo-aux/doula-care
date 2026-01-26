@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -8,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import {
   Phone,
@@ -16,10 +18,13 @@ import {
   CreditCard,
   Calendar,
   FileText,
+  Bell,
+  KeyRound,
 } from "lucide-react";
 import type { Tables } from "@/integrations/supabase/types";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { SendNotificationDialog } from "./SendNotificationDialog";
 
 type Client = Tables<"clients">;
 
@@ -59,6 +64,8 @@ export function ClientDetailsDialog({
   onOpenChange,
   client,
 }: ClientDetailsDialogProps) {
+  const [notificationDialogOpen, setNotificationDialogOpen] = useState(false);
+
   if (!client) return null;
 
   const formatCurrency = (value: number) => {
@@ -125,6 +132,30 @@ export function ClientDetailsDialog({
                 </div>
               </div>
             </div>
+
+            {/* Quick Actions */}
+            {client.user_id && (
+              <>
+                <Separator />
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setNotificationDialogOpen(true)}
+                  >
+                    <Bell className="w-4 h-4 mr-2" />
+                    Enviar Notificação
+                  </Button>
+                </div>
+              </>
+            )}
+
+            {!client.user_id && client.status === "gestante" && client.dpp && (
+              <div className="p-3 bg-muted/50 rounded-lg text-sm text-muted-foreground flex items-center gap-2">
+                <KeyRound className="w-4 h-4" />
+                Esta cliente ainda não tem acesso ao app. Edite e salve para criar o acesso automaticamente.
+              </div>
+            )}
 
             <Separator />
 
@@ -258,6 +289,12 @@ export function ClientDetailsDialog({
           </div>
         </ScrollArea>
       </DialogContent>
+
+      <SendNotificationDialog
+        open={notificationDialogOpen}
+        onOpenChange={setNotificationDialogOpen}
+        client={client}
+      />
     </Dialog>
   );
 }

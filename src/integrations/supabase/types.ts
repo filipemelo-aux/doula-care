@@ -14,6 +14,41 @@ export type Database = {
   }
   public: {
     Tables: {
+      client_notifications: {
+        Row: {
+          client_id: string
+          created_at: string
+          id: string
+          message: string
+          read: boolean | null
+          title: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          id?: string
+          message: string
+          read?: boolean | null
+          title: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          id?: string
+          message?: string
+          read?: boolean | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_notifications_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       clients: {
         Row: {
           baby_names: string[] | null
@@ -28,6 +63,7 @@ export type Database = {
           cpf: string | null
           created_at: string
           dpp: string | null
+          first_login: boolean | null
           full_name: string
           id: string
           neighborhood: string | null
@@ -44,6 +80,7 @@ export type Database = {
           status: Database["public"]["Enums"]["client_status"]
           street: string | null
           updated_at: string
+          user_id: string | null
           zip_code: string | null
         }
         Insert: {
@@ -59,6 +96,7 @@ export type Database = {
           cpf?: string | null
           created_at?: string
           dpp?: string | null
+          first_login?: boolean | null
           full_name: string
           id?: string
           neighborhood?: string | null
@@ -75,6 +113,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["client_status"]
           street?: string | null
           updated_at?: string
+          user_id?: string | null
           zip_code?: string | null
         }
         Update: {
@@ -90,6 +129,7 @@ export type Database = {
           cpf?: string | null
           created_at?: string
           dpp?: string | null
+          first_login?: boolean | null
           full_name?: string
           id?: string
           neighborhood?: string | null
@@ -106,6 +146,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["client_status"]
           street?: string | null
           updated_at?: string
+          user_id?: string | null
           zip_code?: string | null
         }
         Relationships: []
@@ -298,7 +339,7 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "admin" | "moderator" | "user"
+      app_role: "admin" | "moderator" | "user" | "client"
       client_status: "tentante" | "gestante" | "lactante"
       expense_category:
         | "social_media"
@@ -449,7 +490,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "moderator", "user"],
+      app_role: ["admin", "moderator", "user", "client"],
       client_status: ["tentante", "gestante", "lactante"],
       expense_category: [
         "social_media",

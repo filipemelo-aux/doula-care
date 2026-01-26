@@ -267,6 +267,28 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
           .from("transactions")
           .insert([transactionPayload]);
         if (transactionError) throw transactionError;
+
+        // Create user for client if DPP is set (gestante with expected delivery date)
+        if (data.dpp && data.status === "gestante") {
+          try {
+            const response = await supabase.functions.invoke("create-client-user", {
+              body: {
+                clientId: newClient.id,
+                fullName: data.full_name,
+                dpp: data.dpp,
+              },
+            });
+
+            if (response.error) {
+              console.error("Error creating client user:", response.error);
+              toast.info("Cliente cadastrada, mas houve um erro ao criar acesso da gestante");
+            } else if (response.data?.email) {
+              toast.info(`Acesso criado: ${response.data.email}`);
+            }
+          } catch (userError) {
+            console.error("Error invoking create-client-user:", userError);
+          }
+        }
       }
     },
     onSuccess: () => {
