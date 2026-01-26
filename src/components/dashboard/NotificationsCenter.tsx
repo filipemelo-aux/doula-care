@@ -157,14 +157,14 @@ export function NotificationsCenter() {
     }
   });
 
-  // Add diary entry notifications
+  // Add diary entry notifications (medium priority - more visible)
   recentDiaryEntries?.forEach(entry => {
     notifications.push({
       id: `diary-${entry.id}`,
       type: "new_diary_entry",
       title: "Novo Registro no Diário",
       description: entry.client_name || "Cliente",
-      priority: "low",
+      priority: "medium",
       icon: BookHeart,
       color: "primary",
       timestamp: entry.created_at
@@ -244,6 +244,8 @@ export function NotificationsCenter() {
                     className={`p-3 rounded-lg border transition-colors ${
                       notification.priority === "high"
                         ? "bg-destructive/5 border-destructive/20 hover:bg-destructive/10"
+                        : notification.type === "new_diary_entry"
+                        ? "bg-pink-50 border-pink-200 hover:bg-pink-100 dark:bg-pink-950/30 dark:border-pink-800 dark:hover:bg-pink-950/50"
                         : notification.priority === "medium"
                         ? "bg-warning/5 border-warning/20 hover:bg-warning/10"
                         : "bg-muted/30 border-border/50 hover:bg-muted/50"
@@ -253,36 +255,44 @@ export function NotificationsCenter() {
                       <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
                         notification.priority === "high"
                           ? "bg-destructive/15"
+                          : notification.type === "new_diary_entry"
+                          ? "bg-pink-200 dark:bg-pink-800/50"
                           : notification.priority === "medium"
                           ? "bg-warning/15"
-                          : notification.type === "new_diary_entry"
-                          ? "bg-primary/15"
                           : "bg-muted"
                       }`}>
                         <notification.icon className={`h-4 w-4 ${
                           notification.priority === "high"
                             ? "text-destructive"
+                            : notification.type === "new_diary_entry"
+                            ? "text-pink-600 dark:text-pink-400"
                             : notification.priority === "medium"
                             ? "text-warning"
-                            : notification.type === "new_diary_entry"
-                            ? "text-primary"
                             : "text-muted-foreground"
                         }`} />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-0.5">
+                        <div className="flex items-center gap-2 mb-0.5 flex-wrap">
                           <span className={`text-xs font-medium ${
                             notification.priority === "high"
                               ? "text-destructive"
+                              : notification.type === "new_diary_entry"
+                              ? "text-pink-600 dark:text-pink-400"
                               : notification.priority === "medium"
                               ? "text-warning"
-                              : notification.type === "new_diary_entry"
-                              ? "text-primary"
                               : "text-muted-foreground"
                           }`}>
                             {notification.title}
                           </span>
-                          {notification.client && notification.type !== "labor_started" && (
+                          {notification.type === "new_diary_entry" && (
+                            <Badge 
+                              variant="outline" 
+                              className="text-[9px] px-1.5 h-4 border-0 bg-pink-200 text-pink-700 dark:bg-pink-800/50 dark:text-pink-300 animate-pulse"
+                            >
+                              NOVO REGISTRO
+                            </Badge>
+                          )}
+                          {notification.client && notification.type !== "labor_started" && notification.type !== "new_diary_entry" && (
                             <Badge 
                               variant="outline" 
                               className={`text-[10px] px-1.5 h-4 border-0 ${
@@ -311,7 +321,7 @@ export function NotificationsCenter() {
                           </p>
                         )}
                         {notification.type === "new_diary_entry" && notification.timestamp && (
-                          <p className="text-xs text-primary mt-0.5 flex items-center gap-1">
+                          <p className="text-xs text-pink-600 dark:text-pink-400 mt-0.5 flex items-center gap-1">
                             <Clock className="h-3 w-3" />
                             {format(parseISO(notification.timestamp), "dd/MM 'às' HH:mm", { locale: ptBR })}
                           </p>
