@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -8,12 +9,26 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Baby, Heart, Calendar, Scale, Ruler, Clock } from "lucide-react";
+import { 
+  Baby, 
+  Heart, 
+  Calendar, 
+  Scale, 
+  Ruler, 
+  Clock, 
+  MessageCircle,
+  BookHeart
+} from "lucide-react";
 import { calculateCurrentPregnancyWeeks, calculateCurrentPregnancyDays, isPostTerm } from "@/lib/pregnancy";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { Tables } from "@/integrations/supabase/types";
+import { SendNotificationDialog } from "@/components/clients/SendNotificationDialog";
+import { ClientDiaryDialog } from "./ClientDiaryDialog";
 
+type Client = Tables<"clients">;
 type ClientStatus = "gestante" | "lactante";
 
 interface ClientsListDialogProps {
@@ -27,6 +42,10 @@ export function ClientsListDialog({
   onOpenChange,
   status,
 }: ClientsListDialogProps) {
+  const [selectedClient, setSelectedClient] = useState<Client | null>(null);
+  const [notificationDialogOpen, setNotificationDialogOpen] = useState(false);
+  const [diaryDialogOpen, setDiaryDialogOpen] = useState(false);
+
   const { data: clients, isLoading } = useQuery({
     queryKey: ["clients-list-dialog", status],
     queryFn: async () => {
@@ -37,7 +56,7 @@ export function ClientsListDialog({
         .order("updated_at", { ascending: false });
 
       if (error) throw error;
-      return data;
+      return data as Client[];
     },
     enabled: open,
   });
@@ -126,6 +145,38 @@ export function ClientsListDialog({
                           </p>
                         )}
                       </div>
+
+                      {/* Action buttons for gestantes */}
+                      {status === "gestante" && (
+                        <div className="flex gap-1 shrink-0">
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-8 w-8"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedClient(client);
+                              setDiaryDialogOpen(true);
+                            }}
+                            title="Ver diário"
+                          >
+                            <BookHeart className="h-4 w-4 text-pink-500" />
+                          </Button>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-8 w-8"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedClient(client);
+                              setNotificationDialogOpen(true);
+                            }}
+                            title="Enviar mensagem"
+                          >
+                            <MessageCircle className="h-4 w-4 text-primary" />
+                          </Button>
+                        </div>
+                      )}
                     </div>
 
                     {/* Gestante Info */}
@@ -183,6 +234,20 @@ export function ClientsListDialog({
           )}
         </ScrollArea>
       </DialogContent>
+
+      {/* Notification Dialog */}
+      <SendNotificationDialog
+        open={notificationDialogOpen}
+        onOpenChange={setNotificationDialogOpen}
+        client={selectedClient}
+      />
+
+      {/* Diary Dialog */}
+      <ClientDiaryDialog
+        open={diaryDialogOpen}
+        onOpenChange={setDiaryDialogOpen}
+        client={selectedClient}
+      />
     </Dialog>
   );
 }
