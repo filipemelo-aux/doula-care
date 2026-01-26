@@ -64,6 +64,26 @@ export function ClientsListDialog({
     enabled: open,
   });
 
+  // Fetch recent diary entries (last 24 hours) to show indicators
+  const { data: recentDiaryEntries } = useQuery({
+    queryKey: ["recent-diary-entries-by-client"],
+    queryFn: async () => {
+      const twentyFourHoursAgo = new Date();
+      twentyFourHoursAgo.setHours(twentyFourHoursAgo.getHours() - 24);
+
+      const { data, error } = await supabase
+        .from("pregnancy_diary")
+        .select("client_id")
+        .gte("created_at", twentyFourHoursAgo.toISOString());
+
+      if (error) throw error;
+      
+      // Return a Set of client IDs that have recent entries
+      return new Set(data.map(entry => entry.client_id));
+    },
+    enabled: open && status === "gestante",
+  });
+
   const title = status === "gestante" ? "Gestantes em Acompanhamento" : "Lactantes Pós-Parto";
   const description = status === "gestante" 
     ? "Lista de todas as gestantes atualmente em acompanhamento" 
@@ -158,7 +178,7 @@ export function ClientsListDialog({
                           <Button
                             size="icon"
                             variant="ghost"
-                            className="h-8 w-8"
+                            className="h-8 w-8 relative"
                             onClick={(e) => {
                               e.stopPropagation();
                               setSelectedClient(client);
@@ -167,6 +187,9 @@ export function ClientsListDialog({
                             title="Ver diário"
                           >
                             <BookHeart className="h-4 w-4 text-pink-500" />
+                            {recentDiaryEntries?.has(client.id) && (
+                              <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-primary animate-pulse" />
+                            )}
                           </Button>
                           <Button
                             size="icon"
@@ -198,7 +221,7 @@ export function ClientsListDialog({
                               <Button
                                 size="sm"
                                 variant="outline"
-                                className="h-5 px-1.5 text-[9px]"
+                                className="h-5 px-1.5 text-[9px] relative"
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   setSelectedClient(client);
@@ -207,6 +230,9 @@ export function ClientsListDialog({
                               >
                                 <BookHeart className="h-2.5 w-2.5 mr-0.5 text-pink-500" />
                                 Diário
+                                {recentDiaryEntries?.has(client.id) && (
+                                  <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-primary animate-pulse" />
+                                )}
                               </Button>
                               <Button
                                 size="sm"
