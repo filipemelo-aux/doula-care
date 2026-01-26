@@ -10,6 +10,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Bell, Baby, CheckCircle, AlertTriangle, Calendar, Clock, Activity, BookHeart, Timer, ChevronDown, ChevronRight } from "lucide-react";
 import { calculateCurrentPregnancyWeeks, calculateCurrentPregnancyDays, isPostTerm } from "@/lib/pregnancy";
 import { BirthRegistrationDialog } from "@/components/clients/BirthRegistrationDialog";
+import { ClientDiaryDialog } from "@/components/dashboard/ClientDiaryDialog";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import type { Tables } from "@/integrations/supabase/types";
@@ -44,7 +45,8 @@ interface ChildNotification {
   description: string;
   timestamp?: string;
   extraInfo?: string;
-  priority: "high" | "medium";
+  priority: "high" | "medium" | "low";
+  clientId?: string;
 }
 
 interface ParentNotification {
@@ -58,11 +60,14 @@ interface ParentNotification {
   timestamp?: string;
   children: ChildNotification[];
   isInLabor?: boolean;
+  clientId?: string;
 }
 
 export function NotificationsCenter() {
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [birthDialogOpen, setBirthDialogOpen] = useState(false);
+  const [diaryDialogOpen, setDiaryDialogOpen] = useState(false);
+  const [diaryClient, setDiaryClient] = useState<Client | null>(null);
   const [expandedNotifications, setExpandedNotifications] = useState<Set<string>>(new Set());
   const queryClient = useQueryClient();
 
@@ -324,7 +329,8 @@ export function NotificationsCenter() {
         title: count > 1 ? `${count} Registros no Diário` : "Registro no Diário",
         description: "Novo registro disponível",
         timestamp: latestEntry.created_at,
-        priority: "medium"
+        priority: "low",
+        clientId: client.id
       });
 
       // Remove from map so we don't duplicate as parent
@@ -365,10 +371,11 @@ export function NotificationsCenter() {
       type: "new_diary_entry",
       title: count > 1 ? `${count} Novos Registros no Diário` : "Novo Registro no Diário",
       description: clientName,
-      priority: "medium",
+      priority: "low",
       icon: BookHeart,
       timestamp: latestEntry.created_at,
-      children: []
+      children: [],
+      clientId
     });
   });
 
@@ -633,13 +640,21 @@ export function NotificationsCenter() {
                             {notification.children.map((child) => (
                               <div
                                 key={child.id}
+                                onClick={() => {
+                                  if (child.type === "new_diary_entry" && notification.client) {
+                                    setDiaryClient(notification.client);
+                                    setDiaryDialogOpen(true);
+                                  }
+                                }}
                                 className={`p-1.5 lg:p-2 rounded-md ml-4 lg:ml-6 border-l-2 ${
                                   child.type === "labor_started"
                                     ? "bg-destructive/10 border-l-destructive"
                                     : child.type === "new_contraction" && child.priority === "high"
                                     ? "bg-destructive/10 border-l-destructive"
-                                    : "bg-orange-500/10 border-l-orange-500"
-                                }`}
+                                    : child.type === "new_contraction"
+                                    ? "bg-orange-500/10 border-l-orange-500"
+                                    : "bg-emerald-500/10 border-l-emerald-500"
+                                } ${child.type === "new_diary_entry" ? "cursor-pointer hover:bg-emerald-500/20 transition-colors" : ""}`}
                               >
                                 <div className="flex items-start gap-1.5 lg:gap-2">
                                   <div className={`w-5 h-5 lg:w-6 lg:h-6 rounded-full flex items-center justify-center flex-shrink-0 ${
@@ -647,12 +662,14 @@ export function NotificationsCenter() {
                                       ? "bg-destructive/20"
                                       : child.type === "new_contraction" && child.priority === "high"
                                       ? "bg-destructive/20"
-                                      : "bg-orange-500/20"
+                                      : child.type === "new_contraction"
+                                      ? "bg-orange-500/20"
+                                      : "bg-emerald-500/20"
                                   }`}>
                                     {child.type === "labor_started" ? (
                                       <Activity className="h-2.5 w-2.5 lg:h-3 lg:w-3 text-destructive" />
                                     ) : child.type === "new_diary_entry" ? (
-                                      <BookHeart className="h-2.5 w-2.5 lg:h-3 lg:w-3 text-orange-500" />
+                                      <BookHeart className="h-2.5 w-2.5 lg:h-3 lg:w-3 text-emerald-600" />
                                     ) : (
                                       <Timer className={`h-2.5 w-2.5 lg:h-3 lg:w-3 ${
                                         child.priority === "high" ? "text-destructive" : "text-orange-500"
@@ -665,7 +682,9 @@ export function NotificationsCenter() {
                                         ? "text-destructive" 
                                         : child.type === "new_contraction" && child.priority === "high"
                                         ? "text-destructive"
-                                        : "text-orange-600"
+                                        : child.type === "new_contraction"
+                                        ? "text-orange-600"
+                                        : "text-emerald-700"
                                     }`}>
                                       {child.title}
                                     </span>
@@ -678,7 +697,9 @@ export function NotificationsCenter() {
                                           ? "text-destructive" 
                                           : child.type === "new_contraction" && child.priority === "high"
                                           ? "text-destructive"
-                                          : "text-orange-500"
+                                          : child.type === "new_contraction"
+                                          ? "text-orange-500"
+                                          : "text-emerald-600"
                                       }`}>
                                         <Clock className="h-2.5 w-2.5 lg:h-3 lg:w-3 flex-shrink-0" />
                                         <span className="truncate">{format(parseISO(child.timestamp), "dd/MM 'às' HH:mm", { locale: ptBR })}</span>
@@ -688,7 +709,9 @@ export function NotificationsCenter() {
                                             className={`text-[9px] lg:text-[10px] h-3.5 lg:h-4 px-1 lg:px-1.5 ${
                                               child.priority === "high" 
                                                 ? "border-destructive/50 text-destructive bg-destructive/10"
-                                                : "border-orange-300 text-orange-600 bg-orange-50"
+                                                : child.type === "new_contraction"
+                                                ? "border-orange-300 text-orange-600 bg-orange-50"
+                                                : "border-emerald-300 text-emerald-600 bg-emerald-50"
                                             }`}
                                           >
                                             {child.extraInfo}
@@ -716,6 +739,12 @@ export function NotificationsCenter() {
         open={birthDialogOpen}
         onOpenChange={setBirthDialogOpen}
         client={selectedClient}
+      />
+
+      <ClientDiaryDialog
+        open={diaryDialogOpen}
+        onOpenChange={setDiaryDialogOpen}
+        client={diaryClient}
       />
     </>
   );
