@@ -122,27 +122,11 @@ export function ClientsListDialog({
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
-                          {/* Badge before name on mobile */}
-                          {isMobile && status === "gestante" && currentWeeks !== null && (
-                            <Badge 
-                              variant="outline" 
-                              className={`text-[10px] h-5 ${
-                                postTerm
-                                  ? "bg-red-200 text-red-800 border-red-300 dark:bg-red-800/50 dark:text-red-300"
-                                  : currentWeeks >= 40
-                                    ? "bg-orange-100 text-orange-700 border-orange-200"
-                                    : "bg-primary/10 text-primary border-primary/20"
-                              }`}
-                            >
-                              {currentWeeks}s{currentDays > 0 ? `${currentDays}d` : ""}
-                              {postTerm && " - Pós-Data"}
-                            </Badge>
-                          )}
                           <h4 className="font-medium text-sm truncate">
                             {isMobile ? abbreviateName(client.full_name) : client.full_name}
                           </h4>
-                          {/* Badge after name on desktop */}
-                          {!isMobile && status === "gestante" && currentWeeks !== null && (
+                          {/* Badge after name on both mobile and desktop */}
+                          {status === "gestante" && currentWeeks !== null && (
                             <Badge 
                               variant="outline" 
                               className={`text-[10px] h-5 ${
