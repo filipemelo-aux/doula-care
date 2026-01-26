@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
+import { useGestanteAuth } from "@/contexts/GestanteAuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,124 +13,57 @@ export default function GestanteLogin() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [checkingSession, setCheckingSession] = useState(true);
   const navigate = useNavigate();
+  const { signIn, isAuthenticated, isFirstLogin, loading: authLoading } = useGestanteAuth();
 
-  // Check if already logged in
+  // Redirect if already authenticated
   useEffect(() => {
-    let isMounted = true;
-    
-    const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!isMounted) return;
-      
-      if (session) {
-        // Check user role and redirect accordingly
-        const { data: adminRole } = await supabase
-          .from("user_roles")
-          .select("role")
-          .eq("user_id", session.user.id)
-          .in("role", ["admin", "moderator"])
-          .maybeSingle();
-
-        if (!isMounted) return;
-
-        if (adminRole) {
-          navigate("/admin", { replace: true });
-          return;
-        }
-
-        const { data: clientRole } = await supabase
-          .from("user_roles")
-          .select("role")
-          .eq("user_id", session.user.id)
-          .eq("role", "client")
-          .maybeSingle();
-
-        if (!isMounted) return;
-
-        if (clientRole) {
-          navigate("/gestante", { replace: true });
-          return;
-        }
+    if (!authLoading && isAuthenticated) {
+      if (isFirstLogin) {
+        navigate("/gestante/alterar-senha", { replace: true });
+      } else {
+        navigate("/gestante", { replace: true });
       }
-      
-      if (isMounted) {
-        setCheckingSession(false);
-      }
-    };
-
-    checkSession();
-    
-    return () => {
-      isMounted = false;
-    };
-  }, [navigate]);
+    }
+  }, [isAuthenticated, isFirstLogin, authLoading, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!username.trim() || !password.trim()) {
+      toast.error("Preencha todos os campos");
+      return;
+    }
+
     setLoading(true);
 
-    try {
-      // Normalize username and append domain if needed
-      let email = username.trim().toLowerCase();
-      if (!email.includes("@")) {
-        email = `${email}@gestante.doula.app`;
-      }
+    const { error } = await signIn(username.trim().toLowerCase(), password);
 
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
+    if (error) {
+      toast.error("Erro ao fazer login", {
+        description: error.message === "Usuário não autorizado para esta área" 
+          ? "Esta área é exclusiva para gestantes"
+          : "Usuário ou senha incorretos",
       });
-
-      if (error) {
-        toast.error("Erro ao fazer login", {
-          description: "Usuário ou senha incorretos",
-        });
-        setLoading(false);
-        return;
-      }
-
-      // Check if user is a client
-      const { data: roleData } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", data.user.id)
-        .eq("role", "client")
-        .maybeSingle();
-
-      if (!roleData) {
-        await supabase.auth.signOut();
-        toast.error("Acesso negado", {
-          description: "Esta área é exclusiva para gestantes",
-        });
-        setLoading(false);
-        return;
-      }
-
-      // Check if first login
-      const { data: clientData } = await supabase
-        .from("clients")
-        .select("first_login")
-        .eq("user_id", data.user.id)
-        .maybeSingle();
-
-      if (clientData?.first_login) {
-        toast.success("Bem-vinda! Por favor, altere sua senha.");
-        navigate("/gestante/alterar-senha");
-      } else {
-        toast.success("Login realizado com sucesso!");
-        navigate("/gestante");
-      }
-    } catch (error) {
-      toast.error("Erro inesperado ao fazer login");
-    } finally {
       setLoading(false);
+      return;
     }
+
+    toast.success("Login realizado com sucesso!");
+    // Navigation will be handled by useEffect above
+    setLoading(false);
   };
 
-  if (checkingSession) {
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  // Don't render login form if already authenticated (prevents flash)
+  if (isAuthenticated) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -161,6 +94,7 @@ export default function GestanteLogin() {
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 required
+                autoComplete="username"
                 className="input-field lowercase"
               />
               <p className="text-xs text-muted-foreground">
@@ -177,6 +111,7 @@ export default function GestanteLogin() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
+                  autoComplete="current-password"
                   className="input-field pr-10"
                 />
                 <Button
@@ -211,7 +146,7 @@ export default function GestanteLogin() {
           
           <div className="mt-6 pt-4 border-t border-border">
             <Link 
-              to="/login" 
+              to="/admin/login" 
               className="flex items-center justify-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
               <Shield className="h-4 w-4" />
