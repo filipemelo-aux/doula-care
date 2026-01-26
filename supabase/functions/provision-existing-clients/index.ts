@@ -23,9 +23,17 @@ function generateUsername(fullName: string): string {
   return `${parts[0]}.${parts[parts.length - 1]}`;
 }
 
-// Generate password from DPP (only numbers)
+// Generate password from DPP (day and month only - ddmm format)
 function generatePassword(dpp: string): string {
-  return dpp.replace(/\D/g, "");
+  // DPP format is YYYY-MM-DD, extract day and month
+  const parts = dpp.split("-");
+  if (parts.length === 3) {
+    const day = parts[2];
+    const month = parts[1];
+    return `${day}${month}`;
+  }
+  // Fallback: extract only numbers (first 4 digits for ddmm)
+  return dpp.replace(/\D/g, "").slice(0, 4);
 }
 
 Deno.serve(async (req) => {
@@ -77,7 +85,7 @@ Deno.serve(async (req) => {
         const email = `${username}@gestante.doula.app`;
         const password = generatePassword(client.dpp);
 
-        if (password.length < 6) {
+        if (password.length < 4) {
           results.errors.push(`${client.full_name}: DPP inválido (senha muito curta)`);
           continue;
         }
