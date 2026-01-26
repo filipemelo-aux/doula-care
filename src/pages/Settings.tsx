@@ -177,11 +177,11 @@ export default function Settings() {
   const getRoleBadge = (role: string) => {
     switch (role) {
       case "admin":
-        return <Badge className="bg-primary/15 text-primary border-0"><Crown className="w-3 h-3 mr-1" />Admin</Badge>;
+        return <Badge className="bg-primary/15 text-primary border-0 text-[10px] px-1.5 py-0"><Crown className="w-2.5 h-2.5 mr-0.5" />Admin</Badge>;
       case "moderator":
-        return <Badge className="bg-warning/15 text-warning border-0"><Shield className="w-3 h-3 mr-1" />Moderador</Badge>;
+        return <Badge className="bg-warning/15 text-warning border-0 text-[10px] px-1.5 py-0"><Shield className="w-2.5 h-2.5 mr-0.5" />Mod</Badge>;
       default:
-        return <Badge className="bg-muted text-muted-foreground border-0"><User className="w-3 h-3 mr-1" />Usuário</Badge>;
+        return <Badge className="bg-muted text-muted-foreground border-0 text-[10px] px-1.5 py-0"><User className="w-2.5 h-2.5 mr-0.5" />User</Badge>;
     }
   };
 
@@ -465,30 +465,31 @@ export default function Settings() {
                 <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
               </div>
             ) : usersWithRoles && usersWithRoles.length > 0 ? (
-              <div className="overflow-x-auto -mx-2 sm:mx-0">
-                <Table className="text-sm">
+              <div className="-mx-2 sm:mx-0">
+                <Table className="text-xs sm:text-sm">
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="whitespace-nowrap px-2">Usuário</TableHead>
-                      <TableHead className="whitespace-nowrap px-2">Papel</TableHead>
-                      <TableHead className="whitespace-nowrap px-2">Data</TableHead>
+                      <TableHead className="px-2">Usuário</TableHead>
+                      <TableHead className="px-2">Papel</TableHead>
+                      <TableHead className="px-2 w-16 hidden sm:table-cell">Data</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {usersWithRoles.map((userProfile) => (
                       <TableRow key={userProfile.id} className="table-row-hover">
-                        <TableCell className="px-2 py-2">
+                        <TableCell className="px-2 py-1.5">
                           <div className="min-w-0">
-                            <p className="font-medium truncate max-w-[120px] sm:max-w-none">
+                            <p className="font-medium truncate text-xs sm:text-sm max-w-[100px] sm:max-w-none">
                               {userProfile.full_name || "Sem nome"}
                             </p>
-                            <p className="text-xs text-muted-foreground truncate max-w-[100px] sm:max-w-[180px]">
-                              {userProfile.user_id.slice(0, 8)}...
+                            <p className="text-[10px] text-muted-foreground">
+                              {format(new Date(userProfile.created_at), "dd/MM/yy", { locale: ptBR })}
+                              <span className="sm:hidden"> • ID: {userProfile.user_id.slice(0, 4)}...</span>
                             </p>
                           </div>
                         </TableCell>
-                        <TableCell className="px-2 py-2">
-                          <div className="flex flex-wrap gap-1">
+                        <TableCell className="px-2 py-1.5">
+                          <div className="flex flex-wrap gap-0.5">
                             {userProfile.roles.length > 0 ? (
                               userProfile.roles.map((role) => (
                                 <span key={role}>{getRoleBadge(role)}</span>
@@ -498,7 +499,7 @@ export default function Settings() {
                             )}
                           </div>
                         </TableCell>
-                        <TableCell className="text-muted-foreground whitespace-nowrap px-2 py-2 text-xs">
+                        <TableCell className="text-muted-foreground px-2 py-1.5 text-xs hidden sm:table-cell">
                           {format(new Date(userProfile.created_at), "dd/MM/yy", { locale: ptBR })}
                         </TableCell>
                       </TableRow>
