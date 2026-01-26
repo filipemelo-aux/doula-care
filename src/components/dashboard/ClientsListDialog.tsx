@@ -142,40 +142,7 @@ export function ClientsListDialog({
                             </Badge>
                           )}
                         </div>
-                        
-                        {/* Action buttons for gestantes - mobile only (above phone) */}
-                        {status === "gestante" && isMobile && (
-                          <div className="flex gap-1.5 mt-1">
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="h-6 px-2 text-[10px]"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setSelectedClient(client);
-                                setDiaryDialogOpen(true);
-                              }}
-                            >
-                              <BookHeart className="h-3 w-3 mr-1 text-pink-500" />
-                              Diário
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="h-6 px-2 text-[10px]"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setSelectedClient(client);
-                                setNotificationDialogOpen(true);
-                              }}
-                            >
-                              <MessageCircle className="h-3 w-3 mr-1 text-primary" />
-                              Mensagem
-                            </Button>
-                          </div>
-                        )}
-                        
-                        <p className="text-xs text-muted-foreground mt-1">{client.phone}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">{client.phone}</p>
                         
                         {babyNames && babyNames.length > 0 && (
                           <p className="text-xs text-primary mt-1 flex items-center gap-1">
@@ -221,11 +188,41 @@ export function ClientsListDialog({
                     {/* Gestante Info */}
                     {status === "gestante" && client.dpp && (
                       <div className="mt-3 pt-3 border-t border-border/50">
-                        <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                        <div className="flex items-center justify-between text-xs text-muted-foreground">
                           <span className="flex items-center gap-1">
                             <Calendar className="h-3 w-3" />
                             DPP: {formatDate(client.dpp)}
                           </span>
+                          {isMobile && (
+                            <div className="flex gap-1.5">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="h-6 px-2 text-[10px]"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setSelectedClient(client);
+                                  setDiaryDialogOpen(true);
+                                }}
+                              >
+                                <BookHeart className="h-3 w-3 mr-1 text-pink-500" />
+                                Diário
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="h-6 px-2 text-[10px]"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setSelectedClient(client);
+                                  setNotificationDialogOpen(true);
+                                }}
+                              >
+                                <MessageCircle className="h-3 w-3 mr-1 text-primary" />
+                                Mensagem
+                              </Button>
+                            </div>
+                          )}
                         </div>
                       </div>
                     )}
