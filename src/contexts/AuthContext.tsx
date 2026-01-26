@@ -41,17 +41,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
+    let isMounted = true;
+    
     // Set up auth state listener BEFORE getting session
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        if (!isMounted) return;
+        
+        // Handle sign out event - don't try to check roles
+        if (event === 'SIGNED_OUT') {
+          setSession(null);
+          setUser(null);
+          setIsAdmin(false);
+          setLoading(false);
+          return;
+        }
+        
         setSession(session);
         setUser(session?.user ?? null);
 
         if (session?.user) {
           // Use setTimeout to avoid blocking the auth state change
           setTimeout(async () => {
+            if (!isMounted) return;
             const admin = await checkAdminRole(session.user.id);
-            setIsAdmin(admin);
+            if (isMounted) {
+              setIsAdmin(admin);
+            }
           }, 0);
         } else {
           setIsAdmin(false);
@@ -63,18 +79,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // Get initial session
     supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (!isMounted) return;
+      
       setSession(session);
       setUser(session?.user ?? null);
 
       if (session?.user) {
         const admin = await checkAdminRole(session.user.id);
-        setIsAdmin(admin);
+        if (isMounted) {
+          setIsAdmin(admin);
+        }
       }
 
       setLoading(false);
     });
 
     return () => {
+      isMounted = false;
       subscription.unsubscribe();
     };
   }, []);
@@ -88,19 +109,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signOut = async () => {
+    // Clear local state first
+    setIsAdmin(false);
+    setUser(null);
+    setSession(null);
+    
     try {
-      // First sign out from Supabase
-      await supabase.auth.signOut({ scope: 'local' });
+      // Sign out globally to clear all sessions
+      await supabase.auth.signOut({ scope: 'global' });
     } catch (error) {
       console.error("Error signing out:", error);
-    } finally {
-      // Then clear local state
-      setIsAdmin(false);
-      setUser(null);
-      setSession(null);
-      // Force a full page reload to clear all state and redirect
-      window.location.replace("/");
     }
+    
+    // Force a full page reload to clear all state and redirect
+    window.location.href = "/";
   };
 
   return (
