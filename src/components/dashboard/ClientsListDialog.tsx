@@ -142,10 +142,43 @@ export function ClientsListDialog({
                             </Badge>
                           )}
                         </div>
-                        <p className="text-xs text-muted-foreground mt-0.5">{client.phone}</p>
+                        
+                        {/* Action buttons for gestantes - mobile only (above phone) */}
+                        {status === "gestante" && isMobile && (
+                          <div className="flex gap-1.5 mt-1">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-6 px-2 text-[10px]"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedClient(client);
+                                setDiaryDialogOpen(true);
+                              }}
+                            >
+                              <BookHeart className="h-3 w-3 mr-1 text-pink-500" />
+                              Diário
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-6 px-2 text-[10px]"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedClient(client);
+                                setNotificationDialogOpen(true);
+                              }}
+                            >
+                              <MessageCircle className="h-3 w-3 mr-1 text-primary" />
+                              Mensagem
+                            </Button>
+                          </div>
+                        )}
+                        
+                        <p className="text-xs text-muted-foreground mt-1">{client.phone}</p>
                         
                         {babyNames && babyNames.length > 0 && (
-                          <p className="text-xs text-primary mt-1.5 flex items-center gap-1">
+                          <p className="text-xs text-primary mt-1 flex items-center gap-1">
                             <Baby className="h-3 w-3" />
                             {babyNames.join(", ")}
                           </p>
@@ -184,38 +217,6 @@ export function ClientsListDialog({
                         </div>
                       )}
                     </div>
-
-                    {/* Action buttons for gestantes - mobile only (new row) */}
-                    {status === "gestante" && isMobile && (
-                      <div className="flex gap-2 mt-2 pt-2 border-t border-border/50">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="flex-1 h-8 text-xs"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setSelectedClient(client);
-                            setDiaryDialogOpen(true);
-                          }}
-                        >
-                          <BookHeart className="h-3.5 w-3.5 mr-1.5 text-pink-500" />
-                          Diário
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="flex-1 h-8 text-xs"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setSelectedClient(client);
-                            setNotificationDialogOpen(true);
-                          }}
-                        >
-                          <MessageCircle className="h-3.5 w-3.5 mr-1.5 text-primary" />
-                          Mensagem
-                        </Button>
-                      </div>
-                    )}
 
                     {/* Gestante Info */}
                     {status === "gestante" && client.dpp && (
