@@ -168,12 +168,6 @@ export function BirthAlert() {
                       <span className="text-sm font-medium text-foreground truncate flex-1 min-w-0">
                         {isMobile ? abbreviateName(client.full_name) : client.full_name}
                       </span>
-                      {/* Labor badge - desktop only inline */}
-                      {client.is_in_labor && !isMobile && (
-                        <Badge className="bg-destructive text-destructive-foreground text-[9px] px-1.5 h-4 animate-pulse">
-                          🚨 EM TRABALHO DE PARTO
-                        </Badge>
-                      )}
                     </div>
 
                     {/* Row 2: Status + DPP + Badge */}
@@ -207,13 +201,20 @@ export function BirthAlert() {
                       </Badge>
                     </div>
 
-                    {/* Button - desktop only inline */}
+                    {/* Row 3 Desktop: Labor badge + Button sharing full width */}
                     {!isMobile && (
-                      <div className="mt-1 pl-8">
+                      <div className="mt-1.5 pl-8 flex items-center justify-between gap-2">
+                        {client.is_in_labor ? (
+                          <Badge className="bg-destructive text-destructive-foreground text-[9px] px-1.5 h-5 animate-pulse">
+                            🚨 EM TRABALHO DE PARTO
+                          </Badge>
+                        ) : (
+                          <span />
+                        )}
                         <Button
                           size="sm"
                           variant="outline"
-                          className="h-4 px-1 text-[10px] border-dashed border-primary/50 text-primary hover:bg-primary hover:text-primary-foreground hover:border-solid flex-shrink-0 transition-all"
+                          className="h-5 px-2 text-[10px] border-dashed border-primary/50 text-primary hover:bg-primary hover:text-primary-foreground hover:border-solid flex-shrink-0 transition-all"
                           onClick={() => handleRegisterBirth(client as Client)}
                         >
                           <CheckCircle className="h-2.5 w-2.5 mr-0.5" />
