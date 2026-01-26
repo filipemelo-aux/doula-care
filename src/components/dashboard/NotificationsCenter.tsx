@@ -636,21 +636,15 @@ export function NotificationsCenter() {
                                 className={`p-1.5 lg:p-2 rounded-md ml-4 lg:ml-6 border-l-2 ${
                                   child.type === "labor_started"
                                     ? "bg-destructive/10 border-l-destructive"
-                                    : child.type === "new_diary_entry"
-                                    ? "bg-primary/10 border-l-primary"
                                     : child.type === "new_contraction" && child.priority === "high"
                                     ? "bg-destructive/10 border-l-destructive"
-                                    : child.type === "new_contraction"
-                                    ? "bg-orange-500/10 border-l-orange-500"
-                                    : "bg-muted/50 border-l-muted-foreground"
+                                    : "bg-orange-500/10 border-l-orange-500"
                                 }`}
                               >
                                 <div className="flex items-start gap-1.5 lg:gap-2">
                                   <div className={`w-5 h-5 lg:w-6 lg:h-6 rounded-full flex items-center justify-center flex-shrink-0 ${
                                     child.type === "labor_started"
                                       ? "bg-destructive/20"
-                                      : child.type === "new_diary_entry"
-                                      ? "bg-primary/20"
                                       : child.type === "new_contraction" && child.priority === "high"
                                       ? "bg-destructive/20"
                                       : "bg-orange-500/20"
@@ -658,7 +652,7 @@ export function NotificationsCenter() {
                                     {child.type === "labor_started" ? (
                                       <Activity className="h-2.5 w-2.5 lg:h-3 lg:w-3 text-destructive" />
                                     ) : child.type === "new_diary_entry" ? (
-                                      <BookHeart className="h-2.5 w-2.5 lg:h-3 lg:w-3 text-primary" />
+                                      <BookHeart className="h-2.5 w-2.5 lg:h-3 lg:w-3 text-orange-500" />
                                     ) : (
                                       <Timer className={`h-2.5 w-2.5 lg:h-3 lg:w-3 ${
                                         child.priority === "high" ? "text-destructive" : "text-orange-500"
@@ -669,8 +663,6 @@ export function NotificationsCenter() {
                                     <span className={`text-[10px] lg:text-xs font-medium ${
                                       child.type === "labor_started"
                                         ? "text-destructive" 
-                                        : child.type === "new_diary_entry"
-                                        ? "text-primary"
                                         : child.type === "new_contraction" && child.priority === "high"
                                         ? "text-destructive"
                                         : "text-orange-600"
@@ -684,8 +676,6 @@ export function NotificationsCenter() {
                                       <p className={`text-[10px] lg:text-xs mt-0.5 flex items-center flex-wrap gap-1 ${
                                         child.type === "labor_started"
                                           ? "text-destructive" 
-                                          : child.type === "new_diary_entry"
-                                          ? "text-primary"
                                           : child.type === "new_contraction" && child.priority === "high"
                                           ? "text-destructive"
                                           : "text-orange-500"
