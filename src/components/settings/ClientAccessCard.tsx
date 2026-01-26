@@ -227,33 +227,46 @@ export function ClientAccessCard({ clientsWithAccounts, loadingClients }: Client
                         </div>
                       </TableCell>
                       <TableCell className="px-2 py-1.5">
-                        <div className="flex items-center gap-1.5">
-                          <span className="text-xs font-mono min-w-[52px]">
-                            {isPasswordVisible ? password : "••••••"}
-                          </span>
-                          <div className="flex items-center">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-6 w-6 shrink-0"
-                              onClick={() => togglePasswordVisibility(client.id)}
-                            >
-                              {isPasswordVisible ? (
-                                <EyeOff className="h-3.5 w-3.5" />
-                              ) : (
-                                <Eye className="h-3.5 w-3.5" />
-                              )}
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-6 w-6 shrink-0"
-                              onClick={() => copyToClipboard(password, "Senha")}
-                            >
-                              <Copy className="h-3 w-3" />
-                            </Button>
+                        {client.first_login ? (
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-xs font-mono min-w-[52px]">
+                              {isPasswordVisible ? password : "••••••"}
+                            </span>
+                            <div className="flex items-center">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-6 w-6 shrink-0"
+                                onClick={() => togglePasswordVisibility(client.id)}
+                              >
+                                {isPasswordVisible ? (
+                                  <EyeOff className="h-3.5 w-3.5" />
+                                ) : (
+                                  <Eye className="h-3.5 w-3.5" />
+                                )}
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-6 w-6 shrink-0"
+                                onClick={() => copyToClipboard(password, "Senha")}
+                              >
+                                <Copy className="h-3 w-3" />
+                              </Button>
+                            </div>
                           </div>
-                        </div>
+                        ) : (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <span className="text-xs text-muted-foreground italic cursor-help">
+                                Personalizada
+                              </span>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Usuária alterou a senha. Use o botão de reset para restaurar.</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        )}
                       </TableCell>
                       <TableCell className="px-2 py-1.5">
                         {client.first_login ? (
