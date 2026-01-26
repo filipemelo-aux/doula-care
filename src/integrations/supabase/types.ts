@@ -233,6 +233,7 @@ export type Database = {
           emotion: string | null
           id: string
           observations: string | null
+          read_by_admin: boolean
           symptoms: string[] | null
           updated_at: string
         }
@@ -243,6 +244,7 @@ export type Database = {
           emotion?: string | null
           id?: string
           observations?: string | null
+          read_by_admin?: boolean
           symptoms?: string[] | null
           updated_at?: string
         }
@@ -253,6 +255,7 @@ export type Database = {
           emotion?: string | null
           id?: string
           observations?: string | null
+          read_by_admin?: boolean
           symptoms?: string[] | null
           updated_at?: string
         }

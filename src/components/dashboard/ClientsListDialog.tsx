@@ -74,6 +74,7 @@ export function ClientsListDialog({
       const { data, error } = await supabase
         .from("pregnancy_diary")
         .select("client_id")
+        .eq("read_by_admin", false)
         .gte("created_at", twentyFourHoursAgo.toISOString());
 
       if (error) throw error;
