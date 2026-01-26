@@ -20,7 +20,7 @@ interface SidebarProps {
 }
 
 const navItems = [
-  { to: "/", icon: LayoutDashboard, label: "Visão Geral" },
+  { to: "/admin", icon: LayoutDashboard, label: "Visão Geral" },
   { to: "/clientes", icon: Users, label: "Clientes" },
   { to: "/planos", icon: CreditCard, label: "Planos" },
   { to: "/financeiro", icon: TrendingUp, label: "Financeiro" },

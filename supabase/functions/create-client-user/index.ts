@@ -23,10 +23,17 @@ function generateUsername(fullName: string): string {
   return `${parts[0]}.${parts[parts.length - 1]}`;
 }
 
-// Generate password from DPP (only numbers)
+// Generate password from DPP (day and month only - ddmm format)
 function generatePassword(dpp: string): string {
-  // Extract only numbers from the DPP date
-  return dpp.replace(/\D/g, "");
+  // DPP format is YYYY-MM-DD, extract day and month
+  const parts = dpp.split("-");
+  if (parts.length === 3) {
+    const day = parts[2];
+    const month = parts[1];
+    return `${day}${month}`;
+  }
+  // Fallback: extract only numbers (first 4 digits for ddmm)
+  return dpp.replace(/\D/g, "").slice(0, 4);
 }
 
 Deno.serve(async (req) => {
@@ -55,8 +62,8 @@ Deno.serve(async (req) => {
     const email = `${username}@gestante.doula.app`;
     const password = generatePassword(dpp);
 
-    if (password.length < 6) {
-      throw new Error("DPP must generate a password with at least 6 digits");
+    if (password.length < 4) {
+      throw new Error("DPP inválido para gerar senha");
     }
 
     // Check if user already exists for this client
