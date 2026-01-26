@@ -90,7 +90,7 @@ export function NotificationsCenter() {
     },
   });
 
-  // Fetch recent diary entries (last 24 hours)
+  // Fetch recent UNREAD diary entries (last 24 hours)
   const { data: recentDiaryEntries, isLoading: loadingDiary } = useQuery({
     queryKey: ["recent-diary-entries"],
     queryFn: async () => {
@@ -104,7 +104,12 @@ export function NotificationsCenter() {
         .gte("created_at", twentyFourHoursAgo.toISOString())
         .order("created_at", { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching diary entries:", error);
+        throw error;
+      }
+      
+      console.log("Diary entries fetched:", data?.length || 0, "unread entries");
       
       return data.map(entry => ({
         id: entry.id,
@@ -129,7 +134,12 @@ export function NotificationsCenter() {
         .gte("started_at", twentyFourHoursAgo.toISOString())
         .order("started_at", { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching contractions:", error);
+        throw error;
+      }
+      
+      console.log("Contractions fetched:", data?.length || 0, "entries");
       
       return data.map(entry => ({
         id: entry.id,
