@@ -448,8 +448,8 @@ export function NotificationsCenter() {
                 {parentNotifications.map((notification) => {
                   const hasChildren = notification.children.length > 0;
                   const isExpanded = expandedNotifications.has(notification.id);
-                  const hasHighPriorityChild = notification.children.some(c => c.priority === "high");
-                  const effectivePriority = notification.priority === "high" || hasHighPriorityChild ? "high" : notification.priority;
+                  // Only post-term gets high priority styling
+                  const isPostTerm = notification.type === "post_term";
 
                   return (
                     <Collapsible
@@ -459,7 +459,7 @@ export function NotificationsCenter() {
                     >
                       <div
                         className={`rounded-lg border transition-colors ${
-                          effectivePriority === "high"
+                          isPostTerm
                             ? "bg-destructive/5 border-destructive/20"
                             : notification.type === "new_diary_entry"
                             ? "bg-primary/5 border-primary/20"
@@ -471,14 +471,14 @@ export function NotificationsCenter() {
                           <div className={`p-3 ${hasChildren ? "cursor-pointer hover:bg-black/5" : ""}`}>
                             <div className="flex items-start gap-3">
                               <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
-                                effectivePriority === "high"
+                                isPostTerm
                                   ? "bg-destructive/15"
                                   : notification.type === "new_diary_entry"
                                   ? "bg-primary/15"
                                   : "bg-warning/15"
                               }`}>
                                 <notification.icon className={`h-4 w-4 ${
-                                  effectivePriority === "high"
+                                  isPostTerm
                                     ? "text-destructive"
                                     : notification.type === "new_diary_entry"
                                     ? "text-primary"
@@ -488,7 +488,7 @@ export function NotificationsCenter() {
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2 mb-0.5">
                                   <span className={`text-xs font-medium ${
-                                    effectivePriority === "high"
+                                    isPostTerm
                                       ? "text-destructive"
                                       : notification.type === "new_diary_entry"
                                       ? "text-primary"
