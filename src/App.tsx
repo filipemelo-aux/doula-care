@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+import { GestanteProtectedRoute } from "@/components/gestante/GestanteProtectedRoute";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
@@ -16,6 +17,11 @@ import Reports from "./pages/Reports";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 
+// Gestante pages
+import GestanteLogin from "./pages/gestante/GestanteLogin";
+import GestanteChangePassword from "./pages/gestante/GestanteChangePassword";
+import GestanteDashboard from "./pages/gestante/GestanteDashboard";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -26,6 +32,7 @@ const App = () => (
       <BrowserRouter>
         <AuthProvider>
           <Routes>
+            {/* Admin routes */}
             <Route path="/login" element={<Login />} />
             <Route
               element={
@@ -42,6 +49,26 @@ const App = () => (
               <Route path="/relatorios" element={<Reports />} />
               <Route path="/configuracoes" element={<Settings />} />
             </Route>
+
+            {/* Gestante routes */}
+            <Route path="/gestante/login" element={<GestanteLogin />} />
+            <Route
+              path="/gestante/alterar-senha"
+              element={
+                <GestanteProtectedRoute>
+                  <GestanteChangePassword />
+                </GestanteProtectedRoute>
+              }
+            />
+            <Route
+              path="/gestante"
+              element={
+                <GestanteProtectedRoute>
+                  <GestanteDashboard />
+                </GestanteProtectedRoute>
+              }
+            />
+
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>

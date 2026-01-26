@@ -1,1 +1,7 @@
 project_id = "gjnvxzsforfrxjanxqnq"
+
+[functions.create-admin-user]
+verify_jwt = false
+
+[functions.create-client-user]
+verify_jwt = false
