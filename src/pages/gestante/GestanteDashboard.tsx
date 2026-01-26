@@ -114,8 +114,14 @@ export default function GestanteDashboard() {
   };
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut();
-    navigate("/gestante/login");
+    try {
+      await supabase.auth.signOut({ scope: 'local' });
+    } catch (error) {
+      console.error("Error signing out:", error);
+    } finally {
+      // Force a full page reload to clear all state
+      window.location.replace("/");
+    }
   };
 
   const calculateGestationalAge = () => {

@@ -88,12 +88,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signOut = async () => {
-    setIsAdmin(false);
-    setUser(null);
-    setSession(null);
-    await supabase.auth.signOut();
-    // Force navigation to gestante login (root)
-    window.location.href = "/";
+    try {
+      // First sign out from Supabase
+      await supabase.auth.signOut({ scope: 'local' });
+    } catch (error) {
+      console.error("Error signing out:", error);
+    } finally {
+      // Then clear local state
+      setIsAdmin(false);
+      setUser(null);
+      setSession(null);
+      // Force a full page reload to clear all state and redirect
+      window.location.replace("/");
+    }
   };
 
   return (
