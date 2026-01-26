@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Bell, Baby, CheckCircle, AlertTriangle, Calendar } from "lucide-react";
+import { abbreviateName } from "@/lib/utils";
 import { calculateCurrentPregnancyWeeks, calculateCurrentPregnancyDays, isPostTerm } from "@/lib/pregnancy";
 import { BirthRegistrationDialog } from "@/components/clients/BirthRegistrationDialog";
 import { format, parseISO } from "date-fns";
@@ -165,7 +166,7 @@ export function BirthAlert() {
                         )}
                       </div>
                       <span className="text-sm font-medium text-foreground truncate flex-1 min-w-0">
-                        {client.full_name}
+                        {isMobile ? abbreviateName(client.full_name) : client.full_name}
                       </span>
                       {/* Labor badge - desktop only inline */}
                       {client.is_in_labor && !isMobile && (
