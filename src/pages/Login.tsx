@@ -15,7 +15,7 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const [checkingSession, setCheckingSession] = useState(true);
   const navigate = useNavigate();
-  const { signIn } = useAuth();
+  const { signIn, isAdmin, roleChecked, user } = useAuth();
 
   // Check if already logged in as admin
   useEffect(() => {
@@ -67,6 +67,13 @@ export default function Login() {
     };
   }, [navigate]);
 
+  // Redirect when role is verified as admin
+  useEffect(() => {
+    if (user && roleChecked && isAdmin) {
+      navigate("/admin", { replace: true });
+    }
+  }, [user, roleChecked, isAdmin, navigate]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -82,13 +89,25 @@ export default function Login() {
     }
 
     toast.success("Login realizado com sucesso!");
-    navigate("/admin");
+    // Navigation will be handled by useEffect when roleChecked becomes true
   };
 
   if (checkingSession) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  // Show loading while waiting for role check after login
+  if (loading && user && !roleChecked) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <p className="text-muted-foreground">Verificando permissões...</p>
+        </div>
       </div>
     );
   }
@@ -116,6 +135,7 @@ export default function Login() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
+                autoComplete="email"
                 className="input-field"
               />
             </div>
@@ -128,6 +148,7 @@ export default function Login() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
+                autoComplete="current-password"
                 className="input-field"
               />
             </div>
