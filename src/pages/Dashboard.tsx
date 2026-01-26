@@ -5,7 +5,7 @@ import { StatCard } from "@/components/dashboard/StatCard";
 import { RecentClients } from "@/components/dashboard/RecentClients";
 import { FinancialOverview } from "@/components/dashboard/FinancialOverview";
 import { TopPlansCard } from "@/components/dashboard/TopPlansCard";
-import { BirthAlert } from "@/components/dashboard/BirthAlert";
+import { NotificationsCenter } from "@/components/dashboard/NotificationsCenter";
 import { PeriodFilter, PeriodOption } from "@/components/dashboard/PeriodFilter";
 import { ClientsListDialog } from "@/components/dashboard/ClientsListDialog";
 import { Users, Baby, Heart, Wallet } from "lucide-react";
@@ -100,8 +100,8 @@ export default function Dashboard() {
         />
       </div>
 
-      {/* Notifications (Birth Alert) - Full width, centered */}
-      <BirthAlert />
+      {/* Notifications Center - includes birth alerts, contractions, diary entries */}
+      <NotificationsCenter />
 
       {/* Financial Overview */}
       <FinancialOverview period={period} />
