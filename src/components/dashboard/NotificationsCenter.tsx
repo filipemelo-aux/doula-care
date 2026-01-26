@@ -1,12 +1,12 @@
-import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useState, useEffect } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Bell, Baby, CheckCircle, AlertTriangle, Calendar, Clock, Activity, BookHeart } from "lucide-react";
+import { Bell, Baby, CheckCircle, AlertTriangle, Calendar, Clock, Activity, BookHeart, Timer } from "lucide-react";
 import { calculateCurrentPregnancyWeeks, calculateCurrentPregnancyDays, isPostTerm } from "@/lib/pregnancy";
 import { BirthRegistrationDialog } from "@/components/clients/BirthRegistrationDialog";
 import { format, parseISO } from "date-fns";
@@ -22,9 +22,17 @@ interface DiaryEntry {
   client_name?: string;
 }
 
+interface ContractionEntry {
+  id: string;
+  client_id: string;
+  started_at: string;
+  duration_seconds: number | null;
+  client_name?: string;
+}
+
 interface Notification {
   id: string;
-  type: "birth_approaching" | "post_term" | "payment_pending" | "labor_started" | "new_diary_entry";
+  type: "birth_approaching" | "post_term" | "payment_pending" | "labor_started" | "new_diary_entry" | "new_contraction";
   title: string;
   description: string;
   client?: Client & { current_weeks?: number | null; current_days?: number; is_post_term?: boolean };
@@ -32,11 +40,13 @@ interface Notification {
   icon: typeof Baby;
   color: string;
   timestamp?: string;
+  extraInfo?: string;
 }
 
 export function NotificationsCenter() {
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [birthDialogOpen, setBirthDialogOpen] = useState(false);
+  const queryClient = useQueryClient();
 
   const { data: birthAlertClients, isLoading: loadingBirth } = useQuery({
     queryKey: ["birth-alert-clients"],
@@ -105,6 +115,78 @@ export function NotificationsCenter() {
     refetchInterval: 60000, // Refetch every minute
   });
 
+  // Fetch recent contractions (last 24 hours)
+  const { data: recentContractions, isLoading: loadingContractions } = useQuery({
+    queryKey: ["recent-contractions"],
+    queryFn: async () => {
+      const twentyFourHoursAgo = new Date();
+      twentyFourHoursAgo.setHours(twentyFourHoursAgo.getHours() - 24);
+
+      const { data, error } = await supabase
+        .from("contractions")
+        .select("id, client_id, started_at, duration_seconds, clients(full_name)")
+        .gte("started_at", twentyFourHoursAgo.toISOString())
+        .order("started_at", { ascending: false });
+
+      if (error) throw error;
+      
+      return data.map(entry => ({
+        id: entry.id,
+        client_id: entry.client_id,
+        started_at: entry.started_at,
+        duration_seconds: entry.duration_seconds,
+        client_name: (entry.clients as { full_name: string } | null)?.full_name || "Cliente"
+      })) as ContractionEntry[];
+    },
+    refetchInterval: 30000, // Refetch every 30 seconds
+  });
+
+  // Real-time subscription for contractions
+  useEffect(() => {
+    const channel = supabase
+      .channel('contractions-realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'contractions'
+        },
+        () => {
+          // Invalidate and refetch contractions when changes occur
+          queryClient.invalidateQueries({ queryKey: ["recent-contractions"] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient]);
+
+  // Real-time subscription for diary entries
+  useEffect(() => {
+    const channel = supabase
+      .channel('diary-realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'pregnancy_diary'
+        },
+        () => {
+          // Invalidate and refetch diary entries when new ones are added
+          queryClient.invalidateQueries({ queryKey: ["recent-diary-entries"] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient]);
+
   const handleRegisterBirth = (client: Client) => {
     setSelectedClient(client);
     setBirthDialogOpen(true);
@@ -157,6 +239,25 @@ export function NotificationsCenter() {
     }
   });
 
+  // Add contraction notifications (medium priority - important for labor tracking)
+  recentContractions?.forEach(entry => {
+    const durationText = entry.duration_seconds 
+      ? `${entry.duration_seconds}s de duração` 
+      : "Em andamento";
+    
+    notifications.push({
+      id: `contraction-${entry.id}`,
+      type: "new_contraction",
+      title: "Nova Contração Registrada",
+      description: entry.client_name || "Cliente",
+      priority: "medium",
+      icon: Timer,
+      color: "warning",
+      timestamp: entry.started_at,
+      extraInfo: durationText
+    });
+  });
+
   // Add diary entry notifications
   recentDiaryEntries?.forEach(entry => {
     notifications.push({
@@ -171,17 +272,26 @@ export function NotificationsCenter() {
     });
   });
 
-  // Sort by priority and type (labor_started first)
+  // Sort by priority and type (labor_started first, then by timestamp)
   notifications.sort((a, b) => {
     // Labor started always comes first
     if (a.type === "labor_started" && b.type !== "labor_started") return -1;
     if (a.type !== "labor_started" && b.type === "labor_started") return 1;
     
     const priorityOrder = { high: 0, medium: 1, low: 2 };
-    return priorityOrder[a.priority] - priorityOrder[b.priority];
+    const priorityDiff = priorityOrder[a.priority] - priorityOrder[b.priority];
+    
+    if (priorityDiff !== 0) return priorityDiff;
+    
+    // Within same priority, sort by timestamp (newest first)
+    if (a.timestamp && b.timestamp) {
+      return new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime();
+    }
+    
+    return 0;
   });
 
-  const isLoading = loadingBirth || loadingDiary;
+  const isLoading = loadingBirth || loadingDiary || loadingContractions;
   const hasNotifications = notifications.length > 0;
   const highPriorityCount = notifications.filter(n => n.priority === "high").length;
 
@@ -253,6 +363,8 @@ export function NotificationsCenter() {
                       <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
                         notification.priority === "high"
                           ? "bg-destructive/15"
+                          : notification.type === "new_contraction"
+                          ? "bg-orange-500/15"
                           : notification.priority === "medium"
                           ? "bg-warning/15"
                           : notification.type === "new_diary_entry"
@@ -262,6 +374,8 @@ export function NotificationsCenter() {
                         <notification.icon className={`h-4 w-4 ${
                           notification.priority === "high"
                             ? "text-destructive"
+                            : notification.type === "new_contraction"
+                            ? "text-orange-500"
                             : notification.priority === "medium"
                             ? "text-warning"
                             : notification.type === "new_diary_entry"
@@ -274,6 +388,8 @@ export function NotificationsCenter() {
                           <span className={`text-xs font-medium ${
                             notification.priority === "high"
                               ? "text-destructive"
+                              : notification.type === "new_contraction"
+                              ? "text-orange-500"
                               : notification.priority === "medium"
                               ? "text-warning"
                               : notification.type === "new_diary_entry"
@@ -315,6 +431,19 @@ export function NotificationsCenter() {
                             <Clock className="h-3 w-3" />
                             {format(parseISO(notification.timestamp), "dd/MM 'às' HH:mm", { locale: ptBR })}
                           </p>
+                        )}
+                        {notification.type === "new_contraction" && notification.timestamp && (
+                          <div className="flex items-center gap-2 mt-0.5">
+                            <p className="text-xs text-orange-500 flex items-center gap-1">
+                              <Clock className="h-3 w-3" />
+                              {format(parseISO(notification.timestamp), "dd/MM 'às' HH:mm", { locale: ptBR })}
+                            </p>
+                            {notification.extraInfo && (
+                              <Badge variant="outline" className="text-[10px] h-4 px-1.5 border-orange-300 text-orange-600 bg-orange-50">
+                                {notification.extraInfo}
+                              </Badge>
+                            )}
+                          </div>
                         )}
                       </div>
                       {notification.client && (
