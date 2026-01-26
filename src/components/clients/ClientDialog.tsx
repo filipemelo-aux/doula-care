@@ -312,29 +312,29 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden">
-        <DialogHeader className="pb-2">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
+        <DialogHeader className="pb-2 flex-shrink-0">
           <DialogTitle className="font-display text-lg">
             {client ? "Editar Cliente" : "Nova Cliente"}
           </DialogTitle>
         </DialogHeader>
-        <div className="max-h-[calc(90vh-100px)] overflow-y-auto pr-4">
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col flex-1 min-h-0">
+            <div className="flex-1 overflow-y-auto pr-4 space-y-4">
               {/* Dados Pessoais */}
-              <div className="space-y-2">
-                <h3 className="text-xs font-semibold text-foreground border-b pb-1">
+              <div className="space-y-3">
+                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
                   Dados Pessoais
                 </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   <FormField
                     control={form.control}
                     name="full_name"
                     render={({ field }) => (
-                      <FormItem className="md:col-span-2 space-y-1">
+                      <FormItem className="space-y-1">
                         <FormLabel className="text-xs">Nome Completo *</FormLabel>
                         <FormControl>
-                          <Input {...field} className="input-field h-8 text-sm" />
+                          <Input {...field} className="h-9 text-sm" placeholder="Nome da cliente" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -347,12 +347,11 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
                       <FormItem className="space-y-1">
                         <FormLabel className="text-xs">Telefone *</FormLabel>
                         <FormControl>
-                          <Input
-                            {...field}
-                            className="input-field h-8 text-sm"
-                            placeholder="(11) 99999-9999"
+                          <Input 
+                            {...field} 
+                            className="h-9 text-sm" 
+                            placeholder="(00) 00000-0000"
                             onChange={(e) => field.onChange(maskPhone(e.target.value))}
-                            maxLength={16}
                           />
                         </FormControl>
                         <FormMessage />
@@ -366,12 +365,11 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
                       <FormItem className="space-y-1">
                         <FormLabel className="text-xs">CPF</FormLabel>
                         <FormControl>
-                          <Input
-                            {...field}
-                            className="input-field h-8 text-sm"
+                          <Input 
+                            {...field} 
+                            className="h-9 text-sm" 
                             placeholder="000.000.000-00"
                             onChange={(e) => field.onChange(maskCPF(e.target.value))}
-                            maxLength={14}
                           />
                         </FormControl>
                         <FormMessage />
@@ -382,19 +380,54 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
               </div>
 
               {/* Endereço */}
-              <div className="space-y-2">
-                <h3 className="text-xs font-semibold text-foreground border-b pb-1">
+              <div className="space-y-3">
+                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
                   Endereço
                 </h3>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  <FormField
+                    control={form.control}
+                    name="zip_code"
+                    render={({ field }) => (
+                      <FormItem className="space-y-1">
+                        <FormLabel className="text-xs">CEP</FormLabel>
+                        <FormControl>
+                          <Input 
+                            {...field} 
+                            className="h-9 text-sm" 
+                            placeholder="00000-000"
+                            onChange={(e) => {
+                              const value = maskCEP(e.target.value);
+                              field.onChange(value);
+                              // Auto-fill address when CEP has 9 chars (with dash)
+                              if (value.replace(/\D/g, "").length === 8) {
+                                fetch(`https://viacep.com.br/ws/${value.replace(/\D/g, "")}/json/`)
+                                  .then(res => res.json())
+                                  .then(data => {
+                                    if (!data.erro) {
+                                      form.setValue("street", data.logradouro || "");
+                                      form.setValue("neighborhood", data.bairro || "");
+                                      form.setValue("city", data.localidade || "");
+                                      form.setValue("state", data.uf || "");
+                                    }
+                                  })
+                                  .catch(() => {});
+                              }
+                            }}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                   <FormField
                     control={form.control}
                     name="street"
                     render={({ field }) => (
-                      <FormItem className="md:col-span-2 space-y-1">
+                      <FormItem className="space-y-1 md:col-span-2">
                         <FormLabel className="text-xs">Rua</FormLabel>
                         <FormControl>
-                          <Input {...field} className="input-field h-8 text-sm" />
+                          <Input {...field} className="h-9 text-sm" placeholder="Nome da rua" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -407,7 +440,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
                       <FormItem className="space-y-1">
                         <FormLabel className="text-xs">Número</FormLabel>
                         <FormControl>
-                          <Input {...field} className="input-field h-8 text-sm" />
+                          <Input {...field} className="h-9 text-sm" placeholder="123" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -420,7 +453,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
                       <FormItem className="space-y-1">
                         <FormLabel className="text-xs">Bairro</FormLabel>
                         <FormControl>
-                          <Input {...field} className="input-field h-8 text-sm" />
+                          <Input {...field} className="h-9 text-sm" placeholder="Bairro" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -433,7 +466,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
                       <FormItem className="space-y-1">
                         <FormLabel className="text-xs">Cidade</FormLabel>
                         <FormControl>
-                          <Input {...field} className="input-field h-8 text-sm" />
+                          <Input {...field} className="h-9 text-sm" placeholder="Cidade" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -446,26 +479,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
                       <FormItem className="space-y-1">
                         <FormLabel className="text-xs">Estado</FormLabel>
                         <FormControl>
-                          <Input {...field} className="input-field h-8 text-sm" placeholder="SP" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="zip_code"
-                    render={({ field }) => (
-                      <FormItem className="md:col-span-2 space-y-1">
-                        <FormLabel className="text-xs">CEP</FormLabel>
-                        <FormControl>
-                          <Input
-                            {...field}
-                            className="input-field h-8 text-sm"
-                            placeholder="00000-000"
-                            onChange={(e) => field.onChange(maskCEP(e.target.value))}
-                            maxLength={9}
-                          />
+                          <Input {...field} className="h-9 text-sm" placeholder="UF" maxLength={2} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -475,19 +489,19 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
               </div>
 
               {/* Acompanhante */}
-              <div className="space-y-2">
-                <h3 className="text-xs font-semibold text-foreground border-b pb-1">
-                  Dados do Acompanhante
+              <div className="space-y-3">
+                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                  Acompanhante
                 </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   <FormField
                     control={form.control}
                     name="companion_name"
                     render={({ field }) => (
                       <FormItem className="space-y-1">
-                        <FormLabel className="text-xs">Nome do(a) Acompanhante</FormLabel>
+                        <FormLabel className="text-xs">Nome do Acompanhante</FormLabel>
                         <FormControl>
-                          <Input {...field} className="input-field h-8 text-sm" />
+                          <Input {...field} className="h-9 text-sm" placeholder="Nome do acompanhante" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -498,14 +512,13 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
                     name="companion_phone"
                     render={({ field }) => (
                       <FormItem className="space-y-1">
-                        <FormLabel className="text-xs">Telefone do(a) Acompanhante</FormLabel>
+                        <FormLabel className="text-xs">Telefone do Acompanhante</FormLabel>
                         <FormControl>
-                          <Input
-                            {...field}
-                            className="input-field h-8 text-sm"
-                            placeholder="(11) 99999-9999"
+                          <Input 
+                            {...field} 
+                            className="h-9 text-sm" 
+                            placeholder="(00) 00000-0000"
                             onChange={(e) => field.onChange(maskPhone(e.target.value))}
-                            maxLength={16}
                           />
                         </FormControl>
                         <FormMessage />
@@ -515,12 +528,12 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
                 </div>
               </div>
 
-              {/* Perfil Materno */}
-              <div className="space-y-2">
-                <h3 className="text-xs font-semibold text-foreground border-b pb-1">
-                  Perfil Materno
+              {/* Status e Gestação */}
+              <div className="space-y-3">
+                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                  Status e Gestação
                 </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                   <FormField
                     control={form.control}
                     name="status"
@@ -529,8 +542,8 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
                         <FormLabel className="text-xs">Situação *</FormLabel>
                         <Select onValueChange={field.onChange} value={field.value}>
                           <FormControl>
-                            <SelectTrigger className="input-field h-8 text-sm">
-                              <SelectValue />
+                            <SelectTrigger className="h-9 text-sm">
+                              <SelectValue placeholder="Selecione" />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
@@ -548,51 +561,32 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
                       <FormField
                         control={form.control}
                         name="dpp"
-                        render={({ field }) => {
-                          const calculatedWeeks = field.value 
-                            ? calculateCurrentPregnancyWeeks(null, null, field.value)
-                            : null;
-                          
-                          return (
-                            <FormItem className="space-y-1">
-                              <FormLabel className="text-xs">DPP (Data Prevista Parto)</FormLabel>
-                              <FormControl>
-                                <Input
-                                  type="date"
-                                  {...field}
-                                  value={field.value ?? ""}
-                                  onChange={(e) => field.onChange(e.target.value || null)}
-                                  className="input-field h-8 text-sm"
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          );
-                        }}
+                        render={({ field }) => (
+                          <FormItem className="space-y-1">
+                            <FormLabel className="text-xs">DPP (Data Provável do Parto)</FormLabel>
+                            <FormControl>
+                              <Input 
+                                type="date" 
+                                className="h-9 text-sm"
+                                value={field.value || ""}
+                                onChange={(e) => field.onChange(e.target.value || null)}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
                       />
-                      <div className="space-y-1">
-                        <label className="text-xs font-medium">Semanas Atuais</label>
-                        <div className="input-field h-8 text-sm flex items-center px-3 bg-muted/50">
-                          {(() => {
-                            const dppValue = form.watch("dpp");
-                            const weeks = dppValue 
-                              ? calculateCurrentPregnancyWeeks(null, null, dppValue)
-                              : null;
-                            return weeks !== null ? `${weeks} semanas` : "Defina a DPP";
-                          })()}
-                        </div>
-                      </div>
                       <FormField
                         control={form.control}
                         name="baby_names"
                         render={({ field }) => (
-                          <FormItem className="md:col-span-2 space-y-1">
-                            <FormLabel className="text-xs">Nome(s) do Bebê</FormLabel>
+                          <FormItem className="space-y-1">
+                            <FormLabel className="text-xs">Nomes do(s) Bebê(s)</FormLabel>
                             <FormControl>
-                              <Input
-                                {...field}
-                                className="input-field h-8 text-sm"
-                                placeholder="Separe por vírgula se gêmeos (ex: João, Maria)"
+                              <Input 
+                                {...field} 
+                                className="h-9 text-sm" 
+                                placeholder="Nome1, Nome2..."
                               />
                             </FormControl>
                             <FormMessage />
@@ -604,12 +598,12 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
                 </div>
               </div>
 
-              {/* Dados do Plano */}
-              <div className="space-y-2">
-                <h3 className="text-xs font-semibold text-foreground border-b pb-1">
-                  Dados do Plano
+              {/* Plano e Pagamento */}
+              <div className="space-y-3">
+                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                  Plano e Pagamento
                 </h3>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
                   <FormField
                     control={form.control}
                     name="plan"
@@ -618,8 +612,8 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
                         <FormLabel className="text-xs">Plano *</FormLabel>
                         <Select onValueChange={field.onChange} value={field.value}>
                           <FormControl>
-                            <SelectTrigger className="input-field h-8 text-sm">
-                              <SelectValue />
+                            <SelectTrigger className="h-9 text-sm">
+                              <SelectValue placeholder="Selecione" />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
@@ -639,13 +633,12 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
                       <FormItem className="space-y-1">
                         <FormLabel className="text-xs">Valor (R$)</FormLabel>
                         <FormControl>
-                          <Input
-                            type="number"
+                          <Input 
+                            type="number" 
                             step="0.01"
-                            min={0}
-                            {...field}
-                            onChange={(e) => field.onChange(Number(e.target.value))}
-                            className="input-field h-8 text-sm"
+                            className="h-9 text-sm"
+                            value={field.value || ""}
+                            onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
                           />
                         </FormControl>
                         <FormMessage />
@@ -657,15 +650,15 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
                     name="payment_method"
                     render={({ field }) => (
                       <FormItem className="space-y-1">
-                        <FormLabel className="text-xs">Pagamento *</FormLabel>
+                        <FormLabel className="text-xs">Método de Pagamento</FormLabel>
                         <Select onValueChange={field.onChange} value={field.value}>
                           <FormControl>
-                            <SelectTrigger className="input-field h-8 text-sm">
-                              <SelectValue />
+                            <SelectTrigger className="h-9 text-sm">
+                              <SelectValue placeholder="Selecione" />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value="pix">Pix</SelectItem>
+                            <SelectItem value="pix">PIX</SelectItem>
                             <SelectItem value="cartao">Cartão</SelectItem>
                             <SelectItem value="dinheiro">Dinheiro</SelectItem>
                             <SelectItem value="transferencia">Transferência</SelectItem>
@@ -680,11 +673,11 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
                     name="payment_status"
                     render={({ field }) => (
                       <FormItem className="space-y-1">
-                        <FormLabel className="text-xs">Status *</FormLabel>
+                        <FormLabel className="text-xs">Status do Pagamento</FormLabel>
                         <Select onValueChange={field.onChange} value={field.value}>
                           <FormControl>
-                            <SelectTrigger className="input-field h-8 text-sm">
-                              <SelectValue />
+                            <SelectTrigger className="h-9 text-sm">
+                              <SelectValue placeholder="Selecione" />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
@@ -718,24 +711,24 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
                   </FormItem>
                 )}
               />
+            </div>
 
-              {/* Actions */}
-              <div className="flex justify-end gap-2 pt-2 border-t">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => onOpenChange(false)}
-                >
-                  Cancelar
-                </Button>
-                <Button type="submit" size="sm" disabled={mutation.isPending}>
-                  {mutation.isPending ? "Salvando..." : client ? "Atualizar" : "Cadastrar"}
-                </Button>
-              </div>
-            </form>
-          </Form>
-        </div>
+            {/* Actions - Fixed at bottom */}
+            <div className="flex justify-end gap-2 pt-4 mt-4 border-t flex-shrink-0">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => onOpenChange(false)}
+              >
+                Cancelar
+              </Button>
+              <Button type="submit" size="sm" disabled={mutation.isPending}>
+                {mutation.isPending ? "Salvando..." : client ? "Atualizar" : "Cadastrar"}
+              </Button>
+            </div>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   );
