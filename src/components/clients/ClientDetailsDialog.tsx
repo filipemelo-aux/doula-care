@@ -22,7 +22,7 @@ import {
   KeyRound,
 } from "lucide-react";
 import type { Tables } from "@/integrations/supabase/types";
-import { format } from "date-fns";
+import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { SendNotificationDialog } from "./SendNotificationDialog";
 
@@ -124,9 +124,9 @@ export function ClientDetailsDialog({
                       {client.pregnancy_weeks} semanas
                     </span>
                   )}
-                  {client.status === "gestante" && (client as any).dpp && (
+                  {client.status === "gestante" && client.dpp && (
                     <span className="text-sm text-muted-foreground">
-                      DPP: {format(new Date((client as any).dpp), "dd/MM/yyyy")}
+                      DPP: {format(parseISO(client.dpp), "dd/MM/yyyy")}
                     </span>
                   )}
                 </div>
