@@ -5,17 +5,18 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-// Generate password from DPP (day and month only - ddmm format)
+// Generate password from DPP (day and month only - ddmm format + suffix for min 6 chars)
 function generatePassword(dpp: string): string {
   // DPP format is YYYY-MM-DD, extract day and month
   const parts = dpp.split("-");
   if (parts.length === 3) {
     const day = parts[2];
     const month = parts[1];
-    return `${day}${month}`;
+    // Add "gg" suffix to ensure 6+ characters (gestante)
+    return `${day}${month}gg`;
   }
-  // Fallback: extract only numbers (first 4 digits for ddmm)
-  return dpp.replace(/\D/g, "").slice(0, 4);
+  // Fallback: extract only numbers (first 4 digits for ddmm) + suffix
+  return dpp.replace(/\D/g, "").slice(0, 4) + "gg";
 }
 
 Deno.serve(async (req) => {

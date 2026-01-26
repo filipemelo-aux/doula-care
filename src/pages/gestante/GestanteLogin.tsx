@@ -180,7 +180,7 @@ export default function GestanteLogin() {
                 </Button>
               </div>
               <p className="text-xs text-muted-foreground">
-                Primeira vez? Sua senha é dia e mês da DPP (formato DDMM)
+                Primeira vez? Sua senha é dia e mês da DPP + gg (ex: 3101gg)
               </p>
             </div>
             <Button type="submit" className="w-full" disabled={loading}>
