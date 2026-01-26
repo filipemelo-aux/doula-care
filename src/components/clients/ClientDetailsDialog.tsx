@@ -10,7 +10,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import { cn, formatBrazilDate } from "@/lib/utils";
 import {
   Phone,
   MapPin,
@@ -22,8 +22,7 @@ import {
   KeyRound,
 } from "lucide-react";
 import type { Tables } from "@/integrations/supabase/types";
-import { format, parseISO } from "date-fns";
-import { ptBR } from "date-fns/locale";
+import { parseISO } from "date-fns";
 import { SendNotificationDialog } from "./SendNotificationDialog";
 
 type Client = Tables<"clients">;
@@ -126,7 +125,7 @@ export function ClientDetailsDialog({
                   )}
                   {client.status === "gestante" && client.dpp && (
                     <span className="text-sm text-muted-foreground">
-                      DPP: {format(parseISO(client.dpp), "dd/MM/yyyy")}
+                      DPP: {formatBrazilDate(client.dpp)}
                     </span>
                   )}
                 </div>
@@ -281,10 +280,7 @@ export function ClientDetailsDialog({
             <Separator />
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
               <Calendar className="w-3 h-3" />
-              Cadastrada em{" "}
-              {format(new Date(client.created_at), "dd 'de' MMMM 'de' yyyy", {
-                locale: ptBR,
-              })}
+              Cadastrada em {formatBrazilDate(client.created_at, "dd 'de' MMMM 'de' yyyy")}
             </div>
           </div>
         </ScrollArea>

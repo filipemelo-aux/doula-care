@@ -22,10 +22,8 @@ import {
   BookHeart
 } from "lucide-react";
 import { calculateCurrentPregnancyWeeks, calculateCurrentPregnancyDays, isPostTerm } from "@/lib/pregnancy";
-import { abbreviateName } from "@/lib/utils";
+import { abbreviateName, formatBrazilDate } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
 import { Tables } from "@/integrations/supabase/types";
 import { SendNotificationDialog } from "@/components/clients/SendNotificationDialog";
 import { ClientDiaryDialog } from "./ClientDiaryDialog";
@@ -93,7 +91,7 @@ export function ClientsListDialog({
 
   const formatDate = (dateStr: string | null) => {
     if (!dateStr) return "—";
-    return format(new Date(dateStr), "dd/MM/yyyy", { locale: ptBR });
+    return formatBrazilDate(dateStr);
   };
 
   const formatTime = (timeStr: string | null) => {

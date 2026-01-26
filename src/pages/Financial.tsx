@@ -41,7 +41,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
 import { format, parseISO } from "date-fns";
-import { ptBR } from "date-fns/locale";
+import { formatBrazilDate } from "@/lib/utils";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { Wallet, Calendar, Clock } from "lucide-react";
 import {
@@ -537,7 +537,7 @@ export default function Financial() {
 
                       {/* Info: Client + Date */}
                       <p className="text-xs text-muted-foreground truncate">
-                        {transaction.clients?.full_name || "—"} • {format(parseISO(transaction.date), "dd/MM/yy")}
+                        {transaction.clients?.full_name || "—"} • {formatBrazilDate(transaction.date, "dd/MM/yy")}
                       </p>
 
                       {/* Values: Grid layout - compact */}
@@ -705,7 +705,7 @@ export default function Financial() {
                           className="group hover:bg-muted/30 border-b border-border/30 transition-colors"
                         >
                           <TableCell className="py-2.5 text-xs text-muted-foreground">
-                            {format(parseISO(transaction.date), "dd/MM/yy")}
+                            {formatBrazilDate(transaction.date, "dd/MM/yy")}
                           </TableCell>
                           <TableCell className="py-2.5">
                             <div className="flex flex-col gap-0.5">

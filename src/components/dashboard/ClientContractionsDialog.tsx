@@ -11,8 +11,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Timer, Clock, Calendar, Loader2, TrendingDown } from "lucide-react";
-import { format, differenceInMinutes, differenceInSeconds } from "date-fns";
-import { ptBR } from "date-fns/locale";
+import { differenceInMinutes, differenceInSeconds } from "date-fns";
+import { formatBrazilDate, formatBrazilTime } from "@/lib/utils";
 import { Tables } from "@/integrations/supabase/types";
 
 type Client = Tables<"clients">;
@@ -84,7 +84,7 @@ export function ClientContractionsDialog({
   const groupByDate = (items: Contraction[]) => {
     const grouped: Record<string, Contraction[]> = {};
     items.forEach(item => {
-      const dateKey = format(new Date(item.started_at), "yyyy-MM-dd");
+      const dateKey = formatBrazilDate(item.started_at, "yyyy-MM-dd");
       if (!grouped[dateKey]) grouped[dateKey] = [];
       grouped[dateKey].push(item);
     });
@@ -150,7 +150,7 @@ export function ClientContractionsDialog({
                   <div className="flex items-center gap-2 mb-2 sticky top-0 bg-background/80 backdrop-blur-sm py-1">
                     <Calendar className="h-3 w-3 text-muted-foreground" />
                     <span className="text-xs font-medium text-muted-foreground">
-                      {format(new Date(dateKey), "EEEE, dd/MM", { locale: ptBR })}
+                      {formatBrazilDate(dateKey, "EEEE, dd/MM")}
                     </span>
                     <Badge variant="secondary" className="text-[10px] h-4 px-1.5 ml-auto">
                       {dayContractions.length} contrações
@@ -173,7 +173,7 @@ export function ClientContractionsDialog({
                                 </div>
                                 <div className="min-w-0">
                                   <p className="text-xs font-medium">
-                                    {format(new Date(contraction.started_at), "HH:mm:ss")}
+                                    {formatBrazilTime(contraction.started_at, "HH:mm:ss")}
                                   </p>
                                   <p className="text-[10px] text-muted-foreground">
                                     Duração: {formatDuration(contraction.duration_seconds)}

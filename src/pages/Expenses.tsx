@@ -41,7 +41,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
+import { formatBrazilDate } from "@/lib/utils";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { Wallet, Calendar } from "lucide-react";
 import {
@@ -323,7 +323,7 @@ export default function Expenses() {
         <StatCard
           title="Este Mês"
           value={formatCurrency(thisMonthExpenses)}
-          subtitle={format(new Date(), "MMMM yyyy", { locale: ptBR })}
+          subtitle={formatBrazilDate(new Date(), "MMMM yyyy")}
           icon={Calendar}
         />
         <StatCard
@@ -389,7 +389,7 @@ export default function Expenses() {
                       <div className="flex-1 min-w-0">
                         <p className="font-medium text-sm truncate">{expense.description}</p>
                         <p className="text-xs text-muted-foreground">
-                          {format(new Date(expense.date), "dd/MM/yyyy")}
+                          {formatBrazilDate(expense.date)}
                         </p>
                       </div>
                       <div className="flex items-center gap-1 flex-shrink-0">
@@ -447,7 +447,7 @@ export default function Expenses() {
                   <TableBody>
                     {filteredExpenses.map((expense) => (
                       <TableRow key={expense.id} className="table-row-hover">
-                        <TableCell>{format(new Date(expense.date), "dd/MM/yyyy")}</TableCell>
+                        <TableCell>{formatBrazilDate(expense.date)}</TableCell>
                         <TableCell className="font-medium">{expense.description}</TableCell>
                         <TableCell>
                           <Badge variant="secondary">

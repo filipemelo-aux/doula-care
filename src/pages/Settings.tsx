@@ -43,8 +43,7 @@ import {
   User,
 } from "lucide-react";
 import { toast } from "sonner";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
+import { formatBrazilDate } from "@/lib/utils";
 import { ClientAccessCard } from "@/components/settings/ClientAccessCard";
 
 export default function Settings() {
@@ -483,7 +482,7 @@ export default function Settings() {
                               {userProfile.full_name || "Sem nome"}
                             </p>
                             <p className="text-[10px] text-muted-foreground">
-                              {format(new Date(userProfile.created_at), "dd/MM/yy", { locale: ptBR })}
+                              {formatBrazilDate(userProfile.created_at, "dd/MM/yy")}
                               <span className="sm:hidden"> • ID: {userProfile.user_id.slice(0, 4)}...</span>
                             </p>
                           </div>
@@ -500,7 +499,7 @@ export default function Settings() {
                           </div>
                         </TableCell>
                         <TableCell className="text-muted-foreground px-2 py-1.5 text-xs hidden sm:table-cell">
-                          {format(new Date(userProfile.created_at), "dd/MM/yy", { locale: ptBR })}
+                          {formatBrazilDate(userProfile.created_at, "dd/MM/yy")}
                         </TableCell>
                       </TableRow>
                     ))}
