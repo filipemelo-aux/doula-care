@@ -19,20 +19,43 @@ export function getLocalDate(dateString: string): Date {
 
 /**
  * Abbreviate a name for mobile display.
- * If the name has more than 4 parts, abbreviate the 3rd part with first letter + "."
- * Example: "Maria José da Silva Santos" -> "Maria José d. Silva Santos"
+ * If the name has more than 4 parts (excluding prefixes), abbreviate the 3rd actual name with first letter + "."
+ * Prefixes like "de", "da", "do", "dos", "das", "e" are not counted as names.
+ * Example: "Maria José da Silva Santos" -> "Maria José da S. Santos"
  */
 export function abbreviateName(fullName: string): string {
   const parts = fullName.split(" ");
+  const prefixes = ["de", "da", "do", "dos", "das", "e", "del", "della", "di"];
   
-  if (parts.length <= 4) {
+  // Count actual names (excluding prefixes)
+  const actualNames = parts.filter(part => !prefixes.includes(part.toLowerCase()));
+  
+  if (actualNames.length <= 4) {
     return fullName;
   }
   
-  // Abbreviate the 3rd name (index 2)
+  // Find the index of the 3rd actual name in the original parts array
+  let actualNameCount = 0;
+  let indexToAbbreviate = -1;
+  
+  for (let i = 0; i < parts.length; i++) {
+    if (!prefixes.includes(parts[i].toLowerCase())) {
+      actualNameCount++;
+      if (actualNameCount === 3) {
+        indexToAbbreviate = i;
+        break;
+      }
+    }
+  }
+  
+  if (indexToAbbreviate === -1) {
+    return fullName;
+  }
+  
+  // Abbreviate the 3rd actual name
   const abbreviated = parts.map((part, index) => {
-    if (index === 2) {
-      return part.charAt(0).toLowerCase() + ".";
+    if (index === indexToAbbreviate) {
+      return part.charAt(0).toUpperCase() + ".";
     }
     return part;
   });
