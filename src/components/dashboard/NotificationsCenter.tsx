@@ -501,8 +501,8 @@ export function NotificationsCenter() {
               <p className="text-xs text-muted-foreground/70 mt-1">Tudo em dia!</p>
             </div>
           ) : (
-            <div className="max-h-[300px] lg:max-h-[400px] overflow-y-auto px-4 pb-4">
-              <div className="space-y-2 pt-2">
+            <div className="max-h-[300px] lg:max-h-[400px] overflow-y-auto overflow-x-hidden px-2 lg:px-4 pb-3 lg:pb-4">
+              <div className="space-y-2 pt-1 lg:pt-2">
                 {parentNotifications.map((notification) => {
                   const hasChildren = notification.children.length > 0;
                   const isExpanded = expandedNotifications.has(notification.id);
@@ -528,7 +528,7 @@ export function NotificationsCenter() {
                       >
                         {/* Parent notification */}
                         <CollapsibleTrigger asChild disabled={!hasChildren}>
-                          <div className={`p-3 ${hasChildren ? "cursor-pointer hover:bg-black/5" : ""}`}>
+                          <div className={`p-2 lg:p-3 ${hasChildren ? "cursor-pointer hover:bg-black/5" : ""}`}>
                             <div className="flex items-start gap-2">
                               <div className={`w-7 h-7 lg:w-8 lg:h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
                                 isPostTerm
@@ -639,7 +639,7 @@ export function NotificationsCenter() {
 
                         {/* Child notifications */}
                         <CollapsibleContent>
-                          <div className="border-t border-border/50 mx-2 lg:mx-3 mb-2 lg:mb-3 pt-2 space-y-1.5 lg:space-y-2 overflow-hidden">
+                          <div className="border-t border-border/50 mx-1 lg:mx-3 mb-1.5 lg:mb-3 pt-1.5 lg:pt-2 space-y-1 lg:space-y-2 overflow-hidden">
                             {notification.children.map((child) => (
                               <div
                                 key={child.id}
@@ -652,7 +652,7 @@ export function NotificationsCenter() {
                                     setContractionsDialogOpen(true);
                                   }
                                 }}
-                                className={`p-1.5 rounded-md ml-2 lg:ml-4 border-l-2 ${
+                                className={`p-1 lg:p-1.5 rounded-md ml-1 lg:ml-4 border-l-2 ${
                                   child.type === "labor_started"
                                     ? "bg-destructive/10 border-l-destructive"
                                     : child.type === "new_contraction" && child.priority === "high"
