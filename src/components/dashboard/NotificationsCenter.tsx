@@ -6,7 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Bell, Baby, CheckCircle, AlertTriangle, Calendar, Clock, Activity, BookHeart, Timer } from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Bell, Baby, CheckCircle, AlertTriangle, Calendar, Clock, Activity, BookHeart, Timer, ChevronDown, ChevronRight } from "lucide-react";
 import { calculateCurrentPregnancyWeeks, calculateCurrentPregnancyDays, isPostTerm } from "@/lib/pregnancy";
 import { BirthRegistrationDialog } from "@/components/clients/BirthRegistrationDialog";
 import { format, parseISO } from "date-fns";
@@ -14,6 +15,12 @@ import { ptBR } from "date-fns/locale";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Client = Tables<"clients">;
+
+interface EnrichedClient extends Client {
+  current_weeks: number | null;
+  current_days: number;
+  is_post_term: boolean;
+}
 
 interface DiaryEntry {
   id: string;
@@ -30,22 +37,32 @@ interface ContractionEntry {
   client_name?: string;
 }
 
-interface Notification {
+interface ChildNotification {
   id: string;
-  type: "birth_approaching" | "post_term" | "payment_pending" | "labor_started" | "new_diary_entry" | "new_contraction";
+  type: "labor_started" | "new_contraction";
   title: string;
   description: string;
-  client?: Client & { current_weeks?: number | null; current_days?: number; is_post_term?: boolean };
-  priority: "high" | "medium" | "low";
-  icon: typeof Baby;
-  color: string;
   timestamp?: string;
   extraInfo?: string;
+  priority: "high" | "medium";
+}
+
+interface ParentNotification {
+  id: string;
+  type: "birth_approaching" | "post_term" | "new_diary_entry";
+  title: string;
+  description: string;
+  client?: EnrichedClient;
+  priority: "high" | "medium" | "low";
+  icon: typeof Baby;
+  timestamp?: string;
+  children: ChildNotification[];
 }
 
 export function NotificationsCenter() {
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [birthDialogOpen, setBirthDialogOpen] = useState(false);
+  const [expandedNotifications, setExpandedNotifications] = useState<Set<string>>(new Set());
   const queryClient = useQueryClient();
 
   const { data: birthAlertClients, isLoading: loadingBirth } = useQuery({
@@ -71,26 +88,21 @@ export function NotificationsCenter() {
         is_post_term: isPostTerm(client.dpp)
       }));
 
-      // Return clients with 37+ weeks OR those in labor
       return enrichedClients
         .filter(client => 
           (client.current_weeks !== null && client.current_weeks >= 37) || 
           client.labor_started_at
         )
         .sort((a, b) => {
-          // Labor started comes first
           if (a.labor_started_at && !b.labor_started_at) return -1;
           if (!a.labor_started_at && b.labor_started_at) return 1;
-          // Then post-term
           if (a.is_post_term && !b.is_post_term) return -1;
           if (!a.is_post_term && b.is_post_term) return 1;
-          // Then by weeks
           return (b.current_weeks || 0) - (a.current_weeks || 0);
         });
     },
   });
 
-  // Fetch recent UNREAD diary entries (last 24 hours)
   const { data: recentDiaryEntries, isLoading: loadingDiary } = useQuery({
     queryKey: ["recent-diary-entries"],
     queryFn: async () => {
@@ -109,8 +121,6 @@ export function NotificationsCenter() {
         throw error;
       }
       
-      console.log("Diary entries fetched:", data?.length || 0, "unread entries");
-      
       return data.map(entry => ({
         id: entry.id,
         client_id: entry.client_id,
@@ -118,10 +128,9 @@ export function NotificationsCenter() {
         client_name: (entry.clients as { full_name: string } | null)?.full_name || "Cliente"
       })) as DiaryEntry[];
     },
-    refetchInterval: 60000, // Refetch every minute
+    refetchInterval: 60000,
   });
 
-  // Fetch recent contractions (last 24 hours)
   const { data: recentContractions, isLoading: loadingContractions } = useQuery({
     queryKey: ["recent-contractions"],
     queryFn: async () => {
@@ -139,8 +148,6 @@ export function NotificationsCenter() {
         throw error;
       }
       
-      console.log("Contractions fetched:", data?.length || 0, "entries");
-      
       return data.map(entry => ({
         id: entry.id,
         client_id: entry.client_id,
@@ -149,7 +156,7 @@ export function NotificationsCenter() {
         client_name: (entry.clients as { full_name: string } | null)?.full_name || "Cliente"
       })) as ContractionEntry[];
     },
-    refetchInterval: 30000, // Refetch every 30 seconds
+    refetchInterval: 30000,
   });
 
   // Real-time subscription for contractions
@@ -164,7 +171,6 @@ export function NotificationsCenter() {
           table: 'contractions'
         },
         () => {
-          // Invalidate and refetch contractions when changes occur
           queryClient.invalidateQueries({ queryKey: ["recent-contractions"] });
         }
       )
@@ -187,7 +193,6 @@ export function NotificationsCenter() {
           table: 'pregnancy_diary'
         },
         () => {
-          // Invalidate and refetch diary entries when new ones are added
           queryClient.invalidateQueries({ queryKey: ["recent-diary-entries"] });
         }
       )
@@ -203,54 +208,19 @@ export function NotificationsCenter() {
     setBirthDialogOpen(true);
   };
 
-  // Build notifications list
-  const notifications: Notification[] = [];
+  const toggleExpanded = (id: string) => {
+    setExpandedNotifications(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  };
 
-  // Add labor started notifications (highest priority)
-  birthAlertClients?.forEach(client => {
-    if (client.labor_started_at) {
-      notifications.push({
-        id: `labor-${client.id}`,
-        type: "labor_started",
-        title: "Trabalho de Parto Iniciado",
-        description: client.full_name,
-        client,
-        priority: "high",
-        icon: Activity,
-        color: "destructive",
-        timestamp: client.labor_started_at
-      });
-    }
-  });
-
-  // Add birth approaching notifications
-  birthAlertClients?.forEach(client => {
-    if (client.is_post_term) {
-      notifications.push({
-        id: `post-term-${client.id}`,
-        type: "post_term",
-        title: "Gestação Pós-Data",
-        description: client.full_name,
-        client,
-        priority: "high",
-        icon: AlertTriangle,
-        color: "destructive"
-      });
-    } else {
-      notifications.push({
-        id: `birth-${client.id}`,
-        type: "birth_approaching",
-        title: "Parto se Aproximando",
-        description: client.full_name,
-        client,
-        priority: client.current_weeks && client.current_weeks >= 39 ? "high" : "medium",
-        icon: Baby,
-        color: client.current_weeks && client.current_weeks >= 39 ? "warning" : "warning"
-      });
-    }
-  });
-
-  // Add contraction notifications - grouped by client (show most recent + count)
+  // Group contractions by client
   const contractionsByClient = new Map<string, { entries: ContractionEntry[]; clientName: string }>();
   recentContractions?.forEach(entry => {
     const existing = contractionsByClient.get(entry.client_id);
@@ -264,29 +234,7 @@ export function NotificationsCenter() {
     }
   });
 
-  contractionsByClient.forEach(({ entries, clientName }, clientId) => {
-    const latestEntry = entries[0]; // Already sorted by started_at DESC
-    const count = entries.length;
-    const isActiveLabor = count >= 3; // 3+ contractions in 24h suggests active labor
-    
-    const durationText = latestEntry.duration_seconds 
-      ? `${latestEntry.duration_seconds}s` 
-      : "Em andamento";
-    
-    notifications.push({
-      id: `contraction-${clientId}`,
-      type: "new_contraction",
-      title: isActiveLabor ? "Contrações Frequentes" : "Nova Contração",
-      description: clientName,
-      priority: isActiveLabor ? "high" : "medium",
-      icon: Timer,
-      color: isActiveLabor ? "destructive" : "warning",
-      timestamp: latestEntry.started_at,
-      extraInfo: count > 1 ? `${count} contrações (última: ${durationText})` : durationText
-    });
-  });
-
-  // Add diary entry notifications - grouped by client
+  // Group diary entries by client
   const diaryByClient = new Map<string, { entries: DiaryEntry[]; clientName: string }>();
   recentDiaryEntries?.forEach(entry => {
     const existing = diaryByClient.get(entry.client_id);
@@ -300,44 +248,149 @@ export function NotificationsCenter() {
     }
   });
 
+  // Build parent notifications with children
+  const parentNotifications: ParentNotification[] = [];
+
+  // Parent: Birth approaching/Post-term with children (labor, contractions)
+  birthAlertClients?.forEach(client => {
+    const children: ChildNotification[] = [];
+    
+    // Child: Labor started
+    if (client.labor_started_at) {
+      children.push({
+        id: `labor-${client.id}`,
+        type: "labor_started",
+        title: "Trabalho de Parto Iniciado",
+        description: "Alerta de alta prioridade",
+        timestamp: client.labor_started_at,
+        priority: "high"
+      });
+    }
+
+    // Child: Contractions
+    const clientContractions = contractionsByClient.get(client.id);
+    if (clientContractions) {
+      const count = clientContractions.entries.length;
+      const latestEntry = clientContractions.entries[0];
+      const isActiveLabor = count >= 3;
+      const durationText = latestEntry.duration_seconds 
+        ? `${latestEntry.duration_seconds}s` 
+        : "Em andamento";
+
+      children.push({
+        id: `contraction-${client.id}`,
+        type: "new_contraction",
+        title: isActiveLabor ? "Contrações Frequentes" : "Nova Contração",
+        description: count > 1 ? `${count} contrações nas últimas 24h` : "1 contração registrada",
+        timestamp: latestEntry.started_at,
+        extraInfo: durationText,
+        priority: isActiveLabor ? "high" : "medium"
+      });
+
+      // Remove from map so we don't duplicate
+      contractionsByClient.delete(client.id);
+    }
+
+    // Determine parent type
+    const parentType = client.is_post_term ? "post_term" : "birth_approaching";
+    const hasHighPriorityChild = children.some(c => c.priority === "high");
+    
+    parentNotifications.push({
+      id: `birth-${client.id}`,
+      type: parentType,
+      title: client.is_post_term ? "Gestação Pós-Data" : "Parto se Aproximando",
+      description: client.full_name,
+      client,
+      priority: hasHighPriorityChild || client.is_post_term || (client.current_weeks && client.current_weeks >= 39) ? "high" : "medium",
+      icon: client.is_post_term ? AlertTriangle : Baby,
+      children
+    });
+  });
+
+  // Parent: New diary entries (standalone, no children from other clients)
   diaryByClient.forEach(({ entries, clientName }, clientId) => {
-    const latestEntry = entries[0]; // Already sorted by created_at DESC
+    const latestEntry = entries[0];
     const count = entries.length;
     
-    notifications.push({
+    parentNotifications.push({
       id: `diary-${clientId}`,
       type: "new_diary_entry",
       title: count > 1 ? `${count} Novos Registros no Diário` : "Novo Registro no Diário",
       description: clientName,
-      priority: "medium", // Elevated priority for visibility
+      priority: "medium",
       icon: BookHeart,
-      color: "primary",
-      timestamp: latestEntry.created_at
+      timestamp: latestEntry.created_at,
+      children: []
     });
   });
 
-  // Sort by priority and type (labor_started first, then by timestamp)
-  notifications.sort((a, b) => {
-    // Labor started always comes first
-    if (a.type === "labor_started" && b.type !== "labor_started") return -1;
-    if (a.type !== "labor_started" && b.type === "labor_started") return 1;
-    
+  // Handle orphan contractions (clients not in 37+ weeks alert)
+  contractionsByClient.forEach(({ entries, clientName }, clientId) => {
+    const count = entries.length;
+    const latestEntry = entries[0];
+    const isActiveLabor = count >= 3;
+    const durationText = latestEntry.duration_seconds 
+      ? `${latestEntry.duration_seconds}s` 
+      : "Em andamento";
+
+    // Create as parent since client isn't in birth alert
+    parentNotifications.push({
+      id: `contraction-orphan-${clientId}`,
+      type: "birth_approaching",
+      title: "Atividade de Contração",
+      description: clientName,
+      priority: isActiveLabor ? "high" : "medium",
+      icon: Timer,
+      timestamp: latestEntry.started_at,
+      children: [{
+        id: `contraction-${clientId}`,
+        type: "new_contraction",
+        title: isActiveLabor ? "Contrações Frequentes" : "Nova Contração",
+        description: count > 1 ? `${count} contrações nas últimas 24h` : "1 contração registrada",
+        timestamp: latestEntry.started_at,
+        extraInfo: durationText,
+        priority: isActiveLabor ? "high" : "medium"
+      }]
+    });
+  });
+
+  // Sort by priority (high priority children count too)
+  parentNotifications.sort((a, b) => {
     const priorityOrder = { high: 0, medium: 1, low: 2 };
-    const priorityDiff = priorityOrder[a.priority] - priorityOrder[b.priority];
+    const aHasHighChild = a.children.some(c => c.priority === "high");
+    const bHasHighChild = b.children.some(c => c.priority === "high");
     
+    // High priority parents or parents with high priority children first
+    const aEffectivePriority = a.priority === "high" || aHasHighChild ? "high" : a.priority;
+    const bEffectivePriority = b.priority === "high" || bHasHighChild ? "high" : b.priority;
+    
+    const priorityDiff = priorityOrder[aEffectivePriority] - priorityOrder[bEffectivePriority];
     if (priorityDiff !== 0) return priorityDiff;
     
-    // Within same priority, sort by timestamp (newest first)
-    if (a.timestamp && b.timestamp) {
-      return new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime();
-    }
-    
-    return 0;
+    // Then by timestamp
+    const aTime = a.timestamp ? new Date(a.timestamp).getTime() : 0;
+    const bTime = b.timestamp ? new Date(b.timestamp).getTime() : 0;
+    return bTime - aTime;
   });
 
   const isLoading = loadingBirth || loadingDiary || loadingContractions;
-  const hasNotifications = notifications.length > 0;
-  const highPriorityCount = notifications.filter(n => n.priority === "high").length;
+  const hasNotifications = parentNotifications.length > 0;
+  const highPriorityCount = parentNotifications.filter(n => 
+    n.priority === "high" || n.children.some(c => c.priority === "high")
+  ).length;
+
+  // Auto-expand notifications with high priority children
+  useEffect(() => {
+    const toExpand = new Set<string>();
+    parentNotifications.forEach(n => {
+      if (n.children.some(c => c.priority === "high")) {
+        toExpand.add(n.id);
+      }
+    });
+    if (toExpand.size > 0) {
+      setExpandedNotifications(prev => new Set([...prev, ...toExpand]));
+    }
+  }, [parentNotifications.length]);
 
   if (isLoading) {
     return (
@@ -375,7 +428,7 @@ export function NotificationsCenter() {
             </div>
             {hasNotifications && (
               <Badge variant="secondary" className="text-xs">
-                {notifications.length}
+                {parentNotifications.length}
               </Badge>
             )}
           </div>
@@ -392,127 +445,187 @@ export function NotificationsCenter() {
           ) : (
             <ScrollArea className="h-full max-h-[300px] lg:max-h-[400px] px-4 pb-4">
               <div className="space-y-2">
-                {notifications.map((notification) => (
-                  <div
-                    key={notification.id}
-                    className={`p-3 rounded-lg border transition-colors ${
-                      notification.priority === "high"
-                        ? "bg-destructive/5 border-destructive/20 hover:bg-destructive/10"
-                        : notification.priority === "medium"
-                        ? "bg-warning/5 border-warning/20 hover:bg-warning/10"
-                        : "bg-muted/30 border-border/50 hover:bg-muted/50"
-                    }`}
-                  >
-                    <div className="flex items-start gap-3">
-                      <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
-                        notification.priority === "high"
-                          ? "bg-destructive/15"
-                          : notification.type === "new_contraction"
-                          ? "bg-orange-500/15"
-                          : notification.priority === "medium"
-                          ? "bg-warning/15"
-                          : notification.type === "new_diary_entry"
-                          ? "bg-primary/15"
-                          : "bg-muted"
-                      }`}>
-                        <notification.icon className={`h-4 w-4 ${
-                          notification.priority === "high"
-                            ? "text-destructive"
-                            : notification.type === "new_contraction"
-                            ? "text-orange-500"
-                            : notification.priority === "medium"
-                            ? "text-warning"
+                {parentNotifications.map((notification) => {
+                  const hasChildren = notification.children.length > 0;
+                  const isExpanded = expandedNotifications.has(notification.id);
+                  const hasHighPriorityChild = notification.children.some(c => c.priority === "high");
+                  const effectivePriority = notification.priority === "high" || hasHighPriorityChild ? "high" : notification.priority;
+
+                  return (
+                    <Collapsible
+                      key={notification.id}
+                      open={isExpanded}
+                      onOpenChange={() => hasChildren && toggleExpanded(notification.id)}
+                    >
+                      <div
+                        className={`rounded-lg border transition-colors ${
+                          effectivePriority === "high"
+                            ? "bg-destructive/5 border-destructive/20"
                             : notification.type === "new_diary_entry"
-                            ? "text-primary"
-                            : "text-muted-foreground"
-                        }`} />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-0.5">
-                          <span className={`text-xs font-medium ${
-                            notification.priority === "high"
-                              ? "text-destructive"
-                              : notification.type === "new_contraction"
-                              ? "text-orange-500"
-                              : notification.priority === "medium"
-                              ? "text-warning"
-                              : notification.type === "new_diary_entry"
-                              ? "text-primary"
-                              : "text-muted-foreground"
-                          }`}>
-                            {notification.title}
-                          </span>
-                          {notification.client && notification.type !== "labor_started" && (
-                            <Badge 
-                              variant="outline" 
-                              className={`text-[10px] px-1.5 h-4 border-0 ${
-                                notification.client.is_post_term
-                                  ? "bg-destructive/20 text-destructive"
-                                  : "bg-warning/20 text-warning"
-                              }`}
-                            >
-                              {notification.client.current_weeks}s{notification.client.current_days && notification.client.current_days > 0 ? `${notification.client.current_days}d` : ""}
-                            </Badge>
-                          )}
-                        </div>
-                        <p className="text-sm font-medium text-foreground truncate">
-                          {notification.description}
-                        </p>
-                        {notification.type === "labor_started" && notification.timestamp && (
-                          <p className="text-xs text-destructive mt-0.5 flex items-center gap-1 font-medium">
-                            <Clock className="h-3 w-3" />
-                            Início: {format(parseISO(notification.timestamp), "dd/MM 'às' HH:mm", { locale: ptBR })}
-                          </p>
-                        )}
-                        {notification.client?.dpp && notification.type !== "labor_started" && notification.type !== "new_diary_entry" && (
-                          <p className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1">
-                            <Calendar className="h-3 w-3" />
-                            DPP: {format(parseISO(notification.client.dpp), "dd/MM/yyyy")}
-                          </p>
-                        )}
-                        {notification.type === "new_diary_entry" && notification.timestamp && (
-                          <p className="text-xs text-primary mt-0.5 flex items-center gap-1">
-                            <Clock className="h-3 w-3" />
-                            {format(parseISO(notification.timestamp), "dd/MM 'às' HH:mm", { locale: ptBR })}
-                          </p>
-                        )}
-                        {notification.type === "new_contraction" && notification.timestamp && (
-                          <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                            <p className={`text-xs flex items-center gap-1 ${
-                              notification.priority === "high" ? "text-destructive" : "text-orange-500"
-                            }`}>
-                              <Clock className="h-3 w-3" />
-                              {format(parseISO(notification.timestamp), "dd/MM 'às' HH:mm", { locale: ptBR })}
-                            </p>
-                            {notification.extraInfo && (
-                              <Badge 
-                                variant="outline" 
-                                className={`text-[10px] h-4 px-1.5 ${
-                                  notification.priority === "high" 
-                                    ? "border-destructive/50 text-destructive bg-destructive/10"
-                                    : "border-orange-300 text-orange-600 bg-orange-50"
+                            ? "bg-primary/5 border-primary/20"
+                            : "bg-warning/5 border-warning/20"
+                        }`}
+                      >
+                        {/* Parent notification */}
+                        <CollapsibleTrigger asChild disabled={!hasChildren}>
+                          <div className={`p-3 ${hasChildren ? "cursor-pointer hover:bg-black/5" : ""}`}>
+                            <div className="flex items-start gap-3">
+                              <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+                                effectivePriority === "high"
+                                  ? "bg-destructive/15"
+                                  : notification.type === "new_diary_entry"
+                                  ? "bg-primary/15"
+                                  : "bg-warning/15"
+                              }`}>
+                                <notification.icon className={`h-4 w-4 ${
+                                  effectivePriority === "high"
+                                    ? "text-destructive"
+                                    : notification.type === "new_diary_entry"
+                                    ? "text-primary"
+                                    : "text-warning"
+                                }`} />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2 mb-0.5">
+                                  <span className={`text-xs font-medium ${
+                                    effectivePriority === "high"
+                                      ? "text-destructive"
+                                      : notification.type === "new_diary_entry"
+                                      ? "text-primary"
+                                      : "text-warning"
+                                  }`}>
+                                    {notification.title}
+                                  </span>
+                                  {notification.client && (
+                                    <Badge 
+                                      variant="outline" 
+                                      className={`text-[10px] px-1.5 h-4 border-0 ${
+                                        notification.client.is_post_term
+                                          ? "bg-destructive/20 text-destructive"
+                                          : "bg-warning/20 text-warning"
+                                      }`}
+                                    >
+                                      {notification.client.current_weeks}s{notification.client.current_days > 0 ? `${notification.client.current_days}d` : ""}
+                                    </Badge>
+                                  )}
+                                  {hasChildren && (
+                                    <Badge variant="secondary" className="text-[10px] px-1.5 h-4">
+                                      {notification.children.length}
+                                    </Badge>
+                                  )}
+                                </div>
+                                <p className="text-sm font-medium text-foreground truncate">
+                                  {notification.description}
+                                </p>
+                                {notification.client?.dpp && notification.type !== "new_diary_entry" && (
+                                  <p className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1">
+                                    <Calendar className="h-3 w-3" />
+                                    DPP: {format(parseISO(notification.client.dpp), "dd/MM/yyyy")}
+                                  </p>
+                                )}
+                                {notification.type === "new_diary_entry" && notification.timestamp && (
+                                  <p className="text-xs text-primary mt-0.5 flex items-center gap-1">
+                                    <Clock className="h-3 w-3" />
+                                    {format(parseISO(notification.timestamp), "dd/MM 'às' HH:mm", { locale: ptBR })}
+                                  </p>
+                                )}
+                              </div>
+                              <div className="flex items-center gap-1 flex-shrink-0">
+                                {notification.client && (
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    className="h-7 px-2 text-xs hover:bg-primary/10"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleRegisterBirth(notification.client as Client);
+                                    }}
+                                  >
+                                    <CheckCircle className="h-3 w-3 mr-1" />
+                                    Nasceu
+                                  </Button>
+                                )}
+                                {hasChildren && (
+                                  isExpanded ? (
+                                    <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                                  ) : (
+                                    <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                                  )
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </CollapsibleTrigger>
+
+                        {/* Child notifications */}
+                        <CollapsibleContent>
+                          <div className="border-t border-border/50 mx-3 mb-3 pt-2 space-y-2">
+                            {notification.children.map((child) => (
+                              <div
+                                key={child.id}
+                                className={`p-2 rounded-md ml-6 border-l-2 ${
+                                  child.priority === "high"
+                                    ? "bg-destructive/10 border-l-destructive"
+                                    : child.type === "new_contraction"
+                                    ? "bg-orange-500/10 border-l-orange-500"
+                                    : "bg-muted/50 border-l-muted-foreground"
                                 }`}
                               >
-                                {notification.extraInfo}
-                              </Badge>
-                            )}
+                                <div className="flex items-start gap-2">
+                                  <div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 ${
+                                    child.priority === "high"
+                                      ? "bg-destructive/20"
+                                      : "bg-orange-500/20"
+                                  }`}>
+                                    {child.type === "labor_started" ? (
+                                      <Activity className={`h-3 w-3 ${
+                                        child.priority === "high" ? "text-destructive" : "text-orange-500"
+                                      }`} />
+                                    ) : (
+                                      <Timer className={`h-3 w-3 ${
+                                        child.priority === "high" ? "text-destructive" : "text-orange-500"
+                                      }`} />
+                                    )}
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <span className={`text-xs font-medium ${
+                                      child.priority === "high" ? "text-destructive" : "text-orange-600"
+                                    }`}>
+                                      {child.title}
+                                    </span>
+                                    <p className="text-xs text-muted-foreground">
+                                      {child.description}
+                                    </p>
+                                    {child.timestamp && (
+                                      <p className={`text-xs mt-0.5 flex items-center gap-1 ${
+                                        child.priority === "high" ? "text-destructive" : "text-orange-500"
+                                      }`}>
+                                        <Clock className="h-3 w-3" />
+                                        {format(parseISO(child.timestamp), "dd/MM 'às' HH:mm", { locale: ptBR })}
+                                        {child.extraInfo && (
+                                          <Badge 
+                                            variant="outline" 
+                                            className={`ml-1 text-[10px] h-4 px-1.5 ${
+                                              child.priority === "high" 
+                                                ? "border-destructive/50 text-destructive bg-destructive/10"
+                                                : "border-orange-300 text-orange-600 bg-orange-50"
+                                            }`}
+                                          >
+                                            {child.extraInfo}
+                                          </Badge>
+                                        )}
+                                      </p>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
                           </div>
-                        )}
+                        </CollapsibleContent>
                       </div>
-                      {notification.client && (
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="h-7 px-2 text-xs hover:bg-primary/10 flex-shrink-0"
-                          onClick={() => handleRegisterBirth(notification.client as Client)}
-                        >
-                          <CheckCircle className="h-3 w-3 mr-1" />
-                          Nasceu
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                ))}
+                    </Collapsible>
+                  );
+                })}
               </div>
             </ScrollArea>
           )}
