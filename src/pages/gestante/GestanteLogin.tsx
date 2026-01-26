@@ -112,7 +112,9 @@ export default function GestanteLogin() {
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   autoComplete="current-password"
+                  autoCapitalize="off"
                   className="input-field pr-10"
+                  style={{ textTransform: 'none' }}
                 />
                 <Button
                   type="button"
