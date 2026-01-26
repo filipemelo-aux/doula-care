@@ -1,4 +1,5 @@
-import { useQuery } from "@tanstack/react-query";
+import { useEffect } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Dialog,
@@ -19,14 +20,15 @@ import {
   Sparkles, 
   AlertCircle,
   Calendar,
-  Loader2
+  Loader2,
+  Eye
 } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Tables } from "@/integrations/supabase/types";
 
 type Client = Tables<"clients">;
-type DiaryEntry = Tables<"pregnancy_diary">;
+type DiaryEntry = Tables<"pregnancy_diary"> & { read_by_admin?: boolean };
 
 interface ClientDiaryDialogProps {
   open: boolean;
@@ -48,6 +50,8 @@ export function ClientDiaryDialog({
   onOpenChange,
   client,
 }: ClientDiaryDialogProps) {
+  const queryClient = useQueryClient();
+
   const { data: entries, isLoading } = useQuery({
     queryKey: ["client-diary", client?.id],
     queryFn: async () => {
@@ -65,6 +69,35 @@ export function ClientDiaryDialog({
     },
     enabled: open && !!client?.id,
   });
+
+  // Mark unread entries as read when dialog opens
+  useEffect(() => {
+    const markAsRead = async () => {
+      if (!open || !client?.id || !entries) return;
+      
+      const unreadEntryIds = entries
+        .filter(entry => !entry.read_by_admin)
+        .map(entry => entry.id);
+      
+      if (unreadEntryIds.length === 0) return;
+
+      const { error } = await supabase
+        .from("pregnancy_diary")
+        .update({ read_by_admin: true })
+        .in("id", unreadEntryIds);
+
+      if (!error) {
+        // Invalidate queries to refresh notification indicators
+        queryClient.invalidateQueries({ queryKey: ["recent-diary-entries"] });
+        queryClient.invalidateQueries({ queryKey: ["recent-diary-entries-by-client"] });
+        queryClient.invalidateQueries({ queryKey: ["client-diary", client.id] });
+      }
+    };
+
+    // Small delay to ensure entries are loaded
+    const timeout = setTimeout(markAsRead, 500);
+    return () => clearTimeout(timeout);
+  }, [open, client?.id, entries, queryClient]);
 
   const getEmotionDisplay = (emotion: string | null) => {
     if (!emotion) return null;
@@ -127,12 +160,23 @@ export function ClientDiaryDialog({
                   
                   <div className="space-y-2">
                     {dayEntries.map((entry) => (
-                      <Card key={entry.id} className="overflow-hidden">
+                      <Card 
+                        key={entry.id} 
+                        className={`overflow-hidden ${!entry.read_by_admin ? 'ring-2 ring-primary/30 bg-primary/5' : ''}`}
+                      >
                         <CardContent className="p-3">
                           <div className="flex items-start justify-between gap-2 mb-2">
-                            <span className="text-xs text-muted-foreground">
-                              {format(new Date(entry.created_at), "HH:mm")}
-                            </span>
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs text-muted-foreground">
+                                {format(new Date(entry.created_at), "HH:mm")}
+                              </span>
+                              {!entry.read_by_admin && (
+                                <Badge variant="outline" className="text-[10px] h-4 px-1.5 bg-primary/10 text-primary border-primary/30">
+                                  <Eye className="h-2.5 w-2.5 mr-0.5" />
+                                  Novo
+                                </Badge>
+                              )}
+                            </div>
                             {getEmotionDisplay(entry.emotion)}
                           </div>
                           

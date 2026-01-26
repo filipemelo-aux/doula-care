@@ -99,7 +99,8 @@ export function NotificationsCenter() {
 
       const { data, error } = await supabase
         .from("pregnancy_diary")
-        .select("id, client_id, created_at, clients(full_name)")
+        .select("id, client_id, created_at, read_by_admin, clients(full_name)")
+        .eq("read_by_admin", false)
         .gte("created_at", twentyFourHoursAgo.toISOString())
         .order("created_at", { ascending: false });
 
