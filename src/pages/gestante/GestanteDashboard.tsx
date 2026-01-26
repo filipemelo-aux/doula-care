@@ -124,7 +124,7 @@ export default function GestanteDashboard() {
       <div className="container mx-auto px-4 py-6 space-y-6">
         {/* Pregnancy Progress + Labor Button Row */}
         {gestationalAge && (
-          <div className={`grid gap-4 ${gestationalAge.weeks >= 37 ? 'grid-cols-2' : 'grid-cols-1'}`}>
+          <div className={`grid gap-4 ${gestationalAge.weeks >= 37 ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-1'}`}>
             {/* Pregnancy Progress Card */}
             <Card className="overflow-hidden bg-gradient-to-br from-primary/10 to-accent/10 border-primary/20">
               <CardContent className="p-4">
