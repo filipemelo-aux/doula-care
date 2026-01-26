@@ -639,7 +639,7 @@ export function NotificationsCenter() {
 
                         {/* Child notifications */}
                         <CollapsibleContent>
-                          <div className="border-t border-border/50 mx-1 lg:mx-3 mb-1.5 lg:mb-3 pt-1.5 lg:pt-2 space-y-1 lg:space-y-2 overflow-hidden">
+                          <div className="border-t border-border/50 mx-1 lg:mx-3 mb-1.5 lg:mb-3 pt-1.5 lg:pt-2 space-y-1 lg:space-y-2 overflow-x-hidden">
                             {notification.children.map((child) => (
                               <div
                                 key={child.id}
@@ -652,7 +652,7 @@ export function NotificationsCenter() {
                                     setContractionsDialogOpen(true);
                                   }
                                 }}
-                                className={`p-1 lg:p-1.5 rounded-md ml-1 lg:ml-4 border-l-2 ${
+                                className={`p-1 lg:p-1.5 rounded-md border-l-2 ${
                                   child.type === "labor_started"
                                     ? "bg-destructive/10 border-l-destructive"
                                     : child.type === "new_contraction" && child.priority === "high"
