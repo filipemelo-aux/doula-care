@@ -33,7 +33,7 @@ export function GestanteLayout({ children }: GestanteLayoutProps) {
       </main>
 
       {/* Bottom Navigation - elevated above Lovable branding */}
-      <nav className="fixed bottom-10 left-0 right-0 z-50 bg-background/95 backdrop-blur-md border-t border-b safe-area-bottom shadow-lg">
+      <nav className="fixed bottom-0 left-0 right-0 z-50 bg-background border-t shadow-lg">
         <div className="flex items-center justify-around h-16 max-w-lg mx-auto px-2">
           {navItems.map((item) => {
             const isActive = location.pathname === item.to;
@@ -59,6 +59,8 @@ export function GestanteLayout({ children }: GestanteLayoutProps) {
             );
           })}
         </div>
+        {/* Solid fill below navigation to cover any watermarks */}
+        <div className="h-10 bg-background" />
       </nav>
     </div>
   );
