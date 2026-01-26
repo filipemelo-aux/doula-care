@@ -40,12 +40,20 @@ export function BirthAlert() {
             client.dpp
           ),
           current_days: calculateCurrentPregnancyDays(client.dpp),
-          is_post_term: isPostTerm(client.dpp)
+          is_post_term: isPostTerm(client.dpp),
+          is_in_labor: !!client.labor_started_at
         }))
-        .filter(client => client.current_weeks !== null && client.current_weeks >= 37)
+        .filter(client => 
+          client.is_in_labor || (client.current_weeks !== null && client.current_weeks >= 37)
+        )
         .sort((a, b) => {
+          // Labor started takes highest priority
+          if (a.is_in_labor && !b.is_in_labor) return -1;
+          if (!a.is_in_labor && b.is_in_labor) return 1;
+          // Then post-term
           if (a.is_post_term && !b.is_post_term) return -1;
           if (!a.is_post_term && b.is_post_term) return 1;
+          // Then by weeks
           return (b.current_weeks || 0) - (a.current_weeks || 0);
         });
     },
@@ -57,8 +65,9 @@ export function BirthAlert() {
   };
 
   const hasNotifications = clients && clients.length > 0;
+  const hasLaborStarted = clients?.some(c => c.is_in_labor);
   const hasPostTerm = clients?.some(c => c.is_post_term);
-  const highPriorityCount = clients?.filter(c => c.is_post_term || (c.current_weeks && c.current_weeks >= 39)).length || 0;
+  const highPriorityCount = clients?.filter(c => c.is_in_labor || c.is_post_term || (c.current_weeks && c.current_weeks >= 39)).length || 0;
 
   if (isLoading) {
     return (
@@ -83,7 +92,9 @@ export function BirthAlert() {
   return (
     <>
       <Card className={`card-glass overflow-hidden max-w-full ${
-        hasPostTerm 
+        hasLaborStarted
+          ? "border-destructive/50 ring-2 ring-destructive/20"
+          : hasPostTerm 
           ? "border-destructive/30" 
           : hasNotifications 
           ? "border-warning/30" 
@@ -121,25 +132,33 @@ export function BirthAlert() {
           ) : (
             <div className="divide-y divide-border/50">
               {clients?.map((client) => {
-                const isHighPriority = client.is_post_term || (client.current_weeks && client.current_weeks >= 39);
+                const isHighPriority = client.is_in_labor || client.is_post_term || (client.current_weeks && client.current_weeks >= 39);
                 
                 return (
                   <div
                     key={client.id}
                     className={`px-2 py-2 transition-colors hover:bg-muted/30 overflow-hidden ${
-                      client.is_post_term ? "bg-destructive/5" : ""
+                      client.is_in_labor 
+                        ? "bg-destructive/10 animate-pulse" 
+                        : client.is_post_term 
+                        ? "bg-destructive/5" 
+                        : ""
                     }`}
                   >
-                    {/* Row 1: Icon + Name */}
+                    {/* Row 1: Icon + Name + Labor Badge */}
                     <div className="flex items-center gap-2">
                       <div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 ${
-                        client.is_post_term
+                        client.is_in_labor
+                          ? "bg-destructive/20"
+                          : client.is_post_term
                           ? "bg-destructive/15"
                           : isHighPriority
                           ? "bg-warning/15"
                           : "bg-warning/10"
                       }`}>
-                        {client.is_post_term ? (
+                        {client.is_in_labor ? (
+                          <Baby className="h-3 w-3 text-destructive animate-bounce" />
+                        ) : client.is_post_term ? (
                           <AlertTriangle className="h-3 w-3 text-destructive" />
                         ) : (
                           <Baby className={`h-3 w-3 ${isHighPriority ? "text-warning" : "text-warning/80"}`} />
@@ -148,13 +167,18 @@ export function BirthAlert() {
                       <span className="text-sm font-medium text-foreground truncate flex-1 min-w-0">
                         {client.full_name}
                       </span>
+                      {client.is_in_labor && (
+                        <Badge className="bg-destructive text-destructive-foreground text-[9px] px-1.5 h-4 animate-pulse">
+                          🚨 EM TRABALHO DE PARTO
+                        </Badge>
+                      )}
                     </div>
 
                     {/* Row 2: Status + DPP + Badge + Nasceu button */}
                     <div className="flex items-center justify-between mt-1 pl-8">
                       <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground min-w-0">
                         <span className="truncate">
-                          {client.is_post_term ? "Pós-data" : "Parto próximo"}
+                          {client.is_in_labor ? "Trabalho de parto" : client.is_post_term ? "Pós-data" : "Parto próximo"}
                         </span>
                         {client.dpp && (
                           <>
@@ -168,7 +192,9 @@ export function BirthAlert() {
                         <Badge 
                           variant="outline" 
                           className={`text-[9px] px-1 h-4 border-0 flex-shrink-0 ${
-                            client.is_post_term
+                            client.is_in_labor
+                              ? "bg-destructive/20 text-destructive"
+                              : client.is_post_term
                               ? "bg-destructive/20 text-destructive"
                               : isHighPriority
                               ? "bg-warning/20 text-warning"
