@@ -472,8 +472,8 @@ export function NotificationsCenter() {
 
   return (
     <>
-      <Card className="card-glass h-full flex flex-col">
-        <CardHeader className="pb-3 flex-shrink-0">
+      <Card className="card-glass h-full flex flex-col overflow-hidden">
+        <CardHeader className="pb-2 lg:pb-3 px-3 lg:px-6 flex-shrink-0">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <div className="relative">
@@ -491,7 +491,7 @@ export function NotificationsCenter() {
             )}
           </div>
         </CardHeader>
-        <CardContent className="p-0 overflow-hidden">
+        <CardContent className="p-0 overflow-x-hidden">
           {!hasNotifications ? (
             <div className="flex flex-col items-center justify-center h-full text-center px-6 py-8">
               <div className="w-12 h-12 rounded-full bg-muted/50 flex items-center justify-center mb-3">
@@ -501,8 +501,8 @@ export function NotificationsCenter() {
               <p className="text-xs text-muted-foreground/70 mt-1">Tudo em dia!</p>
             </div>
           ) : (
-            <div className="max-h-[300px] lg:max-h-[400px] overflow-y-auto overflow-x-hidden px-2 lg:px-4 pb-3 lg:pb-4">
-              <div className="space-y-2 pt-1 lg:pt-2">
+            <div className="max-h-[300px] lg:max-h-[400px] overflow-y-auto overflow-x-hidden px-1.5 lg:px-4 pb-2 lg:pb-4">
+              <div className="space-y-1.5 lg:space-y-2 pt-1">
                 {parentNotifications.map((notification) => {
                   const hasChildren = notification.children.length > 0;
                   const isExpanded = expandedNotifications.has(notification.id);
