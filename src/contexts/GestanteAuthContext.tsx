@@ -6,6 +6,8 @@ interface ClientData {
   id: string;
   full_name: string;
   first_login: boolean;
+  status: "tentante" | "gestante" | "lactante";
+  birth_occurred: boolean;
 }
 
 interface GestanteAuthContextType {
@@ -37,7 +39,7 @@ export function GestanteAuthProvider({ children }: { children: ReactNode }) {
     try {
       const { data, error } = await supabase
         .from("clients")
-        .select("id, full_name, first_login")
+        .select("id, full_name, first_login, status, birth_occurred")
         .eq("user_id", userId)
         .maybeSingle();
 

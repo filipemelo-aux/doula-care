@@ -28,6 +28,7 @@ interface DiaryEntryDialogProps {
   onOpenChange: (open: boolean) => void;
   clientId: string;
   onSuccess: () => void;
+  isLactante?: boolean;
 }
 
 const emotions = [
@@ -39,7 +40,7 @@ const emotions = [
   { value: "cansada", icon: Meh, label: "Cansada", color: "text-gray-500 bg-gray-50 border-gray-200 hover:bg-gray-100" },
 ];
 
-const commonSymptoms = [
+const pregnancySymptoms = [
   "Enjoo",
   "Azia",
   "Dor nas costas",
@@ -52,12 +53,37 @@ const commonSymptoms = [
   "Fome excessiva",
 ];
 
-export function DiaryEntryDialog({ open, onOpenChange, clientId, onSuccess }: DiaryEntryDialogProps) {
+const lactationSymptoms = [
+  "Dor ao amamentar",
+  "Ingurgitamento mamário",
+  "Mastite",
+  "Fissuras no mamilo",
+  "Cansaço extremo",
+  "Privação de sono",
+  "Baby blues",
+  "Ansiedade pós-parto",
+  "Cólica uterina",
+  "Sangramento vaginal",
+  "Dor na cesárea",
+  "Dor no períneo",
+  "Inchaço nas pernas",
+  "Queda de cabelo",
+  "Suor noturno",
+  "Fome excessiva",
+  "Sede constante",
+  "Dificuldade na pega",
+  "Baixa produção de leite",
+  "Vazamento de leite",
+];
+
+export function DiaryEntryDialog({ open, onOpenChange, clientId, onSuccess, isLactante = false }: DiaryEntryDialogProps) {
   const [content, setContent] = useState("");
   const [emotion, setEmotion] = useState<string | null>(null);
   const [symptoms, setSymptoms] = useState<string[]>([]);
   const [observations, setObservations] = useState("");
   const [saving, setSaving] = useState(false);
+  
+  const currentSymptoms = isLactante ? lactationSymptoms : pregnancySymptoms;
 
   const toggleSymptom = (symptom: string) => {
     setSymptoms(prev => 
@@ -154,9 +180,9 @@ export function DiaryEntryDialog({ open, onOpenChange, clientId, onSuccess }: Di
 
           {/* Symptoms */}
           <div className="space-y-2">
-            <Label>Sintomas do dia (opcional)</Label>
+            <Label>{isLactante ? "Sintomas do pós-parto (opcional)" : "Sintomas do dia (opcional)"}</Label>
             <div className="flex flex-wrap gap-2">
-              {commonSymptoms.map((symptom) => {
+              {currentSymptoms.map((symptom) => {
                 const isSelected = symptoms.includes(symptom);
                 return (
                   <Badge
