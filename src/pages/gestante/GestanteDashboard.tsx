@@ -24,6 +24,7 @@ import { getLocalDate } from "@/lib/utils";
 import { GestanteLayout } from "@/components/gestante/GestanteLayout";
 import { useNavigate } from "react-router-dom";
 import { LaborStartButton } from "@/components/gestante/LaborStartButton";
+import { ServiceRequestButtons } from "@/components/gestante/ServiceRequestButton";
 
 type Client = Tables<"clients">;
 
@@ -280,6 +281,9 @@ export default function GestanteDashboard() {
               </CardContent>
             </Card>
           </div>
+
+          {/* Service Request Buttons */}
+          <ServiceRequestButtons />
 
           {/* Welcome to Motherhood Message */}
           <Card className="bg-gradient-to-br from-purple-50 to-pink-50 border-purple-200">
