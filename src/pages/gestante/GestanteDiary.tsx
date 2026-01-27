@@ -19,7 +19,7 @@ import {
   AlertCircle
 } from "lucide-react";
 import { toast } from "sonner";
-import { formatBrazilDate, formatBrazilTime } from "@/lib/utils";
+import { formatBrazilDate, formatBrazilTime, cn } from "@/lib/utils";
 import { DiaryEntryDialog } from "@/components/gestante/DiaryEntryDialog";
 
 interface DiaryEntry {
@@ -45,6 +45,8 @@ export default function GestanteDiary() {
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const { client } = useGestanteAuth();
+  
+  const isLactante = client?.status === "lactante" && client?.birth_occurred;
 
   useEffect(() => {
     if (client?.id) {
@@ -108,12 +110,21 @@ export default function GestanteDiary() {
       <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-sm border-b">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center">
+            <div className={cn(
+              "w-10 h-10 rounded-full flex items-center justify-center",
+              isLactante 
+                ? "bg-gradient-to-br from-pink-400 to-rose-500" 
+                : "bg-gradient-to-br from-primary to-accent"
+            )}>
               <BookHeart className="w-5 h-5 text-primary-foreground" />
             </div>
             <div>
-              <h1 className="font-display font-semibold text-lg">Diário da Gestação</h1>
-              <p className="text-xs text-muted-foreground">Seus momentos e sentimentos</p>
+              <h1 className="font-display font-semibold text-lg">
+                {isLactante ? "Diário da Lactante" : "Diário da Gestação"}
+              </h1>
+              <p className="text-xs text-muted-foreground">
+                {isLactante ? "Sua jornada como mamãe" : "Seus momentos e sentimentos"}
+              </p>
             </div>
           </div>
           <Button size="sm" onClick={() => setDialogOpen(true)}>
@@ -129,12 +140,23 @@ export default function GestanteDiary() {
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
           </div>
         ) : entries.length === 0 ? (
-          <Card className="bg-gradient-to-br from-primary/5 to-accent/5 border-dashed">
+          <Card className={cn(
+            "border-dashed",
+            isLactante 
+              ? "bg-gradient-to-br from-pink-50 to-rose-50" 
+              : "bg-gradient-to-br from-primary/5 to-accent/5"
+          )}>
             <CardContent className="py-12 text-center">
-              <BookHeart className="h-12 w-12 mx-auto text-primary/40 mb-4" />
+              <BookHeart className={cn(
+                "h-12 w-12 mx-auto mb-4",
+                isLactante ? "text-pink-400" : "text-primary/40"
+              )} />
               <h3 className="font-semibold text-lg mb-2">Seu diário está vazio</h3>
               <p className="text-muted-foreground text-sm mb-4">
-                Comece a registrar seus momentos especiais durante a gestação
+                {isLactante 
+                  ? "Comece a registrar seus momentos especiais como mamãe"
+                  : "Comece a registrar seus momentos especiais durante a gestação"
+                }
               </p>
               <Button onClick={() => setDialogOpen(true)}>
                 <Plus className="h-4 w-4 mr-2" />
@@ -202,6 +224,7 @@ export default function GestanteDiary() {
         onOpenChange={setDialogOpen}
         clientId={client?.id || ""}
         onSuccess={fetchEntries}
+        isLactante={isLactante}
       />
     </GestanteLayout>
   );
