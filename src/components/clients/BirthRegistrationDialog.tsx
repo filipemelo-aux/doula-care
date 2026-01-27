@@ -62,7 +62,8 @@ export function BirthRegistrationDialog({
     mutationFn: async (data: BirthFormData) => {
       if (!client) throw new Error("Cliente não encontrada");
 
-      const { error } = await supabase
+      // Update client to lactante status
+      const { error: updateError } = await supabase
         .from("clients")
         .update({
           birth_occurred: true,
@@ -70,11 +71,23 @@ export function BirthRegistrationDialog({
           birth_time: data.birth_time || null,
           birth_weight: parseWeight(data.birth_weight),
           birth_height: parseHeight(data.birth_height),
-          status: "lactante", // Automatically change status to lactante
+          status: "lactante",
+          labor_started_at: null, // Clear labor status
         })
         .eq("id", client.id);
 
-      if (error) throw error;
+      if (updateError) throw updateError;
+
+      // Delete all contractions for this client (no longer relevant after birth)
+      const { error: contractionsError } = await supabase
+        .from("contractions")
+        .delete()
+        .eq("client_id", client.id);
+
+      if (contractionsError) {
+        console.error("Error deleting contractions:", contractionsError);
+        // Don't throw - birth registration is more important
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["clients"] });
