@@ -145,10 +145,13 @@ export function NotificationsCenter() {
       const twentyFourHoursAgo = new Date();
       twentyFourHoursAgo.setHours(twentyFourHoursAgo.getHours() - 24);
 
+      // Only fetch contractions for gestante clients (not lactante)
       const { data, error } = await supabase
         .from("contractions")
-        .select("id, client_id, started_at, duration_seconds, clients(full_name)")
+        .select("id, client_id, started_at, duration_seconds, clients!inner(full_name, status, birth_occurred)")
         .gte("started_at", twentyFourHoursAgo.toISOString())
+        .eq("clients.status", "gestante")
+        .eq("clients.birth_occurred", false)
         .order("started_at", { ascending: false });
 
       if (error) {
@@ -161,7 +164,7 @@ export function NotificationsCenter() {
         client_id: entry.client_id,
         started_at: entry.started_at,
         duration_seconds: entry.duration_seconds,
-        client_name: (entry.clients as { full_name: string } | null)?.full_name || "Cliente"
+        client_name: (entry.clients as { full_name: string; status: string; birth_occurred: boolean } | null)?.full_name || "Cliente"
       })) as ContractionEntry[];
     },
     refetchInterval: 30000,
