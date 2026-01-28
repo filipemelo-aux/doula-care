@@ -150,13 +150,74 @@ export function GestanteAuthProvider({ children }: { children: ReactNode }) {
 
   const signIn = async (username: string, password: string): Promise<{ error: Error | null }> => {
     try {
-      // Format email from username
-      const email = username.includes("@") ? username : `${username}@gestante.doula.app`;
+      // Format base email from username
+      const baseUsername = username.includes("@") ? username.split("@")[0] : username;
+      
+      // First, try to find the actual email in auth.users by looking up the client
+      // This handles cases where the email has a numeric suffix (e.g., antonia.santos.8817)
+      let email = `${baseUsername}@gestante.doula.app`;
+      
+      // Query clients table to find the user_id, then we can get the actual email
+      const { data: clientsData } = await supabase
+        .from("clients")
+        .select("user_id")
+        .not("user_id", "is", null);
+      
+      if (clientsData && clientsData.length > 0) {
+        // We need to find if there's a user with email starting with the base username
+        // Try the exact email first, if it fails, we'll search for alternatives
+      }
 
-      const { data, error } = await supabase.auth.signInWithPassword({
+      // Try to sign in with the base email first
+      let { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
+
+      // If login failed with base email, try to find alternative email with suffix
+      if (error && error.message.includes("Invalid login credentials")) {
+        // Search for clients whose user has an email starting with the base username
+        const { data: allClients } = await supabase
+          .from("clients")
+          .select("user_id, full_name")
+          .not("user_id", "is", null);
+        
+        if (allClients) {
+          // Generate expected username from each client's name and compare
+          for (const client of allClients) {
+            const nameParts = client.full_name
+              .normalize("NFD")
+              .replace(/[\u0300-\u036f]/g, "")
+              .toLowerCase()
+              .trim()
+              .split(/\s+/);
+            
+            if (nameParts.length >= 2) {
+              const expectedUsername = `${nameParts[0]}.${nameParts[nameParts.length - 1]}`;
+              
+              if (expectedUsername === baseUsername) {
+                // Found a matching client, try to get the actual email from their session
+                // We need to use edge function to get the real email
+                const response = await supabase.functions.invoke("get-client-email", {
+                  body: { userId: client.user_id }
+                });
+                
+                if (response.data?.email) {
+                  email = response.data.email;
+                  // Try login with the actual email
+                  const retryResult = await supabase.auth.signInWithPassword({
+                    email,
+                    password,
+                  });
+                  data = retryResult.data;
+                  error = retryResult.error;
+                  break;
+                }
+              }
+            }
+          }
+        }
+      }
 
       if (error) {
         return { error: error as Error };
