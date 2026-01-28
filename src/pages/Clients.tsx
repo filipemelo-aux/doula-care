@@ -80,17 +80,26 @@ export default function Clients() {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("clients").delete().eq("id", id);
+      const { data, error } = await supabase.functions.invoke("delete-client-user", {
+        body: { clientId: id },
+      });
       if (error) throw error;
+      if (data.error) throw new Error(data.error);
+      return data;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["clients"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
       queryClient.invalidateQueries({ queryKey: ["recent-clients"] });
-      toast.success("Cliente excluída com sucesso!");
+      queryClient.invalidateQueries({ queryKey: ["clients-with-accounts"] });
+      toast.success("Cliente excluída com sucesso!", {
+        description: data.warning || undefined,
+      });
     },
-    onError: () => {
-      toast.error("Erro ao excluir cliente");
+    onError: (error) => {
+      toast.error("Erro ao excluir cliente", {
+        description: error.message,
+      });
     },
   });
 
