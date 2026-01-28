@@ -36,7 +36,7 @@ interface ClientDetailsDialogProps {
 const statusLabels = {
   tentante: "Tentante",
   gestante: "Gestante",
-  lactante: "Lactante",
+  lactante: "Puérpera",
 };
 
 const planLabels = {

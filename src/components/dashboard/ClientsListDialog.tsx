@@ -83,10 +83,10 @@ export function ClientsListDialog({
     enabled: open && status === "gestante",
   });
 
-  const title = status === "gestante" ? "Gestantes em Acompanhamento" : "Lactantes Pós-Parto";
+  const title = status === "gestante" ? "Gestantes em Acompanhamento" : "Puérperas Pós-Parto";
   const description = status === "gestante" 
     ? "Lista de todas as gestantes atualmente em acompanhamento" 
-    : "Lista de todas as mães em período pós-parto";
+    : "Lista de todas as mães no período de puerpério";
   const Icon = status === "gestante" ? Baby : Heart;
 
   const formatDate = (dateStr: string | null) => {
@@ -252,7 +252,7 @@ export function ClientsListDialog({
                       </div>
                     )}
 
-                    {/* Lactante/Birth Info */}
+                    {/* Puérpera/Birth Info */}
                     {status === "lactante" && client.birth_occurred && (
                       <div className="mt-3 pt-3 border-t border-border/50">
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
@@ -290,7 +290,7 @@ export function ClientsListDialog({
           ) : (
             <div className="text-center py-8 text-muted-foreground">
               <Icon className="h-12 w-12 mx-auto mb-3 opacity-30" />
-              <p>Nenhuma {status === "gestante" ? "gestante" : "lactante"} encontrada</p>
+              <p>Nenhuma {status === "gestante" ? "gestante" : "puérpera"} encontrada</p>
             </div>
           )}
         </ScrollArea>

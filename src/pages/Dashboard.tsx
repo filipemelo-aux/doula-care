@@ -13,7 +13,7 @@ import { Users, Baby, Heart, Wallet } from "lucide-react";
 export default function Dashboard() {
   const [period, setPeriod] = useState<PeriodOption>("month");
   const [gestantesDialogOpen, setGestantesDialogOpen] = useState(false);
-  const [lactantesDialogOpen, setLactantesDialogOpen] = useState(false);
+  const [puerperasDialogOpen, setPuerperasDialogOpen] = useState(false);
 
   const { data: stats } = useQuery({
     queryKey: ["dashboard-stats"],
@@ -28,7 +28,7 @@ export default function Dashboard() {
 
       const totalClients = clients.length;
       const gestantes = clients.filter((c) => c.status === "gestante").length;
-      const lactantes = clients.filter((c) => c.status === "lactante").length;
+      const puerperas = clients.filter((c) => c.status === "lactante").length;
 
       const totalIncome = transactions
         .filter((t) => t.type === "receita")
@@ -41,7 +41,7 @@ export default function Dashboard() {
       return {
         totalClients,
         gestantes,
-        lactantes,
+        puerperas,
         totalIncome,
         pendingPayments,
       };
@@ -85,11 +85,11 @@ export default function Dashboard() {
           onClick={() => setGestantesDialogOpen(true)}
         />
         <StatCard
-          title="Lactantes"
-          value={stats?.lactantes || 0}
+          title="Puérperas"
+          value={stats?.puerperas || 0}
           subtitle="Pós-parto"
           icon={Heart}
-          onClick={() => setLactantesDialogOpen(true)}
+          onClick={() => setPuerperasDialogOpen(true)}
         />
         <StatCard
           title="Receita Total"
@@ -119,8 +119,8 @@ export default function Dashboard() {
         status="gestante"
       />
       <ClientsListDialog
-        open={lactantesDialogOpen}
-        onOpenChange={setLactantesDialogOpen}
+        open={puerperasDialogOpen}
+        onOpenChange={setPuerperasDialogOpen}
         status="lactante"
       />
     </div>

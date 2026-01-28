@@ -553,7 +553,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
                           <SelectContent>
                             <SelectItem value="tentante">Tentante</SelectItem>
                             <SelectItem value="gestante">Gestante</SelectItem>
-                            <SelectItem value="lactante">Lactante</SelectItem>
+                            <SelectItem value="lactante">Puérpera</SelectItem>
                           </SelectContent>
                         </Select>
                         <FormMessage />
