@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -7,13 +7,14 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Bell, Baby, CheckCircle, AlertTriangle, Calendar, Clock, Activity, BookHeart, Timer, ChevronDown, ChevronRight } from "lucide-react";
+import { Bell, Baby, CheckCircle, AlertTriangle, Calendar, Clock, Activity, BookHeart, Timer, ChevronDown, ChevronRight, Sparkles, Check } from "lucide-react";
 import { calculateCurrentPregnancyWeeks, calculateCurrentPregnancyDays, isPostTerm } from "@/lib/pregnancy";
 import { BirthRegistrationDialog } from "@/components/clients/BirthRegistrationDialog";
 import { ClientDiaryDialog } from "@/components/dashboard/ClientDiaryDialog";
 import { ClientContractionsDialog } from "@/components/dashboard/ClientContractionsDialog";
 import { formatBrazilDate, formatBrazilDateTime } from "@/lib/utils";
 import type { Tables } from "@/integrations/supabase/types";
+import { toast } from "sonner";
 
 type Client = Tables<"clients">;
 
@@ -38,20 +39,30 @@ interface ContractionEntry {
   client_name?: string;
 }
 
+interface ServiceRequest {
+  id: string;
+  client_id: string;
+  title: string;
+  message: string;
+  created_at: string;
+  client_name?: string;
+}
+
 interface ChildNotification {
   id: string;
-  type: "labor_started" | "new_contraction" | "new_diary_entry";
+  type: "labor_started" | "new_contraction" | "new_diary_entry" | "service_request";
   title: string;
   description: string;
   timestamp?: string;
   extraInfo?: string;
   priority: "high" | "medium" | "low";
   clientId?: string;
+  notificationId?: string;
 }
 
 interface ParentNotification {
   id: string;
-  type: "birth_approaching" | "post_term" | "new_diary_entry";
+  type: "birth_approaching" | "post_term" | "new_diary_entry" | "service_request";
   title: string;
   description: string;
   client?: EnrichedClient;
@@ -61,6 +72,7 @@ interface ParentNotification {
   children: ChildNotification[];
   isInLabor?: boolean;
   clientId?: string;
+  notificationId?: string;
 }
 
 export function NotificationsCenter() {
@@ -170,6 +182,53 @@ export function NotificationsCenter() {
     refetchInterval: 30000,
   });
 
+  // Fetch service requests (unread notifications from lactante clients)
+  const { data: serviceRequests, isLoading: loadingServiceRequests } = useQuery({
+    queryKey: ["service-requests"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("client_notifications")
+        .select("id, client_id, title, message, created_at, clients(full_name)")
+        .eq("read", false)
+        .ilike("title", "%Solicitação%")
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        console.error("Error fetching service requests:", error);
+        throw error;
+      }
+      
+      return data.map(entry => ({
+        id: entry.id,
+        client_id: entry.client_id,
+        title: entry.title,
+        message: entry.message,
+        created_at: entry.created_at,
+        client_name: (entry.clients as { full_name: string } | null)?.full_name || "Cliente"
+      })) as ServiceRequest[];
+    },
+    refetchInterval: 30000,
+  });
+
+  // Mutation to mark service request as read
+  const markAsReadMutation = useMutation({
+    mutationFn: async (notificationId: string) => {
+      const { error } = await supabase
+        .from("client_notifications")
+        .update({ read: true })
+        .eq("id", notificationId);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["service-requests"] });
+      toast.success("Solicitação marcada como lida");
+    },
+    onError: () => {
+      toast.error("Erro ao marcar solicitação");
+    }
+  });
+
   // Real-time subscription for contractions
   useEffect(() => {
     const channel = supabase
@@ -205,6 +264,28 @@ export function NotificationsCenter() {
         },
         () => {
           queryClient.invalidateQueries({ queryKey: ["recent-diary-entries"] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient]);
+
+  // Real-time subscription for service requests
+  useEffect(() => {
+    const channel = supabase
+      .channel('service-requests-realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'client_notifications'
+        },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ["service-requests"] });
         }
       )
       .subscribe();
@@ -384,6 +465,31 @@ export function NotificationsCenter() {
     });
   });
 
+  // Parent: Service requests from lactante clients
+  serviceRequests?.forEach(request => {
+    const serviceName = request.title.replace("Solicitação de ", "");
+    
+    parentNotifications.push({
+      id: `service-${request.id}`,
+      type: "service_request",
+      title: `Solicitação de Serviço`,
+      description: request.client_name || "Cliente",
+      priority: "medium",
+      icon: Sparkles,
+      timestamp: request.created_at,
+      children: [{
+        id: `service-child-${request.id}`,
+        type: "service_request",
+        title: serviceName,
+        description: request.message.split(".")[0], // First sentence only
+        timestamp: request.created_at,
+        priority: "medium",
+        notificationId: request.id
+      }],
+      notificationId: request.id
+    });
+  });
+
   // Handle orphan contractions (clients not in 37+ weeks alert)
   contractionsByClient.forEach(({ entries, clientName }, clientId) => {
     const count = entries.length;
@@ -433,7 +539,7 @@ export function NotificationsCenter() {
     return bTime - aTime;
   });
 
-  const isLoading = loadingBirth || loadingDiary || loadingContractions;
+  const isLoading = loadingBirth || loadingDiary || loadingContractions || loadingServiceRequests;
   const hasNotifications = parentNotifications.length > 0;
   const highPriorityCount = parentNotifications.filter(n => 
     n.priority === "high" || n.children.some(c => c.priority === "high")
@@ -525,6 +631,8 @@ export function NotificationsCenter() {
                             ? "bg-destructive/5 border-destructive/20"
                             : notification.type === "new_diary_entry"
                             ? "bg-primary/5 border-primary/20"
+                            : notification.type === "service_request"
+                            ? "bg-purple-500/5 border-purple-500/20"
                             : "bg-warning/5 border-warning/20"
                         }`}
                       >
@@ -537,6 +645,8 @@ export function NotificationsCenter() {
                                   ? "bg-destructive/15"
                                   : notification.type === "new_diary_entry"
                                   ? "bg-primary/15"
+                                  : notification.type === "service_request"
+                                  ? "bg-purple-500/15"
                                   : "bg-warning/15"
                               }`}>
                                 <notification.icon className={`h-3.5 w-3.5 lg:h-4 lg:w-4 ${
@@ -544,6 +654,8 @@ export function NotificationsCenter() {
                                     ? "text-destructive"
                                     : notification.type === "new_diary_entry"
                                     ? "text-primary"
+                                    : notification.type === "service_request"
+                                    ? "text-purple-600"
                                     : "text-warning"
                                 }`} />
                               </div>
@@ -554,6 +666,8 @@ export function NotificationsCenter() {
                                       ? "text-destructive"
                                       : notification.type === "new_diary_entry"
                                       ? "text-primary"
+                                      : notification.type === "service_request"
+                                      ? "text-purple-600"
                                       : "text-warning"
                                   }`}>
                                     {notification.title}
@@ -592,7 +706,7 @@ export function NotificationsCenter() {
                                     🚨 EM TRABALHO DE PARTO
                                   </Badge>
                                 )}
-                                {notification.client?.dpp && notification.type !== "new_diary_entry" && (
+                                {notification.client?.dpp && notification.type !== "new_diary_entry" && notification.type !== "service_request" && (
                                   <p className="text-[10px] lg:text-xs text-muted-foreground mt-0.5 flex items-center gap-1">
                                     <Calendar className="h-2.5 w-2.5 lg:h-3 lg:w-3 flex-shrink-0" />
                                     DPP: {formatBrazilDate(notification.client.dpp)}
@@ -603,6 +717,28 @@ export function NotificationsCenter() {
                                     <Clock className="h-2.5 w-2.5 lg:h-3 lg:w-3 flex-shrink-0" />
                                     {formatBrazilDateTime(notification.timestamp, "dd/MM 'às' HH:mm")}
                                   </p>
+                                )}
+                                {notification.type === "service_request" && notification.timestamp && (
+                                  <p className="text-[10px] lg:text-xs text-purple-600 mt-0.5 flex items-center gap-1">
+                                    <Clock className="h-2.5 w-2.5 lg:h-3 lg:w-3 flex-shrink-0" />
+                                    {formatBrazilDateTime(notification.timestamp, "dd/MM 'às' HH:mm")}
+                                  </p>
+                                )}
+                                {/* Mark as read button for service requests - mobile */}
+                                {notification.type === "service_request" && notification.notificationId && (
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="h-6 px-2 text-[10px] lg:text-xs border-dashed border-purple-300 hover:bg-purple-500/10 mt-1.5 w-full lg:hidden"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      markAsReadMutation.mutate(notification.notificationId!);
+                                    }}
+                                    disabled={markAsReadMutation.isPending}
+                                  >
+                                    <Check className="h-3 w-3 mr-1 flex-shrink-0" />
+                                    Marcar como lida
+                                  </Button>
                                 )}
                                 {/* Button on mobile - below content */}
                                 {notification.client && (
@@ -635,6 +771,22 @@ export function NotificationsCenter() {
                                   Registrar nascimento
                                 </Button>
                               )}
+                              {/* Mark as read button for service requests - desktop */}
+                              {notification.type === "service_request" && notification.notificationId && (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="h-7 px-2 text-xs border-dashed border-purple-300 hover:bg-purple-500/10 hidden lg:flex flex-shrink-0"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    markAsReadMutation.mutate(notification.notificationId!);
+                                  }}
+                                  disabled={markAsReadMutation.isPending}
+                                >
+                                  <Check className="h-3 w-3 mr-1" />
+                                  Marcar como lida
+                                </Button>
+                              )}
                             </div>
                           </div>
                         </CollapsibleTrigger>
@@ -661,6 +813,8 @@ export function NotificationsCenter() {
                                     ? "bg-destructive/10 border-l-destructive"
                                     : child.type === "new_contraction"
                                     ? "bg-orange-500/10 border-l-orange-500"
+                                    : child.type === "service_request"
+                                    ? "bg-purple-500/10 border-l-purple-500"
                                     : "bg-emerald-500/10 border-l-emerald-500"
                                 } ${child.type === "new_diary_entry" ? "cursor-pointer hover:bg-emerald-500/20 transition-colors" : ""} ${child.type === "new_contraction" ? "cursor-pointer hover:bg-orange-500/20 transition-colors" : ""}`}
                               >
@@ -672,12 +826,16 @@ export function NotificationsCenter() {
                                       ? "bg-destructive/20"
                                       : child.type === "new_contraction"
                                       ? "bg-orange-500/20"
+                                      : child.type === "service_request"
+                                      ? "bg-purple-500/20"
                                       : "bg-emerald-500/20"
                                   }`}>
                                     {child.type === "labor_started" ? (
                                       <Activity className="h-2.5 w-2.5 text-destructive" />
                                     ) : child.type === "new_diary_entry" ? (
                                       <BookHeart className="h-2.5 w-2.5 text-emerald-600" />
+                                    ) : child.type === "service_request" ? (
+                                      <Sparkles className="h-2.5 w-2.5 text-purple-600" />
                                     ) : (
                                       <Timer className={`h-2.5 w-2.5 ${
                                         child.priority === "high" ? "text-destructive" : "text-orange-500"
@@ -692,6 +850,8 @@ export function NotificationsCenter() {
                                         ? "text-destructive"
                                         : child.type === "new_contraction"
                                         ? "text-orange-600"
+                                        : child.type === "service_request"
+                                        ? "text-purple-700"
                                         : "text-emerald-700"
                                     }`}>
                                       {child.title}
@@ -707,6 +867,8 @@ export function NotificationsCenter() {
                                           ? "text-destructive"
                                           : child.type === "new_contraction"
                                           ? "text-orange-500"
+                                          : child.type === "service_request"
+                                          ? "text-purple-600"
                                           : "text-emerald-600"
                                       }`}>
                                         <Clock className="h-2.5 w-2.5 flex-shrink-0" />
