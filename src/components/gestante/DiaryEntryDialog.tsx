@@ -28,7 +28,7 @@ interface DiaryEntryDialogProps {
   onOpenChange: (open: boolean) => void;
   clientId: string;
   onSuccess: () => void;
-  isLactante?: boolean;
+  isPuerpera?: boolean;
 }
 
 const emotions = [
@@ -53,7 +53,7 @@ const pregnancySymptoms = [
   "Fome excessiva",
 ];
 
-const lactationSymptoms = [
+const puerperiumSymptoms = [
   "Dor ao amamentar",
   "Ingurgitamento mamário",
   "Mastite",
@@ -76,14 +76,14 @@ const lactationSymptoms = [
   "Vazamento de leite",
 ];
 
-export function DiaryEntryDialog({ open, onOpenChange, clientId, onSuccess, isLactante = false }: DiaryEntryDialogProps) {
+export function DiaryEntryDialog({ open, onOpenChange, clientId, onSuccess, isPuerpera = false }: DiaryEntryDialogProps) {
   const [content, setContent] = useState("");
   const [emotion, setEmotion] = useState<string | null>(null);
   const [symptoms, setSymptoms] = useState<string[]>([]);
   const [observations, setObservations] = useState("");
   const [saving, setSaving] = useState(false);
   
-  const currentSymptoms = isLactante ? lactationSymptoms : pregnancySymptoms;
+  const currentSymptoms = isPuerpera ? puerperiumSymptoms : pregnancySymptoms;
 
   const toggleSymptom = (symptom: string) => {
     setSymptoms(prev => 
@@ -180,7 +180,7 @@ export function DiaryEntryDialog({ open, onOpenChange, clientId, onSuccess, isLa
 
           {/* Symptoms */}
           <div className="space-y-2">
-            <Label>{isLactante ? "Sintomas do pós-parto (opcional)" : "Sintomas do dia (opcional)"}</Label>
+            <Label>{isPuerpera ? "Sintomas do puerpério (opcional)" : "Sintomas do dia (opcional)"}</Label>
             <div className="flex flex-wrap gap-2">
               {currentSymptoms.map((symptom) => {
                 const isSelected = symptoms.includes(symptom);

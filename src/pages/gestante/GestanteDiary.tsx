@@ -46,7 +46,7 @@ export default function GestanteDiary() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const { client } = useGestanteAuth();
   
-  const isLactante = client?.status === "lactante" && client?.birth_occurred;
+  const isPuerpera = client?.status === "lactante" && client?.birth_occurred;
 
   useEffect(() => {
     if (client?.id) {
@@ -112,7 +112,7 @@ export default function GestanteDiary() {
           <div className="flex items-center gap-3">
             <div className={cn(
               "w-10 h-10 rounded-full flex items-center justify-center",
-              isLactante 
+              isPuerpera 
                 ? "bg-gradient-to-br from-pink-400 to-rose-500" 
                 : "bg-gradient-to-br from-primary to-accent"
             )}>
@@ -120,10 +120,10 @@ export default function GestanteDiary() {
             </div>
             <div>
               <h1 className="font-display font-semibold text-lg">
-                {isLactante ? "Diário da Lactante" : "Diário da Gestação"}
+                {isPuerpera ? "Diário do Puerpério" : "Diário da Gestação"}
               </h1>
               <p className="text-xs text-muted-foreground">
-                {isLactante ? "Sua jornada como mamãe" : "Seus momentos e sentimentos"}
+                {isPuerpera ? "Sua jornada como mamãe" : "Seus momentos e sentimentos"}
               </p>
             </div>
           </div>
@@ -142,18 +142,18 @@ export default function GestanteDiary() {
         ) : entries.length === 0 ? (
           <Card className={cn(
             "border-dashed",
-            isLactante 
+            isPuerpera 
               ? "bg-gradient-to-br from-pink-50 to-rose-50" 
               : "bg-gradient-to-br from-primary/5 to-accent/5"
           )}>
             <CardContent className="py-12 text-center">
               <BookHeart className={cn(
                 "h-12 w-12 mx-auto mb-4",
-                isLactante ? "text-pink-400" : "text-primary/40"
+                isPuerpera ? "text-pink-400" : "text-primary/40"
               )} />
               <h3 className="font-semibold text-lg mb-2">Seu diário está vazio</h3>
               <p className="text-muted-foreground text-sm mb-4">
-                {isLactante 
+                {isPuerpera 
                   ? "Comece a registrar seus momentos especiais como mamãe"
                   : "Comece a registrar seus momentos especiais durante a gestação"
                 }
@@ -224,7 +224,7 @@ export default function GestanteDiary() {
         onOpenChange={setDialogOpen}
         clientId={client?.id || ""}
         onSuccess={fetchEntries}
-        isLactante={isLactante}
+        isPuerpera={isPuerpera}
       />
     </GestanteLayout>
   );

@@ -115,7 +115,7 @@ export default function GestanteDashboard() {
 
   const gestationalAge = calculateGestationalAge();
   const babyAge = calculateBabyAge();
-  const isLactante = clientData?.status === "lactante" && clientData?.birth_occurred;
+  const isPuerpera = clientData?.status === "lactante" && clientData?.birth_occurred;
 
   if (loading) {
     return (
@@ -127,15 +127,15 @@ export default function GestanteDashboard() {
     );
   }
 
-  // Lactante View - After birth
-  if (isLactante) {
+  // Puérpera View - After birth
+  if (isPuerpera) {
     const babyNames = clientData?.baby_names as string[] | null;
     const babyName = babyNames && babyNames.length > 0 ? babyNames[0] : "seu bebê";
     const multipleBabies = babyNames && babyNames.length > 1;
 
     return (
       <GestanteLayout>
-        {/* Header for Lactante */}
+        {/* Header for Puérpera */}
         <header className="bg-gradient-to-br from-pink-200/50 via-primary/10 to-accent/20 border-b">
           <div className="container mx-auto px-4 py-6">
             <div className="flex items-center justify-between">
@@ -242,7 +242,7 @@ export default function GestanteDashboard() {
             </Card>
           )}
 
-          {/* Quick Actions for Lactante */}
+          {/* Quick Actions for Puérpera */}
           <div className="grid grid-cols-2 gap-3">
             <Card 
               className="cursor-pointer hover:shadow-md transition-shadow active:scale-[0.98]"

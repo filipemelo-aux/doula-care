@@ -35,7 +35,7 @@ type Client = Tables<"clients">;
 const statusLabels = {
   tentante: "Tentante",
   gestante: "Gestante",
-  lactante: "Lactante",
+  lactante: "Puérpera",
 };
 
 const planLabels = {
