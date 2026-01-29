@@ -61,20 +61,20 @@ export function ServiceRequestButtons() {
     mutationFn: async (service: ServiceType) => {
       if (!client?.id) throw new Error("Cliente não encontrado");
 
-      // Create a notification for the doula
-      const { error } = await supabase.from("client_notifications").insert({
+      // Create service request in the new table
+      const { error } = await supabase.from("service_requests").insert({
         client_id: client.id,
-        title: `Solicitação de ${service.name}`,
-        message: `${client.full_name} solicitou o serviço de ${service.name}. ${service.description}`,
-        read: false,
+        service_type: service.name,
+        status: "pending",
       });
 
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["client-notifications"] });
+      queryClient.invalidateQueries({ queryKey: ["service-requests"] });
+      queryClient.invalidateQueries({ queryKey: ["my-service-requests"] });
       toast.success("Solicitação enviada com sucesso!", {
-        description: "Sua Doula receberá uma notificação sobre seu pedido.",
+        description: "Sua Doula receberá uma notificação e enviará o orçamento.",
       });
       setConfirmDialogOpen(false);
       setSelectedService(null);
@@ -143,7 +143,7 @@ export function ServiceRequestButtons() {
           </DialogHeader>
           <div className="py-4">
             <p className="text-sm text-muted-foreground">
-              Ao confirmar, sua Doula será notificada sobre sua solicitação e entrará em contato para agendar o atendimento.
+              Ao confirmar, sua Doula receberá sua solicitação e enviará um orçamento para sua aprovação.
             </p>
           </div>
           <DialogFooter className="gap-2">

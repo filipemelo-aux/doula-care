@@ -7,11 +7,12 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Bell, Baby, CheckCircle, AlertTriangle, Calendar, Clock, Activity, BookHeart, Timer, ChevronDown, ChevronRight, Sparkles, Check } from "lucide-react";
+import { Bell, Baby, CheckCircle, AlertTriangle, Calendar, Clock, Activity, BookHeart, Timer, ChevronDown, ChevronRight, Sparkles, Send } from "lucide-react";
 import { calculateCurrentPregnancyWeeks, calculateCurrentPregnancyDays, isPostTerm } from "@/lib/pregnancy";
 import { BirthRegistrationDialog } from "@/components/clients/BirthRegistrationDialog";
 import { ClientDiaryDialog } from "@/components/dashboard/ClientDiaryDialog";
 import { ClientContractionsDialog } from "@/components/dashboard/ClientContractionsDialog";
+import { SendBudgetDialog } from "@/components/dashboard/SendBudgetDialog";
 import { formatBrazilDate, formatBrazilDateTime, abbreviateName } from "@/lib/utils";
 import type { Tables } from "@/integrations/supabase/types";
 import { toast } from "sonner";
@@ -42,8 +43,8 @@ interface ContractionEntry {
 interface ServiceRequest {
   id: string;
   client_id: string;
-  title: string;
-  message: string;
+  service_type: string;
+  status: string;
   created_at: string;
   client_name?: string;
 }
@@ -82,6 +83,13 @@ export function NotificationsCenter() {
   const [diaryClient, setDiaryClient] = useState<Client | null>(null);
   const [contractionsDialogOpen, setContractionsDialogOpen] = useState(false);
   const [contractionsClient, setContractionsClient] = useState<Client | null>(null);
+  const [budgetDialogOpen, setBudgetDialogOpen] = useState(false);
+  const [selectedServiceRequest, setSelectedServiceRequest] = useState<{
+    id: string;
+    client_id: string;
+    service_type: string;
+    client_name: string;
+  } | null>(null);
   const [expandedNotifications, setExpandedNotifications] = useState<Set<string>>(new Set());
   const queryClient = useQueryClient();
 
@@ -182,15 +190,14 @@ export function NotificationsCenter() {
     refetchInterval: 30000,
   });
 
-  // Fetch service requests (unread notifications from lactante clients)
+  // Fetch pending service requests from service_requests table
   const { data: serviceRequests, isLoading: loadingServiceRequests } = useQuery({
-    queryKey: ["service-requests"],
+    queryKey: ["service-requests-pending"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("client_notifications")
-        .select("id, client_id, title, message, created_at, clients(full_name)")
-        .eq("read", false)
-        .ilike("title", "%Solicitação%")
+        .from("service_requests")
+        .select("id, client_id, service_type, status, created_at, clients(full_name)")
+        .eq("status", "pending")
         .order("created_at", { ascending: false });
 
       if (error) {
@@ -201,8 +208,8 @@ export function NotificationsCenter() {
       return data.map(entry => ({
         id: entry.id,
         client_id: entry.client_id,
-        title: entry.title,
-        message: entry.message,
+        service_type: entry.service_type,
+        status: entry.status,
         created_at: entry.created_at,
         client_name: (entry.clients as { full_name: string } | null)?.full_name || "Cliente"
       })) as ServiceRequest[];
@@ -210,24 +217,16 @@ export function NotificationsCenter() {
     refetchInterval: 30000,
   });
 
-  // Mutation to mark service request as read
-  const markAsReadMutation = useMutation({
-    mutationFn: async (notificationId: string) => {
-      const { error } = await supabase
-        .from("client_notifications")
-        .update({ read: true })
-        .eq("id", notificationId);
-      
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["service-requests"] });
-      toast.success("Solicitação marcada como lida");
-    },
-    onError: () => {
-      toast.error("Erro ao marcar solicitação");
-    }
-  });
+  // Handle opening budget dialog
+  const handleOpenBudgetDialog = (request: ServiceRequest) => {
+    setSelectedServiceRequest({
+      id: request.id,
+      client_id: request.client_id,
+      service_type: request.service_type,
+      client_name: request.client_name || "Cliente",
+    });
+    setBudgetDialogOpen(true);
+  };
 
   // Real-time subscription for contractions
   useEffect(() => {
@@ -280,12 +279,12 @@ export function NotificationsCenter() {
       .on(
         'postgres_changes',
         {
-          event: 'INSERT',
+          event: '*',
           schema: 'public',
-          table: 'client_notifications'
+          table: 'service_requests'
         },
         () => {
-          queryClient.invalidateQueries({ queryKey: ["service-requests"] });
+          queryClient.invalidateQueries({ queryKey: ["service-requests-pending"] });
         }
       )
       .subscribe();
@@ -465,12 +464,12 @@ export function NotificationsCenter() {
     });
   });
 
-  // Parent: Service requests from lactante clients
+  // Parent: Service requests from clients - store full request for budget dialog
+  const serviceRequestsMap = new Map<string, ServiceRequest>();
   serviceRequests?.forEach(request => {
-    const serviceName = request.title.replace("Solicitação de ", "");
+    serviceRequestsMap.set(request.id, request);
+    const serviceName = request.service_type;
     const clientName = request.client_name || "Cliente";
-    // Abbreviate the message to remove client name repetition and keep it short
-    const abbreviatedMessage = serviceName;
     
     parentNotifications.push({
       id: `service-${request.id}`,
@@ -484,7 +483,7 @@ export function NotificationsCenter() {
         id: `service-child-${request.id}`,
         type: "service_request",
         title: serviceName,
-        description: abbreviatedMessage,
+        description: "Informe o valor do serviço",
         timestamp: request.created_at,
         priority: "medium",
         notificationId: request.id
@@ -727,7 +726,7 @@ export function NotificationsCenter() {
                                     {formatBrazilDateTime(notification.timestamp, "dd/MM 'às' HH:mm")}
                                   </p>
                                 )}
-                                {/* Mark as read button for service requests - mobile */}
+                                {/* Send budget button for service requests - mobile */}
                                 {notification.type === "service_request" && notification.notificationId && (
                                   <Button
                                     size="sm"
@@ -735,12 +734,12 @@ export function NotificationsCenter() {
                                     className="h-6 px-2 text-[10px] lg:text-xs border-dashed border-purple-300 hover:bg-purple-500/10 mt-1.5 w-full lg:hidden"
                                     onClick={(e) => {
                                       e.stopPropagation();
-                                      markAsReadMutation.mutate(notification.notificationId!);
+                                      const request = serviceRequestsMap.get(notification.notificationId!);
+                                      if (request) handleOpenBudgetDialog(request);
                                     }}
-                                    disabled={markAsReadMutation.isPending}
                                   >
-                                    <Check className="h-3 w-3 mr-1 flex-shrink-0" />
-                                    Marcar como lida
+                                    <Send className="h-3 w-3 mr-1 flex-shrink-0" />
+                                    Enviar Orçamento
                                   </Button>
                                 )}
                                 {/* Button on mobile - below content */}
@@ -774,7 +773,7 @@ export function NotificationsCenter() {
                                   Registrar nascimento
                                 </Button>
                               )}
-                              {/* Mark as read button for service requests - desktop */}
+                              {/* Send budget button for service requests - desktop */}
                               {notification.type === "service_request" && notification.notificationId && (
                                 <Button
                                   size="sm"
@@ -782,12 +781,12 @@ export function NotificationsCenter() {
                                   className="h-7 px-2 text-xs border-dashed border-purple-300 hover:bg-purple-500/10 hidden lg:flex flex-shrink-0"
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    markAsReadMutation.mutate(notification.notificationId!);
+                                    const request = serviceRequestsMap.get(notification.notificationId!);
+                                    if (request) handleOpenBudgetDialog(request);
                                   }}
-                                  disabled={markAsReadMutation.isPending}
                                 >
-                                  <Check className="h-3 w-3 mr-1" />
-                                  Marcar como lida
+                                  <Send className="h-3 w-3 mr-1" />
+                                  Enviar Orçamento
                                 </Button>
                               )}
                             </div>
@@ -924,6 +923,12 @@ export function NotificationsCenter() {
         open={contractionsDialogOpen}
         onOpenChange={setContractionsDialogOpen}
         client={contractionsClient}
+      />
+
+      <SendBudgetDialog
+        open={budgetDialogOpen}
+        onOpenChange={setBudgetDialogOpen}
+        serviceRequest={selectedServiceRequest}
       />
     </>
   );
