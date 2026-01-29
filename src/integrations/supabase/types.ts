@@ -296,6 +296,50 @@ export type Database = {
         }
         Relationships: []
       }
+      service_requests: {
+        Row: {
+          budget_sent_at: string | null
+          budget_value: number | null
+          client_id: string
+          created_at: string
+          id: string
+          responded_at: string | null
+          service_type: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          budget_sent_at?: string | null
+          budget_value?: number | null
+          client_id: string
+          created_at?: string
+          id?: string
+          responded_at?: string | null
+          service_type: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          budget_sent_at?: string | null
+          budget_value?: number | null
+          client_id?: string
+          created_at?: string
+          id?: string
+          responded_at?: string | null
+          service_type?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_requests_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       transactions: {
         Row: {
           amount: number
