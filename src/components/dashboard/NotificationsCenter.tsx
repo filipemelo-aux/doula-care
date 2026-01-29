@@ -12,7 +12,7 @@ import { calculateCurrentPregnancyWeeks, calculateCurrentPregnancyDays, isPostTe
 import { BirthRegistrationDialog } from "@/components/clients/BirthRegistrationDialog";
 import { ClientDiaryDialog } from "@/components/dashboard/ClientDiaryDialog";
 import { ClientContractionsDialog } from "@/components/dashboard/ClientContractionsDialog";
-import { formatBrazilDate, formatBrazilDateTime } from "@/lib/utils";
+import { formatBrazilDate, formatBrazilDateTime, abbreviateName } from "@/lib/utils";
 import type { Tables } from "@/integrations/supabase/types";
 import { toast } from "sonner";
 
@@ -468,12 +468,15 @@ export function NotificationsCenter() {
   // Parent: Service requests from lactante clients
   serviceRequests?.forEach(request => {
     const serviceName = request.title.replace("Solicitação de ", "");
+    const clientName = request.client_name || "Cliente";
+    // Abbreviate the message to remove client name repetition and keep it short
+    const abbreviatedMessage = serviceName;
     
     parentNotifications.push({
       id: `service-${request.id}`,
       type: "service_request",
       title: `Solicitação de Serviço`,
-      description: request.client_name || "Cliente",
+      description: abbreviateName(clientName),
       priority: "medium",
       icon: Sparkles,
       timestamp: request.created_at,
@@ -481,7 +484,7 @@ export function NotificationsCenter() {
         id: `service-child-${request.id}`,
         type: "service_request",
         title: serviceName,
-        description: request.message.split(".")[0], // First sentence only
+        description: abbreviatedMessage,
         timestamp: request.created_at,
         priority: "medium",
         notificationId: request.id
