@@ -54,7 +54,8 @@ const clientSchema = z.object({
   baby_names: z.string().optional(),
   plan: z.enum(["basico", "intermediario", "completo"]),
   payment_method: z.enum(["pix", "cartao", "dinheiro", "transferencia"]),
-  payment_status: z.enum(["pendente", "pago", "parcial"]),
+  payment_type: z.enum(["a_vista", "parcelado"]),
+  installments: z.number().min(1).max(24).optional(),
   plan_value: z.number().min(0).optional(),
   notes: z.string().optional(),
 });
@@ -99,12 +100,13 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
       pregnancy_weeks: null,
       dpp: null,
       baby_names: "",
-      plan: "basico",
-      payment_method: "pix",
-      payment_status: "pendente",
-      plan_value: 0,
-      notes: "",
-    },
+        plan: "basico",
+        payment_method: "pix",
+        payment_type: "a_vista",
+        installments: 1,
+        plan_value: 0,
+        notes: "",
+      },
   });
 
   const status = form.watch("status");
@@ -141,7 +143,8 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
         baby_names: (client as any).baby_names?.join(", ") || "",
         plan: client.plan as "basico" | "intermediario" | "completo",
         payment_method: client.payment_method as "pix" | "cartao" | "dinheiro" | "transferencia",
-        payment_status: client.payment_status as "pendente" | "pago" | "parcial",
+        payment_type: "a_vista",
+        installments: 1,
         plan_value: Number(client.plan_value) || 0,
         notes: client.notes || "",
       });
@@ -164,7 +167,8 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
         baby_names: "",
         plan: "basico",
         payment_method: "pix",
-        payment_status: "pendente",
+        payment_type: "a_vista",
+        installments: 1,
         plan_value: planSettings?.find((p) => p.plan_type === "basico")?.default_value || 0,
         notes: "",
       });
@@ -198,7 +202,6 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
           : undefined,
         plan: data.plan,
         payment_method: data.payment_method,
-        payment_status: data.payment_status,
         plan_value: data.plan_value || 0,
         notes: data.notes || null,
       };
@@ -260,6 +263,10 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
           plan_id: planSetting?.id || null,
           payment_method: data.payment_method as "pix" | "cartao" | "dinheiro" | "transferencia" | "boleto",
           is_auto_generated: true,
+          installments: data.payment_type === "parcelado" ? (data.installments || 1) : 1,
+          installment_value: data.payment_type === "parcelado" && data.installments 
+            ? (data.plan_value || 0) / data.installments 
+            : (data.plan_value || 0),
           notes: `Receita gerada automaticamente ao cadastrar cliente`,
         };
 
@@ -674,10 +681,10 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
                   />
                   <FormField
                     control={form.control}
-                    name="payment_status"
+                    name="payment_type"
                     render={({ field }) => (
                       <FormItem className="space-y-1">
-                        <FormLabel className="text-xs">Status do Pagamento</FormLabel>
+                        <FormLabel className="text-xs">Tipo de Pagamento</FormLabel>
                         <Select onValueChange={field.onChange} value={field.value}>
                           <FormControl>
                             <SelectTrigger className="h-9 text-sm">
@@ -685,15 +692,43 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value="pendente">Pendente</SelectItem>
-                            <SelectItem value="pago">Pago</SelectItem>
-                            <SelectItem value="parcial">Parcial</SelectItem>
+                            <SelectItem value="a_vista">À Vista</SelectItem>
+                            <SelectItem value="parcelado">Parcelado</SelectItem>
                           </SelectContent>
                         </Select>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
+                  {form.watch("payment_type") === "parcelado" && (
+                    <FormField
+                      control={form.control}
+                      name="installments"
+                      render={({ field }) => (
+                        <FormItem className="space-y-1">
+                          <FormLabel className="text-xs">Parcelas</FormLabel>
+                          <Select 
+                            onValueChange={(value) => field.onChange(parseInt(value))} 
+                            value={String(field.value || 1)}
+                          >
+                            <FormControl>
+                              <SelectTrigger className="h-9 text-sm">
+                                <SelectValue placeholder="Selecione" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {Array.from({ length: 12 }, (_, i) => i + 1).map((num) => (
+                                <SelectItem key={num} value={String(num)}>
+                                  {num}x
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  )}
                 </div>
               </div>
 

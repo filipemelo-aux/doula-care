@@ -549,23 +549,26 @@ export default function Financial() {
                         <div className="text-center min-w-0">
                           <span className="text-[10px] text-muted-foreground block">Parc.</span>
                           {isEditingInstallmentsMobile ? (
-                            <Input
-                              type="number"
+                            <Select
                               value={editingInstallmentsValue}
-                              onChange={(e) => setEditingInstallmentsValue(e.target.value)}
-                              className="w-full h-6 text-center text-sm px-0.5"
-                              min={1}
-                              max={24}
-                              autoFocus
-                              onKeyDown={(e) => {
-                                if (e.key === "Enter") {
-                                  handleSaveInstallments(transaction.id, totalAmount);
-                                } else if (e.key === "Escape") {
-                                  handleCancelEditInstallments();
-                                }
+                              onValueChange={(value) => {
+                                setEditingInstallmentsValue(value);
+                                const installments = parseInt(value);
+                                const installmentValue = totalAmount / installments;
+                                updateInstallmentsMutation.mutate({ id: transaction.id, installments, installmentValue });
                               }}
-                              onBlur={() => handleSaveInstallments(transaction.id, totalAmount)}
-                            />
+                            >
+                              <SelectTrigger className="w-14 h-6 text-xs px-1">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {Array.from({ length: 24 }, (_, i) => i + 1).map((num) => (
+                                  <SelectItem key={num} value={String(num)}>
+                                    {num}x
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
                           ) : (
                             <span 
                               className="text-sm font-medium cursor-pointer px-1.5 py-0.5 rounded border border-dashed border-muted-foreground/40 hover:border-primary hover:bg-primary/5 transition-colors"
@@ -727,32 +730,26 @@ export default function Financial() {
                           </TableCell>
                           <TableCell className="text-center py-2.5">
                             {isEditingInstallments ? (
-                              <div className="flex items-center justify-center gap-0.5">
-                                <Input
-                                  type="number"
-                                  value={editingInstallmentsValue}
-                                  onChange={(e) => setEditingInstallmentsValue(e.target.value)}
-                                  className="w-10 h-6 text-center text-xs px-1"
-                                  min={1}
-                                  max={24}
-                                  autoFocus
-                                  onKeyDown={(e) => {
-                                    if (e.key === "Enter") {
-                                      handleSaveInstallments(transaction.id, totalAmount);
-                                    } else if (e.key === "Escape") {
-                                      handleCancelEditInstallments();
-                                    }
-                                  }}
-                                />
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={() => handleSaveInstallments(transaction.id, totalAmount)}
-                                  className="h-5 w-5 text-success"
-                                >
-                                  <Check className="h-3 w-3" />
-                                </Button>
-                              </div>
+                              <Select
+                                value={editingInstallmentsValue}
+                                onValueChange={(value) => {
+                                  setEditingInstallmentsValue(value);
+                                  const installments = parseInt(value);
+                                  const installmentValue = totalAmount / installments;
+                                  updateInstallmentsMutation.mutate({ id: transaction.id, installments, installmentValue });
+                                }}
+                              >
+                                <SelectTrigger className="w-14 h-6 text-xs mx-auto">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {Array.from({ length: 24 }, (_, i) => i + 1).map((num) => (
+                                    <SelectItem key={num} value={String(num)}>
+                                      {num}x
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
                             ) : (
                               <span 
                                 className="text-xs text-muted-foreground cursor-pointer px-1.5 py-0.5 rounded border border-dashed border-muted-foreground/40 hover:border-primary hover:bg-primary/5 transition-colors"
