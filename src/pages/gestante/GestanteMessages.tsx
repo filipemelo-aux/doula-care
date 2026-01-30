@@ -64,6 +64,27 @@ export default function GestanteMessages() {
     }
   };
 
+  // Mark notifications as read by client when page loads
+  useEffect(() => {
+    if (client?.id && notifications.length > 0) {
+      const unreadByClient = notifications.filter(n => !(n as any).read_by_client);
+      if (unreadByClient.length > 0) {
+        markAllAsReadByClient(unreadByClient.map(n => n.id));
+      }
+    }
+  }, [client?.id, notifications]);
+
+  const markAllAsReadByClient = async (ids: string[]) => {
+    try {
+      await supabase
+        .from("client_notifications")
+        .update({ read_by_client: true })
+        .in("id", ids);
+    } catch (error) {
+      console.error("Error marking as read by client:", error);
+    }
+  };
+
   // Fetch service requests with budget_sent status
   const { data: pendingBudgets } = useQuery({
     queryKey: ["my-pending-budgets", client?.id],
@@ -182,22 +203,8 @@ export default function GestanteMessages() {
     },
   });
 
-  const markAsRead = async (notificationId: string) => {
-    try {
-      await supabase
-        .from("client_notifications")
-        .update({ read: true })
-        .eq("id", notificationId);
-
-      setNotifications(prev =>
-        prev.map(n => n.id === notificationId ? { ...n, read: true } : n)
-      );
-    } catch (error) {
-      console.error("Error marking notification as read:", error);
-    }
-  };
-
-  const unreadCount = notifications.filter(n => !n.read).length + (pendingBudgets?.length || 0);
+  // Count unread for client (using read_by_client field)
+  const unreadCount = notifications.filter(n => !(n as any).read_by_client).length + (pendingBudgets?.length || 0);
 
   // Check if a notification is a budget notification
   const isBudgetNotification = (notification: Notification) => {
@@ -211,7 +218,7 @@ export default function GestanteMessages() {
     <GestanteLayout>
       {/* Header */}
       <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-sm border-b">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+        <div className="px-4 lg:px-8 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center">
               <MessageCircle className="w-5 h-5 text-primary-foreground" />
@@ -315,18 +322,17 @@ export default function GestanteMessages() {
               {regularNotifications.map((notification) => (
                 <Card
                   key={notification.id}
-                  className={`cursor-pointer transition-all ${
-                    notification.read 
+                  className={`transition-all ${
+                    (notification as any).read_by_client 
                       ? "bg-background" 
                       : "bg-primary/5 border-primary/20 shadow-sm"
                   }`}
-                  onClick={() => !notification.read && markAsRead(notification.id)}
                 >
                   <CardContent className="p-4">
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
-                          {notification.read ? (
+                          {(notification as any).read_by_client ? (
                             <CheckCircle className="h-4 w-4 text-muted-foreground" />
                           ) : (
                             <Clock className="h-4 w-4 text-primary" />
