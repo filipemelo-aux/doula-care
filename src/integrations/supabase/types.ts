@@ -21,6 +21,7 @@ export type Database = {
           id: string
           message: string
           read: boolean | null
+          read_by_client: boolean | null
           title: string
         }
         Insert: {
@@ -29,6 +30,7 @@ export type Database = {
           id?: string
           message: string
           read?: boolean | null
+          read_by_client?: boolean | null
           title: string
         }
         Update: {
@@ -37,6 +39,7 @@ export type Database = {
           id?: string
           message?: string
           read?: boolean | null
+          read_by_client?: boolean | null
           title?: string
         }
         Relationships: [

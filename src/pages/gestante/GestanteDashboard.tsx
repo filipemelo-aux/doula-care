@@ -70,7 +70,7 @@ export default function GestanteDashboard() {
         .from("client_notifications")
         .select("*", { count: "exact", head: true })
         .eq("client_id", client.id)
-        .eq("read", false);
+        .eq("read_by_client", false);
 
       if (error) throw error;
       setUnreadMessages(count || 0);
@@ -137,7 +137,7 @@ export default function GestanteDashboard() {
       <GestanteLayout>
         {/* Header for Puérpera */}
         <header className="bg-gradient-to-br from-pink-200/50 via-primary/10 to-accent/20 border-b">
-          <div className="container mx-auto px-4 py-6">
+          <div className="px-4 lg:px-8 py-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <div className="w-14 h-14 rounded-full bg-gradient-to-br from-pink-400 to-primary flex items-center justify-center shadow-lg animate-pulse">
@@ -311,7 +311,7 @@ export default function GestanteDashboard() {
     <GestanteLayout>
       {/* Header */}
       <header className="bg-gradient-to-br from-primary/20 via-primary/10 to-accent/10 border-b">
-        <div className="container mx-auto px-4 py-6">
+        <div className="px-4 lg:px-8 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <div className="w-14 h-14 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-lg">
