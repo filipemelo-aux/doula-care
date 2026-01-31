@@ -710,17 +710,17 @@ export default function Financial() {
                           <TableCell className="py-2.5 text-xs text-muted-foreground">
                             {formatBrazilDate(transaction.date, "dd/MM/yy")}
                           </TableCell>
-                          <TableCell className="py-2.5">
-                            <div className="flex flex-col gap-0.5">
-                              <div className="flex items-center gap-1.5">
+                          <TableCell className="py-2.5 max-w-[200px]">
+                            <div className="flex flex-col gap-0.5 min-w-0">
+                              <div className="flex items-center gap-1.5 min-w-0">
                                 {transaction.is_auto_generated && (
                                   <Zap className="w-3 h-3 text-warning flex-shrink-0" />
                                 )}
-                                <span className="font-medium text-sm text-foreground">
+                                <span className="font-medium text-sm text-foreground truncate">
                                   {transaction.clients?.full_name || "—"}
                                 </span>
                               </div>
-                              <span className="text-xs text-muted-foreground">
+                              <span className="text-xs text-muted-foreground truncate">
                                 {transaction.plan_settings?.name || transaction.description}
                               </span>
                             </div>
