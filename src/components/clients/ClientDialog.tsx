@@ -322,7 +322,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={onOpenChange} modal={false}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader className="pb-2 flex-shrink-0">
           <DialogTitle className="font-display text-lg">
