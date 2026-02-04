@@ -4,6 +4,7 @@ import { Check, ChevronDown, ChevronUp } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
+// Passthrough component that preserves all SelectPrimitive.Root props including modal
 const Select = SelectPrimitive.Root;
 
 const SelectGroup = SelectPrimitive.Group;
