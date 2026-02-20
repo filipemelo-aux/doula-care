@@ -6,9 +6,10 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { BookHeart } from "lucide-react";
+import { BookHeart, Send } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ClientDiaryDialog } from "@/components/dashboard/ClientDiaryDialog";
+import { SendNotificationDialog } from "@/components/clients/SendNotificationDialog";
 import type { Tables } from "@/integrations/supabase/types";
 
 const statusLabels = {
@@ -32,6 +33,8 @@ const paymentStatusLabels = {
 export function RecentClients() {
   const [diaryDialogOpen, setDiaryDialogOpen] = useState(false);
   const [diaryClient, setDiaryClient] = useState<Tables<"clients"> | null>(null);
+  const [notifDialogOpen, setNotifDialogOpen] = useState(false);
+  const [notifClient, setNotifClient] = useState<Tables<"clients"> | null>(null);
 
   const { data: clients, isLoading } = useQuery({
     queryKey: ["recent-clients"],
@@ -97,6 +100,18 @@ export function RecentClients() {
                     <p className="font-medium text-foreground truncate">{client.full_name}</p>
                     <p className="text-sm text-muted-foreground">{client.phone}</p>
                   </div>
+                  <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 flex-shrink-0 text-muted-foreground hover:text-primary hover:bg-primary/10"
+                      title={`Enviar notificação para ${client.full_name}`}
+                      onClick={() => {
+                        setNotifClient(client);
+                        setNotifDialogOpen(true);
+                      }}
+                    >
+                      <Send className="h-4 w-4" />
+                    </Button>
                   {(client.status === "gestante" || client.status === "lactante") && (
                     <Button
                       variant="ghost"
@@ -144,6 +159,12 @@ export function RecentClients() {
       open={diaryDialogOpen}
       onOpenChange={setDiaryDialogOpen}
       client={diaryClient}
+    />
+
+    <SendNotificationDialog
+      open={notifDialogOpen}
+      onOpenChange={setNotifDialogOpen}
+      client={notifClient}
     />
     </>
   );
