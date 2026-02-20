@@ -919,7 +919,7 @@ export default function Financial() {
 
       {/* Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader className="pb-2">
             <DialogTitle className="font-display text-lg">
               {selectedTransaction ? "Editar Receita" : "Nova Receita de Serviço"}
