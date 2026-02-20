@@ -56,7 +56,7 @@ export function Sidebar({ isOpen, onToggle, onNavigate }: SidebarProps) {
             <Heart className="w-5 h-5 text-primary-foreground" />
           </div>
           <div>
-            <h1 className="font-display text-xl text-sidebar-foreground">Doula Care</h1>
+            <h1 className="font-display text-xl text-sidebar-foreground">Papo de Doula</h1>
             <p className="text-xs text-sidebar-foreground/60">Dashboard</p>
           </div>
         </div>

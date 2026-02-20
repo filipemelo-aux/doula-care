@@ -20,8 +20,8 @@ export default defineConfig(({ mode }) => ({
       registerType: "autoUpdate",
       includeAssets: ["favicon.ico", "pwa-icon-192.png", "pwa-icon-512.png"],
       manifest: {
-        name: "Doula Care",
-        short_name: "DoulaCare",
+        name: "Papo de Doula",
+        short_name: "PapoDeDoula",
         start_url: "/",
         display: "standalone",
         background_color: "#ffffff",
