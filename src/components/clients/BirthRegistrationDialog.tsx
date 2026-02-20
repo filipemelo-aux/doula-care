@@ -94,6 +94,8 @@ export function BirthRegistrationDialog({
       queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
       queryClient.invalidateQueries({ queryKey: ["recent-clients"] });
       queryClient.invalidateQueries({ queryKey: ["birth-alert-clients"] });
+      queryClient.invalidateQueries({ queryKey: ["recent-contractions"] });
+      queryClient.invalidateQueries({ queryKey: ["recent-diary-entries"] });
       toast.success("Parto registrado com sucesso!");
       onOpenChange(false);
       form.reset();
