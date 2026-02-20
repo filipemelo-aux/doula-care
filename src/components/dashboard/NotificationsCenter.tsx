@@ -794,35 +794,65 @@ export function NotificationsCenter() {
                                   </Button>
                                 )}
                                 {/* Button on mobile - below content */}
-                                {notification.client && (
+                                {notification.client && !notification.client.birth_occurred && (
+                                  notification.isInLabor ? (
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      className="h-6 px-2 text-[10px] lg:text-xs border-dashed border-destructive/50 hover:bg-destructive/10 mt-1.5 w-full lg:hidden"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleRegisterBirth(notification.client as Client);
+                                      }}
+                                    >
+                                      <Baby className="h-3 w-3 mr-1 flex-shrink-0 text-destructive" />
+                                      <span className="text-destructive">Registrar nascimento</span>
+                                    </Button>
+                                  ) : (
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      className="h-6 px-2 text-[10px] lg:text-xs border-dashed hover:bg-primary/10 mt-1.5 w-full lg:hidden"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleRegisterBirth(notification.client as Client);
+                                      }}
+                                    >
+                                      <CheckCircle className="h-3 w-3 mr-1 flex-shrink-0" />
+                                      Registrar nascimento
+                                    </Button>
+                                  )
+                                )}
+                              </div>
+                              {/* Button on desktop - right side */}
+                              {notification.client && !notification.client.birth_occurred && (
+                                notification.isInLabor ? (
                                   <Button
                                     size="sm"
                                     variant="outline"
-                                    className="h-6 px-2 text-[10px] lg:text-xs border-dashed hover:bg-primary/10 mt-1.5 w-full lg:hidden"
+                                    className="h-7 px-2 text-xs border-dashed border-destructive/50 hover:bg-destructive/10 hidden lg:flex flex-shrink-0"
                                     onClick={(e) => {
                                       e.stopPropagation();
                                       handleRegisterBirth(notification.client as Client);
                                     }}
                                   >
-                                    <CheckCircle className="h-3 w-3 mr-1 flex-shrink-0" />
+                                    <Baby className="h-3 w-3 mr-1 text-destructive" />
+                                    <span className="text-destructive">Registrar nascimento</span>
+                                  </Button>
+                                ) : (
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="h-7 px-2 text-xs border-dashed hover:bg-primary/10 hidden lg:flex flex-shrink-0"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleRegisterBirth(notification.client as Client);
+                                    }}
+                                  >
+                                    <CheckCircle className="h-3 w-3 mr-1" />
                                     Registrar nascimento
                                   </Button>
-                                )}
-                              </div>
-                              {/* Button on desktop - right side */}
-                              {notification.client && (
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  className="h-7 px-2 text-xs border-dashed hover:bg-primary/10 hidden lg:flex flex-shrink-0"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleRegisterBirth(notification.client as Client);
-                                  }}
-                                >
-                                  <CheckCircle className="h-3 w-3 mr-1" />
-                                  Registrar nascimento
-                                </Button>
+                                )
                               )}
                               {/* Send budget button for service requests - desktop */}
                               {notification.type === "service_request" && notification.notificationId && (
