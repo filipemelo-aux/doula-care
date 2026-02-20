@@ -53,7 +53,7 @@ export function Sidebar({ isOpen, onToggle, onNavigate }: SidebarProps) {
       {/* Logo */}
       <div className="h-20 flex items-center justify-between px-6 border-b border-sidebar-border">
         <div className={cn("flex items-center gap-3 transition-opacity", !isOpen && "lg:opacity-0")}>
-          <img src={logo} alt="Papo de Doula" className="w-10 h-10 object-contain" style={{ filter: "drop-shadow(0 2px 6px hsl(var(--primary) / 0.2))" }} />
+          <img src={logo} alt="Papo de Doula" className="w-10 h-10 object-contain" />
           <div>
             <h1 className="font-display text-lg text-sidebar-foreground">Papo de Doula</h1>
             <p className="text-xs text-sidebar-foreground/60">Dashboard</p>
