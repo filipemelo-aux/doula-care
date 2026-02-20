@@ -91,6 +91,12 @@ const transactionSchema = z.object({
 
 type TransactionFormData = z.infer<typeof transactionSchema>;
 
+const predefinedServices = [
+  { id: "taping", name: "Taping", icon: "✨" },
+  { id: "ventosaterapia", name: "Ventosaterapia", icon: "☀️" },
+  { id: "laserterapia", name: "Laserterapia", icon: "⚡" },
+];
+
 export default function Financial() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [search, setSearch] = useState("");
@@ -102,6 +108,9 @@ export default function Financial() {
   const [editingInstallmentsId, setEditingInstallmentsId] = useState<string | null>(null);
   const [editingInstallmentsValue, setEditingInstallmentsValue] = useState<string>("");
   const [revenueTab, setRevenueTab] = useState<string>("clientes");
+  const [selectedService, setSelectedService] = useState<string | null>(null);
+  const [customServiceName, setCustomServiceName] = useState<string>("");
+  const [showCustomService, setShowCustomService] = useState(false);
 
   const queryClient = useQueryClient();
 
@@ -368,6 +377,9 @@ export default function Financial() {
 
   const handleOpenDialog = () => {
     setSelectedTransaction(null);
+    setSelectedService(null);
+    setCustomServiceName("");
+    setShowCustomService(false);
     form.reset({
       description: "",
       amount: 0,
@@ -377,6 +389,20 @@ export default function Financial() {
       notes: "",
     });
     setDialogOpen(true);
+  };
+
+  const handleSelectService = (serviceName: string) => {
+    setSelectedService(serviceName);
+    setShowCustomService(false);
+    setCustomServiceName("");
+    form.setValue("description", `Serviço: ${serviceName}`);
+  };
+
+  const handleCustomServiceConfirm = () => {
+    if (customServiceName.trim()) {
+      setSelectedService(customServiceName.trim());
+      form.setValue("description", `Serviço: ${customServiceName.trim()}`);
+    }
   };
 
   // Separate client plan revenues from service/manual revenues
@@ -896,7 +922,7 @@ export default function Financial() {
         <DialogContent className="max-w-lg">
           <DialogHeader className="pb-2">
             <DialogTitle className="font-display text-lg">
-              {selectedTransaction ? "Editar Receita" : "Nova Receita"}
+              {selectedTransaction ? "Editar Receita" : "Nova Receita de Serviço"}
             </DialogTitle>
           </DialogHeader>
           <Form {...form}>
@@ -919,21 +945,104 @@ export default function Financial() {
                 </div>
               )}
 
-              {/* Campos para nova receita */}
+              {/* Seleção de serviço para nova receita */}
               {!selectedTransaction && (
                 <>
+                  <div className="space-y-2">
+                    <FormLabel className="text-xs font-medium">Tipo de Serviço *</FormLabel>
+                    <div className="grid grid-cols-3 gap-2">
+                      {predefinedServices.map((service) => (
+                        <button
+                          key={service.id}
+                          type="button"
+                          onClick={() => handleSelectService(service.name)}
+                          className={`flex flex-col items-center gap-1 p-3 rounded-lg border text-center transition-all ${
+                            selectedService === service.name
+                              ? "border-primary bg-primary/10 ring-1 ring-primary"
+                              : "border-border hover:border-primary/50 hover:bg-muted/50"
+                          }`}
+                        >
+                          <span className="text-lg">{service.icon}</span>
+                          <span className="text-xs font-medium">{service.name}</span>
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* Custom service */}
+                    {!showCustomService ? (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="w-full border-dashed gap-1.5 text-xs"
+                        onClick={() => {
+                          setShowCustomService(true);
+                          setSelectedService(null);
+                        }}
+                      >
+                        <Plus className="h-3 w-3" />
+                        Outro serviço
+                      </Button>
+                    ) : (
+                      <div className="flex gap-2">
+                        <Input
+                          placeholder="Nome do serviço..."
+                          value={customServiceName}
+                          onChange={(e) => setCustomServiceName(e.target.value)}
+                          className="input-field h-8 text-sm flex-1"
+                          autoFocus
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              e.preventDefault();
+                              handleCustomServiceConfirm();
+                            }
+                          }}
+                        />
+                        <Button
+                          type="button"
+                          size="sm"
+                          className="h-8"
+                          onClick={handleCustomServiceConfirm}
+                          disabled={!customServiceName.trim()}
+                        >
+                          <Check className="h-3 w-3" />
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="h-8"
+                          onClick={() => {
+                            setShowCustomService(false);
+                            setCustomServiceName("");
+                          }}
+                        >
+                          <X className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    )}
+
+                    {selectedService && (
+                      <p className="text-xs text-success flex items-center gap-1">
+                        <CheckCircle className="h-3 w-3" />
+                        Serviço selecionado: <span className="font-medium">{selectedService}</span>
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Cliente (opcional) */}
                   <FormField
                     control={form.control}
                     name="client_id"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Cliente</FormLabel>
+                        <FormLabel className="text-xs">Cliente (opcional)</FormLabel>
                         <Select
-                          onValueChange={(value) => handleClientChange(value)}
+                          onValueChange={field.onChange}
                           value={field.value}
                         >
                           <FormControl>
-                            <SelectTrigger className="input-field">
+                            <SelectTrigger className="input-field h-8 text-sm">
                               <SelectValue placeholder="Selecione uma cliente" />
                             </SelectTrigger>
                           </FormControl>
@@ -945,48 +1054,6 @@ export default function Financial() {
                             ))}
                           </SelectContent>
                         </Select>
-                        <p className="text-xs text-muted-foreground">
-                          Ao selecionar uma cliente, o plano e valor são preenchidos automaticamente
-                        </p>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="plan_id"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Plano</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value}>
-                          <FormControl>
-                            <SelectTrigger className="input-field">
-                              <SelectValue placeholder="Selecione um plano" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {plans?.map((plan) => (
-                              <SelectItem key={plan.id} value={plan.id}>
-                                {plan.name} - {formatCurrency(Number(plan.default_value))}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="description"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Descrição *</FormLabel>
-                        <FormControl>
-                          <Input {...field} className="input-field" />
-                        </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
