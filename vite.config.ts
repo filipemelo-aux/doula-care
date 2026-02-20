@@ -21,7 +21,7 @@ export default defineConfig(({ mode }) => ({
       includeAssets: ["favicon.ico", "pwa-icon-192.png", "pwa-icon-512.png"],
       manifest: {
         name: "Papo de Doula",
-        short_name: "PapoDeDoula",
+        short_name: "Papo de Doula",
         start_url: "/?v=2",
         display: "standalone",
         background_color: "#ffffff",
