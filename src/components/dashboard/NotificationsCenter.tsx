@@ -29,6 +29,7 @@ interface DiaryEntry {
   id: string;
   client_id: string;
   created_at: string;
+  read_by_admin: boolean;
   client_name?: string;
 }
 
@@ -59,6 +60,7 @@ interface ChildNotification {
   priority: "high" | "medium" | "low";
   clientId?: string;
   notificationId?: string;
+  isRead?: boolean;
 }
 
 interface ParentNotification {
@@ -74,6 +76,7 @@ interface ParentNotification {
   isInLabor?: boolean;
   clientId?: string;
   notificationId?: string;
+  isRead?: boolean;
 }
 
 export function NotificationsCenter() {
@@ -156,7 +159,6 @@ export function NotificationsCenter() {
       const { data, error } = await supabase
         .from("pregnancy_diary")
         .select("id, client_id, created_at, read_by_admin, clients(full_name)")
-        .eq("read_by_admin", false)
         .gte("created_at", twentyFourHoursAgo.toISOString())
         .order("created_at", { ascending: false });
 
@@ -169,6 +171,7 @@ export function NotificationsCenter() {
         id: entry.id,
         client_id: entry.client_id,
         created_at: entry.created_at,
+        read_by_admin: entry.read_by_admin ?? false,
         client_name: (entry.clients as { full_name: string } | null)?.full_name || "Cliente"
       })) as DiaryEntry[];
     },
@@ -342,15 +345,17 @@ export function NotificationsCenter() {
   });
 
   // Group diary entries by client
-  const diaryByClient = new Map<string, { entries: DiaryEntry[]; clientName: string }>();
+  const diaryByClient = new Map<string, { entries: DiaryEntry[]; clientName: string; allRead: boolean }>();
   recentDiaryEntries?.forEach(entry => {
     const existing = diaryByClient.get(entry.client_id);
     if (existing) {
       existing.entries.push(entry);
+      if (!entry.read_by_admin) existing.allRead = false;
     } else {
       diaryByClient.set(entry.client_id, {
         entries: [entry],
-        clientName: entry.client_name || "Cliente"
+        clientName: entry.client_name || "Cliente",
+        allRead: entry.read_by_admin
       });
     }
   });
@@ -418,20 +423,22 @@ export function NotificationsCenter() {
       contractionsByClient.delete(client.id);
     }
 
-    // Child: Diary entries (add as child when client has birth alert) - always medium priority
+    // Child: Diary entries (add as child when client has birth alert)
     const clientDiary = diaryByClient.get(client.id);
     if (clientDiary) {
       const count = clientDiary.entries.length;
+      const unreadCount = clientDiary.entries.filter(e => !e.read_by_admin).length;
       const latestEntry = clientDiary.entries[0];
 
       children.push({
         id: `diary-child-${client.id}`,
         type: "new_diary_entry",
         title: count > 1 ? `${count} Registros no Diário` : "Registro no Diário",
-        description: "Novo registro disponível",
+        description: unreadCount > 0 ? `${unreadCount} não lido(s)` : "Já visualizado",
         timestamp: latestEntry.created_at,
         priority: "low",
-        clientId: client.id
+        clientId: client.id,
+        isRead: clientDiary.allRead
       });
 
       // Remove from map so we don't duplicate as parent
@@ -463,22 +470,24 @@ export function NotificationsCenter() {
   });
 
   // Parent: New diary entries (standalone - only for clients WITHOUT birth alert)
-  diaryByClient.forEach(({ entries, clientName }, clientId) => {
+  diaryByClient.forEach(({ entries, clientName, allRead }, clientId) => {
     const latestEntry = entries[0];
     const count = entries.length;
+    const unreadCount = entries.filter(e => !e.read_by_admin).length;
     const lookupClient = clientsMap.get(clientId) || null;
     
     parentNotifications.push({
       id: `diary-${clientId}`,
       type: "new_diary_entry",
-      title: count > 1 ? `${count} Novos Registros no Diário` : "Novo Registro no Diário",
+      title: count > 1 ? `${count} Registros no Diário` : "Registro no Diário",
       description: clientName,
       priority: "low",
       icon: BookHeart,
       timestamp: latestEntry.created_at,
       children: [],
       clientId,
-      client: lookupClient as EnrichedClient | undefined
+      client: lookupClient as EnrichedClient | undefined,
+      isRead: allRead
     });
   });
 
@@ -565,8 +574,8 @@ export function NotificationsCenter() {
     n.priority === "high" || n.children.some(c => c.priority === "high")
   ).length;
   
-  // Unread count: diary entries (unread) + pending service requests
-  const unreadDiaryCount = recentDiaryEntries?.length || 0;
+  // Unread count: unread diary entries + pending service requests
+  const unreadDiaryCount = recentDiaryEntries?.filter(e => !e.read_by_admin).length || 0;
   const pendingServiceCount = serviceRequests?.length || 0;
   const unreadCount = unreadDiaryCount + pendingServiceCount + highPriorityCount;
 
@@ -654,7 +663,9 @@ export function NotificationsCenter() {
                     >
                       <div
                         className={`rounded-lg border transition-colors overflow-hidden ${
-                          notification.isInLabor
+                          notification.isRead
+                            ? "bg-muted/30 border-border/50 opacity-60"
+                            : notification.isInLabor
                             ? "bg-destructive/10 border-destructive/30 ring-1 ring-destructive/20"
                             : isPostTerm
                             ? "bg-destructive/5 border-destructive/20"
@@ -849,7 +860,9 @@ export function NotificationsCenter() {
                                   }
                                 }}
                                 className={`p-1 lg:p-1.5 rounded-md border-l-2 ${
-                                  child.type === "labor_started"
+                                  child.isRead
+                                    ? "bg-muted/20 border-l-muted-foreground/30 opacity-50"
+                                    : child.type === "labor_started"
                                     ? "bg-destructive/10 border-l-destructive"
                                     : child.type === "new_contraction" && child.priority === "high"
                                     ? "bg-destructive/10 border-l-destructive"
