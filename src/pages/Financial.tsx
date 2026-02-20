@@ -544,7 +544,7 @@ export default function Financial() {
                       <div className="grid grid-cols-4 gap-0 pt-1.5 border-t border-border/50">
                         <div className="text-center min-w-0 px-0">
                           <span className="text-[10px] text-muted-foreground block">Total</span>
-                          <span className="font-semibold text-xs">{formatCompact(totalAmount)}</span>
+                          <span className="font-semibold text-sm">{formatCompact(totalAmount)}</span>
                         </div>
                         <div className="text-center min-w-0 px-0">
                           <span className="text-[10px] text-muted-foreground block">Parc.</span>
@@ -571,7 +571,7 @@ export default function Financial() {
                             </Select>
                           ) : (
                             <span 
-                              className="text-xs font-medium cursor-pointer px-1 py-0.5 rounded border border-dashed border-muted-foreground/40 hover:border-primary hover:bg-primary/5 transition-colors"
+                              className="text-sm font-medium cursor-pointer border-b border-dashed border-muted-foreground/40 hover:border-primary transition-colors"
                               onClick={() => handleStartEditInstallments(transaction)}
                             >
                               {installments}x
@@ -601,7 +601,7 @@ export default function Financial() {
                             />
                           ) : (
                             <span 
-                              className="text-xs text-success font-medium cursor-pointer px-1 py-0.5 rounded border border-dashed border-success/40 hover:border-success hover:bg-success/5 transition-colors"
+                              className="text-sm text-success font-medium cursor-pointer border-b border-dashed border-success/40 hover:border-success transition-colors"
                               onClick={() => handleStartEditReceived(transaction)}
                             >
                               {formatCompact(receivedAmount)}
@@ -612,7 +612,7 @@ export default function Financial() {
                           <span className="text-[10px] text-muted-foreground block">Pend.</span>
                           {pendingAmount > 0 ? (
                             <div className="flex items-center justify-center gap-0">
-                              <span className="text-xs text-warning font-medium">{formatCompact(pendingAmount)}</span>
+                              <span className="text-sm text-warning font-medium">{formatCompact(pendingAmount)}</span>
                               <Button
                                 variant="ghost"
                                 size="icon"
@@ -623,7 +623,7 @@ export default function Financial() {
                               </Button>
                             </div>
                           ) : (
-                            <span className="text-xs text-success font-medium">OK</span>
+                            <span className="text-sm text-success font-medium">OK</span>
                           )}
                         </div>
                       </div>
