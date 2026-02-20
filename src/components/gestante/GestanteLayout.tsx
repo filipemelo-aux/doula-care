@@ -5,12 +5,9 @@ import {
   MessageCircle, 
   Baby, 
   Timer, 
-  User,
-  LogOut
+  User
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import { useAuth } from "@/contexts/AuthContext";
 
 interface GestanteLayoutProps {
   children: ReactNode;
@@ -27,21 +24,10 @@ const navItems = [
 export function GestanteLayout({ children }: GestanteLayoutProps) {
   const navigate = useNavigate();
   const location = useLocation();
-  const { signOut, client } = useAuth();
-
-  const firstName = client?.full_name?.split(" ")[0] || "";
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 pb-28">
-      {/* Header - same h-16 as admin */}
-      <header className="sticky top-0 z-40 flex items-center justify-between px-4 h-16 bg-background/80 backdrop-blur-sm border-b border-border">
-        <h1 className="font-display text-lg text-foreground">
-          {firstName ? `Olá, ${firstName}` : "Olá"}
-        </h1>
-        <Button variant="ghost" size="icon" onClick={() => signOut()} title="Sair">
-          <LogOut className="h-5 w-5 text-muted-foreground" />
-        </Button>
-      </header>
+      {/* No top header - each page has its own header */}
 
       {/* Main Content */}
       <main className="min-h-[calc(100vh-5rem)]">
