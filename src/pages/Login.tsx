@@ -85,7 +85,7 @@ export default function Login() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-primary/5 p-4">
       <Card className="w-full max-w-md card-glass">
         <CardHeader className="text-center space-y-4">
-          <div className="mx-auto w-36 h-36 flex items-center justify-center" style={{ filter: "drop-shadow(0 4px 12px hsl(var(--primary) / 0.25))" }}>
+          <div className="mx-auto w-36 h-36 flex items-center justify-center">
             <img src={logo} alt="Papo de Doula" className="w-36 h-36 object-contain" />
           </div>
           <div>
