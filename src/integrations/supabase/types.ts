@@ -73,6 +73,7 @@ export type Database = {
           neighborhood: string | null
           notes: string | null
           number: string | null
+          owner_id: string | null
           payment_method: Database["public"]["Enums"]["payment_method"]
           payment_status: Database["public"]["Enums"]["payment_status"]
           phone: string
@@ -107,6 +108,7 @@ export type Database = {
           neighborhood?: string | null
           notes?: string | null
           number?: string | null
+          owner_id?: string | null
           payment_method?: Database["public"]["Enums"]["payment_method"]
           payment_status?: Database["public"]["Enums"]["payment_status"]
           phone: string
@@ -141,6 +143,7 @@ export type Database = {
           neighborhood?: string | null
           notes?: string | null
           number?: string | null
+          owner_id?: string | null
           payment_method?: Database["public"]["Enums"]["payment_method"]
           payment_status?: Database["public"]["Enums"]["payment_status"]
           phone?: string
@@ -192,6 +195,75 @@ export type Database = {
           },
         ]
       }
+      payments: {
+        Row: {
+          amount: number
+          amount_paid: number
+          client_id: string
+          created_at: string
+          due_date: string | null
+          id: string
+          installment_number: number
+          notes: string | null
+          owner_id: string | null
+          paid_at: string | null
+          payment_method: string | null
+          status: string
+          total_installments: number
+          transaction_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          amount_paid?: number
+          client_id: string
+          created_at?: string
+          due_date?: string | null
+          id?: string
+          installment_number?: number
+          notes?: string | null
+          owner_id?: string | null
+          paid_at?: string | null
+          payment_method?: string | null
+          status?: string
+          total_installments?: number
+          transaction_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          amount_paid?: number
+          client_id?: string
+          created_at?: string
+          due_date?: string | null
+          id?: string
+          installment_number?: number
+          notes?: string | null
+          owner_id?: string | null
+          paid_at?: string | null
+          payment_method?: string | null
+          status?: string
+          total_installments?: number
+          transaction_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payments_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payments_transaction_id_fkey"
+            columns: ["transaction_id"]
+            isOneToOne: false
+            referencedRelation: "transactions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       plan_settings: {
         Row: {
           created_at: string
@@ -201,6 +273,7 @@ export type Database = {
           id: string
           is_active: boolean
           name: string
+          owner_id: string | null
           plan_type: Database["public"]["Enums"]["plan_type"]
           updated_at: string
         }
@@ -212,6 +285,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           name: string
+          owner_id?: string | null
           plan_type: Database["public"]["Enums"]["plan_type"]
           updated_at?: string
         }
@@ -223,6 +297,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           name?: string
+          owner_id?: string | null
           plan_type?: Database["public"]["Enums"]["plan_type"]
           updated_at?: string
         }
@@ -361,6 +436,7 @@ export type Database = {
           installments: number | null
           is_auto_generated: boolean | null
           notes: string | null
+          owner_id: string | null
           payment_method:
             | Database["public"]["Enums"]["transaction_payment_method"]
             | null
@@ -385,6 +461,7 @@ export type Database = {
           installments?: number | null
           is_auto_generated?: boolean | null
           notes?: string | null
+          owner_id?: string | null
           payment_method?:
             | Database["public"]["Enums"]["transaction_payment_method"]
             | null
@@ -409,6 +486,7 @@ export type Database = {
           installments?: number | null
           is_auto_generated?: boolean | null
           notes?: string | null
+          owner_id?: string | null
           payment_method?:
             | Database["public"]["Enums"]["transaction_payment_method"]
             | null

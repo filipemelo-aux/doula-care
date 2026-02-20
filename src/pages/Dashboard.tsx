@@ -1,6 +1,5 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { useFinancialMetrics, formatCurrency } from "@/hooks/useFinancialMetrics";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { RecentClients } from "@/components/dashboard/RecentClients";
 import { FinancialOverview } from "@/components/dashboard/FinancialOverview";
@@ -8,52 +7,14 @@ import { TopPlansCard } from "@/components/dashboard/TopPlansCard";
 import { NotificationsCenter } from "@/components/dashboard/NotificationsCenter";
 import { PeriodFilter, PeriodOption } from "@/components/dashboard/PeriodFilter";
 import { ClientsListDialog } from "@/components/dashboard/ClientsListDialog";
-import { Users, Baby, Heart, Wallet } from "lucide-react";
+import { Users, Baby, Heart, Wallet, TrendingUp, BarChart3, AlertTriangle } from "lucide-react";
 
 export default function Dashboard() {
   const [period, setPeriod] = useState<PeriodOption>("month");
   const [gestantesDialogOpen, setGestantesDialogOpen] = useState(false);
   const [puerperasDialogOpen, setPuerperasDialogOpen] = useState(false);
 
-  const { data: stats } = useQuery({
-    queryKey: ["dashboard-stats"],
-    queryFn: async () => {
-      const [clientsResult, transactionsResult] = await Promise.all([
-        supabase.from("clients").select("status, payment_status, plan_value"),
-        supabase.from("transactions").select("type, amount"),
-      ]);
-
-      const clients = clientsResult.data || [];
-      const transactions = transactionsResult.data || [];
-
-      const totalClients = clients.length;
-      const gestantes = clients.filter((c) => c.status === "gestante").length;
-      const puerperas = clients.filter((c) => c.status === "lactante").length;
-
-      const totalIncome = transactions
-        .filter((t) => t.type === "receita")
-        .reduce((sum, t) => sum + Number(t.amount), 0);
-
-      const pendingPayments = clients
-        .filter((c) => c.payment_status === "pendente" || c.payment_status === "parcial")
-        .reduce((sum, c) => sum + Number(c.plan_value || 0), 0);
-
-      return {
-        totalClients,
-        gestantes,
-        puerperas,
-        totalIncome,
-        pendingPayments,
-      };
-    },
-  });
-
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat("pt-BR", {
-      style: "currency",
-      currency: "BRL",
-    }).format(value);
-  };
+  const { data: metrics } = useFinancialMetrics(period);
 
   return (
     <div className="space-y-4 lg:space-y-6 overflow-x-hidden">
@@ -68,39 +29,63 @@ export default function Dashboard() {
         <PeriodFilter selected={period} onChange={setPeriod} />
       </div>
 
-      {/* Stats Grid */}
+      {/* Stats Grid - Row 1: Clients */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
         <StatCard
           title="Total de Clientes"
-          value={stats?.totalClients || 0}
+          value={metrics?.totalClients || 0}
           subtitle="Clientes cadastradas"
           icon={Users}
           variant="primary"
         />
         <StatCard
           title="Gestantes"
-          value={stats?.gestantes || 0}
+          value={metrics?.gestantes || 0}
           subtitle="Em acompanhamento"
           icon={Baby}
           onClick={() => setGestantesDialogOpen(true)}
         />
         <StatCard
           title="Puérperas"
-          value={stats?.puerperas || 0}
+          value={metrics?.puerperas || 0}
           subtitle="Pós-parto"
           icon={Heart}
           onClick={() => setPuerperasDialogOpen(true)}
         />
         <StatCard
-          title="Receita Total"
-          value={formatCurrency(stats?.totalIncome || 0)}
-          subtitle={`${formatCurrency(stats?.pendingPayments || 0)} pendente`}
+          title="Receita Contratada"
+          value={formatCurrency(metrics?.totalContracted || 0)}
+          subtitle={`${formatCurrency(metrics?.totalPending || 0)} pendente`}
           icon={Wallet}
           variant="success"
         />
       </div>
 
-      {/* Notifications Center - includes birth alerts, contractions, diary entries */}
+      {/* Stats Grid - Row 2: Business Intelligence */}
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 lg:gap-4">
+        <StatCard
+          title="Ticket Médio"
+          value={formatCurrency(metrics?.averageTicket || 0)}
+          subtitle="Por cliente"
+          icon={BarChart3}
+        />
+        <StatCard
+          title="Receita Média/Mês"
+          value={formatCurrency(metrics?.monthlyAverageRevenue || 0)}
+          subtitle="Média recebida"
+          icon={TrendingUp}
+          variant="success"
+        />
+        <StatCard
+          title="Inadimplência"
+          value={`${(metrics?.defaultRate || 0).toFixed(1)}%`}
+          subtitle="Pendente / contratado"
+          icon={AlertTriangle}
+          variant={(metrics?.defaultRate || 0) > 30 ? "primary" : undefined}
+        />
+      </div>
+
+      {/* Notifications Center */}
       <NotificationsCenter />
 
       {/* Financial Overview */}
