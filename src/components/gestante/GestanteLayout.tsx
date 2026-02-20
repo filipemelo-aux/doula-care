@@ -36,8 +36,8 @@ export function GestanteLayout({ children }: GestanteLayoutProps) {
       {/* Top Header with Logo + Logout */}
       <header className="flex items-center justify-between px-4 h-16 bg-card/50 backdrop-blur-sm border-b border-border sticky top-0 z-50">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-[60%] bg-[#FFF5EE] flex items-center justify-center overflow-hidden">
-            <img src={logo} alt="Papo de Doula" className="w-[90%] h-[90%] object-contain mix-blend-multiply" />
+          <div style={{ borderRadius: '60%' }} className="w-9 h-9 bg-[#FFF5EE] flex items-center justify-center overflow-hidden">
+            <img src={logo} alt="Papo de Doula" className="w-[92%] h-[92%] object-contain mix-blend-multiply" />
           </div>
           <h1 className="font-display text-lg text-foreground">Papo de Doula</h1>
         </div>
