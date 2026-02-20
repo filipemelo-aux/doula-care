@@ -1,14 +1,17 @@
 import { ReactNode } from "react";
 import logo from "@/assets/logo.png";
 import { useNavigate, useLocation } from "react-router-dom";
+import { useGestanteAuth } from "@/contexts/GestanteAuthContext";
 import { 
   BookHeart, 
   MessageCircle, 
   Baby, 
   Timer, 
-  User
+  User,
+  LogOut
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 interface GestanteLayoutProps {
   children: ReactNode;
@@ -25,14 +28,21 @@ const navItems = [
 export function GestanteLayout({ children }: GestanteLayoutProps) {
   const navigate = useNavigate();
   const location = useLocation();
+  const { signOut } = useGestanteAuth();
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 pb-28">
-      {/* Top Header with Logo */}
-      <header className="flex items-center gap-3 px-4 py-3 bg-card/50 backdrop-blur-sm border-b border-border sticky top-0 z-40">
-        <img src={logo} alt="Papo de Doula" className="w-10 h-10 object-contain" style={{ filter: "drop-shadow(0 2px 6px hsl(var(--primary) / 0.2))" }} />
-        <h1 className="font-display text-lg text-foreground">Papo de Doula</h1>
+      {/* Top Header with Logo + Logout */}
+      <header className="flex items-center justify-between px-4 h-16 bg-card border-b border-border sticky top-0 z-50">
+        <div className="flex items-center gap-3">
+          <img src={logo} alt="Papo de Doula" className="w-10 h-10 object-contain" style={{ filter: "drop-shadow(0 2px 6px hsl(var(--primary) / 0.2))" }} />
+          <h1 className="font-display text-lg text-foreground">Papo de Doula</h1>
+        </div>
+        <Button variant="ghost" size="icon" onClick={signOut} title="Sair" className="text-muted-foreground hover:text-destructive">
+          <LogOut className="h-5 w-5" />
+        </Button>
       </header>
+
       {/* Main Content */}
       <main className="min-h-[calc(100vh-5rem)]">
         {children}
