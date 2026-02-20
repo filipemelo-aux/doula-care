@@ -14,7 +14,9 @@ export function usePushNotifications() {
   const [permission, setPermission] = useState<NotificationPermission>("default");
 
   useEffect(() => {
-    const supported = "serviceWorker" in navigator && "PushManager" in window && "Notification" in window;
+    // Check real support: must not be in iframe and APIs must exist
+    const inIframe = window.self !== window.top;
+    const supported = !inIframe && "serviceWorker" in navigator && "PushManager" in window && "Notification" in window;
     setIsSupported(supported);
 
     if (supported) {
