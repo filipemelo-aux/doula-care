@@ -2,11 +2,9 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
-import { GestanteAuthProvider } from "@/contexts/GestanteAuthContext";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
-import { GestanteProtectedRoute } from "@/components/gestante/GestanteProtectedRoute";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
@@ -19,7 +17,6 @@ import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 
 // Gestante pages
-import GestanteLogin from "./pages/gestante/GestanteLogin";
 import GestanteChangePassword from "./pages/gestante/GestanteChangePassword";
 import GestanteDashboard from "./pages/gestante/GestanteDashboard";
 import GestanteDiary from "./pages/gestante/GestanteDiary";
@@ -36,82 +33,83 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
-          <GestanteAuthProvider>
-            <Routes>
-              {/* Gestante routes - Main entry point */}
-              <Route path="/" element={<GestanteLogin />} />
-              <Route path="/gestante/login" element={<GestanteLogin />} />
-              <Route
-                path="/gestante/alterar-senha"
-                element={
-                  <GestanteProtectedRoute>
-                    <GestanteChangePassword />
-                  </GestanteProtectedRoute>
-                }
-              />
-              <Route
-                path="/gestante"
-                element={
-                  <GestanteProtectedRoute>
-                    <GestanteDashboard />
-                  </GestanteProtectedRoute>
-                }
-              />
-              <Route
-                path="/gestante/diario"
-                element={
-                  <GestanteProtectedRoute>
-                    <GestanteDiary />
-                  </GestanteProtectedRoute>
-                }
-              />
-              <Route
-                path="/gestante/mensagens"
-                element={
-                  <GestanteProtectedRoute>
-                    <GestanteMessages />
-                  </GestanteProtectedRoute>
-                }
-              />
-              <Route
-                path="/gestante/contracoes"
-                element={
-                  <GestanteProtectedRoute>
-                    <GestanteContractions />
-                  </GestanteProtectedRoute>
-                }
-              />
-              <Route
-                path="/gestante/perfil"
-                element={
-                  <GestanteProtectedRoute>
-                    <GestanteProfile />
-                  </GestanteProtectedRoute>
-                }
-              />
+          <Routes>
+            {/* Single login page */}
+            <Route path="/login" element={<Login />} />
+            {/* Legacy routes redirect to unified login */}
+            <Route path="/" element={<Navigate to="/login" replace />} />
+            <Route path="/admin/login" element={<Navigate to="/login" replace />} />
+            <Route path="/gestante/login" element={<Navigate to="/login" replace />} />
 
-              {/* Admin routes */}
-              <Route path="/login" element={<Login />} />
-              <Route path="/admin/login" element={<Login />} />
-              <Route
-                element={
-                  <ProtectedRoute>
-                    <DashboardLayout />
-                  </ProtectedRoute>
-                }
-              >
-                <Route path="/admin" element={<Dashboard />} />
-                <Route path="/clientes" element={<Clients />} />
-                <Route path="/planos" element={<Plans />} />
-                <Route path="/financeiro" element={<Financial />} />
-                <Route path="/despesas" element={<Expenses />} />
-                <Route path="/relatorios" element={<Reports />} />
-                <Route path="/configuracoes" element={<Settings />} />
-              </Route>
+            {/* Client (Gestante) routes */}
+            <Route
+              path="/gestante/alterar-senha"
+              element={
+                <ProtectedRoute allowedRoles={["client"]}>
+                  <GestanteChangePassword />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/gestante"
+              element={
+                <ProtectedRoute allowedRoles={["client"]}>
+                  <GestanteDashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/gestante/diario"
+              element={
+                <ProtectedRoute allowedRoles={["client"]}>
+                  <GestanteDiary />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/gestante/mensagens"
+              element={
+                <ProtectedRoute allowedRoles={["client"]}>
+                  <GestanteMessages />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/gestante/contracoes"
+              element={
+                <ProtectedRoute allowedRoles={["client"]}>
+                  <GestanteContractions />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/gestante/perfil"
+              element={
+                <ProtectedRoute allowedRoles={["client"]}>
+                  <GestanteProfile />
+                </ProtectedRoute>
+              }
+            />
 
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </GestanteAuthProvider>
+            {/* Admin routes */}
+            <Route
+              element={
+                <ProtectedRoute allowedRoles={["admin", "moderator"]}>
+                  <DashboardLayout />
+                </ProtectedRoute>
+              }
+            >
+              <Route path="/admin" element={<Dashboard />} />
+              <Route path="/clientes" element={<Clients />} />
+              <Route path="/planos" element={<Plans />} />
+              <Route path="/financeiro" element={<Financial />} />
+              <Route path="/despesas" element={<Expenses />} />
+              <Route path="/relatorios" element={<Reports />} />
+              <Route path="/configuracoes" element={<Settings />} />
+            </Route>
+
+            <Route path="*" element={<NotFound />} />
+          </Routes>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
