@@ -536,9 +536,12 @@ export default function Financial() {
                       </div>
 
                       {/* Info: Client + Date */}
-                      <p className="text-xs text-muted-foreground truncate">
-                        {transaction.clients?.full_name || "—"} • {formatBrazilDate(transaction.date, "dd/MM/yy")}
-                      </p>
+                      <div className="flex items-center gap-1 min-w-0 w-full">
+                        <span className="text-xs text-muted-foreground truncate min-w-0 flex-1" title={transaction.clients?.full_name || "—"}>
+                          {transaction.clients?.full_name || "—"}
+                        </span>
+                        <span className="text-xs text-muted-foreground flex-shrink-0">• {formatBrazilDate(transaction.date, "dd/MM/yy")}</span>
+                      </div>
 
                       {/* Values: flex layout */}
                       <div className="flex items-start pt-1.5 border-t border-border/50 w-full">
