@@ -416,7 +416,7 @@ export default function Financial() {
   };
 
   return (
-    <div className="space-y-4 lg:space-y-8 overflow-x-hidden max-w-full w-full box-border">
+    <div className="space-y-4 lg:space-y-8 w-full box-border">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div className="page-header mb-0 min-w-0">
@@ -430,7 +430,7 @@ export default function Financial() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 gap-2 lg:grid-cols-4 lg:gap-4 max-w-full overflow-hidden">
+      <div className="grid grid-cols-2 gap-2 lg:grid-cols-4 lg:gap-4 w-full">
         <StatCard
           title="Receita Total"
           value={formatCurrency(totalIncome)}
@@ -475,8 +475,8 @@ export default function Financial() {
       </Card>
 
       {/* Revenues List */}
-      <Card className="card-glass overflow-hidden">
-        <CardHeader className="px-2 py-3 lg:p-6">
+      <Card className="card-glass w-full box-border">
+        <CardHeader className="px-3 py-3 lg:p-6">
           <CardTitle className="text-lg font-semibold text-foreground">
             Receitas ({filteredTransactions?.length || 0})
           </CardTitle>
@@ -489,7 +489,7 @@ export default function Financial() {
           ) : filteredTransactions && filteredTransactions.length > 0 ? (
             <>
               {/* Mobile Cards */}
-              <div className="block lg:hidden space-y-2 px-1 py-1 max-w-full overflow-hidden">
+              <div className="block lg:hidden space-y-2 px-2 py-1 w-full box-border">
                 {filteredTransactions.map((transaction) => {
                   const totalAmount = Number(transaction.amount) || 0;
                   const receivedAmount = Number(transaction.amount_received) || 0;
@@ -516,7 +516,7 @@ export default function Financial() {
                     : transaction.description;
 
                   return (
-                    <Card key={transaction.id} className="p-1.5 space-y-1 w-full max-w-full overflow-hidden box-border">
+                    <Card key={transaction.id} className="p-2 space-y-1 w-full box-border">
                       {/* Header: Description + Actions */}
                       <div className="flex items-center justify-between gap-0">
                         <div className="flex items-center gap-0.5 min-w-0 flex-1">
@@ -541,8 +541,8 @@ export default function Financial() {
                       </p>
 
                       {/* Values: flex layout - compact */}
-                      <div className="flex items-start pt-1.5 border-t border-border/50 overflow-hidden">
-                        <div className="text-center min-w-0 flex-1 overflow-hidden">
+                      <div className="flex items-start pt-1.5 border-t border-border/50 w-full">
+                        <div className="text-center min-w-0 flex-1 flex-shrink-1">
                           <span className="text-[10px] text-muted-foreground block">Total</span>
                           <span className="font-semibold text-sm truncate block">{formatCompact(totalAmount)}</span>
                         </div>
@@ -578,7 +578,7 @@ export default function Financial() {
                             </span>
                           )}
                         </div>
-                        <div className="text-center min-w-0 flex-1 overflow-hidden">
+                        <div className="text-center min-w-0 flex-1 flex-shrink-1">
                           <span className="text-[10px] text-muted-foreground block">Receb.</span>
                           {isEditingReceivedMobile ? (
                             <Input
@@ -608,11 +608,11 @@ export default function Financial() {
                             </span>
                           )}
                         </div>
-                        <div className="text-center min-w-0 flex-1 overflow-hidden">
+                        <div className="text-center min-w-0 flex-1 flex-shrink-1">
                           <span className="text-[10px] text-muted-foreground block">Pend.</span>
                           {pendingAmount > 0 ? (
                             <div className="flex flex-col items-center">
-                              <span className="text-sm text-warning font-medium truncate max-w-full">{formatCompact(pendingAmount)}</span>
+                              <span className="text-sm text-warning font-medium truncate block">{formatCompact(pendingAmount)}</span>
                               <Button
                                 variant="ghost"
                                 size="icon"
