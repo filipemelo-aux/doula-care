@@ -84,7 +84,7 @@ export default function Login() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-primary/5 p-4">
       <Card className="w-full max-w-md card-glass">
-        <CardHeader className="text-center space-y-4">
+        <CardHeader className="text-center space-y-1">
           <img src={logo} alt="Papo de Doula" className="w-40 h-40 object-contain mx-auto" />
           <div>
             <CardTitle className="text-2xl font-display">Papo de Doula</CardTitle>
