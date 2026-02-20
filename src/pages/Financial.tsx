@@ -489,7 +489,7 @@ export default function Financial() {
           ) : filteredTransactions && filteredTransactions.length > 0 ? (
             <>
               {/* Mobile Cards */}
-              <div className="block lg:hidden space-y-2 px-2 py-1 w-full box-border">
+              <div className="block lg:hidden space-y-2 px-2 py-1 w-full box-border min-w-0">
                 {filteredTransactions.map((transaction) => {
                   const totalAmount = Number(transaction.amount) || 0;
                   const receivedAmount = Number(transaction.amount_received) || 0;
@@ -516,14 +516,14 @@ export default function Financial() {
                     : transaction.description;
 
                   return (
-                    <Card key={transaction.id} className="px-1.5 py-1 space-y-0.5 w-full box-border">
+                    <Card key={transaction.id} className="px-1.5 py-1 space-y-0.5 w-full box-border min-w-0 overflow-hidden">
                       {/* Header: Description + Actions */}
                       <div className="flex items-center justify-between gap-0">
                         <div className="flex items-center gap-0.5 min-w-0 flex-1">
                           {transaction.is_auto_generated && (
                             <Zap className="w-3 h-3 text-warning flex-shrink-0" />
                           )}
-                          <p className="font-medium text-sm truncate">{compactDesc}</p>
+                          <p className="font-medium text-sm truncate min-w-0">{compactDesc}</p>
                         </div>
                         <Button
                           variant="ghost"
