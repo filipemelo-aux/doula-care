@@ -516,7 +516,7 @@ export default function Financial() {
                     : transaction.description;
 
                   return (
-                    <Card key={transaction.id} className="p-2 space-y-1 w-full box-border">
+                    <Card key={transaction.id} className="px-1.5 py-1 space-y-0.5 w-full box-border">
                       {/* Header: Description + Actions */}
                       <div className="flex items-center justify-between gap-0">
                         <div className="flex items-center gap-0.5 min-w-0 flex-1">
@@ -541,13 +541,13 @@ export default function Financial() {
                       </p>
 
                       {/* Values: flex layout - compact */}
-                      <div className="flex items-start pt-1.5 border-t border-border/50 w-full">
-                        <div className="text-center min-w-0 flex-1 flex-shrink-1">
-                          <span className="text-[10px] text-muted-foreground block">Total</span>
-                          <span className="font-semibold text-sm truncate block">{formatCompact(totalAmount)}</span>
+                      <div className="flex items-start pt-1 border-t border-border/50 w-full">
+                        <div className="text-center min-w-0 flex-1 flex-shrink px-0.5">
+                          <span className="text-[9px] text-muted-foreground block leading-tight">Total</span>
+                          <span className="font-semibold text-xs truncate block">{formatCompact(totalAmount)}</span>
                         </div>
-                        <div className="text-center min-w-0 w-10 flex-shrink-0">
-                          <span className="text-[10px] text-muted-foreground block">Parc.</span>
+                        <div className="text-center min-w-0 flex-shrink px-0.5" style={{flexBasis: '28px'}}>
+                          <span className="text-[9px] text-muted-foreground block leading-tight">Parc.</span>
                           {isEditingInstallmentsMobile ? (
                             <Select
                               value={editingInstallmentsValue}
@@ -558,7 +558,7 @@ export default function Financial() {
                                 updateInstallmentsMutation.mutate({ id: transaction.id, installments, installmentValue });
                               }}
                             >
-                              <SelectTrigger className="w-10 h-6 text-xs px-0.5">
+                              <SelectTrigger className="w-9 h-5 text-[10px] px-0.5">
                                 <SelectValue />
                               </SelectTrigger>
                               <SelectContent>
@@ -571,21 +571,21 @@ export default function Financial() {
                             </Select>
                           ) : (
                             <span 
-                              className="text-sm font-medium cursor-pointer border-b border-dashed border-muted-foreground/40 hover:border-primary transition-colors"
+                              className="text-xs font-medium cursor-pointer border-b border-dashed border-muted-foreground/40 hover:border-primary transition-colors"
                               onClick={() => handleStartEditInstallments(transaction)}
                             >
                               {installments}x
                             </span>
                           )}
                         </div>
-                        <div className="text-center min-w-0 flex-1 flex-shrink-1">
-                          <span className="text-[10px] text-muted-foreground block">Receb.</span>
+                        <div className="text-center min-w-0 flex-1 flex-shrink px-0.5">
+                          <span className="text-[9px] text-muted-foreground block leading-tight">Receb.</span>
                           {isEditingReceivedMobile ? (
                             <Input
                               type="number"
                               value={editingReceivedValue}
                               onChange={(e) => setEditingReceivedValue(e.target.value)}
-                              className="w-full h-6 text-center text-sm px-0.5"
+                              className="w-full h-5 text-center text-xs px-0.5"
                               min={0}
                               max={totalAmount}
                               step="0.01"
@@ -601,18 +601,18 @@ export default function Financial() {
                             />
                           ) : (
                             <span 
-                              className="text-sm text-success font-medium cursor-pointer border-b border-dashed border-success/40 hover:border-success transition-colors"
+                              className="text-xs text-success font-medium cursor-pointer border-b border-dashed border-success/40 hover:border-success transition-colors"
                               onClick={() => handleStartEditReceived(transaction)}
                             >
                               {formatCompact(receivedAmount)}
                             </span>
                           )}
                         </div>
-                        <div className="text-center min-w-0 flex-1 flex-shrink-1">
-                          <span className="text-[10px] text-muted-foreground block">Pend.</span>
+                        <div className="text-center min-w-0 flex-1 flex-shrink px-0.5">
+                          <span className="text-[9px] text-muted-foreground block leading-tight">Pend.</span>
                           {pendingAmount > 0 ? (
-                            <div className="flex flex-col items-center">
-                              <span className="text-sm text-warning font-medium truncate block">{formatCompact(pendingAmount)}</span>
+                            <div className="flex items-center justify-center gap-0">
+                              <span className="text-xs text-warning font-medium truncate">{formatCompact(pendingAmount)}</span>
                               <Button
                                 variant="ghost"
                                 size="icon"
@@ -623,13 +623,13 @@ export default function Financial() {
                               </Button>
                             </div>
                           ) : (
-                            <span className="text-sm text-success font-medium">OK</span>
+                            <span className="text-xs text-success font-medium">OK</span>
                           )}
                         </div>
                       </div>
 
                       {/* Payment method icons */}
-                      <div className="flex items-center justify-center gap-0 pt-1.5 border-t border-border/50">
+                      <div className="flex items-center justify-center gap-0 pt-1 border-t border-border/50">
                         <Button
                           variant={currentMethod === "pix" ? "secondary" : "ghost"}
                           size="icon"
