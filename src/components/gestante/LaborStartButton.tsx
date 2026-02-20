@@ -15,6 +15,7 @@ import { Baby, Loader2, Heart } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useGestanteAuth } from "@/contexts/GestanteAuthContext";
 import { toast } from "sonner";
+import { sendPushNotification } from "@/lib/pushNotifications";
 
 interface LaborStartButtonProps {
   laborStarted: boolean;
@@ -51,6 +52,15 @@ export function LaborStartButton({ laborStarted, onLaborStarted }: LaborStartBut
       if (notifError) {
         console.error("Error sending notification:", notifError);
       }
+
+      // Send push notification to admins
+      sendPushNotification({
+        send_to_admins: true,
+        title: "🚨 TRABALHO DE PARTO INICIADO",
+        message: `${client.full_name} informou que o trabalho de parto começou!`,
+        url: "/dashboard",
+        tag: "labor-started",
+      });
 
       toast.success("Sua Doula foi notificada!");
       onLaborStarted();

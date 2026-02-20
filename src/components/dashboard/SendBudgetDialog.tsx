@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { Loader2, Send, Sparkles } from "lucide-react";
+import { sendPushNotification } from "@/lib/pushNotifications";
 
 interface ServiceRequest {
   id: string;
@@ -64,6 +65,15 @@ export function SendBudgetDialog({ open, onOpenChange, serviceRequest }: SendBud
         });
 
       if (notifError) throw notifError;
+
+      // Push notification to client
+      sendPushNotification({
+        client_ids: [serviceRequest.client_id],
+        title: `Orçamento: ${serviceRequest.service_type}`,
+        message: `Sua Doula enviou um orçamento de R$ ${value.toFixed(2).replace(".", ",")}`,
+        url: "/gestante/mensagens",
+        tag: "budget-sent",
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["service-requests-pending"] });

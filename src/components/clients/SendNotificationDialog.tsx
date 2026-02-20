@@ -15,6 +15,7 @@ import {
 import { Loader2, Send } from "lucide-react";
 import { toast } from "sonner";
 import { Tables } from "@/integrations/supabase/types";
+import { sendPushNotification } from "@/lib/pushNotifications";
 
 type Client = Tables<"clients">;
 
@@ -46,6 +47,15 @@ export function SendNotificationDialog({
         });
 
       if (error) throw error;
+
+      // Send push to the client's device
+      sendPushNotification({
+        client_ids: [client.id],
+        title,
+        message,
+        url: "/gestante/mensagens",
+        tag: "doula-message",
+      });
     },
     onSuccess: () => {
       toast.success("Notificação enviada com sucesso!");

@@ -8,3 +8,12 @@ verify_jwt = false
 
 [functions.provision-existing-clients]
 verify_jwt = false
+
+[functions.get-vapid-public-key]
+verify_jwt = false
+
+[functions.generate-vapid-keys]
+verify_jwt = false
+
+[functions.send-push-notification]
+verify_jwt = false

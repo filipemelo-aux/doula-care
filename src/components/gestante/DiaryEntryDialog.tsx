@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { sendPushNotification } from "@/lib/pushNotifications";
 
 interface DiaryEntryDialogProps {
   open: boolean;
@@ -112,6 +113,15 @@ export function DiaryEntryDialog({ open, onOpenChange, clientId, onSuccess, isPu
         });
 
       if (error) throw error;
+
+      // Notify admin about new diary entry
+      sendPushNotification({
+        send_to_admins: true,
+        title: "📔 Novo Registro no Diário",
+        message: `Nova entrada no diário de gestação.`,
+        url: "/dashboard",
+        tag: "diary-entry",
+      });
 
       toast.success("Registro salvo com sucesso!");
       resetForm();
