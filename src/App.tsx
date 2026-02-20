@@ -15,6 +15,7 @@ import Expenses from "./pages/Expenses";
 import Reports from "./pages/Reports";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
+import InstallAppBanner from "./components/pwa/InstallAppBanner";
 
 // Gestante pages
 import GestanteChangePassword from "./pages/gestante/GestanteChangePassword";
@@ -33,6 +34,7 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
+          <InstallAppBanner />
           <Routes>
             {/* Single login page */}
             <Route path="/login" element={<Login />} />
