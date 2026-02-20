@@ -14,7 +14,7 @@ export default {
     },
     extend: {
       fontFamily: {
-        display: ["DM Sans", "Inter", "system-ui", "sans-serif"],
+        display: ["Nunito", "DM Sans", "Inter", "system-ui", "sans-serif"],
         sans: ["DM Sans", "Inter", "system-ui", "sans-serif"],
       },
       colors: {
