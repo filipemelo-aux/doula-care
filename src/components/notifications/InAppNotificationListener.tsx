@@ -87,9 +87,9 @@ export function InAppNotificationListener({ userId, role, clientId }: InAppNotif
     };
   }, [userId, role]);
 
-  // Listen for client_notifications inserts
+  // Listen for client_notifications inserts (client only — admins use NotificationsCenter)
   useEffect(() => {
-    if (role === "client" && !clientId) return;
+    if (role !== "client" || !clientId) return;
 
     const channel = supabase
       .channel(`in-app-notifications-${userId}`)
@@ -99,7 +99,7 @@ export function InAppNotificationListener({ userId, role, clientId }: InAppNotif
           event: "INSERT",
           schema: "public",
           table: "client_notifications",
-          ...(role === "client" && clientId ? { filter: `client_id=eq.${clientId}` } : {}),
+          filter: `client_id=eq.${clientId}`,
         },
         (payload) => {
           const notification = payload.new as {
@@ -127,11 +127,7 @@ export function InAppNotificationListener({ userId, role, clientId }: InAppNotif
             action: {
               label: "Ver",
               onClick: () => {
-                if (role === "client") {
-                  window.location.href = "/gestante/mensagens";
-                } else {
-                  window.location.href = "/admin";
-                }
+                window.location.href = "/gestante/mensagens";
               },
             },
           });
