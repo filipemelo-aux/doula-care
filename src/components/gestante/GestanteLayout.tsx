@@ -27,13 +27,17 @@ const navItems = [
 export function GestanteLayout({ children }: GestanteLayoutProps) {
   const navigate = useNavigate();
   const location = useLocation();
-  const { signOut } = useAuth();
+  const { signOut, client } = useAuth();
+
+  const firstName = client?.full_name?.split(" ")[0] || "";
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 pb-28">
-      {/* Header with logout */}
-      <header className="sticky top-0 z-40 flex items-center justify-between px-4 h-14 bg-background/80 backdrop-blur-sm border-b border-border">
-        <h1 className="font-display text-lg text-foreground">Doula Care</h1>
+      {/* Header - same h-16 as admin */}
+      <header className="sticky top-0 z-40 flex items-center justify-between px-4 h-16 bg-background/80 backdrop-blur-sm border-b border-border">
+        <h1 className="font-display text-lg text-foreground">
+          {firstName ? `Olá, ${firstName}` : "Olá"}
+        </h1>
         <Button variant="ghost" size="icon" onClick={() => signOut()} title="Sair">
           <LogOut className="h-5 w-5 text-muted-foreground" />
         </Button>

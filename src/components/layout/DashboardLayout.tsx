@@ -49,7 +49,7 @@ export function DashboardLayout() {
           </Button>
         </header>
 
-        <main className="flex-1 p-4 lg:p-8 overflow-x-hidden overflow-y-auto">
+        <main className="flex-1 p-4 lg:p-8 overflow-x-hidden overflow-y-auto max-w-full">
           <div className="max-w-7xl mx-auto animate-fade-in">
             <Outlet />
           </div>
