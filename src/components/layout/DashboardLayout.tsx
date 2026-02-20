@@ -37,8 +37,8 @@ export function DashboardLayout() {
               <Menu className="h-5 w-5" />
             </Button>
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-[22%] bg-[#FFF5EE] flex items-center justify-center">
-                <img src={logo} alt="Papo de Doula" className="w-[78%] h-[78%] object-contain" />
+              <div className="w-10 h-10 rounded-[70%] bg-[#FFF5EE] flex items-center justify-center overflow-hidden">
+                <img src={logo} alt="Papo de Doula" className="w-[85%] h-[85%] object-contain" />
               </div>
               <h1 className="font-display text-lg text-foreground">Papo de Doula</h1>
             </div>
