@@ -52,8 +52,8 @@ export function Sidebar({ isOpen, onToggle, onNavigate }: SidebarProps) {
       {/* Logo */}
       <div className="h-20 flex items-center justify-between px-6 border-b border-sidebar-border">
         <div className={cn("flex items-center gap-3 transition-opacity", !isOpen && "lg:opacity-0")}>
-          <div className="w-11 h-11 rounded-[60%] bg-[#FFF5EE] flex items-center justify-center overflow-hidden">
-            <img src={logo} alt="Papo de Doula" className="w-[90%] h-[90%] object-contain mix-blend-multiply" />
+          <div style={{ borderRadius: '60%' }} className="w-10 h-10 bg-[#FFF5EE] flex items-center justify-center overflow-hidden">
+            <img src={logo} alt="Papo de Doula" className="w-[92%] h-[92%] object-contain mix-blend-multiply" />
           </div>
           <div>
             <h1 className="font-display text-lg text-sidebar-foreground">Papo de Doula</h1>
@@ -76,8 +76,8 @@ export function Sidebar({ isOpen, onToggle, onNavigate }: SidebarProps) {
       {/* Collapsed Logo and Expand Button */}
       {!isOpen && (
         <div className="hidden lg:flex h-20 absolute top-0 left-0 w-20 items-center justify-between px-2">
-          <div className="w-10 h-10 rounded-[60%] bg-[#FFF5EE] flex items-center justify-center overflow-hidden">
-            <img src={logo} alt="Papo de Doula" className="w-[90%] h-[90%] object-contain mix-blend-multiply" />
+          <div style={{ borderRadius: '60%' }} className="w-9 h-9 bg-[#FFF5EE] flex items-center justify-center overflow-hidden">
+            <img src={logo} alt="Papo de Doula" className="w-[92%] h-[92%] object-contain mix-blend-multiply" />
           </div>
           <Button
             variant="ghost"

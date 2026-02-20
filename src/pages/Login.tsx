@@ -86,8 +86,8 @@ export default function Login() {
       <Card className="w-full max-w-md card-glass">
         <CardHeader className="text-center space-y-4">
           <div className="flex flex-col items-center gap-0">
-            <div className="w-24 h-24 rounded-[60%] bg-[#FFF5EE] flex items-center justify-center overflow-hidden">
-              <img src={logo} alt="Papo de Doula" className="w-[90%] h-[90%] object-contain mix-blend-multiply" />
+            <div style={{ borderRadius: '60%' }} className="w-20 h-20 bg-[#FFF5EE] flex items-center justify-center overflow-hidden">
+              <img src={logo} alt="Papo de Doula" className="w-[92%] h-[92%] object-contain mix-blend-multiply" />
             </div>
             <CardTitle className="text-2xl font-display font-bold tracking-wide -mt-1">Papo de Doula</CardTitle>
           </div>
