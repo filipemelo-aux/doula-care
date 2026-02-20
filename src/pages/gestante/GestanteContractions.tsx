@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { GestanteLayout } from "@/components/gestante/GestanteLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,12 +10,15 @@ import {
   Clock, 
   AlertTriangle,
   Loader2,
-  History
+  History,
+  Heart,
+  Baby,
+  Sparkles
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useGestanteAuth } from "@/contexts/GestanteAuthContext";
 import { toast } from "sonner";
-import { differenceInSeconds, differenceInMinutes } from "date-fns";
+import { differenceInSeconds, differenceInMinutes, subMinutes } from "date-fns";
 import { cn, formatBrazilTime } from "@/lib/utils";
 import { sendPushNotification } from "@/lib/pushNotifications";
 
@@ -206,6 +209,60 @@ export default function GestanteContractions() {
     ? Math.round(completedContractions.reduce((sum, c) => sum + (c.duration_seconds || 0), 0) / completedContractions.length)
     : 0;
 
+  // Active labor detection: 3+ contractions in last 10 min with duration ≥ 60s
+  const laborStatus = useMemo(() => {
+    if (completedContractions.length < 3) return "none";
+    
+    const tenMinAgo = subMinutes(new Date(), 10);
+    const recentContractions = completedContractions.filter(c => 
+      new Date(c.started_at) >= tenMinAgo && (c.duration_seconds || 0) >= 60
+    );
+    
+    if (recentContractions.length >= 3) return "active";
+    
+    // Has contractions but doesn't meet active labor criteria
+    if (completedContractions.length >= 1) return "prodromal";
+    
+    return "none";
+  }, [completedContractions]);
+
+  // Notify doula when active labor is detected (only once)
+  const activeLaborNotifiedRef = useRef(false);
+  useEffect(() => {
+    if (laborStatus !== "active" || activeLaborNotifiedRef.current || !client?.id) return;
+    activeLaborNotifiedRef.current = true;
+
+    // Update labor_started_at if not already set
+    supabase
+      .from("clients")
+      .select("labor_started_at")
+      .eq("id", client.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data?.labor_started_at) return;
+
+        supabase
+          .from("clients")
+          .update({ labor_started_at: new Date().toISOString() })
+          .eq("id", client.id)
+          .then(() => {
+            supabase.from("client_notifications").insert({
+              client_id: client.id,
+              title: "🚨 TRABALHO DE PARTO ATIVO DETECTADO",
+              message: `${client.full_name} apresenta padrão de trabalho de parto ativo: 3+ contrações em 10 minutos com duração ≥ 1 minuto.`,
+            });
+
+            sendPushNotification({
+              send_to_admins: true,
+              title: "🚨 TRABALHO DE PARTO ATIVO",
+              message: `${client.full_name} está em trabalho de parto ativo! 3+ contrações em 10 min, duração ≥ 1 min.`,
+              url: "/dashboard",
+              tag: "active-labor-detected",
+            });
+          });
+      });
+  }, [laborStatus, client?.id, client?.full_name]);
+
   if (loading) {
     return (
       <GestanteLayout>
@@ -309,15 +366,40 @@ export default function GestanteContractions() {
           </div>
         )}
 
-        {/* Alert for close contractions */}
-        {completedContractions.length >= 3 && avgDuration >= 45 && (
-          <Card className="bg-yellow-50 border-yellow-200">
+        {/* Active Labor Detected */}
+        {laborStatus === "active" && (
+          <Card className="bg-gradient-to-br from-pink-50 to-rose-50 border-2 border-pink-300 shadow-lg shadow-pink-100">
+            <CardContent className="p-5 text-center space-y-3">
+              <div className="w-14 h-14 mx-auto rounded-full bg-gradient-to-br from-pink-400 to-rose-500 flex items-center justify-center animate-pulse">
+                <Baby className="h-7 w-7 text-white" />
+              </div>
+              <h3 className="font-display font-bold text-lg text-pink-800">
+                Seu bebê está a caminho! 💕
+              </h3>
+              <p className="text-sm text-pink-700 leading-relaxed">
+                Suas contrações indicam que o trabalho de parto ativo começou. 
+                Respire fundo, confie no seu corpo — você está preparada para este momento. 
+                Sua Doula já foi notificada e está com você. ❤️
+              </p>
+              <div className="flex items-center justify-center gap-1 text-xs text-pink-500">
+                <Heart className="h-3 w-3" />
+                <span>Sua Doula foi notificada automaticamente</span>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Prodromal Labor Reassurance */}
+        {laborStatus === "prodromal" && completedContractions.length >= 2 && (
+          <Card className="bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200">
             <CardContent className="p-4 flex items-start gap-3">
-              <AlertTriangle className="h-5 w-5 text-yellow-600 shrink-0 mt-0.5" />
+              <Sparkles className="h-5 w-5 text-amber-500 shrink-0 mt-0.5" />
               <div>
-                <p className="font-medium text-yellow-800">Atenção</p>
-                <p className="text-sm text-yellow-700">
-                  Suas contrações estão ficando mais longas. Entre em contato com sua Doula.
+                <p className="font-medium text-amber-800">Tudo bem, mamãe! 🤗</p>
+                <p className="text-sm text-amber-700 leading-relaxed">
+                  Suas contrações ainda não indicam trabalho de parto ativo — isso é chamado de <strong>pródromos</strong>, 
+                  e é completamente normal! Seu corpo está se preparando com carinho para a chegada do bebê. 
+                  Continue registrando e descanse quando puder. 💛
                 </p>
               </div>
             </CardContent>
