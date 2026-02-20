@@ -35,7 +35,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, TrendingUp, Search, Trash2, Zap, Check, X, CheckCircle, CreditCard, Banknote, Building2, QrCode, FileText, Users, Wrench } from "lucide-react";
+import { Plus, TrendingUp, Search, Trash2, Zap, Check, X, CheckCircle, CreditCard, Banknote, Building2, QrCode, FileText, Users, Wrench, UserPlus } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -111,6 +111,9 @@ export default function Financial() {
   const [selectedService, setSelectedService] = useState<string | null>(null);
   const [customServiceName, setCustomServiceName] = useState<string>("");
   const [showCustomService, setShowCustomService] = useState(false);
+  const [showQuickClient, setShowQuickClient] = useState(false);
+  const [quickClientName, setQuickClientName] = useState("");
+  const [quickClientPhone, setQuickClientPhone] = useState("");
 
   const queryClient = useQueryClient();
 
@@ -380,6 +383,9 @@ export default function Financial() {
     setSelectedService(null);
     setCustomServiceName("");
     setShowCustomService(false);
+    setShowQuickClient(false);
+    setQuickClientName("");
+    setQuickClientPhone("");
     form.reset({
       description: "",
       amount: 0,
@@ -390,6 +396,38 @@ export default function Financial() {
     });
     setDialogOpen(true);
   };
+
+  const quickClientMutation = useMutation({
+    mutationFn: async ({ name, phone }: { name: string; phone: string }) => {
+      const { data: userData } = await supabase.auth.getUser();
+      const { data, error } = await supabase
+        .from("clients")
+        .insert({
+          full_name: name,
+          phone: phone,
+          status: "gestante",
+          plan: "basico",
+          payment_method: "pix",
+          payment_status: "pendente",
+          owner_id: userData.user?.id || null,
+        })
+        .select("id, full_name")
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["clients-with-plans"] });
+      form.setValue("client_id", data.id);
+      setShowQuickClient(false);
+      setQuickClientName("");
+      setQuickClientPhone("");
+      toast.success(`Cliente "${data.full_name}" cadastrada!`);
+    },
+    onError: () => {
+      toast.error("Erro ao cadastrar cliente");
+    },
+  });
 
   const handleSelectService = (serviceName: string) => {
     setSelectedService(serviceName);
@@ -1031,33 +1069,105 @@ export default function Financial() {
                   </div>
 
                   {/* Cliente (opcional) */}
-                  <FormField
-                    control={form.control}
-                    name="client_id"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-xs">Cliente (opcional)</FormLabel>
-                        <Select
-                          onValueChange={field.onChange}
-                          value={field.value}
-                        >
-                          <FormControl>
-                            <SelectTrigger className="input-field h-8 text-sm">
-                              <SelectValue placeholder="Selecione uma cliente" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {clients?.map((client) => (
-                              <SelectItem key={client.id} value={client.id}>
-                                {client.full_name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
+                  <div className="space-y-2">
+                    <FormField
+                      control={form.control}
+                      name="client_id"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-xs">Cliente (opcional)</FormLabel>
+                          <Select
+                            onValueChange={field.onChange}
+                            value={field.value}
+                          >
+                            <FormControl>
+                              <SelectTrigger className="input-field h-8 text-sm">
+                                <SelectValue placeholder="Selecione uma cliente" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {clients?.map((client) => (
+                                <SelectItem key={client.id} value={client.id}>
+                                  {client.full_name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    {!showQuickClient ? (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="w-full border-dashed gap-1.5 text-xs"
+                        onClick={() => setShowQuickClient(true)}
+                      >
+                        <UserPlus className="h-3 w-3" />
+                        Cadastrar cliente rápida
+                      </Button>
+                    ) : (
+                      <div className="rounded-lg border border-dashed border-primary/40 bg-primary/5 p-3 space-y-2">
+                        <p className="text-xs font-medium text-primary flex items-center gap-1">
+                          <UserPlus className="h-3 w-3" />
+                          Cadastro rápido
+                        </p>
+                        <Input
+                          placeholder="Nome completo"
+                          value={quickClientName}
+                          onChange={(e) => setQuickClientName(e.target.value)}
+                          className="input-field h-8 text-sm"
+                          autoFocus
+                        />
+                        <Input
+                          placeholder="Telefone"
+                          value={quickClientPhone}
+                          onChange={(e) => setQuickClientPhone(e.target.value)}
+                          className="input-field h-8 text-sm"
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              e.preventDefault();
+                              if (quickClientName.trim() && quickClientPhone.trim()) {
+                                quickClientMutation.mutate({ name: quickClientName.trim(), phone: quickClientPhone.trim() });
+                              }
+                            }
+                          }}
+                        />
+                        <div className="flex gap-2">
+                          <Button
+                            type="button"
+                            size="sm"
+                            className="h-7 text-xs flex-1 gap-1"
+                            onClick={() => {
+                              if (quickClientName.trim() && quickClientPhone.trim()) {
+                                quickClientMutation.mutate({ name: quickClientName.trim(), phone: quickClientPhone.trim() });
+                              }
+                            }}
+                            disabled={!quickClientName.trim() || !quickClientPhone.trim() || quickClientMutation.isPending}
+                          >
+                            <Check className="h-3 w-3" />
+                            {quickClientMutation.isPending ? "Salvando..." : "Salvar"}
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 text-xs"
+                            onClick={() => {
+                              setShowQuickClient(false);
+                              setQuickClientName("");
+                              setQuickClientPhone("");
+                            }}
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      </div>
                     )}
-                  />
+                  </div>
                 </>
               )}
 
