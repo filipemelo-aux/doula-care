@@ -222,8 +222,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setClient(null);
     setRoleChecked(false);
 
+    // Clear all auth storage before signing out to prevent re-authentication
+    const storageKey = `sb-gjnvxzsforfrxjanxqnq-auth-token`;
+    localStorage.removeItem(storageKey);
+    sessionStorage.clear();
+
     try {
-      await supabase.auth.signOut({ scope: "global" });
+      await supabase.auth.signOut({ scope: "local" });
     } catch (error) {
       console.error("Error signing out:", error);
     }
