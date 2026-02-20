@@ -1,5 +1,5 @@
 import { ReactNode } from "react";
-const logo = "/pwa-icon-512.png";
+import logo from "@/assets/logo.png";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useGestanteAuth } from "@/contexts/GestanteAuthContext";
 import { 
@@ -36,7 +36,9 @@ export function GestanteLayout({ children }: GestanteLayoutProps) {
       {/* Top Header with Logo + Logout */}
       <header className="flex items-center justify-between px-4 h-16 bg-card/50 backdrop-blur-sm border-b border-border sticky top-0 z-50">
         <div className="flex items-center gap-3">
-          <img src={logo} alt="Papo de Doula" className="w-11 h-11 object-contain mix-blend-multiply" />
+          <div className="w-10 h-10 rounded-[22%] bg-[#FFF5EE] flex items-center justify-center">
+            <img src={logo} alt="Papo de Doula" className="w-[78%] h-[78%] object-contain" />
+          </div>
           <h1 className="font-display text-lg text-foreground">Papo de Doula</h1>
         </div>
         <div className="flex items-center gap-1">
