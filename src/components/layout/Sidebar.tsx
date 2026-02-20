@@ -53,8 +53,8 @@ export function Sidebar({ isOpen, onToggle, onNavigate }: SidebarProps) {
       {/* Logo */}
       <div className="h-20 flex items-center justify-between px-6 border-b border-sidebar-border">
         <div className={cn("flex items-center gap-3 transition-opacity", !isOpen && "lg:opacity-0")}>
-          <div className="w-10 h-10 rounded-full overflow-hidden">
-            <img src={logo} alt="Papo de Doula" className="w-full h-full object-contain" />
+          <div className="w-10 h-10 flex items-center justify-center">
+            <img src={logo} alt="Papo de Doula" className="w-10 h-10 object-contain" />
           </div>
           <div>
             <h1 className="font-display text-xl text-sidebar-foreground">Papo de Doula</h1>
