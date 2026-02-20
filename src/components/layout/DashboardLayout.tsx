@@ -1,5 +1,5 @@
 import { useState } from "react";
-const logo = "/pwa-icon-512.png";
+import logo from "@/assets/logo.png";
 import { Outlet } from "react-router-dom";
 import { Sidebar } from "./Sidebar";
 import { Menu, LogOut } from "lucide-react";
@@ -37,7 +37,9 @@ export function DashboardLayout() {
               <Menu className="h-5 w-5" />
             </Button>
             <div className="flex items-center gap-3">
-              <img src={logo} alt="Papo de Doula" className="w-11 h-11 object-contain mix-blend-multiply" />
+              <div className="w-10 h-10 rounded-[22%] bg-[#FFF5EE] flex items-center justify-center">
+                <img src={logo} alt="Papo de Doula" className="w-[78%] h-[78%] object-contain" />
+              </div>
               <h1 className="font-display text-lg text-foreground">Papo de Doula</h1>
             </div>
           </div>
