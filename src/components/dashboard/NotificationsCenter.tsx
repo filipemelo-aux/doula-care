@@ -93,6 +93,22 @@ export function NotificationsCenter() {
   const [expandedNotifications, setExpandedNotifications] = useState<Set<string>>(new Set());
   const queryClient = useQueryClient();
 
+  // Fetch all clients for lookup (needed for diary/contraction notifications)
+  const { data: allClients } = useQuery({
+    queryKey: ["all-clients-lookup"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("clients")
+        .select("*")
+        .order("full_name");
+      if (error) throw error;
+      return data as Client[];
+    },
+  });
+
+  const clientsMap = new Map<string, Client>();
+  allClients?.forEach(c => clientsMap.set(c.id, c));
+
   const { data: birthAlertClients, isLoading: loadingBirth } = useQuery({
     queryKey: ["birth-alert-clients"],
     queryFn: async () => {
@@ -450,6 +466,7 @@ export function NotificationsCenter() {
   diaryByClient.forEach(({ entries, clientName }, clientId) => {
     const latestEntry = entries[0];
     const count = entries.length;
+    const lookupClient = clientsMap.get(clientId) || null;
     
     parentNotifications.push({
       id: `diary-${clientId}`,
@@ -460,7 +477,8 @@ export function NotificationsCenter() {
       icon: BookHeart,
       timestamp: latestEntry.created_at,
       children: [],
-      clientId
+      clientId,
+      client: lookupClient as EnrichedClient | undefined
     });
   });
 
@@ -546,6 +564,11 @@ export function NotificationsCenter() {
   const highPriorityCount = parentNotifications.filter(n => 
     n.priority === "high" || n.children.some(c => c.priority === "high")
   ).length;
+  
+  // Unread count: diary entries (unread) + pending service requests
+  const unreadDiaryCount = recentDiaryEntries?.length || 0;
+  const pendingServiceCount = serviceRequests?.length || 0;
+  const unreadCount = unreadDiaryCount + pendingServiceCount + highPriorityCount;
 
   // Auto-expand notifications with high priority children
   useEffect(() => {
@@ -588,17 +611,21 @@ export function NotificationsCenter() {
             <div className="flex items-center gap-2">
               <div className="relative">
                 <Bell className="h-4 w-4 text-muted-foreground" />
-                {highPriorityCount > 0 && (
+                {unreadCount > 0 && (
                   <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-destructive animate-pulse" />
                 )}
               </div>
               <CardTitle className="text-base font-semibold">Notificações</CardTitle>
             </div>
-            {hasNotifications && (
+            {unreadCount > 0 ? (
+              <Badge variant="destructive" className="text-xs">
+                {unreadCount}
+              </Badge>
+            ) : hasNotifications ? (
               <Badge variant="secondary" className="text-xs">
                 {parentNotifications.length}
               </Badge>
-            )}
+            ) : null}
           </div>
         </CardHeader>
         <CardContent className="p-0 overflow-x-hidden">
@@ -639,8 +666,21 @@ export function NotificationsCenter() {
                         }`}
                       >
                         {/* Parent notification */}
-                        <CollapsibleTrigger asChild disabled={!hasChildren}>
-                          <div className={`p-2 lg:p-3 ${hasChildren ? "cursor-pointer hover:bg-black/5" : ""}`}>
+                        <CollapsibleTrigger asChild disabled={!hasChildren && notification.type !== "new_diary_entry"}>
+                          <div 
+                            className={`p-2 lg:p-3 ${hasChildren ? "cursor-pointer hover:bg-black/5" : notification.type === "new_diary_entry" ? "cursor-pointer hover:bg-primary/10" : ""}`}
+                            onClick={() => {
+                              // Standalone diary notification without children - open diary dialog directly
+                              if (!hasChildren && notification.type === "new_diary_entry") {
+                                const clientId = notification.clientId;
+                                const lookupClient = clientId ? clientsMap.get(clientId) : notification.client;
+                                if (lookupClient) {
+                                  setDiaryClient(lookupClient);
+                                  setDiaryDialogOpen(true);
+                                }
+                              }
+                            }}
+                          >
                             <div className="flex items-start gap-1.5 lg:gap-2 overflow-hidden">
                               <div className={`w-7 h-7 lg:w-8 lg:h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
                                 isPostTerm
