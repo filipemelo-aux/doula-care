@@ -1,4 +1,5 @@
 import { ReactNode } from "react";
+import logo from "@/assets/logo.png";
 import { useNavigate, useLocation } from "react-router-dom";
 import { 
   BookHeart, 
@@ -27,8 +28,11 @@ export function GestanteLayout({ children }: GestanteLayoutProps) {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 pb-28">
-      {/* No top header - each page has its own header */}
-
+      {/* Top Header with Logo */}
+      <header className="flex items-center gap-3 px-4 py-3 bg-card/50 backdrop-blur-sm border-b border-border sticky top-0 z-40">
+        <img src={logo} alt="Papo de Doula" className="w-10 h-10 object-contain" style={{ filter: "drop-shadow(0 2px 6px hsl(var(--primary) / 0.2))" }} />
+        <h1 className="font-display text-lg text-foreground">Papo de Doula</h1>
+      </header>
       {/* Main Content */}
       <main className="min-h-[calc(100vh-5rem)]">
         {children}
