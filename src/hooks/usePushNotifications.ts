@@ -19,15 +19,39 @@ export function usePushNotifications() {
 
     if (supported) {
       setPermission(Notification.permission);
-      checkExistingSubscription();
+      checkAndFixSubscription();
     }
   }, []);
 
-  const checkExistingSubscription = async () => {
+  const checkAndFixSubscription = async () => {
     try {
       const registration = await navigator.serviceWorker.ready;
       const subscription = await registration.pushManager.getSubscription();
-      setIsSubscribed(!!subscription);
+
+      if (subscription) {
+        // Verify the subscription is still valid by checking against current VAPID key
+        const currentVapidKey = await getVapidPublicKey();
+        const storedVapidKey = localStorage.getItem("vapid_public_key");
+
+        if (currentVapidKey && storedVapidKey && currentVapidKey !== storedVapidKey) {
+          // VAPID key changed - unsubscribe and re-subscribe
+          console.log("VAPID key changed, re-subscribing...");
+          await subscription.unsubscribe();
+          localStorage.setItem("vapid_public_key", currentVapidKey);
+          setIsSubscribed(false);
+          // Auto re-subscribe if permission was already granted
+          if (Notification.permission === "granted") {
+            await doSubscribe(currentVapidKey);
+          }
+        } else {
+          if (currentVapidKey && !storedVapidKey) {
+            localStorage.setItem("vapid_public_key", currentVapidKey);
+          }
+          setIsSubscribed(true);
+        }
+      } else {
+        setIsSubscribed(false);
+      }
     } catch (err) {
       console.error("Error checking push subscription:", err);
     }
@@ -44,28 +68,8 @@ export function usePushNotifications() {
     }
   };
 
-  const subscribe = useCallback(async () => {
-    if (!isSupported) return false;
-    setIsLoading(true);
-
+  const doSubscribe = async (vapidPublicKey: string): Promise<boolean> => {
     try {
-      // Request notification permission
-      const perm = await Notification.requestPermission();
-      setPermission(perm);
-
-      if (perm !== "granted") {
-        setIsLoading(false);
-        return false;
-      }
-
-      const vapidPublicKey = await getVapidPublicKey();
-      if (!vapidPublicKey) {
-        console.error("VAPID public key not available");
-        setIsLoading(false);
-        return false;
-      }
-
-      // Convert VAPID key to Uint8Array
       const applicationServerKey = urlBase64ToUint8Array(vapidPublicKey).buffer as ArrayBuffer;
 
       const registration = await navigator.serviceWorker.ready;
@@ -76,7 +80,6 @@ export function usePushNotifications() {
 
       const subJson = subscription.toJSON();
 
-      // Get current user
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
@@ -93,9 +96,38 @@ export function usePushNotifications() {
 
       if (error) throw error;
 
+      localStorage.setItem("vapid_public_key", vapidPublicKey);
       setIsSubscribed(true);
-      setIsLoading(false);
       return true;
+    } catch (err) {
+      console.error("Error in doSubscribe:", err);
+      return false;
+    }
+  };
+
+  const subscribe = useCallback(async () => {
+    if (!isSupported) return false;
+    setIsLoading(true);
+
+    try {
+      const perm = await Notification.requestPermission();
+      setPermission(perm);
+
+      if (perm !== "granted") {
+        setIsLoading(false);
+        return false;
+      }
+
+      const vapidPublicKey = await getVapidPublicKey();
+      if (!vapidPublicKey) {
+        console.error("VAPID public key not available");
+        setIsLoading(false);
+        return false;
+      }
+
+      const result = await doSubscribe(vapidPublicKey);
+      setIsLoading(false);
+      return result;
     } catch (err) {
       console.error("Error subscribing to push:", err);
       setIsLoading(false);
@@ -113,7 +145,6 @@ export function usePushNotifications() {
         const endpoint = subscription.endpoint;
         await subscription.unsubscribe();
 
-        // Remove from database
         const { data: { user } } = await supabase.auth.getUser();
         if (user) {
           await supabase

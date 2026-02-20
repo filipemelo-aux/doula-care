@@ -7,7 +7,7 @@ import { TopPlansCard } from "@/components/dashboard/TopPlansCard";
 import { NotificationsCenter } from "@/components/dashboard/NotificationsCenter";
 import { PeriodFilter, PeriodOption } from "@/components/dashboard/PeriodFilter";
 import { ClientsListDialog } from "@/components/dashboard/ClientsListDialog";
-import { Users, Baby, Heart, Wallet, TrendingUp, BarChart3, AlertTriangle } from "lucide-react";
+import { Users, Baby, Heart, Wallet, TrendingUp, BarChart3 } from "lucide-react";
 
 export default function Dashboard() {
   const [period, setPeriod] = useState<PeriodOption>("month");
@@ -62,7 +62,7 @@ export default function Dashboard() {
       </div>
 
       {/* Stats Grid - Row 2: Business Intelligence */}
-      <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 lg:gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-2 gap-3 lg:gap-4">
         <StatCard
           title="Ticket Médio"
           value={formatCurrency(metrics?.averageTicket || 0)}
@@ -75,13 +75,6 @@ export default function Dashboard() {
           subtitle="Média recebida"
           icon={TrendingUp}
           variant="success"
-        />
-        <StatCard
-          title="Inadimplência"
-          value={`${(metrics?.defaultRate || 0).toFixed(1)}%`}
-          subtitle="Pendente / contratado"
-          icon={AlertTriangle}
-          variant={(metrics?.defaultRate || 0) > 30 ? "primary" : undefined}
         />
       </div>
 
