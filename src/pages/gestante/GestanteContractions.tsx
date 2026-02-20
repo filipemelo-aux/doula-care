@@ -17,6 +17,7 @@ import { useGestanteAuth } from "@/contexts/GestanteAuthContext";
 import { toast } from "sonner";
 import { differenceInSeconds, differenceInMinutes } from "date-fns";
 import { cn, formatBrazilTime } from "@/lib/utils";
+import { sendPushNotification } from "@/lib/pushNotifications";
 
 interface Contraction {
   id: string;
@@ -102,6 +103,15 @@ export default function GestanteContractions() {
       setElapsedSeconds(0);
       setContractions(prev => [data, ...prev]);
       toast.success("Contração iniciada");
+
+      // Notify admins via push
+      sendPushNotification({
+        send_to_admins: true,
+        title: "⏱️ Nova Contração Registrada",
+        message: `${client.full_name} iniciou uma contração.`,
+        url: "/admin",
+        tag: `contraction-${client.id}`,
+      });
     } catch (error) {
       console.error("Error starting contraction:", error);
       toast.error("Erro ao iniciar contração");
@@ -137,6 +147,15 @@ export default function GestanteContractions() {
       setActiveContraction(null);
       setElapsedSeconds(0);
       toast.success(`Contração finalizada: ${formatDuration(duration)}`);
+
+      // Notify admins with duration info
+      sendPushNotification({
+        send_to_admins: true,
+        title: "⏱️ Contração Finalizada",
+        message: `${client?.full_name}: duração de ${formatDuration(duration)}.`,
+        url: "/admin",
+        tag: `contraction-${client?.id}`,
+      });
     } catch (error) {
       console.error("Error stopping contraction:", error);
       toast.error("Erro ao finalizar contração");
