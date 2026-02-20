@@ -1,4 +1,5 @@
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
+import logo from "@/assets/logo.png";
 import {
   LayoutDashboard,
   Users,
@@ -52,8 +53,8 @@ export function Sidebar({ isOpen, onToggle, onNavigate }: SidebarProps) {
       {/* Logo */}
       <div className="h-20 flex items-center justify-between px-6 border-b border-sidebar-border">
         <div className={cn("flex items-center gap-3 transition-opacity", !isOpen && "lg:opacity-0")}>
-          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center">
-            <Heart className="w-5 h-5 text-primary-foreground" />
+          <div className="w-10 h-10 rounded-full overflow-hidden">
+            <img src={logo} alt="Papo de Doula" className="w-full h-full object-contain" />
           </div>
           <div>
             <h1 className="font-display text-xl text-sidebar-foreground">Papo de Doula</h1>

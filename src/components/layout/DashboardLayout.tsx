@@ -1,4 +1,5 @@
 import { useState } from "react";
+import logo from "@/assets/logo.png";
 import { Outlet } from "react-router-dom";
 import { Sidebar } from "./Sidebar";
 import { Menu, LogOut } from "lucide-react";
@@ -34,6 +35,7 @@ export function DashboardLayout() {
             >
               <Menu className="h-5 w-5" />
             </Button>
+            <img src={logo} alt="Papo de Doula" className="w-8 h-8 rounded-full" />
             <h1 className="font-display text-xl text-foreground">Papo de Doula</h1>
           </div>
           <Button variant="ghost" size="icon" onClick={() => signOut()} title="Sair">
