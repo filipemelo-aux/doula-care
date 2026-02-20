@@ -167,50 +167,75 @@ function buildCSV(tab: ReportTab, data: Awaited<ReturnType<typeof fetchReportDat
 
 // ─── XLSX ───────────────────────────────────────────────────
 async function buildAndDownloadXLSX(tab: ReportTab, data: Awaited<ReturnType<typeof fetchReportData>>, fileName: string, period: PeriodOption) {
-  const XLSX = await import("xlsx");
-  const wb = XLSX.utils.book_new();
+  const ExcelJS = await import("exceljs");
+  const wb = new ExcelJS.Workbook();
 
   if (tab === "clientes" && "clients" in data) {
-    const rows = data.clients.map((c) => ({
-      Nome: c.full_name,
-      Status: statusLabels[c.status] || c.status,
-      Plano: planLabels[c.plan] || c.plan,
-      Telefone: c.phone,
-      "Valor do Plano": c.plan_value || 0,
-      "Status Pagamento": paymentStatusLabels[c.payment_status] || c.payment_status,
-    }));
-    const ws = XLSX.utils.json_to_sheet(rows);
-    XLSX.utils.book_append_sheet(wb, ws, "Clientes");
+    const ws = wb.addWorksheet("Clientes");
+    ws.columns = [
+      { header: "Nome", key: "nome", width: 30 },
+      { header: "Status", key: "status", width: 15 },
+      { header: "Plano", key: "plano", width: 15 },
+      { header: "Telefone", key: "telefone", width: 18 },
+      { header: "Valor do Plano", key: "valor", width: 15 },
+      { header: "Status Pagamento", key: "pagamento", width: 18 },
+    ];
+    data.clients.forEach((c) => {
+      ws.addRow({
+        nome: c.full_name,
+        status: statusLabels[c.status] || c.status,
+        plano: planLabels[c.plan] || c.plan,
+        telefone: c.phone,
+        valor: c.plan_value || 0,
+        pagamento: paymentStatusLabels[c.payment_status] || c.payment_status,
+      });
+    });
   } else if ("summary" in data) {
-    // Summary sheet
     if (tab === "financeiro") {
       const s = data.summary;
-      const summaryRows = [
-        { Métrica: "Receita Total", Valor: s.totalIncome },
-        { Métrica: "Receita Recebida", Valor: s.totalReceived },
-        { Métrica: "Receita Pendente", Valor: s.totalPending },
-        { Métrica: "Despesas", Valor: s.totalExpenses },
-        { Métrica: "Saldo", Valor: s.balance },
+      const wsSummary = wb.addWorksheet("Resumo");
+      wsSummary.columns = [
+        { header: "Métrica", key: "metrica", width: 25 },
+        { header: "Valor", key: "valor", width: 20 },
       ];
-      const wsSummary = XLSX.utils.json_to_sheet(summaryRows);
-      XLSX.utils.book_append_sheet(wb, wsSummary, "Resumo");
+      wsSummary.addRow({ metrica: "Receita Total", valor: s.totalIncome });
+      wsSummary.addRow({ metrica: "Receita Recebida", valor: s.totalReceived });
+      wsSummary.addRow({ metrica: "Receita Pendente", valor: s.totalPending });
+      wsSummary.addRow({ metrica: "Despesas", valor: s.totalExpenses });
+      wsSummary.addRow({ metrica: "Saldo", valor: s.balance });
     }
 
-    // Transactions sheet
-    const rows = data.transactions.map((t) => ({
-      Data: t.date,
-      Descrição: t.description,
-      Tipo: t.type === "receita" ? "Receita" : "Despesa",
-      Valor: t.amount,
-      "Valor Recebido": t.amount_received || 0,
-      "Forma Pagamento": methodLabels[t.payment_method || ""] || t.payment_method || "",
-      Categoria: categoryLabels[t.expense_category || ""] || t.expense_category || "",
-    }));
-    const ws = XLSX.utils.json_to_sheet(rows);
-    XLSX.utils.book_append_sheet(wb, ws, "Transações");
+    const ws = wb.addWorksheet("Transações");
+    ws.columns = [
+      { header: "Data", key: "data", width: 12 },
+      { header: "Descrição", key: "descricao", width: 30 },
+      { header: "Tipo", key: "tipo", width: 12 },
+      { header: "Valor", key: "valor", width: 15 },
+      { header: "Valor Recebido", key: "recebido", width: 15 },
+      { header: "Forma Pagamento", key: "pagamento", width: 18 },
+      { header: "Categoria", key: "categoria", width: 20 },
+    ];
+    data.transactions.forEach((t) => {
+      ws.addRow({
+        data: t.date,
+        descricao: t.description,
+        tipo: t.type === "receita" ? "Receita" : "Despesa",
+        valor: t.amount,
+        recebido: t.amount_received || 0,
+        pagamento: methodLabels[t.payment_method || ""] || t.payment_method || "",
+        categoria: categoryLabels[t.expense_category || ""] || t.expense_category || "",
+      });
+    });
   }
 
-  XLSX.writeFile(wb, `${fileName}.xlsx`);
+  const buffer = await wb.xlsx.writeBuffer();
+  const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.document" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `${fileName}.xlsx`;
+  a.click();
+  URL.revokeObjectURL(url);
 }
 
 // ─── PDF ────────────────────────────────────────────────────
