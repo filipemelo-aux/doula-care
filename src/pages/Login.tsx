@@ -84,12 +84,12 @@ export default function Login() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-primary/5 p-4">
       <Card className="w-full max-w-md card-glass">
-        <CardHeader className="text-center space-y-1">
-          <img src={logo} alt="Papo de Doula" className="w-40 h-40 object-contain mx-auto" />
-          <div>
-            <CardTitle className="text-2xl font-display">Papo de Doula</CardTitle>
-            <CardDescription>Entre com seu email e senha</CardDescription>
+        <CardHeader className="text-center space-y-4">
+          <div className="flex flex-col items-center gap-0">
+            <img src={logo} alt="Papo de Doula" className="w-32 h-32 object-contain" />
+            <CardTitle className="text-2xl font-display font-bold tracking-wide -mt-1">Papo de Doula</CardTitle>
           </div>
+          <CardDescription>Entre com seu email e senha</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
