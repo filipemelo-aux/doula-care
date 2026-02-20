@@ -29,6 +29,8 @@ import {
   CreditCard,
   FileText,
   DollarSign,
+  Download,
+  Loader2,
 } from "lucide-react";
 import { PeriodFilter, PeriodOption, getPeriodDates, getPeriodLabel } from "@/components/dashboard/PeriodFilter";
 import {
@@ -39,11 +41,35 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { exportReport, type ReportTab, type ExportFormat } from "@/services/reportExport";
+import { toast } from "sonner";
 
 const COLORS = ["hsl(350 65% 55%)", "hsl(142 71% 45%)", "hsl(18 60% 60%)", "hsl(199 89% 48%)", "hsl(38 92% 50%)", "hsl(270 60% 60%)"];
 
 export default function Reports() {
   const [period, setPeriod] = useState<PeriodOption>("semester");
+  const [activeTab, setActiveTab] = useState<ReportTab>("financeiro");
+  const [exporting, setExporting] = useState(false);
+
+  const handleExport = async (fmt: ExportFormat) => {
+    try {
+      setExporting(true);
+      await exportReport(activeTab, period, fmt);
+      toast.success("Relatório exportado com sucesso!");
+    } catch (err) {
+      console.error(err);
+      toast.error("Erro ao exportar relatório");
+    } finally {
+      setExporting(false);
+    }
+  };
 
   // Get monthly data for charts
   const { data: monthlyData } = useQuery({
@@ -269,7 +295,31 @@ export default function Reports() {
             Visualize o desempenho do seu negócio em detalhes
           </p>
         </div>
-        <PeriodFilter selected={period} onChange={setPeriod} />
+        <div className="flex items-center gap-2">
+          <PeriodFilter selected={period} onChange={setPeriod} />
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" className="gap-2" disabled={exporting}>
+                {exporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+                Exportar
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => handleExport("csv")}>
+                <FileText className="w-4 h-4 mr-2" />
+                CSV
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleExport("pdf")}>
+                <FileText className="w-4 h-4 mr-2" />
+                PDF
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleExport("xlsx")}>
+                <FileText className="w-4 h-4 mr-2" />
+                Excel (XLSX)
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </div>
 
       {/* Summary Cards */}
@@ -323,7 +373,7 @@ export default function Reports() {
       </div>
 
       {/* Tabs for different report views */}
-      <Tabs defaultValue="financeiro" className="space-y-6">
+      <Tabs defaultValue="financeiro" onValueChange={(v) => setActiveTab(v as ReportTab)} className="space-y-6">
         <TabsList className="grid w-full grid-cols-4 lg:w-auto lg:inline-flex">
           <TabsTrigger value="financeiro" className="gap-2">
             <DollarSign className="w-4 h-4" />
