@@ -14,6 +14,47 @@ export type Database = {
   }
   public: {
     Tables: {
+      appointments: {
+        Row: {
+          client_id: string
+          created_at: string
+          id: string
+          notes: string | null
+          owner_id: string | null
+          scheduled_at: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          owner_id?: string | null
+          scheduled_at: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          owner_id?: string | null
+          scheduled_at?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appointments_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       client_notifications: {
         Row: {
           client_id: string
@@ -409,8 +450,11 @@ export type Database = {
           budget_sent_at: string | null
           budget_value: number | null
           client_id: string
+          completed_at: string | null
           created_at: string
           id: string
+          rating: number | null
+          rating_comment: string | null
           responded_at: string | null
           service_type: string
           status: string
@@ -420,8 +464,11 @@ export type Database = {
           budget_sent_at?: string | null
           budget_value?: number | null
           client_id: string
+          completed_at?: string | null
           created_at?: string
           id?: string
+          rating?: number | null
+          rating_comment?: string | null
           responded_at?: string | null
           service_type: string
           status?: string
@@ -431,8 +478,11 @@ export type Database = {
           budget_sent_at?: string | null
           budget_value?: number | null
           client_id?: string
+          completed_at?: string | null
           created_at?: string
           id?: string
+          rating?: number | null
+          rating_comment?: string | null
           responded_at?: string | null
           service_type?: string
           status?: string
