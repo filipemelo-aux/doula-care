@@ -1,5 +1,6 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { InAppNotificationListener } from "@/components/notifications/InAppNotificationListener";
+import { AutoPushPrompt } from "@/components/notifications/AutoPushPrompt";
 
 export function NotificationListenerProvider() {
   const { user, role, client, isAdmin, isClient } = useAuth();
@@ -7,10 +8,13 @@ export function NotificationListenerProvider() {
   if (!user || !role) return null;
 
   return (
-    <InAppNotificationListener
-      userId={user.id}
-      role={isClient ? "client" : "admin"}
-      clientId={client?.id}
-    />
+    <>
+      <InAppNotificationListener
+        userId={user.id}
+        role={isClient ? "client" : "admin"}
+        clientId={client?.id}
+      />
+      <AutoPushPrompt userId={user.id} />
+    </>
   );
 }
