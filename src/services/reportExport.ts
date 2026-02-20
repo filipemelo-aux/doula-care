@@ -166,76 +166,64 @@ function buildCSV(tab: ReportTab, data: Awaited<ReturnType<typeof fetchReportDat
 }
 
 // ─── XLSX ───────────────────────────────────────────────────
-async function buildAndDownloadXLSX(tab: ReportTab, data: Awaited<ReturnType<typeof fetchReportData>>, fileName: string, period: PeriodOption) {
-  const ExcelJS = await import("exceljs");
-  const wb = new ExcelJS.Workbook();
+async function buildAndDownloadXLSX(tab: ReportTab, data: Awaited<ReturnType<typeof fetchReportData>>, fileName: string, _period: PeriodOption) {
+  const mod = await import("write-excel-file");
+  const writeXlsxFile = mod.default;
+  type Cell = { value: string | number | null; type?: typeof String | typeof Number; fontWeight?: "bold" };
+  type Row = Cell[];
+
+  const sheets: { name: string; data: Row[] }[] = [];
 
   if (tab === "clientes" && "clients" in data) {
-    const ws = wb.addWorksheet("Clientes");
-    ws.columns = [
-      { header: "Nome", key: "nome", width: 30 },
-      { header: "Status", key: "status", width: 15 },
-      { header: "Plano", key: "plano", width: 15 },
-      { header: "Telefone", key: "telefone", width: 18 },
-      { header: "Valor do Plano", key: "valor", width: 15 },
-      { header: "Status Pagamento", key: "pagamento", width: 18 },
+    const header: Row = [
+      { value: "Nome", fontWeight: "bold" }, { value: "Status", fontWeight: "bold" },
+      { value: "Plano", fontWeight: "bold" }, { value: "Telefone", fontWeight: "bold" },
+      { value: "Valor do Plano", fontWeight: "bold" }, { value: "Status Pagamento", fontWeight: "bold" },
     ];
-    data.clients.forEach((c) => {
-      ws.addRow({
-        nome: c.full_name,
-        status: statusLabels[c.status] || c.status,
-        plano: planLabels[c.plan] || c.plan,
-        telefone: c.phone,
-        valor: c.plan_value || 0,
-        pagamento: paymentStatusLabels[c.payment_status] || c.payment_status,
-      });
-    });
+    const rows: Row[] = data.clients.map((c) => [
+      { value: c.full_name, type: String }, { value: statusLabels[c.status] || c.status, type: String },
+      { value: planLabels[c.plan] || c.plan, type: String }, { value: c.phone, type: String },
+      { value: c.plan_value || 0, type: Number }, { value: paymentStatusLabels[c.payment_status] || c.payment_status, type: String },
+    ]);
+    sheets.push({ name: "Clientes", data: [header, ...rows] });
   } else if ("summary" in data) {
     if (tab === "financeiro") {
       const s = data.summary;
-      const wsSummary = wb.addWorksheet("Resumo");
-      wsSummary.columns = [
-        { header: "Métrica", key: "metrica", width: 25 },
-        { header: "Valor", key: "valor", width: 20 },
+      const summaryHeader: Row = [{ value: "Métrica", fontWeight: "bold" }, { value: "Valor", fontWeight: "bold" }];
+      const summaryRows: Row[] = [
+        [{ value: "Receita Total", type: String }, { value: s.totalIncome, type: Number }],
+        [{ value: "Receita Recebida", type: String }, { value: s.totalReceived, type: Number }],
+        [{ value: "Receita Pendente", type: String }, { value: s.totalPending, type: Number }],
+        [{ value: "Despesas", type: String }, { value: s.totalExpenses, type: Number }],
+        [{ value: "Saldo", type: String }, { value: s.balance, type: Number }],
       ];
-      wsSummary.addRow({ metrica: "Receita Total", valor: s.totalIncome });
-      wsSummary.addRow({ metrica: "Receita Recebida", valor: s.totalReceived });
-      wsSummary.addRow({ metrica: "Receita Pendente", valor: s.totalPending });
-      wsSummary.addRow({ metrica: "Despesas", valor: s.totalExpenses });
-      wsSummary.addRow({ metrica: "Saldo", valor: s.balance });
+      sheets.push({ name: "Resumo", data: [summaryHeader, ...summaryRows] });
     }
 
-    const ws = wb.addWorksheet("Transações");
-    ws.columns = [
-      { header: "Data", key: "data", width: 12 },
-      { header: "Descrição", key: "descricao", width: 30 },
-      { header: "Tipo", key: "tipo", width: 12 },
-      { header: "Valor", key: "valor", width: 15 },
-      { header: "Valor Recebido", key: "recebido", width: 15 },
-      { header: "Forma Pagamento", key: "pagamento", width: 18 },
-      { header: "Categoria", key: "categoria", width: 20 },
+    const txHeader: Row = [
+      { value: "Data", fontWeight: "bold" }, { value: "Descrição", fontWeight: "bold" },
+      { value: "Tipo", fontWeight: "bold" }, { value: "Valor", fontWeight: "bold" },
+      { value: "Valor Recebido", fontWeight: "bold" }, { value: "Forma Pagamento", fontWeight: "bold" },
+      { value: "Categoria", fontWeight: "bold" },
     ];
-    data.transactions.forEach((t) => {
-      ws.addRow({
-        data: t.date,
-        descricao: t.description,
-        tipo: t.type === "receita" ? "Receita" : "Despesa",
-        valor: t.amount,
-        recebido: t.amount_received || 0,
-        pagamento: methodLabels[t.payment_method || ""] || t.payment_method || "",
-        categoria: categoryLabels[t.expense_category || ""] || t.expense_category || "",
-      });
-    });
+    const txRows: Row[] = data.transactions.map((t) => [
+      { value: t.date, type: String }, { value: t.description, type: String },
+      { value: t.type === "receita" ? "Receita" : "Despesa", type: String },
+      { value: t.amount, type: Number }, { value: t.amount_received || 0, type: Number },
+      { value: methodLabels[t.payment_method || ""] || t.payment_method || "", type: String },
+      { value: categoryLabels[t.expense_category || ""] || t.expense_category || "", type: String },
+    ]);
+    sheets.push({ name: "Transações", data: [txHeader, ...txRows] });
   }
 
-  const buffer = await wb.xlsx.writeBuffer();
-  const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.document" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `${fileName}.xlsx`;
-  a.click();
-  URL.revokeObjectURL(url);
+  if (sheets.length === 1) {
+    await writeXlsxFile(sheets[0].data as any, { fileName: `${fileName}.xlsx` });
+  } else if (sheets.length > 1) {
+    await writeXlsxFile(sheets.map(s => s.data) as any, {
+      sheets: sheets.map(s => s.name),
+      fileName: `${fileName}.xlsx`,
+    });
+  }
 }
 
 // ─── PDF ────────────────────────────────────────────────────
