@@ -444,8 +444,10 @@ export default function Financial() {
   };
 
   // Separate client plan revenues from service/manual revenues
-  const clientTransactions = transactions?.filter((t) => t.plan_id != null) || [];
-  const serviceTransactions = transactions?.filter((t) => t.plan_id == null) || [];
+  // Client tab: has plan_id OR is auto-generated (contract-based)
+  // Service tab: no plan_id AND not auto-generated (manual/service entries)
+  const clientTransactions = transactions?.filter((t) => t.plan_id != null || t.is_auto_generated === true) || [];
+  const serviceTransactions = transactions?.filter((t) => t.plan_id == null && !t.is_auto_generated) || [];
 
   const activeTabTransactions = revenueTab === "clientes" ? clientTransactions : serviceTransactions;
 
