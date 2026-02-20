@@ -4,11 +4,11 @@ import { Loader2 } from "lucide-react";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
-  requireAdmin?: boolean;
+  allowedRoles: ("admin" | "moderator" | "client" | "user")[];
 }
 
-export function ProtectedRoute({ children, requireAdmin = false }: ProtectedRouteProps) {
-  const { user, loading, isAdmin, roleChecked } = useAuth();
+export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) {
+  const { user, loading, role, roleChecked, isFirstLogin } = useAuth();
   const location = useLocation();
 
   // Show loading during initial auth check or while role check is pending
@@ -23,19 +23,31 @@ export function ProtectedRoute({ children, requireAdmin = false }: ProtectedRout
     );
   }
 
-  // No user means not authenticated - redirect to admin login
+  // Not authenticated
   if (!user) {
-    return <Navigate to="/admin/login" state={{ from: location }} replace />;
+    return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  // Role check completed but user is not admin - redirect to admin login
-  if (roleChecked && !isAdmin) {
-    return <Navigate to="/admin/login" replace />;
+  // Role not in allowed list
+  if (roleChecked && role && !allowedRoles.includes(role)) {
+    // Redirect to the correct area based on role
+    if (role === "admin" || role === "moderator") {
+      return <Navigate to="/admin" replace />;
+    }
+    if (role === "client") {
+      return <Navigate to="/gestante" replace />;
+    }
+    return <Navigate to="/login" replace />;
   }
 
-  // Check if admin access is required but user is not admin
-  if (requireAdmin && !isAdmin) {
-    return <Navigate to="/admin" replace />;
+  // No role found
+  if (roleChecked && !role) {
+    return <Navigate to="/login" replace />;
+  }
+
+  // Client first login: force password change
+  if (role === "client" && isFirstLogin && location.pathname !== "/gestante/alterar-senha") {
+    return <Navigate to="/gestante/alterar-senha" replace />;
   }
 
   return <>{children}</>;
