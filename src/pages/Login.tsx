@@ -6,7 +6,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Heart, Loader2, Eye, EyeOff } from "lucide-react";
-import { InstallAppButton } from "@/components/pwa/InstallAppButton";
 import { toast } from "sonner";
 
 export default function Login() {
@@ -83,8 +82,7 @@ export default function Login() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-primary/5 p-4">
-      <div className="w-full max-w-md space-y-4">
-      <Card className="w-full card-glass">
+      <Card className="w-full max-w-md card-glass">
         <CardHeader className="text-center space-y-4">
           <div className="mx-auto w-16 h-16 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center">
             <Heart className="w-8 h-8 text-primary-foreground" />
@@ -152,10 +150,6 @@ export default function Login() {
           </form>
         </CardContent>
       </Card>
-      <div className="flex justify-center">
-        <InstallAppButton />
-      </div>
-      </div>
     </div>
   );
 }
