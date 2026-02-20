@@ -135,29 +135,18 @@ export default function GestanteDashboard() {
 
     return (
       <GestanteLayout>
-        {/* Header for Puérpera */}
-        <header className="sticky top-0 z-40 bg-gradient-to-br from-pink-200/50 via-primary/10 to-accent/20 border-b">
-          <div className="px-4 lg:px-8 py-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-pink-400 to-primary flex items-center justify-center shadow-md animate-pulse">
-                  <Baby className="w-5 h-5 text-primary-foreground" />
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">Mamãe,</p>
-                  <h1 className="font-display font-bold text-base">{client?.full_name?.split(" ")[0]}!</h1>
-                </div>
-              </div>
-              <button
-                onClick={signOut}
-                className="p-2 rounded-full hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
-                title="Sair"
-              >
-                <LogOut className="h-5 w-5" />
-              </button>
+        {/* Greeting for Puérpera */}
+        <div className="bg-gradient-to-b from-pink-200/50 to-background px-4 lg:px-8 py-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-pink-400 to-primary flex items-center justify-center shadow-md animate-pulse">
+              <Baby className="w-5 h-5 text-primary-foreground" />
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">Mamãe,</p>
+              <h1 className="font-display font-bold text-base">{client?.full_name?.split(" ")[0]}!</h1>
             </div>
           </div>
-        </header>
+        </div>
 
         <div className="container mx-auto px-4 py-6 space-y-6">
           {/* Congratulations Card */}
@@ -309,29 +298,18 @@ export default function GestanteDashboard() {
   // Gestante View - Before birth (original)
   return (
     <GestanteLayout>
-      {/* Header */}
-      <header className="sticky top-0 z-40 bg-gradient-to-br from-primary/20 via-primary/10 to-accent/10 border-b">
-        <div className="px-4 lg:px-8 py-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-md">
-                <Heart className="w-5 h-5 text-primary-foreground" />
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground">Olá,</p>
-                <h1 className="font-display font-bold text-base">{client?.full_name?.split(" ")[0]}!</h1>
-              </div>
-            </div>
-            <button
-              onClick={signOut}
-              className="p-2 rounded-full hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
-              title="Sair"
-            >
-              <LogOut className="h-5 w-5" />
-            </button>
+      {/* Greeting */}
+      <div className="bg-gradient-to-b from-primary/15 to-background px-4 lg:px-8 py-4">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-md">
+            <Heart className="w-5 h-5 text-primary-foreground" />
+          </div>
+          <div>
+            <p className="text-xs text-muted-foreground">Olá,</p>
+            <h1 className="font-display font-bold text-base">{client?.full_name?.split(" ")[0]}!</h1>
           </div>
         </div>
-      </header>
+      </div>
 
       <div className="container mx-auto px-4 py-6 space-y-6">
         {/* Pregnancy Progress + Labor Button Row */}
