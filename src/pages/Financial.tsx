@@ -41,7 +41,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
 import { format, parseISO } from "date-fns";
-import { formatBrazilDate } from "@/lib/utils";
+import { formatBrazilDate, abbreviateName } from "@/lib/utils";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { Wallet, Calendar, Clock } from "lucide-react";
 import {
@@ -538,7 +538,7 @@ export default function Financial() {
                       {/* Info: Client + Date */}
                       <div className="flex items-center gap-1 min-w-0 w-full">
                         <span className="text-xs text-muted-foreground truncate min-w-0 flex-1" title={transaction.clients?.full_name || "—"}>
-                          {transaction.clients?.full_name || "—"}
+                          {transaction.clients?.full_name ? abbreviateName(transaction.clients.full_name) : "—"}
                         </span>
                         <span className="text-xs text-muted-foreground flex-shrink-0">• {formatBrazilDate(transaction.date, "dd/MM/yy")}</span>
                       </div>

@@ -70,39 +70,54 @@ export function formatBrazilTime(
 export function abbreviateName(fullName: string): string {
   const parts = fullName.split(" ");
   const prefixes = ["de", "da", "do", "dos", "das", "e", "del", "della", "di"];
-  
-  // Count actual names (excluding prefixes)
-  const actualNames = parts.filter(part => !prefixes.includes(part.toLowerCase()));
-  
-  if (actualNames.length <= 4) {
+
+  // Group parts into "name units" where prefix + next word = 1 unit
+  // e.g. ["Maria", "José", "da", "Silva", "Santos", "Oliveira"] -> 
+  //       [{parts: ["Maria"]}, {parts: ["José"]}, {parts: ["da", "Silva"]}, {parts: ["Santos"]}, {parts: ["Oliveira"]}]
+  const nameUnits: { parts: string[]; startIndex: number }[] = [];
+  let i = 0;
+  while (i < parts.length) {
+    if (prefixes.includes(parts[i].toLowerCase()) && i + 1 < parts.length) {
+      // Prefix + next word = one unit
+      nameUnits.push({ parts: [parts[i], parts[i + 1]], startIndex: i });
+      i += 2;
+    } else {
+      nameUnits.push({ parts: [parts[i]], startIndex: i });
+      i += 1;
+    }
+  }
+
+  const totalNames = nameUnits.length; // first name + surnames
+  const totalSurnames = totalNames - 1;
+
+  // Determine which name positions (1-indexed) to abbreviate
+  const positionsToAbbreviate: number[] = [];
+  if (totalSurnames >= 5) {
+    // 5+ surnames: abbreviate 3rd and 4th names
+    positionsToAbbreviate.push(3, 4);
+  } else if (totalSurnames === 4) {
+    // 4 surnames: abbreviate 3rd name
+    positionsToAbbreviate.push(3);
+  }
+
+  if (positionsToAbbreviate.length === 0) {
     return fullName;
   }
-  
-  // Find the indices of the 3rd and 4th actual names in the original parts array
-  let actualNameCount = 0;
-  const indicesToAbbreviate: number[] = [];
-  
-  for (let i = 0; i < parts.length; i++) {
-    if (!prefixes.includes(parts[i].toLowerCase())) {
-      actualNameCount++;
-      if (actualNameCount === 3 || actualNameCount === 4) {
-        indicesToAbbreviate.push(i);
+
+  // Build abbreviated name
+  const result = nameUnits.map((unit, idx) => {
+    const position = idx + 1; // 1-indexed
+    if (positionsToAbbreviate.includes(position)) {
+      // Get the main name (last part of the unit, the non-prefix part)
+      const mainName = unit.parts[unit.parts.length - 1];
+      if (unit.parts.length > 1) {
+        // Has prefix: keep prefix + abbreviate main name
+        return [...unit.parts.slice(0, -1), mainName.charAt(0).toUpperCase() + "."].join(" ");
       }
-      if (actualNameCount >= 4) break;
+      return mainName.charAt(0).toUpperCase() + ".";
     }
-  }
-  
-  if (indicesToAbbreviate.length === 0) {
-    return fullName;
-  }
-  
-  // Abbreviate the 3rd and 4th actual names
-  const abbreviated = parts.map((part, index) => {
-    if (indicesToAbbreviate.includes(index)) {
-      return part.charAt(0).toUpperCase() + ".";
-    }
-    return part;
+    return unit.parts.join(" ");
   });
-  
-  return abbreviated.join(" ");
+
+  return result.join(" ");
 }
