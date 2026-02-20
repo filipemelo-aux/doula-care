@@ -95,11 +95,11 @@ export default function Login() {
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Email ou Usuário</Label>
+              <Label htmlFor="email">Usuário</Label>
               <Input
                 id="email"
                 type="text"
-                placeholder="seu@email.com ou nome.sobrenome"
+                placeholder="Digite seu usuário"
                 value={email}
                 onChange={(e) => setEmail(e.target.value.toLowerCase())}
                 required
@@ -108,10 +108,6 @@ export default function Login() {
                 className="input-field lowercase"
                 style={{ textTransform: "lowercase" }}
               />
-              <p className="text-xs text-muted-foreground">
-                Administradores: use seu email (ex: doula@email.com).
-                Clientes: use seu usuário no formato nome.sobrenome (ex: maria.silva).
-              </p>
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">Senha</Label>
