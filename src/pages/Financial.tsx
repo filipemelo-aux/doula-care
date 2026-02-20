@@ -540,13 +540,13 @@ export default function Financial() {
                         {transaction.clients?.full_name || "—"} • {formatBrazilDate(transaction.date, "dd/MM/yy")}
                       </p>
 
-                      {/* Values: Grid layout - compact */}
-                      <div className="grid grid-cols-4 gap-0 pt-1.5 border-t border-border/50">
-                        <div className="text-center min-w-0 px-0">
+                      {/* Values: flex layout - compact */}
+                      <div className="flex items-start pt-1.5 border-t border-border/50 overflow-hidden">
+                        <div className="text-center min-w-0 flex-1 overflow-hidden">
                           <span className="text-[10px] text-muted-foreground block">Total</span>
-                          <span className="font-semibold text-sm">{formatCompact(totalAmount)}</span>
+                          <span className="font-semibold text-sm truncate block">{formatCompact(totalAmount)}</span>
                         </div>
-                        <div className="text-center min-w-0 px-0">
+                        <div className="text-center min-w-0 w-10 flex-shrink-0">
                           <span className="text-[10px] text-muted-foreground block">Parc.</span>
                           {isEditingInstallmentsMobile ? (
                             <Select
@@ -558,7 +558,7 @@ export default function Financial() {
                                 updateInstallmentsMutation.mutate({ id: transaction.id, installments, installmentValue });
                               }}
                             >
-                              <SelectTrigger className="w-14 h-6 text-xs px-1">
+                              <SelectTrigger className="w-10 h-6 text-xs px-0.5">
                                 <SelectValue />
                               </SelectTrigger>
                               <SelectContent>
@@ -578,7 +578,7 @@ export default function Financial() {
                             </span>
                           )}
                         </div>
-                        <div className="text-center min-w-0 px-0">
+                        <div className="text-center min-w-0 flex-1 overflow-hidden">
                           <span className="text-[10px] text-muted-foreground block">Receb.</span>
                           {isEditingReceivedMobile ? (
                             <Input
@@ -608,11 +608,11 @@ export default function Financial() {
                             </span>
                           )}
                         </div>
-                        <div className="text-center min-w-0 px-0">
+                        <div className="text-center min-w-0 flex-1 overflow-hidden">
                           <span className="text-[10px] text-muted-foreground block">Pend.</span>
                           {pendingAmount > 0 ? (
-                            <div className="flex items-center justify-center gap-0">
-                              <span className="text-sm text-warning font-medium">{formatCompact(pendingAmount)}</span>
+                            <div className="flex flex-col items-center">
+                              <span className="text-sm text-warning font-medium truncate max-w-full">{formatCompact(pendingAmount)}</span>
                               <Button
                                 variant="ghost"
                                 size="icon"
