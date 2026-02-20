@@ -1,10 +1,15 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { BookHeart } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { ClientDiaryDialog } from "@/components/dashboard/ClientDiaryDialog";
+import type { Tables } from "@/integrations/supabase/types";
 
 const statusLabels = {
   tentante: "Tentante",
@@ -19,6 +24,9 @@ const paymentStatusLabels = {
 };
 
 export function RecentClients() {
+  const [diaryDialogOpen, setDiaryDialogOpen] = useState(false);
+  const [diaryClient, setDiaryClient] = useState<Tables<"clients"> | null>(null);
+
   const { data: clients, isLoading } = useQuery({
     queryKey: ["recent-clients"],
     queryFn: async () => {
@@ -55,6 +63,7 @@ export function RecentClients() {
   }
 
   return (
+    <>
     <Card className="card-glass">
       <CardHeader>
         <CardTitle className="text-lg font-semibold text-foreground">Clientes Recentes</CardTitle>
@@ -101,6 +110,20 @@ export function RecentClients() {
                     {paymentStatusLabels[client.payment_status as keyof typeof paymentStatusLabels]}
                   </Badge>
                 </div>
+                {(client.status === "gestante" || client.status === "lactante") && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 flex-shrink-0 text-primary hover:bg-primary/10"
+                    title={client.status === "lactante" ? "Diário do Puerpério" : "Diário da Gestação"}
+                    onClick={() => {
+                      setDiaryClient(client);
+                      setDiaryDialogOpen(true);
+                    }}
+                  >
+                    <BookHeart className="h-4 w-4" />
+                  </Button>
+                )}
               </div>
             ))}
           </div>
@@ -111,5 +134,12 @@ export function RecentClients() {
         )}
       </CardContent>
     </Card>
+
+    <ClientDiaryDialog
+      open={diaryDialogOpen}
+      onOpenChange={setDiaryDialogOpen}
+      client={diaryClient}
+    />
+    </>
   );
 }
