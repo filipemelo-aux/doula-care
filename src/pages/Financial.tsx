@@ -35,7 +35,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, TrendingUp, Search, Trash2, Zap, Check, X, CheckCircle, CreditCard, Banknote, Building2, QrCode, FileText } from "lucide-react";
+import { Plus, TrendingUp, Search, Trash2, Zap, Check, X, CheckCircle, CreditCard, Banknote, Building2, QrCode, FileText, Users, Wrench } from "lucide-react";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -100,6 +101,7 @@ export default function Financial() {
   const [editingReceivedValue, setEditingReceivedValue] = useState<string>("");
   const [editingInstallmentsId, setEditingInstallmentsId] = useState<string | null>(null);
   const [editingInstallmentsValue, setEditingInstallmentsValue] = useState<string>("");
+  const [revenueTab, setRevenueTab] = useState<string>("clientes");
 
   const queryClient = useQueryClient();
 
@@ -377,7 +379,13 @@ export default function Financial() {
     setDialogOpen(true);
   };
 
-  const filteredTransactions = transactions?.filter(
+  // Separate client plan revenues from service/manual revenues
+  const clientTransactions = transactions?.filter((t) => t.plan_id != null) || [];
+  const serviceTransactions = transactions?.filter((t) => t.plan_id == null) || [];
+
+  const activeTabTransactions = revenueTab === "clientes" ? clientTransactions : serviceTransactions;
+
+  const filteredTransactions = activeTabTransactions.filter(
     (t) =>
       t.description.toLowerCase().includes(search.toLowerCase()) ||
       t.clients?.full_name?.toLowerCase().includes(search.toLowerCase())
@@ -477,9 +485,18 @@ export default function Financial() {
       {/* Revenues List */}
       <Card className="card-glass w-full box-border">
         <CardHeader className="px-3 py-3 lg:p-6">
-          <CardTitle className="text-lg font-semibold text-foreground">
-            Receitas ({filteredTransactions?.length || 0})
-          </CardTitle>
+          <Tabs value={revenueTab} onValueChange={setRevenueTab} className="w-full">
+            <TabsList className="w-full">
+              <TabsTrigger value="clientes" className="flex-1 gap-1.5">
+                <Users className="h-3.5 w-3.5" />
+                Clientes ({clientTransactions.length})
+              </TabsTrigger>
+              <TabsTrigger value="servicos" className="flex-1 gap-1.5">
+                <Wrench className="h-3.5 w-3.5" />
+                Serviços ({serviceTransactions.length})
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
         </CardHeader>
         <CardContent className="p-0">
           {isLoading ? (
