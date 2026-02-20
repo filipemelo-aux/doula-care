@@ -22,27 +22,23 @@ export default defineConfig(({ mode }) => ({
       manifest: {
         name: "Papo de Doula",
         short_name: "Papo de Doula",
-        start_url: "/?v=2",
+        start_url: "/?v=3",
         display: "standalone",
         background_color: "#ffffff",
         theme_color: "#c34a1c",
         orientation: "portrait",
         icons: [
           {
-            src: "/pwa-icon-192.png?v=2",
+            src: "/pwa-icon-192.png?v=3",
             sizes: "192x192",
             type: "image/png",
+            purpose: "any",
           },
           {
-            src: "/pwa-icon-512.png?v=2",
+            src: "/pwa-icon-512.png?v=3",
             sizes: "512x512",
             type: "image/png",
-          },
-          {
-            src: "/pwa-icon-512.png?v=2",
-            sizes: "512x512",
-            type: "image/png",
-            purpose: "maskable",
+            purpose: "any",
           },
         ],
       },
