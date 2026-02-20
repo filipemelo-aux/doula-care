@@ -489,7 +489,7 @@ export default function Financial() {
           ) : filteredTransactions && filteredTransactions.length > 0 ? (
             <>
               {/* Mobile Cards */}
-              <div className="block lg:hidden space-y-2 px-2 py-2 max-w-full overflow-hidden">
+              <div className="block lg:hidden space-y-2 px-1 py-2 max-w-full overflow-hidden">
                 {filteredTransactions.map((transaction) => {
                   const totalAmount = Number(transaction.amount) || 0;
                   const receivedAmount = Number(transaction.amount_received) || 0;
@@ -516,7 +516,7 @@ export default function Financial() {
                     : transaction.description;
 
                   return (
-                    <Card key={transaction.id} className="p-2 space-y-1.5 w-full max-w-full overflow-hidden box-border">
+                    <Card key={transaction.id} className="p-1.5 space-y-1 w-full max-w-full overflow-hidden box-border">
                       {/* Header: Description + Actions */}
                       <div className="flex items-center justify-between gap-1">
                         <div className="flex items-center gap-1 min-w-0 flex-1">
@@ -541,12 +541,12 @@ export default function Financial() {
                       </p>
 
                       {/* Values: Grid layout - compact */}
-                      <div className="grid grid-cols-4 gap-0.5 pt-1.5 border-t border-border/50">
-                        <div className="text-center min-w-0">
+                      <div className="grid grid-cols-4 gap-0 pt-1.5 border-t border-border/50">
+                        <div className="text-center min-w-0 px-0">
                           <span className="text-[10px] text-muted-foreground block">Total</span>
-                          <span className="font-semibold text-sm">{formatCompact(totalAmount)}</span>
+                          <span className="font-semibold text-xs">{formatCompact(totalAmount)}</span>
                         </div>
-                        <div className="text-center min-w-0">
+                        <div className="text-center min-w-0 px-0">
                           <span className="text-[10px] text-muted-foreground block">Parc.</span>
                           {isEditingInstallmentsMobile ? (
                             <Select
@@ -571,14 +571,14 @@ export default function Financial() {
                             </Select>
                           ) : (
                             <span 
-                              className="text-sm font-medium cursor-pointer px-1.5 py-0.5 rounded border border-dashed border-muted-foreground/40 hover:border-primary hover:bg-primary/5 transition-colors"
+                              className="text-xs font-medium cursor-pointer px-1 py-0.5 rounded border border-dashed border-muted-foreground/40 hover:border-primary hover:bg-primary/5 transition-colors"
                               onClick={() => handleStartEditInstallments(transaction)}
                             >
                               {installments}x
                             </span>
                           )}
                         </div>
-                        <div className="text-center min-w-0">
+                        <div className="text-center min-w-0 px-0">
                           <span className="text-[10px] text-muted-foreground block">Receb.</span>
                           {isEditingReceivedMobile ? (
                             <Input
@@ -601,18 +601,18 @@ export default function Financial() {
                             />
                           ) : (
                             <span 
-                              className="text-sm text-success font-medium cursor-pointer px-1.5 py-0.5 rounded border border-dashed border-success/40 hover:border-success hover:bg-success/5 transition-colors"
+                              className="text-xs text-success font-medium cursor-pointer px-1 py-0.5 rounded border border-dashed border-success/40 hover:border-success hover:bg-success/5 transition-colors"
                               onClick={() => handleStartEditReceived(transaction)}
                             >
                               {formatCompact(receivedAmount)}
                             </span>
                           )}
                         </div>
-                        <div className="text-center min-w-0">
+                        <div className="text-center min-w-0 px-0">
                           <span className="text-[10px] text-muted-foreground block">Pend.</span>
                           {pendingAmount > 0 ? (
-                            <div className="flex items-center justify-center gap-0.5">
-                              <span className="text-sm text-warning font-medium">{formatCompact(pendingAmount)}</span>
+                            <div className="flex items-center justify-center gap-0">
+                              <span className="text-xs text-warning font-medium">{formatCompact(pendingAmount)}</span>
                               <Button
                                 variant="ghost"
                                 size="icon"
@@ -623,7 +623,7 @@ export default function Financial() {
                               </Button>
                             </div>
                           ) : (
-                            <span className="text-sm text-success font-medium">OK</span>
+                            <span className="text-xs text-success font-medium">OK</span>
                           )}
                         </div>
                       </div>
