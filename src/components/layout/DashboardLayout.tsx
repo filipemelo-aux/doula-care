@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Outlet } from "react-router-dom";
 import { Sidebar } from "./Sidebar";
 import { Menu, LogOut } from "lucide-react";
+import { InstallAppButton } from "@/components/pwa/InstallAppButton";
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useAuth } from "@/contexts/AuthContext";
@@ -36,17 +37,23 @@ export function DashboardLayout() {
             </Button>
             <h1 className="font-display text-xl text-foreground">Doula Care</h1>
           </div>
-          <Button variant="ghost" size="icon" onClick={() => signOut()} title="Sair">
-            <LogOut className="h-5 w-5 text-muted-foreground" />
-          </Button>
+          <div className="flex items-center gap-2">
+            <InstallAppButton />
+            <Button variant="ghost" size="icon" onClick={() => signOut()} title="Sair">
+              <LogOut className="h-5 w-5 text-muted-foreground" />
+            </Button>
+          </div>
         </header>
 
         {/* Desktop Header */}
         <header className="hidden lg:flex h-16 border-b border-border items-center justify-end px-8 bg-card/50 backdrop-blur-sm sticky top-0 z-40">
-          <Button variant="ghost" size="sm" onClick={() => signOut()} className="gap-2 text-muted-foreground hover:text-foreground">
+          <div className="flex items-center gap-2">
+            <InstallAppButton />
+            <Button variant="ghost" size="sm" onClick={() => signOut()} className="gap-2 text-muted-foreground hover:text-foreground">
             <LogOut className="h-4 w-4" />
             Sair
           </Button>
+          </div>
         </header>
 
         <main className="flex-1 p-3 lg:p-8 overflow-y-auto w-full box-border">
