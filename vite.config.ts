@@ -22,24 +22,24 @@ export default defineConfig(({ mode }) => ({
       manifest: {
         name: "Papo de Doula",
         short_name: "PapoDeDoula",
-        start_url: "/",
+        start_url: "/?v=2",
         display: "standalone",
         background_color: "#ffffff",
         theme_color: "#c34a1c",
         orientation: "portrait",
         icons: [
           {
-            src: "/pwa-icon-192.png",
+            src: "/pwa-icon-192.png?v=2",
             sizes: "192x192",
             type: "image/png",
           },
           {
-            src: "/pwa-icon-512.png",
+            src: "/pwa-icon-512.png?v=2",
             sizes: "512x512",
             type: "image/png",
           },
           {
-            src: "/pwa-icon-512.png",
+            src: "/pwa-icon-512.png?v=2",
             sizes: "512x512",
             type: "image/png",
             purpose: "maskable",
@@ -47,6 +47,9 @@ export default defineConfig(({ mode }) => ({
         ],
       },
       workbox: {
+        skipWaiting: true,
+        clientsClaim: true,
+        cleanupOutdatedCaches: true,
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
         navigateFallbackDenylist: [/^\/~oauth/],
         runtimeCaching: [
@@ -54,7 +57,7 @@ export default defineConfig(({ mode }) => ({
             urlPattern: /^https:\/\/gjnvxzsforfrxjanxqnq\.supabase\.co\/.*/i,
             handler: "NetworkFirst",
             options: {
-              cacheName: "supabase-api-cache",
+              cacheName: "supabase-api-cache-v2",
               expiration: {
                 maxEntries: 50,
                 maxAgeSeconds: 300,
