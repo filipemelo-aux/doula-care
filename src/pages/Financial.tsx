@@ -416,7 +416,7 @@ export default function Financial() {
   };
 
   return (
-    <div className="space-y-6 lg:space-y-8 overflow-x-hidden">
+    <div className="space-y-6 lg:space-y-8 overflow-x-hidden max-w-full w-full box-border">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div className="page-header mb-0 min-w-0">
@@ -430,7 +430,7 @@ export default function Financial() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 gap-2 lg:grid-cols-4 lg:gap-4">
+      <div className="grid grid-cols-2 gap-2 lg:grid-cols-4 lg:gap-4 max-w-full overflow-hidden">
         <StatCard
           title="Receita Total"
           value={formatCurrency(totalIncome)}
@@ -489,7 +489,7 @@ export default function Financial() {
           ) : filteredTransactions && filteredTransactions.length > 0 ? (
             <>
               {/* Mobile Cards */}
-              <div className="block lg:hidden space-y-2 px-3 py-2">
+              <div className="block lg:hidden space-y-2 px-2 py-2 max-w-full overflow-hidden">
                 {filteredTransactions.map((transaction) => {
                   const totalAmount = Number(transaction.amount) || 0;
                   const receivedAmount = Number(transaction.amount_received) || 0;
@@ -516,7 +516,7 @@ export default function Financial() {
                     : transaction.description;
 
                   return (
-                    <Card key={transaction.id} className="p-2 space-y-1.5 w-full max-w-full overflow-hidden">
+                    <Card key={transaction.id} className="p-2 space-y-1.5 w-full max-w-full overflow-hidden box-border">
                       {/* Header: Description + Actions */}
                       <div className="flex items-center justify-between gap-1">
                         <div className="flex items-center gap-1 min-w-0 flex-1">
@@ -541,7 +541,7 @@ export default function Financial() {
                       </p>
 
                       {/* Values: Grid layout - compact */}
-                      <div className="grid grid-cols-4 gap-1 pt-1.5 border-t border-border/50">
+                      <div className="grid grid-cols-4 gap-0.5 pt-1.5 border-t border-border/50">
                         <div className="text-center min-w-0">
                           <span className="text-[10px] text-muted-foreground block">Total</span>
                           <span className="font-semibold text-sm">{formatCompact(totalAmount)}</span>
