@@ -88,7 +88,7 @@ export default function Login() {
             <Heart className="w-8 h-8 text-primary-foreground" />
           </div>
           <div>
-            <CardTitle className="text-2xl font-display">Doula Care</CardTitle>
+            <CardTitle className="text-2xl font-display">Papo de Doula</CardTitle>
             <CardDescription>Entre com seu email e senha</CardDescription>
           </div>
         </CardHeader>
