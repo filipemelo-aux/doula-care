@@ -136,16 +136,16 @@ export default function GestanteDashboard() {
     return (
       <GestanteLayout>
         {/* Header for Puérpera */}
-        <header className="bg-gradient-to-br from-pink-200/50 via-primary/10 to-accent/20 border-b">
-          <div className="px-4 lg:px-8 py-6">
+        <header className="sticky top-0 z-40 bg-gradient-to-br from-pink-200/50 via-primary/10 to-accent/20 border-b">
+          <div className="px-4 lg:px-8 py-3">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="w-14 h-14 rounded-full bg-gradient-to-br from-pink-400 to-primary flex items-center justify-center shadow-lg animate-pulse">
-                  <Baby className="w-7 h-7 text-primary-foreground" />
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-pink-400 to-primary flex items-center justify-center shadow-md animate-pulse">
+                  <Baby className="w-5 h-5 text-primary-foreground" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Mamãe,</p>
-                  <h1 className="font-display font-bold text-xl">{client?.full_name?.split(" ")[0]}!</h1>
+                  <p className="text-xs text-muted-foreground">Mamãe,</p>
+                  <h1 className="font-display font-bold text-base">{client?.full_name?.split(" ")[0]}!</h1>
                 </div>
               </div>
               <button
@@ -310,16 +310,16 @@ export default function GestanteDashboard() {
   return (
     <GestanteLayout>
       {/* Header */}
-      <header className="bg-gradient-to-br from-primary/20 via-primary/10 to-accent/10 border-b">
-        <div className="px-4 lg:px-8 py-6">
+      <header className="sticky top-0 z-40 bg-gradient-to-br from-primary/20 via-primary/10 to-accent/10 border-b">
+        <div className="px-4 lg:px-8 py-3">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="w-14 h-14 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-lg">
-                <Heart className="w-7 h-7 text-primary-foreground" />
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-md">
+                <Heart className="w-5 h-5 text-primary-foreground" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Olá,</p>
-                <h1 className="font-display font-bold text-xl">{client?.full_name?.split(" ")[0]}!</h1>
+                <p className="text-xs text-muted-foreground">Olá,</p>
+                <h1 className="font-display font-bold text-base">{client?.full_name?.split(" ")[0]}!</h1>
               </div>
             </div>
             <button
