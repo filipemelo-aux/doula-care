@@ -35,8 +35,10 @@ export function DashboardLayout() {
             >
               <Menu className="h-5 w-5" />
             </Button>
-            <img src={logo} alt="Papo de Doula" className="w-10 h-10 object-contain" />
-            <h1 className="font-display text-xl text-foreground">Papo de Doula</h1>
+            <div className="flex items-center gap-3">
+              <img src={logo} alt="Papo de Doula" className="w-10 h-10 object-contain" style={{ filter: "drop-shadow(0 2px 6px hsl(var(--primary) / 0.2))" }} />
+              <h1 className="font-display text-lg text-foreground">Papo de Doula</h1>
+            </div>
           </div>
           <Button variant="ghost" size="icon" onClick={() => signOut()} title="Sair">
             <LogOut className="h-5 w-5 text-muted-foreground" />
