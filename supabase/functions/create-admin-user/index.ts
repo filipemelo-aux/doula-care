@@ -21,6 +21,40 @@ Deno.serve(async (req) => {
       },
     });
 
+    // Verify caller is authenticated admin
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) {
+      return new Response(
+        JSON.stringify({ error: "Missing authorization" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const { data: { user: callingUser }, error: authError } = await supabase.auth.getUser(
+      authHeader.replace("Bearer ", "")
+    );
+
+    if (authError || !callingUser) {
+      return new Response(
+        JSON.stringify({ error: "Invalid token" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const { data: roleData } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", callingUser.id)
+      .in("role", ["admin"])
+      .maybeSingle();
+
+    if (!roleData) {
+      return new Response(
+        JSON.stringify({ error: "Admin role required" }),
+        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     const { email, password, fullName, role } = await req.json();
 
     // Create user with service role (bypasses email confirmation)
@@ -32,7 +66,6 @@ Deno.serve(async (req) => {
     });
 
     if (createError) {
-      // Check if user already exists
       if (createError.message.includes("already been registered")) {
         return new Response(
           JSON.stringify({ message: "Usuário já existe", exists: true }),
@@ -42,7 +75,6 @@ Deno.serve(async (req) => {
       throw createError;
     }
 
-    // Assign role if provided
     if (userData.user && role) {
       const { error: roleError } = await supabase
         .from("user_roles")
