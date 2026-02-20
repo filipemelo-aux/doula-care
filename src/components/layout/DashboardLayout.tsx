@@ -35,7 +35,7 @@ export function DashboardLayout() {
             >
               <Menu className="h-5 w-5" />
             </Button>
-            <img src={logo} alt="Papo de Doula" className="w-8 h-8 rounded-full" />
+            <img src={logo} alt="Papo de Doula" className="w-10 h-10 object-contain" />
             <h1 className="font-display text-xl text-foreground">Papo de Doula</h1>
           </div>
           <Button variant="ghost" size="icon" onClick={() => signOut()} title="Sair">
