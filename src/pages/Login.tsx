@@ -95,17 +95,23 @@ export default function Login() {
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">Email ou Usuário</Label>
               <Input
                 id="email"
                 type="text"
-                placeholder="seu@email.com"
+                placeholder="seu@email.com ou nome.sobrenome"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => setEmail(e.target.value.toLowerCase())}
                 required
                 autoComplete="email"
-                className="input-field"
+                autoCapitalize="off"
+                className="input-field lowercase"
+                style={{ textTransform: "lowercase" }}
               />
+              <p className="text-xs text-muted-foreground">
+                Administradores: use seu email (ex: doula@email.com).
+                Clientes: use seu usuário no formato nome.sobrenome (ex: maria.silva).
+              </p>
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">Senha</Label>
