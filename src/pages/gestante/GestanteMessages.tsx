@@ -111,56 +111,24 @@ export default function GestanteMessages() {
     mutationFn: async (request: ServiceRequest) => {
       if (!client?.id) throw new Error("Cliente não encontrado");
 
-      // Update service request status to accepted
-      const { error: updateError } = await supabase
-        .from("service_requests")
-        .update({
-          status: "accepted",
-          responded_at: new Date().toISOString(),
-        })
-        .eq("id", request.id);
+      const { data, error } = await supabase.functions.invoke("respond-budget", {
+        body: { request_id: request.id, action: "accept" },
+      });
 
-      if (updateError) throw updateError;
-
-      // Create a transaction for the approved service
-      const { error: transactionError } = await supabase
-        .from("transactions")
-        .insert({
-          client_id: client.id,
-          type: "receita",
-          description: `Serviço aprovado: ${request.service_type}`,
-          amount: request.budget_value || 0,
-          date: new Date().toISOString().split("T")[0],
-          payment_method: "pix",
-          is_auto_generated: true,
-        });
-
-      if (transactionError) throw transactionError;
-
-      // Create notification for admin
-      const { error: notifError } = await supabase
-        .from("client_notifications")
-        .insert({
-          client_id: client.id,
-          title: `Orçamento Aceito: ${request.service_type}`,
-          message: `O orçamento de R$ ${(request.budget_value || 0).toFixed(2).replace(".", ",")} para ${request.service_type} foi aceito.`,
-          read: false,
-        });
-
-      if (notifError) console.error("Error creating notification:", notifError);
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
 
       // Push to admin
       sendPushNotification({
         send_to_admins: true,
         title: `✅ Orçamento Aceito: ${request.service_type}`,
         message: `${client.full_name} aceitou o orçamento.`,
-        url: "/dashboard",
+        url: "/admin",
         tag: "budget-accepted",
       });
     },
     onSuccess: (_, request) => {
       queryClient.invalidateQueries({ queryKey: ["my-pending-budgets"] });
-      queryClient.invalidateQueries({ queryKey: ["transactions"] });
       toast.success("Orçamento aceito!", {
         description: `O serviço de ${request.service_type} foi adicionado aos seus pagamentos.`,
       });
@@ -177,35 +145,19 @@ export default function GestanteMessages() {
     mutationFn: async (request: ServiceRequest) => {
       if (!client?.id) throw new Error("Cliente não encontrado");
 
-      // Update service request status to rejected
-      const { error: updateError } = await supabase
-        .from("service_requests")
-        .update({
-          status: "rejected",
-          responded_at: new Date().toISOString(),
-        })
-        .eq("id", request.id);
+      const { data, error } = await supabase.functions.invoke("respond-budget", {
+        body: { request_id: request.id, action: "reject" },
+      });
 
-      if (updateError) throw updateError;
-
-      // Create notification for admin
-      const { error: notifError } = await supabase
-        .from("client_notifications")
-        .insert({
-          client_id: client.id,
-          title: `Orçamento Recusado: ${request.service_type}`,
-          message: `O orçamento de R$ ${(request.budget_value || 0).toFixed(2).replace(".", ",")} para ${request.service_type} foi recusado.`,
-          read: false,
-        });
-
-      if (notifError) console.error("Error creating notification:", notifError);
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
 
       // Push to admin
       sendPushNotification({
         send_to_admins: true,
         title: `❌ Orçamento Recusado: ${request.service_type}`,
         message: `${client.full_name} recusou o orçamento.`,
-        url: "/dashboard",
+        url: "/admin",
         tag: "budget-rejected",
       });
     },
