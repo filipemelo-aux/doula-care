@@ -19,6 +19,7 @@ import { toast } from "sonner";
 import { formatBrazilDateTime } from "@/lib/utils";
 import { Tables } from "@/integrations/supabase/types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { sendPushNotification } from "@/lib/pushNotifications";
 
 type Notification = Tables<"client_notifications">;
 
@@ -147,6 +148,15 @@ export default function GestanteMessages() {
         });
 
       if (notifError) console.error("Error creating notification:", notifError);
+
+      // Push to admin
+      sendPushNotification({
+        send_to_admins: true,
+        title: `✅ Orçamento Aceito: ${request.service_type}`,
+        message: `${client.full_name} aceitou o orçamento.`,
+        url: "/dashboard",
+        tag: "budget-accepted",
+      });
     },
     onSuccess: (_, request) => {
       queryClient.invalidateQueries({ queryKey: ["my-pending-budgets"] });
@@ -189,6 +199,15 @@ export default function GestanteMessages() {
         });
 
       if (notifError) console.error("Error creating notification:", notifError);
+
+      // Push to admin
+      sendPushNotification({
+        send_to_admins: true,
+        title: `❌ Orçamento Recusado: ${request.service_type}`,
+        message: `${client.full_name} recusou o orçamento.`,
+        url: "/dashboard",
+        tag: "budget-rejected",
+      });
     },
     onSuccess: (_, request) => {
       queryClient.invalidateQueries({ queryKey: ["my-pending-budgets"] });

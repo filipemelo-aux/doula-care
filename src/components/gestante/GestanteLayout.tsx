@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { PushNotificationToggle } from "@/components/pwa/PushNotificationToggle";
 
 interface GestanteLayoutProps {
   children: ReactNode;
@@ -38,9 +39,12 @@ export function GestanteLayout({ children }: GestanteLayoutProps) {
           <img src={logo} alt="Papo de Doula" className="w-12 h-12 object-contain" />
           <h1 className="font-display text-lg text-foreground">Papo de Doula</h1>
         </div>
-        <Button variant="ghost" size="icon" onClick={signOut} title="Sair" className="text-muted-foreground hover:text-destructive">
-          <LogOut className="h-5 w-5" />
-        </Button>
+        <div className="flex items-center gap-1">
+          <PushNotificationToggle compact />
+          <Button variant="ghost" size="icon" onClick={signOut} title="Sair" className="text-muted-foreground hover:text-destructive">
+            <LogOut className="h-5 w-5" />
+          </Button>
+        </div>
       </header>
 
       {/* Main Content */}

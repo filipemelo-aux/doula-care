@@ -6,6 +6,7 @@ import { Menu, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useAuth } from "@/contexts/AuthContext";
+import { PushNotificationToggle } from "@/components/pwa/PushNotificationToggle";
 
 export function DashboardLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -40,9 +41,12 @@ export function DashboardLayout() {
               <h1 className="font-display text-lg text-foreground">Papo de Doula</h1>
             </div>
           </div>
-          <Button variant="ghost" size="icon" onClick={() => signOut()} title="Sair">
-            <LogOut className="h-5 w-5 text-muted-foreground" />
-          </Button>
+          <div className="flex items-center gap-1">
+            <PushNotificationToggle compact />
+            <Button variant="ghost" size="icon" onClick={() => signOut()} title="Sair">
+              <LogOut className="h-5 w-5 text-muted-foreground" />
+            </Button>
+          </div>
         </header>
 
         {/* Desktop Header */}
