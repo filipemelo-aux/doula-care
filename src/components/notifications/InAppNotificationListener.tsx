@@ -1,7 +1,8 @@
 import { useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Bell, AlertTriangle } from "lucide-react";
+import { Bell, AlertTriangle, Baby } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface InAppNotificationListenerProps {
   userId: string;
@@ -11,7 +12,82 @@ interface InAppNotificationListenerProps {
 
 export function InAppNotificationListener({ userId, role, clientId }: InAppNotificationListenerProps) {
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
+  const contractionChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
 
+  // Listen for new contractions (admin only) to offer labor registration
+  useEffect(() => {
+    if (role !== "admin") return;
+
+    const channel = supabase
+      .channel(`admin-contraction-alerts-${userId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "contractions",
+        },
+        async (payload) => {
+          const contraction = payload.new as { client_id: string };
+
+          // Check if this client already has labor started
+          const { data: clientData } = await supabase
+            .from("clients")
+            .select("id, full_name, labor_started_at")
+            .eq("id", contraction.client_id)
+            .maybeSingle();
+
+          if (!clientData || clientData.labor_started_at) return;
+
+          // First contraction without labor started — offer to register
+          toast(
+            `⏱️ ${clientData.full_name} registrou uma contração`,
+            {
+              description: "Deseja registrar que o trabalho de parto iniciou?",
+              duration: 60000,
+              icon: <Baby className="h-5 w-5 text-primary" />,
+              className: "border-2 border-primary/40 shadow-lg",
+              action: {
+                label: "Registrar Parto",
+                onClick: async () => {
+                  const { error } = await supabase
+                    .from("clients")
+                    .update({ labor_started_at: new Date().toISOString() })
+                    .eq("id", clientData.id);
+
+                  if (error) {
+                    toast.error("Erro ao registrar trabalho de parto");
+                    return;
+                  }
+
+                  // Send notification to the client
+                  await supabase.from("client_notifications").insert({
+                    client_id: clientData.id,
+                    title: "💕 Seu bebê está a caminho!",
+                    message: "Sua Doula registrou que o trabalho de parto começou. Respire fundo, confie no seu corpo. Estarei com você!",
+                  });
+
+                  toast.success(`Trabalho de parto registrado para ${clientData.full_name}`, {
+                    icon: <Baby className="h-5 w-5 text-primary" />,
+                  });
+                },
+              },
+            }
+          );
+        }
+      )
+      .subscribe();
+
+    contractionChannelRef.current = channel;
+
+    return () => {
+      if (contractionChannelRef.current) {
+        supabase.removeChannel(contractionChannelRef.current);
+      }
+    };
+  }, [userId, role]);
+
+  // Listen for client_notifications inserts
   useEffect(() => {
     if (role === "client" && !clientId) return;
 
@@ -51,7 +127,6 @@ export function InAppNotificationListener({ userId, role, clientId }: InAppNotif
             action: {
               label: "Ver",
               onClick: () => {
-                // Navigate to messages for clients, dashboard for admins
                 if (role === "client") {
                   window.location.href = "/gestante/mensagens";
                 } else {

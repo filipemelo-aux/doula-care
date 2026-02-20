@@ -42,6 +42,31 @@ export default function GestanteDashboard() {
     }
   }, [user]);
 
+  // Listen for realtime updates to this client's record (e.g., doula registering labor)
+  useEffect(() => {
+    if (!client?.id) return;
+
+    const channel = supabase
+      .channel(`client-updates-${client.id}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "clients",
+          filter: `id=eq.${client.id}`,
+        },
+        (payload) => {
+          setClientData(payload.new as Client);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [client?.id]);
+
   const fetchFullClientData = async () => {
     if (!user) return;
     
@@ -402,8 +427,38 @@ export default function GestanteDashboard() {
           </Card>
         </div>
 
-        {/* Contractions Quick Access - Show if labor started */}
+        {/* Labor Started - Welcoming Message */}
         {clientData?.labor_started_at && (
+          <Card className="overflow-hidden bg-gradient-to-br from-pink-100 via-primary/15 to-accent/15 border-primary/30 shadow-lg ring-2 ring-primary/20">
+            <CardContent className="p-5 text-center space-y-3">
+              <div className="flex justify-center">
+                <div className="relative">
+                  <Baby className="h-12 w-12 text-primary animate-pulse" />
+                  <Heart className="h-5 w-5 text-pink-500 absolute -top-1 -right-2 animate-bounce" />
+                </div>
+              </div>
+              <h3 className="font-display font-bold text-lg text-primary">
+                Seu bebê está a caminho! 💕
+              </h3>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                Respire fundo, mamãe. Confie no seu corpo e no seu instinto. 
+                Sua Doula está acompanhando tudo de perto e estará ao seu lado. 
+                Cada contração te aproxima do momento mais lindo da sua vida. 🌸
+              </p>
+              <div 
+                className="cursor-pointer bg-primary/10 rounded-xl p-3 flex items-center justify-center gap-2 hover:bg-primary/20 transition-colors"
+                onClick={() => navigate("/gestante/contracoes")}
+              >
+                <Timer className="h-5 w-5 text-primary" />
+                <span className="font-medium text-sm text-primary">Registrar Contrações</span>
+                <ChevronRight className="h-4 w-4 text-primary" />
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Contractions Quick Access - Show if labor started */}
+        {clientData?.labor_started_at && !clientData?.labor_started_at && (
           <Card 
             className="cursor-pointer hover:shadow-md transition-shadow active:scale-[0.98] bg-gradient-to-br from-orange-50 to-amber-50 border-orange-200"
             onClick={() => navigate("/gestante/contracoes")}
