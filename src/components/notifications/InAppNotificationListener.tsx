@@ -108,6 +108,15 @@ export function InAppNotificationListener({ userId, role, clientId }: InAppNotif
             id: string;
           };
 
+          // Skip admin-only notifications (budget responses) from showing as client toasts
+          const isBudgetResponse =
+            notification.title?.includes("Orçamento Aceito") ||
+            notification.title?.includes("Orçamento Recusado") ||
+            notification.title?.includes("✅ Orçamento") ||
+            notification.title?.includes("❌ Orçamento");
+
+          if (isBudgetResponse) return;
+
           const isUrgent =
             notification.title?.toLowerCase().includes("parto") ||
             notification.title?.toLowerCase().includes("urgente") ||

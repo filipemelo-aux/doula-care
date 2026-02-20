@@ -25,6 +25,8 @@ import { GestanteLayout } from "@/components/gestante/GestanteLayout";
 import { useNavigate } from "react-router-dom";
 import { LaborStartButton } from "@/components/gestante/LaborStartButton";
 import { ServiceRequestButtons } from "@/components/gestante/ServiceRequestButton";
+import { AppointmentsCard } from "@/components/gestante/AppointmentsCard";
+import { ScheduledServicesCard } from "@/components/gestante/ScheduledServicesCard";
 
 type Client = Tables<"clients">;
 
@@ -296,6 +298,12 @@ export default function GestanteDashboard() {
             </Card>
           </div>
 
+          {/* Appointments */}
+          {client?.id && <AppointmentsCard clientId={client.id} />}
+
+          {/* Scheduled Services */}
+          {client?.id && <ScheduledServicesCard clientId={client.id} />}
+
           {/* Service Request Buttons */}
           <ServiceRequestButtons />
 
@@ -426,6 +434,12 @@ export default function GestanteDashboard() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Appointments */}
+        {client?.id && <AppointmentsCard clientId={client.id} />}
+
+        {/* Scheduled Services */}
+        {client?.id && <ScheduledServicesCard clientId={client.id} />}
 
         {/* Labor Started - Welcoming Message */}
         {clientData?.labor_started_at && (

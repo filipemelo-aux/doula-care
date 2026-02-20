@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { ManageAppointmentsDialog } from "./ManageAppointmentsDialog";
 import {
   Dialog,
   DialogContent,
@@ -64,6 +65,7 @@ export function ClientDetailsDialog({
   client,
 }: ClientDetailsDialogProps) {
   const [notificationDialogOpen, setNotificationDialogOpen] = useState(false);
+  const [appointmentsDialogOpen, setAppointmentsDialogOpen] = useState(false);
 
   if (!client) return null;
 
@@ -144,6 +146,14 @@ export function ClientDetailsDialog({
                   >
                     <Bell className="w-4 h-4 mr-2" />
                     Enviar Notificação
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setAppointmentsDialogOpen(true)}
+                  >
+                    <Calendar className="w-4 h-4 mr-2" />
+                    Consultas
                   </Button>
                 </div>
               </>
@@ -291,6 +301,15 @@ export function ClientDetailsDialog({
         onOpenChange={setNotificationDialogOpen}
         client={client}
       />
+
+      {client && (
+        <ManageAppointmentsDialog
+          open={appointmentsDialogOpen}
+          onOpenChange={setAppointmentsDialogOpen}
+          clientId={client.id}
+          clientName={client.full_name}
+        />
+      )}
     </Dialog>
   );
 }
