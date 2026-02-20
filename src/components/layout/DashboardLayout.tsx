@@ -1,4 +1,5 @@
 import { useState } from "react";
+import logo from "@/assets/logo.png";
 import { Outlet } from "react-router-dom";
 import { Sidebar } from "./Sidebar";
 import { Menu, LogOut } from "lucide-react";
