@@ -1,5 +1,5 @@
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
-import logo from "@/assets/logo.png";
+const logo = "/pwa-icon-512.png";
 import {
   LayoutDashboard,
   Users,
@@ -8,7 +8,6 @@ import {
   TrendingDown,
   FileText,
   Settings,
-  Heart,
   ChevronLeft,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -53,7 +52,7 @@ export function Sidebar({ isOpen, onToggle, onNavigate }: SidebarProps) {
       {/* Logo */}
       <div className="h-20 flex items-center justify-between px-6 border-b border-sidebar-border">
         <div className={cn("flex items-center gap-3 transition-opacity", !isOpen && "lg:opacity-0")}>
-          <img src={logo} alt="Papo de Doula" className="w-12 h-12 object-contain" />
+          <img src={logo} alt="Papo de Doula" className="w-12 h-12 object-contain rounded-xl" />
           <div>
             <h1 className="font-display text-lg text-sidebar-foreground">Papo de Doula</h1>
             <p className="text-xs text-sidebar-foreground/60">Dashboard</p>
@@ -75,9 +74,7 @@ export function Sidebar({ isOpen, onToggle, onNavigate }: SidebarProps) {
       {/* Collapsed Logo and Expand Button */}
       {!isOpen && (
         <div className="hidden lg:flex h-20 absolute top-0 left-0 w-20 items-center justify-between px-2">
-          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center">
-            <Heart className="w-5 h-5 text-primary-foreground" />
-          </div>
+          <img src={logo} alt="Papo de Doula" className="w-10 h-10 object-contain rounded-lg" />
           <Button
             variant="ghost"
             size="icon"

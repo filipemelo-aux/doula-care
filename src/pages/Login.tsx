@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import logo from "@/assets/logo.png";
+const logo = "/pwa-icon-512.png";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -86,7 +86,7 @@ export default function Login() {
       <Card className="w-full max-w-md card-glass">
         <CardHeader className="text-center space-y-4">
           <div className="flex flex-col items-center gap-0">
-            <img src={logo} alt="Papo de Doula" className="w-32 h-32 object-contain" />
+            <img src={logo} alt="Papo de Doula" className="w-32 h-32 object-contain rounded-2xl shadow-md" />
             <CardTitle className="text-2xl font-display font-bold tracking-wide -mt-1">Papo de Doula</CardTitle>
           </div>
           <CardDescription>Entre com seu email e senha</CardDescription>
