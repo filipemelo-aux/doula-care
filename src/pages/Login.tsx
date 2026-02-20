@@ -86,7 +86,7 @@ export default function Login() {
       <Card className="w-full max-w-md card-glass">
         <CardHeader className="text-center space-y-4">
           <div className="flex flex-col items-center gap-0">
-            <img src={logo} alt="Papo de Doula" className="w-32 h-32 object-contain rounded-2xl shadow-md" />
+            <img src={logo} alt="Papo de Doula" className="w-28 h-28 object-contain mix-blend-multiply" />
             <CardTitle className="text-2xl font-display font-bold tracking-wide -mt-1">Papo de Doula</CardTitle>
           </div>
           <CardDescription>Entre com seu email e senha</CardDescription>
