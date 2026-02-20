@@ -540,14 +540,14 @@ export default function Financial() {
                         {transaction.clients?.full_name || "—"} • {formatBrazilDate(transaction.date, "dd/MM/yy")}
                       </p>
 
-                      {/* Values: flex layout - compact */}
-                      <div className="flex items-start pt-1 border-t border-border/50 w-full">
-                        <div className="text-center min-w-0 flex-1 flex-shrink px-0.5">
-                          <span className="text-[9px] text-muted-foreground block leading-tight">Total</span>
-                          <span className="font-semibold text-xs truncate block">{formatCompact(totalAmount)}</span>
+                      {/* Values: flex layout */}
+                      <div className="flex items-start pt-1.5 border-t border-border/50 w-full">
+                        <div className="text-center min-w-0 flex-1 flex-shrink px-1">
+                          <span className="text-[10px] text-muted-foreground block">Total</span>
+                          <span className="font-semibold text-sm truncate block">{formatCompact(totalAmount)}</span>
                         </div>
-                        <div className="text-center min-w-0 flex-shrink px-0.5" style={{flexBasis: '28px'}}>
-                          <span className="text-[9px] text-muted-foreground block leading-tight">Parc.</span>
+                        <div className="text-center min-w-0 flex-shrink px-1" style={{flexBasis: '36px'}}>
+                          <span className="text-[10px] text-muted-foreground block">Parc.</span>
                           {isEditingInstallmentsMobile ? (
                             <Select
                               value={editingInstallmentsValue}
@@ -558,7 +558,7 @@ export default function Financial() {
                                 updateInstallmentsMutation.mutate({ id: transaction.id, installments, installmentValue });
                               }}
                             >
-                              <SelectTrigger className="w-9 h-5 text-[10px] px-0.5">
+                              <SelectTrigger className="w-10 h-6 text-xs px-1">
                                 <SelectValue />
                               </SelectTrigger>
                               <SelectContent>
@@ -571,21 +571,21 @@ export default function Financial() {
                             </Select>
                           ) : (
                             <span 
-                              className="text-xs font-medium cursor-pointer border-b border-dashed border-muted-foreground/40 hover:border-primary transition-colors"
+                              className="text-sm font-medium cursor-pointer border-b border-dashed border-muted-foreground/40 hover:border-primary transition-colors"
                               onClick={() => handleStartEditInstallments(transaction)}
                             >
                               {installments}x
                             </span>
                           )}
                         </div>
-                        <div className="text-center min-w-0 flex-1 flex-shrink px-0.5">
-                          <span className="text-[9px] text-muted-foreground block leading-tight">Receb.</span>
+                        <div className="text-center min-w-0 flex-1 flex-shrink px-1">
+                          <span className="text-[10px] text-muted-foreground block">Receb.</span>
                           {isEditingReceivedMobile ? (
                             <Input
                               type="number"
                               value={editingReceivedValue}
                               onChange={(e) => setEditingReceivedValue(e.target.value)}
-                              className="w-full h-5 text-center text-xs px-0.5"
+                              className="w-full h-6 text-center text-sm px-1"
                               min={0}
                               max={totalAmount}
                               step="0.01"
@@ -601,29 +601,29 @@ export default function Financial() {
                             />
                           ) : (
                             <span 
-                              className="text-xs text-success font-medium cursor-pointer border-b border-dashed border-success/40 hover:border-success transition-colors"
+                              className="text-sm text-success font-medium cursor-pointer border-b border-dashed border-success/40 hover:border-success transition-colors"
                               onClick={() => handleStartEditReceived(transaction)}
                             >
                               {formatCompact(receivedAmount)}
                             </span>
                           )}
                         </div>
-                        <div className="text-center min-w-0 flex-1 flex-shrink px-0.5">
-                          <span className="text-[9px] text-muted-foreground block leading-tight">Pend.</span>
+                        <div className="text-center min-w-0 flex-1 flex-shrink px-1">
+                          <span className="text-[10px] text-muted-foreground block">Pend.</span>
                           {pendingAmount > 0 ? (
-                            <div className="flex items-center justify-center gap-0">
-                              <span className="text-xs text-warning font-medium truncate">{formatCompact(pendingAmount)}</span>
+                            <div className="flex items-center justify-center gap-0.5">
+                              <span className="text-sm text-warning font-medium truncate">{formatCompact(pendingAmount)}</span>
                               <Button
                                 variant="ghost"
                                 size="icon"
                                 onClick={() => handleMarkAsPaid(transaction.id, totalAmount)}
-                                className="h-4 w-4 text-success p-0"
+                                className="h-5 w-5 text-success p-0"
                               >
-                                <CheckCircle className="h-3 w-3" />
+                                <CheckCircle className="h-3.5 w-3.5" />
                               </Button>
                             </div>
                           ) : (
-                            <span className="text-xs text-success font-medium">OK</span>
+                            <span className="text-sm text-success font-medium">OK</span>
                           )}
                         </div>
                       </div>
