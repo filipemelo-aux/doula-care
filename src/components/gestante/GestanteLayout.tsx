@@ -5,9 +5,12 @@ import {
   MessageCircle, 
   Baby, 
   Timer, 
-  User 
+  User,
+  LogOut
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface GestanteLayoutProps {
   children: ReactNode;
@@ -24,15 +27,24 @@ const navItems = [
 export function GestanteLayout({ children }: GestanteLayoutProps) {
   const navigate = useNavigate();
   const location = useLocation();
+  const { signOut } = useAuth();
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 pb-28">
+      {/* Header with logout */}
+      <header className="sticky top-0 z-40 flex items-center justify-between px-4 h-14 bg-background/80 backdrop-blur-sm border-b border-border">
+        <h1 className="font-display text-lg text-foreground">Doula Care</h1>
+        <Button variant="ghost" size="icon" onClick={() => signOut()} title="Sair">
+          <LogOut className="h-5 w-5 text-muted-foreground" />
+        </Button>
+      </header>
+
       {/* Main Content */}
       <main className="min-h-[calc(100vh-5rem)]">
         {children}
       </main>
 
-      {/* Bottom Navigation - elevated above Lovable branding */}
+      {/* Bottom Navigation */}
       <nav className="fixed bottom-0 left-0 right-0 z-50 bg-background border-t shadow-lg">
         <div className="flex items-center justify-around h-16 max-w-lg mx-auto px-2">
           {navItems.map((item) => {
@@ -59,7 +71,6 @@ export function GestanteLayout({ children }: GestanteLayoutProps) {
             );
           })}
         </div>
-        {/* Solid fill below navigation to cover any watermarks */}
         <div className="h-10 bg-background" />
       </nav>
     </div>
