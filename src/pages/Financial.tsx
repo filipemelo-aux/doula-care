@@ -140,7 +140,7 @@ export default function Financial() {
         .from("transactions")
         .select("*, clients(full_name), plan_settings(name)")
         .eq("type", "receita")
-        .order("date", { ascending: false });
+        .order("created_at", { ascending: false });
 
       if (error) throw error;
       return data as Transaction[];
