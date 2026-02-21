@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,7 +11,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Briefcase, CheckCircle, Star, Loader2 } from "lucide-react";
+import { Briefcase, CheckCircle, Star, Loader2, Camera, X, Image as ImageIcon } from "lucide-react";
 import { toast } from "sonner";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { formatBrazilDateTime } from "@/lib/utils";
@@ -25,6 +25,7 @@ interface ServiceRequest {
   completed_at: string | null;
   rating: number | null;
   rating_comment: string | null;
+  rating_photos: string[] | null;
 }
 
 interface ScheduledServicesCardProps {
@@ -35,6 +36,10 @@ export function ScheduledServicesCard({ clientId }: ScheduledServicesCardProps) 
   const [ratingDialog, setRatingDialog] = useState<ServiceRequest | null>(null);
   const [selectedRating, setSelectedRating] = useState(0);
   const [ratingComment, setRatingComment] = useState("");
+  const [selectedPhotos, setSelectedPhotos] = useState<File[]>([]);
+  const [photoPreviewUrls, setPhotoPreviewUrls] = useState<string[]>([]);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const queryClient = useQueryClient();
 
   const { data: services } = useQuery({
@@ -42,7 +47,7 @@ export function ScheduledServicesCard({ clientId }: ScheduledServicesCardProps) 
     queryFn: async () => {
       const { data, error } = await supabase
         .from("service_requests")
-        .select("id, service_type, status, budget_value, responded_at, completed_at, rating, rating_comment")
+        .select("id, service_type, status, budget_value, responded_at, completed_at, rating, rating_comment, rating_photos")
         .eq("client_id", clientId)
         .eq("status", "accepted")
         .order("responded_at", { ascending: false });
@@ -70,22 +75,84 @@ export function ScheduledServicesCard({ clientId }: ScheduledServicesCardProps) 
   });
 
   const rateMutation = useMutation({
-    mutationFn: async ({ id, rating, comment }: { id: string; rating: number; comment: string }) => {
+    mutationFn: async ({ id, rating, comment, photos }: { id: string; rating: number; comment: string; photos: string[] }) => {
       const { error } = await supabase
         .from("service_requests")
-        .update({ rating, rating_comment: comment || null })
+        .update({ rating, rating_comment: comment || null, rating_photos: photos.length > 0 ? photos : null })
         .eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["scheduled-services"] });
-      setRatingDialog(null);
-      setSelectedRating(0);
-      setRatingComment("");
+      closeRatingDialog();
       toast.success("Avaliação enviada! Obrigada 💕");
     },
     onError: () => toast.error("Erro ao enviar avaliação"),
   });
+
+  const handleAddPhotos = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (selectedPhotos.length + files.length > 5) {
+      toast.error("Máximo de 5 fotos");
+      return;
+    }
+    setSelectedPhotos(prev => [...prev, ...files]);
+    files.forEach(file => {
+      const url = URL.createObjectURL(file);
+      setPhotoPreviewUrls(prev => [...prev, url]);
+    });
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const removePhoto = (index: number) => {
+    URL.revokeObjectURL(photoPreviewUrls[index]);
+    setSelectedPhotos(prev => prev.filter((_, i) => i !== index));
+    setPhotoPreviewUrls(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const uploadPhotos = async (serviceId: string): Promise<string[]> => {
+    const urls: string[] = [];
+    for (const file of selectedPhotos) {
+      const ext = file.name.split(".").pop();
+      const path = `${clientId}/${serviceId}/${crypto.randomUUID()}.${ext}`;
+      const { error } = await supabase.storage
+        .from("rating-photos")
+        .upload(path, file);
+      if (error) throw error;
+      const { data: urlData } = supabase.storage.from("rating-photos").getPublicUrl(path);
+      urls.push(urlData.publicUrl);
+    }
+    return urls;
+  };
+
+  const handleSubmitRating = async () => {
+    if (!ratingDialog || selectedRating === 0) return;
+    setUploading(true);
+    try {
+      const photoUrls = selectedPhotos.length > 0 ? await uploadPhotos(ratingDialog.id) : [];
+      rateMutation.mutate({
+        id: ratingDialog.id,
+        rating: selectedRating,
+        comment: ratingComment,
+        photos: photoUrls,
+      });
+    } catch {
+      toast.error("Erro ao enviar fotos");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const closeRatingDialog = () => {
+    photoPreviewUrls.forEach(url => URL.revokeObjectURL(url));
+    setRatingDialog(null);
+    setSelectedRating(0);
+    setRatingComment("");
+    setSelectedPhotos([]);
+    setPhotoPreviewUrls([]);
+  };
+
+  const [viewingPhotos, setViewingPhotos] = useState<string[] | null>(null);
 
   if (!services || services.length === 0) return null;
 
@@ -100,10 +167,7 @@ export function ScheduledServicesCard({ clientId }: ScheduledServicesCardProps) 
 
           <div className="space-y-2">
             {services.map((svc) => (
-              <div
-                key={svc.id}
-                className="bg-background/60 rounded-lg p-3 space-y-2"
-              >
+              <div key={svc.id} className="bg-background/60 rounded-lg p-3 space-y-2">
                 <div className="flex items-center justify-between">
                   <p className="font-medium text-sm">{svc.service_type}</p>
                   {svc.completed_at ? (
@@ -119,7 +183,7 @@ export function ScheduledServicesCard({ clientId }: ScheduledServicesCardProps) 
                   </p>
                 )}
 
-                <div className="flex gap-2">
+                <div className="flex gap-2 flex-wrap">
                   {!svc.completed_at && (
                     <Button
                       size="sm"
@@ -146,6 +210,8 @@ export function ScheduledServicesCard({ clientId }: ScheduledServicesCardProps) 
                         setRatingDialog(svc);
                         setSelectedRating(0);
                         setRatingComment("");
+                        setSelectedPhotos([]);
+                        setPhotoPreviewUrls([]);
                       }}
                     >
                       <Star className="h-3 w-3 mr-1" />
@@ -154,16 +220,33 @@ export function ScheduledServicesCard({ clientId }: ScheduledServicesCardProps) 
                   )}
 
                   {svc.rating && (
-                    <div className="flex items-center gap-0.5">
-                      {[1, 2, 3, 4, 5].map((s) => (
-                        <Star
-                          key={s}
-                          className={`h-3.5 w-3.5 ${s <= svc.rating! ? "text-amber-400 fill-amber-400" : "text-muted-foreground/30"}`}
-                        />
-                      ))}
+                    <div className="flex items-center gap-1">
+                      <div className="flex items-center gap-0.5">
+                        {[1, 2, 3, 4, 5].map((s) => (
+                          <Star
+                            key={s}
+                            className={`h-3.5 w-3.5 ${s <= svc.rating! ? "text-amber-400 fill-amber-400" : "text-muted-foreground/30"}`}
+                          />
+                        ))}
+                      </div>
+                      {svc.rating_photos && svc.rating_photos.length > 0 && (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="text-xs h-6 px-1.5"
+                          onClick={() => setViewingPhotos(svc.rating_photos!)}
+                        >
+                          <ImageIcon className="h-3 w-3 mr-0.5" />
+                          {svc.rating_photos.length}
+                        </Button>
+                      )}
                     </div>
                   )}
                 </div>
+
+                {svc.rating_comment && (
+                  <p className="text-xs text-muted-foreground italic">"{svc.rating_comment}"</p>
+                )}
               </div>
             ))}
           </div>
@@ -171,7 +254,7 @@ export function ScheduledServicesCard({ clientId }: ScheduledServicesCardProps) 
       </Card>
 
       {/* Rating Dialog */}
-      <Dialog open={!!ratingDialog} onOpenChange={(o) => !o && setRatingDialog(null)}>
+      <Dialog open={!!ratingDialog} onOpenChange={(o) => !o && closeRatingDialog()}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
             <DialogTitle className="font-display">Avaliar Serviço</DialogTitle>
@@ -202,27 +285,84 @@ export function ScheduledServicesCard({ clientId }: ScheduledServicesCardProps) 
               onChange={(e) => setRatingComment(e.target.value)}
               rows={3}
             />
+
+            {/* Photo upload */}
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-sm font-medium">Fotos (opcional)</p>
+                <span className="text-xs text-muted-foreground">{selectedPhotos.length}/5</span>
+              </div>
+
+              {photoPreviewUrls.length > 0 && (
+                <div className="flex flex-wrap gap-2 mb-2">
+                  {photoPreviewUrls.map((url, idx) => (
+                    <div key={idx} className="relative w-16 h-16 rounded-md overflow-hidden border">
+                      <img src={url} alt="" className="w-full h-full object-cover" />
+                      <button
+                        onClick={() => removePhoto(idx)}
+                        className="absolute top-0 right-0 bg-black/60 rounded-bl-md p-0.5"
+                      >
+                        <X className="h-3 w-3 text-white" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {selectedPhotos.length < 5 && (
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  className="text-xs"
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  <Camera className="h-3.5 w-3.5 mr-1" />
+                  Adicionar foto
+                </Button>
+              )}
+
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                multiple
+                className="hidden"
+                onChange={handleAddPhotos}
+              />
+            </div>
           </div>
 
           <DialogFooter>
             <Button
-              disabled={selectedRating === 0 || rateMutation.isPending}
-              onClick={() => {
-                if (ratingDialog) {
-                  rateMutation.mutate({
-                    id: ratingDialog.id,
-                    rating: selectedRating,
-                    comment: ratingComment,
-                  });
-                }
-              }}
+              disabled={selectedRating === 0 || rateMutation.isPending || uploading}
+              onClick={handleSubmitRating}
             >
-              {rateMutation.isPending ? (
+              {(rateMutation.isPending || uploading) ? (
                 <Loader2 className="h-4 w-4 animate-spin mr-1" />
               ) : null}
               Enviar Avaliação
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Photo viewer dialog */}
+      <Dialog open={!!viewingPhotos} onOpenChange={(o) => !o && setViewingPhotos(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="font-display">Fotos da Avaliação</DialogTitle>
+          </DialogHeader>
+          <div className="grid grid-cols-2 gap-2">
+            {viewingPhotos?.map((url, idx) => (
+              <img
+                key={idx}
+                src={url}
+                alt={`Foto ${idx + 1}`}
+                className="w-full rounded-md object-cover aspect-square"
+              />
+            ))}
+          </div>
         </DialogContent>
       </Dialog>
     </>

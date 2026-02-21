@@ -6,6 +6,17 @@ import { Card, CardContent } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { 
   MessageCircle, 
   Loader2,
@@ -13,7 +24,8 @@ import {
   Clock,
   Sparkles,
   Check,
-  X
+  X,
+  Trash2
 } from "lucide-react";
 import { toast } from "sonner";
 import { formatBrazilDateTime } from "@/lib/utils";
@@ -65,7 +77,6 @@ export default function GestanteMessages() {
     }
   };
 
-  // Mark notifications as read by client when page loads
   useEffect(() => {
     if (client?.id && notifications.length > 0) {
       const unreadByClient = notifications.filter(n => !(n as any).read_by_client);
@@ -86,7 +97,6 @@ export default function GestanteMessages() {
     }
   };
 
-  // Fetch service requests with budget_sent status
   const { data: pendingBudgets } = useQuery({
     queryKey: ["my-pending-budgets", client?.id],
     queryFn: async () => {
@@ -106,7 +116,6 @@ export default function GestanteMessages() {
     refetchInterval: 30000,
   });
 
-  // Accept budget mutation
   const acceptBudgetMutation = useMutation({
     mutationFn: async (request: ServiceRequest) => {
       if (!client?.id) throw new Error("Cliente não encontrado");
@@ -118,7 +127,6 @@ export default function GestanteMessages() {
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
 
-      // Push to admin
       sendPushNotification({
         send_to_admins: true,
         title: `✅ Orçamento Aceito: ${request.service_type}`,
@@ -140,7 +148,6 @@ export default function GestanteMessages() {
     },
   });
 
-  // Reject budget mutation
   const rejectBudgetMutation = useMutation({
     mutationFn: async (request: ServiceRequest) => {
       if (!client?.id) throw new Error("Cliente não encontrado");
@@ -152,7 +159,6 @@ export default function GestanteMessages() {
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
 
-      // Push to admin
       sendPushNotification({
         send_to_admins: true,
         title: `❌ Orçamento Recusado: ${request.service_type}`,
@@ -174,20 +180,34 @@ export default function GestanteMessages() {
     },
   });
 
-  // Count unread for client (using read_by_client field)
+  const clearAllNotifications = async () => {
+    if (!client?.id) return;
+    try {
+      const ids = regularNotifications.map(n => n.id);
+      if (ids.length === 0) return;
+      const { error } = await supabase
+        .from("client_notifications")
+        .delete()
+        .in("id", ids);
+      if (error) throw error;
+      setNotifications(prev => prev.filter(n => isBudgetNotification(n)));
+      toast.success("Mensagens limpas!");
+    } catch (error) {
+      console.error("Error clearing notifications:", error);
+      toast.error("Erro ao limpar mensagens");
+    }
+  };
+
   const unreadCount = notifications.filter(n => !(n as any).read_by_client).length + (pendingBudgets?.length || 0);
 
-  // Check if a notification is a budget notification
   const isBudgetNotification = (notification: Notification) => {
     return notification.title.startsWith("Orçamento:");
   };
 
-  // Filter out budget notifications from regular notifications (they're handled separately)
   const regularNotifications = notifications.filter(n => !isBudgetNotification(n));
 
   return (
     <GestanteLayout>
-      {/* Header */}
       <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-sm border-b">
         <div className="px-4 lg:px-8 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -199,9 +219,35 @@ export default function GestanteMessages() {
               <p className="text-xs text-muted-foreground">Comunicados da sua Doula</p>
             </div>
           </div>
-          {unreadCount > 0 && (
-            <Badge variant="destructive">{unreadCount} nova{unreadCount > 1 ? "s" : ""}</Badge>
-          )}
+          <div className="flex items-center gap-2">
+            {regularNotifications.length > 0 && (
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button size="sm" variant="outline" className="text-xs">
+                    <Trash2 className="h-3.5 w-3.5 mr-1" />
+                    Limpar
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Limpar mensagens?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Todas as mensagens serão removidas permanentemente. Orçamentos pendentes não serão afetados.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                    <AlertDialogAction onClick={clearAllNotifications}>
+                      Limpar tudo
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            )}
+            {unreadCount > 0 && (
+              <Badge variant="destructive">{unreadCount} nova{unreadCount > 1 ? "s" : ""}</Badge>
+            )}
+          </div>
         </div>
       </header>
 
