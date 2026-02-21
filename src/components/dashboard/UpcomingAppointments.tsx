@@ -131,20 +131,18 @@ export function UpcomingAppointments() {
                         <p className="text-lg font-bold leading-tight">{format(date, "dd")}</p>
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <p className="font-medium text-sm truncate">{apt.title}</p>
-                          {today && (
-                            <Badge variant="secondary" className="text-[10px] px-1.5 py-0 flex-shrink-0">
-                              Hoje
-                            </Badge>
-                          )}
-                        </div>
+                        <p className="font-medium text-sm truncate">{apt.title}</p>
                         <p className="text-xs text-muted-foreground truncate" title={apt.clients?.full_name}>
                           {displayName(apt.clients?.full_name || "")}
                         </p>
                         <p className="text-xs text-muted-foreground flex items-center gap-1">
                           <Clock className="h-3 w-3" />
                           {format(date, "EEEE, HH:mm", { locale: ptBR })}
+                          {today && (
+                            <Badge variant="secondary" className="text-[10px] px-1.5 py-0 flex-shrink-0 ml-1">
+                              Hoje
+                            </Badge>
+                          )}
                         </p>
                       </div>
                       <div className="flex items-center gap-1">
