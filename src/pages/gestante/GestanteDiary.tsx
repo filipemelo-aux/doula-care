@@ -15,7 +15,6 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { 
   BookHeart, 
@@ -56,6 +55,7 @@ export default function GestanteDiary() {
   const [entries, setEntries] = useState<DiaryEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [deleteEntryId, setDeleteEntryId] = useState<string | null>(null);
   const { client } = useGestanteAuth();
   
   const isPuerpera = client?.status === "lactante" && client?.birth_occurred;
@@ -68,14 +68,12 @@ export default function GestanteDiary() {
 
   const fetchEntries = async () => {
     if (!client?.id) return;
-
     try {
       const { data, error } = await supabase
         .from("pregnancy_diary")
         .select("*")
         .eq("client_id", client.id)
         .order("created_at", { ascending: false });
-
       if (error) throw error;
       setEntries(data || []);
     } catch (error) {
@@ -86,19 +84,21 @@ export default function GestanteDiary() {
     }
   };
 
-  const clearAllEntries = async () => {
-    if (!client?.id) return;
+  const deleteEntry = async () => {
+    if (!deleteEntryId) return;
     try {
       const { error } = await supabase
         .from("pregnancy_diary")
         .delete()
-        .eq("client_id", client.id);
+        .eq("id", deleteEntryId);
       if (error) throw error;
-      setEntries([]);
-      toast.success("Diário limpo com sucesso!");
+      setEntries(prev => prev.filter(e => e.id !== deleteEntryId));
+      toast.success("Registro excluído!");
     } catch (error) {
-      console.error("Error clearing diary:", error);
-      toast.error("Erro ao limpar diário");
+      console.error("Error deleting entry:", error);
+      toast.error("Erro ao excluir registro");
+    } finally {
+      setDeleteEntryId(null);
     }
   };
 
@@ -106,7 +106,6 @@ export default function GestanteDiary() {
     if (!emotion) return null;
     const emotionData = emotionIcons[emotion];
     if (!emotionData) return null;
-    
     const Icon = emotionData.icon;
     return (
       <div className={`flex items-center gap-1 ${emotionData.color}`}>
@@ -118,15 +117,11 @@ export default function GestanteDiary() {
 
   const groupEntriesByDate = (entries: DiaryEntry[]) => {
     const grouped: Record<string, DiaryEntry[]> = {};
-    
     entries.forEach(entry => {
       const dateKey = formatBrazilDate(entry.created_at, "yyyy-MM-dd");
-      if (!grouped[dateKey]) {
-        grouped[dateKey] = [];
-      }
+      if (!grouped[dateKey]) grouped[dateKey] = [];
       grouped[dateKey].push(entry);
     });
-    
     return grouped;
   };
 
@@ -154,36 +149,10 @@ export default function GestanteDiary() {
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            {entries.length > 0 && (
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button size="sm" variant="outline" className="text-xs">
-                    <Trash2 className="h-3.5 w-3.5 mr-1" />
-                    Limpar
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Limpar diário?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      Todos os registros do diário serão removidos permanentemente. Esta ação não pode ser desfeita.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                    <AlertDialogAction onClick={clearAllEntries}>
-                      Limpar tudo
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-            )}
-            <Button size="sm" onClick={() => setDialogOpen(true)}>
-              <Plus className="h-4 w-4 mr-1" />
-              Novo
-            </Button>
-          </div>
+          <Button size="sm" onClick={() => setDialogOpen(true)}>
+            <Plus className="h-4 w-4 mr-1" />
+            Novo
+          </Button>
         </div>
       </header>
 
@@ -237,7 +206,15 @@ export default function GestanteDiary() {
                             <span className="text-xs text-muted-foreground">
                               {formatBrazilTime(entry.created_at)}
                             </span>
-                            {getEmotionDisplay(entry.emotion)}
+                            <div className="flex items-center gap-2">
+                              {getEmotionDisplay(entry.emotion)}
+                              <button
+                                onClick={() => setDeleteEntryId(entry.id)}
+                                className="p-1 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </button>
+                            </div>
                           </div>
                           
                           <p className="text-sm whitespace-pre-wrap mb-3">
@@ -271,6 +248,22 @@ export default function GestanteDiary() {
           </ScrollArea>
         )}
       </div>
+
+      {/* Delete confirmation */}
+      <AlertDialog open={!!deleteEntryId} onOpenChange={(o) => !o && setDeleteEntryId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir registro?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Este registro será removido permanentemente do seu diário.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={deleteEntry}>Excluir</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <DiaryEntryDialog
         open={dialogOpen}
