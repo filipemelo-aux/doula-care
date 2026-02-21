@@ -455,6 +455,7 @@ export type Database = {
           id: string
           rating: number | null
           rating_comment: string | null
+          rating_photos: string[] | null
           responded_at: string | null
           service_type: string
           status: string
@@ -469,6 +470,7 @@ export type Database = {
           id?: string
           rating?: number | null
           rating_comment?: string | null
+          rating_photos?: string[] | null
           responded_at?: string | null
           service_type: string
           status?: string
@@ -483,6 +485,7 @@ export type Database = {
           id?: string
           rating?: number | null
           rating_comment?: string | null
+          rating_photos?: string[] | null
           responded_at?: string | null
           service_type?: string
           status?: string

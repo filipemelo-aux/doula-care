@@ -6,6 +6,17 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { 
   BookHeart, 
   Plus, 
@@ -16,7 +27,8 @@ import {
   Meh,
   Heart,
   Sparkles,
-  AlertCircle
+  AlertCircle,
+  Trash2
 } from "lucide-react";
 import { toast } from "sonner";
 import { formatBrazilDate, formatBrazilTime, cn } from "@/lib/utils";
@@ -74,6 +86,22 @@ export default function GestanteDiary() {
     }
   };
 
+  const clearAllEntries = async () => {
+    if (!client?.id) return;
+    try {
+      const { error } = await supabase
+        .from("pregnancy_diary")
+        .delete()
+        .eq("client_id", client.id);
+      if (error) throw error;
+      setEntries([]);
+      toast.success("Diário limpo com sucesso!");
+    } catch (error) {
+      console.error("Error clearing diary:", error);
+      toast.error("Erro ao limpar diário");
+    }
+  };
+
   const getEmotionDisplay = (emotion: string | null) => {
     if (!emotion) return null;
     const emotionData = emotionIcons[emotion];
@@ -106,7 +134,6 @@ export default function GestanteDiary() {
 
   return (
     <GestanteLayout>
-      {/* Header */}
       <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-sm border-b">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -127,10 +154,36 @@ export default function GestanteDiary() {
               </p>
             </div>
           </div>
-          <Button size="sm" onClick={() => setDialogOpen(true)}>
-            <Plus className="h-4 w-4 mr-1" />
-            Novo
-          </Button>
+          <div className="flex items-center gap-2">
+            {entries.length > 0 && (
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button size="sm" variant="outline" className="text-xs">
+                    <Trash2 className="h-3.5 w-3.5 mr-1" />
+                    Limpar
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Limpar diário?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Todos os registros do diário serão removidos permanentemente. Esta ação não pode ser desfeita.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                    <AlertDialogAction onClick={clearAllEntries}>
+                      Limpar tudo
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            )}
+            <Button size="sm" onClick={() => setDialogOpen(true)}>
+              <Plus className="h-4 w-4 mr-1" />
+              Novo
+            </Button>
+          </div>
         </div>
       </header>
 
