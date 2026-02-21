@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { format, parseISO } from "date-fns";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -42,7 +43,7 @@ export function RecentClients() {
       const { data, error } = await supabase
         .from("clients")
         .select("*")
-        .order("created_at", { ascending: false })
+        .order("dpp", { ascending: true, nullsFirst: false })
         .limit(5);
 
       if (error) throw error;
@@ -99,6 +100,9 @@ export function RecentClients() {
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-foreground truncate">{client.full_name}</p>
                     <p className="text-sm text-muted-foreground">{client.phone}</p>
+                    {client.dpp && (
+                      <p className="text-xs text-muted-foreground">DPP: {format(parseISO(client.dpp), "dd/MM/yyyy")}</p>
+                    )}
                   </div>
                   <Button
                       variant="ghost"

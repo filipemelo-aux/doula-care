@@ -58,7 +58,7 @@ import {
 import type { Tables } from "@/integrations/supabase/types";
 
 type Transaction = Tables<"transactions"> & {
-  clients?: { full_name: string } | null;
+  clients?: { full_name: string; dpp: string | null } | null;
   plan_settings?: { name: string } | null;
 };
 
@@ -138,7 +138,7 @@ export default function Financial() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("transactions")
-        .select("*, clients(full_name), plan_settings(name)")
+        .select("*, clients(full_name, dpp), plan_settings(name)")
         .eq("type", "receita")
         .order("created_at", { ascending: false });
 
@@ -446,7 +446,15 @@ export default function Financial() {
   // Separate client plan revenues from service/manual revenues
   // Client tab: has plan_id OR is auto-generated (contract-based)
   // Service tab: no plan_id AND not auto-generated (manual/service entries)
-  const clientTransactions = transactions?.filter((t) => t.plan_id != null || t.is_auto_generated === true) || [];
+  const clientTransactions = (transactions?.filter((t) => t.plan_id != null || t.is_auto_generated === true) || [])
+    .sort((a, b) => {
+      const dppA = (a.clients as any)?.dpp;
+      const dppB = (b.clients as any)?.dpp;
+      if (!dppA && !dppB) return 0;
+      if (!dppA) return 1;
+      if (!dppB) return -1;
+      return dppA.localeCompare(dppB);
+    });
   const serviceTransactions = transactions?.filter((t) => t.plan_id == null && !t.is_auto_generated) || [];
 
   const activeTabTransactions = revenueTab === "clientes" ? clientTransactions : serviceTransactions;

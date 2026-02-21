@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { format, parseISO } from "date-fns";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -71,7 +72,7 @@ export default function Clients() {
       const { data, error } = await supabase
         .from("clients")
         .select("*")
-        .order("created_at", { ascending: false });
+        .order("dpp", { ascending: true, nullsFirst: false });
 
       if (error) throw error;
       return data;
@@ -191,6 +192,9 @@ export default function Clients() {
                         <div className="flex-1 min-w-0 overflow-hidden">
                           <p className="font-medium text-xs truncate">{formatClientName(client.full_name)}</p>
                           <p className="text-[10px] text-muted-foreground truncate">{client.phone}</p>
+                          {client.dpp && (
+                            <p className="text-[10px] text-muted-foreground">DPP: {format(parseISO(client.dpp), "dd/MM/yyyy")}</p>
+                          )}
                         </div>
                         <div className="flex items-center gap-0 flex-shrink-0">
                           <Button
@@ -247,6 +251,7 @@ export default function Clients() {
                     <TableRow>
                       <TableHead>Nome</TableHead>
                       <TableHead>Telefone</TableHead>
+                      <TableHead>DPP</TableHead>
                       <TableHead>Situação</TableHead>
                       <TableHead>Plano</TableHead>
                       <TableHead>Pagamento</TableHead>
@@ -260,6 +265,9 @@ export default function Clients() {
                           {client.full_name}
                         </TableCell>
                         <TableCell>{client.phone}</TableCell>
+                        <TableCell className="text-muted-foreground">
+                          {client.dpp ? format(parseISO(client.dpp), "dd/MM/yyyy") : "—"}
+                        </TableCell>
                         <TableCell>
                           <Badge
                             variant="outline"
