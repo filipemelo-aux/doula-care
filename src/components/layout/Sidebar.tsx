@@ -3,7 +3,6 @@ import logo from "@/assets/logo.png";
 import {
   LayoutDashboard,
   Users,
-  CreditCard,
   TrendingUp,
   TrendingDown,
   FileText,
@@ -24,7 +23,6 @@ const navItems = [
   { to: "/admin", icon: LayoutDashboard, label: "Visão Geral" },
   { to: "/agenda", icon: CalendarDays, label: "Agenda" },
   { to: "/clientes", icon: Users, label: "Clientes" },
-  { to: "/planos", icon: CreditCard, label: "Planos" },
   { to: "/financeiro", icon: TrendingUp, label: "Financeiro" },
   { to: "/despesas", icon: TrendingDown, label: "Despesas" },
   { to: "/relatorios", icon: FileText, label: "Relatórios" },

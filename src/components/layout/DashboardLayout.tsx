@@ -4,13 +4,12 @@ import { Outlet } from "react-router-dom";
 import { Sidebar } from "./Sidebar";
 import { Menu, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useIsMobile } from "@/hooks/use-mobile";
 import { useAuth } from "@/contexts/AuthContext";
 import { PushNotificationToggle } from "@/components/pwa/PushNotificationToggle";
 
 export function DashboardLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const { signOut } = useAuth();
+  const { signOut, profileName } = useAuth();
 
   const handleNavigate = () => {
     setSidebarOpen(false);
@@ -40,7 +39,9 @@ export function DashboardLayout() {
               <div className="w-8 h-8 rounded-[40%] bg-[#FFF5EE] flex items-center justify-center overflow-hidden p-0.5">
                 <img src={logo} alt="Papo de Doula" className="w-full h-full object-contain mix-blend-multiply" />
               </div>
-              <h1 className="font-display text-lg text-foreground">Papo de Doula</h1>
+              <h1 className="font-display text-lg text-foreground">
+                {profileName ? `Olá, ${profileName.split(" ")[0]}` : "Papo de Doula"}
+              </h1>
             </div>
           </div>
           <div className="flex items-center gap-1">
@@ -52,7 +53,13 @@ export function DashboardLayout() {
         </header>
 
         {/* Desktop Header */}
-        <header className="hidden lg:flex h-16 border-b border-border items-center justify-end px-8 bg-card/50 backdrop-blur-sm sticky top-0 z-40">
+        <header className="hidden lg:flex h-16 border-b border-border items-center justify-between px-8 bg-card/50 backdrop-blur-sm sticky top-0 z-40">
+          {profileName && (
+            <p className="text-sm text-muted-foreground">
+              Olá, <span className="font-medium text-foreground">{profileName.split(" ")[0]}</span> 👋
+            </p>
+          )}
+          {!profileName && <div />}
           <Button variant="ghost" size="sm" onClick={() => signOut()} className="gap-2 text-muted-foreground hover:text-foreground">
             <LogOut className="h-4 w-4" />
             Sair
