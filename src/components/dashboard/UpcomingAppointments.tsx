@@ -5,10 +5,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calendar, Trash2, Loader2, Plus, Clock } from "lucide-react";
-import { format, isPast, isToday } from "date-fns";
+import { format, isToday } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
+import { abbreviateName } from "@/lib/utils";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { ManageAppointmentsDialog } from "@/components/clients/ManageAppointmentsDialog";
 
 interface AppointmentWithClient {
@@ -24,7 +28,10 @@ interface AppointmentWithClient {
 
 export function UpcomingAppointments() {
   const queryClient = useQueryClient();
+  const isMobile = useIsMobile();
   const [selectedClient, setSelectedClient] = useState<{ id: string; name: string } | null>(null);
+  const [pickClientOpen, setPickClientOpen] = useState(false);
+  const [pickedClientId, setPickedClientId] = useState("");
 
   const { data: appointments, isLoading } = useQuery({
     queryKey: ["all-appointments"],
@@ -40,6 +47,20 @@ export function UpcomingAppointments() {
     },
   });
 
+  const { data: clients } = useQuery({
+    queryKey: ["clients-for-appointments"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("clients")
+        .select("id, full_name, user_id")
+        .not("user_id", "is", null)
+        .order("full_name");
+      if (error) throw error;
+      return data;
+    },
+    enabled: pickClientOpen,
+  });
+
   const handleDelete = async (id: string) => {
     const { error } = await supabase.from("appointments").delete().eq("id", id);
     if (error) {
@@ -50,14 +71,31 @@ export function UpcomingAppointments() {
     }
   };
 
+  const handlePickClient = () => {
+    const client = clients?.find((c) => c.id === pickedClientId);
+    if (client) {
+      setPickClientOpen(false);
+      setPickedClientId("");
+      setSelectedClient({ id: client.id, name: client.full_name });
+    }
+  };
+
+  const displayName = (name: string) => (isMobile ? abbreviateName(name) : name);
+
   return (
     <>
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-base font-display flex items-center gap-2">
-            <Calendar className="h-5 w-5 text-primary" />
-            Consultas Agendadas
-          </CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-base font-display flex items-center gap-2">
+              <Calendar className="h-5 w-5 text-primary" />
+              Consultas Agendadas
+            </CardTitle>
+            <Button size="sm" variant="outline" onClick={() => setPickClientOpen(true)}>
+              <Plus className="h-4 w-4 mr-1" />
+              Nova Consulta
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           {isLoading ? (
@@ -86,13 +124,13 @@ export function UpcomingAppointments() {
                         <div className="flex items-center gap-2">
                           <p className="font-medium text-sm truncate">{apt.title}</p>
                           {today && (
-                            <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
+                            <Badge variant="secondary" className="text-[10px] px-1.5 py-0 flex-shrink-0">
                               Hoje
                             </Badge>
                           )}
                         </div>
-                        <p className="text-xs text-muted-foreground truncate">
-                          {apt.clients?.full_name}
+                        <p className="text-xs text-muted-foreground truncate" title={apt.clients?.full_name}>
+                          {displayName(apt.clients?.full_name || "")}
                         </p>
                         <p className="text-xs text-muted-foreground flex items-center gap-1">
                           <Clock className="h-3 w-3" />
@@ -100,17 +138,6 @@ export function UpcomingAppointments() {
                         </p>
                       </div>
                       <div className="flex items-center gap-1">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8"
-                          onClick={() =>
-                            setSelectedClient({ id: apt.client_id, name: apt.clients?.full_name })
-                          }
-                          title="Gerenciar consultas"
-                        >
-                          <Plus className="h-4 w-4" />
-                        </Button>
                         <Button
                           variant="ghost"
                           size="icon"
@@ -133,6 +160,32 @@ export function UpcomingAppointments() {
           )}
         </CardContent>
       </Card>
+
+      {/* Pick client dialog */}
+      <Dialog open={pickClientOpen} onOpenChange={setPickClientOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="font-display">Selecionar Cliente</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <Select value={pickedClientId} onValueChange={setPickedClientId}>
+              <SelectTrigger>
+                <SelectValue placeholder="Escolha uma cliente..." />
+              </SelectTrigger>
+              <SelectContent>
+                {clients?.map((c) => (
+                  <SelectItem key={c.id} value={c.id}>
+                    {c.full_name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button className="w-full" disabled={!pickedClientId} onClick={handlePickClient}>
+              Continuar
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {selectedClient && (
         <ManageAppointmentsDialog
