@@ -14,6 +14,7 @@ import Financial from "./pages/Financial";
 import Expenses from "./pages/Expenses";
 import Reports from "./pages/Reports";
 import Settings from "./pages/Settings";
+import Agenda from "./pages/Agenda";
 import NotFound from "./pages/NotFound";
 import InstallAppBanner from "./components/pwa/InstallAppBanner";
 import { NotificationListenerProvider } from "./components/notifications/NotificationListenerProvider";
@@ -104,6 +105,7 @@ const App = () => (
               }
             >
               <Route path="/admin" element={<Dashboard />} />
+              <Route path="/agenda" element={<Agenda />} />
               <Route path="/clientes" element={<Clients />} />
               <Route path="/planos" element={<Plans />} />
               <Route path="/financeiro" element={<Financial />} />

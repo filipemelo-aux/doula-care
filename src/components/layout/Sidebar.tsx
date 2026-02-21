@@ -9,6 +9,7 @@ import {
   FileText,
   Settings,
   ChevronLeft,
+  CalendarDays,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -21,6 +22,7 @@ interface SidebarProps {
 
 const navItems = [
   { to: "/admin", icon: LayoutDashboard, label: "Visão Geral" },
+  { to: "/agenda", icon: CalendarDays, label: "Agenda" },
   { to: "/clientes", icon: Users, label: "Clientes" },
   { to: "/planos", icon: CreditCard, label: "Planos" },
   { to: "/financeiro", icon: TrendingUp, label: "Financeiro" },
