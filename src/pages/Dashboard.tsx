@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useFinancialMetrics, formatCurrency } from "@/hooks/useFinancialMetrics";
+import { useAuth } from "@/contexts/AuthContext";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { RecentClients } from "@/components/dashboard/RecentClients";
 import { FinancialOverview } from "@/components/dashboard/FinancialOverview";
@@ -14,11 +15,25 @@ export default function Dashboard() {
   const [period, setPeriod] = useState<PeriodOption>("month");
   const [gestantesDialogOpen, setGestantesDialogOpen] = useState(false);
   const [puerperasDialogOpen, setPuerperasDialogOpen] = useState(false);
+  const { profileName } = useAuth();
 
   const { data: metrics } = useFinancialMetrics(period);
 
   return (
     <div className="space-y-4 lg:space-y-6 overflow-x-hidden">
+      {/* Greeting */}
+      {profileName && (
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-md">
+            <Heart className="w-5 h-5 text-primary-foreground" />
+          </div>
+          <div>
+            <p className="text-xs text-muted-foreground">Olá,</p>
+            <h1 className="font-display font-bold text-base">{profileName.split(" ")[0]}!</h1>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
         <div className="page-header mb-0 min-w-0">
