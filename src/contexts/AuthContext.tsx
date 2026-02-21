@@ -123,9 +123,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let isMounted = true;
+    let initialLoadDone = false;
 
+    // 1. Listener for ONGOING auth changes (does NOT control loading)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, currentSession) => {
+      (event, currentSession) => {
         if (!isMounted) return;
 
         if (event === "SIGNED_OUT") {
@@ -139,9 +141,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           return;
         }
 
-        if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED" || event === "INITIAL_SESSION") {
+        // Skip INITIAL_SESSION — handled by getSession below
+        if (event === "INITIAL_SESSION") return;
+
+        if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
+          // Update session/user immediately (sync)
+          setSession(currentSession);
+          setUser(currentSession?.user ?? null);
+
+          // Dispatch async work AFTER callback to avoid deadlock
           setTimeout(() => {
-            if (isMounted) {
+            if (isMounted && initialLoadDone) {
               initializeUser(currentSession);
             }
           }, 0);
@@ -149,11 +159,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     );
 
-    supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
-      if (isMounted) {
-        initializeUser(currentSession);
+    // 2. INITIAL load (controls loading state)
+    const initializeAuth = async () => {
+      try {
+        const { data: { session: currentSession } } = await supabase.auth.getSession();
+        if (!isMounted) return;
+        await initializeUser(currentSession);
+      } catch {
+        if (isMounted) {
+          setLoading(false);
+          setRoleChecked(true);
+        }
+      } finally {
+        initialLoadDone = true;
       }
-    });
+    };
+
+    initializeAuth();
 
     return () => {
       isMounted = false;
