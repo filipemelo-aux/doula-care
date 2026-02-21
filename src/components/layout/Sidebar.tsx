@@ -53,7 +53,7 @@ export function Sidebar({ isOpen, onToggle, onNavigate }: SidebarProps) {
       <div className="h-20 flex items-center justify-between px-6 border-b border-sidebar-border">
         <div className={cn("flex items-center gap-3 transition-opacity", !isOpen && "lg:opacity-0")}>
           <div className="w-9 h-9 rounded-[40%] bg-[#FFF5EE] overflow-hidden">
-            <img src={logo} alt="Papo de Doula" className="w-full h-full object-cover mix-blend-multiply" />
+            <img src={logo} alt="Papo de Doula" className="w-full h-full object-cover mix-blend-multiply scale-[1.35]" />
           </div>
           <div>
             <h1 className="font-display text-lg text-sidebar-foreground">Papo de Doula</h1>
@@ -77,7 +77,7 @@ export function Sidebar({ isOpen, onToggle, onNavigate }: SidebarProps) {
       {!isOpen && (
         <div className="hidden lg:flex h-20 absolute top-0 left-0 w-20 items-center justify-between px-2">
           <div className="w-8 h-8 rounded-[40%] bg-[#FFF5EE] overflow-hidden">
-            <img src={logo} alt="Papo de Doula" className="w-full h-full object-cover mix-blend-multiply" />
+            <img src={logo} alt="Papo de Doula" className="w-full h-full object-cover mix-blend-multiply scale-[1.35]" />
           </div>
           <Button
             variant="ghost"
