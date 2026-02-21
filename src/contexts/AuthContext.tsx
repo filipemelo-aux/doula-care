@@ -22,6 +22,7 @@ interface AuthContextType {
   isClient: boolean;
   client: ClientData | null;
   isFirstLogin: boolean;
+  profileName: string | null;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
   refreshClientData: () => Promise<void>;
@@ -37,6 +38,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [role, setRole] = useState<AppRole | null>(null);
   const [roleChecked, setRoleChecked] = useState(false);
   const [client, setClient] = useState<ClientData | null>(null);
+  const [profileName, setProfileName] = useState<string | null>(null);
 
   const fetchRole = useCallback(async (userId: string): Promise<AppRole | null> => {
     try {
@@ -84,6 +86,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(null);
       setRole(null);
       setClient(null);
+      setProfileName(null);
       setRoleChecked(true);
       setLoading(false);
       return;
@@ -98,8 +101,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (userRole === "client") {
       const clientData = await fetchClientData(currentSession.user.id);
       setClient(clientData);
+      setProfileName(clientData?.full_name || null);
     } else {
       setClient(null);
+      // Fetch profile name for admin/moderator users
+      try {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("full_name")
+          .eq("user_id", currentSession.user.id)
+          .maybeSingle();
+        setProfileName(profile?.full_name || null);
+      } catch {
+        setProfileName(null);
+      }
     }
 
     setRoleChecked(true);
@@ -118,6 +133,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setUser(null);
           setRole(null);
           setClient(null);
+          setProfileName(null);
           setRoleChecked(true);
           setLoading(false);
           return;
@@ -263,6 +279,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isClient,
         client,
         isFirstLogin: client?.first_login ?? false,
+        profileName,
         signIn,
         signOut,
         refreshClientData,

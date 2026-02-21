@@ -9,7 +9,6 @@ import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Clients from "./pages/Clients";
-import Plans from "./pages/Plans";
 import Financial from "./pages/Financial";
 import Expenses from "./pages/Expenses";
 import Reports from "./pages/Reports";
@@ -107,7 +106,6 @@ const App = () => (
               <Route path="/admin" element={<Dashboard />} />
               <Route path="/agenda" element={<Agenda />} />
               <Route path="/clientes" element={<Clients />} />
-              <Route path="/planos" element={<Plans />} />
               <Route path="/financeiro" element={<Financial />} />
               <Route path="/despesas" element={<Expenses />} />
               <Route path="/relatorios" element={<Reports />} />
