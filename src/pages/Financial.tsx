@@ -631,6 +631,9 @@ export default function Financial() {
                         <span className="text-xs text-muted-foreground truncate min-w-0 flex-1" title={transaction.clients?.full_name || "—"}>
                           {transaction.clients?.full_name ? abbreviateName(transaction.clients.full_name) : "—"}
                         </span>
+                        {(transaction.clients as any)?.dpp && (
+                          <span className="text-xs text-muted-foreground flex-shrink-0">DPP: {format(parseISO((transaction.clients as any).dpp), "dd/MM/yy")}</span>
+                        )}
                         <span className="text-xs text-muted-foreground flex-shrink-0">• {formatBrazilDate(transaction.date, "dd/MM/yy")}</span>
                       </div>
 
@@ -777,6 +780,7 @@ export default function Financial() {
                     <TableRow className="hover:bg-transparent border-b border-border/50">
                       <TableHead className="w-[75px] text-xs font-medium text-muted-foreground py-2">Data</TableHead>
                       <TableHead className="text-xs font-medium text-muted-foreground py-2">Cliente / Descrição</TableHead>
+                      <TableHead className="w-[75px] text-xs font-medium text-muted-foreground py-2">DPP</TableHead>
                       <TableHead className="text-right w-[90px] text-xs font-medium text-muted-foreground py-2">Valor</TableHead>
                       <TableHead className="text-center w-[55px] text-xs font-medium text-muted-foreground py-2">Parc.</TableHead>
                       <TableHead className="text-right w-[90px] text-xs font-medium text-muted-foreground py-2">Recebido</TableHead>
@@ -818,6 +822,9 @@ export default function Financial() {
                                 {transaction.plan_settings?.name || transaction.description}
                               </span>
                             </div>
+                          </TableCell>
+                          <TableCell className="py-2.5 text-xs text-muted-foreground">
+                            {(transaction.clients as any)?.dpp ? format(parseISO((transaction.clients as any).dpp), "dd/MM/yy") : "—"}
                           </TableCell>
                           <TableCell className="text-right py-2.5">
                             <span className="font-semibold text-sm">{formatCurrency(totalAmount)}</span>
