@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState, useCallback, ReactNode } from "react";
 import { User, Session } from "@supabase/supabase-js";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 
 type AppRole = "admin" | "moderator" | "client" | "user";
@@ -32,6 +33,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const navigate = useNavigate();
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
@@ -271,7 +273,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.error("Error signing out:", error);
     }
 
-    window.location.href = "/login";
+    navigate("/login", { replace: true });
   };
 
   const refreshClientData = async () => {
