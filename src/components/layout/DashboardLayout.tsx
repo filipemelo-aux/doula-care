@@ -37,7 +37,7 @@ export function DashboardLayout() {
             </Button>
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-[40%] bg-[#FFF5EE] overflow-hidden">
-                <img src={logo} alt="Papo de Doula" className="w-full h-full object-cover mix-blend-multiply scale-[1.35]" />
+                <img src={logo} alt="Papo de Doula" className="w-full h-full object-cover mix-blend-multiply scale-[1.15]" />
               </div>
               <h1 className="font-display text-lg text-foreground">Papo de Doula</h1>
             </div>
@@ -54,7 +54,7 @@ export function DashboardLayout() {
         <header className="hidden lg:flex h-16 border-b border-border items-center justify-between px-8 bg-card/50 backdrop-blur-sm sticky top-0 z-40">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-[40%] bg-[#FFF5EE] overflow-hidden">
-              <img src={logo} alt="Papo de Doula" className="w-full h-full object-cover mix-blend-multiply scale-[1.35]" />
+              <img src={logo} alt="Papo de Doula" className="w-full h-full object-cover mix-blend-multiply scale-[1.15]" />
             </div>
             <h1 className="font-display text-lg text-foreground">Papo de Doula</h1>
           </div>
