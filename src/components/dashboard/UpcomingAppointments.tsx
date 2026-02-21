@@ -80,7 +80,17 @@ export function UpcomingAppointments() {
     }
   };
 
-  const displayName = (name: string) => abbreviateName(name);
+  const displayName = (name: string) => {
+    const parts = name.split(" ");
+    if (parts.length <= 3) return name;
+    // Keep first 2, abbreviate middle ones, keep last
+    const first = parts.slice(0, 2);
+    const middle = parts.slice(2, -1);
+    const last = parts[parts.length - 1];
+    const prefixes = ["de", "da", "do", "dos", "das", "e", "del", "della", "di"];
+    const abbreviated = middle.map((p) => (prefixes.includes(p.toLowerCase()) ? p : `${p[0]}.`));
+    return [...first, ...abbreviated, last].join(" ");
+  };
 
   return (
     <>
@@ -91,8 +101,6 @@ export function UpcomingAppointments() {
               <Calendar className="h-5 w-5 text-primary" />
               Consultas Agendadas
             </CardTitle>
-          </div>
-          <div className="flex items-center mt-2" style={{ paddingLeft: "56px" }}>
             <Button size="sm" variant="outline" onClick={() => setPickClientOpen(true)}>
               <Plus className="h-4 w-4 mr-1" />
               {isMobile ? "Consulta" : "Nova Consulta"}
