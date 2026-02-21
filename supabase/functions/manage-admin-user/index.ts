@@ -18,7 +18,7 @@ Deno.serve(async (req) => {
       auth: { autoRefreshToken: false, persistSession: false },
     });
 
-    // Verify caller is admin
+    // Verify caller is admin or moderator
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
       return new Response(JSON.stringify({ error: "Missing authorization" }), {
@@ -36,18 +36,21 @@ Deno.serve(async (req) => {
       });
     }
 
-    const { data: roleData } = await supabase
+    // Check if caller is admin or moderator
+    const { data: callerRoles } = await supabase
       .from("user_roles")
       .select("role")
       .eq("user_id", callingUser.id)
-      .in("role", ["admin"])
-      .maybeSingle();
+      .in("role", ["admin", "moderator"]);
 
-    if (!roleData) {
-      return new Response(JSON.stringify({ error: "Admin role required" }), {
+    if (!callerRoles || callerRoles.length === 0) {
+      return new Response(JSON.stringify({ error: "Admin or moderator role required" }), {
         status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
+    const callerIsAdmin = callerRoles.some((r) => r.role === "admin");
+    const callerIsModerator = callerRoles.some((r) => r.role === "moderator");
 
     const { action, userId, fullName, role } = await req.json();
 
@@ -62,6 +65,28 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: "Não é possível excluir seu próprio usuário" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
+    }
+
+    // If caller is moderator, check that target is NOT an admin
+    if (callerIsModerator && !callerIsAdmin) {
+      const { data: targetRoles } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", userId);
+
+      const targetIsAdmin = targetRoles?.some((r) => r.role === "admin");
+      if (targetIsAdmin) {
+        return new Response(JSON.stringify({ error: "Moderadores não podem gerenciar administradores" }), {
+          status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      // Moderators cannot assign admin role
+      if (role === "admin") {
+        return new Response(JSON.stringify({ error: "Moderadores não podem atribuir o papel de administrador" }), {
+          status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
     }
 
     if (action === "update") {

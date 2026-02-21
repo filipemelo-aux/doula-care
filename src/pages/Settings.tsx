@@ -96,7 +96,9 @@ const planSchema = z.object({
 type PlanFormData = z.infer<typeof planSchema>;
 
 export default function Settings() {
-  const { user, isAdmin, signOut, profileName } = useAuth();
+  const { user, isAdmin, role, signOut, profileName } = useAuth();
+  const callerIsAdmin = role === "admin";
+  const callerIsModerator = role === "moderator";
   const queryClient = useQueryClient();
 
   // User management state
@@ -371,7 +373,7 @@ export default function Settings() {
               </div>
               <div>
                 <h3 className="font-semibold text-foreground">{profileName || user?.email}</h3>
-                <p className="text-sm text-muted-foreground">{isAdmin ? "Administrador" : "Usuário"}</p>
+                <p className="text-sm text-muted-foreground">{callerIsAdmin ? "Administrador" : callerIsModerator ? "Moderador" : "Usuário"}</p>
               </div>
             </div>
             <Button variant="outline" onClick={signOut} className="gap-2 w-full sm:w-auto">
@@ -433,7 +435,7 @@ export default function Settings() {
                               <SelectContent>
                                 <SelectItem value="user">Usuário</SelectItem>
                                 <SelectItem value="moderator">Moderador</SelectItem>
-                                <SelectItem value="admin">Administrador</SelectItem>
+                                {callerIsAdmin && <SelectItem value="admin">Administrador</SelectItem>}
                               </SelectContent>
                             </Select>
                           </div>
@@ -486,28 +488,36 @@ export default function Settings() {
                                 </div>
                               </TableCell>
                               <TableCell className="px-2 py-1.5">
-                                <div className="flex items-center gap-1">
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-7 w-7"
-                                    onClick={() => openEditUser(userProfile)}
-                                    title="Editar"
-                                  >
-                                    <Edit2 className="h-3.5 w-3.5" />
-                                  </Button>
-                                  {!isCurrentUser(userProfile.user_id) && (
-                                    <Button
-                                      variant="ghost"
-                                      size="icon"
-                                      className="h-7 w-7 text-destructive hover:text-destructive"
-                                      onClick={() => setDeleteUserId(userProfile.user_id)}
-                                      title="Excluir"
-                                    >
-                                      <Trash2 className="h-3.5 w-3.5" />
-                                    </Button>
-                                  )}
-                                </div>
+                                {(() => {
+                                  const targetIsAdmin = userProfile.roles.includes("admin");
+                                  const canManage = callerIsAdmin || (callerIsModerator && !targetIsAdmin);
+                                  return (
+                                    <div className="flex items-center gap-1">
+                                      {canManage && (
+                                        <Button
+                                          variant="ghost"
+                                          size="icon"
+                                          className="h-7 w-7"
+                                          onClick={() => openEditUser(userProfile)}
+                                          title="Editar"
+                                        >
+                                          <Edit2 className="h-3.5 w-3.5" />
+                                        </Button>
+                                      )}
+                                      {canManage && !isCurrentUser(userProfile.user_id) && (
+                                        <Button
+                                          variant="ghost"
+                                          size="icon"
+                                          className="h-7 w-7 text-destructive hover:text-destructive"
+                                          onClick={() => setDeleteUserId(userProfile.user_id)}
+                                          title="Excluir"
+                                        >
+                                          <Trash2 className="h-3.5 w-3.5" />
+                                        </Button>
+                                      )}
+                                    </div>
+                                  );
+                                })()}
                               </TableCell>
                             </TableRow>
                           ))}
@@ -666,7 +676,7 @@ export default function Settings() {
                 <SelectContent>
                   <SelectItem value="user">Usuário</SelectItem>
                   <SelectItem value="moderator">Moderador</SelectItem>
-                  <SelectItem value="admin">Administrador</SelectItem>
+                  {callerIsAdmin && <SelectItem value="admin">Administrador</SelectItem>}
                 </SelectContent>
               </Select>
             </div>
