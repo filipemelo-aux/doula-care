@@ -52,7 +52,7 @@ Deno.serve(async (req) => {
     const callerIsAdmin = callerRoles.some((r) => r.role === "admin");
     const callerIsModerator = callerRoles.some((r) => r.role === "moderator");
 
-    const { action, userId, fullName, role } = await req.json();
+    const { action, userId, fullName, role, email } = await req.json();
 
     if (!userId) {
       return new Response(JSON.stringify({ error: "userId is required" }), {
@@ -97,6 +97,12 @@ Deno.serve(async (req) => {
           .update({ full_name: fullName })
           .eq("user_id", userId);
         if (profileError) throw profileError;
+      }
+
+      // Update email
+      if (email !== undefined && email !== "") {
+        const { error: emailError } = await supabase.auth.admin.updateUserById(userId, { email });
+        if (emailError) throw emailError;
       }
 
       // Update role

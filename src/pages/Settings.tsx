@@ -104,13 +104,13 @@ export default function Settings() {
   // User management state
   const [newUserOpen, setNewUserOpen] = useState(false);
   const [changePasswordOpen, setChangePasswordOpen] = useState(false);
-  const [editUserDialog, setEditUserDialog] = useState<{ userId: string; fullName: string; role: string } | null>(null);
+  const [editUserDialog, setEditUserDialog] = useState<{ userId: string; fullName: string; role: string; email?: string } | null>(null);
   const [deleteUserId, setDeleteUserId] = useState<string | null>(null);
   const [newUserData, setNewUserData] = useState({
     email: "",
     password: "",
     fullName: "",
-    role: "user" as "admin" | "moderator" | "user",
+    role: "moderator" as "admin" | "moderator" | "user",
   });
   const [passwordData, setPasswordData] = useState({
     newPassword: "",
@@ -118,6 +118,7 @@ export default function Settings() {
   });
   const [editName, setEditName] = useState("");
   const [editRole, setEditRole] = useState("");
+  const [editEmail, setEditEmail] = useState("");
 
   // Plan state
   const [planDialogOpen, setPlanDialogOpen] = useState(false);
@@ -143,10 +144,13 @@ export default function Settings() {
         .select("*");
       if (rolesError) throw rolesError;
 
-      return profiles.map((profile) => ({
-        ...profile,
-        roles: roles?.filter((r) => r.user_id === profile.user_id).map((r) => r.role) || [],
-      }));
+      // Only show users with admin or moderator roles
+      return profiles
+        .map((profile) => ({
+          ...profile,
+          roles: roles?.filter((r) => r.user_id === profile.user_id).map((r) => r.role) || [],
+        }))
+        .filter((u) => u.roles.includes("admin") || u.roles.includes("moderator"));
     },
     enabled: isAdmin,
   });
@@ -208,15 +212,15 @@ export default function Settings() {
         queryClient.invalidateQueries({ queryKey: ["users-with-roles"] });
       }
       setNewUserOpen(false);
-      setNewUserData({ email: "", password: "", fullName: "", role: "user" });
+      setNewUserData({ email: "", password: "", fullName: "", role: "moderator" });
     },
     onError: (error) => toast.error("Erro ao criar usuário", { description: error.message }),
   });
 
   const updateUserMutation = useMutation({
-    mutationFn: async ({ userId, fullName, role }: { userId: string; fullName: string; role: string }) => {
+    mutationFn: async ({ userId, fullName, role, email }: { userId: string; fullName: string; role: string; email?: string }) => {
       const { data, error } = await supabase.functions.invoke("manage-admin-user", {
-        body: { action: "update", userId, fullName, role },
+        body: { action: "update", userId, fullName, role, email },
       });
       if (error) throw error;
       if (data.error) throw new Error(data.error);
@@ -308,11 +312,20 @@ export default function Settings() {
     changePasswordMutation.mutate(passwordData.newPassword);
   };
 
-  const openEditUser = (profile: any) => {
+  const openEditUser = async (profile: any) => {
     const adminRole = profile.roles.find((r: string) => r !== "client") || "user";
     setEditName(profile.full_name || "");
     setEditRole(adminRole);
+    setEditEmail("");
     setEditUserDialog({ userId: profile.user_id, fullName: profile.full_name || "", role: adminRole });
+
+    // Fetch email from edge function
+    try {
+      const { data } = await supabase.functions.invoke("get-client-email", {
+        body: { userId: profile.user_id },
+      });
+      if (data?.email) setEditEmail(data.email);
+    } catch {}
   };
 
   const handleEditPlan = (plan: PlanSetting) => {
@@ -670,6 +683,10 @@ export default function Settings() {
               <Input value={editName} onChange={(e) => setEditName(e.target.value)} placeholder="Nome completo" />
             </div>
             <div className="space-y-2">
+              <Label>Email</Label>
+              <Input type="email" value={editEmail} onChange={(e) => setEditEmail(e.target.value)} placeholder="email@exemplo.com" />
+            </div>
+            <div className="space-y-2">
               <Label>Permissão</Label>
               <Select value={editRole} onValueChange={setEditRole}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
@@ -685,7 +702,7 @@ export default function Settings() {
               disabled={updateUserMutation.isPending}
               onClick={() => {
                 if (editUserDialog) {
-                  updateUserMutation.mutate({ userId: editUserDialog.userId, fullName: editName, role: editRole });
+                  updateUserMutation.mutate({ userId: editUserDialog.userId, fullName: editName, role: editRole, email: editEmail || undefined });
                 }
               }}
             >
