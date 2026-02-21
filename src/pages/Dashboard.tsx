@@ -5,6 +5,7 @@ import { RecentClients } from "@/components/dashboard/RecentClients";
 import { FinancialOverview } from "@/components/dashboard/FinancialOverview";
 import { TopPlansCard } from "@/components/dashboard/TopPlansCard";
 import { NotificationsCenter } from "@/components/dashboard/NotificationsCenter";
+import { UpcomingAppointments } from "@/components/dashboard/UpcomingAppointments";
 import { PeriodFilter, PeriodOption } from "@/components/dashboard/PeriodFilter";
 import { ClientsListDialog } from "@/components/dashboard/ClientsListDialog";
 import { Users, Baby, Heart, Wallet, TrendingUp, BarChart3 } from "lucide-react";
@@ -80,6 +81,9 @@ export default function Dashboard() {
 
       {/* Notifications Center */}
       <NotificationsCenter />
+
+      {/* Upcoming Appointments */}
+      <UpcomingAppointments />
 
       {/* Financial Overview */}
       <FinancialOverview period={period} />
