@@ -80,7 +80,7 @@ export function UpcomingAppointments() {
     }
   };
 
-  const displayName = (name: string) => (isMobile ? abbreviateName(name) : name);
+  const displayName = (name: string) => abbreviateName(name);
 
   return (
     <>
@@ -91,6 +91,8 @@ export function UpcomingAppointments() {
               <Calendar className="h-5 w-5 text-primary" />
               Consultas Agendadas
             </CardTitle>
+          </div>
+          <div className="flex items-center mt-2" style={{ paddingLeft: "56px" }}>
             <Button size="sm" variant="outline" onClick={() => setPickClientOpen(true)}>
               <Plus className="h-4 w-4 mr-1" />
               {isMobile ? "Consulta" : "Nova Consulta"}
