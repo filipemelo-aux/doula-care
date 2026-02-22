@@ -120,6 +120,7 @@ export type Database = {
           phone: string
           plan: Database["public"]["Enums"]["plan_type"]
           plan_value: number | null
+          preferred_name: string | null
           pregnancy_weeks: number | null
           pregnancy_weeks_set_at: string | null
           state: string | null
@@ -155,6 +156,7 @@ export type Database = {
           phone: string
           plan?: Database["public"]["Enums"]["plan_type"]
           plan_value?: number | null
+          preferred_name?: string | null
           pregnancy_weeks?: number | null
           pregnancy_weeks_set_at?: string | null
           state?: string | null
@@ -190,6 +192,7 @@ export type Database = {
           phone?: string
           plan?: Database["public"]["Enums"]["plan_type"]
           plan_value?: number | null
+          preferred_name?: string | null
           pregnancy_weeks?: number | null
           pregnancy_weeks_set_at?: string | null
           state?: string | null

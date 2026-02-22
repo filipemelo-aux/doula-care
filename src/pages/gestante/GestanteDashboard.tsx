@@ -27,6 +27,7 @@ import { LaborStartButton } from "@/components/gestante/LaborStartButton";
 import { ServiceRequestButtons } from "@/components/gestante/ServiceRequestButton";
 import { AppointmentsCard } from "@/components/gestante/AppointmentsCard";
 import { ScheduledServicesCard } from "@/components/gestante/ScheduledServicesCard";
+import { WelcomeNameDialog } from "@/components/gestante/WelcomeNameDialog";
 
 type Client = Tables<"clients">;
 
@@ -34,6 +35,8 @@ export default function GestanteDashboard() {
   const [clientData, setClientData] = useState<Client | null>(null);
   const [loading, setLoading] = useState(true);
   const [unreadMessages, setUnreadMessages] = useState(0);
+  const [showWelcome, setShowWelcome] = useState(false);
+  const [preferredName, setPreferredName] = useState<string | null>(null);
   const { client, user, signOut } = useGestanteAuth();
   const navigate = useNavigate();
 
@@ -81,6 +84,13 @@ export default function GestanteDashboard() {
 
       if (error) throw error;
       setClientData(data);
+      if (data) {
+        setPreferredName((data as any).preferred_name || null);
+        // Show welcome dialog if no preferred_name set yet
+        if (!(data as any).preferred_name) {
+          setShowWelcome(true);
+        }
+      }
     } catch (error) {
       console.error("Error fetching client:", error);
       toast.error("Erro ao carregar dados");
@@ -144,6 +154,8 @@ export default function GestanteDashboard() {
   const babyAge = calculateBabyAge();
   const isPuerpera = clientData?.status === "lactante" && clientData?.birth_occurred;
 
+  const displayName = preferredName || client?.full_name?.split(" ")[0] || "";
+
   if (loading) {
     return (
       <GestanteLayout>
@@ -162,6 +174,16 @@ export default function GestanteDashboard() {
 
     return (
       <GestanteLayout>
+        {showWelcome && user && (
+          <WelcomeNameDialog
+            fullName={client?.full_name || ""}
+            userId={user.id}
+            onComplete={(name) => {
+              setPreferredName(name);
+              setShowWelcome(false);
+            }}
+          />
+        )}
         {/* Greeting for Puérpera */}
         <div className="bg-gradient-to-b from-pink-200/50 to-background px-4 lg:px-8 py-4">
           <div className="flex items-center gap-3">
@@ -170,7 +192,7 @@ export default function GestanteDashboard() {
             </div>
             <div>
               <p className="text-xs text-muted-foreground">Mamãe,</p>
-              <h1 className="font-display font-bold text-base">{client?.full_name?.split(" ")[0]}!</h1>
+              <h1 className="font-display font-bold text-base">{displayName}!</h1>
             </div>
           </div>
         </div>
@@ -331,6 +353,16 @@ export default function GestanteDashboard() {
   // Gestante View - Before birth (original)
   return (
     <GestanteLayout>
+      {showWelcome && user && (
+        <WelcomeNameDialog
+          fullName={client?.full_name || ""}
+          userId={user.id}
+          onComplete={(name) => {
+            setPreferredName(name);
+            setShowWelcome(false);
+          }}
+        />
+      )}
       {/* Greeting */}
       <div className="bg-gradient-to-b from-primary/15 to-background px-4 lg:px-8 py-4">
         <div className="flex items-center gap-3">
@@ -338,8 +370,8 @@ export default function GestanteDashboard() {
             <Heart className="w-5 h-5 text-primary-foreground" />
           </div>
           <div>
-            <p className="text-xs text-muted-foreground">Olá,</p>
-            <h1 className="font-display font-bold text-base">{client?.full_name?.split(" ")[0]}!</h1>
+              <p className="text-xs text-muted-foreground">Olá,</p>
+              <h1 className="font-display font-bold text-base">{displayName}!</h1>
           </div>
         </div>
       </div>
