@@ -75,14 +75,14 @@ export function LaborStartButton({ laborStarted, onLaborStarted }: LaborStartBut
 
   if (laborStarted) {
     return (
-      <div className="bg-gradient-to-br from-pink-100 to-rose-100 border-2 border-pink-300 rounded-2xl p-6 text-center">
-        <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-pink-400 to-rose-500 flex items-center justify-center animate-pulse">
+      <div className="bg-gradient-to-br from-primary/10 to-accent/10 border-2 border-primary/30 rounded-2xl p-6 text-center">
+        <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center animate-pulse">
           <Heart className="h-8 w-8 text-white" />
         </div>
-        <h3 className="font-display font-bold text-lg text-pink-800 mb-1">
+        <h3 className="font-display font-bold text-lg text-accent mb-1">
           Trabalho de Parto Iniciado
         </h3>
-        <p className="text-sm text-pink-700">
+        <p className="text-sm text-accent/80">
           Sua Doula foi notificada e está acompanhando você ❤️
         </p>
       </div>
@@ -94,7 +94,7 @@ export function LaborStartButton({ laborStarted, onLaborStarted }: LaborStartBut
       <AlertDialogTrigger asChild>
         <Button 
           size="lg" 
-          className="w-full h-auto py-6 bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white shadow-lg rounded-2xl"
+          className="w-full h-auto py-6 bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-white shadow-lg rounded-2xl"
         >
           <div className="flex flex-col items-center gap-2">
             <Baby className="h-8 w-8" />
@@ -110,7 +110,7 @@ export function LaborStartButton({ laborStarted, onLaborStarted }: LaborStartBut
       <AlertDialogContent className="max-w-sm mx-4">
         <AlertDialogHeader>
           <AlertDialogTitle className="text-center">
-            <Baby className="h-12 w-12 mx-auto mb-3 text-pink-500" />
+            <Baby className="h-12 w-12 mx-auto mb-3 text-primary" />
             Confirmar início do trabalho de parto?
           </AlertDialogTitle>
           <AlertDialogDescription className="text-center">
@@ -121,7 +121,7 @@ export function LaborStartButton({ laborStarted, onLaborStarted }: LaborStartBut
           <AlertDialogAction
             onClick={handleStartLabor}
             disabled={loading}
-            className="w-full bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600"
+            className="w-full bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90"
           >
             {loading ? (
               <Loader2 className="h-4 w-4 animate-spin mr-2" />

@@ -43,14 +43,14 @@ export function WelcomeNameDialog({ fullName, userId, onComplete }: WelcomeNameD
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm p-4">
-      <div className="w-full max-w-md rounded-2xl bg-gradient-to-br from-pink-50 via-primary/5 to-accent/10 border border-primary/20 shadow-2xl p-8 space-y-6 animate-in fade-in zoom-in-95 duration-500">
+      <div className="w-full max-w-md rounded-2xl bg-gradient-to-br from-secondary via-primary/5 to-accent/10 border border-primary/20 shadow-2xl p-8 space-y-6 animate-in fade-in zoom-in-95 duration-500">
         {/* Decorative header */}
         <div className="flex justify-center">
           <div className="relative">
-            <div className="w-16 h-16 rounded-full bg-gradient-to-br from-pink-300 to-primary flex items-center justify-center shadow-lg">
+            <div className="w-16 h-16 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-lg">
               <Sparkles className="h-8 w-8 text-primary-foreground" />
             </div>
-            <Heart className="h-5 w-5 text-pink-500 absolute -top-1 -right-1 animate-bounce" />
+            <Heart className="h-5 w-5 text-accent absolute -top-1 -right-1 animate-bounce" />
           </div>
         </div>
 

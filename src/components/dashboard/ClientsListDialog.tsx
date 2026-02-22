@@ -185,7 +185,7 @@ export function ClientsListDialog({
                             }}
                             title="Ver diário"
                           >
-                            <BookHeart className="h-4 w-4 text-pink-500" />
+                            <BookHeart className="h-4 w-4 text-primary" />
                             {recentDiaryEntries?.has(client.id) && (
                               <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-primary animate-pulse" />
                             )}
@@ -227,7 +227,7 @@ export function ClientsListDialog({
                                   setDiaryDialogOpen(true);
                                 }}
                               >
-                                <BookHeart className="h-2.5 w-2.5 mr-0.5 text-pink-500" />
+                                <BookHeart className="h-2.5 w-2.5 mr-0.5 text-primary" />
                                 Diário
                                 {recentDiaryEntries?.has(client.id) && (
                                   <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-primary animate-pulse" />

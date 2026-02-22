@@ -39,7 +39,7 @@ const emotionIcons: Record<string, { icon: typeof Smile; color: string; label: s
   feliz: { icon: Smile, color: "text-green-500", label: "Feliz" },
   triste: { icon: Frown, color: "text-blue-500", label: "Triste" },
   ansiosa: { icon: AlertCircle, color: "text-yellow-500", label: "Ansiosa" },
-  calma: { icon: Heart, color: "text-pink-500", label: "Calma" },
+  calma: { icon: Heart, color: "text-primary", label: "Calma" },
   animada: { icon: Sparkles, color: "text-purple-500", label: "Animada" },
   cansada: { icon: Meh, color: "text-gray-500", label: "Cansada" },
 };

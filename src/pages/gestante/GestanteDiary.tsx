@@ -46,7 +46,7 @@ const emotionIcons: Record<string, { icon: typeof Smile; color: string; label: s
   feliz: { icon: Smile, color: "text-green-500", label: "Feliz" },
   triste: { icon: Frown, color: "text-blue-500", label: "Triste" },
   ansiosa: { icon: AlertCircle, color: "text-yellow-500", label: "Ansiosa" },
-  calma: { icon: Heart, color: "text-pink-500", label: "Calma" },
+  calma: { icon: Heart, color: "text-primary", label: "Calma" },
   animada: { icon: Sparkles, color: "text-purple-500", label: "Animada" },
   cansada: { icon: Meh, color: "text-gray-500", label: "Cansada" },
 };
@@ -135,7 +135,7 @@ export default function GestanteDiary() {
             <div className={cn(
               "w-10 h-10 rounded-full flex items-center justify-center",
               isPuerpera 
-                ? "bg-gradient-to-br from-pink-400 to-rose-500" 
+                ? "bg-gradient-to-br from-primary to-accent" 
                 : "bg-gradient-to-br from-primary to-accent"
             )}>
               <BookHeart className="w-5 h-5 text-primary-foreground" />
@@ -165,13 +165,13 @@ export default function GestanteDiary() {
           <Card className={cn(
             "border-dashed",
             isPuerpera 
-              ? "bg-gradient-to-br from-pink-50 to-rose-50" 
+              ? "bg-gradient-to-br from-primary/5 to-accent/5" 
               : "bg-gradient-to-br from-primary/5 to-accent/5"
           )}>
             <CardContent className="py-12 text-center">
               <BookHeart className={cn(
                 "h-12 w-12 mx-auto mb-4",
-                isPuerpera ? "text-pink-400" : "text-primary/40"
+                isPuerpera ? "text-primary/60" : "text-primary/40"
               )} />
               <h3 className="font-semibold text-lg mb-2">Seu diário está vazio</h3>
               <p className="text-muted-foreground text-sm mb-4">
