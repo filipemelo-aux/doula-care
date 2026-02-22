@@ -56,6 +56,7 @@ const clientSchema = z.object({
   payment_method: z.enum(["pix", "cartao", "dinheiro", "transferencia"]),
   payment_type: z.enum(["a_vista", "parcelado"]),
   installments: z.number().min(1).max(24).optional(),
+  first_due_date: z.string().optional(),
   plan_value: z.number().min(0).optional(),
   notes: z.string().optional(),
 });
@@ -104,6 +105,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
         payment_method: "pix",
         payment_type: "a_vista",
         installments: 1,
+        first_due_date: "",
         plan_value: 0,
         notes: "",
       },
@@ -145,6 +147,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
         payment_method: client.payment_method as "pix" | "cartao" | "dinheiro" | "transferencia",
         payment_type: "a_vista",
         installments: 1,
+        first_due_date: "",
         plan_value: Number(client.plan_value) || 0,
         notes: client.notes || "",
       });
@@ -169,6 +172,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
         payment_method: "pix",
         payment_type: "a_vista",
         installments: 1,
+        first_due_date: "",
         plan_value: planSettings?.find((p) => p.plan_type === "basico")?.default_value || 0,
         notes: "",
       });
@@ -274,6 +278,31 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
           .from("transactions")
           .insert([transactionPayload]);
         if (transactionError) throw transactionError;
+
+        // Create payment records with due dates if parcelado
+        if (data.payment_type === "parcelado" && data.installments && data.installments > 1) {
+          const installmentCount = data.installments;
+          const installmentAmount = (data.plan_value || 0) / installmentCount;
+          const firstDueDate = data.first_due_date ? new Date(data.first_due_date + "T12:00:00") : new Date();
+          
+          const paymentRecords = Array.from({ length: installmentCount }, (_, i) => {
+            const dueDate = new Date(firstDueDate);
+            dueDate.setMonth(dueDate.getMonth() + i);
+            return {
+              client_id: newClient.id,
+              installment_number: i + 1,
+              total_installments: installmentCount,
+              amount: installmentAmount,
+              due_date: dueDate.toISOString().split("T")[0],
+              status: "pendente",
+            };
+          });
+
+          const { error: paymentError } = await supabase
+            .from("payments")
+            .insert(paymentRecords);
+          if (paymentError) console.error("Error creating payments:", paymentError);
+        }
 
         // Create user for client if DPP is set (gestante with expected delivery date)
         if (data.dpp && data.status === "gestante") {
@@ -700,34 +729,54 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
                       </FormItem>
                     )}
                   />
-                  {form.watch("payment_type") === "parcelado" && (
-                    <FormField
-                      control={form.control}
-                      name="installments"
-                      render={({ field }) => (
-                        <FormItem className="space-y-1">
-                          <FormLabel className="text-xs">Parcelas</FormLabel>
-                          <Select 
-                            onValueChange={(value) => field.onChange(parseInt(value))} 
-                            value={String(field.value || 1)}
-                          >
+                   {form.watch("payment_type") === "parcelado" && (
+                    <>
+                      <FormField
+                        control={form.control}
+                        name="installments"
+                        render={({ field }) => (
+                          <FormItem className="space-y-1">
+                            <FormLabel className="text-xs">Parcelas</FormLabel>
+                            <Select 
+                              onValueChange={(value) => field.onChange(parseInt(value))} 
+                              value={String(field.value || 1)}
+                            >
+                              <FormControl>
+                                <SelectTrigger className="h-9 text-sm">
+                                  <SelectValue placeholder="Selecione" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {Array.from({ length: 12 }, (_, i) => i + 1).map((num) => (
+                                  <SelectItem key={num} value={String(num)}>
+                                    {num}x
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="first_due_date"
+                        render={({ field }) => (
+                          <FormItem className="space-y-1">
+                            <FormLabel className="text-xs">1º Vencimento</FormLabel>
                             <FormControl>
-                              <SelectTrigger className="h-9 text-sm">
-                                <SelectValue placeholder="Selecione" />
-                              </SelectTrigger>
+                              <Input 
+                                type="date" 
+                                className="h-9 text-sm"
+                                value={field.value || ""}
+                                onChange={(e) => field.onChange(e.target.value)}
+                              />
                             </FormControl>
-                            <SelectContent>
-                              {Array.from({ length: 12 }, (_, i) => i + 1).map((num) => (
-                                <SelectItem key={num} value={String(num)}>
-                                  {num}x
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </>
                   )}
                 </div>
               </div>
