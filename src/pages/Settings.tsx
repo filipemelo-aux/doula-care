@@ -398,6 +398,7 @@ export default function Settings() {
               <AvatarUpload
                 currentUrl={avatarUrl}
                 onUploaded={setAvatarUrl}
+                userId={user?.id}
                 name={profileName || ""}
                 size="lg"
               />
