@@ -233,10 +233,10 @@ export default function GestanteDashboard() {
 
           {/* Baby Age Card */}
           {babyAge && (
-            <Card className="overflow-hidden bg-gradient-to-br from-blue-50 to-purple-50 border-blue-200">
+            <Card className="overflow-hidden bg-gradient-to-br from-secondary to-primary/5 border-primary/20">
               <CardContent className="p-4">
                 <div className="flex items-center gap-2 mb-3">
-                  <Baby className="h-5 w-5 text-blue-500" />
+                  <Baby className="h-5 w-5 text-primary" />
                   <h2 className="font-display font-semibold text-base">
                     {multipleBabies ? "Seus Bebês" : babyName}
                   </h2>
@@ -244,7 +244,7 @@ export default function GestanteDashboard() {
                 
                 <div className="text-center py-3">
                   {babyAge.weeks > 0 ? (
-                    <p className="text-4xl font-display font-bold text-blue-600">
+                    <p className="text-4xl font-display font-bold text-primary">
                       {babyAge.weeks}
                       <span className="text-2xl">s</span>
                       {babyAge.days > 0 && (
@@ -252,7 +252,7 @@ export default function GestanteDashboard() {
                       )}
                     </p>
                   ) : (
-                    <p className="text-4xl font-display font-bold text-blue-600">
+                    <p className="text-4xl font-display font-bold text-primary">
                       {babyAge.days}
                       <span className="text-2xl">d</span>
                     </p>

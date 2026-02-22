@@ -273,24 +273,24 @@ export default function GestanteMessages() {
               {pendingBudgets?.map((budget) => (
                 <Card
                   key={`budget-${budget.id}`}
-                  className="bg-purple-50 border-purple-200 shadow-sm"
+                  className="bg-secondary border-primary/20 shadow-sm"
                 >
                   <CardContent className="p-4">
                     <div className="flex items-start gap-3">
-                      <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center flex-shrink-0">
-                        <Sparkles className="h-5 w-5 text-purple-600" />
+                      <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                        <Sparkles className="h-5 w-5 text-primary" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
-                          <Badge className="bg-purple-600 text-white text-[10px]">
+                          <Badge className="bg-primary text-primary-foreground text-[10px]">
                             Orçamento
                           </Badge>
-                          <p className="font-medium text-purple-900">{budget.service_type}</p>
+                          <p className="font-medium text-foreground">{budget.service_type}</p>
                         </div>
-                        <p className="text-2xl font-bold text-purple-700 my-2">
+                        <p className="text-2xl font-bold text-accent my-2">
                           R$ {(budget.budget_value || 0).toFixed(2).replace(".", ",")}
                         </p>
-                        <p className="text-sm text-purple-600/80 mb-3">
+                        <p className="text-sm text-muted-foreground mb-3">
                           Sua Doula enviou este orçamento. Deseja aprovar?
                         </p>
                         <div className="flex gap-2">
@@ -326,7 +326,7 @@ export default function GestanteMessages() {
                             )}
                           </Button>
                         </div>
-                        <p className="text-xs text-purple-500 mt-3">
+                        <p className="text-xs text-muted-foreground mt-3">
                           {budget.budget_sent_at && formatBrazilDateTime(budget.budget_sent_at, "dd/MM/yyyy 'às' HH:mm")}
                         </p>
                       </div>
