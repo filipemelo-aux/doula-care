@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Camera, Loader2, User, Trash2, ImagePlus } from "lucide-react";
 import { toast } from "sonner";
+import { ImageCropDialog } from "./ImageCropDialog";
 
 interface AvatarUploadProps {
   currentUrl: string | null;
@@ -21,30 +22,41 @@ interface AvatarUploadProps {
 
 export function AvatarUpload({ currentUrl, onUploaded, userId, name, size = "lg" }: AvatarUploadProps) {
   const [uploading, setUploading] = useState(false);
+  const [cropSrc, setCropSrc] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
 
   const sizeClasses = size === "lg" ? "w-20 h-20" : "w-12 h-12";
   const iconSize = size === "lg" ? "w-8 h-8" : "w-5 h-5";
 
-  const handleUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelected = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (!file || !userId) return;
+    if (!file) return;
 
     if (!file.type.startsWith("image/")) {
       toast.error("Selecione uma imagem");
       return;
     }
-
     if (file.size > 2 * 1024 * 1024) {
       toast.error("A imagem deve ter no máximo 2MB");
       return;
     }
 
+    const reader = new FileReader();
+    reader.onload = () => setCropSrc(reader.result as string);
+    reader.readAsDataURL(file);
+
+    // Reset inputs so same file can be re-selected
+    if (fileInputRef.current) fileInputRef.current.value = "";
+    if (cameraInputRef.current) cameraInputRef.current.value = "";
+  };
+
+  const handleCroppedUpload = async (blob: Blob) => {
+    if (!userId) return;
     setUploading(true);
     try {
-      const ext = file.name.split(".").pop() || "jpg";
-      const path = `${userId}/avatar.${ext}`;
+      const path = `${userId}/avatar.jpg`;
+      const file = new File([blob], "avatar.jpg", { type: "image/jpeg" });
 
       const { error: uploadError } = await supabase.storage
         .from("avatars")
@@ -72,9 +84,6 @@ export function AvatarUpload({ currentUrl, onUploaded, userId, name, size = "lg"
       toast.error("Erro ao enviar foto");
     } finally {
       setUploading(false);
-      // Reset inputs so same file can be re-selected
-      if (fileInputRef.current) fileInputRef.current.value = "";
-      if (cameraInputRef.current) cameraInputRef.current.value = "";
     }
   };
 
@@ -159,7 +168,7 @@ export function AvatarUpload({ currentUrl, onUploaded, userId, name, size = "lg"
         type="file"
         accept="image/*"
         className="hidden"
-        onChange={handleUpload}
+        onChange={handleFileSelected}
       />
       <input
         ref={cameraInputRef}
@@ -167,7 +176,14 @@ export function AvatarUpload({ currentUrl, onUploaded, userId, name, size = "lg"
         accept="image/*"
         capture="user"
         className="hidden"
-        onChange={handleUpload}
+        onChange={handleFileSelected}
+      />
+
+      <ImageCropDialog
+        open={!!cropSrc}
+        onOpenChange={(open) => { if (!open) setCropSrc(null); }}
+        imageSrc={cropSrc || ""}
+        onCropComplete={handleCroppedUpload}
       />
     </div>
   );
