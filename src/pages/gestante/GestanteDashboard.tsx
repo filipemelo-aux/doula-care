@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useGestanteAuth } from "@/contexts/GestanteAuthContext";
 import { Card, CardContent } from "@/components/ui/card";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { 
   Heart, 
   Baby, 
@@ -37,6 +38,7 @@ export default function GestanteDashboard() {
   const [loading, setLoading] = useState(true);
   const [unreadMessages, setUnreadMessages] = useState(0);
   const [preferredName, setPreferredName] = useState<string | null>(null);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const { client, user, signOut } = useGestanteAuth();
   const navigate = useNavigate();
 
@@ -45,6 +47,13 @@ export default function GestanteDashboard() {
       fetchFullClientData();
       fetchUnreadCount();
       checkPaymentMessages();
+      // Fetch avatar
+      supabase
+        .from("profiles")
+        .select("avatar_url")
+        .eq("user_id", user.id)
+        .maybeSingle()
+        .then(({ data }) => setAvatarUrl(data?.avatar_url || null));
     }
   }, [user]);
 
@@ -195,9 +204,12 @@ export default function GestanteDashboard() {
         {/* Greeting for Puérpera */}
         <div className="bg-gradient-to-b from-primary/15 to-background px-4 lg:px-8 py-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-md animate-pulse">
-              <Baby className="w-5 h-5 text-primary-foreground" />
-            </div>
+            <Avatar className="w-10 h-10 shadow-md">
+              <AvatarImage src={avatarUrl || undefined} alt="Perfil" className="object-cover" />
+              <AvatarFallback className="bg-gradient-to-br from-primary to-accent">
+                <Baby className="w-5 h-5 text-primary-foreground" />
+              </AvatarFallback>
+            </Avatar>
             <div>
               <p className="text-xs text-muted-foreground">Mamãe,</p>
               <h1 className="font-display font-bold text-base">{displayName}!</h1>
@@ -367,9 +379,12 @@ export default function GestanteDashboard() {
       {/* Greeting */}
       <div className="bg-gradient-to-b from-primary/15 to-background px-4 lg:px-8 py-4">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-md">
-            <Heart className="w-5 h-5 text-primary-foreground" />
-          </div>
+          <Avatar className="w-10 h-10 shadow-md">
+            <AvatarImage src={avatarUrl || undefined} alt="Perfil" className="object-cover" />
+            <AvatarFallback className="bg-gradient-to-br from-primary to-accent">
+              <Heart className="w-5 h-5 text-primary-foreground" />
+            </AvatarFallback>
+          </Avatar>
           <div>
               <p className="text-xs text-muted-foreground">Olá,</p>
               <h1 className="font-display font-bold text-base">{displayName}!</h1>
