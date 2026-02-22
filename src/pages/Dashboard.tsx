@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useFinancialMetrics, formatCurrency } from "@/hooks/useFinancialMetrics";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { RecentClients } from "@/components/dashboard/RecentClients";
 import { FinancialOverview } from "@/components/dashboard/FinancialOverview";
@@ -9,13 +10,25 @@ import { NotificationsCenter } from "@/components/dashboard/NotificationsCenter"
 import { UpcomingAppointments } from "@/components/dashboard/UpcomingAppointments";
 import { PeriodFilter, PeriodOption } from "@/components/dashboard/PeriodFilter";
 import { ClientsListDialog } from "@/components/dashboard/ClientsListDialog";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Users, Baby, Heart, Wallet, TrendingUp, BarChart3 } from "lucide-react";
 
 export default function Dashboard() {
   const [period, setPeriod] = useState<PeriodOption>("month");
   const [gestantesDialogOpen, setGestantesDialogOpen] = useState(false);
   const [puerperasDialogOpen, setPuerperasDialogOpen] = useState(false);
-  const { profileName } = useAuth();
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const { profileName, user } = useAuth();
+
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from("profiles")
+      .select("avatar_url")
+      .eq("user_id", user.id)
+      .maybeSingle()
+      .then(({ data }) => setAvatarUrl(data?.avatar_url || null));
+  }, [user]);
 
   const { data: metrics } = useFinancialMetrics(period);
 
@@ -24,9 +37,12 @@ export default function Dashboard() {
       {/* Greeting */}
       {profileName && (
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-md">
-            <Heart className="w-5 h-5 text-primary-foreground" />
-          </div>
+          <Avatar className="w-10 h-10 shadow-md">
+            <AvatarImage src={avatarUrl || undefined} alt="Perfil" className="object-cover" />
+            <AvatarFallback className="bg-gradient-to-br from-primary to-accent">
+              <Heart className="w-5 h-5 text-primary-foreground" />
+            </AvatarFallback>
+          </Avatar>
           <div>
             <p className="text-xs text-muted-foreground">Olá,</p>
             <h1 className="font-display font-bold text-base">{profileName.split(" ")[0]}!</h1>
