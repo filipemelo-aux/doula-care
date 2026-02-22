@@ -56,6 +56,8 @@ const clientSchema = z.object({
   payment_method: z.enum(["pix", "cartao", "dinheiro", "transferencia"]),
   payment_type: z.enum(["a_vista", "parcelado"]),
   installments: z.number().min(1).max(24).optional(),
+  installment_frequency: z.enum(["semanal", "quinzenal", "mensal", "manual"]).optional(),
+  custom_interval_days: z.number().min(1).max(365).optional(),
   first_due_date: z.string().optional(),
   plan_value: z.number().min(0).optional(),
   notes: z.string().optional(),
@@ -105,6 +107,8 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
         payment_method: "pix",
         payment_type: "a_vista",
         installments: 1,
+        installment_frequency: "mensal",
+        custom_interval_days: 30,
         first_due_date: "",
         plan_value: 0,
         notes: "",
@@ -147,6 +151,8 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
         payment_method: client.payment_method as "pix" | "cartao" | "dinheiro" | "transferencia",
         payment_type: "a_vista",
         installments: 1,
+        installment_frequency: "mensal",
+        custom_interval_days: 30,
         first_due_date: "",
         plan_value: Number(client.plan_value) || 0,
         notes: client.notes || "",
@@ -172,6 +178,8 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
         payment_method: "pix",
         payment_type: "a_vista",
         installments: 1,
+        installment_frequency: "mensal",
+        custom_interval_days: 30,
         first_due_date: "",
         plan_value: planSettings?.find((p) => p.plan_type === "basico")?.default_value || 0,
         notes: "",
@@ -285,9 +293,20 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
           const installmentAmount = (data.plan_value || 0) / installmentCount;
           const firstDueDate = data.first_due_date ? new Date(data.first_due_date + "T12:00:00") : new Date();
           
+          const frequency = data.installment_frequency || "mensal";
+          const customDays = data.custom_interval_days || 30;
+          
           const paymentRecords = Array.from({ length: installmentCount }, (_, i) => {
             const dueDate = new Date(firstDueDate);
-            dueDate.setMonth(dueDate.getMonth() + i);
+            if (frequency === "semanal") {
+              dueDate.setDate(dueDate.getDate() + (7 * i));
+            } else if (frequency === "quinzenal") {
+              dueDate.setDate(dueDate.getDate() + (15 * i));
+            } else if (frequency === "manual") {
+              dueDate.setDate(dueDate.getDate() + (customDays * i));
+            } else {
+              dueDate.setMonth(dueDate.getMonth() + i);
+            }
             return {
               client_id: newClient.id,
               installment_number: i + 1,
@@ -758,6 +777,51 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
                           </FormItem>
                         )}
                       />
+                      <FormField
+                        control={form.control}
+                        name="installment_frequency"
+                        render={({ field }) => (
+                          <FormItem className="space-y-1">
+                            <FormLabel className="text-xs">Frequência</FormLabel>
+                            <Select onValueChange={field.onChange} value={field.value || "mensal"}>
+                              <FormControl>
+                                <SelectTrigger className="h-9 text-sm">
+                                  <SelectValue placeholder="Selecione" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value="semanal">Semanal (7 dias)</SelectItem>
+                                <SelectItem value="quinzenal">Quinzenal (15 dias)</SelectItem>
+                                <SelectItem value="mensal">Mensal</SelectItem>
+                                <SelectItem value="manual">Personalizado</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      {form.watch("installment_frequency") === "manual" && (
+                        <FormField
+                          control={form.control}
+                          name="custom_interval_days"
+                          render={({ field }) => (
+                            <FormItem className="space-y-1">
+                              <FormLabel className="text-xs">Intervalo (dias)</FormLabel>
+                              <FormControl>
+                                <Input 
+                                  type="number" 
+                                  min={1}
+                                  max={365}
+                                  className="h-9 text-sm"
+                                  value={field.value || 30}
+                                  onChange={(e) => field.onChange(parseInt(e.target.value) || 30)}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      )}
                       <FormField
                         control={form.control}
                         name="first_due_date"
