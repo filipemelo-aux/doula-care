@@ -48,6 +48,24 @@ export function unmask(value: string): string {
   return value.replace(/\D/g, "");
 }
 
+const LOWERCASE_PREPOSITIONS = new Set([
+  "de", "da", "do", "dos", "das", "den", "del", "di", "du",
+  "e", "em", "na", "no", "nas", "nos", "ao", "aos", "à", "às",
+]);
+
+export function toTitleCase(value: string): string {
+  if (!value) return value;
+  return value
+    .toLowerCase()
+    .split(" ")
+    .map((word, index) => {
+      if (!word) return word;
+      if (index > 0 && LOWERCASE_PREPOSITIONS.has(word)) return word;
+      return word.charAt(0).toUpperCase() + word.slice(1);
+    })
+    .join(" ");
+}
+
 export function toUpperCase(value: string): string {
   return value.toUpperCase();
 }
