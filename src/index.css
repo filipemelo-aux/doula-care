@@ -14,29 +14,29 @@
   :root {
     /* Warm cream background */
     --background: 32 40% 97%;
-    --foreground: 20 35% 18%;
+    --foreground: 16 45% 16%;
 
     /* Cards with subtle warmth */
     --card: 33 35% 99%;
-    --card-foreground: 20 35% 18%;
+    --card-foreground: 16 45% 16%;
 
     --popover: 33 35% 99%;
-    --popover-foreground: 20 35% 18%;
+    --popover-foreground: 16 45% 16%;
 
-    /* Warm terracotta primary (from logo gradient) */
-    --primary: 28 58% 45%;
+    /* Terracotta primary */
+    --primary: 16 55% 35%;
     --primary-foreground: 0 0% 100%;
 
     /* Soft warm beige secondary */
     --secondary: 30 30% 92%;
-    --secondary-foreground: 25 35% 25%;
+    --secondary-foreground: 16 45% 20%;
 
     /* Muted warm tones */
     --muted: 32 22% 93%;
-    --muted-foreground: 25 15% 42%;
+    --muted-foreground: 16 30% 38%;
 
-    /* Deep amber accent (logo darker tone) */
-    --accent: 20 50% 38%;
+    /* Deep terracotta accent */
+    --accent: 14 50% 28%;
     --accent-foreground: 0 0% 100%;
 
     /* Status colors */
@@ -55,30 +55,30 @@
     /* Borders and inputs */
     --border: 30 25% 86%;
     --input: 30 25% 86%;
-    --ring: 28 58% 45%;
+    --ring: 16 55% 35%;
 
     --radius: 0.75rem;
 
-    /* Sidebar - warm beige/terracotta */
+    /* Sidebar - terracotta theme */
     --sidebar-background: 30 35% 96%;
-    --sidebar-foreground: 25 30% 20%;
-    --sidebar-primary: 28 58% 45%;
+    --sidebar-foreground: 16 45% 16%;
+    --sidebar-primary: 16 55% 35%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 28 40% 92%;
-    --sidebar-accent-foreground: 20 45% 30%;
+    --sidebar-accent: 20 30% 92%;
+    --sidebar-accent-foreground: 14 45% 25%;
     --sidebar-border: 30 25% 88%;
-    --sidebar-ring: 28 58% 45%;
+    --sidebar-ring: 16 55% 35%;
 
     /* Custom gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(28 58% 45%), hsl(20 50% 38%));
+    --gradient-primary: linear-gradient(135deg, hsl(16 55% 35%), hsl(14 50% 28%));
     --gradient-soft: linear-gradient(135deg, hsl(30 35% 96%), hsl(32 40% 97%));
     --gradient-success: linear-gradient(135deg, hsl(142 71% 45%), hsl(150 60% 50%));
     --gradient-card: linear-gradient(180deg, hsl(33 35% 99%), hsl(30 28% 96%));
 
     /* Shadows */
-    --shadow-soft: 0 2px 8px -2px hsl(25 30% 12% / 0.08);
-    --shadow-medium: 0 4px 16px -4px hsl(25 30% 12% / 0.12);
-    --shadow-card: 0 1px 3px hsl(25 30% 12% / 0.06), 0 4px 12px hsl(25 30% 12% / 0.04);
+    --shadow-soft: 0 2px 8px -2px hsl(16 30% 12% / 0.08);
+    --shadow-medium: 0 4px 16px -4px hsl(16 30% 12% / 0.12);
+    --shadow-card: 0 1px 3px hsl(16 30% 12% / 0.06), 0 4px 12px hsl(16 30% 12% / 0.04);
   }
 
   .dark {
@@ -91,16 +91,16 @@
     --popover: 25 18% 13%;
     --popover-foreground: 32 22% 95%;
 
-    --primary: 24 68% 55%;
+    --primary: 16 55% 45%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 28 15% 18%;
+    --secondary: 18 15% 18%;
     --secondary-foreground: 30 20% 85%;
 
-    --muted: 25 15% 18%;
-    --muted-foreground: 25 12% 58%;
+    --muted: 16 15% 18%;
+    --muted-foreground: 16 12% 58%;
 
-    --accent: 18 50% 48%;
+    --accent: 14 50% 38%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 62% 45%;
@@ -115,23 +115,23 @@
     --info: 199 70% 45%;
     --info-foreground: 0 0% 100%;
 
-    --border: 25 15% 20%;
-    --input: 25 15% 20%;
-    --ring: 24 68% 55%;
+    --border: 16 15% 20%;
+    --input: 16 15% 20%;
+    --ring: 16 55% 45%;
 
-    --sidebar-background: 25 18% 8%;
+    --sidebar-background: 16 18% 8%;
     --sidebar-foreground: 32 22% 90%;
-    --sidebar-primary: 24 68% 55%;
+    --sidebar-primary: 16 55% 45%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 25 18% 15%;
-    --sidebar-accent-foreground: 24 45% 72%;
-    --sidebar-border: 25 15% 18%;
-    --sidebar-ring: 24 68% 55%;
+    --sidebar-accent: 16 18% 15%;
+    --sidebar-accent-foreground: 16 45% 72%;
+    --sidebar-border: 16 15% 18%;
+    --sidebar-ring: 16 55% 45%;
 
-    --gradient-primary: linear-gradient(135deg, hsl(24 68% 55%), hsl(16 50% 48%));
-    --gradient-soft: linear-gradient(135deg, hsl(25 18% 12%), hsl(25 18% 10%));
+    --gradient-primary: linear-gradient(135deg, hsl(16 55% 45%), hsl(14 50% 38%));
+    --gradient-soft: linear-gradient(135deg, hsl(16 18% 12%), hsl(16 18% 10%));
     --gradient-success: linear-gradient(135deg, hsl(142 60% 40%), hsl(150 50% 45%));
-    --gradient-card: linear-gradient(180deg, hsl(25 18% 13%), hsl(25 18% 11%));
+    --gradient-card: linear-gradient(180deg, hsl(16 18% 13%), hsl(16 18% 11%));
 
     --shadow-soft: 0 2px 8px -2px hsl(0 0% 0% / 0.3);
     --shadow-medium: 0 4px 16px -4px hsl(0 0% 0% / 0.4);
