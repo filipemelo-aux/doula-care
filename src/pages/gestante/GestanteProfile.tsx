@@ -22,7 +22,9 @@ import { ptBR } from "date-fns/locale";
 import { Tables } from "@/integrations/supabase/types";
 import { EditContactDialog } from "@/components/gestante/EditContactDialog";
 import { AvatarUpload } from "@/components/gestante/AvatarUpload";
+import { PaymentDetailsDialog } from "@/components/gestante/PaymentDetailsDialog";
 import { getLocalDate } from "@/lib/utils";
+import { ChevronRight } from "lucide-react";
 
 type Client = Tables<"clients">;
 
@@ -30,6 +32,7 @@ export default function GestanteProfile() {
   const [clientData, setClientData] = useState<Client | null>(null);
   const [loading, setLoading] = useState(true);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const { client, user, signOut } = useGestanteAuth();
 
@@ -130,23 +133,29 @@ export default function GestanteProfile() {
 
       <div className="container mx-auto px-4 py-6 space-y-4">
         {/* Plan Info */}
-        <Card>
+        <Card
+          className="cursor-pointer hover:shadow-md transition-shadow active:scale-[0.99]"
+          onClick={() => setPaymentDialogOpen(true)}
+        >
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <CreditCard className="h-5 w-5 text-primary" />
                 <CardTitle className="text-base">Meu Plano</CardTitle>
               </div>
-              <Badge variant={getPaymentStatusBadge(clientData?.payment_status || "pendente").variant}>
-                {getPaymentStatusBadge(clientData?.payment_status || "pendente").label}
-              </Badge>
+              <div className="flex items-center gap-2">
+                <Badge variant={getPaymentStatusBadge(clientData?.payment_status || "pendente").variant}>
+                  {getPaymentStatusBadge(clientData?.payment_status || "pendente").label}
+                </Badge>
+                <ChevronRight className="h-4 w-4 text-muted-foreground" />
+              </div>
             </div>
           </CardHeader>
           <CardContent>
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xl font-semibold">{getPlanLabel(clientData?.plan || "basico")}</p>
-                <p className="text-sm text-muted-foreground">Plano contratado</p>
+                <p className="text-sm text-muted-foreground">Toque para ver detalhes</p>
               </div>
               {clientData?.plan_value && (
                 <div className="text-right">
@@ -252,6 +261,11 @@ export default function GestanteProfile() {
         onOpenChange={setEditDialogOpen}
         client={clientData}
         onUpdate={fetchClientData}
+      />
+
+      <PaymentDetailsDialog
+        open={paymentDialogOpen}
+        onOpenChange={setPaymentDialogOpen}
       />
     </GestanteLayout>
   );
