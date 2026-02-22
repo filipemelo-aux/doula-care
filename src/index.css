@@ -14,14 +14,14 @@
   :root {
     /* Warm cream background */
     --background: 32 40% 97%;
-    --foreground: 25 30% 12%;
+    --foreground: 20 35% 18%;
 
     /* Cards with subtle warmth */
     --card: 33 35% 99%;
-    --card-foreground: 25 30% 12%;
+    --card-foreground: 20 35% 18%;
 
     --popover: 33 35% 99%;
-    --popover-foreground: 25 30% 12%;
+    --popover-foreground: 20 35% 18%;
 
     /* Warm terracotta primary (from logo gradient) */
     --primary: 28 58% 45%;
