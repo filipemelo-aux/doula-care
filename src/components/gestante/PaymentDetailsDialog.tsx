@@ -25,6 +25,8 @@ import {
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
+import { QRCodeSVG } from "qrcode.react";
+import { generatePixPayload } from "@/lib/pixPayload";
 
 interface PaymentDetailsDialogProps {
   open: boolean;
@@ -219,42 +221,102 @@ export function PaymentDetailsDialog({ open, onOpenChange }: PaymentDetailsDialo
             </Card>
 
             {/* Pix Payment */}
-            {pixSettings?.pix_key && totalPending > 0 && (
-              <Card className="border-primary/30">
-                <CardContent className="p-4 space-y-3">
-                  <div className="flex items-center gap-2">
-                    <QrCode className="h-5 w-5 text-primary" />
-                    <span className="font-semibold text-sm">Pagar via Pix</span>
-                  </div>
-                  <div className="bg-muted/50 rounded-lg p-3 space-y-1">
-                    <p className="text-xs text-muted-foreground">
-                      {pixKeyTypeLabel[pixSettings.pix_key_type || "random"] || "Chave Pix"}
-                    </p>
-                    <p className="text-sm font-mono break-all">{pixSettings.pix_key}</p>
-                    {pixSettings.pix_beneficiary_name && (
+            {pixSettings?.pix_key && totalPending > 0 && (() => {
+              const nextPendingItem = displayItems.find((i) => i.status !== "pago");
+              const paymentAmount = nextPendingItem
+                ? nextPendingItem.amount - nextPendingItem.amount_paid
+                : totalPending;
+
+              const pixPayload = generatePixPayload({
+                pixKey: pixSettings.pix_key,
+                beneficiaryName: pixSettings.pix_beneficiary_name || "Doula",
+                city: "SAO PAULO",
+                amount: paymentAmount,
+              });
+
+              const handleCopyPayload = async () => {
+                try {
+                  await navigator.clipboard.writeText(pixPayload);
+                  setCopiedId("payload");
+                  toast.success("Código Pix copiado!");
+                  setTimeout(() => setCopiedId(null), 2000);
+                } catch {
+                  toast.error("Não foi possível copiar");
+                }
+              };
+
+              return (
+                <Card className="border-primary/30">
+                  <CardContent className="p-4 space-y-4">
+                    <div className="flex items-center gap-2">
+                      <QrCode className="h-5 w-5 text-primary" />
+                      <span className="font-semibold text-sm">Pagar via Pix</span>
+                    </div>
+
+                    {/* QR Code */}
+                    <div className="flex flex-col items-center gap-2">
+                      <div className="bg-white p-3 rounded-lg shadow-sm">
+                        <QRCodeSVG value={pixPayload} size={180} />
+                      </div>
                       <p className="text-xs text-muted-foreground">
-                        Beneficiário: {pixSettings.pix_beneficiary_name}
+                        Escaneie o QR Code ou copie o código abaixo
                       </p>
-                    )}
-                  </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="w-full"
-                    onClick={handleCopyPix}
-                  >
-                    {copiedId === "pix" ? (
-                      <><Check className="h-4 w-4 mr-2" /> Copiado!</>
-                    ) : (
-                      <><Copy className="h-4 w-4 mr-2" /> Copiar chave Pix</>
-                    )}
-                  </Button>
-                  <p className="text-xs text-muted-foreground text-center">
-                    Após o pagamento, envie o comprovante pela aba de mensagens
-                  </p>
-                </CardContent>
-              </Card>
-            )}
+                      <p className="text-lg font-semibold text-primary">
+                        {formatCurrency(paymentAmount)}
+                      </p>
+                      {nextPendingItem && nextPendingItem.total_installments > 1 && (
+                        <p className="text-xs text-muted-foreground">
+                          Parcela {nextPendingItem.installment_number}/{nextPendingItem.total_installments}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Copy buttons */}
+                    <div className="space-y-2">
+                      <Button
+                        variant="default"
+                        size="sm"
+                        className="w-full"
+                        onClick={handleCopyPayload}
+                      >
+                        {copiedId === "payload" ? (
+                          <><Check className="h-4 w-4 mr-2" /> Copiado!</>
+                        ) : (
+                          <><Copy className="h-4 w-4 mr-2" /> Copiar código Pix</>
+                        )}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full"
+                        onClick={handleCopyPix}
+                      >
+                        {copiedId === "pix" ? (
+                          <><Check className="h-4 w-4 mr-2" /> Copiado!</>
+                        ) : (
+                          <><Copy className="h-4 w-4 mr-2" /> Copiar chave Pix</>
+                        )}
+                      </Button>
+                    </div>
+
+                    <div className="bg-muted/50 rounded-lg p-2 text-center">
+                      <p className="text-xs text-muted-foreground">
+                        {pixKeyTypeLabel[pixSettings.pix_key_type || "random"] || "Chave Pix"}: {pixSettings.pix_key}
+                      </p>
+                      {pixSettings.pix_beneficiary_name && (
+                        <p className="text-xs text-muted-foreground">
+                          Beneficiário: {pixSettings.pix_beneficiary_name}
+                        </p>
+                      )}
+                    </div>
+
+                    <p className="text-xs text-muted-foreground text-center">
+                      Após o pagamento, envie o comprovante pela aba de mensagens
+                    </p>
+                  </CardContent>
+                </Card>
+              );
+            })()}
 
             <Separator />
 
