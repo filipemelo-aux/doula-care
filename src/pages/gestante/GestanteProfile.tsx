@@ -113,6 +113,7 @@ export default function GestanteProfile() {
             <AvatarUpload
               currentUrl={avatarUrl}
               onUploaded={setAvatarUrl}
+              userId={user?.id}
               name={client?.full_name || ""}
               size="sm"
             />
