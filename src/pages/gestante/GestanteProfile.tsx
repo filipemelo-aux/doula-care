@@ -21,6 +21,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Tables } from "@/integrations/supabase/types";
 import { EditContactDialog } from "@/components/gestante/EditContactDialog";
+import { AvatarUpload } from "@/components/gestante/AvatarUpload";
 import { getLocalDate } from "@/lib/utils";
 
 type Client = Tables<"clients">;
@@ -29,11 +30,13 @@ export default function GestanteProfile() {
   const [clientData, setClientData] = useState<Client | null>(null);
   const [loading, setLoading] = useState(true);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const { client, user, signOut } = useGestanteAuth();
 
   useEffect(() => {
     if (user) {
       fetchClientData();
+      fetchAvatar();
     }
   }, [user]);
 
@@ -55,6 +58,18 @@ export default function GestanteProfile() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const fetchAvatar = async () => {
+    if (!user) return;
+    try {
+      const { data } = await supabase
+        .from("profiles")
+        .select("avatar_url")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      setAvatarUrl(data?.avatar_url || null);
+    } catch {}
   };
 
   const handleSignOut = async () => {
@@ -95,9 +110,12 @@ export default function GestanteProfile() {
       <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-sm border-b">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center">
-              <User className="w-5 h-5 text-primary-foreground" />
-            </div>
+            <AvatarUpload
+              currentUrl={avatarUrl}
+              onUploaded={setAvatarUrl}
+              name={client?.full_name || ""}
+              size="sm"
+            />
             <div>
               <h1 className="font-display font-semibold text-lg">Meu Perfil</h1>
               <p className="text-xs text-muted-foreground">{client?.full_name}</p>

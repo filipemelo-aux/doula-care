@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -71,6 +71,7 @@ import {
 import { toast } from "sonner";
 import { formatBrazilDate } from "@/lib/utils";
 import { ClientAccessCard } from "@/components/settings/ClientAccessCard";
+import { AvatarUpload } from "@/components/gestante/AvatarUpload";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -100,6 +101,19 @@ export default function Settings() {
   const callerIsAdmin = role === "admin";
   const callerIsModerator = role === "moderator";
   const queryClient = useQueryClient();
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+
+  // Fetch avatar
+  useEffect(() => {
+    if (user) {
+      supabase
+        .from("profiles")
+        .select("avatar_url")
+        .eq("user_id", user.id)
+        .maybeSingle()
+        .then(({ data }) => setAvatarUrl(data?.avatar_url || null));
+    }
+  }, [user]);
 
   // User management state
   const [newUserOpen, setNewUserOpen] = useState(false);
@@ -381,9 +395,12 @@ export default function Settings() {
         <CardContent className="pt-6">
           <div className="flex flex-col gap-4">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center">
-                <User className="w-6 h-6 text-primary-foreground" />
-              </div>
+              <AvatarUpload
+                currentUrl={avatarUrl}
+                onUploaded={setAvatarUrl}
+                name={profileName || ""}
+                size="lg"
+              />
               <div>
                 <h3 className="font-semibold text-foreground">{profileName || user?.email}</h3>
                 <p className="text-sm text-muted-foreground">{callerIsAdmin ? "Administrador" : callerIsModerator ? "Moderador" : "Usuário"}</p>

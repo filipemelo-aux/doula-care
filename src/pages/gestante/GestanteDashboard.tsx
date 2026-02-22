@@ -27,6 +27,7 @@ import { LaborStartButton } from "@/components/gestante/LaborStartButton";
 import { ServiceRequestButtons } from "@/components/gestante/ServiceRequestButton";
 import { AppointmentsCard } from "@/components/gestante/AppointmentsCard";
 import { ScheduledServicesCard } from "@/components/gestante/ScheduledServicesCard";
+import { OverduePaymentAlert } from "@/components/gestante/OverduePaymentAlert";
 
 
 type Client = Tables<"clients">;
@@ -43,6 +44,7 @@ export default function GestanteDashboard() {
     if (user) {
       fetchFullClientData();
       fetchUnreadCount();
+      checkPaymentMessages();
     }
   }, [user]);
 
@@ -108,6 +110,27 @@ export default function GestanteDashboard() {
       setUnreadMessages(count || 0);
     } catch (error) {
       console.error("Error fetching unread count:", error);
+    }
+  };
+
+  // Check for unread payment messages and redirect if found
+  const checkPaymentMessages = async () => {
+    if (!client?.id) return;
+
+    try {
+      const { count, error } = await supabase
+        .from("client_notifications")
+        .select("*", { count: "exact", head: true })
+        .eq("client_id", client.id)
+        .eq("read_by_client", false)
+        .or("title.like.💰%,title.like.🚨 Pagamento%");
+
+      if (error) throw error;
+      if ((count || 0) > 0) {
+        navigate("/gestante/mensagens", { replace: true });
+      }
+    } catch (error) {
+      console.error("Error checking payment messages:", error);
     }
   };
 
@@ -183,6 +206,9 @@ export default function GestanteDashboard() {
         </div>
 
         <div className="container mx-auto px-4 py-6 space-y-6">
+          {/* Overdue Payment Alert */}
+          <OverduePaymentAlert />
+
           {/* Congratulations Card */}
           <Card className="overflow-hidden bg-gradient-to-br from-primary/10 via-primary/20 to-accent/20 border-primary/30 shadow-lg">
             <CardContent className="p-6 text-center">
@@ -352,6 +378,9 @@ export default function GestanteDashboard() {
       </div>
 
       <div className="container mx-auto px-4 py-6 space-y-6">
+        {/* Overdue Payment Alert */}
+        <OverduePaymentAlert />
+
         {/* Pregnancy Progress + Labor Button Row */}
         {gestationalAge && (
           <div className={`grid gap-4 ${gestationalAge.weeks >= 37 ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-1'}`}>
