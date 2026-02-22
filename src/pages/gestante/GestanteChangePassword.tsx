@@ -8,12 +8,15 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, Eye, EyeOff, Lock } from "lucide-react";
 import { toast } from "sonner";
+import { WelcomeNameDialog } from "@/components/gestante/WelcomeNameDialog";
 
 export default function GestanteChangePassword() {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [showWelcome, setShowWelcome] = useState(false);
+  const [clientFullName, setClientFullName] = useState("");
   const navigate = useNavigate();
   const { user, setFirstLoginComplete, refreshClientData } = useAuth();
 
@@ -33,9 +36,18 @@ export default function GestanteChangePassword() {
     setLoading(true);
 
     try {
-      // First update first_login flag BEFORE changing password
-      // This prevents the redirect loop
       if (user) {
+        // Fetch client full name for the welcome dialog
+        const { data: clientData } = await supabase
+          .from("clients")
+          .select("full_name")
+          .eq("user_id", user.id)
+          .maybeSingle();
+
+        if (clientData) {
+          setClientFullName(clientData.full_name);
+        }
+
         const { error: updateError } = await supabase
           .from("clients")
           .update({ first_login: false })
@@ -47,23 +59,20 @@ export default function GestanteChangePassword() {
         }
       }
 
-      // Update local state immediately to prevent redirect loop
       setFirstLoginComplete();
 
-      // Then update the password
       const { error } = await supabase.auth.updateUser({
         password: newPassword,
       });
 
       if (error) throw error;
 
-      // Refresh client data to sync state
       await refreshClientData();
 
       toast.success("Senha alterada com sucesso!");
       
-      // Use replace to prevent back navigation to this page
-      navigate("/gestante", { replace: true });
+      // Show welcome dialog after successful password change
+      setShowWelcome(true);
     } catch (error) {
       toast.error("Erro ao alterar senha", {
         description: error instanceof Error ? error.message : "Tente novamente",
@@ -72,6 +81,19 @@ export default function GestanteChangePassword() {
       setLoading(false);
     }
   };
+
+  // Show welcome dialog after password change
+  if (showWelcome && user) {
+    return (
+      <WelcomeNameDialog
+        fullName={clientFullName}
+        userId={user.id}
+        onComplete={() => {
+          navigate("/gestante", { replace: true });
+        }}
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-primary/5 p-4">
