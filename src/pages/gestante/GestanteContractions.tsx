@@ -368,20 +368,20 @@ export default function GestanteContractions() {
 
         {/* Active Labor Detected */}
         {laborStatus === "active" && (
-          <Card className="bg-gradient-to-br from-pink-50 to-rose-50 border-2 border-pink-300 shadow-lg shadow-pink-100">
+          <Card className="bg-gradient-to-br from-primary/5 to-accent/5 border-2 border-primary/30 shadow-lg shadow-primary/10">
             <CardContent className="p-5 text-center space-y-3">
-              <div className="w-14 h-14 mx-auto rounded-full bg-gradient-to-br from-pink-400 to-rose-500 flex items-center justify-center animate-pulse">
+              <div className="w-14 h-14 mx-auto rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center animate-pulse">
                 <Baby className="h-7 w-7 text-white" />
               </div>
-              <h3 className="font-display font-bold text-lg text-pink-800">
+              <h3 className="font-display font-bold text-lg text-accent">
                 Seu bebê está a caminho! 💕
               </h3>
-              <p className="text-sm text-pink-700 leading-relaxed">
+              <p className="text-sm text-accent/80 leading-relaxed">
                 Suas contrações indicam que o trabalho de parto ativo começou. 
                 Respire fundo, confie no seu corpo — você está preparada para este momento. 
                 Sua Doula já foi notificada e está com você. ❤️
               </p>
-              <div className="flex items-center justify-center gap-1 text-xs text-pink-500">
+              <div className="flex items-center justify-center gap-1 text-xs text-primary">
                 <Heart className="h-3 w-3" />
                 <span>Sua Doula foi notificada automaticamente</span>
               </div>

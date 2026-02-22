@@ -170,9 +170,9 @@ export default function GestanteDashboard() {
     return (
       <GestanteLayout>
         {/* Greeting for Puérpera */}
-        <div className="bg-gradient-to-b from-pink-200/50 to-background px-4 lg:px-8 py-4">
+        <div className="bg-gradient-to-b from-primary/15 to-background px-4 lg:px-8 py-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-pink-400 to-primary flex items-center justify-center shadow-md animate-pulse">
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-md animate-pulse">
               <Baby className="w-5 h-5 text-primary-foreground" />
             </div>
             <div>
@@ -184,12 +184,12 @@ export default function GestanteDashboard() {
 
         <div className="container mx-auto px-4 py-6 space-y-6">
           {/* Congratulations Card */}
-          <Card className="overflow-hidden bg-gradient-to-br from-pink-100 via-primary/20 to-accent/20 border-primary/30 shadow-lg">
+          <Card className="overflow-hidden bg-gradient-to-br from-primary/10 via-primary/20 to-accent/20 border-primary/30 shadow-lg">
             <CardContent className="p-6 text-center">
               <div className="flex justify-center mb-4">
                 <div className="relative">
                   <Sparkles className="h-12 w-12 text-primary animate-pulse" />
-                  <Heart className="h-6 w-6 text-pink-500 absolute -top-1 -right-1 animate-bounce" />
+                  <Heart className="h-6 w-6 text-accent absolute -top-1 -right-1 animate-bounce" />
                 </div>
               </div>
               <h2 className="font-display font-bold text-2xl text-primary mb-2">
@@ -272,8 +272,8 @@ export default function GestanteDashboard() {
               onClick={() => navigate("/gestante/diario")}
             >
               <CardContent className="p-4 flex items-center gap-3">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-pink-100 to-pink-200 flex items-center justify-center">
-                  <BookHeart className="h-6 w-6 text-pink-600" />
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/15 to-primary/25 flex items-center justify-center">
+                  <BookHeart className="h-6 w-6 text-primary" />
                 </div>
                 <div className="flex-1">
                   <p className="font-medium text-sm">Diário</p>
@@ -315,15 +315,15 @@ export default function GestanteDashboard() {
           <ServiceRequestButtons />
 
           {/* Welcome to Motherhood Message */}
-          <Card className="bg-gradient-to-br from-purple-50 to-pink-50 border-purple-200">
+          <Card className="bg-gradient-to-br from-secondary to-primary/5 border-primary/20">
             <CardContent className="p-4">
               <div className="flex items-start gap-3">
-                <Heart className="h-5 w-5 text-pink-500 mt-0.5 flex-shrink-0" />
+                <Heart className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
                 <div>
-                  <p className="font-medium text-sm text-purple-800 mb-1">
+                  <p className="font-medium text-sm text-accent mb-1">
                     Bem-vinda à maternidade!
                   </p>
-                  <p className="text-xs text-purple-600">
+                  <p className="text-xs text-accent/80">
                     Continue usando o app para registrar momentos especiais e manter contato com sua Doula nesta nova fase.
                   </p>
                 </div>
@@ -409,8 +409,8 @@ export default function GestanteDashboard() {
             onClick={() => navigate("/gestante/diario")}
           >
             <CardContent className="p-4 flex items-center gap-3">
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-pink-100 to-pink-200 flex items-center justify-center">
-                <BookHeart className="h-6 w-6 text-pink-600" />
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/15 to-primary/25 flex items-center justify-center">
+                <BookHeart className="h-6 w-6 text-primary" />
               </div>
               <div className="flex-1">
                 <p className="font-medium text-sm">Diário</p>
@@ -450,12 +450,12 @@ export default function GestanteDashboard() {
 
         {/* Labor Started - Welcoming Message */}
         {clientData?.labor_started_at && (
-          <Card className="overflow-hidden bg-gradient-to-br from-pink-100 via-primary/15 to-accent/15 border-primary/30 shadow-lg ring-2 ring-primary/20">
+          <Card className="overflow-hidden bg-gradient-to-br from-primary/10 via-primary/15 to-accent/15 border-primary/30 shadow-lg ring-2 ring-primary/20">
             <CardContent className="p-5 text-center space-y-3">
               <div className="flex justify-center">
                 <div className="relative">
                   <Baby className="h-12 w-12 text-primary animate-pulse" />
-                  <Heart className="h-5 w-5 text-pink-500 absolute -top-1 -right-2 animate-bounce" />
+                  <Heart className="h-5 w-5 text-accent absolute -top-1 -right-2 animate-bounce" />
                 </div>
               </div>
               <h3 className="font-display font-bold text-lg text-primary">
