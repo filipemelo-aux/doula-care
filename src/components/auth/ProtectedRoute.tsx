@@ -4,7 +4,7 @@ import { Loader2 } from "lucide-react";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
-  allowedRoles: ("admin" | "moderator" | "client" | "user")[];
+  allowedRoles: ("admin" | "moderator" | "client" | "user" | "super_admin")[];
 }
 
 export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) {
@@ -31,6 +31,9 @@ export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) 
   // Role not in allowed list
   if (roleChecked && role && !allowedRoles.includes(role)) {
     // Redirect to the correct area based on role
+    if (role === "super_admin") {
+      return <Navigate to="/super-admin" replace />;
+    }
     if (role === "admin" || role === "moderator") {
       return <Navigate to="/admin" replace />;
     }

@@ -23,7 +23,7 @@ interface LaborStartButtonProps {
 }
 
 export function LaborStartButton({ laborStarted, onLaborStarted }: LaborStartButtonProps) {
-  const { client } = useGestanteAuth();
+  const { client, organizationId } = useGestanteAuth();
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
 
@@ -46,7 +46,8 @@ export function LaborStartButton({ laborStarted, onLaborStarted }: LaborStartBut
         .insert({
           client_id: client.id,
           title: "🚨 TRABALHO DE PARTO INICIADO",
-          message: `${client.full_name} informou que o trabalho de parto começou! Entre em contato imediatamente.`
+          message: `${client.full_name} informou que o trabalho de parto começou! Entre em contato imediatamente.`,
+          organization_id: organizationId || null,
         });
 
       if (notifError) {

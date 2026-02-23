@@ -30,7 +30,7 @@ interface Contraction {
 }
 
 export default function GestanteContractions() {
-  const { client } = useGestanteAuth();
+  const { client, organizationId } = useGestanteAuth();
   const [contractions, setContractions] = useState<Contraction[]>([]);
   const [activeContraction, setActiveContraction] = useState<Contraction | null>(null);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
@@ -95,7 +95,8 @@ export default function GestanteContractions() {
         .from("contractions")
         .insert({
           client_id: client.id,
-          started_at: new Date().toISOString()
+          started_at: new Date().toISOString(),
+          organization_id: organizationId || null,
         })
         .select()
         .single();
@@ -250,6 +251,7 @@ export default function GestanteContractions() {
               client_id: client.id,
               title: "🚨 TRABALHO DE PARTO ATIVO DETECTADO",
               message: `${client.full_name} apresenta padrão de trabalho de parto ativo: 3+ contrações em 10 minutos com duração ≥ 1 minuto.`,
+              organization_id: organizationId || null,
             });
 
             sendPushNotification({

@@ -18,6 +18,7 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          organization_id: string | null
           owner_id: string
           pix_beneficiary_name: string | null
           pix_key: string | null
@@ -27,6 +28,7 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
+          organization_id?: string | null
           owner_id: string
           pix_beneficiary_name?: string | null
           pix_key?: string | null
@@ -36,13 +38,22 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
+          organization_id?: string | null
           owner_id?: string
           pix_beneficiary_name?: string | null
           pix_key?: string | null
           pix_key_type?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "admin_settings_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       appointments: {
         Row: {
@@ -50,6 +61,7 @@ export type Database = {
           created_at: string
           id: string
           notes: string | null
+          organization_id: string | null
           owner_id: string | null
           reminder_1h_sent: boolean
           reminder_24h_sent: boolean
@@ -62,6 +74,7 @@ export type Database = {
           created_at?: string
           id?: string
           notes?: string | null
+          organization_id?: string | null
           owner_id?: string | null
           reminder_1h_sent?: boolean
           reminder_24h_sent?: boolean
@@ -74,6 +87,7 @@ export type Database = {
           created_at?: string
           id?: string
           notes?: string | null
+          organization_id?: string | null
           owner_id?: string | null
           reminder_1h_sent?: boolean
           reminder_24h_sent?: boolean
@@ -89,6 +103,13 @@ export type Database = {
             referencedRelation: "clients"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "appointments_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
         ]
       }
       client_notifications: {
@@ -97,6 +118,7 @@ export type Database = {
           created_at: string
           id: string
           message: string
+          organization_id: string | null
           read: boolean | null
           read_by_client: boolean | null
           title: string
@@ -106,6 +128,7 @@ export type Database = {
           created_at?: string
           id?: string
           message: string
+          organization_id?: string | null
           read?: boolean | null
           read_by_client?: boolean | null
           title: string
@@ -115,6 +138,7 @@ export type Database = {
           created_at?: string
           id?: string
           message?: string
+          organization_id?: string | null
           read?: boolean | null
           read_by_client?: boolean | null
           title?: string
@@ -125,6 +149,13 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_notifications_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
         ]
@@ -150,6 +181,7 @@ export type Database = {
           neighborhood: string | null
           notes: string | null
           number: string | null
+          organization_id: string | null
           owner_id: string | null
           payment_method: Database["public"]["Enums"]["payment_method"]
           payment_status: Database["public"]["Enums"]["payment_status"]
@@ -186,6 +218,7 @@ export type Database = {
           neighborhood?: string | null
           notes?: string | null
           number?: string | null
+          organization_id?: string | null
           owner_id?: string | null
           payment_method?: Database["public"]["Enums"]["payment_method"]
           payment_status?: Database["public"]["Enums"]["payment_status"]
@@ -222,6 +255,7 @@ export type Database = {
           neighborhood?: string | null
           notes?: string | null
           number?: string | null
+          organization_id?: string | null
           owner_id?: string | null
           payment_method?: Database["public"]["Enums"]["payment_method"]
           payment_status?: Database["public"]["Enums"]["payment_status"]
@@ -238,7 +272,15 @@ export type Database = {
           user_id?: string | null
           zip_code?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "clients_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       contractions: {
         Row: {
@@ -247,6 +289,7 @@ export type Database = {
           duration_seconds: number | null
           ended_at: string | null
           id: string
+          organization_id: string | null
           started_at: string
         }
         Insert: {
@@ -255,6 +298,7 @@ export type Database = {
           duration_seconds?: number | null
           ended_at?: string | null
           id?: string
+          organization_id?: string | null
           started_at?: string
         }
         Update: {
@@ -263,6 +307,7 @@ export type Database = {
           duration_seconds?: number | null
           ended_at?: string | null
           id?: string
+          organization_id?: string | null
           started_at?: string
         }
         Relationships: [
@@ -273,7 +318,44 @@ export type Database = {
             referencedRelation: "clients"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "contractions_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
         ]
+      }
+      organizations: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          plan: Database["public"]["Enums"]["org_plan"]
+          responsible_email: string
+          status: Database["public"]["Enums"]["org_status"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          plan?: Database["public"]["Enums"]["org_plan"]
+          responsible_email: string
+          status?: Database["public"]["Enums"]["org_status"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          plan?: Database["public"]["Enums"]["org_plan"]
+          responsible_email?: string
+          status?: Database["public"]["Enums"]["org_status"]
+          updated_at?: string
+        }
+        Relationships: []
       }
       payments: {
         Row: {
@@ -285,6 +367,7 @@ export type Database = {
           id: string
           installment_number: number
           notes: string | null
+          organization_id: string | null
           owner_id: string | null
           paid_at: string | null
           payment_method: string | null
@@ -302,6 +385,7 @@ export type Database = {
           id?: string
           installment_number?: number
           notes?: string | null
+          organization_id?: string | null
           owner_id?: string | null
           paid_at?: string | null
           payment_method?: string | null
@@ -319,6 +403,7 @@ export type Database = {
           id?: string
           installment_number?: number
           notes?: string | null
+          organization_id?: string | null
           owner_id?: string | null
           paid_at?: string | null
           payment_method?: string | null
@@ -333,6 +418,13 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payments_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
           {
@@ -353,6 +445,7 @@ export type Database = {
           id: string
           is_active: boolean
           name: string
+          organization_id: string | null
           owner_id: string | null
           plan_type: Database["public"]["Enums"]["plan_type"]
           updated_at: string
@@ -365,6 +458,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           name: string
+          organization_id?: string | null
           owner_id?: string | null
           plan_type: Database["public"]["Enums"]["plan_type"]
           updated_at?: string
@@ -377,11 +471,20 @@ export type Database = {
           id?: string
           is_active?: boolean
           name?: string
+          organization_id?: string | null
           owner_id?: string | null
           plan_type?: Database["public"]["Enums"]["plan_type"]
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "plan_settings_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       pregnancy_diary: {
         Row: {
@@ -391,6 +494,7 @@ export type Database = {
           emotion: string | null
           id: string
           observations: string | null
+          organization_id: string | null
           read_by_admin: boolean
           symptoms: string[] | null
           updated_at: string
@@ -402,6 +506,7 @@ export type Database = {
           emotion?: string | null
           id?: string
           observations?: string | null
+          organization_id?: string | null
           read_by_admin?: boolean
           symptoms?: string[] | null
           updated_at?: string
@@ -413,6 +518,7 @@ export type Database = {
           emotion?: string | null
           id?: string
           observations?: string | null
+          organization_id?: string | null
           read_by_admin?: boolean
           symptoms?: string[] | null
           updated_at?: string
@@ -425,6 +531,13 @@ export type Database = {
             referencedRelation: "clients"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "pregnancy_diary_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
         ]
       }
       profiles: {
@@ -433,6 +546,7 @@ export type Database = {
           created_at: string
           full_name: string | null
           id: string
+          organization_id: string | null
           updated_at: string
           user_id: string
         }
@@ -441,6 +555,7 @@ export type Database = {
           created_at?: string
           full_name?: string | null
           id?: string
+          organization_id?: string | null
           updated_at?: string
           user_id: string
         }
@@ -449,10 +564,19 @@ export type Database = {
           created_at?: string
           full_name?: string | null
           id?: string
+          organization_id?: string | null
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       push_subscriptions: {
         Row: {
@@ -495,6 +619,7 @@ export type Database = {
           completed_at: string | null
           created_at: string
           id: string
+          organization_id: string | null
           rating: number | null
           rating_comment: string | null
           rating_photos: string[] | null
@@ -510,6 +635,7 @@ export type Database = {
           completed_at?: string | null
           created_at?: string
           id?: string
+          organization_id?: string | null
           rating?: number | null
           rating_comment?: string | null
           rating_photos?: string[] | null
@@ -525,6 +651,7 @@ export type Database = {
           completed_at?: string | null
           created_at?: string
           id?: string
+          organization_id?: string | null
           rating?: number | null
           rating_comment?: string | null
           rating_photos?: string[] | null
@@ -539,6 +666,13 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_requests_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
         ]
@@ -561,6 +695,7 @@ export type Database = {
           installments: number | null
           is_auto_generated: boolean | null
           notes: string | null
+          organization_id: string | null
           owner_id: string | null
           payment_method:
             | Database["public"]["Enums"]["transaction_payment_method"]
@@ -586,6 +721,7 @@ export type Database = {
           installments?: number | null
           is_auto_generated?: boolean | null
           notes?: string | null
+          organization_id?: string | null
           owner_id?: string | null
           payment_method?:
             | Database["public"]["Enums"]["transaction_payment_method"]
@@ -611,6 +747,7 @@ export type Database = {
           installments?: number | null
           is_auto_generated?: boolean | null
           notes?: string | null
+          organization_id?: string | null
           owner_id?: string | null
           payment_method?:
             | Database["public"]["Enums"]["transaction_payment_method"]
@@ -625,6 +762,13 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transactions_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
           {
@@ -662,6 +806,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_user_organization_id: { Args: never; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -669,9 +814,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_super_admin: { Args: never; Returns: boolean }
     }
     Enums: {
-      app_role: "admin" | "moderator" | "user" | "client"
+      app_role: "admin" | "moderator" | "user" | "client" | "super_admin"
       client_status: "tentante" | "gestante" | "lactante"
       expense_category:
         | "social_media"
@@ -685,6 +831,8 @@ export type Database = {
         | "servicos_terceiros"
         | "outros"
       expense_type: "material_trabalho" | "servicos_contratados"
+      org_plan: "free" | "pro" | "premium"
+      org_status: "ativo" | "suspenso"
       payment_method: "pix" | "cartao" | "dinheiro" | "transferencia"
       payment_status: "pendente" | "pago" | "parcial"
       plan_type: "basico" | "intermediario" | "completo"
@@ -822,7 +970,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "moderator", "user", "client"],
+      app_role: ["admin", "moderator", "user", "client", "super_admin"],
       client_status: ["tentante", "gestante", "lactante"],
       expense_category: [
         "social_media",
@@ -837,6 +985,8 @@ export const Constants = {
         "outros",
       ],
       expense_type: ["material_trabalho", "servicos_contratados"],
+      org_plan: ["free", "pro", "premium"],
+      org_status: ["ativo", "suspenso"],
       payment_method: ["pix", "cartao", "dinheiro", "transferencia"],
       payment_status: ["pendente", "pago", "parcial"],
       plan_type: ["basico", "intermediario", "completo"],

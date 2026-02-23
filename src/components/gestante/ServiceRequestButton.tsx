@@ -54,7 +54,7 @@ const services: ServiceType[] = [
 export function ServiceRequestButtons() {
   const [selectedService, setSelectedService] = useState<ServiceType | null>(null);
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
-  const { client } = useGestanteAuth();
+  const { client, organizationId } = useGestanteAuth();
   const queryClient = useQueryClient();
 
   const requestMutation = useMutation({
@@ -66,6 +66,7 @@ export function ServiceRequestButtons() {
         client_id: client.id,
         service_type: service.name,
         status: "pending",
+        organization_id: organizationId || null,
       });
 
       if (error) throw error;

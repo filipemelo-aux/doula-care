@@ -55,7 +55,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    const { email, password, fullName, role } = await req.json();
+    const { email, password, fullName, role, organizationId } = await req.json();
 
     // Create user with service role (bypasses email confirmation)
     const { data: userData, error: createError } = await supabase.auth.admin.createUser({
@@ -82,6 +82,11 @@ Deno.serve(async (req) => {
 
       if (roleError) {
         console.error("Error assigning role:", roleError);
+      }
+
+      // Set organization_id on the user's profile
+      if (organizationId) {
+        await supabase.from("profiles").update({ organization_id: organizationId }).eq("user_id", userData.user.id);
       }
     }
 

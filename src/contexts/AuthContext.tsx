@@ -3,7 +3,7 @@ import { User, Session } from "@supabase/supabase-js";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 
-type AppRole = "admin" | "moderator" | "client" | "user";
+type AppRole = "admin" | "moderator" | "client" | "user" | "super_admin";
 
 interface ClientData {
   id: string;
@@ -21,9 +21,11 @@ interface AuthContextType {
   roleChecked: boolean;
   isAdmin: boolean;
   isClient: boolean;
+  isSuperAdmin: boolean;
   client: ClientData | null;
   isFirstLogin: boolean;
   profileName: string | null;
+  organizationId: string | null;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
   refreshClientData: () => Promise<void>;
@@ -41,6 +43,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [roleChecked, setRoleChecked] = useState(false);
   const [client, setClient] = useState<ClientData | null>(null);
   const [profileName, setProfileName] = useState<string | null>(null);
+  const [organizationId, setOrganizationId] = useState<string | null>(null);
 
   const fetchRole = useCallback(async (userId: string): Promise<AppRole | null> => {
     try {
@@ -89,6 +92,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setRole(null);
       setClient(null);
       setProfileName(null);
+      setOrganizationId(null);
       setRoleChecked(true);
       setLoading(false);
       return;
@@ -104,18 +108,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const clientData = await fetchClientData(currentSession.user.id);
       setClient(clientData);
       setProfileName(clientData?.full_name || null);
-    } else {
-      setClient(null);
-      // Fetch profile name for admin/moderator users
+      // Fetch organization_id from profile for client users too
       try {
         const { data: profile } = await supabase
           .from("profiles")
-          .select("full_name")
+          .select("organization_id")
+          .eq("user_id", currentSession.user.id)
+          .maybeSingle();
+        setOrganizationId(profile?.organization_id || null);
+      } catch {
+        setOrganizationId(null);
+      }
+    } else {
+      setClient(null);
+      // Fetch profile name and organization_id for admin/moderator/super_admin users
+      try {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("full_name, organization_id")
           .eq("user_id", currentSession.user.id)
           .maybeSingle();
         setProfileName(profile?.full_name || null);
+        setOrganizationId(profile?.organization_id || null);
       } catch {
         setProfileName(null);
+        setOrganizationId(null);
       }
     }
 
@@ -138,6 +155,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setRole(null);
           setClient(null);
           setProfileName(null);
+          setOrganizationId(null);
           setRoleChecked(true);
           setLoading(false);
           return;
@@ -260,6 +278,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
     setSession(null);
     setClient(null);
+    setOrganizationId(null);
     setRoleChecked(false);
 
     // Clear all auth storage before signing out to prevent re-authentication
@@ -290,6 +309,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const isAdmin = role === "admin" || role === "moderator";
   const isClient = role === "client";
+  const isSuperAdmin = role === "super_admin";
 
   return (
     <AuthContext.Provider
@@ -301,9 +321,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         roleChecked,
         isAdmin,
         isClient,
+        isSuperAdmin,
         client,
         isFirstLogin: client?.first_login ?? false,
         profileName,
+        organizationId,
         signIn,
         signOut,
         refreshClientData,
