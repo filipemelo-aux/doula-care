@@ -290,7 +290,7 @@ export default function Reports() {
           </div>
         </div>
         {/* Mobile: filters on second line */}
-        <div className="flex lg:hidden items-center gap-1">
+        <div className="flex lg:hidden items-center gap-0">
           <PeriodFilter selected={period} onChange={setPeriod} />
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
