@@ -83,6 +83,13 @@ export function usePushNotifications() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
+      // Detect device type
+      const ua = navigator.userAgent;
+      let deviceType = "desktop";
+      if (/android/i.test(ua)) deviceType = "android";
+      else if (/iphone|ipad|ipod/i.test(ua)) deviceType = "ios";
+      else if (/mobile/i.test(ua)) deviceType = "mobile";
+
       // Save subscription to database
       const { error } = await supabase.from("push_subscriptions").upsert(
         {
@@ -90,6 +97,7 @@ export function usePushNotifications() {
           endpoint: subJson.endpoint!,
           p256dh: subJson.keys!.p256dh!,
           auth: subJson.keys!.auth!,
+          device_type: deviceType,
         },
         { onConflict: "user_id,endpoint" }
       );

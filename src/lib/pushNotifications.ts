@@ -1,5 +1,28 @@
 import { supabase } from "@/integrations/supabase/client";
 
+export type PushNotificationType =
+  | "labor_started"
+  | "new_contraction"
+  | "new_diary"
+  | "new_message"
+  | "budget_response"
+  | "payment_received"
+  | "appointment_reminder"
+  | "general";
+
+export type PushPriority = "high" | "normal";
+
+const NOTIFICATION_ROUTES: Record<PushNotificationType, string> = {
+  labor_started: "/admin",
+  new_contraction: "/admin",
+  new_diary: "/admin",
+  new_message: "/gestante/mensagens",
+  budget_response: "/gestante/mensagens",
+  payment_received: "/financeiro",
+  appointment_reminder: "/agenda",
+  general: "/",
+};
+
 interface SendPushParams {
   user_ids?: string[];
   client_ids?: string[];
@@ -8,18 +31,32 @@ interface SendPushParams {
   message: string;
   url?: string;
   tag?: string;
+  type?: PushNotificationType;
+  priority?: PushPriority;
+  require_interaction?: boolean;
+}
+
+export function getRouteForNotificationType(type: PushNotificationType): string {
+  return NOTIFICATION_ROUTES[type] || "/";
 }
 
 export async function sendPushNotification(params: SendPushParams): Promise<void> {
+  // Auto-resolve URL from type if not explicitly set
+  const resolvedParams = {
+    ...params,
+    url: params.url || (params.type ? getRouteForNotificationType(params.type) : "/"),
+    priority: params.priority || (params.type === "labor_started" || params.type === "new_contraction" ? "high" : "normal"),
+    require_interaction: params.require_interaction ?? params.priority === "high",
+  };
+
   try {
     const { error } = await supabase.functions.invoke("send-push-notification", {
-      body: params,
+      body: resolvedParams,
     });
     if (error) {
       console.error("Error sending push notification:", error);
     }
   } catch (err) {
-    // Silent fail - push notifications are best-effort
     console.error("Push notification error:", err);
   }
 }

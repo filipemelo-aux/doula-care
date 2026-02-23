@@ -34,16 +34,19 @@ self.addEventListener("push", (event) => {
 
   try {
     const data = event.data.json();
-    const { title, body, icon, badge, url, tag } = data;
+    const { title, body, icon, badge, url, tag, priority, require_interaction, type } = data;
+
+    const isHighPriority = priority === "high" || type === "labor_started" || type === "new_contraction";
 
     const options = {
       body: body || "",
       icon: icon || "/pwa-icon-192.png",
       badge: badge || "/pwa-icon-192.png",
-      tag: tag || "default",
+      tag: tag || type || "default",
       renotify: true,
-      data: { url: url || "/" },
-      vibrate: [200, 100, 200],
+      requireInteraction: require_interaction ?? isHighPriority,
+      data: { url: url || "/", type: type || "general" },
+      vibrate: isHighPriority ? [300, 100, 300, 100, 300] : [200, 100, 200],
       actions: [
         { action: "open", title: "Abrir" },
         { action: "close", title: "Fechar" },
