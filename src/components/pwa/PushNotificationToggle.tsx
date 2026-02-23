@@ -29,13 +29,13 @@ export function PushNotificationToggle({ compact = false }: PushNotificationTogg
       await unsubscribe();
       toast.success("Notificações desativadas");
     } else {
-      const success = await subscribe();
-      if (success) {
+      const result = await subscribe();
+      if (result === true) {
         toast.success("Notificações ativadas! Você receberá alertas no celular.");
-      } else if (permission === "denied") {
+      } else if (result === "denied") {
         toast.error("Notificações bloqueadas. Habilite nas configurações do navegador.");
       } else {
-        toast.error("Não foi possível ativar as notificações.");
+        toast.error("Erro ao ativar notificações. Tente novamente.");
       }
     }
   };

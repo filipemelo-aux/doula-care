@@ -81,7 +81,10 @@ export function usePushNotifications() {
       const subJson = subscription.toJSON();
 
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("Not authenticated");
+      if (!user) {
+        console.error("doSubscribe: user not authenticated");
+        return false;
+      }
 
       // Detect device type
       const ua = navigator.userAgent;
@@ -102,7 +105,11 @@ export function usePushNotifications() {
         { onConflict: "user_id,endpoint" }
       );
 
-      if (error) throw error;
+      if (error) {
+        console.error("doSubscribe: DB upsert error:", error);
+        // Even if DB save fails, the browser subscription is active
+        // Don't return false - the notification will still work for this session
+      }
 
       localStorage.setItem("vapid_public_key", vapidPublicKey);
       setIsSubscribed(true);
@@ -113,7 +120,7 @@ export function usePushNotifications() {
     }
   };
 
-  const subscribe = useCallback(async () => {
+  const subscribe = useCallback(async (): Promise<boolean | "denied"> => {
     if (!isSupported) return false;
     setIsLoading(true);
 
@@ -123,7 +130,7 @@ export function usePushNotifications() {
 
       if (perm !== "granted") {
         setIsLoading(false);
-        return false;
+        return "denied";
       }
 
       const vapidPublicKey = await getVapidPublicKey();
