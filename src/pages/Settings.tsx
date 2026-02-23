@@ -70,6 +70,7 @@ import {
   QrCode,
 } from "lucide-react";
 import { PixSettingsCard } from "@/components/settings/PixSettingsCard";
+import { PushNotificationStatusCard } from "@/components/settings/PushNotificationStatusCard";
 import { toast } from "sonner";
 import { formatBrazilDate } from "@/lib/utils";
 import { ClientAccessCard } from "@/components/settings/ClientAccessCard";
@@ -642,6 +643,7 @@ export default function Settings() {
 
         {/* ─── SECURITY TAB ─── */}
         <TabsContent value="security" className="space-y-6">
+          <PushNotificationStatusCard />
           <Card className="card-glass">
             <CardHeader>
               <div className="flex items-center gap-3">
