@@ -33,13 +33,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Check, Edit2, Plus, Power, PowerOff, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -50,19 +43,12 @@ import type { Tables } from "@/integrations/supabase/types";
 
 type PlanSetting = Tables<"plan_settings">;
 
-const planLabels: Record<string, string> = {
-  basico: "Básico",
-  intermediario: "Intermediário",
-  completo: "Completo",
-};
-
 const planSchema = z.object({
   name: z.string().min(2, "Nome obrigatório").max(100),
   description: z.string().max(500).optional(),
   default_value: z.number().min(0, "Valor deve ser positivo"),
   features: z.string().optional(),
   is_active: z.boolean(),
-  plan_type: z.enum(["basico", "intermediario", "completo"]),
 });
 
 type PlanFormData = z.infer<typeof planSchema>;
@@ -82,7 +68,6 @@ export default function Plans() {
       default_value: 0,
       features: "",
       is_active: true,
-      plan_type: "basico",
     },
   });
 
@@ -121,15 +106,15 @@ export default function Plans() {
       default_value: number;
       features: string[] | null;
       is_active: boolean;
-      plan_type: "basico" | "intermediario" | "completo";
     }) => {
+      // Use "basico" as default plan_type since the enum is required by DB
       const { error } = await supabase.from("plan_settings").insert({
         name: data.name,
         description: data.description,
         default_value: data.default_value,
         features: data.features,
         is_active: data.is_active,
-        plan_type: data.plan_type,
+        plan_type: "basico" as const,
         organization_id: organizationId,
       });
       if (error) throw error;
@@ -222,7 +207,6 @@ export default function Plans() {
       default_value: 0,
       features: "",
       is_active: true,
-      plan_type: "basico",
     });
     setDialogOpen(true);
   };
@@ -235,7 +219,6 @@ export default function Plans() {
       default_value: Number(plan.default_value),
       features: plan.features?.join("\n") || "",
       is_active: plan.is_active ?? true,
-      plan_type: plan.plan_type,
     });
     setDialogOpen(true);
   };
@@ -266,7 +249,6 @@ export default function Plans() {
         default_value: data.default_value,
         features,
         is_active: data.is_active,
-        plan_type: data.plan_type,
       });
     }
   };
@@ -347,9 +329,8 @@ export default function Plans() {
       {/* Plans Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {plans?.map((plan) => {
-          const planType = plan.plan_type;
           const isActive = plan.is_active !== false;
-          const clientsInPlan = clientCounts?.[planType] || 0;
+          const clientsInPlan = clientCounts?.[plan.plan_type] || 0;
 
           return (
             <Card
@@ -369,9 +350,6 @@ export default function Plans() {
               </div>
 
               <CardHeader className="pt-12">
-                <Badge variant="outline" className="w-fit mb-2">
-                  {planLabels[planType] || planType}
-                </Badge>
                 <CardTitle className="text-2xl font-display">{plan.name}</CardTitle>
                 <CardDescription>{plan.description}</CardDescription>
               </CardHeader>
@@ -459,31 +437,6 @@ export default function Plans() {
           </DialogHeader>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              {!selectedPlan && (
-                <FormField
-                  control={form.control}
-                  name="plan_type"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Categoria *</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Selecione a categoria" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="basico">Básico</SelectItem>
-                          <SelectItem value="intermediario">Intermediário</SelectItem>
-                          <SelectItem value="completo">Completo</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              )}
-
               <FormField
                 control={form.control}
                 name="name"
@@ -491,7 +444,7 @@ export default function Plans() {
                   <FormItem>
                     <FormLabel>Nome do Plano *</FormLabel>
                     <FormControl>
-                      <Input {...field} className="input-field" placeholder="Ex: Plano Essencial" />
+                      <Input {...field} className="input-field" placeholder="Ex: Acompanhamento Completo" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
