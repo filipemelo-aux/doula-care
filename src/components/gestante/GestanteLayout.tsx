@@ -33,7 +33,7 @@ export function GestanteLayout({ children }: GestanteLayoutProps) {
   const { signOut } = useGestanteAuth();
   const { logoUrl: orgLogo, displayName } = useOrgBranding();
   const headerLogo = orgLogo || logo;
-  const headerName = displayName || "Papo de Doula";
+  const headerName = displayName || "Doula Care";
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 pb-28">

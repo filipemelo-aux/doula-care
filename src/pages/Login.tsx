@@ -101,9 +101,9 @@ export default function Login() {
         <CardHeader className="text-center space-y-2">
           <div className="flex flex-col items-center gap-1.5">
             <div className="w-[4.5rem] h-[4.5rem] rounded-[40%] bg-[#FFF5EE] overflow-hidden">
-              <img src={cachedLogo || logo} alt={cachedName || "Papo de Doula"} className="w-full h-full object-cover mix-blend-multiply scale-[1.15]" />
-            </div>
-            <CardTitle className="text-2xl font-display font-bold tracking-wide">{cachedName || "Papo de Doula"}</CardTitle>
+               <img src={cachedLogo || logo} alt={cachedName || "Doula Care"} className="w-full h-full object-cover mix-blend-multiply scale-[1.15]" />
+             </div>
+             <CardTitle className="text-2xl font-display font-bold tracking-wide">{cachedName || "Doula Care"}</CardTitle>
           </div>
           <CardDescription>Entre com seu email e senha</CardDescription>
         </CardHeader>

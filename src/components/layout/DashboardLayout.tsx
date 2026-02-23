@@ -13,7 +13,7 @@ export function DashboardLayout() {
   const { signOut } = useAuth();
   const { logoUrl: orgLogo, displayName } = useOrgBranding();
   const headerLogo = orgLogo || logo;
-  const headerName = displayName || "Papo de Doula";
+  const headerName = displayName || "Doula Care";
 
   const handleNavigate = () => {
     setSidebarOpen(false);

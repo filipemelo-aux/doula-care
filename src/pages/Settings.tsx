@@ -651,7 +651,7 @@ export default function Settings() {
                   <Heart className="w-6 h-6 text-primary-foreground" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-foreground">Papo de Doula Dashboard</h3>
+                  <h3 className="font-semibold text-foreground">Doula Care Dashboard</h3>
                   <p className="text-sm text-muted-foreground">Versão 1.0 • Desenvolvido com ❤️ para profissionais de doula</p>
                 </div>
               </div>
