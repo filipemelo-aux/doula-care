@@ -65,6 +65,7 @@ export function ClientsListDialog({
         .from("clients")
         .select("*")
         .eq("status", status)
+        .order("dpp", { ascending: true, nullsFirst: false })
         .order("updated_at", { ascending: false });
 
       if (error) throw error;
