@@ -14,7 +14,7 @@ export default function InstallAppBanner() {
       <div className="fixed top-0 left-0 right-0 z-50 bg-primary text-primary-foreground px-4 py-3 flex items-center justify-between gap-2 shadow-lg">
         <div className="flex items-center gap-2 min-w-0">
           <Download className="h-5 w-5 flex-shrink-0" />
-          <span className="text-sm font-medium truncate">Instale o Papo de Doula no seu celular!</span>
+          <span className="text-sm font-medium truncate">Instale o Doula Care no seu celular!</span>
         </div>
         <div className="flex items-center gap-1 flex-shrink-0">
           <Button

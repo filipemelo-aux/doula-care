@@ -64,7 +64,7 @@ self.addEventListener("push", (event) => {
     };
 
     event.waitUntil(
-      self.registration.showNotification(title || "Papo de Doula", options)
+      self.registration.showNotification(title || "Doula Care", options)
     );
   } catch (err) {
     console.error("Error showing push notification:", err);

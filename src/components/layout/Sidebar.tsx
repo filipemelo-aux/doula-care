@@ -38,7 +38,7 @@ export function Sidebar({ isOpen, onToggle, onNavigate }: SidebarProps) {
   const { planLabel, plan } = usePlanLimits();
   const { logoUrl: orgLogo, displayName } = useOrgBranding();
   const sidebarLogo = orgLogo || logo;
-  const sidebarName = displayName || "Papo de Doula";
+  const sidebarName = displayName || "Doula Care";
 
   const handleNavClick = (to: string) => {
     navigate(to);
