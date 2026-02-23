@@ -689,33 +689,12 @@ export default function Financial() {
 
                   return (
                     <Card key={transaction.id} className="px-2 py-1.5 space-y-1 w-full box-border min-w-0 overflow-hidden">
-                      {/* Header: Description + Actions */}
-                      <div className="flex items-center gap-1 min-w-0">
-                        <div className="flex items-center gap-0.5 min-w-0 flex-1">
-                          {transaction.is_auto_generated && (
-                            <Zap className="w-3 h-3 text-warning flex-shrink-0" />
-                          )}
-                          <p className="font-medium text-sm truncate min-w-0">{compactDesc}</p>
-                        </div>
-                        <div className="flex items-center flex-shrink-0">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleOpenPaymentDialog(transaction)}
-                            className="h-6 w-6 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50"
-                            title="Lançar pagamento"
-                          >
-                            <DollarSign className="h-3 w-3" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleDelete(transaction.id)}
-                            className="h-6 w-6 text-destructive"
-                          >
-                            <Trash2 className="h-3 w-3" />
-                          </Button>
-                        </div>
+                      {/* Header: Description */}
+                      <div className="flex items-center gap-0.5 min-w-0">
+                        {transaction.is_auto_generated && (
+                          <Zap className="w-3 h-3 text-warning flex-shrink-0" />
+                        )}
+                        <p className="font-medium text-sm truncate min-w-0">{compactDesc}</p>
                       </div>
 
                       {/* Info: Client + Date - date aligned with Pend. column */}
@@ -828,15 +807,35 @@ export default function Financial() {
                             <FileText className="h-3 w-3" />
                           </Button>
                         </div>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleOpenPaymentDialog(transaction)}
-                          className="h-6 w-6 text-muted-foreground"
-                          title="Ver detalhes"
-                        >
-                          <Eye className="h-3 w-3" />
-                        </Button>
+                        <div className="flex items-center gap-0">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleOpenPaymentDialog(transaction)}
+                            className="h-6 w-6 text-success"
+                            title="Lançar pagamento"
+                          >
+                            <DollarSign className="h-3 w-3" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleOpenPaymentDialog(transaction)}
+                            className="h-6 w-6 text-muted-foreground"
+                            title="Ver detalhes"
+                          >
+                            <Eye className="h-3 w-3" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleDelete(transaction.id)}
+                            className="h-6 w-6 text-destructive"
+                            title="Excluir"
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        </div>
                       </div>
                     </Card>
                   );
