@@ -12,6 +12,8 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { usePlanLimits } from "@/hooks/usePlanLimits";
 
 interface SidebarProps {
   isOpen: boolean;
@@ -32,6 +34,7 @@ const navItems = [
 export function Sidebar({ isOpen, onToggle, onNavigate }: SidebarProps) {
   const location = useLocation();
   const navigate = useNavigate();
+  const { planLabel, plan } = usePlanLimits();
 
   const handleNavClick = (to: string) => {
     navigate(to);
@@ -117,11 +120,16 @@ export function Sidebar({ isOpen, onToggle, onNavigate }: SidebarProps) {
       {/* Footer */}
       <div className={cn("p-4 border-t border-sidebar-border", !isOpen && "lg:hidden")}>
         <div className="bg-sidebar-accent rounded-lg p-4">
-          <p className="text-sm text-sidebar-accent-foreground font-medium mb-1">
-            Precisa de ajuda?
-          </p>
+          <div className="flex items-center justify-between mb-1">
+            <p className="text-sm text-sidebar-accent-foreground font-medium">
+              Plano atual
+            </p>
+            <Badge variant={plan === "free" ? "secondary" : plan === "pro" ? "default" : "outline"} className="uppercase text-[10px]">
+              {planLabel}
+            </Badge>
+          </div>
           <p className="text-xs text-sidebar-foreground/60">
-            Acesse nosso suporte para tirar suas dúvidas
+            {plan === "free" ? "Limite de 5 gestantes" : plan === "pro" ? "Gestantes ilimitadas" : "Recursos avançados"}
           </p>
         </div>
       </div>
