@@ -18,7 +18,6 @@ Deno.serve(async (req) => {
       auth: { autoRefreshToken: false, persistSession: false },
     });
 
-    // Verify caller is admin or moderator
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
       return new Response(JSON.stringify({ error: "Missing authorization" }), {
@@ -36,7 +35,6 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Check if caller is admin or moderator
     const { data: callerRoles } = await supabase
       .from("user_roles")
       .select("role")
@@ -49,18 +47,20 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Validate caller's organization is active
+    // Get caller's organization
     const { data: callerProfile } = await supabase
       .from("profiles")
       .select("organization_id")
       .eq("user_id", callingUser.id)
       .single();
 
-    if (callerProfile?.organization_id) {
+    const callerOrgId = callerProfile?.organization_id;
+
+    if (callerOrgId) {
       const { data: org } = await supabase
         .from("organizations")
         .select("status")
-        .eq("id", callerProfile.organization_id)
+        .eq("id", callerOrgId)
         .single();
 
       if (org?.status === "suspenso") {
@@ -78,6 +78,19 @@ Deno.serve(async (req) => {
     if (!userId) {
       return new Response(JSON.stringify({ error: "userId is required" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // ORG ISOLATION: Verify target user belongs to same org
+    const { data: targetProfile } = await supabase
+      .from("profiles")
+      .select("organization_id")
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    if (callerOrgId && targetProfile?.organization_id !== callerOrgId) {
+      return new Response(JSON.stringify({ error: "Usuário não pertence à sua organização" }), {
+        status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
@@ -102,7 +115,6 @@ Deno.serve(async (req) => {
         });
       }
 
-      // Moderators cannot assign admin role
       if (role === "admin") {
         return new Response(JSON.stringify({ error: "Moderadores não podem atribuir o papel de administrador" }), {
           status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -111,7 +123,6 @@ Deno.serve(async (req) => {
     }
 
     if (action === "update") {
-      // Update profile name
       if (fullName !== undefined) {
         const { error: profileError } = await supabase
           .from("profiles")
@@ -120,22 +131,18 @@ Deno.serve(async (req) => {
         if (profileError) throw profileError;
       }
 
-      // Update email
       if (email !== undefined && email !== "") {
         const { error: emailError } = await supabase.auth.admin.updateUserById(userId, { email });
         if (emailError) throw emailError;
       }
 
-      // Update role
       if (role !== undefined) {
-        // Delete existing roles for this user (non-client)
         await supabase
           .from("user_roles")
           .delete()
           .eq("user_id", userId)
           .neq("role", "client");
 
-        // Insert new role
         if (role) {
           const { error: roleError } = await supabase
             .from("user_roles")
@@ -150,11 +157,8 @@ Deno.serve(async (req) => {
     }
 
     if (action === "delete") {
-      // Delete roles
       await supabase.from("user_roles").delete().eq("user_id", userId);
-      // Delete profile
       await supabase.from("profiles").delete().eq("user_id", userId);
-      // Delete auth user
       const { error: deleteError } = await supabase.auth.admin.deleteUser(userId);
       if (deleteError) throw deleteError;
 

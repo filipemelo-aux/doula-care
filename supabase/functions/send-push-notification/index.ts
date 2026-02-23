@@ -111,18 +111,40 @@ Deno.serve(async (req) => {
       }
     }
 
-    // If we want to send to admin users (e.g., for gestante events)
+    // If we want to send to admin users - SCOPED TO CALLER'S ORG
     if (body.send_to_admins) {
-      const { data: adminRoles } = await supabase
-        .from("user_roles")
-        .select("user_id")
-        .in("role", ["admin", "moderator"]);
+      // Get caller's org
+      const { data: callerProfile } = await supabase
+        .from("profiles")
+        .select("organization_id")
+        .eq("user_id", user.id)
+        .maybeSingle();
 
-      if (adminRoles) {
-        targetUserIds = [
-          ...targetUserIds,
-          ...adminRoles.map((r) => r.user_id),
-        ];
+      const callerOrgId = callerProfile?.organization_id;
+
+      if (callerOrgId) {
+        // Get admin/moderator users in the SAME org
+        const { data: orgProfiles } = await supabase
+          .from("profiles")
+          .select("user_id")
+          .eq("organization_id", callerOrgId);
+
+        if (orgProfiles) {
+          const orgUserIds = orgProfiles.map(p => p.user_id);
+          
+          const { data: adminRoles } = await supabase
+            .from("user_roles")
+            .select("user_id")
+            .in("role", ["admin", "moderator"])
+            .in("user_id", orgUserIds);
+
+          if (adminRoles) {
+            targetUserIds = [
+              ...targetUserIds,
+              ...adminRoles.map((r) => r.user_id),
+            ];
+          }
+        }
       }
     }
 

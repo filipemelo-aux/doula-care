@@ -18,7 +18,6 @@ Deno.serve(async (req) => {
       { auth: { persistSession: false } }
     );
 
-    // Get the authorization header to verify admin role
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
       return new Response(
@@ -27,7 +26,6 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Verify the calling user is an admin
     const { data: { user: callingUser }, error: authError } = await supabaseAdmin.auth.getUser(
       authHeader.replace("Bearer ", "")
     );
@@ -39,7 +37,6 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Check if calling user is admin
     const { data: roleData } = await supabaseAdmin
       .from("user_roles")
       .select("role")
@@ -54,18 +51,20 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Validate caller's organization is active
+    // Get caller's organization
     const { data: callerProfile } = await supabaseAdmin
       .from("profiles")
       .select("organization_id")
       .eq("user_id", callingUser.id)
       .single();
 
-    if (callerProfile?.organization_id) {
+    const callerOrgId = callerProfile?.organization_id;
+
+    if (callerOrgId) {
       const { data: org } = await supabaseAdmin
         .from("organizations")
         .select("status")
-        .eq("id", callerProfile.organization_id)
+        .eq("id", callerOrgId)
         .single();
 
       if (org?.status === "suspenso") {
@@ -85,10 +84,10 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Get the client to find their user_id
+    // Verify client belongs to caller's organization
     const { data: client, error: clientError } = await supabaseAdmin
       .from("clients")
-      .select("user_id, full_name")
+      .select("user_id, full_name, organization_id")
       .eq("id", clientId)
       .single();
 
@@ -99,34 +98,39 @@ Deno.serve(async (req) => {
       );
     }
 
+    // ORG ISOLATION CHECK
+    if (callerOrgId && client.organization_id !== callerOrgId) {
+      return new Response(
+        JSON.stringify({ error: "Cliente não pertence à sua organização" }),
+        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     const userId = client.user_id;
 
-    // Delete related records first (contractions, diary entries, notifications)
+    // Delete related records first
     await supabaseAdmin.from("contractions").delete().eq("client_id", clientId);
     await supabaseAdmin.from("pregnancy_diary").delete().eq("client_id", clientId);
     await supabaseAdmin.from("client_notifications").delete().eq("client_id", clientId);
+    await supabaseAdmin.from("service_requests").delete().eq("client_id", clientId);
+    await supabaseAdmin.from("appointments").delete().eq("client_id", clientId);
 
-    // Delete the client record
     const { error: deleteClientError } = await supabaseAdmin
       .from("clients")
       .delete()
       .eq("id", clientId);
 
     if (deleteClientError) {
-      console.error("Error deleting client:", deleteClientError);
       return new Response(
         JSON.stringify({ error: "Failed to delete client", details: deleteClientError.message }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // If the client had a user account, delete it from auth.users
     if (userId) {
       const { error: deleteUserError } = await supabaseAdmin.auth.admin.deleteUser(userId);
       
       if (deleteUserError) {
-        console.error("Error deleting auth user:", deleteUserError);
-        // Client is already deleted, log but don't fail
         return new Response(
           JSON.stringify({ 
             success: true, 
