@@ -100,11 +100,7 @@ const transactionSchema = z.object({
 
 type TransactionFormData = z.infer<typeof transactionSchema>;
 
-const defaultServices = [
-  { id: "taping", name: "Taping", icon: "✨" },
-  { id: "ventosaterapia", name: "Ventosaterapia", icon: "☀️" },
-  { id: "laserterapia", name: "Laserterapia", icon: "⚡" },
-];
+// Services come entirely from the database (custom_services table per org)
 
 export default function Financial() {
   const { user, organizationId } = useAuth();
@@ -219,10 +215,7 @@ export default function Financial() {
     enabled: !!organizationId,
   });
 
-  const allServices = [
-    ...defaultServices,
-    ...(customServices || []).map((s: any) => ({ id: s.id, name: s.name, icon: s.icon })),
-  ];
+  const allServices = (customServices || []).map((s: any) => ({ id: s.id, name: s.name, icon: s.icon }));
 
   const addCustomServiceMutation = useMutation({
     mutationFn: async (serviceName: string) => {
@@ -1112,10 +1105,9 @@ export default function Financial() {
                 <>
                   <div className="space-y-2">
                     <FormLabel className="text-xs font-medium">Tipo de Serviço *</FormLabel>
-                    <div className="grid grid-cols-3 gap-2 max-h-44 overflow-y-auto">
-                      {allServices.map((service) => {
-                        const isCustom = !defaultServices.some((d) => d.id === service.id);
-                        return (
+                    {allServices.length > 0 ? (
+                      <div className="grid grid-cols-3 gap-2 max-h-44 overflow-y-auto">
+                        {allServices.map((service) => (
                           <div key={service.id} className="relative group/service">
                             <button
                               type="button"
@@ -1129,24 +1121,26 @@ export default function Financial() {
                               <span className="text-lg">{service.icon}</span>
                               <span className="text-xs font-medium truncate w-full">{service.name}</span>
                             </button>
-                            {isCustom && (
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  if (selectedService === service.name) setSelectedService(null);
-                                  deleteCustomServiceMutation.mutate(service.id);
-                                }}
-                                className="absolute -top-1.5 -right-1.5 h-4 w-4 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center opacity-0 group-hover/service:opacity-100 transition-opacity"
-                                title="Remover serviço"
-                              >
-                                <X className="h-2.5 w-2.5" />
-                              </button>
-                            )}
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if (selectedService === service.name) setSelectedService(null);
+                                deleteCustomServiceMutation.mutate(service.id);
+                              }}
+                              className="absolute -top-1.5 -right-1.5 h-4 w-4 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center opacity-0 group-hover/service:opacity-100 transition-opacity"
+                              title="Remover serviço"
+                            >
+                              <X className="h-2.5 w-2.5" />
+                            </button>
                           </div>
-                        );
-                      })}
-                    </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-xs text-muted-foreground text-center py-2">
+                        Nenhum serviço cadastrado. Clique abaixo para incluir.
+                      </p>
+                    )}
 
                     {/* Custom service */}
                     {!showCustomService ? (
@@ -1161,7 +1155,7 @@ export default function Financial() {
                         }}
                       >
                         <Plus className="h-3 w-3" />
-                        Outro serviço
+                        Incluir serviço
                       </Button>
                     ) : (
                       <div className="flex gap-2">
