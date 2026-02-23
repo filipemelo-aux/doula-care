@@ -719,11 +719,11 @@ export default function Financial() {
                       </div>
 
                       {/* Info: Client + Date */}
-                      <div className="flex items-center gap-1 min-w-0">
+                      <div className="flex items-center min-w-0 overflow-hidden">
                         <span className="text-xs text-muted-foreground truncate min-w-0 flex-1">
                           {transaction.clients?.full_name ? abbreviateName(transaction.clients.full_name) : "—"}
                         </span>
-                        <span className="text-xs text-muted-foreground flex-shrink-0">{formatBrazilDate(transaction.date, "dd/MM/yy")}</span>
+                        <span className="text-[10px] text-muted-foreground flex-shrink-0 ml-1">{formatBrazilDate(transaction.date, "dd/MM/yy")}</span>
                       </div>
 
                       {/* Values: flex layout */}
