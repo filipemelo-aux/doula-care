@@ -29,3 +29,6 @@ verify_jwt = false
 
 [functions.generate-service-icon]
 verify_jwt = false
+
+[functions.check-billing-overdue]
+verify_jwt = false
