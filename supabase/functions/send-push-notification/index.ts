@@ -66,6 +66,9 @@ Deno.serve(async (req) => {
       message,
       url,
       tag,
+      type,
+      priority,
+      require_interaction,
     }: {
       user_ids?: string[];
       client_ids?: string[];
@@ -73,6 +76,9 @@ Deno.serve(async (req) => {
       message: string;
       url?: string;
       tag?: string;
+      type?: string;
+      priority?: string;
+      require_interaction?: boolean;
     } = body;
 
     if (!title || !message) {
@@ -167,6 +173,8 @@ Deno.serve(async (req) => {
           },
         };
 
+        const isHighPriority = priority === "high";
+
         const pushMessage: PushMessage = {
           data: JSON.stringify({
             title,
@@ -174,9 +182,15 @@ Deno.serve(async (req) => {
             icon: "/pwa-icon-192.png",
             badge: "/pwa-icon-192.png",
             url: url || "/",
-            tag: tag || "default",
+            tag: tag || type || "default",
+            type: type || "general",
+            priority: priority || "normal",
+            require_interaction: require_interaction ?? isHighPriority,
           }),
-          options: { ttl: 3600 },
+          options: {
+            ttl: 3600,
+            urgency: isHighPriority ? "high" : "normal",
+          },
         };
 
         const payload = await buildPushPayload(
