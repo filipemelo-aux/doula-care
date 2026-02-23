@@ -173,7 +173,7 @@ Deno.serve(async (req) => {
           },
         };
 
-        const isHighPriority = priority === "high";
+        const isCritica = priority === "critica";
 
         const pushMessage: PushMessage = {
           data: JSON.stringify({
@@ -184,12 +184,12 @@ Deno.serve(async (req) => {
             url: url || "/",
             tag: tag || type || "default",
             type: type || "general",
-            priority: priority || "normal",
-            require_interaction: require_interaction ?? isHighPriority,
+            priority: isCritica ? "critica" : "normal",
+            require_interaction: require_interaction ?? isCritica,
           }),
           options: {
-            ttl: 3600,
-            urgency: isHighPriority ? "high" : "normal",
+            ttl: isCritica ? 86400 : 3600, // 24h for critical, 1h for normal
+            urgency: isCritica ? "high" : "normal",
           },
         };
 
