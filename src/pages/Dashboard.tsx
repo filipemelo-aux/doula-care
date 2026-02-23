@@ -71,7 +71,7 @@ export default function Dashboard() {
       </div>
 
       {/* Stats Grid - Row 1: Clients */}
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 lg:gap-4">
+      <div className={`grid grid-cols-2 ${(metrics?.outros || 0) > 0 ? 'lg:grid-cols-5' : 'lg:grid-cols-4'} gap-3 lg:gap-4`}>
         <StatCard
           title="Total de Clientes"
           value={metrics?.totalClients || 0}
@@ -93,13 +93,15 @@ export default function Dashboard() {
           icon={Heart}
           onClick={() => setPuerperasDialogOpen(true)}
         />
-        <StatCard
-          title="Outros"
-          value={metrics?.outros || 0}
-          subtitle="Outras clientes"
-          icon={UserPlus}
-          onClick={() => setOutrosDialogOpen(true)}
-        />
+        {(metrics?.outros || 0) > 0 && (
+          <StatCard
+            title="Outros"
+            value={metrics.outros}
+            subtitle="Outras clientes"
+            icon={UserPlus}
+            onClick={() => setOutrosDialogOpen(true)}
+          />
+        )}
         <StatCard
           title="Receita Contratada"
           value={formatCurrency(metrics?.totalContracted || 0)}
