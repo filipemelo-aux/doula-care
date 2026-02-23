@@ -230,8 +230,9 @@ export default function Financial() {
           autoReceived = 0;
         }
       } else {
-        // Parcelado: handled per-installment below
-        autoReceived = entryAlreadyPaid ? data.amount : 0;
+        // Parcelado: only the first installment if entry was paid
+        const firstInstallmentValue = data.amount / (data.installments || 1);
+        autoReceived = entryAlreadyPaid ? firstInstallmentValue : 0;
       }
 
       const { data: newTransaction, error } = await supabase.from("transactions").insert({
@@ -277,10 +278,10 @@ export default function Financial() {
             installment_number: i + 1,
             total_installments: installments,
             amount: installmentValue,
-            amount_paid: isPastDue || entryAlreadyPaid ? installmentValue : 0,
+            amount_paid: isPastDue || (entryAlreadyPaid && i === 0) ? installmentValue : 0,
             due_date: dueDateStr,
-            status: isPastDue || entryAlreadyPaid ? "pago" : "pendente",
-            paid_at: isPastDue || entryAlreadyPaid ? new Date().toISOString() : null,
+            status: isPastDue || (entryAlreadyPaid && i === 0) ? "pago" : "pendente",
+            paid_at: isPastDue || (entryAlreadyPaid && i === 0) ? new Date().toISOString() : null,
             owner_id: user?.id || null,
             organization_id: organizationId || null,
           };
