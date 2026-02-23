@@ -4,6 +4,8 @@ import path from "path";
 import { componentTagger } from "lovable-tagger";
 import { VitePWA } from "vite-plugin-pwa";
 
+const APP_VERSION = "1.0.1";
+
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
   server: {
@@ -22,20 +24,20 @@ export default defineConfig(({ mode }) => ({
       manifest: {
         name: "Papo de Doula",
         short_name: "Papo de Doula",
-        start_url: "/?v=3",
+        start_url: `/?v=${APP_VERSION}`,
         display: "standalone",
         background_color: "#ffffff",
         theme_color: "#c34a1c",
         orientation: "portrait",
         icons: [
           {
-            src: "/pwa-icon-192.png?v=3",
+            src: `/pwa-icon-192.png?v=${APP_VERSION}`,
             sizes: "192x192",
             type: "image/png",
             purpose: "any",
           },
           {
-            src: "/pwa-icon-512.png?v=3",
+            src: `/pwa-icon-512.png?v=${APP_VERSION}`,
             sizes: "512x512",
             type: "image/png",
             purpose: "any",
@@ -43,7 +45,7 @@ export default defineConfig(({ mode }) => ({
         ],
       },
       workbox: {
-        skipWaiting: true,
+        skipWaiting: false,
         clientsClaim: true,
         cleanupOutdatedCaches: true,
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
@@ -54,7 +56,7 @@ export default defineConfig(({ mode }) => ({
             urlPattern: /^https:\/\/gjnvxzsforfrxjanxqnq\.supabase\.co\/.*/i,
             handler: "NetworkFirst",
             options: {
-              cacheName: "supabase-api-cache-v2",
+              cacheName: `supabase-api-cache-${APP_VERSION}`,
               expiration: {
                 maxEntries: 50,
                 maxAgeSeconds: 300,
