@@ -8,6 +8,7 @@ export interface OrgBranding {
   secondary_color: string | null;
   logo_url: string | null;
   nome_exibicao: string | null;
+  name: string | null;
 }
 
 // Default brand colors (terracotta palette)
@@ -188,6 +189,7 @@ export function useOrgBranding() {
         secondary_color: d.secondary_color || null,
         logo_url: d.logo_url || null,
         nome_exibicao: d.nome_exibicao || null,
+        name: d.name || null,
       };
     },
     enabled: !!organizationId,
@@ -205,7 +207,7 @@ export function useOrgBranding() {
       const pc = branding.primary_color || DEFAULT_PRIMARY;
       const sc = branding.secondary_color || DEFAULT_SECONDARY;
       applyThemeToDOM(pc, sc);
-      cacheBranding(pc, sc, branding.logo_url, branding.nome_exibicao);
+      cacheBranding(pc, sc, branding.logo_url, branding.nome_exibicao || branding.name);
     } else {
       clearCustomTheme();
     }
@@ -219,7 +221,7 @@ export function useOrgBranding() {
     branding,
     isLoading,
     logoUrl: branding?.logo_url || null,
-    displayName: branding?.nome_exibicao || null,
+    displayName: branding?.nome_exibicao || branding?.name || null,
     primaryColor: branding?.primary_color || DEFAULT_PRIMARY,
     secondaryColor: branding?.secondary_color || DEFAULT_SECONDARY,
   };
