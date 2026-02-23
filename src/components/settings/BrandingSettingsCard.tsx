@@ -248,28 +248,30 @@ export function BrandingSettingsCard() {
           {/* Custom color - compact */}
           <div className="space-y-2">
             <Label className="text-xs text-muted-foreground">Ou escolha cores personalizadas</Label>
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-2 flex-1">
-                <input
-                  type="color"
-                  value={primaryColor}
-                  onChange={(e) => { setPrimaryColor(e.target.value); setPreviewing(false); }}
-                  className="w-9 h-9 rounded-lg border border-border cursor-pointer appearance-none bg-transparent [&::-webkit-color-swatch-wrapper]:p-0.5 [&::-webkit-color-swatch]:rounded-md [&::-webkit-color-swatch]:border-none"
-                  title="Cor primária"
-                />
-                <span className="text-xs text-muted-foreground">Primária</span>
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+              <div className="flex items-center gap-4 min-w-0">
+                <div className="flex items-center gap-2">
+                  <input
+                    type="color"
+                    value={primaryColor}
+                    onChange={(e) => { setPrimaryColor(e.target.value); setPreviewing(false); }}
+                    className="w-9 h-9 rounded-lg border border-border cursor-pointer appearance-none bg-transparent [&::-webkit-color-swatch-wrapper]:p-0.5 [&::-webkit-color-swatch]:rounded-md [&::-webkit-color-swatch]:border-none shrink-0"
+                    title="Cor primária"
+                  />
+                  <span className="text-xs text-muted-foreground">Primária</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="color"
+                    value={secondaryColor}
+                    onChange={(e) => { setSecondaryColor(e.target.value); setPreviewing(false); }}
+                    className="w-9 h-9 rounded-lg border border-border cursor-pointer appearance-none bg-transparent [&::-webkit-color-swatch-wrapper]:p-0.5 [&::-webkit-color-swatch]:rounded-md [&::-webkit-color-swatch]:border-none shrink-0"
+                    title="Cor secundária"
+                  />
+                  <span className="text-xs text-muted-foreground">Secundária</span>
+                </div>
               </div>
-              <div className="flex items-center gap-2 flex-1">
-                <input
-                  type="color"
-                  value={secondaryColor}
-                  onChange={(e) => { setSecondaryColor(e.target.value); setPreviewing(false); }}
-                  className="w-9 h-9 rounded-lg border border-border cursor-pointer appearance-none bg-transparent [&::-webkit-color-swatch-wrapper]:p-0.5 [&::-webkit-color-swatch]:rounded-md [&::-webkit-color-swatch]:border-none"
-                  title="Cor secundária"
-                />
-                <span className="text-xs text-muted-foreground">Secundária</span>
-              </div>
-              <Button variant="outline" size="sm" onClick={handlePreview} className="gap-1.5 shrink-0">
+              <Button variant="outline" size="sm" onClick={handlePreview} className="gap-1.5 shrink-0 w-full sm:w-auto">
                 <Eye className="h-3.5 w-3.5" />
                 Visualizar
               </Button>
