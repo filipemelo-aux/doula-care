@@ -69,6 +69,7 @@ import {
   CreditCard,
   QrCode,
   Palette,
+  RefreshCw,
 } from "lucide-react";
 import { PixSettingsCard } from "@/components/settings/PixSettingsCard";
 import { BrandingSettingsCard } from "@/components/settings/BrandingSettingsCard";
@@ -78,6 +79,7 @@ import { formatBrazilDate } from "@/lib/utils";
 import { ClientAccessCard } from "@/components/settings/ClientAccessCard";
 import { AvatarUpload } from "@/components/gestante/AvatarUpload";
 import { useForm } from "react-hook-form";
+import { APP_VERSION } from "@/lib/appVersion";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import type { Tables } from "@/integrations/supabase/types";
@@ -644,6 +646,53 @@ export default function Settings() {
             </CardContent>
           </Card>
 
+          <Card className="card-glass">
+            <CardContent className="pt-6 space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                    <RefreshCw className="w-5 h-5 text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-foreground text-sm">Verificar atualizações</h3>
+                    <p className="text-xs text-muted-foreground">Limpa cache e busca a versão mais recente</p>
+                  </div>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={async () => {
+                    try {
+                      toast.loading("Verificando atualizações...", { id: "update-check" });
+                      // Clear all caches
+                      if ("caches" in window) {
+                        const names = await caches.keys();
+                        await Promise.all(names.map((n) => caches.delete(n)));
+                      }
+                      // Force SW update
+                      if ("serviceWorker" in navigator) {
+                        const reg = await navigator.serviceWorker.getRegistration();
+                        if (reg) {
+                          await reg.update();
+                          if (reg.waiting) {
+                            reg.waiting.postMessage({ type: "SKIP_WAITING" });
+                          }
+                        }
+                      }
+                      toast.success("Caches limpos! Recarregando...", { id: "update-check" });
+                      setTimeout(() => window.location.reload(), 600);
+                    } catch (err) {
+                      console.error(err);
+                      toast.error("Erro ao verificar atualizações", { id: "update-check" });
+                    }
+                  }}
+                >
+                  Atualizar
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
           <Card className="card-glass border-primary/20">
             <CardContent className="pt-6">
               <div className="flex items-center gap-4">
@@ -652,7 +701,7 @@ export default function Settings() {
                 </div>
                 <div>
                   <h3 className="font-semibold text-foreground">Doula Care Dashboard</h3>
-                  <p className="text-sm text-muted-foreground">Versão 1.0 • Desenvolvido com ❤️ para profissionais de doula</p>
+                  <p className="text-sm text-muted-foreground">v{APP_VERSION} • Desenvolvido com ❤️ para profissionais de doula</p>
                 </div>
               </div>
             </CardContent>
