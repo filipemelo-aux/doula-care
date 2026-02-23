@@ -710,11 +710,10 @@ export default function Financial() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            onClick={() => {/* TODO: view details */}}
-                            className="h-6 w-6 text-muted-foreground"
-                            title="Ver detalhes"
+                            onClick={() => handleDelete(transaction.id)}
+                            className="h-6 w-6 text-destructive flex-shrink-0"
                           >
-                            <Eye className="h-3 w-3" />
+                            <Trash2 className="h-3 w-3" />
                           </Button>
                           <Button
                             variant="ghost"
@@ -792,47 +791,58 @@ export default function Financial() {
                         </div>
                       </div>
 
-                      {/* Payment method icons */}
-                      <div className="flex items-center justify-center gap-0 pt-1 border-t border-border/50">
+                      {/* Payment method icons + details button */}
+                      <div className="flex items-center justify-between pt-1 border-t border-border/50">
+                        <div className="flex items-center gap-0">
+                          <Button
+                            variant={currentMethod === "pix" ? "secondary" : "ghost"}
+                            size="icon"
+                            onClick={() => handleChangePaymentMethod(transaction.id, "pix")}
+                            className="h-6 w-6"
+                          >
+                            <QrCode className="h-3 w-3" />
+                          </Button>
+                          <Button
+                            variant={currentMethod === "cartao" ? "secondary" : "ghost"}
+                            size="icon"
+                            onClick={() => handleChangePaymentMethod(transaction.id, "cartao")}
+                            className="h-6 w-6"
+                          >
+                            <CreditCard className="h-3 w-3" />
+                          </Button>
+                          <Button
+                            variant={currentMethod === "dinheiro" ? "secondary" : "ghost"}
+                            size="icon"
+                            onClick={() => handleChangePaymentMethod(transaction.id, "dinheiro")}
+                            className="h-6 w-6"
+                          >
+                            <Banknote className="h-3 w-3" />
+                          </Button>
+                          <Button
+                            variant={currentMethod === "transferencia" ? "secondary" : "ghost"}
+                            size="icon"
+                            onClick={() => handleChangePaymentMethod(transaction.id, "transferencia")}
+                            className="h-6 w-6"
+                          >
+                            <Building2 className="h-3 w-3" />
+                          </Button>
+                          <Button
+                            variant={currentMethod === "boleto" ? "secondary" : "ghost"}
+                            size="icon"
+                            onClick={() => handleChangePaymentMethod(transaction.id, "boleto")}
+                            className="h-6 w-6"
+                          >
+                            <FileText className="h-3 w-3" />
+                          </Button>
+                        </div>
                         <Button
-                          variant={currentMethod === "pix" ? "secondary" : "ghost"}
+                          variant="ghost"
                           size="icon"
-                          onClick={() => handleChangePaymentMethod(transaction.id, "pix")}
-                          className="h-6 w-6"
+                          onClick={() => {/* TODO: view details */}}
+                          className="h-6 w-6 text-muted-foreground"
+                          title="Ver detalhes"
                         >
-                          <QrCode className="h-3 w-3" />
-                        </Button>
-                        <Button
-                          variant={currentMethod === "cartao" ? "secondary" : "ghost"}
-                          size="icon"
-                          onClick={() => handleChangePaymentMethod(transaction.id, "cartao")}
-                          className="h-6 w-6"
-                        >
-                          <CreditCard className="h-3 w-3" />
-                        </Button>
-                        <Button
-                          variant={currentMethod === "dinheiro" ? "secondary" : "ghost"}
-                          size="icon"
-                          onClick={() => handleChangePaymentMethod(transaction.id, "dinheiro")}
-                          className="h-6 w-6"
-                        >
-                          <Banknote className="h-3 w-3" />
-                        </Button>
-                        <Button
-                          variant={currentMethod === "transferencia" ? "secondary" : "ghost"}
-                          size="icon"
-                          onClick={() => handleChangePaymentMethod(transaction.id, "transferencia")}
-                          className="h-6 w-6"
-                        >
-                          <Building2 className="h-3 w-3" />
-                        </Button>
-                        <Button
-                          variant={currentMethod === "boleto" ? "secondary" : "ghost"}
-                          size="icon"
-                          onClick={() => handleChangePaymentMethod(transaction.id, "boleto")}
-                          className="h-6 w-6"
-                        >
-                          <FileText className="h-3 w-3" />
+                          <Eye className="h-3 w-3" />
                         </Button>
                       </div>
                     </Card>
