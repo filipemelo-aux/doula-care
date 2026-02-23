@@ -231,9 +231,24 @@ export default function Financial() {
           autoReceived = 0;
         }
       } else {
-        // Parcelado: only the first installment if entry was paid
-        const firstInstallmentValue = data.amount / (data.installments || 1);
-        autoReceived = entryAlreadyPaid ? firstInstallmentValue : 0;
+        // Parcelado: calculate after building payment records to account for ALL paid installments
+        const firstDueDate = data.first_due_date ? new Date(data.first_due_date + "T12:00:00") : new Date();
+        const frequency = data.installment_frequency || "mensal";
+        const customDays = data.custom_interval_days || 30;
+        const todayStr = format(new Date(), "yyyy-MM-dd");
+
+        for (let i = 0; i < installments; i++) {
+          const dueDate = new Date(firstDueDate);
+          if (frequency === "semanal") dueDate.setDate(dueDate.getDate() + (7 * i));
+          else if (frequency === "quinzenal") dueDate.setDate(dueDate.getDate() + (15 * i));
+          else if (frequency === "manual") dueDate.setDate(dueDate.getDate() + (customDays * i));
+          else dueDate.setMonth(dueDate.getMonth() + i);
+          const dueDateStr = dueDate.toISOString().split("T")[0];
+          const isPastDue = dueDateStr < todayStr;
+          if (isPastDue || (entryAlreadyPaid && i === 0)) {
+            autoReceived += installmentValue;
+          }
+        }
       }
 
       const { data: newTransaction, error } = await supabase.from("transactions").insert({
