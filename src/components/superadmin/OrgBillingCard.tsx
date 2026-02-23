@@ -11,10 +11,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
-import { format } from "date-fns";
+import { format, addMonths } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Receipt, Plus, CheckCircle, Clock, AlertTriangle, XCircle } from "lucide-react";
+import { Receipt, Plus, CheckCircle, Clock, AlertTriangle, XCircle, Bell } from "lucide-react";
 import { maskCurrency, parseCurrency } from "@/lib/masks";
 
 interface BillingRow {
@@ -24,6 +25,7 @@ interface BillingRow {
   billing_cycle: string;
   reference_month: string;
   status: string;
+  due_date: string | null;
   paid_at: string | null;
   payment_method: string | null;
   notes: string | null;
@@ -45,7 +47,9 @@ export function OrgBillingCard() {
   const [newAmount, setNewAmount] = useState("");
   const [newCycle, setNewCycle] = useState<"monthly" | "annual">("monthly");
   const [newRefMonth, setNewRefMonth] = useState(format(new Date(), "yyyy-MM"));
+  const [newDueDate, setNewDueDate] = useState("");
   const [newNotes, setNewNotes] = useState("");
+  const [notifyDoula, setNotifyDoula] = useState(true);
 
   const { data: orgs = [] } = useQuery({
     queryKey: ["billing-orgs"],
@@ -79,7 +83,7 @@ export function OrgBillingCard() {
       let query = supabase
         .from("org_billing")
         .select("*")
-        .order("reference_month", { ascending: false });
+        .order("due_date", { ascending: true, nullsFirst: false });
 
       if (statusFilter !== "all") {
         query = query.eq("status", statusFilter);
@@ -96,18 +100,37 @@ export function OrgBillingCard() {
       const amount = parseCurrency(newAmount);
       if (!selectedOrg || amount <= 0) throw new Error("Dados inválidos");
 
-      const { error } = await supabase.from("org_billing").insert({
+      const { data: billing, error } = await supabase.from("org_billing").insert({
         organization_id: selectedOrg,
         amount,
         billing_cycle: newCycle,
         reference_month: `${newRefMonth}-01`,
+        due_date: newDueDate || null,
         notes: newNotes || null,
-      });
+        notify_on_create: notifyDoula,
+      }).select("id").single();
       if (error) throw error;
+
+      // Send notification to the doula's org
+      if (notifyDoula) {
+        const org = orgs.find((o) => o.id === selectedOrg);
+        const dueDateText = newDueDate
+          ? ` Vencimento: ${format(new Date(newDueDate + "T12:00:00"), "dd/MM/yyyy", { locale: ptBR })}.`
+          : "";
+        const refText = format(new Date(`${newRefMonth}-01T12:00:00`), "MMMM/yyyy", { locale: ptBR });
+
+        await supabase.from("org_notifications").insert({
+          organization_id: selectedOrg,
+          title: "Nova cobrança",
+          message: `Cobrança de ${amount.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })} referente a ${refText}.${dueDateText}`,
+          type: "billing",
+          billing_id: billing?.id || null,
+        });
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["org-billing"] });
-      toast.success("Cobrança criada!");
+      toast.success("Cobrança criada" + (notifyDoula ? " e doula notificada!" : "!"));
       setShowCreateDialog(false);
       resetForm();
     },
@@ -115,17 +138,33 @@ export function OrgBillingCard() {
   });
 
   const updateStatusMutation = useMutation({
-    mutationFn: async ({ id, status }: { id: string; status: string }) => {
+    mutationFn: async ({ id, status, orgId }: { id: string; status: string; orgId: string }) => {
       const updates: Record<string, any> = { status };
       if (status === "pago") updates.paid_at = new Date().toISOString();
       else updates.paid_at = null;
 
       const { error } = await supabase.from("org_billing").update(updates).eq("id", id);
       if (error) throw error;
+
+      // Notify doula on status change
+      const statusLabels: Record<string, string> = {
+        pago: "Pagamento confirmado",
+        atrasado: "Pagamento em atraso",
+        cancelado: "Cobrança cancelada",
+        pendente: "Cobrança pendente",
+      };
+
+      await supabase.from("org_notifications").insert({
+        organization_id: orgId,
+        title: statusLabels[status] || "Atualização de cobrança",
+        message: `O status da sua cobrança foi atualizado para: ${statusLabels[status] || status}.`,
+        type: "billing",
+        billing_id: id,
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["org-billing"] });
-      toast.success("Status atualizado!");
+      toast.success("Status atualizado e doula notificada!");
     },
     onError: () => toast.error("Erro ao atualizar"),
   });
@@ -135,10 +174,11 @@ export function OrgBillingCard() {
     setNewAmount("");
     setNewCycle("monthly");
     setNewRefMonth(format(new Date(), "yyyy-MM"));
+    setNewDueDate("");
     setNewNotes("");
+    setNotifyDoula(true);
   };
 
-  // Auto-fill amount when org selected
   const handleOrgSelect = (orgId: string) => {
     setSelectedOrg(orgId);
     const org = orgs.find((o) => o.id === orgId);
@@ -148,6 +188,11 @@ export function OrgBillingCard() {
       const priceRow = pricing.find((p) => p.plan === org.plan && p.billing_cycle === cycle);
       if (priceRow && priceRow.price > 0) {
         setNewAmount(maskCurrency(String(priceRow.price * 100)));
+      }
+      // Auto-set due date to end of next month
+      if (!newDueDate) {
+        const nextMonth = addMonths(new Date(), 1);
+        setNewDueDate(format(nextMonth, "yyyy-MM-dd"));
       }
     }
   };
@@ -196,7 +241,6 @@ export function OrgBillingCard() {
             </Button>
           </div>
 
-          {/* Summary */}
           <div className="grid grid-cols-2 gap-3 mt-3">
             <div className="bg-emerald-50 dark:bg-emerald-950/20 rounded-lg p-3 border border-emerald-200 dark:border-emerald-800/30">
               <p className="text-xs text-muted-foreground">Recebido</p>
@@ -209,7 +253,6 @@ export function OrgBillingCard() {
           </div>
         </CardHeader>
         <CardContent>
-          {/* Filter */}
           <div className="mb-4">
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger className="w-40 h-8 text-sm">
@@ -238,44 +281,50 @@ export function OrgBillingCard() {
                   <TableRow>
                     <TableHead>Doula</TableHead>
                     <TableHead>Referência</TableHead>
+                    <TableHead>Vencimento</TableHead>
                     <TableHead>Valor</TableHead>
-                    <TableHead>Ciclo</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Ações</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {billings.map((bill) => (
-                    <TableRow key={bill.id}>
-                      <TableCell className="font-medium">{getOrgName(bill.organization_id)}</TableCell>
-                      <TableCell className="text-muted-foreground">
-                        {format(new Date(bill.reference_month + "T12:00:00"), "MMM/yyyy", { locale: ptBR })}
-                      </TableCell>
-                      <TableCell>{formatCurrency(Number(bill.amount))}</TableCell>
-                      <TableCell className="text-muted-foreground">
-                        {bill.billing_cycle === "monthly" ? "Mensal" : "Anual"}
-                      </TableCell>
-                      <TableCell>{getStatusBadge(bill.status)}</TableCell>
-                      <TableCell>
-                        <Select
-                          value={bill.status}
-                          onValueChange={(status) =>
-                            updateStatusMutation.mutate({ id: bill.id, status })
-                          }
-                        >
-                          <SelectTrigger className="w-28 h-8 text-xs">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="pendente">Pendente</SelectItem>
-                            <SelectItem value="pago">Pago</SelectItem>
-                            <SelectItem value="atrasado">Atrasado</SelectItem>
-                            <SelectItem value="cancelado">Cancelado</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                  {billings.map((bill) => {
+                    const isOverdue = bill.due_date && bill.status === "pendente" && new Date(bill.due_date + "T23:59:59") < new Date();
+                    return (
+                      <TableRow key={bill.id} className={isOverdue ? "bg-destructive/5" : ""}>
+                        <TableCell className="font-medium">{getOrgName(bill.organization_id)}</TableCell>
+                        <TableCell className="text-muted-foreground">
+                          {format(new Date(bill.reference_month + "T12:00:00"), "MMM/yyyy", { locale: ptBR })}
+                        </TableCell>
+                        <TableCell className={isOverdue ? "text-destructive font-medium" : "text-muted-foreground"}>
+                          {bill.due_date
+                            ? format(new Date(bill.due_date + "T12:00:00"), "dd/MM/yyyy", { locale: ptBR })
+                            : "—"}
+                          {isOverdue && <AlertTriangle className="h-3 w-3 inline ml-1 text-destructive" />}
+                        </TableCell>
+                        <TableCell>{formatCurrency(Number(bill.amount))}</TableCell>
+                        <TableCell>{getStatusBadge(bill.status)}</TableCell>
+                        <TableCell>
+                          <Select
+                            value={bill.status}
+                            onValueChange={(status) =>
+                              updateStatusMutation.mutate({ id: bill.id, status, orgId: bill.organization_id })
+                            }
+                          >
+                            <SelectTrigger className="w-28 h-8 text-xs">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="pendente">Pendente</SelectItem>
+                              <SelectItem value="pago">Pago</SelectItem>
+                              <SelectItem value="atrasado">Atrasado</SelectItem>
+                              <SelectItem value="cancelado">Cancelado</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
                 </TableBody>
               </Table>
             </div>
@@ -330,14 +379,25 @@ export function OrgBillingCard() {
               </div>
             </div>
 
-            <div className="space-y-1">
-              <Label className="text-xs">Valor</Label>
-              <Input
-                value={newAmount}
-                onChange={(e) => setNewAmount(maskCurrency(e.target.value))}
-                placeholder="R$ 0,00"
-                className="h-9 text-sm lowercase"
-              />
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label className="text-xs">Valor</Label>
+                <Input
+                  value={newAmount}
+                  onChange={(e) => setNewAmount(maskCurrency(e.target.value))}
+                  placeholder="R$ 0,00"
+                  className="h-9 text-sm lowercase"
+                />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Vencimento</Label>
+                <Input
+                  type="date"
+                  value={newDueDate}
+                  onChange={(e) => setNewDueDate(e.target.value)}
+                  className="h-9 text-sm lowercase"
+                />
+              </div>
             </div>
 
             <div className="space-y-1">
@@ -349,6 +409,14 @@ export function OrgBillingCard() {
                 className="text-sm resize-none"
                 rows={2}
               />
+            </div>
+
+            <div className="flex items-center justify-between rounded-lg border border-border p-3">
+              <div className="flex items-center gap-2">
+                <Bell className="h-4 w-4 text-primary" />
+                <Label className="text-sm font-normal">Notificar doula</Label>
+              </div>
+              <Switch checked={notifyDoula} onCheckedChange={setNotifyDoula} />
             </div>
 
             <Button

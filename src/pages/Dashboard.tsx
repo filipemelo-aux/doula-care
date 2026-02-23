@@ -13,6 +13,7 @@ import { ClientsListDialog } from "@/components/dashboard/ClientsListDialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Users, Baby, Heart, Wallet, TrendingUp, BarChart3, UserRound } from "lucide-react";
 import { AdminWelcomeDialog } from "@/components/dashboard/AdminWelcomeDialog";
+import { BillingAlertBanner } from "@/components/dashboard/BillingAlertBanner";
 
 export default function Dashboard() {
   const [period, setPeriod] = useState<PeriodOption>("month");
@@ -58,6 +59,9 @@ export default function Dashboard() {
           </div>
         </div>
       )}
+
+      {/* Billing alerts for doula */}
+      <BillingAlertBanner />
 
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
