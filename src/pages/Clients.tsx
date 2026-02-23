@@ -261,7 +261,9 @@ export default function Clients() {
                           variant="outline"
                           className={cn("badge-status border-0 text-[9px] px-1 h-4", `badge-${client.status}`)}
                         >
-                          {statusLabels[client.status as keyof typeof statusLabels]}
+                          {client.status === "outro" && (client as any).custom_status
+                            ? (client as any).custom_status
+                            : statusLabels[client.status as keyof typeof statusLabels]}
                         </Badge>
                         <Badge variant="outline" className="text-[9px] px-1 h-4">
                           {planLabels[client.plan as keyof typeof planLabels]}
@@ -312,7 +314,9 @@ export default function Clients() {
                             variant="outline"
                             className={cn("badge-status border-0", `badge-${client.status}`)}
                           >
-                            {statusLabels[client.status as keyof typeof statusLabels]}
+                            {client.status === "outro" && (client as any).custom_status
+                              ? (client as any).custom_status
+                              : statusLabels[client.status as keyof typeof statusLabels]}
                           </Badge>
                         </TableCell>
                         <TableCell>

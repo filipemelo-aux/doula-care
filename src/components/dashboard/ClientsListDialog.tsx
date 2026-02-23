@@ -157,6 +157,11 @@ export function ClientsListDialog({
                           <h4 className="font-medium text-sm truncate">
                             {isMobile ? abbreviateName(client.full_name) : client.full_name}
                           </h4>
+                          {status === "outro" && (client as any).custom_status && (
+                            <Badge variant="outline" className="text-[10px] h-5 badge-outro">
+                              {(client as any).custom_status}
+                            </Badge>
+                          )}
                           {/* Badge after name on both mobile and desktop */}
                           {status === "gestante" && currentWeeks !== null && (
                             <Badge 

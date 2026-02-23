@@ -173,6 +173,7 @@ export type Database = {
           companion_phone: string | null
           cpf: string | null
           created_at: string
+          custom_status: string | null
           dpp: string | null
           first_login: boolean | null
           full_name: string
@@ -210,6 +211,7 @@ export type Database = {
           companion_phone?: string | null
           cpf?: string | null
           created_at?: string
+          custom_status?: string | null
           dpp?: string | null
           first_login?: boolean | null
           full_name: string
@@ -247,6 +249,7 @@ export type Database = {
           companion_phone?: string | null
           cpf?: string | null
           created_at?: string
+          custom_status?: string | null
           dpp?: string | null
           first_login?: boolean | null
           full_name?: string
