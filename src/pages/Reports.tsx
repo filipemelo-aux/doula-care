@@ -257,7 +257,7 @@ export default function Reports() {
   };
 
   return (
-    <div className="space-y-4 lg:space-y-6 overflow-x-hidden">
+    <div className="space-y-4 lg:space-y-6 w-full max-w-full overflow-hidden">
       {/* Header */}
       <div className="flex flex-col gap-3">
         <div className="flex items-center justify-between gap-2">
@@ -291,7 +291,7 @@ export default function Reports() {
       </div>
 
       {/* KPI Cards - 2 rows of 3 on mobile, 6 cols on desktop */}
-      <div className="grid grid-cols-3 lg:grid-cols-6 gap-2 lg:gap-3">
+      <div className="grid grid-cols-3 lg:grid-cols-6 gap-2 lg:gap-3 w-full max-w-full">
         <KpiCard
           label="Contratado"
           value={formatCurrency(metrics?.totalContracted || 0)}
@@ -360,10 +360,11 @@ export default function Reports() {
                 Evolução Financeira — {getPeriodLabel(period)}
               </CardTitle>
             </CardHeader>
-            <CardContent className="px-1 lg:px-6 pb-4">
+            <CardContent className="px-0 lg:px-6 pb-4">
               {monthlyData && monthlyData.length > 0 ? (
+                <div className="overflow-x-auto -mx-0">
                 <ResponsiveContainer width="100%" height={280}>
-                  <AreaChart data={monthlyData} margin={{ left: -10, right: 5, top: 5, bottom: 0 }}>
+                  <AreaChart data={monthlyData} margin={{ left: -15, right: 5, top: 5, bottom: 0 }}>
                     <defs>
                       <linearGradient id="gRecebido" x1="0" y1="0" x2="0" y2="1">
                         <stop offset="5%" stopColor="hsl(142 71% 45%)" stopOpacity={0.25} />
@@ -390,6 +391,7 @@ export default function Reports() {
                     <Area type="monotone" dataKey="despesas" name="Despesas" stroke="hsl(0 72% 51%)" strokeWidth={2} fillOpacity={1} fill="url(#gDespesas)" />
                   </AreaChart>
                 </ResponsiveContainer>
+                </div>
               ) : (
                 <EmptyState text="Sem dados suficientes para exibir" />
               )}
@@ -397,7 +399,7 @@ export default function Reports() {
           </Card>
 
           {/* Monthly Table - Mobile cards / Desktop table */}
-          <Card className="card-glass">
+          <Card className="card-glass overflow-hidden">
             <CardHeader className="pb-2 px-3 lg:px-6 pt-4 lg:pt-6">
               <CardTitle className="text-sm lg:text-lg font-semibold text-foreground">
                 Relatório Mensal
@@ -405,7 +407,7 @@ export default function Reports() {
             </CardHeader>
             <CardContent className="px-3 lg:px-6 pb-4">
               {/* Mobile Cards */}
-              <div className="block lg:hidden space-y-2">
+              <div className="block lg:hidden space-y-2 max-h-[400px] overflow-y-auto">
                 {monthlyTableData?.map((row) => (
                   <div key={row.month} className="rounded-lg border border-border/50 p-3 space-y-2 bg-card/50">
                     <div className="flex items-center justify-between">
@@ -485,7 +487,7 @@ export default function Reports() {
               <CardHeader className="pb-2 px-3 lg:px-6 pt-4 lg:pt-6">
                 <CardTitle className="text-sm lg:text-lg font-semibold">Por Status</CardTitle>
               </CardHeader>
-              <CardContent className="px-1 lg:px-6 pb-4">
+              <CardContent className="px-1 lg:px-6 pb-4 overflow-hidden">
                 {clientStats?.byStatus && clientStats.byStatus.length > 0 ? (
                   <ResponsiveContainer width="100%" height={250}>
                     <PieChart>
@@ -493,11 +495,11 @@ export default function Reports() {
                         data={clientStats.byStatus}
                         cx="50%"
                         cy="50%"
-                        innerRadius={50}
-                        outerRadius={85}
+                        innerRadius={40}
+                        outerRadius={70}
                         paddingAngle={4}
                         dataKey="value"
-                        label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                        label={({ name, percent }) => `${(percent * 100).toFixed(0)}%`}
                         labelLine={{ strokeWidth: 1 }}
                       >
                         {clientStats.byStatus.map((entry, i) => (
@@ -505,6 +507,7 @@ export default function Reports() {
                         ))}
                       </Pie>
                       <Tooltip contentStyle={tooltipStyle} />
+                      <Legend wrapperStyle={{ fontSize: "11px" }} />
                     </PieChart>
                   </ResponsiveContainer>
                 ) : (
@@ -579,7 +582,7 @@ export default function Reports() {
                 Por Forma de Pagamento — {getPeriodLabel(period)}
               </CardTitle>
             </CardHeader>
-            <CardContent className="px-1 lg:px-6 pb-4">
+            <CardContent className="px-1 lg:px-6 pb-4 overflow-hidden">
               {incomeByMethod && incomeByMethod.length > 0 ? (
                 <div className="space-y-4">
                   <ResponsiveContainer width="100%" height={220}>
@@ -588,11 +591,11 @@ export default function Reports() {
                         data={incomeByMethod}
                         cx="50%"
                         cy="50%"
-                        innerRadius={45}
-                        outerRadius={80}
+                        innerRadius={40}
+                        outerRadius={70}
                         paddingAngle={4}
                         dataKey="value"
-                        label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                        label={({ percent }) => `${(percent * 100).toFixed(0)}%`}
                         labelLine={{ strokeWidth: 1 }}
                       >
                         {incomeByMethod.map((_, i) => (
@@ -600,6 +603,7 @@ export default function Reports() {
                         ))}
                       </Pie>
                       <Tooltip formatter={(v: number) => formatCurrency(v)} contentStyle={tooltipStyle} />
+                      <Legend wrapperStyle={{ fontSize: "11px" }} />
                     </PieChart>
                   </ResponsiveContainer>
                   <div className="space-y-2 px-2 lg:px-0">
@@ -647,7 +651,7 @@ export default function Reports() {
               <CardHeader className="pb-2 px-3 lg:px-6 pt-4 lg:pt-6">
                 <CardTitle className="text-sm lg:text-lg font-semibold">Por Categoria</CardTitle>
               </CardHeader>
-              <CardContent className="px-1 lg:px-6 pb-4">
+              <CardContent className="px-1 lg:px-6 pb-4 overflow-hidden">
                 {expensesByCategory?.byCategory && expensesByCategory.byCategory.length > 0 ? (
                   <ResponsiveContainer width="100%" height={250}>
                     <PieChart>
@@ -655,8 +659,8 @@ export default function Reports() {
                         data={expensesByCategory.byCategory}
                         cx="50%"
                         cy="50%"
-                        innerRadius={45}
-                        outerRadius={80}
+                        innerRadius={40}
+                        outerRadius={70}
                         paddingAngle={3}
                         dataKey="value"
                         label={({ percent }) => `${(percent * 100).toFixed(0)}%`}
@@ -762,13 +766,13 @@ function KpiCard({
   color: string;
 }) {
   return (
-    <Card className="card-glass overflow-hidden">
-      <CardContent className="p-2.5 lg:p-4">
+    <Card className="card-glass overflow-hidden min-w-0">
+      <CardContent className="p-2 lg:p-4">
         <div className="flex items-center gap-1.5 mb-1">
           {icon}
           <span className="text-[10px] lg:text-xs text-muted-foreground truncate">{label}</span>
         </div>
-        <p className="text-xs lg:text-base font-bold text-foreground truncate">{value}</p>
+        <p className="text-[11px] lg:text-base font-bold text-foreground truncate">{value}</p>
       </CardContent>
     </Card>
   );
