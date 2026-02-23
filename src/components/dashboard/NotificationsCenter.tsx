@@ -148,6 +148,7 @@ export function NotificationsCenter() {
           return (b.current_weeks || 0) - (a.current_weeks || 0);
         });
     },
+    refetchInterval: 30000,
   });
 
   const { data: recentDiaryEntries, isLoading: loadingDiary } = useQuery({
@@ -304,6 +305,29 @@ export function NotificationsCenter() {
         },
         () => {
           queryClient.invalidateQueries({ queryKey: ["service-requests-pending"] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient]);
+
+  // Real-time subscription for clients (labor_started_at, birth, status)
+  useEffect(() => {
+    const channel = supabase
+      .channel('clients-realtime-notifications')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'clients'
+        },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ["birth-alert-clients"] });
+          queryClient.invalidateQueries({ queryKey: ["all-clients-lookup"] });
         }
       )
       .subscribe();
