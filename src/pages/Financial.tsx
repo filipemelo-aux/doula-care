@@ -100,7 +100,7 @@ const transactionSchema = z.object({
 
 type TransactionFormData = z.infer<typeof transactionSchema>;
 
-const predefinedServices = [
+const defaultServices = [
   { id: "taping", name: "Taping", icon: "✨" },
   { id: "ventosaterapia", name: "Ventosaterapia", icon: "☀️" },
   { id: "laserterapia", name: "Laserterapia", icon: "⚡" },
@@ -201,6 +201,41 @@ export default function Financial() {
         .order("name");
       if (error) throw error;
       return data;
+    },
+  });
+
+  // Fetch org custom services
+  const { data: customServices } = useQuery({
+    queryKey: ["custom-services", organizationId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("custom_services")
+        .select("*")
+        .eq("is_active", true)
+        .order("name");
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!organizationId,
+  });
+
+  const allServices = [
+    ...defaultServices,
+    ...(customServices || []).map((s: any) => ({ id: s.id, name: s.name, icon: s.icon })),
+  ];
+
+  const addCustomServiceMutation = useMutation({
+    mutationFn: async (serviceName: string) => {
+      const { error } = await supabase
+        .from("custom_services")
+        .insert({ name: serviceName, organization_id: organizationId });
+      if (error) {
+        if (error.code === "23505") return; // duplicate, ignore
+        throw error;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["custom-services"] });
     },
   });
 
@@ -528,8 +563,13 @@ export default function Financial() {
 
   const handleCustomServiceConfirm = () => {
     if (customServiceName.trim()) {
-      setSelectedService(customServiceName.trim());
-      form.setValue("description", `Serviço: ${customServiceName.trim()}`);
+      const name = customServiceName.trim();
+      setSelectedService(name);
+      form.setValue("description", `Serviço: ${name}`);
+      // Save as custom service for future use
+      addCustomServiceMutation.mutate(name);
+      setShowCustomService(false);
+      setCustomServiceName("");
     }
   };
 
@@ -1046,8 +1086,8 @@ export default function Financial() {
                 <>
                   <div className="space-y-2">
                     <FormLabel className="text-xs font-medium">Tipo de Serviço *</FormLabel>
-                    <div className="grid grid-cols-3 gap-2">
-                      {predefinedServices.map((service) => (
+                    <div className="grid grid-cols-3 gap-2 max-h-40 overflow-y-auto">
+                      {allServices.map((service) => (
                         <button
                           key={service.id}
                           type="button"
