@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Heart, Loader2, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
-import { getCachedBranding, applyThemeToDOM } from "@/hooks/useOrgBranding";
+import { getCachedBranding } from "@/hooks/useOrgBranding";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -20,11 +20,10 @@ export default function Login() {
   const navigate = useNavigate();
   const { signIn, user, role, roleChecked, loading, isAdmin, isClient, isSuperAdmin, isFirstLogin } = useAuth();
 
-  // Apply cached org branding on login screen
+  // Read cached branding for logo/name (theme already applied in main.tsx)
   useEffect(() => {
     const cached = getCachedBranding();
     if (cached) {
-      applyThemeToDOM(cached.primary, cached.secondary);
       if (cached.logoUrl) setCachedLogo(cached.logoUrl);
       if (cached.displayName) setCachedName(cached.displayName);
     }
