@@ -12,12 +12,14 @@ import { PeriodFilter, PeriodOption } from "@/components/dashboard/PeriodFilter"
 import { ClientsListDialog } from "@/components/dashboard/ClientsListDialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Users, Baby, Heart, Wallet, TrendingUp, BarChart3 } from "lucide-react";
+import { AdminWelcomeDialog } from "@/components/dashboard/AdminWelcomeDialog";
 
 export default function Dashboard() {
   const [period, setPeriod] = useState<PeriodOption>("month");
   const [gestantesDialogOpen, setGestantesDialogOpen] = useState(false);
   const [puerperasDialogOpen, setPuerperasDialogOpen] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [showWelcome, setShowWelcome] = useState(false);
   const { profileName, user } = useAuth();
 
   useEffect(() => {
@@ -28,6 +30,12 @@ export default function Dashboard() {
       .eq("user_id", user.id)
       .maybeSingle()
       .then(({ data }) => setAvatarUrl(data?.avatar_url || null));
+
+    // Show welcome dialog on first admin access
+    const welcomeKey = `admin_welcome_seen_${user.id}`;
+    if (!localStorage.getItem(welcomeKey)) {
+      setShowWelcome(true);
+    }
   }, [user]);
 
   const { data: metrics } = useFinancialMetrics(period);
@@ -135,6 +143,14 @@ export default function Dashboard() {
         open={puerperasDialogOpen}
         onOpenChange={setPuerperasDialogOpen}
         status="lactante"
+      />
+      <AdminWelcomeDialog
+        open={showWelcome}
+        onClose={() => {
+          setShowWelcome(false);
+          if (user) localStorage.setItem(`admin_welcome_seen_${user.id}`, "true");
+        }}
+        name={profileName}
       />
     </div>
   );

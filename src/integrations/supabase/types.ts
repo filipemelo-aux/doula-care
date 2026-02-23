@@ -832,7 +832,7 @@ export type Database = {
         | "outros"
       expense_type: "material_trabalho" | "servicos_contratados"
       org_plan: "free" | "pro" | "premium"
-      org_status: "ativo" | "suspenso"
+      org_status: "ativo" | "suspenso" | "pendente"
       payment_method: "pix" | "cartao" | "dinheiro" | "transferencia"
       payment_status: "pendente" | "pago" | "parcial"
       plan_type: "basico" | "intermediario" | "completo"
@@ -986,7 +986,7 @@ export const Constants = {
       ],
       expense_type: ["material_trabalho", "servicos_contratados"],
       org_plan: ["free", "pro", "premium"],
-      org_status: ["ativo", "suspenso"],
+      org_status: ["ativo", "suspenso", "pendente"],
       payment_method: ["pix", "cartao", "dinheiro", "transferencia"],
       payment_status: ["pendente", "pago", "parcial"],
       plan_type: ["basico", "intermediario", "completo"],
