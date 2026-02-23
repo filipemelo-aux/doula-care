@@ -715,14 +715,6 @@ export default function Financial() {
                           >
                             <Trash2 className="h-3 w-3" />
                           </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleDelete(transaction.id)}
-                            className="h-6 w-6 text-destructive flex-shrink-0"
-                          >
-                            <Trash2 className="h-3 w-3" />
-                          </Button>
                         </div>
                       </div>
 
