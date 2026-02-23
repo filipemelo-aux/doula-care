@@ -1,5 +1,6 @@
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import logo from "@/assets/logo.png";
+import { useOrgBranding } from "@/hooks/useOrgBranding";
 import {
   LayoutDashboard,
   Users,
@@ -35,6 +36,9 @@ export function Sidebar({ isOpen, onToggle, onNavigate }: SidebarProps) {
   const location = useLocation();
   const navigate = useNavigate();
   const { planLabel, plan } = usePlanLimits();
+  const { logoUrl: orgLogo, displayName } = useOrgBranding();
+  const sidebarLogo = orgLogo || logo;
+  const sidebarName = displayName || "Papo de Doula";
 
   const handleNavClick = (to: string) => {
     navigate(to);
@@ -56,10 +60,10 @@ export function Sidebar({ isOpen, onToggle, onNavigate }: SidebarProps) {
       <div className="h-20 flex items-center justify-between px-6 border-b border-sidebar-border">
         <div className={cn("flex items-center gap-3 transition-opacity", !isOpen && "lg:opacity-0")}>
           <div className="w-9 h-9 rounded-[40%] bg-[#FFF5EE] overflow-hidden">
-            <img src={logo} alt="Papo de Doula" className="w-full h-full object-cover mix-blend-multiply scale-[1.15]" />
+            <img src={sidebarLogo} alt={sidebarName} className="w-full h-full object-cover mix-blend-multiply scale-[1.15]" />
           </div>
           <div>
-            <h1 className="font-display text-lg text-sidebar-foreground">Papo de Doula</h1>
+            <h1 className="font-display text-lg text-sidebar-foreground">{sidebarName}</h1>
             <p className="text-xs text-sidebar-foreground/60">Dashboard</p>
           </div>
         </div>
@@ -80,7 +84,7 @@ export function Sidebar({ isOpen, onToggle, onNavigate }: SidebarProps) {
       {!isOpen && (
         <div className="hidden lg:flex h-20 absolute top-0 left-0 w-20 items-center justify-between px-2">
           <div className="w-8 h-8 rounded-[40%] bg-[#FFF5EE] overflow-hidden">
-            <img src={logo} alt="Papo de Doula" className="w-full h-full object-cover mix-blend-multiply scale-[1.15]" />
+            <img src={sidebarLogo} alt={sidebarName} className="w-full h-full object-cover mix-blend-multiply scale-[1.15]" />
           </div>
           <Button
             variant="ghost"

@@ -1,5 +1,6 @@
 import { ReactNode } from "react";
 import logo from "@/assets/logo.png";
+import { useOrgBranding } from "@/hooks/useOrgBranding";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useGestanteAuth } from "@/contexts/GestanteAuthContext";
 import { 
@@ -30,6 +31,9 @@ export function GestanteLayout({ children }: GestanteLayoutProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const { signOut } = useGestanteAuth();
+  const { logoUrl: orgLogo, displayName } = useOrgBranding();
+  const headerLogo = orgLogo || logo;
+  const headerName = displayName || "Papo de Doula";
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 pb-28">
@@ -37,9 +41,9 @@ export function GestanteLayout({ children }: GestanteLayoutProps) {
       <header className="flex items-center justify-between px-4 h-16 bg-card/50 backdrop-blur-sm border-b border-border sticky top-0 z-50">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-[40%] bg-[#FFF5EE] overflow-hidden">
-            <img src={logo} alt="Papo de Doula" className="w-full h-full object-cover mix-blend-multiply scale-[1.15]" />
+            <img src={headerLogo} alt={headerName} className="w-full h-full object-cover mix-blend-multiply scale-[1.15]" />
           </div>
-          <h1 className="font-display text-lg text-foreground">Papo de Doula</h1>
+          <h1 className="font-display text-lg text-foreground">{headerName}</h1>
         </div>
         <div className="flex items-center gap-1">
           <PushNotificationToggle compact />
