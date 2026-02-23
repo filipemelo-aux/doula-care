@@ -685,7 +685,7 @@ export default function Financial() {
                   const planName = transaction.plan_settings?.name || "";
                   const compactDesc = firstName && planName 
                     ? `Contrato - ${firstName} - ${planName}`
-                    : transaction.description.replace(/\s*-\s*Plano\s+/i, " - ");
+                    : transaction.description;
 
                   return (
                     <Card key={transaction.id} className="px-1.5 py-1 space-y-0.5 w-full box-border min-w-0 overflow-hidden">
@@ -723,9 +723,6 @@ export default function Financial() {
                         <span className="text-xs text-muted-foreground truncate min-w-0 flex-1" title={transaction.clients?.full_name || "—"}>
                           {transaction.clients?.full_name ? abbreviateName(transaction.clients.full_name) : "—"}
                         </span>
-                        {(transaction.clients as any)?.dpp && (
-                          <span className="text-xs text-muted-foreground flex-shrink-0">DPP: {format(parseISO((transaction.clients as any).dpp), "dd/MM/yy")}</span>
-                        )}
                         <span className="text-xs text-muted-foreground flex-shrink-0">• {formatBrazilDate(transaction.date, "dd/MM/yy")}</span>
                       </div>
 
