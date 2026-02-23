@@ -685,7 +685,7 @@ export default function Financial() {
                   const planName = transaction.plan_settings?.name || "";
                   const compactDesc = firstName && planName 
                     ? `Contrato - ${firstName} - ${planName}`
-                    : transaction.description;
+                    : transaction.description.replace(/\s*-\s*Plano\s+/i, " - ");
 
                   return (
                     <Card key={transaction.id} className="px-1.5 py-1 space-y-0.5 w-full box-border min-w-0 overflow-hidden">
@@ -830,7 +830,7 @@ export default function Financial() {
                         <Button
                           variant="ghost"
                           size="icon"
-                          onClick={() => {/* TODO: view details */}}
+                          onClick={() => handleOpenPaymentDialog(transaction)}
                           className="h-6 w-6 text-muted-foreground"
                           title="Ver detalhes"
                         >
@@ -887,7 +887,7 @@ export default function Financial() {
                                 </span>
                               </div>
                               <span className="text-xs text-muted-foreground truncate">
-                                {transaction.plan_settings?.name || transaction.description}
+                                {transaction.plan_settings?.name || transaction.description.replace(/\s*-\s*Plano\s+/i, " - ")}
                               </span>
                             </div>
                           </TableCell>
@@ -978,7 +978,7 @@ export default function Financial() {
                               <Button
                                 variant="ghost"
                                 size="icon"
-                                onClick={() => {/* TODO: view details */}}
+                                onClick={() => handleOpenPaymentDialog(transaction)}
                                 className="h-6 w-6 text-muted-foreground hover:text-foreground opacity-0 group-hover:opacity-100 transition-opacity"
                                 title="Ver detalhes"
                               >
