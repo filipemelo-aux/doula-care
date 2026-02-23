@@ -36,7 +36,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, TrendingUp, Search, Trash2, Zap, Check, X, CheckCircle, CreditCard, Banknote, Building2, QrCode, FileText, Users, Wrench, UserPlus, DollarSign } from "lucide-react";
+import { Plus, TrendingUp, Search, Trash2, Zap, Check, X, CheckCircle, CreditCard, Banknote, Building2, QrCode, FileText, Users, Wrench, UserPlus, DollarSign, Eye } from "lucide-react";
 import { RecordPaymentDialog } from "@/components/financial/RecordPaymentDialog";
 import { maskCurrency, parseCurrency, maskPhone } from "@/lib/masks";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -682,14 +682,34 @@ export default function Financial() {
                           )}
                           <p className="font-medium text-sm truncate min-w-0">{compactDesc}</p>
                         </div>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleDelete(transaction.id)}
-                          className="h-6 w-6 text-destructive flex-shrink-0"
-                        >
-                          <Trash2 className="h-3 w-3" />
-                        </Button>
+                        <div className="flex items-center gap-0 flex-shrink-0">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleOpenPaymentDialog(transaction)}
+                            className="h-6 w-6 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50"
+                            title="Lançar pagamento"
+                          >
+                            <DollarSign className="h-3 w-3" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => {/* TODO: view details */}}
+                            className="h-6 w-6 text-muted-foreground"
+                            title="Ver detalhes"
+                          >
+                            <Eye className="h-3 w-3" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleDelete(transaction.id)}
+                            className="h-6 w-6 text-destructive flex-shrink-0"
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        </div>
                       </div>
 
                       {/* Info: Client + Date */}
@@ -750,18 +770,7 @@ export default function Financial() {
                         <div className="text-center min-w-0 flex-1 flex-shrink px-1">
                           <span className="text-[10px] text-muted-foreground block">Pend.</span>
                           {pendingAmount > 0 ? (
-                            <div className="flex items-center justify-center gap-0.5">
-                              <span className="text-sm text-warning font-medium truncate">{formatCompact(pendingAmount)}</span>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => handleOpenPaymentDialog(transaction)}
-                                className="h-5 w-5 text-primary p-0"
-                                title="Lançar pagamento"
-                              >
-                                <DollarSign className="h-3.5 w-3.5" />
-                              </Button>
-                            </div>
+                            <span className="text-sm text-warning font-medium truncate block">{formatCompact(pendingAmount)}</span>
                           ) : (
                             <span className="text-sm text-success font-medium">OK</span>
                           )}
@@ -829,7 +838,7 @@ export default function Financial() {
                       <TableHead className="text-right w-[90px] text-xs font-medium text-muted-foreground py-2">Recebido</TableHead>
                       <TableHead className="text-right w-[90px] text-xs font-medium text-muted-foreground py-2">Pendente</TableHead>
                       <TableHead className="w-[130px] text-xs font-medium text-muted-foreground py-2 text-center">Pagamento</TableHead>
-                      <TableHead className="w-[36px] py-2"></TableHead>
+                      <TableHead className="w-[80px] py-2"></TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -909,20 +918,9 @@ export default function Financial() {
                           </TableCell>
                           <TableCell className="text-right py-2.5">
                             {pendingAmount > 0 ? (
-                              <div className="flex items-center justify-end gap-1">
-                                <span className="text-xs text-warning font-medium">
-                                  {formatCurrency(pendingAmount)}
-                                </span>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={() => handleOpenPaymentDialog(transaction)}
-                                  className="h-5 w-5 text-primary hover:bg-primary/10"
-                                  title="Lançar pagamento"
-                                >
-                                  <DollarSign className="h-3.5 w-3.5" />
-                                </Button>
-                              </div>
+                              <span className="text-xs text-warning font-medium">
+                                {formatCurrency(pendingAmount)}
+                              </span>
                             ) : (
                               <span className="text-xs text-success/70 font-medium">Quitado</span>
                             )}
@@ -950,15 +948,35 @@ export default function Financial() {
                             </div>
                           </TableCell>
                           <TableCell className="py-2.5">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleDelete(transaction.id)}
-                              className="h-6 w-6 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
-                              title="Excluir"
-                            >
-                              <Trash2 className="h-3.5 w-3.5" />
-                            </Button>
+                            <div className="flex items-center gap-0">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleOpenPaymentDialog(transaction)}
+                                className="h-6 w-6 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 opacity-0 group-hover:opacity-100 transition-opacity"
+                                title="Lançar pagamento"
+                              >
+                                <DollarSign className="h-3.5 w-3.5" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => {/* TODO: view details */}}
+                                className="h-6 w-6 text-muted-foreground hover:text-foreground opacity-0 group-hover:opacity-100 transition-opacity"
+                                title="Ver detalhes"
+                              >
+                                <Eye className="h-3.5 w-3.5" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleDelete(transaction.id)}
+                                className="h-6 w-6 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+                                title="Excluir"
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </Button>
+                            </div>
                           </TableCell>
                         </TableRow>
                       );
