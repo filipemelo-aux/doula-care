@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { applyThemeToDOM, clearCustomTheme, DEFAULT_PRIMARY, DEFAULT_SECONDARY, hexToHSL } from "@/hooks/useOrgBranding";
 import { cn } from "@/lib/utils";
+import { ColorPickerGradient } from "@/components/settings/ColorPickerGradient";
 
 // Curated color palettes
 const COLOR_PALETTES = [
@@ -245,33 +246,23 @@ export function BrandingSettingsCard() {
             </div>
           </div>
 
-          {/* Custom color - compact */}
-          <div className="space-y-2">
+          {/* Custom color */}
+          <div className="space-y-3">
             <Label className="text-xs text-muted-foreground">Ou escolha cores personalizadas</Label>
-            <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-              <div className="flex items-center gap-4 min-w-0">
-                <div className="flex items-center gap-2">
-                  <input
-                    type="color"
-                    value={primaryColor}
-                    onChange={(e) => { setPrimaryColor(e.target.value); setPreviewing(false); }}
-                    className="w-9 h-9 rounded-lg border border-border cursor-pointer appearance-none bg-transparent [&::-webkit-color-swatch-wrapper]:p-0.5 [&::-webkit-color-swatch]:rounded-md [&::-webkit-color-swatch]:border-none shrink-0"
-                    title="Cor primária"
-                  />
-                  <span className="text-xs text-muted-foreground">Primária</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="color"
-                    value={secondaryColor}
-                    onChange={(e) => { setSecondaryColor(e.target.value); setPreviewing(false); }}
-                    className="w-9 h-9 rounded-lg border border-border cursor-pointer appearance-none bg-transparent [&::-webkit-color-swatch-wrapper]:p-0.5 [&::-webkit-color-swatch]:rounded-md [&::-webkit-color-swatch]:border-none shrink-0"
-                    title="Cor secundária"
-                  />
-                  <span className="text-xs text-muted-foreground">Secundária</span>
-                </div>
+            <div className="flex flex-col gap-4">
+              <div className="flex flex-col sm:flex-row gap-4">
+                <ColorPickerGradient
+                  value={primaryColor}
+                  onChange={(c) => { setPrimaryColor(c); setPreviewing(false); }}
+                  label="Primária"
+                />
+                <ColorPickerGradient
+                  value={secondaryColor}
+                  onChange={(c) => { setSecondaryColor(c); setPreviewing(false); }}
+                  label="Secundária"
+                />
               </div>
-              <Button variant="outline" size="sm" onClick={handlePreview} className="gap-1.5 shrink-0 w-full sm:w-auto">
+              <Button variant="outline" size="sm" onClick={handlePreview} className="gap-1.5 w-full sm:w-auto">
                 <Eye className="h-3.5 w-3.5" />
                 Visualizar
               </Button>
