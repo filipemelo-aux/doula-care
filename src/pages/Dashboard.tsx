@@ -11,13 +11,14 @@ import { UpcomingAppointments } from "@/components/dashboard/UpcomingAppointment
 import { PeriodFilter, PeriodOption } from "@/components/dashboard/PeriodFilter";
 import { ClientsListDialog } from "@/components/dashboard/ClientsListDialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Users, Baby, Heart, Wallet, TrendingUp, BarChart3 } from "lucide-react";
+import { Users, Baby, Heart, Wallet, TrendingUp, BarChart3, UserPlus } from "lucide-react";
 import { AdminWelcomeDialog } from "@/components/dashboard/AdminWelcomeDialog";
 
 export default function Dashboard() {
   const [period, setPeriod] = useState<PeriodOption>("month");
   const [gestantesDialogOpen, setGestantesDialogOpen] = useState(false);
   const [puerperasDialogOpen, setPuerperasDialogOpen] = useState(false);
+  const [outrosDialogOpen, setOutrosDialogOpen] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [showWelcome, setShowWelcome] = useState(false);
   const { profileName, user } = useAuth();
@@ -70,7 +71,7 @@ export default function Dashboard() {
       </div>
 
       {/* Stats Grid - Row 1: Clients */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 lg:gap-4">
         <StatCard
           title="Total de Clientes"
           value={metrics?.totalClients || 0}
@@ -91,6 +92,13 @@ export default function Dashboard() {
           subtitle="Pós-parto"
           icon={Heart}
           onClick={() => setPuerperasDialogOpen(true)}
+        />
+        <StatCard
+          title="Outros"
+          value={metrics?.outros || 0}
+          subtitle="Outras clientes"
+          icon={UserPlus}
+          onClick={() => setOutrosDialogOpen(true)}
         />
         <StatCard
           title="Receita Contratada"
@@ -143,6 +151,11 @@ export default function Dashboard() {
         open={puerperasDialogOpen}
         onOpenChange={setPuerperasDialogOpen}
         status="lactante"
+      />
+      <ClientsListDialog
+        open={outrosDialogOpen}
+        onOpenChange={setOutrosDialogOpen}
+        status="outro"
       />
       <AdminWelcomeDialog
         open={showWelcome}

@@ -51,7 +51,7 @@ const clientSchema = z.object({
   zip_code: z.string().optional(),
   companion_name: z.string().optional(),
   companion_phone: z.string().optional(),
-  status: z.enum(["tentante", "gestante", "lactante"]),
+  status: z.enum(["gestante", "lactante", "outro"]),
   pregnancy_weeks: z.number().min(0).max(42).optional().nullable(),
   dpp: z.string().optional().nullable(),
   baby_names: z.string().optional(),
@@ -156,7 +156,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
         zip_code: client.zip_code || "",
         companion_name: client.companion_name || "",
         companion_phone: client.companion_phone || "",
-        status: client.status as "tentante" | "gestante" | "lactante",
+        status: client.status as "gestante" | "lactante" | "outro",
         pregnancy_weeks: client.pregnancy_weeks,
         dpp: client.dpp || null,
         baby_names: (client as any).baby_names?.join(", ") || "",
@@ -667,9 +667,9 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value="tentante">Tentante</SelectItem>
                             <SelectItem value="gestante">Gestante</SelectItem>
                             <SelectItem value="lactante">Puérpera</SelectItem>
+                            <SelectItem value="outro">Outro</SelectItem>
                           </SelectContent>
                         </Select>
                         <FormMessage />

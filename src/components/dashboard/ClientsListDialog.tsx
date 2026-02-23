@@ -19,7 +19,8 @@ import {
   Ruler, 
   Clock, 
   MessageCircle,
-  BookHeart
+  BookHeart,
+  Users
 } from "lucide-react";
 import { calculateCurrentPregnancyWeeks, calculateCurrentPregnancyDays, isPostTerm } from "@/lib/pregnancy";
 import { abbreviateName, formatBrazilDate } from "@/lib/utils";
@@ -29,7 +30,7 @@ import { SendNotificationDialog } from "@/components/clients/SendNotificationDia
 import { ClientDiaryDialog } from "./ClientDiaryDialog";
 
 type Client = Tables<"clients">;
-type ClientStatus = "gestante" | "lactante";
+type ClientStatus = "gestante" | "lactante" | "outro";
 
 interface ClientsListDialogProps {
   open: boolean;
@@ -50,6 +51,16 @@ export function ClientsListDialog({
   const { data: clients, isLoading } = useQuery({
     queryKey: ["clients-list-dialog", status],
     queryFn: async () => {
+      // For "outro" status, also include legacy "tentante" clients
+      if (status === "outro") {
+        const { data, error } = await supabase
+          .from("clients")
+          .select("*")
+          .in("status", ["outro", "tentante"])
+          .order("updated_at", { ascending: false });
+        if (error) throw error;
+        return data as Client[];
+      }
       const { data, error } = await supabase
         .from("clients")
         .select("*")
@@ -83,11 +94,13 @@ export function ClientsListDialog({
     enabled: open && status === "gestante",
   });
 
-  const title = status === "gestante" ? "Gestantes em Acompanhamento" : "Puérperas Pós-Parto";
+  const title = status === "gestante" ? "Gestantes em Acompanhamento" : status === "lactante" ? "Puérperas Pós-Parto" : "Outros Clientes";
   const description = status === "gestante" 
     ? "Lista de todas as gestantes atualmente em acompanhamento" 
-    : "Lista de todas as mães no período de puerpério";
-  const Icon = status === "gestante" ? Baby : Heart;
+    : status === "lactante"
+      ? "Lista de todas as mães no período de puerpério"
+      : "Lista de todas as clientes com status 'Outro'";
+  const Icon = status === "gestante" ? Baby : status === "lactante" ? Heart : Users;
 
   const formatDate = (dateStr: string | null) => {
     if (!dateStr) return "—";
