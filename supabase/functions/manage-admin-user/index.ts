@@ -49,6 +49,27 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Validate caller's organization is active
+    const { data: callerProfile } = await supabase
+      .from("profiles")
+      .select("organization_id")
+      .eq("user_id", callingUser.id)
+      .single();
+
+    if (callerProfile?.organization_id) {
+      const { data: org } = await supabase
+        .from("organizations")
+        .select("status")
+        .eq("id", callerProfile.organization_id)
+        .single();
+
+      if (org?.status === "suspenso") {
+        return new Response(JSON.stringify({ error: "Sua organização está suspensa" }), {
+          status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
+
     const callerIsAdmin = callerRoles.some((r) => r.role === "admin");
     const callerIsModerator = callerRoles.some((r) => r.role === "moderator");
 
