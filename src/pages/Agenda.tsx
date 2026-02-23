@@ -279,22 +279,22 @@ export default function Agenda() {
 
       {/* Quick Stats */}
       <div className="grid grid-cols-3 gap-3">
-        <Card className="bg-yellow-50 border-yellow-200">
+        <Card className="bg-warning/10 border-warning/30">
           <CardContent className="p-3 text-center">
-            <p className="text-2xl font-bold text-yellow-700">{pendingServices}</p>
-            <p className="text-xs text-yellow-600">Solicitações Pendentes</p>
+            <p className="text-2xl font-bold text-warning-foreground">{pendingServices}</p>
+            <p className="text-xs text-warning-foreground/80">Solicitações Pendentes</p>
           </CardContent>
         </Card>
-        <Card className="bg-purple-50 border-purple-200">
+        <Card className="bg-primary/10 border-primary/30">
           <CardContent className="p-3 text-center">
-            <p className="text-2xl font-bold text-purple-700">{budgetSentServices}</p>
-            <p className="text-xs text-purple-600">Aguardando Resposta</p>
+            <p className="text-2xl font-bold text-primary">{budgetSentServices}</p>
+            <p className="text-xs text-primary/80">Aguardando Resposta</p>
           </CardContent>
         </Card>
-        <Card className="bg-emerald-50 border-emerald-200">
+        <Card className="bg-success/10 border-success/30">
           <CardContent className="p-3 text-center">
-            <p className="text-2xl font-bold text-emerald-700">{acceptedServices}</p>
-            <p className="text-xs text-emerald-600">Em Andamento</p>
+            <p className="text-2xl font-bold text-success-foreground">{acceptedServices}</p>
+            <p className="text-xs text-success-foreground/80">Em Andamento</p>
           </CardContent>
         </Card>
       </div>
@@ -608,8 +608,8 @@ function ServiceRow({
 
   return (
     <div className="flex items-center gap-3 rounded-lg p-3 border bg-background hover:bg-muted/30 transition-colors">
-      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-100 to-purple-200 flex items-center justify-center flex-shrink-0">
-        <Briefcase className="h-5 w-5 text-purple-600" />
+      <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+        <Briefcase className="h-5 w-5 text-primary" />
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
@@ -618,7 +618,7 @@ function ServiceRow({
         </div>
         <p className="text-xs text-muted-foreground truncate">{displayName(svc.clients?.full_name || "")}</p>
         {svc.budget_value && (
-          <p className="text-xs font-semibold text-purple-700">R$ {svc.budget_value.toFixed(2).replace(".", ",")}</p>
+          <p className="text-xs font-semibold text-primary">R$ {svc.budget_value.toFixed(2).replace(".", ",")}</p>
         )}
         {svc.rating && (
           <div className="flex items-center gap-1 mt-0.5">

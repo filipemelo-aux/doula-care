@@ -89,6 +89,9 @@ function generateThemeVariables(primary: string, secondary: string) {
     "--sidebar-accent-foreground": `${p.h} ${Math.min(p.s, 65)}% 30%`,
     "--sidebar-border": `${s.h} ${Math.max(s.s - 5, 0)}% 83%`,
     "--sidebar-ring": `${p.h} ${p.s}% ${p.l}%`,
+
+    // Gradients
+    "--gradient-primary": `linear-gradient(135deg, hsl(${p.h} ${p.s}% ${p.l}%), hsl(${p.h} ${Math.max(p.s - 3, 0)}% ${Math.max(p.l - 6, 20)}%))`,
   };
 }
 
