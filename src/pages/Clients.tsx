@@ -114,6 +114,13 @@ export default function Clients() {
       (client.cpf && client.cpf.includes(search))
   );
 
+  // On free plan, mark clients beyond the limit as inactive
+  const maxClients = limits.maxClients;
+  const isClientInactive = (index: number) => {
+    if (maxClients === null) return false;
+    return index >= maxClients;
+  };
+
   const handleEdit = (client: Client) => {
     setSelectedClient(client);
     setDialogOpen(true);
@@ -204,8 +211,15 @@ export default function Clients() {
             <>
               {/* Mobile Cards */}
               <div className="block lg:hidden space-y-1.5 p-3">
-                {filteredClients.map((client) => (
-                    <Card key={client.id} className="p-2 space-y-1 w-full max-w-full overflow-hidden">
+                {filteredClients.map((client, index) => {
+                  const inactive = isClientInactive(index);
+                  return (
+                    <Card key={client.id} className={cn("p-2 space-y-1 w-full max-w-full overflow-hidden", inactive && "opacity-50 pointer-events-none relative")}>
+                      {inactive && (
+                        <Badge variant="destructive" className="absolute top-1 right-1 text-[8px] px-1 h-4 z-10">
+                          Inativa (limite do plano)
+                        </Badge>
+                      )}
                       <div className="flex items-center justify-between gap-1">
                         <div className="flex-1 min-w-0 overflow-hidden">
                           <p className="font-medium text-xs truncate">{formatClientName(client.full_name)}</p>
@@ -259,7 +273,8 @@ export default function Clients() {
                         </Badge>
                       </div>
                     </Card>
-                ))}
+                  );
+                })}
               </div>
 
               {/* Desktop Table */}
@@ -277,10 +292,15 @@ export default function Clients() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredClients.map((client) => (
-                      <TableRow key={client.id} className="table-row-hover">
+                    {filteredClients.map((client, index) => {
+                      const inactive = isClientInactive(index);
+                      return (
+                      <TableRow key={client.id} className={cn("table-row-hover", inactive && "opacity-50 pointer-events-none")}>
                         <TableCell className="font-medium">
                           {client.full_name}
+                          {inactive && (
+                            <Badge variant="destructive" className="ml-2 text-[9px] px-1">Inativa</Badge>
+                          )}
                         </TableCell>
                         <TableCell>{client.phone}</TableCell>
                         <TableCell className="text-muted-foreground">
@@ -312,6 +332,7 @@ export default function Clients() {
                               size="icon"
                               onClick={() => handleView(client)}
                               className="h-8 w-8"
+                              disabled={inactive}
                             >
                               <Eye className="h-4 w-4" />
                             </Button>
@@ -320,6 +341,7 @@ export default function Clients() {
                               size="icon"
                               onClick={() => handleEdit(client)}
                               className="h-8 w-8"
+                              disabled={inactive}
                             >
                               <Edit2 className="h-4 w-4" />
                             </Button>
@@ -328,13 +350,15 @@ export default function Clients() {
                               size="icon"
                               onClick={() => handleDelete(client)}
                               className="h-8 w-8 text-destructive hover:text-destructive"
+                              disabled={inactive}
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>
                           </div>
                         </TableCell>
                       </TableRow>
-                    ))}
+                      );
+                    })}
                   </TableBody>
                 </Table>
               </div>

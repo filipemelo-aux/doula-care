@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
+import { usePlanLimits } from "@/hooks/usePlanLimits";
 import { PushPermissionModal } from "@/components/notifications/PushPermissionModal";
 
 interface AutoPushPromptProps {
@@ -8,10 +9,12 @@ interface AutoPushPromptProps {
 
 export function AutoPushPrompt({ userId }: AutoPushPromptProps) {
   const { isSupported, isSubscribed, isLoading, permission } = usePushNotifications();
+  const { limits } = usePlanLimits();
   const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
     if (!isSupported || isSubscribed || isLoading) return;
+    if (!limits.pushNotifications) return; // Plan doesn't support push
     if (permission === "denied") return;
     if (permission === "granted") return; // Already granted but not subscribed - will be handled by hook
     

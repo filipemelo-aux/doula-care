@@ -158,6 +158,32 @@ Deno.serve(async (req) => {
       );
     }
 
+    // Check org plan allows push notifications (only for non-admin senders)
+    // Get caller's org plan
+    const { data: callerProfileForPlan } = await supabase
+      .from("profiles")
+      .select("organization_id")
+      .eq("user_id", user.id)
+      .maybeSingle();
+
+    if (callerProfileForPlan?.organization_id) {
+      const { data: orgPlanData } = await supabase
+        .from("organizations")
+        .select("plan")
+        .eq("id", callerProfileForPlan.organization_id)
+        .single();
+
+      if (orgPlanData?.plan === "free") {
+        return new Response(
+          JSON.stringify({ error: "Push notifications not available on Free plan" }),
+          {
+            status: 403,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          }
+        );
+      }
+    }
+
     // Get push subscriptions for target users
     const { data: subscriptions, error: subError } = await supabase
       .from("push_subscriptions")
