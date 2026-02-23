@@ -18,7 +18,7 @@ const PLAN_LIMITS: Record<OrgPlan, PlanLimits> = {
     maxClients: 5,
     reports: false,
     exportReports: false,
-    pushNotifications: false,
+    pushNotifications: true,
     multiCollaborators: false,
     maxCollaborators: 1,
   },
