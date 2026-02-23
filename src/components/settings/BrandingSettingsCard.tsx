@@ -246,28 +246,6 @@ export function BrandingSettingsCard() {
             </div>
           </div>
 
-          {/* Custom color */}
-          <div className="space-y-3">
-            <Label className="text-xs text-muted-foreground">Ou escolha cores personalizadas</Label>
-            <div className="flex flex-col gap-4">
-              <div className="flex flex-col sm:flex-row gap-4">
-                <ColorPickerGradient
-                  value={primaryColor}
-                  onChange={(c) => { setPrimaryColor(c); setPreviewing(false); }}
-                  label="Primária"
-                />
-                <ColorPickerGradient
-                  value={secondaryColor}
-                  onChange={(c) => { setSecondaryColor(c); setPreviewing(false); }}
-                  label="Secundária"
-                />
-              </div>
-              <Button variant="outline" size="sm" onClick={handlePreview} className="gap-1.5 w-full sm:w-auto">
-                <Eye className="h-3.5 w-3.5" />
-                Visualizar
-              </Button>
-            </div>
-          </div>
 
           {/* Logo */}
           <div className="space-y-2">
