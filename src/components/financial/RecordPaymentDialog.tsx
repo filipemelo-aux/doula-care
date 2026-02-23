@@ -46,20 +46,37 @@ export function RecordPaymentDialog({
   const [paymentType, setPaymentType] = useState<"total" | "parcial">("total");
   const [partialValue, setPartialValue] = useState("");
 
-  // Fetch payments for this transaction
+  // Fetch payments for this transaction (by transaction_id first, fallback to client_id)
   const { data: payments, isLoading } = useQuery({
-    queryKey: ["transaction-payments", transactionId],
+    queryKey: ["transaction-payments", transactionId, clientId],
     queryFn: async () => {
-      if (!transactionId || !clientId) return [];
-      const { data, error } = await supabase
+      if (!transactionId) return [];
+
+      // First try by transaction_id
+      const { data: byTx, error: txErr } = await supabase
         .from("payments")
         .select("*")
         .eq("transaction_id", transactionId)
         .order("installment_number", { ascending: true });
-      if (error) throw error;
-      return data || [];
+      if (txErr) throw txErr;
+      if (byTx && byTx.length > 0) return byTx;
+
+      // Fallback: for contract transactions where payments have no transaction_id,
+      // find by client_id + matching total_installments
+      if (clientId) {
+        const { data: byClient, error: clientErr } = await supabase
+          .from("payments")
+          .select("*")
+          .eq("client_id", clientId)
+          .is("transaction_id", null)
+          .order("installment_number", { ascending: true });
+        if (clientErr) throw clientErr;
+        return byClient || [];
+      }
+
+      return [];
     },
-    enabled: !!transactionId && !!clientId && open,
+    enabled: !!transactionId && open,
   });
 
   // If no payment records exist, we work directly with the transaction
@@ -109,12 +126,23 @@ export function RecordPaymentDialog({
         if (paymentError) throw paymentError;
 
         // Recalculate total received across all payments for this transaction
-        // The update above already committed, so fetched values are current
-        const { data: allPayments, error: fetchError } = await supabase
+        // Try by transaction_id first, fallback to client_id with null transaction_id
+        let allPayments: { amount_paid: number }[] = [];
+        const { data: byTx } = await supabase
           .from("payments")
           .select("amount_paid")
           .eq("transaction_id", transactionId);
-        if (fetchError) throw fetchError;
+        
+        if (byTx && byTx.length > 0) {
+          allPayments = byTx;
+        } else if (clientId) {
+          const { data: byClient } = await supabase
+            .from("payments")
+            .select("amount_paid")
+            .eq("client_id", clientId)
+            .is("transaction_id", null);
+          allPayments = byClient || [];
+        }
 
         const totalReceived = (allPayments || []).reduce((sum, p) => {
           return sum + Number(p.amount_paid || 0);

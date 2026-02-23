@@ -49,15 +49,29 @@ export function RevenueDetailDialog({ open, onOpenChange, transactionId }: Reven
     queryKey: ["transaction-payments", transactionId],
     queryFn: async () => {
       if (!transactionId) return [];
-      const { data, error } = await supabase
+      // First try by transaction_id
+      const { data: byTx, error: txErr } = await supabase
         .from("payments")
         .select("*")
         .eq("transaction_id", transactionId)
         .order("installment_number");
-      if (error) throw error;
-      return data;
+      if (txErr) throw txErr;
+      if (byTx && byTx.length > 0) return byTx;
+
+      // Fallback: for contract transactions, find by client_id with null transaction_id
+      if (transaction?.client_id) {
+        const { data: byClient, error: clientErr } = await supabase
+          .from("payments")
+          .select("*")
+          .eq("client_id", transaction.client_id)
+          .is("transaction_id", null)
+          .order("installment_number");
+        if (clientErr) throw clientErr;
+        return byClient || [];
+      }
+      return [];
     },
-    enabled: !!transactionId && open,
+    enabled: !!transactionId && !!transaction && open,
   });
 
   if (!transaction) return null;
