@@ -123,6 +123,8 @@ export default function Financial() {
   const [quickClientName, setQuickClientName] = useState("");
   const [quickClientPhone, setQuickClientPhone] = useState("");
   const [entryAlreadyPaid, setEntryAlreadyPaid] = useState(false);
+  const [avistaPaymentStatus, setAvistaPaymentStatus] = useState<"pago" | "parcial" | "pendente">("pendente");
+  const [avistaPartialValue, setAvistaPartialValue] = useState<string>("");
 
   const queryClient = useQueryClient();
 
@@ -217,12 +219,20 @@ export default function Financial() {
       const installments = data.payment_type === "parcelado" ? (data.installments || 1) : 1;
       const installmentValue = data.amount / installments;
 
-      // Determine amount_received based on date logic
-      const relevantDateForSave = data.payment_type === "parcelado" && data.first_due_date 
-        ? data.first_due_date 
-        : data.date;
-      const todayStr = format(new Date(), "yyyy-MM-dd");
-      const autoReceived = relevantDateForSave < todayStr ? data.amount : (entryAlreadyPaid ? data.amount : 0);
+      // Determine amount_received based on payment type
+      let autoReceived = 0;
+      if (data.payment_type === "a_vista") {
+        if (avistaPaymentStatus === "pago") {
+          autoReceived = data.amount;
+        } else if (avistaPaymentStatus === "parcial") {
+          autoReceived = parseCurrency(avistaPartialValue) || 0;
+        } else {
+          autoReceived = 0;
+        }
+      } else {
+        // Parcelado: handled per-installment below
+        autoReceived = entryAlreadyPaid ? data.amount : 0;
+      }
 
       const { data: newTransaction, error } = await supabase.from("transactions").insert({
         type: "receita",
@@ -259,6 +269,7 @@ export default function Financial() {
             dueDate.setMonth(dueDate.getMonth() + i);
           }
           const dueDateStr = dueDate.toISOString().split("T")[0];
+          const todayStr = format(new Date(), "yyyy-MM-dd");
           const isPastDue = dueDateStr < todayStr;
           return {
             client_id: data.client_id!,
@@ -466,6 +477,8 @@ export default function Financial() {
     setQuickClientName("");
     setQuickClientPhone("");
     setEntryAlreadyPaid(false);
+    setAvistaPaymentStatus("pendente");
+    setAvistaPartialValue("");
     form.reset({
       description: "",
       amount: 0,
@@ -1458,24 +1471,47 @@ export default function Financial() {
                 </div>
               )}
 
-              {!selectedTransaction && (
-                <div className="rounded-lg border p-3 space-y-1">
-                  {isDateInPast ? (
-                    <p className="text-xs text-success flex items-center gap-1.5">
-                      <CheckCircle className="h-3.5 w-3.5" />
-                      A data é anterior a hoje — entrada será marcada como <strong>Recebida</strong> automaticamente.
-                    </p>
-                  ) : (
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={entryAlreadyPaid}
-                        onChange={(e) => setEntryAlreadyPaid(e.target.checked)}
-                        className="rounded border-border"
+              {!selectedTransaction && watchedPaymentType === "a_vista" && (
+                <div className="rounded-lg border p-3 space-y-2">
+                  <FormLabel className="text-xs font-medium">Status do Pagamento</FormLabel>
+                  <Select
+                    value={avistaPaymentStatus}
+                    onValueChange={(val) => setAvistaPaymentStatus(val as "pago" | "parcial" | "pendente")}
+                  >
+                    <SelectTrigger className="input-field h-8 text-sm">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="pago">Pago Completo</SelectItem>
+                      <SelectItem value="parcial">Parcial</SelectItem>
+                      <SelectItem value="pendente">Pendente</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {avistaPaymentStatus === "parcial" && (
+                    <div className="space-y-1">
+                      <FormLabel className="text-xs">Valor Recebido</FormLabel>
+                      <Input
+                        value={avistaPartialValue}
+                        onChange={(e) => setAvistaPartialValue(maskCurrency(e.target.value))}
+                        className="input-field h-8 text-sm"
+                        placeholder="R$ 0,00"
                       />
-                      <span className="text-xs font-medium">Entrada já foi recebida?</span>
-                    </label>
+                    </div>
                   )}
+                </div>
+              )}
+
+              {!selectedTransaction && watchedPaymentType === "parcelado" && (
+                <div className="rounded-lg border p-3 space-y-1">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={entryAlreadyPaid}
+                      onChange={(e) => setEntryAlreadyPaid(e.target.checked)}
+                      className="rounded border-border"
+                    />
+                    <span className="text-xs font-medium">Entrada já foi recebida?</span>
+                  </label>
                 </div>
               )}
 
