@@ -121,6 +121,7 @@ export default function Financial() {
   const [showQuickClient, setShowQuickClient] = useState(false);
   const [quickClientName, setQuickClientName] = useState("");
   const [quickClientPhone, setQuickClientPhone] = useState("");
+  const [entryAlreadyPaid, setEntryAlreadyPaid] = useState(false);
 
   const queryClient = useQueryClient();
 
@@ -137,6 +138,23 @@ export default function Financial() {
       installment_value: 0,
     },
   });
+
+  // Determine if date-based auto-pay logic applies
+  const watchedDate = form.watch("date");
+  const watchedPaymentType = form.watch("payment_type");
+  const watchedFirstDueDate = form.watch("first_due_date");
+  
+  const getRelevantDate = () => {
+    if (watchedPaymentType === "parcelado" && watchedFirstDueDate) {
+      return watchedFirstDueDate;
+    }
+    return watchedDate;
+  };
+  
+  const relevantDate = getRelevantDate();
+  const today = format(new Date(), "yyyy-MM-dd");
+  const isDateInPast = relevantDate < today;
+  const isDateTodayOrFuture = relevantDate >= today;
 
   const selectedClientId = form.watch("client_id");
 
@@ -198,10 +216,18 @@ export default function Financial() {
       const installments = data.payment_type === "parcelado" ? (data.installments || 1) : 1;
       const installmentValue = data.amount / installments;
 
+      // Determine amount_received based on date logic
+      const relevantDateForSave = data.payment_type === "parcelado" && data.first_due_date 
+        ? data.first_due_date 
+        : data.date;
+      const todayStr = format(new Date(), "yyyy-MM-dd");
+      const autoReceived = relevantDateForSave < todayStr ? data.amount : (entryAlreadyPaid ? data.amount : 0);
+
       const { data: newTransaction, error } = await supabase.from("transactions").insert({
         type: "receita",
         description: data.description,
         amount: data.amount,
+        amount_received: autoReceived,
         date: data.date,
         client_id: data.client_id || null,
         plan_id: data.plan_id || null,
@@ -231,14 +257,18 @@ export default function Financial() {
           } else {
             dueDate.setMonth(dueDate.getMonth() + i);
           }
+          const dueDateStr = dueDate.toISOString().split("T")[0];
+          const isPastDue = dueDateStr < todayStr;
           return {
             client_id: data.client_id!,
             transaction_id: newTransaction.id,
             installment_number: i + 1,
             total_installments: installments,
             amount: installmentValue,
-            due_date: dueDate.toISOString().split("T")[0],
-            status: "pendente",
+            amount_paid: isPastDue || entryAlreadyPaid ? installmentValue : 0,
+            due_date: dueDateStr,
+            status: isPastDue || entryAlreadyPaid ? "pago" : "pendente",
+            paid_at: isPastDue || entryAlreadyPaid ? new Date().toISOString() : null,
             owner_id: user?.id || null,
             organization_id: organizationId || null,
           };
@@ -434,6 +464,7 @@ export default function Financial() {
     setShowQuickClient(false);
     setQuickClientName("");
     setQuickClientPhone("");
+    setEntryAlreadyPaid(false);
     form.reset({
       description: "",
       amount: 0,
@@ -1426,30 +1457,24 @@ export default function Financial() {
               )}
 
               {!selectedTransaction && (
-                <FormField
-                  control={form.control}
-                  name="payment_status"
-                  render={({ field }) => (
-                    <FormItem className="space-y-1">
-                      <FormLabel className="text-xs">Status *</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
-                        <FormControl>
-                          <SelectTrigger className="input-field h-8 text-sm">
-                            <SelectValue />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {Object.entries(paymentStatusLabels).map(([value, label]) => (
-                            <SelectItem key={value} value={value}>
-                              {label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
+                <div className="rounded-lg border p-3 space-y-1">
+                  {isDateInPast ? (
+                    <p className="text-xs text-success flex items-center gap-1.5">
+                      <CheckCircle className="h-3.5 w-3.5" />
+                      A data é anterior a hoje — entrada será marcada como <strong>Recebida</strong> automaticamente.
+                    </p>
+                  ) : (
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={entryAlreadyPaid}
+                        onChange={(e) => setEntryAlreadyPaid(e.target.checked)}
+                        className="rounded border-border"
+                      />
+                      <span className="text-xs font-medium">Entrada já foi recebida?</span>
+                    </label>
                   )}
-                />
+                </div>
               )}
 
               <FormField
