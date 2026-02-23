@@ -1,3 +1,4 @@
+import { maskCurrency, parseCurrency } from "@/lib/masks";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -521,13 +522,15 @@ export default function Plans() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Valor (R$) *</FormLabel>
-                    <FormControl>
+                <FormControl>
                       <Input
-                        type="number"
-                        step="0.01"
-                        min={0}
-                        {...field}
-                        onChange={(e) => field.onChange(Number(e.target.value))}
+                        type="text"
+                        inputMode="numeric"
+                        value={maskCurrency(String(Math.round((field.value || 0) * 100)))}
+                        onChange={(e) => {
+                          const num = parseCurrency(e.target.value);
+                          field.onChange(num);
+                        }}
                         className="input-field"
                       />
                     </FormControl>
