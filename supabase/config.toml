@@ -26,3 +26,6 @@ verify_jwt = false
 
 [functions.register-doula]
 verify_jwt = false
+
+[functions.generate-service-icon]
+verify_jwt = false

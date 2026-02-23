@@ -226,9 +226,18 @@ export default function Financial() {
 
   const addCustomServiceMutation = useMutation({
     mutationFn: async (serviceName: string) => {
+      // Generate AI icon
+      let icon = "🔧";
+      try {
+        const { data: fnData } = await supabase.functions.invoke("generate-service-icon", {
+          body: { serviceName },
+        });
+        if (fnData?.icon) icon = fnData.icon;
+      } catch { /* fallback icon */ }
+
       const { error } = await supabase
         .from("custom_services")
-        .insert({ name: serviceName, organization_id: organizationId });
+        .insert({ name: serviceName, organization_id: organizationId, icon });
       if (error) {
         if (error.code === "23505") return; // duplicate, ignore
         throw error;
@@ -236,6 +245,23 @@ export default function Financial() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["custom-services"] });
+    },
+  });
+
+  const deleteCustomServiceMutation = useMutation({
+    mutationFn: async (serviceId: string) => {
+      const { error } = await supabase
+        .from("custom_services")
+        .delete()
+        .eq("id", serviceId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["custom-services"] });
+      toast.success("Serviço removido");
+    },
+    onError: () => {
+      toast.error("Erro ao remover serviço");
     },
   });
 
@@ -1086,22 +1112,40 @@ export default function Financial() {
                 <>
                   <div className="space-y-2">
                     <FormLabel className="text-xs font-medium">Tipo de Serviço *</FormLabel>
-                    <div className="grid grid-cols-3 gap-2 max-h-40 overflow-y-auto">
-                      {allServices.map((service) => (
-                        <button
-                          key={service.id}
-                          type="button"
-                          onClick={() => handleSelectService(service.name)}
-                          className={`flex flex-col items-center gap-1 p-3 rounded-lg border text-center transition-all ${
-                            selectedService === service.name
-                              ? "border-primary bg-primary/10 ring-1 ring-primary"
-                              : "border-border hover:border-primary/50 hover:bg-muted/50"
-                          }`}
-                        >
-                          <span className="text-lg">{service.icon}</span>
-                          <span className="text-xs font-medium">{service.name}</span>
-                        </button>
-                      ))}
+                    <div className="grid grid-cols-3 gap-2 max-h-44 overflow-y-auto">
+                      {allServices.map((service) => {
+                        const isCustom = !defaultServices.some((d) => d.id === service.id);
+                        return (
+                          <div key={service.id} className="relative group/service">
+                            <button
+                              type="button"
+                              onClick={() => handleSelectService(service.name)}
+                              className={`flex flex-col items-center gap-1 p-3 rounded-lg border text-center transition-all w-full ${
+                                selectedService === service.name
+                                  ? "border-primary bg-primary/10 ring-1 ring-primary"
+                                  : "border-border hover:border-primary/50 hover:bg-muted/50"
+                              }`}
+                            >
+                              <span className="text-lg">{service.icon}</span>
+                              <span className="text-xs font-medium truncate w-full">{service.name}</span>
+                            </button>
+                            {isCustom && (
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  if (selectedService === service.name) setSelectedService(null);
+                                  deleteCustomServiceMutation.mutate(service.id);
+                                }}
+                                className="absolute -top-1.5 -right-1.5 h-4 w-4 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center opacity-0 group-hover/service:opacity-100 transition-opacity"
+                                title="Remover serviço"
+                              >
+                                <X className="h-2.5 w-2.5" />
+                              </button>
+                            )}
+                          </div>
+                        );
+                      })}
                     </div>
 
                     {/* Custom service */}
