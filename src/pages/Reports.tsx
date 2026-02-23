@@ -291,7 +291,7 @@ export default function Reports() {
       </div>
 
       {/* KPI Cards - 2 rows of 3 on mobile, 6 cols on desktop */}
-      <div className="grid grid-cols-3 lg:grid-cols-6 gap-2 lg:gap-3 w-full max-w-full">
+      <div className="grid grid-cols-2 lg:grid-cols-6 gap-2 lg:gap-3 w-full">
         <KpiCard
           label="Contratado"
           value={formatCurrency(metrics?.totalContracted || 0)}
