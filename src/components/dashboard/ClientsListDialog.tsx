@@ -20,7 +20,7 @@ import {
   Clock, 
   MessageCircle,
   BookHeart,
-  Users
+  UserRound
 } from "lucide-react";
 import { calculateCurrentPregnancyWeeks, calculateCurrentPregnancyDays, isPostTerm } from "@/lib/pregnancy";
 import { abbreviateName, formatBrazilDate } from "@/lib/utils";
@@ -100,7 +100,7 @@ export function ClientsListDialog({
     : status === "lactante"
       ? "Lista de todas as mães no período de puerpério"
       : "Lista de todas as clientes com status 'Outro'";
-  const Icon = status === "gestante" ? Baby : status === "lactante" ? Heart : Users;
+  const Icon = status === "gestante" ? Baby : status === "lactante" ? Heart : UserRound;
 
   const formatDate = (dateStr: string | null) => {
     if (!dateStr) return "—";
@@ -308,7 +308,7 @@ export function ClientsListDialog({
           ) : (
             <div className="text-center py-8 text-muted-foreground">
               <Icon className="h-12 w-12 mx-auto mb-3 opacity-30" />
-              <p>Nenhuma {status === "gestante" ? "gestante" : "puérpera"} encontrada</p>
+              <p>Nenhuma {status === "gestante" ? "gestante" : status === "lactante" ? "puérpera" : "cliente"} encontrada</p>
             </div>
           )}
         </ScrollArea>

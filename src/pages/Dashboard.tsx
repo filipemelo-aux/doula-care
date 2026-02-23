@@ -11,7 +11,7 @@ import { UpcomingAppointments } from "@/components/dashboard/UpcomingAppointment
 import { PeriodFilter, PeriodOption } from "@/components/dashboard/PeriodFilter";
 import { ClientsListDialog } from "@/components/dashboard/ClientsListDialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Users, Baby, Heart, Wallet, TrendingUp, BarChart3, UserPlus } from "lucide-react";
+import { Users, Baby, Heart, Wallet, TrendingUp, BarChart3, UserRound } from "lucide-react";
 import { AdminWelcomeDialog } from "@/components/dashboard/AdminWelcomeDialog";
 
 export default function Dashboard() {
@@ -97,7 +97,7 @@ export default function Dashboard() {
           title="Outros"
           value={metrics?.outros || 0}
           subtitle="Outras clientes"
-          icon={UserPlus}
+          icon={UserRound}
           onClick={() => setOutrosDialogOpen(true)}
         />
       </div>
