@@ -92,6 +92,13 @@ function generateThemeVariables(primary: string, secondary: string) {
 
     // Gradients
     "--gradient-primary": `linear-gradient(135deg, hsl(${p.h} ${p.s}% ${p.l}%), hsl(${p.h} ${Math.max(p.s - 3, 0)}% ${Math.max(p.l - 6, 20)}%))`,
+    "--gradient-soft": `linear-gradient(135deg, hsl(${s.h} ${s.s}% 92%), hsl(${s.h} ${s.s}% 95%))`,
+    "--gradient-card": `linear-gradient(180deg, hsl(${s.h} ${Math.max(s.s - 2, 0)}% 98%), hsl(${s.h} ${Math.max(s.s - 5, 0)}% 94%))`,
+
+    // Shadows derived from primary hue
+    "--shadow-soft": `0 2px 8px -2px hsl(${p.h} 40% 18% / 0.08)`,
+    "--shadow-medium": `0 4px 16px -4px hsl(${p.h} 40% 18% / 0.12)`,
+    "--shadow-card": `0 1px 3px hsl(${p.h} 40% 18% / 0.06), 0 4px 12px hsl(${p.h} 40% 18% / 0.04)`,
   };
 }
 
