@@ -70,6 +70,8 @@ export function BrandingSettingsCard() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["org-branding"] });
+      // Apply theme immediately after saving
+      applyThemeToDOM(primaryColor, secondaryColor);
       setPreviewing(false);
       toast.success("Identidade visual salva com sucesso!");
     },
