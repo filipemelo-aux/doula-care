@@ -117,3 +117,22 @@ export function parseHeight(value: string): number | null {
   const num = parseFloat(value);
   return isNaN(num) ? null : num;
 }
+
+// Mask for Brazilian currency (R$ 1.234,56)
+export function maskCurrency(value: string): string {
+  const digits = value.replace(/\D/g, "");
+  if (!digits) return "";
+  const cents = parseInt(digits, 10);
+  const formatted = (cents / 100).toLocaleString("pt-BR", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+  return `R$ ${formatted}`;
+}
+
+// Parse masked currency to number
+export function parseCurrency(value: string): number {
+  const digits = value.replace(/\D/g, "");
+  if (!digits) return 0;
+  return parseInt(digits, 10) / 100;
+}
