@@ -29,7 +29,6 @@ Deno.serve(async (req) => {
       auth: { autoRefreshToken: false, persistSession: false },
     });
 
-    // Verify caller is authenticated admin/moderator
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
       return new Response(
@@ -63,18 +62,20 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Validate caller's organization is active
+    // Get caller's organization
     const { data: callerProfile } = await supabase
       .from("profiles")
       .select("organization_id")
       .eq("user_id", callingUser.id)
       .single();
 
-    if (callerProfile?.organization_id) {
+    const callerOrgId = callerProfile?.organization_id;
+
+    if (callerOrgId) {
       const { data: org } = await supabase
         .from("organizations")
         .select("status")
-        .eq("id", callerProfile.organization_id)
+        .eq("id", callerOrgId)
         .single();
 
       if (org?.status === "suspenso") {
@@ -93,11 +94,20 @@ Deno.serve(async (req) => {
 
     const { data: client, error: clientError } = await supabase
       .from("clients")
-      .select("id, full_name, dpp, user_id")
+      .select("id, full_name, dpp, user_id, organization_id")
       .eq("id", clientId)
       .single();
 
     if (clientError || !client) throw new Error("Cliente não encontrado");
+
+    // ORG ISOLATION CHECK
+    if (callerOrgId && client.organization_id !== callerOrgId) {
+      return new Response(
+        JSON.stringify({ error: "Cliente não pertence à sua organização" }),
+        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     if (!client.user_id) throw new Error("Cliente não possui acesso ao sistema");
     if (!client.dpp) throw new Error("Cliente não possui DPP cadastrada");
 

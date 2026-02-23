@@ -39,7 +39,6 @@ Deno.serve(async (req) => {
       auth: { autoRefreshToken: false, persistSession: false },
     });
 
-    // Verify caller is authenticated admin/moderator
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
       return new Response(
@@ -73,18 +72,20 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Validate caller's organization is active
+    // Get caller's organization
     const { data: callerProfile } = await supabase
       .from("profiles")
       .select("organization_id")
       .eq("user_id", callingUser.id)
       .single();
 
-    if (callerProfile?.organization_id) {
+    const callerOrgId = callerProfile?.organization_id;
+
+    if (callerOrgId) {
       const { data: org } = await supabase
         .from("organizations")
         .select("status")
-        .eq("id", callerProfile.organization_id)
+        .eq("id", callerOrgId)
         .single();
 
       if (org?.status === "suspenso") {
@@ -101,25 +102,35 @@ Deno.serve(async (req) => {
       throw new Error("Missing required fields: clientId, fullName, dpp");
     }
 
+    // ORG ISOLATION: Verify client belongs to caller's org
+    const { data: clientCheck } = await supabase
+      .from("clients")
+      .select("organization_id, user_id")
+      .eq("id", clientId)
+      .single();
+
+    if (callerOrgId && clientCheck?.organization_id !== callerOrgId) {
+      return new Response(
+        JSON.stringify({ error: "Cliente não pertence à sua organização" }),
+        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    if (clientCheck?.user_id) {
+      const username = generateUsername(fullName);
+      const email = `${username}@gestante.doula.app`;
+      return new Response(
+        JSON.stringify({ message: "Usuário já existe para esta cliente", exists: true, email }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
+      );
+    }
+
     const username = generateUsername(fullName);
     const email = `${username}@gestante.doula.app`;
     const password = generatePassword(dpp);
 
     if (password.length < 4) {
       throw new Error("DPP inválido para gerar senha");
-    }
-
-    const { data: existingClient } = await supabase
-      .from("clients")
-      .select("user_id")
-      .eq("id", clientId)
-      .single();
-
-    if (existingClient?.user_id) {
-      return new Response(
-        JSON.stringify({ message: "Usuário já existe para esta cliente", exists: true, email }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
-      );
     }
 
     const { data: userData, error: createError } = await supabase.auth.admin.createUser({
@@ -140,9 +151,10 @@ Deno.serve(async (req) => {
         if (altUserData.user) {
           await supabase.from("clients").update({ user_id: altUserData.user.id, first_login: true }).eq("id", clientId);
           await supabase.from("user_roles").insert({ user_id: altUserData.user.id, role: "client" });
-          // Set organization_id on the user's profile
-          if (organizationId) {
-            await supabase.from("profiles").update({ organization_id: organizationId }).eq("user_id", altUserData.user.id);
+          // Use caller's org, not client-provided one
+          const effectiveOrgId = callerOrgId || organizationId;
+          if (effectiveOrgId) {
+            await supabase.from("profiles").update({ organization_id: effectiveOrgId }).eq("user_id", altUserData.user.id);
           }
 
           return new Response(
@@ -157,9 +169,10 @@ Deno.serve(async (req) => {
     if (userData.user) {
       await supabase.from("clients").update({ user_id: userData.user.id, first_login: true }).eq("id", clientId);
       await supabase.from("user_roles").insert({ user_id: userData.user.id, role: "client" });
-      // Set organization_id on the user's profile
-      if (organizationId) {
-        await supabase.from("profiles").update({ organization_id: organizationId }).eq("user_id", userData.user.id);
+      // Use caller's org, not client-provided one
+      const effectiveOrgId = callerOrgId || organizationId;
+      if (effectiveOrgId) {
+        await supabase.from("profiles").update({ organization_id: effectiveOrgId }).eq("user_id", userData.user.id);
       }
     }
 
