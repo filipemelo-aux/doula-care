@@ -211,19 +211,34 @@ export function ColorPickerGradient({ value, onChange, label }: ColorPickerGradi
             />
           </div>
 
-          {/* Preview + hex */}
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-2">
+          {/* Preview + hex input */}
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 flex-1 min-w-0">
               <div
-                className="w-8 h-8 rounded-lg border border-border"
+                className="w-8 h-8 rounded-lg border border-border shrink-0"
                 style={{ backgroundColor: value }}
               />
-              <span className="text-xs font-mono text-muted-foreground uppercase">{value}</span>
+              <input
+                type="text"
+                value={value}
+                onChange={(e) => {
+                  let v = e.target.value;
+                  if (!v.startsWith("#")) v = "#" + v;
+                  if (/^#[0-9a-fA-F]{0,6}$/.test(v)) {
+                    if (v.length === 7) {
+                      onChange(v);
+                    }
+                  }
+                }}
+                maxLength={7}
+                className="w-[5.5rem] text-xs font-mono uppercase bg-muted/50 border border-border rounded-lg px-2 py-1.5 text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                placeholder="#000000"
+              />
             </div>
             <button
               type="button"
               onClick={() => setIsOpen(false)}
-              className="text-xs font-medium text-primary hover:underline"
+              className="text-xs font-medium text-primary hover:underline shrink-0"
             >
               Fechar
             </button>
