@@ -15,6 +15,7 @@ import Reports from "./pages/Reports";
 import Settings from "./pages/Settings";
 import Agenda from "./pages/Agenda";
 import NotFound from "./pages/NotFound";
+import Register from "./pages/Register";
 import InstallAppBanner from "./components/pwa/InstallAppBanner";
 import UpdatePrompt from "./components/pwa/UpdatePrompt";
 import { NotificationListenerProvider } from "./components/notifications/NotificationListenerProvider";
@@ -42,6 +43,7 @@ const App = () => (
           <Routes>
             {/* Single login page */}
             <Route path="/login" element={<Login />} />
+            <Route path="/cadastro" element={<Register />} />
             {/* Legacy routes redirect to unified login */}
             <Route path="/" element={<Navigate to="/login" replace />} />
             <Route path="/admin/login" element={<Navigate to="/login" replace />} />

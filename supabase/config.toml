@@ -23,3 +23,6 @@ verify_jwt = false
 
 [functions.check-appointment-reminders]
 verify_jwt = false
+
+[functions.register-doula]
+verify_jwt = false

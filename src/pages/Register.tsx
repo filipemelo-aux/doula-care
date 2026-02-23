@@ -1,87 +1,75 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import logo from "@/assets/logo.png";
 import { useNavigate, Link } from "react-router-dom";
-import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Heart, Loader2, Eye, EyeOff } from "lucide-react";
+import { Loader2, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
-export default function Login() {
+export default function Register() {
+  const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const navigate = useNavigate();
-  const { signIn, user, role, roleChecked, loading, isAdmin, isClient, isSuperAdmin, isFirstLogin } = useAuth();
-
-  useEffect(() => {
-    if (!loading && user && roleChecked && role) {
-      if (role === "super_admin") {
-        navigate("/super-admin", { replace: true });
-      } else if (role === "admin" || role === "moderator") {
-        navigate("/admin", { replace: true });
-      } else if (role === "client") {
-        if (isFirstLogin) {
-          navigate("/gestante/alterar-senha", { replace: true });
-        } else {
-          navigate("/gestante", { replace: true });
-        }
-      }
-    }
-  }, [loading, user, role, roleChecked, isFirstLogin, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
 
-    if (!email || !password) {
+    if (!fullName.trim() || !email.trim() || !password) {
       toast.error("Preencha todos os campos");
       setSubmitting(false);
       return;
     }
 
-    const { error } = await signIn(email.trim(), password);
-
-    if (error) {
-      toast.error("Erro ao fazer login", {
-        description: "Credenciais incorretas. Verifique e tente novamente.",
-      });
+    if (password.length < 6) {
+      toast.error("A senha deve ter pelo menos 6 caracteres");
       setSubmitting(false);
       return;
     }
 
-    toast.success("Login realizado com sucesso!");
+    if (password !== confirmPassword) {
+      toast.error("As senhas não coincidem");
+      setSubmitting(false);
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase.functions.invoke("register-doula", {
+        body: {
+          fullName: fullName.trim(),
+          email: email.trim().toLowerCase(),
+          password,
+        },
+      });
+
+      if (error) {
+        toast.error("Erro ao criar conta", { description: error.message });
+        setSubmitting(false);
+        return;
+      }
+
+      if (data?.error) {
+        toast.error("Erro ao criar conta", { description: data.error });
+        setSubmitting(false);
+        return;
+      }
+
+      toast.success("Conta criada com sucesso!", {
+        description: "Faça login para acessar seu painel.",
+      });
+      navigate("/login");
+    } catch (err) {
+      toast.error("Erro inesperado ao criar conta");
+      setSubmitting(false);
+    }
   };
-
-  if (loading && !submitting) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
-
-  if (submitting && user && !roleChecked) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="flex flex-col items-center gap-4">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <p className="text-muted-foreground">Verificando permissões...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (user && roleChecked && role) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-primary/5 p-4">
@@ -93,21 +81,32 @@ export default function Login() {
             </div>
             <CardTitle className="text-2xl font-display font-bold tracking-wide">Papo de Doula</CardTitle>
           </div>
-          <CardDescription>Entre com seu email e senha</CardDescription>
+          <CardDescription>Crie sua conta profissional</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Usuário</Label>
+              <Label htmlFor="fullName">Nome completo</Label>
+              <Input
+                id="fullName"
+                type="text"
+                placeholder="Seu nome completo"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                required
+                className="input-field"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="email">Email profissional</Label>
               <Input
                 id="email"
-                type="text"
-                placeholder="Digite seu usuário"
+                type="email"
+                placeholder="seu@email.com"
                 value={email}
-                onChange={(e) => setEmail(e.target.value.toLowerCase())}
+                onChange={(e) => setEmail(e.target.value)}
                 required
                 autoComplete="email"
-                autoCapitalize="off"
                 className="input-field lowercase"
                 style={{ textTransform: "lowercase" }}
               />
@@ -118,11 +117,11 @@ export default function Login() {
                 <Input
                   id="password"
                   type={showPassword ? "text" : "password"}
-                  placeholder="••••••••"
+                  placeholder="Mínimo 6 caracteres"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  autoComplete="current-password"
+                  minLength={6}
                   className="input-field pr-10"
                 />
                 <Button
@@ -140,21 +139,34 @@ export default function Login() {
                 </Button>
               </div>
             </div>
+            <div className="space-y-2">
+              <Label htmlFor="confirmPassword">Confirmar senha</Label>
+              <Input
+                id="confirmPassword"
+                type={showPassword ? "text" : "password"}
+                placeholder="Repita a senha"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                required
+                minLength={6}
+                className="input-field pr-10"
+              />
+            </div>
             <Button type="submit" className="w-full" disabled={submitting}>
               {submitting ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Entrando...
+                  Criando conta...
                 </>
               ) : (
-                "Entrar"
+                "Criar conta"
               )}
             </Button>
           </form>
           <div className="mt-4 text-center text-sm text-muted-foreground">
-            É doula?{" "}
-            <Link to="/cadastro" className="text-primary hover:underline font-medium">
-              Crie sua conta
+            Já tem uma conta?{" "}
+            <Link to="/login" className="text-primary hover:underline font-medium">
+              Fazer login
             </Link>
           </div>
         </CardContent>
