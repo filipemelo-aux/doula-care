@@ -71,7 +71,7 @@ export default function Dashboard() {
       </div>
 
       {/* Stats Grid - Row 1: Clients */}
-      <div className={`grid grid-cols-2 ${(metrics?.outros || 0) > 0 ? 'lg:grid-cols-5' : 'lg:grid-cols-4'} gap-3 lg:gap-4`}>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
         <StatCard
           title="Total de Clientes"
           value={metrics?.totalClients || 0}
