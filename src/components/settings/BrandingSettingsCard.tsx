@@ -6,10 +6,23 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2, Palette, Upload, X, Eye, RotateCcw, Heart, Baby } from "lucide-react";
+import { Loader2, Palette, Upload, X, Eye, RotateCcw, Heart, Baby, Check } from "lucide-react";
 import { toast } from "sonner";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { applyThemeToDOM, clearCustomTheme, DEFAULT_PRIMARY, DEFAULT_SECONDARY, hexToHSL } from "@/hooks/useOrgBranding";
+import { cn } from "@/lib/utils";
+
+// Curated color palettes
+const COLOR_PALETTES = [
+  { name: "Terracota", primary: "#c34a1c", secondary: "#ebe2dc" },
+  { name: "Rosa Suave", primary: "#d4577b", secondary: "#f5e6ec" },
+  { name: "Lavanda", primary: "#7c5cbf", secondary: "#eee8f5" },
+  { name: "Azul Sereno", primary: "#3b82c4", secondary: "#e4eef8" },
+  { name: "Verde Menta", primary: "#2a9d6e", secondary: "#e2f3ec" },
+  { name: "Dourado", primary: "#b8860b", secondary: "#f5eeda" },
+  { name: "Coral", primary: "#e06050", secondary: "#fce8e5" },
+  { name: "Berinjela", primary: "#6b3a6b", secondary: "#f0e4f0" },
+];
 
 export function BrandingSettingsCard() {
   const { organizationId } = useAuth();
@@ -70,7 +83,6 @@ export function BrandingSettingsCard() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["org-branding"] });
-      // Apply theme immediately after saving
       applyThemeToDOM(primaryColor, secondaryColor);
       setPreviewing(false);
       toast.success("Identidade visual salva com sucesso!");
@@ -142,6 +154,17 @@ export function BrandingSettingsCard() {
     setPreviewing(false);
   };
 
+  const handleSelectPalette = (palette: typeof COLOR_PALETTES[0]) => {
+    setPrimaryColor(palette.primary);
+    setSecondaryColor(palette.secondary);
+    applyThemeToDOM(palette.primary, palette.secondary);
+    setPreviewing(true);
+  };
+
+  const isSelectedPalette = (palette: typeof COLOR_PALETTES[0]) =>
+    primaryColor.toLowerCase() === palette.primary.toLowerCase() &&
+    secondaryColor.toLowerCase() === palette.secondary.toLowerCase();
+
   if (isLoading) {
     return (
       <Card className="card-glass">
@@ -153,7 +176,6 @@ export function BrandingSettingsCard() {
   }
 
   const pHsl = hexToHSL(primaryColor);
-  const sHsl = hexToHSL(secondaryColor);
 
   return (
     <div className="space-y-6">
@@ -184,56 +206,73 @@ export function BrandingSettingsCard() {
             </p>
           </div>
 
-          {/* Colors */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>Cor Primária</Label>
-              <div className="flex items-center gap-3">
-                <div className="relative">
-                  <input
-                    type="color"
-                    value={primaryColor}
-                    onChange={(e) => setPrimaryColor(e.target.value)}
-                    className="w-12 h-12 rounded-lg border-2 border-border cursor-pointer appearance-none bg-transparent [&::-webkit-color-swatch-wrapper]:p-0 [&::-webkit-color-swatch]:rounded-md [&::-webkit-color-swatch]:border-none"
-                  />
-                </div>
-                <div className="flex-1">
-                  <Input
-                    value={primaryColor}
-                    onChange={(e) => setPrimaryColor(e.target.value)}
-                    placeholder="#c34a1c"
-                    className="input-field font-mono text-sm"
-                  />
-                  <p className="text-[10px] text-muted-foreground mt-0.5">
-                    HSL: {pHsl.h}° {pHsl.s}% {pHsl.l}%
-                  </p>
-                </div>
-              </div>
+          {/* Palette Selection */}
+          <div className="space-y-3">
+            <Label>Escolha uma paleta de cores</Label>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              {COLOR_PALETTES.map((palette) => {
+                const selected = isSelectedPalette(palette);
+                return (
+                  <button
+                    key={palette.name}
+                    onClick={() => handleSelectPalette(palette)}
+                    className={cn(
+                      "relative flex flex-col items-center gap-1.5 rounded-xl p-3 border-2 transition-all hover:scale-[1.03] active:scale-[0.97]",
+                      selected
+                        ? "border-foreground shadow-md"
+                        : "border-transparent bg-muted/40 hover:bg-muted/70"
+                    )}
+                  >
+                    <div className="flex gap-1">
+                      <div
+                        className="w-8 h-8 rounded-full border border-black/10 shadow-sm"
+                        style={{ background: palette.primary }}
+                      />
+                      <div
+                        className="w-8 h-8 rounded-full border border-black/10 shadow-sm"
+                        style={{ background: palette.secondary }}
+                      />
+                    </div>
+                    <span className="text-[11px] font-medium text-foreground/80">{palette.name}</span>
+                    {selected && (
+                      <div className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-foreground flex items-center justify-center">
+                        <Check className="w-3 h-3 text-background" />
+                      </div>
+                    )}
+                  </button>
+                );
+              })}
             </div>
+          </div>
 
-            <div className="space-y-2">
-              <Label>Cor Secundária</Label>
-              <div className="flex items-center gap-3">
-                <div className="relative">
-                  <input
-                    type="color"
-                    value={secondaryColor}
-                    onChange={(e) => setSecondaryColor(e.target.value)}
-                    className="w-12 h-12 rounded-lg border-2 border-border cursor-pointer appearance-none bg-transparent [&::-webkit-color-swatch-wrapper]:p-0 [&::-webkit-color-swatch]:rounded-md [&::-webkit-color-swatch]:border-none"
-                  />
-                </div>
-                <div className="flex-1">
-                  <Input
-                    value={secondaryColor}
-                    onChange={(e) => setSecondaryColor(e.target.value)}
-                    placeholder="#ebe2dc"
-                    className="input-field font-mono text-sm"
-                  />
-                  <p className="text-[10px] text-muted-foreground mt-0.5">
-                    HSL: {sHsl.h}° {sHsl.s}% {sHsl.l}%
-                  </p>
-                </div>
+          {/* Custom color - compact */}
+          <div className="space-y-2">
+            <Label className="text-xs text-muted-foreground">Ou escolha cores personalizadas</Label>
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 flex-1">
+                <input
+                  type="color"
+                  value={primaryColor}
+                  onChange={(e) => { setPrimaryColor(e.target.value); setPreviewing(false); }}
+                  className="w-9 h-9 rounded-lg border border-border cursor-pointer appearance-none bg-transparent [&::-webkit-color-swatch-wrapper]:p-0.5 [&::-webkit-color-swatch]:rounded-md [&::-webkit-color-swatch]:border-none"
+                  title="Cor primária"
+                />
+                <span className="text-xs text-muted-foreground">Primária</span>
               </div>
+              <div className="flex items-center gap-2 flex-1">
+                <input
+                  type="color"
+                  value={secondaryColor}
+                  onChange={(e) => { setSecondaryColor(e.target.value); setPreviewing(false); }}
+                  className="w-9 h-9 rounded-lg border border-border cursor-pointer appearance-none bg-transparent [&::-webkit-color-swatch-wrapper]:p-0.5 [&::-webkit-color-swatch]:rounded-md [&::-webkit-color-swatch]:border-none"
+                  title="Cor secundária"
+                />
+                <span className="text-xs text-muted-foreground">Secundária</span>
+              </div>
+              <Button variant="outline" size="sm" onClick={handlePreview} className="gap-1.5 shrink-0">
+                <Eye className="h-3.5 w-3.5" />
+                Visualizar
+              </Button>
             </div>
           </div>
 
@@ -280,22 +319,8 @@ export function BrandingSettingsCard() {
 
           {/* Actions */}
           <div className="flex flex-wrap gap-2 pt-4 border-t">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handlePreview}
-              className="gap-2"
-            >
-              <Eye className="h-4 w-4" />
-              Pré-visualizar
-            </Button>
             {previewing && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleResetPreview}
-                className="gap-2"
-              >
+              <Button variant="ghost" size="sm" onClick={handleResetPreview} className="gap-2">
                 <RotateCcw className="h-4 w-4" />
                 Desfazer preview
               </Button>
