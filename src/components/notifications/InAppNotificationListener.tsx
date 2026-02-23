@@ -87,6 +87,52 @@ export function InAppNotificationListener({ userId, role, clientId, organization
         supabase.removeChannel(contractionChannelRef.current);
       }
     };
+  }, [userId, role, organizationId]);
+
+  // Listen for client_notifications inserts (admin — new messages from clients)
+  useEffect(() => {
+    if (role !== "admin") return;
+
+    const channel = supabase
+      .channel(`admin-client-notifications-${userId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "client_notifications",
+        },
+        async (payload) => {
+          const notification = payload.new as {
+            title: string;
+            message: string;
+            client_id: string;
+            id: string;
+          };
+
+          // Only show notifications that are messages from clients (not system-generated ones for clients)
+          const isClientMessage = notification.title?.startsWith("Mensagem de ");
+          if (!isClientMessage) return;
+
+          toast(notification.title, {
+            description: notification.message?.substring(0, 100),
+            duration: 10000,
+            icon: <Bell className="h-5 w-5 text-primary" />,
+            className: "border-2 border-primary/30 shadow-lg",
+            action: {
+              label: "Ver",
+              onClick: () => {
+                window.location.href = "/admin";
+              },
+            },
+          });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [userId, role]);
 
   // Listen for client_notifications inserts (client only — admins use NotificationsCenter)
