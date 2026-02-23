@@ -688,16 +688,16 @@ export default function Financial() {
                     : transaction.description;
 
                   return (
-                    <Card key={transaction.id} className="px-1.5 py-1 space-y-0.5 w-full box-border min-w-0 overflow-hidden">
+                    <Card key={transaction.id} className="px-2 py-1.5 space-y-1 w-full box-border min-w-0 overflow-hidden">
                       {/* Header: Description + Actions */}
-                      <div className="flex items-center justify-between gap-0">
+                      <div className="flex items-center gap-1 min-w-0">
                         <div className="flex items-center gap-0.5 min-w-0 flex-1">
                           {transaction.is_auto_generated && (
                             <Zap className="w-3 h-3 text-warning flex-shrink-0" />
                           )}
                           <p className="font-medium text-sm truncate min-w-0">{compactDesc}</p>
                         </div>
-                        <div className="flex items-center gap-0 flex-shrink-0">
+                        <div className="flex items-center flex-shrink-0">
                           <Button
                             variant="ghost"
                             size="icon"
@@ -711,7 +711,7 @@ export default function Financial() {
                             variant="ghost"
                             size="icon"
                             onClick={() => handleDelete(transaction.id)}
-                            className="h-6 w-6 text-destructive flex-shrink-0"
+                            className="h-6 w-6 text-destructive"
                           >
                             <Trash2 className="h-3 w-3" />
                           </Button>
@@ -719,11 +719,11 @@ export default function Financial() {
                       </div>
 
                       {/* Info: Client + Date */}
-                      <div className="flex items-center gap-1 min-w-0 w-full">
-                        <span className="text-xs text-muted-foreground truncate min-w-0 flex-1" title={transaction.clients?.full_name || "—"}>
+                      <div className="flex items-center gap-1 min-w-0">
+                        <span className="text-xs text-muted-foreground truncate min-w-0 flex-1">
                           {transaction.clients?.full_name ? abbreviateName(transaction.clients.full_name) : "—"}
                         </span>
-                        <span className="text-xs text-muted-foreground flex-shrink-0">• {formatBrazilDate(transaction.date, "dd/MM/yy")}</span>
+                        <span className="text-xs text-muted-foreground flex-shrink-0">{formatBrazilDate(transaction.date, "dd/MM/yy")}</span>
                       </div>
 
                       {/* Values: flex layout */}
