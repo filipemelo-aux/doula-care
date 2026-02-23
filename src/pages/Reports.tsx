@@ -332,21 +332,21 @@ export default function Reports() {
 
       {/* Tabs */}
       <Tabs defaultValue="financeiro" onValueChange={(v) => setActiveTab(v as ReportTab)} className="space-y-4">
-        <TabsList className="grid w-full grid-cols-4 h-9">
-          <TabsTrigger value="financeiro" className="text-xs gap-1.5 px-1 lg:px-3 h-7">
-            <DollarSign className="w-4 h-4 flex-shrink-0" />
+        <TabsList className="flex w-full h-9 p-1">
+          <TabsTrigger value="financeiro" className="flex-1 min-w-0 text-xs gap-1 px-0 lg:px-3 h-7">
+            <DollarSign className="w-3.5 h-3.5 flex-shrink-0" />
             <span className="hidden lg:inline">Financeiro</span>
           </TabsTrigger>
-          <TabsTrigger value="clientes" className="text-xs gap-1.5 px-1 lg:px-3 h-7">
-            <Users className="w-4 h-4 flex-shrink-0" />
+          <TabsTrigger value="clientes" className="flex-1 min-w-0 text-xs gap-1 px-0 lg:px-3 h-7">
+            <Users className="w-3.5 h-3.5 flex-shrink-0" />
             <span className="hidden lg:inline">Clientes</span>
           </TabsTrigger>
-          <TabsTrigger value="receitas" className="text-xs gap-1.5 px-1 lg:px-3 h-7">
-            <CreditCard className="w-4 h-4 flex-shrink-0" />
+          <TabsTrigger value="receitas" className="flex-1 min-w-0 text-xs gap-1 px-0 lg:px-3 h-7">
+            <CreditCard className="w-3.5 h-3.5 flex-shrink-0" />
             <span className="hidden lg:inline">Receitas</span>
           </TabsTrigger>
-          <TabsTrigger value="despesas" className="text-xs gap-1.5 px-1 lg:px-3 h-7">
-            <FileText className="w-4 h-4 flex-shrink-0" />
+          <TabsTrigger value="despesas" className="flex-1 min-w-0 text-xs gap-1 px-0 lg:px-3 h-7">
+            <FileText className="w-3.5 h-3.5 flex-shrink-0" />
             <span className="hidden lg:inline">Despesas</span>
           </TabsTrigger>
         </TabsList>
