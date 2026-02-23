@@ -259,19 +259,20 @@ export default function Reports() {
   return (
     <div className="space-y-4 lg:space-y-6 w-full max-w-full overflow-hidden">
       {/* Header */}
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-2">
         <div className="flex items-center justify-between gap-2">
           <div className="min-w-0">
             <h1 className="text-xl lg:text-3xl font-semibold text-foreground">Relatórios</h1>
             <p className="text-xs lg:text-sm text-muted-foreground">Desempenho do seu negócio</p>
           </div>
-          <div className="flex items-center gap-2 flex-shrink-0">
+          {/* Desktop: filters inline */}
+          <div className="hidden lg:flex items-center gap-2 flex-shrink-0">
             <PeriodFilter selected={period} onChange={setPeriod} />
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" size="sm" className="gap-1.5" disabled={exporting}>
                   {exporting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
-                  <span className="hidden sm:inline">Exportar</span>
+                  Exportar
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
@@ -287,6 +288,28 @@ export default function Reports() {
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
+        </div>
+        {/* Mobile: filters on second line */}
+        <div className="flex lg:hidden items-center gap-2">
+          <PeriodFilter selected={period} onChange={setPeriod} />
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" className="gap-1.5 flex-shrink-0" disabled={exporting}>
+                {exporting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => handleExport("csv")}>
+                <FileText className="w-4 h-4 mr-2" /> CSV
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleExport("pdf")}>
+                <FileText className="w-4 h-4 mr-2" /> PDF
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleExport("xlsx")}>
+                <FileText className="w-4 h-4 mr-2" /> Excel
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 
