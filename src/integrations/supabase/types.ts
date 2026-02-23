@@ -868,7 +868,7 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "moderator" | "user" | "client" | "super_admin"
-      client_status: "tentante" | "gestante" | "lactante"
+      client_status: "tentante" | "gestante" | "lactante" | "outro"
       expense_category:
         | "social_media"
         | "filmmaker"
@@ -1021,7 +1021,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "moderator", "user", "client", "super_admin"],
-      client_status: ["tentante", "gestante", "lactante"],
+      client_status: ["tentante", "gestante", "lactante", "outro"],
       expense_category: [
         "social_media",
         "filmmaker",

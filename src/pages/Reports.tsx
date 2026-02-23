@@ -131,17 +131,18 @@ export default function Reports() {
     queryKey: ["client-stats-report"],
     queryFn: async () => {
       const { data } = await supabase.from("clients").select("status, plan");
-      const statusCounts = { tentante: 0, gestante: 0, lactante: 0 };
+      const statusCounts = { gestante: 0, lactante: 0, outro: 0 };
       const planCounts = { basico: 0, intermediario: 0, completo: 0 };
       data?.forEach((c) => {
-        if (c.status) statusCounts[c.status as keyof typeof statusCounts]++;
+        if (c.status && c.status in statusCounts) statusCounts[c.status as keyof typeof statusCounts]++;
+        else if (c.status === "tentante") statusCounts.outro++; // legacy mapping
         if (c.plan) planCounts[c.plan as keyof typeof planCounts]++;
       });
       return {
         byStatus: [
-          { name: "Tentantes", value: statusCounts.tentante, color: "hsl(199 89% 48%)" },
           { name: "Gestantes", value: statusCounts.gestante, color: "hsl(16 75% 44%)" },
-          { name: "Lactantes", value: statusCounts.lactante, color: "hsl(142 71% 45%)" },
+          { name: "Puérperas", value: statusCounts.lactante, color: "hsl(142 71% 45%)" },
+          { name: "Outros", value: statusCounts.outro, color: "hsl(199 89% 48%)" },
         ].filter((i) => i.value > 0),
         byPlan: [
           { name: "Básico", value: planCounts.basico, color: "hsl(199 89% 48%)" },

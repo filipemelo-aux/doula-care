@@ -38,6 +38,7 @@ const statusLabels = {
   tentante: "Tentante",
   gestante: "Gestante",
   lactante: "Puérpera",
+  outro: "Outro",
 };
 
 const planLabels = {

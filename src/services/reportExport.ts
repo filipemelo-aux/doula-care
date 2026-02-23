@@ -53,6 +53,7 @@ const statusLabels: Record<string, string> = {
   tentante: "Tentante",
   gestante: "Gestante",
   lactante: "Lactante",
+  outro: "Outro",
 };
 
 const planLabels: Record<string, string> = {

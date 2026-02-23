@@ -9,7 +9,7 @@ interface ClientData {
   id: string;
   full_name: string;
   first_login: boolean;
-  status: "tentante" | "gestante" | "lactante";
+  status: "tentante" | "gestante" | "lactante" | "outro";
   birth_occurred: boolean;
 }
 

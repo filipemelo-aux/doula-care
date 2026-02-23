@@ -21,6 +21,7 @@ export interface FinancialMetrics {
   totalClients: number;
   gestantes: number;
   puerperas: number;
+  outros: number;
 
   // Breakdowns
   incomeByMethod: Record<string, number>;
@@ -59,6 +60,7 @@ export function useFinancialMetrics(period?: PeriodOption) {
       const totalClients = clients.length;
       const gestantes = clients.filter((c) => c.status === "gestante").length;
       const puerperas = clients.filter((c) => c.status === "lactante").length;
+      const outros = clients.filter((c) => c.status === "outro" || c.status === "tentante").length;
 
       // Total contracted value from clients
       const totalContracted = clients.reduce((sum, c) => sum + Number(c.plan_value || 0), 0);
@@ -122,6 +124,7 @@ export function useFinancialMetrics(period?: PeriodOption) {
         totalClients,
         gestantes,
         puerperas,
+        outros,
         incomeByMethod,
         expensesByCategory,
         transactionCount: periodTransactions.length,

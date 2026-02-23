@@ -187,6 +187,10 @@
     @apply bg-info/15 text-info;
   }
 
+  .badge-outro {
+    @apply bg-muted text-muted-foreground;
+  }
+
   .badge-gestante {
     @apply bg-primary/15 text-primary;
   }
