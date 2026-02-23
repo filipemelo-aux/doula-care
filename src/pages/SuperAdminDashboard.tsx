@@ -178,13 +178,14 @@ export default function SuperAdminDashboard() {
           </Card>
           <Card>
             <CardContent className="pt-6">
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 mb-3">
                 <BarChart3 className="h-8 w-8 text-primary" />
-                <div>
-                  <p className="text-sm text-muted-foreground">
-                    Free: {planCounts.free} · Pro: {planCounts.pro} · Premium: {planCounts.premium}
-                  </p>
-                </div>
+                <p className="text-sm font-medium text-muted-foreground">Planos</p>
+              </div>
+              <div className="space-y-1 text-sm">
+                <div className="flex justify-between"><span className="text-muted-foreground">Free</span><span className="font-semibold">{planCounts.free}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">Pro</span><span className="font-semibold">{planCounts.pro}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">Premium</span><span className="font-semibold">{planCounts.premium}</span></div>
               </div>
             </CardContent>
           </Card>
