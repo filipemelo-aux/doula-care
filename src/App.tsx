@@ -16,6 +16,7 @@ import Settings from "./pages/Settings";
 import Agenda from "./pages/Agenda";
 import NotFound from "./pages/NotFound";
 import InstallAppBanner from "./components/pwa/InstallAppBanner";
+import UpdatePrompt from "./components/pwa/UpdatePrompt";
 import { NotificationListenerProvider } from "./components/notifications/NotificationListenerProvider";
 
 // Gestante pages
@@ -36,6 +37,7 @@ const App = () => (
       <BrowserRouter>
         <AuthProvider>
           <InstallAppBanner />
+          <UpdatePrompt />
           <NotificationListenerProvider />
           <Routes>
             {/* Single login page */}
