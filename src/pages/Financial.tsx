@@ -37,6 +37,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Plus, TrendingUp, Search, Trash2, Zap, Check, X, CheckCircle, CreditCard, Banknote, Building2, QrCode, FileText, Users, Wrench, UserPlus } from "lucide-react";
+import { maskCurrency, parseCurrency, maskPhone } from "@/lib/masks";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -44,7 +45,7 @@ import { z } from "zod";
 import { toast } from "sonner";
 import { format, parseISO } from "date-fns";
 import { formatBrazilDate, abbreviateName } from "@/lib/utils";
-import { maskCurrency, parseCurrency } from "@/lib/masks";
+// maskCurrency and parseCurrency already imported above
 import { StatCard } from "@/components/dashboard/StatCard";
 import { Wallet, Calendar, Clock } from "lucide-react";
 import {
@@ -1215,7 +1216,7 @@ export default function Financial() {
                       <div className="rounded-lg border border-dashed border-primary/40 bg-primary/5 p-3 space-y-2">
                         <p className="text-xs font-medium text-primary flex items-center gap-1">
                           <UserPlus className="h-3 w-3" />
-                          Cadastro rápido
+                          Cadastro Rápido de Cliente
                         </p>
                         <Input
                           placeholder="Nome completo"
@@ -1225,10 +1226,11 @@ export default function Financial() {
                           autoFocus
                         />
                         <Input
-                          placeholder="Telefone"
+                          placeholder="(00) 00000-0000"
                           value={quickClientPhone}
-                          onChange={(e) => setQuickClientPhone(e.target.value)}
+                          onChange={(e) => setQuickClientPhone(maskPhone(e.target.value))}
                           className="input-field h-8 text-sm"
+                          maxLength={16}
                           onKeyDown={(e) => {
                             if (e.key === "Enter") {
                               e.preventDefault();
