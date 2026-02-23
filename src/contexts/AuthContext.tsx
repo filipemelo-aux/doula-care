@@ -13,6 +13,8 @@ interface ClientData {
   birth_occurred: boolean;
 }
 
+type OrgStatus = "ativo" | "suspenso";
+
 interface AuthContextType {
   user: User | null;
   session: Session | null;
@@ -26,6 +28,7 @@ interface AuthContextType {
   isFirstLogin: boolean;
   profileName: string | null;
   organizationId: string | null;
+  orgStatus: OrgStatus | null;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
   refreshClientData: () => Promise<void>;
@@ -44,6 +47,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [client, setClient] = useState<ClientData | null>(null);
   const [profileName, setProfileName] = useState<string | null>(null);
   const [organizationId, setOrganizationId] = useState<string | null>(null);
+  const [orgStatus, setOrgStatus] = useState<OrgStatus | null>(null);
 
   const fetchRole = useCallback(async (userId: string): Promise<AppRole | null> => {
     try {
@@ -93,6 +97,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setClient(null);
       setProfileName(null);
       setOrganizationId(null);
+      setOrgStatus(null);
       setRoleChecked(true);
       setLoading(false);
       return;
@@ -115,9 +120,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           .select("organization_id")
           .eq("user_id", currentSession.user.id)
           .maybeSingle();
-        setOrganizationId(profile?.organization_id || null);
+        const orgId = profile?.organization_id || null;
+        setOrganizationId(orgId);
+        // Fetch org status
+        if (orgId) {
+          const { data: org } = await supabase.from("organizations").select("status").eq("id", orgId).single();
+          setOrgStatus((org?.status as OrgStatus) || null);
+        }
       } catch {
         setOrganizationId(null);
+        setOrgStatus(null);
       }
     } else {
       setClient(null);
@@ -129,10 +141,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           .eq("user_id", currentSession.user.id)
           .maybeSingle();
         setProfileName(profile?.full_name || null);
-        setOrganizationId(profile?.organization_id || null);
+        const orgId = profile?.organization_id || null;
+        setOrganizationId(orgId);
+        // Fetch org status
+        if (orgId) {
+          const { data: org } = await supabase.from("organizations").select("status").eq("id", orgId).single();
+          setOrgStatus((org?.status as OrgStatus) || null);
+        }
       } catch {
         setProfileName(null);
         setOrganizationId(null);
+        setOrgStatus(null);
       }
     }
 
@@ -153,11 +172,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setSession(null);
           setUser(null);
           setRole(null);
-          setClient(null);
-          setProfileName(null);
-          setOrganizationId(null);
-          setRoleChecked(true);
-          setLoading(false);
+           setClient(null);
+           setProfileName(null);
+           setOrganizationId(null);
+           setOrgStatus(null);
+           setRoleChecked(true);
+           setLoading(false);
           return;
         }
 
@@ -326,6 +346,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isFirstLogin: client?.first_login ?? false,
         profileName,
         organizationId,
+        orgStatus,
         signIn,
         signOut,
         refreshClientData,
