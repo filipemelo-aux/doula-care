@@ -82,6 +82,34 @@ export function RecordPaymentDialog({
   // If no payment records exist, we work directly with the transaction
   const hasPaymentRecords = payments && payments.length > 0;
 
+  // Auto-provision payment records for transactions with installments > 1 but no payments
+  const provisionMutation = useMutation({
+    mutationFn: async () => {
+      if (!transactionId || !clientId || transactionInstallments <= 1) return;
+      const installmentValue = transactionAmount / transactionInstallments;
+      const records = Array.from({ length: transactionInstallments }, (_, i) => ({
+        client_id: clientId,
+        transaction_id: transactionId,
+        installment_number: i + 1,
+        total_installments: transactionInstallments,
+        amount: installmentValue,
+        amount_paid: 0,
+        status: "pendente",
+      }));
+      const { error } = await supabase.from("payments").insert(records);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["transaction-payments", transactionId, clientId] });
+    },
+  });
+
+  useEffect(() => {
+    if (open && payments !== undefined && !hasPaymentRecords && transactionInstallments > 1 && clientId && !provisionMutation.isPending) {
+      provisionMutation.mutate();
+    }
+  }, [open, payments, hasPaymentRecords, transactionInstallments, clientId]);
+
   useEffect(() => {
     if (open) {
       setSelectedInstallment("");
