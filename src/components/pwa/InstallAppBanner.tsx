@@ -11,7 +11,7 @@ export default function InstallAppBanner() {
 
   if (isInstallable) {
     return (
-      <div className="fixed top-0 left-0 right-0 z-50 bg-primary text-primary-foreground px-4 py-3 flex items-center justify-between gap-2 shadow-lg">
+      <div className="fixed top-0 left-0 right-0 z-[100] bg-primary text-primary-foreground px-4 py-3 flex items-center justify-between gap-2 shadow-lg">
         <div className="flex items-center gap-2 min-w-0">
           <Download className="h-5 w-5 flex-shrink-0" />
           <span className="text-sm font-medium truncate">Instale o Doula Care no seu celular!</span>
@@ -40,7 +40,7 @@ export default function InstallAppBanner() {
 
   if (isIOS) {
     return (
-      <div className="fixed top-0 left-0 right-0 z-50 bg-primary text-primary-foreground px-4 py-3 flex items-center justify-between gap-2 shadow-lg">
+      <div className="fixed top-0 left-0 right-0 z-[100] bg-primary text-primary-foreground px-4 py-3 flex items-center justify-between gap-2 shadow-lg">
         <div className="flex items-center gap-2 min-w-0">
           <Download className="h-5 w-5 flex-shrink-0" />
           <span className="text-sm truncate">

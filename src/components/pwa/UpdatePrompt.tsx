@@ -18,13 +18,10 @@ export default function UpdatePrompt() {
   useEffect(() => {
     if (!("serviceWorker" in navigator)) return;
 
-    const onControllerChange = () => {
-      // New SW took control — reload if we haven't already
-      window.location.reload();
-    };
+    let dismissed = false;
 
     const detectWaiting = (reg: ServiceWorkerRegistration) => {
-      if (reg.waiting) {
+      if (reg.waiting && navigator.serviceWorker.controller && !dismissed) {
         setWaitingWorker(reg.waiting);
         setShowUpdate(true);
       }
@@ -36,8 +33,7 @@ export default function UpdatePrompt() {
         if (!newWorker) return;
 
         newWorker.addEventListener("statechange", () => {
-          if (newWorker.state === "installed" && navigator.serviceWorker.controller) {
-            // New version installed but waiting to activate
+          if (newWorker.state === "installed" && navigator.serviceWorker.controller && !dismissed) {
             setWaitingWorker(newWorker);
             setShowUpdate(true);
           }
@@ -45,21 +41,19 @@ export default function UpdatePrompt() {
       });
     };
 
-    navigator.serviceWorker.addEventListener("controllerchange", onControllerChange);
-
     navigator.serviceWorker.getRegistration().then((reg) => {
       if (!reg) return;
       detectWaiting(reg);
       listenForUpdate(reg);
     });
 
-    // Also check periodically (every 60s) for updates
+    // Check for updates every 60s
     const interval = setInterval(() => {
       navigator.serviceWorker.getRegistration().then((reg) => reg?.update());
     }, 60_000);
 
     return () => {
-      navigator.serviceWorker.removeEventListener("controllerchange", onControllerChange);
+      dismissed = true;
       clearInterval(interval);
     };
   }, []);
