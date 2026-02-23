@@ -102,6 +102,10 @@ export default function Dashboard() {
             onClick={() => setOutrosDialogOpen(true)}
           />
         )}
+      </div>
+
+      {/* Stats Grid - Row 2: Financial */}
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 lg:gap-4">
         <StatCard
           title="Receita Contratada"
           value={formatCurrency(metrics?.totalContracted || 0)}
@@ -109,10 +113,6 @@ export default function Dashboard() {
           icon={Wallet}
           variant="success"
         />
-      </div>
-
-      {/* Stats Grid - Row 2: Business Intelligence */}
-      <div className="grid grid-cols-2 lg:grid-cols-2 gap-3 lg:gap-4">
         <StatCard
           title="Ticket Médio"
           value={formatCurrency(metrics?.averageTicket || 0)}
