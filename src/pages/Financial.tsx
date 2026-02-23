@@ -36,7 +36,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, TrendingUp, Search, Trash2, Zap, Check, X, CheckCircle, CreditCard, Banknote, Building2, QrCode, FileText, Users, Wrench, UserPlus } from "lucide-react";
+import { Plus, TrendingUp, Search, Trash2, Zap, Check, X, CheckCircle, CreditCard, Banknote, Building2, QrCode, FileText, Users, Wrench, UserPlus, DollarSign } from "lucide-react";
+import { RecordPaymentDialog } from "@/components/financial/RecordPaymentDialog";
 import { maskCurrency, parseCurrency, maskPhone } from "@/lib/masks";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useForm } from "react-hook-form";
@@ -111,8 +112,8 @@ export default function Financial() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [transactionToDelete, setTransactionToDelete] = useState<string | null>(null);
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
-  const [editingReceivedId, setEditingReceivedId] = useState<string | null>(null);
-  const [editingReceivedValue, setEditingReceivedValue] = useState<string>("");
+  const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
+  const [paymentTransaction, setPaymentTransaction] = useState<Transaction | null>(null);
   const [editingInstallmentsId, setEditingInstallmentsId] = useState<string | null>(null);
   const [editingInstallmentsValue, setEditingInstallmentsValue] = useState<string>("");
   const [revenueTab, setRevenueTab] = useState<string>("clientes");
@@ -350,24 +351,7 @@ export default function Financial() {
     },
   });
 
-  const updateReceivedMutation = useMutation({
-    mutationFn: async ({ id, amountReceived }: { id: string; amountReceived: number }) => {
-      const { error } = await supabase
-        .from("transactions")
-        .update({ amount_received: amountReceived })
-        .eq("id", id);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["transactions"] });
-      queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
-      toast.success("Valor recebido atualizado!");
-      setEditingReceivedId(null);
-    },
-    onError: () => {
-      toast.error("Erro ao atualizar valor");
-    },
-  });
+  // Removed: inline updateReceivedMutation - now handled by RecordPaymentDialog
 
   const updateInstallmentsMutation = useMutation({
     mutationFn: async ({ id, installments, installmentValue }: { id: string; installments: number; installmentValue: number }) => {
@@ -404,29 +388,14 @@ export default function Financial() {
     },
   });
 
-  const handleStartEditReceived = (transaction: Transaction) => {
-    setEditingReceivedId(transaction.id);
-    setEditingReceivedValue(String(Number(transaction.amount_received) || 0));
-    // Cancel any other editing
-    setEditingInstallmentsId(null);
-  };
-
-  const handleSaveReceived = (transactionId: string, totalAmount: number) => {
-    const value = parseFloat(editingReceivedValue.replace(",", ".")) || 0;
-    const clampedValue = Math.min(Math.max(0, value), totalAmount);
-    updateReceivedMutation.mutate({ id: transactionId, amountReceived: clampedValue });
-  };
-
-  const handleCancelEditReceived = () => {
-    setEditingReceivedId(null);
-    setEditingReceivedValue("");
+  const handleOpenPaymentDialog = (transaction: Transaction) => {
+    setPaymentTransaction(transaction);
+    setPaymentDialogOpen(true);
   };
 
   const handleStartEditInstallments = (transaction: Transaction) => {
     setEditingInstallmentsId(transaction.id);
     setEditingInstallmentsValue(String(Number(transaction.installments) || 1));
-    // Cancel any other editing
-    setEditingReceivedId(null);
   };
 
   const handleSaveInstallments = (transactionId: string, totalAmount: number) => {
@@ -440,9 +409,7 @@ export default function Financial() {
     setEditingInstallmentsValue("");
   };
 
-  const handleMarkAsPaid = (transactionId: string, totalAmount: number) => {
-    updateReceivedMutation.mutate({ id: transactionId, amountReceived: totalAmount });
-  };
+  // Removed: handleMarkAsPaid - now handled by RecordPaymentDialog
 
   const handleChangePaymentMethod = (transactionId: string, method: "pix" | "cartao" | "dinheiro" | "transferencia" | "boleto") => {
     updatePaymentMethodMutation.mutate({ id: transactionId, paymentMethod: method });
@@ -687,7 +654,6 @@ export default function Financial() {
                   const pendingAmount = Math.max(0, totalAmount - receivedAmount);
                   const currentMethod = (transaction.payment_method as keyof typeof paymentMethodLabels) || "pix";
                   const installments = Number(transaction.installments) || 1;
-                  const isEditingReceivedMobile = editingReceivedId === transaction.id;
                   const isEditingInstallmentsMobile = editingInstallmentsId === transaction.id;
 
                   const formatCompact = (value: number) => {
@@ -777,33 +743,9 @@ export default function Financial() {
                         </div>
                         <div className="text-center min-w-0 flex-1 flex-shrink px-1">
                           <span className="text-[10px] text-muted-foreground block">Receb.</span>
-                          {isEditingReceivedMobile ? (
-                            <Input
-                              type="number"
-                              value={editingReceivedValue}
-                              onChange={(e) => setEditingReceivedValue(e.target.value)}
-                              className="w-full h-6 text-center text-sm px-1"
-                              min={0}
-                              max={totalAmount}
-                              step="0.01"
-                              autoFocus
-                              onKeyDown={(e) => {
-                                if (e.key === "Enter") {
-                                  handleSaveReceived(transaction.id, totalAmount);
-                                } else if (e.key === "Escape") {
-                                  handleCancelEditReceived();
-                                }
-                              }}
-                              onBlur={() => handleSaveReceived(transaction.id, totalAmount)}
-                            />
-                          ) : (
-                            <span 
-                              className="text-sm text-success font-medium cursor-pointer border-b border-dashed border-success/40 hover:border-success transition-colors"
-                              onClick={() => handleStartEditReceived(transaction)}
-                            >
-                              {formatCompact(receivedAmount)}
-                            </span>
-                          )}
+                          <span className="text-sm text-success font-medium">
+                            {formatCompact(receivedAmount)}
+                          </span>
                         </div>
                         <div className="text-center min-w-0 flex-1 flex-shrink px-1">
                           <span className="text-[10px] text-muted-foreground block">Pend.</span>
@@ -813,10 +755,11 @@ export default function Financial() {
                               <Button
                                 variant="ghost"
                                 size="icon"
-                                onClick={() => handleMarkAsPaid(transaction.id, totalAmount)}
-                                className="h-5 w-5 text-success p-0"
+                                onClick={() => handleOpenPaymentDialog(transaction)}
+                                className="h-5 w-5 text-primary p-0"
+                                title="Lançar pagamento"
                               >
-                                <CheckCircle className="h-3.5 w-3.5" />
+                                <DollarSign className="h-3.5 w-3.5" />
                               </Button>
                             </div>
                           ) : (
@@ -894,7 +837,6 @@ export default function Financial() {
                       const totalAmount = Number(transaction.amount) || 0;
                       const receivedAmount = Number(transaction.amount_received) || 0;
                       const pendingAmount = Math.max(0, totalAmount - receivedAmount);
-                      const isEditingReceived = editingReceivedId === transaction.id;
                       const isEditingInstallments = editingInstallmentsId === transaction.id;
                       const currentMethod = (transaction.payment_method as keyof typeof paymentMethodLabels) || "pix";
                       const installments = Number(transaction.installments) || 1;
@@ -961,42 +903,9 @@ export default function Financial() {
                             )}
                           </TableCell>
                           <TableCell className="text-right py-2.5">
-                            {isEditingReceived ? (
-                              <div className="flex items-center justify-end gap-0.5">
-                                <Input
-                                  type="number"
-                                  value={editingReceivedValue}
-                                  onChange={(e) => setEditingReceivedValue(e.target.value)}
-                                  className="w-20 h-6 text-right text-xs px-1"
-                                  min={0}
-                                  max={totalAmount}
-                                  step="0.01"
-                                  autoFocus
-                                  onKeyDown={(e) => {
-                                    if (e.key === "Enter") {
-                                      handleSaveReceived(transaction.id, totalAmount);
-                                    } else if (e.key === "Escape") {
-                                      handleCancelEditReceived();
-                                    }
-                                  }}
-                                />
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={() => handleSaveReceived(transaction.id, totalAmount)}
-                                  className="h-5 w-5 text-success"
-                                >
-                                  <Check className="h-3 w-3" />
-                                </Button>
-                              </div>
-                            ) : (
-                              <span 
-                                className="text-xs text-success font-medium cursor-pointer px-1.5 py-0.5 rounded border border-dashed border-success/40 hover:border-success hover:bg-success/5 transition-colors"
-                                onClick={() => handleStartEditReceived(transaction)}
-                              >
-                                {formatCurrency(receivedAmount)}
-                              </span>
-                            )}
+                            <span className="text-xs text-success font-medium">
+                              {formatCurrency(receivedAmount)}
+                            </span>
                           </TableCell>
                           <TableCell className="text-right py-2.5">
                             {pendingAmount > 0 ? (
@@ -1007,11 +916,11 @@ export default function Financial() {
                                 <Button
                                   variant="ghost"
                                   size="icon"
-                                  onClick={() => handleMarkAsPaid(transaction.id, totalAmount)}
-                                  className="h-5 w-5 text-success hover:bg-success/10"
-                                  title="Marcar como quitado"
+                                  onClick={() => handleOpenPaymentDialog(transaction)}
+                                  className="h-5 w-5 text-primary hover:bg-primary/10"
+                                  title="Lançar pagamento"
                                 >
-                                  <CheckCircle className="h-3.5 w-3.5" />
+                                  <DollarSign className="h-3.5 w-3.5" />
                                 </Button>
                               </div>
                             ) : (
@@ -1576,6 +1485,16 @@ export default function Financial() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Record Payment Dialog */}
+      <RecordPaymentDialog
+        open={paymentDialogOpen}
+        onOpenChange={setPaymentDialogOpen}
+        transactionId={paymentTransaction?.id || null}
+        transactionAmount={Number(paymentTransaction?.amount) || 0}
+        transactionInstallments={Number(paymentTransaction?.installments) || 1}
+        clientId={paymentTransaction?.client_id || null}
+      />
     </div>
   );
 }
