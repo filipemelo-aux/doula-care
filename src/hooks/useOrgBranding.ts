@@ -102,12 +102,48 @@ function generateThemeVariables(primary: string, secondary: string) {
   };
 }
 
+function updateThemeColorMeta(color: string) {
+  let meta = document.querySelector('meta[name="theme-color"]') as HTMLMetaElement | null;
+  if (!meta) {
+    meta = document.createElement("meta");
+    meta.name = "theme-color";
+    document.head.appendChild(meta);
+  }
+  meta.content = color;
+}
+
+const BRANDING_CACHE_KEY = "org_branding_cache";
+
+export function cacheBranding(primary: string, secondary: string, logoUrl?: string | null, displayName?: string | null) {
+  try {
+    localStorage.setItem(BRANDING_CACHE_KEY, JSON.stringify({ primary, secondary, logoUrl, displayName, ts: Date.now() }));
+  } catch {}
+}
+
+export function getCachedBranding(): { primary: string; secondary: string; logoUrl?: string | null; displayName?: string | null } | null {
+  try {
+    const raw = localStorage.getItem(BRANDING_CACHE_KEY);
+    if (!raw) return null;
+    const data = JSON.parse(raw);
+    // Cache expires after 30 days
+    if (Date.now() - data.ts > 30 * 24 * 60 * 60 * 1000) return null;
+    return data;
+  } catch {
+    return null;
+  }
+}
+
+export function clearBrandingCache() {
+  try { localStorage.removeItem(BRANDING_CACHE_KEY); } catch {}
+}
+
 function applyThemeToDOM(primary: string, secondary: string) {
   const vars = generateThemeVariables(primary, secondary);
   const root = document.documentElement;
   Object.entries(vars).forEach(([key, value]) => {
     root.style.setProperty(key, value);
   });
+  updateThemeColorMeta(primary);
 }
 
 function clearCustomTheme() {
@@ -125,8 +161,11 @@ function clearCustomTheme() {
     "--sidebar-primary", "--sidebar-primary-foreground",
     "--sidebar-accent", "--sidebar-accent-foreground",
     "--sidebar-border", "--sidebar-ring",
+    "--gradient-primary", "--gradient-soft", "--gradient-card",
+    "--shadow-soft", "--shadow-medium", "--shadow-card",
   ];
   keys.forEach((key) => root.style.removeProperty(key));
+  updateThemeColorMeta(DEFAULT_PRIMARY);
 }
 
 export function useOrgBranding() {
@@ -155,7 +194,7 @@ export function useOrgBranding() {
     staleTime: 5 * 60 * 1000, // 5 min cache
   });
 
-  // Apply theme whenever branding changes
+  // Apply theme whenever branding changes + cache it
   useEffect(() => {
     if (!organizationId) {
       clearCustomTheme();
@@ -163,10 +202,10 @@ export function useOrgBranding() {
     }
 
     if (branding?.primary_color || branding?.secondary_color) {
-      applyThemeToDOM(
-        branding.primary_color || DEFAULT_PRIMARY,
-        branding.secondary_color || DEFAULT_SECONDARY
-      );
+      const pc = branding.primary_color || DEFAULT_PRIMARY;
+      const sc = branding.secondary_color || DEFAULT_SECONDARY;
+      applyThemeToDOM(pc, sc);
+      cacheBranding(pc, sc, branding.logo_url, branding.nome_exibicao);
     } else {
       clearCustomTheme();
     }
@@ -186,5 +225,5 @@ export function useOrgBranding() {
   };
 }
 
-// Export for use in preview
+// Export for use in preview and login
 export { applyThemeToDOM, clearCustomTheme, hexToHSL, DEFAULT_PRIMARY, DEFAULT_SECONDARY };
