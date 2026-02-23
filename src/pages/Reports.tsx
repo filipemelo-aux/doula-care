@@ -332,21 +332,21 @@ export default function Reports() {
 
       {/* Tabs */}
       <Tabs defaultValue="financeiro" onValueChange={(v) => setActiveTab(v as ReportTab)} className="space-y-4">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="financeiro" className="text-xs lg:text-sm gap-1 lg:gap-2 px-1 lg:px-3">
-            <DollarSign className="w-3.5 h-3.5 lg:w-4 lg:h-4 flex-shrink-0" />
-            <span className="truncate">Financeiro</span>
+        <TabsList className="grid w-full grid-cols-4 gap-0">
+          <TabsTrigger value="financeiro" className="text-[10px] lg:text-sm gap-0.5 lg:gap-2 px-0.5 lg:px-3">
+            <DollarSign className="w-3 h-3 lg:w-4 lg:h-4 flex-shrink-0" />
+            <span className="truncate">Financ.</span>
           </TabsTrigger>
-          <TabsTrigger value="clientes" className="text-xs lg:text-sm gap-1 lg:gap-2 px-1 lg:px-3">
-            <Users className="w-3.5 h-3.5 lg:w-4 lg:h-4 flex-shrink-0" />
+          <TabsTrigger value="clientes" className="text-[10px] lg:text-sm gap-0.5 lg:gap-2 px-0.5 lg:px-3">
+            <Users className="w-3 h-3 lg:w-4 lg:h-4 flex-shrink-0" />
             <span className="truncate">Clientes</span>
           </TabsTrigger>
-          <TabsTrigger value="receitas" className="text-xs lg:text-sm gap-1 lg:gap-2 px-1 lg:px-3">
-            <CreditCard className="w-3.5 h-3.5 lg:w-4 lg:h-4 flex-shrink-0" />
+          <TabsTrigger value="receitas" className="text-[10px] lg:text-sm gap-0.5 lg:gap-2 px-0.5 lg:px-3">
+            <CreditCard className="w-3 h-3 lg:w-4 lg:h-4 flex-shrink-0" />
             <span className="truncate">Receitas</span>
           </TabsTrigger>
-          <TabsTrigger value="despesas" className="text-xs lg:text-sm gap-1 lg:gap-2 px-1 lg:px-3">
-            <FileText className="w-3.5 h-3.5 lg:w-4 lg:h-4 flex-shrink-0" />
+          <TabsTrigger value="despesas" className="text-[10px] lg:text-sm gap-0.5 lg:gap-2 px-0.5 lg:px-3">
+            <FileText className="w-3 h-3 lg:w-4 lg:h-4 flex-shrink-0" />
             <span className="truncate">Despesas</span>
           </TabsTrigger>
         </TabsList>
