@@ -8,6 +8,9 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Loader2, Building2, Users, Ban, CheckCircle, LogOut, BarChart3, Clock, ShieldCheck } from "lucide-react";
+import { PlanPricingCard } from "@/components/superadmin/PlanPricingCard";
+import { OrgBillingCard } from "@/components/superadmin/OrgBillingCard";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -157,7 +160,7 @@ export default function SuperAdminDashboard() {
           <Card>
             <CardContent className="pt-6">
               <div className="flex items-center gap-3">
-                <CheckCircle className="h-8 w-8 text-green-500" />
+                <CheckCircle className="h-8 w-8 text-emerald-500" />
                 <div>
                   <p className="text-2xl font-bold">{activeOrgs.length}</p>
                   <p className="text-sm text-muted-foreground">Ativas</p>
@@ -260,94 +263,108 @@ export default function SuperAdminDashboard() {
           </Card>
         )}
 
-        {/* All organizations table */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Organizações</CardTitle>
-            <CardDescription>Gerencie todas as contas de doulas da plataforma</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Nome</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Gestantes</TableHead>
-                  <TableHead>Plano</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Criada em</TableHead>
-                  <TableHead>Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {organizations
-                  .filter((o) => o.status !== "pendente")
-                  .map((org) => (
-                    <TableRow key={org.id}>
-                      <TableCell className="font-medium">{org.name}</TableCell>
-                      <TableCell className="text-muted-foreground">{org.responsible_email}</TableCell>
-                      <TableCell>{org.client_count}</TableCell>
-                      <TableCell>
-                        <Select
-                          value={org.plan}
-                          onValueChange={(value) =>
-                            planMutation.mutate({ orgId: org.id, plan: value as "free" | "pro" | "premium" })
-                          }
-                        >
-                          <SelectTrigger className="w-28">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="free">Free</SelectItem>
-                            <SelectItem value="pro">Pro</SelectItem>
-                            <SelectItem value="premium">Premium</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={org.status === "ativo" ? "default" : "destructive"}>
-                          {org.status === "ativo" ? "Ativo" : "Suspenso"}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-muted-foreground">
-                        {format(new Date(org.created_at), "dd/MM/yyyy", { locale: ptBR })}
-                      </TableCell>
-                      <TableCell>
-                        {org.status === "ativo" ? (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => statusMutation.mutate({ orgId: org.id, status: "suspenso" })}
-                            disabled={statusMutation.isPending}
-                          >
-                            <Ban className="h-4 w-4 mr-1" />
-                            Suspender
-                          </Button>
-                        ) : (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => statusMutation.mutate({ orgId: org.id, status: "ativo" })}
-                            disabled={statusMutation.isPending}
-                          >
-                            <CheckCircle className="h-4 w-4 mr-1" />
-                            Ativar
-                          </Button>
-                        )}
-                      </TableCell>
+        {/* Tabs: Organizações / Planos & Cobranças */}
+        <Tabs defaultValue="orgs" className="space-y-4">
+          <TabsList>
+            <TabsTrigger value="orgs">Organizações</TabsTrigger>
+            <TabsTrigger value="billing">Planos & Cobranças</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="orgs">
+            <Card>
+              <CardHeader>
+                <CardTitle>Organizações</CardTitle>
+                <CardDescription>Gerencie todas as contas de doulas da plataforma</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Nome</TableHead>
+                      <TableHead>Email</TableHead>
+                      <TableHead>Gestantes</TableHead>
+                      <TableHead>Plano</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Criada em</TableHead>
+                      <TableHead>Ações</TableHead>
                     </TableRow>
-                  ))}
-                {organizations.filter((o) => o.status !== "pendente").length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
-                      Nenhuma organização ativa ou suspensa
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
+                  </TableHeader>
+                  <TableBody>
+                    {organizations
+                      .filter((o) => o.status !== "pendente")
+                      .map((org) => (
+                        <TableRow key={org.id}>
+                          <TableCell className="font-medium">{org.name}</TableCell>
+                          <TableCell className="text-muted-foreground">{org.responsible_email}</TableCell>
+                          <TableCell>{org.client_count}</TableCell>
+                          <TableCell>
+                            <Select
+                              value={org.plan}
+                              onValueChange={(value) =>
+                                planMutation.mutate({ orgId: org.id, plan: value as "free" | "pro" | "premium" })
+                              }
+                            >
+                              <SelectTrigger className="w-28">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="free">Free</SelectItem>
+                                <SelectItem value="pro">Pro</SelectItem>
+                                <SelectItem value="premium">Premium</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant={org.status === "ativo" ? "default" : "destructive"}>
+                              {org.status === "ativo" ? "Ativo" : "Suspenso"}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-muted-foreground">
+                            {format(new Date(org.created_at), "dd/MM/yyyy", { locale: ptBR })}
+                          </TableCell>
+                          <TableCell>
+                            {org.status === "ativo" ? (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => statusMutation.mutate({ orgId: org.id, status: "suspenso" })}
+                                disabled={statusMutation.isPending}
+                              >
+                                <Ban className="h-4 w-4 mr-1" />
+                                Suspender
+                              </Button>
+                            ) : (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => statusMutation.mutate({ orgId: org.id, status: "ativo" })}
+                                disabled={statusMutation.isPending}
+                              >
+                                <CheckCircle className="h-4 w-4 mr-1" />
+                                Ativar
+                              </Button>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    {organizations.filter((o) => o.status !== "pendente").length === 0 && (
+                      <TableRow>
+                        <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
+                          Nenhuma organização ativa ou suspensa
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="billing" className="space-y-6">
+            <PlanPricingCard />
+            <OrgBillingCard />
+          </TabsContent>
+        </Tabs>
       </main>
     </div>
   );
