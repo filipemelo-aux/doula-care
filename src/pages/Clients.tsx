@@ -30,6 +30,8 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import type { Tables } from "@/integrations/supabase/types";
+import { usePlanLimits } from "@/hooks/usePlanLimits";
+import { ClientLimitBanner } from "@/components/plan/UpgradeBanner";
 
 type Client = Tables<"clients">;
 
@@ -65,6 +67,7 @@ export default function Clients() {
   const [clientToDelete, setClientToDelete] = useState<Client | null>(null);
 
   const queryClient = useQueryClient();
+  const { canAddClient, remainingClients, clientCount, limits } = usePlanLimits();
 
   const { data: clients, isLoading } = useQuery({
     queryKey: ["clients"],
@@ -149,11 +152,26 @@ export default function Clients() {
             Gerencie suas clientes e acompanhamentos
           </p>
         </div>
-        <Button onClick={() => setDialogOpen(true)} className="gap-2 flex-shrink-0 w-full md:w-auto">
+        <Button
+          onClick={() => {
+            if (!canAddClient) {
+              toast.error("Limite de gestantes atingido", {
+                description: "Faça upgrade do seu plano para cadastrar mais gestantes.",
+              });
+              return;
+            }
+            setDialogOpen(true);
+          }}
+          className="gap-2 flex-shrink-0 w-full md:w-auto"
+          variant={canAddClient ? "default" : "outline"}
+        >
           <Plus className="w-4 h-4" />
           Nova Cliente
         </Button>
       </div>
+
+      {/* Plan limit warning */}
+      <ClientLimitBanner remaining={remainingClients} max={limits.maxClients} current={clientCount} />
 
       {/* Search */}
       <Card className="card-glass">

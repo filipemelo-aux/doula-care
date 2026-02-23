@@ -1,6 +1,7 @@
 import { usePushNotifications } from "@/hooks/usePushNotifications";
+import { usePlanLimits } from "@/hooks/usePlanLimits";
 import { Button } from "@/components/ui/button";
-import { Bell, BellOff, Loader2 } from "lucide-react";
+import { Bell, BellOff, Loader2, Crown } from "lucide-react";
 import { toast } from "sonner";
 
 interface PushNotificationToggleProps {
@@ -9,8 +10,19 @@ interface PushNotificationToggleProps {
 
 export function PushNotificationToggle({ compact = false }: PushNotificationToggleProps) {
   const { isSupported, isSubscribed, isLoading, permission, subscribe, unsubscribe } = usePushNotifications();
+  const { limits, planLabel } = usePlanLimits();
 
   if (!isSupported) return null;
+
+  if (!limits.pushNotifications) {
+    if (compact) return null;
+    return (
+      <Button variant="outline" disabled className="gap-2 opacity-60">
+        <Crown className="h-4 w-4" />
+        Push (Plano Pro)
+      </Button>
+    );
+  }
 
   const handleToggle = async () => {
     if (isSubscribed) {

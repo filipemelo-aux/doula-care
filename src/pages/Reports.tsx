@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { usePlanLimits } from "@/hooks/usePlanLimits";
+import { UpgradeBanner } from "@/components/plan/UpgradeBanner";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -57,6 +59,20 @@ export default function Reports() {
   const [period, setPeriod] = useState<PeriodOption>("semester");
   const [activeTab, setActiveTab] = useState<ReportTab>("financeiro");
   const [exporting, setExporting] = useState(false);
+  const { plan, limits } = usePlanLimits();
+
+  // Block reports for free plan
+  if (!limits.reports) {
+    return (
+      <div className="space-y-6">
+        <div className="page-header">
+          <h1 className="page-title">Relatórios</h1>
+          <p className="page-description">Visualize o desempenho do seu negócio em detalhes</p>
+        </div>
+        <UpgradeBanner feature="Relatórios avançados" currentPlan={plan} requiredPlan="pro" />
+      </div>
+    );
+  }
 
   const handleExport = async (fmt: ExportFormat) => {
     try {
