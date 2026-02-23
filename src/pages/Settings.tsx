@@ -428,12 +428,12 @@ export default function Settings() {
       </Card>
 
       <Tabs defaultValue="users" className="space-y-4">
-        <TabsList className="w-full grid grid-cols-5">
-          <TabsTrigger value="users"><Users className="h-4 w-4 mr-1.5" />Usuários</TabsTrigger>
-          <TabsTrigger value="plans"><CreditCard className="h-4 w-4 mr-1.5" />Planos</TabsTrigger>
-          <TabsTrigger value="branding"><Palette className="h-4 w-4 mr-1.5" />Marca</TabsTrigger>
-          <TabsTrigger value="pix"><QrCode className="h-4 w-4 mr-1.5" />Pix</TabsTrigger>
-          <TabsTrigger value="security"><Shield className="h-4 w-4 mr-1.5" />Segurança</TabsTrigger>
+        <TabsList className="w-full grid grid-cols-5 gap-0 p-1">
+          <TabsTrigger value="users" className="px-1 text-xs sm:text-sm gap-1"><Users className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" /><span className="truncate">Usuários</span></TabsTrigger>
+          <TabsTrigger value="plans" className="px-1 text-xs sm:text-sm gap-1"><CreditCard className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" /><span className="truncate">Planos</span></TabsTrigger>
+          <TabsTrigger value="branding" className="px-1 text-xs sm:text-sm gap-1"><Palette className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" /><span className="truncate">Marca</span></TabsTrigger>
+          <TabsTrigger value="pix" className="px-1 text-xs sm:text-sm gap-1"><QrCode className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" /><span className="truncate">Pix</span></TabsTrigger>
+          <TabsTrigger value="security" className="px-1 text-xs sm:text-sm gap-1"><Shield className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" /><span className="truncate">Segurança</span></TabsTrigger>
         </TabsList>
 
         {/* ─── USERS TAB ─── */}
