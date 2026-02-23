@@ -45,8 +45,9 @@ import {
   Send,
   Eye,
 } from "lucide-react";
-import { format, isToday, isPast, isFuture } from "date-fns";
+import { format, isToday, isPast, isFuture, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { fromZonedTime, toZonedTime } from "date-fns-tz";
 import { toast } from "sonner";
 import { SendBudgetDialog } from "@/components/dashboard/SendBudgetDialog";
 
@@ -163,12 +164,16 @@ export default function Agenda() {
   // ─── Mutations ───────────────────────────────────────────
   const saveAppointmentMutation = useMutation({
     mutationFn: async () => {
+      // datetime-local gives "YYYY-MM-DDTHH:mm" in local time
+      // Convert from Brazil timezone to UTC for storage
+      const scheduledUtc = fromZonedTime(aptDate, "America/Sao_Paulo").toISOString();
+
       if (editingAppointment) {
         const { error } = await supabase
           .from("appointments")
           .update({
             title: aptTitle,
-            scheduled_at: new Date(aptDate).toISOString(),
+            scheduled_at: scheduledUtc,
             notes: aptNotes || null,
           })
           .eq("id", editingAppointment.id);
@@ -177,7 +182,7 @@ export default function Agenda() {
         const { error } = await supabase.from("appointments").insert({
           client_id: aptClientId,
           title: aptTitle,
-          scheduled_at: new Date(aptDate).toISOString(),
+          scheduled_at: scheduledUtc,
           notes: aptNotes || null,
           owner_id: user?.id || null,
           organization_id: organizationId || null,
@@ -222,7 +227,8 @@ export default function Agenda() {
   const openEditAppointment = (apt: AppointmentWithClient) => {
     setEditingAppointment(apt);
     setAptTitle(apt.title);
-    setAptDate(format(new Date(apt.scheduled_at), "yyyy-MM-dd'T'HH:mm"));
+    const zonedDate = toZonedTime(new Date(apt.scheduled_at), "America/Sao_Paulo");
+    setAptDate(format(zonedDate, "yyyy-MM-dd'T'HH:mm"));
     setAptNotes(apt.notes || "");
     setAptClientId(apt.client_id);
     setAppointmentDialog(true);
