@@ -80,6 +80,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import type { Tables } from "@/integrations/supabase/types";
 import Plans from "@/pages/Plans";
+import { usePlanLimits } from "@/hooks/usePlanLimits";
 
 // ─── Plan Types ──────────────────────────────────────────
 type PlanSetting = Tables<"plan_settings">;
@@ -105,6 +106,7 @@ export default function Settings() {
   const callerIsAdmin = role === "admin";
   const callerIsModerator = role === "moderator";
   const queryClient = useQueryClient();
+  const { limits, plan: orgPlan } = usePlanLimits();
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
   // Fetch avatar
@@ -311,6 +313,15 @@ export default function Settings() {
 
   // ─── Handlers ────────────────────────────────────────────
   const handleCreateUser = () => {
+    if (!limits.multiCollaborators) {
+      toast.error("Seu plano não permite criar usuários adicionais. Faça upgrade para o Premium.");
+      return;
+    }
+    const currentUserCount = usersWithRoles?.length || 0;
+    if (currentUserCount >= limits.maxCollaborators) {
+      toast.error(`Seu plano permite no máximo ${limits.maxCollaborators} colaboradores.`);
+      return;
+    }
     if (!newUserData.email || !newUserData.password) {
       toast.error("Preencha email e senha");
       return;
@@ -443,10 +454,11 @@ export default function Settings() {
                         <CardDescription>Gerencie permissões e acessos</CardDescription>
                       </div>
                     </div>
-                    <Dialog open={newUserOpen} onOpenChange={setNewUserOpen}>
-                      <DialogTrigger asChild>
-                        <Button size="sm"><UserPlus className="h-4 w-4 mr-1" />Novo</Button>
-                      </DialogTrigger>
+                    {limits.multiCollaborators ? (
+                      <Dialog open={newUserOpen} onOpenChange={setNewUserOpen}>
+                        <DialogTrigger asChild>
+                          <Button size="sm"><UserPlus className="h-4 w-4 mr-1" />Novo</Button>
+                        </DialogTrigger>
                       <DialogContent>
                         <DialogHeader>
                           <DialogTitle>Criar Novo Usuário</DialogTitle>
@@ -480,7 +492,12 @@ export default function Settings() {
                           </Button>
                         </div>
                       </DialogContent>
-                    </Dialog>
+                      </Dialog>
+                    ) : (
+                      <Button size="sm" variant="outline" disabled title="Disponível apenas no plano Premium">
+                        <Crown className="h-4 w-4 mr-1" />Premium
+                      </Button>
+                    )}
                   </div>
                 </CardHeader>
                 <CardContent className="px-2 sm:px-6">
