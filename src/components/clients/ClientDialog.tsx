@@ -244,7 +244,8 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
 
         // Update auto-generated transaction description if client name or plan changed
         const planName = data.plan === "basico" ? "Básico" : data.plan === "intermediario" ? "Intermediário" : "Completo";
-        const newDescription = `Contrato - ${data.full_name} - Plano ${planName}`;
+        const planDisplayName = planSettings?.find(p => p.plan_type === data.plan)?.name || planName;
+        const newDescription = `Contrato - ${data.full_name} - ${planDisplayName}`;
         
         const { error: transactionError } = await supabase
           .from("transactions")
@@ -272,6 +273,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
 
         // Create automatic income transaction for the new client using client's created_at date in local timezone
         const planName = data.plan === "basico" ? "Básico" : data.plan === "intermediario" ? "Intermediário" : "Completo";
+        const planDisplayName = planSettings?.find(p => p.plan_type === data.plan)?.name || planName;
         const getLocalDate = (dateString: string) => {
           const date = new Date(dateString);
           const year = date.getFullYear();
@@ -317,7 +319,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
 
         const transactionPayload = {
           type: "receita" as const,
-          description: `Contrato - ${data.full_name} - Plano ${planName}`,
+          description: `Contrato - ${data.full_name} - ${planDisplayName}`,
           amount: data.plan_value || 0,
           amount_received: autoReceived,
           date: clientCreatedDate,
