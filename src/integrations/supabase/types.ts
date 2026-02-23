@@ -331,27 +331,39 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          logo_url: string | null
           name: string
+          nome_exibicao: string | null
           plan: Database["public"]["Enums"]["org_plan"]
+          primary_color: string | null
           responsible_email: string
+          secondary_color: string | null
           status: Database["public"]["Enums"]["org_status"]
           updated_at: string
         }
         Insert: {
           created_at?: string
           id?: string
+          logo_url?: string | null
           name: string
+          nome_exibicao?: string | null
           plan?: Database["public"]["Enums"]["org_plan"]
+          primary_color?: string | null
           responsible_email: string
+          secondary_color?: string | null
           status?: Database["public"]["Enums"]["org_status"]
           updated_at?: string
         }
         Update: {
           created_at?: string
           id?: string
+          logo_url?: string | null
           name?: string
+          nome_exibicao?: string | null
           plan?: Database["public"]["Enums"]["org_plan"]
+          primary_color?: string | null
           responsible_email?: string
+          secondary_color?: string | null
           status?: Database["public"]["Enums"]["org_status"]
           updated_at?: string
         }

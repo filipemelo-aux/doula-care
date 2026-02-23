@@ -68,8 +68,10 @@ import {
   PowerOff,
   CreditCard,
   QrCode,
+  Palette,
 } from "lucide-react";
 import { PixSettingsCard } from "@/components/settings/PixSettingsCard";
+import { BrandingSettingsCard } from "@/components/settings/BrandingSettingsCard";
 import { PushNotificationStatusCard } from "@/components/settings/PushNotificationStatusCard";
 import { toast } from "sonner";
 import { formatBrazilDate } from "@/lib/utils";
@@ -430,9 +432,10 @@ export default function Settings() {
       </Card>
 
       <Tabs defaultValue="users" className="space-y-4">
-        <TabsList className="w-full grid grid-cols-4">
+        <TabsList className="w-full grid grid-cols-5">
           <TabsTrigger value="users"><Users className="h-4 w-4 mr-1.5" />Usuários</TabsTrigger>
           <TabsTrigger value="plans"><CreditCard className="h-4 w-4 mr-1.5" />Planos</TabsTrigger>
+          <TabsTrigger value="branding"><Palette className="h-4 w-4 mr-1.5" />Marca</TabsTrigger>
           <TabsTrigger value="pix"><QrCode className="h-4 w-4 mr-1.5" />Pix</TabsTrigger>
           <TabsTrigger value="security"><Shield className="h-4 w-4 mr-1.5" />Segurança</TabsTrigger>
         </TabsList>
@@ -594,6 +597,10 @@ export default function Settings() {
           <Plans />
         </TabsContent>
 
+        {/* ─── BRANDING TAB ─── */}
+        <TabsContent value="branding" className="space-y-6">
+          <BrandingSettingsCard />
+        </TabsContent>
         {/* ─── PIX TAB ─── */}
         <TabsContent value="pix" className="space-y-6">
           <PixSettingsCard />
