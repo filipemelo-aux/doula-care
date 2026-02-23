@@ -106,53 +106,53 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setSession(currentSession);
     setUser(currentSession.user);
 
-    const userRole = await fetchRole(currentSession.user.id);
-    setRole(userRole);
+    try {
+      const userRole = await fetchRole(currentSession.user.id);
+      setRole(userRole);
 
-    if (userRole === "client") {
-      const clientData = await fetchClientData(currentSession.user.id);
-      setClient(clientData);
-      setProfileName(clientData?.full_name || null);
-      // Fetch organization_id from profile for client users too
-      try {
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("organization_id")
-          .eq("user_id", currentSession.user.id)
-          .maybeSingle();
-        const orgId = profile?.organization_id || null;
-        setOrganizationId(orgId);
-        // Fetch org status
-        if (orgId) {
-          const { data: org } = await supabase.from("organizations").select("status").eq("id", orgId).single();
-          setOrgStatus((org?.status as OrgStatus) || null);
+      if (userRole === "client") {
+        const clientData = await fetchClientData(currentSession.user.id);
+        setClient(clientData);
+        setProfileName(clientData?.full_name || null);
+        try {
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("organization_id")
+            .eq("user_id", currentSession.user.id)
+            .maybeSingle();
+          const orgId = profile?.organization_id || null;
+          setOrganizationId(orgId);
+          if (orgId) {
+            const { data: org } = await supabase.from("organizations").select("status").eq("id", orgId).single();
+            setOrgStatus((org?.status as OrgStatus) || null);
+          }
+        } catch {
+          setOrganizationId(null);
+          setOrgStatus(null);
         }
-      } catch {
-        setOrganizationId(null);
-        setOrgStatus(null);
-      }
-    } else {
-      setClient(null);
-      // Fetch profile name and organization_id for admin/moderator/super_admin users
-      try {
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("full_name, organization_id")
-          .eq("user_id", currentSession.user.id)
-          .maybeSingle();
-        setProfileName(profile?.full_name || null);
-        const orgId = profile?.organization_id || null;
-        setOrganizationId(orgId);
-        // Fetch org status
-        if (orgId) {
-          const { data: org } = await supabase.from("organizations").select("status").eq("id", orgId).single();
-          setOrgStatus((org?.status as OrgStatus) || null);
+      } else {
+        setClient(null);
+        try {
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("full_name, organization_id")
+            .eq("user_id", currentSession.user.id)
+            .maybeSingle();
+          setProfileName(profile?.full_name || null);
+          const orgId = profile?.organization_id || null;
+          setOrganizationId(orgId);
+          if (orgId) {
+            const { data: org } = await supabase.from("organizations").select("status").eq("id", orgId).single();
+            setOrgStatus((org?.status as OrgStatus) || null);
+          }
+        } catch {
+          setProfileName(null);
+          setOrganizationId(null);
+          setOrgStatus(null);
         }
-      } catch {
-        setProfileName(null);
-        setOrganizationId(null);
-        setOrgStatus(null);
       }
+    } catch (error) {
+      console.error("Error initializing user data:", error);
     }
 
     setRoleChecked(true);
@@ -228,6 +228,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setRoleChecked(false);
       setLoading(true);
 
+      // Safety timeout: if role check doesn't complete in 15s, reset loading state
+      const safetyTimeout = setTimeout(() => {
+        console.warn("Login safety timeout triggered - resetting loading state");
+        setLoading(false);
+        setRoleChecked(true);
+      }, 15000);
+
       // Support username-based login for clients (nome.sobrenome → email)
       let loginEmail = email;
       if (!email.includes("@")) {
@@ -279,12 +286,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       if (error) {
+        clearTimeout(safetyTimeout);
         setLoading(false);
         setRoleChecked(true);
         return { error: error as Error };
       }
 
-      // initializeUser will be called by onAuthStateChange
+      // If onAuthStateChange doesn't trigger, manually initialize
+      if (data?.session) {
+        // Give onAuthStateChange a moment to fire first
+        setTimeout(async () => {
+          // If still not role-checked after 3s, do it manually
+          if (!roleChecked) {
+            console.warn("onAuthStateChange did not trigger, initializing manually");
+            await initializeUser(data.session);
+          }
+          clearTimeout(safetyTimeout);
+        }, 3000);
+      }
+
       return { error: null };
     } catch (error) {
       setLoading(false);
