@@ -109,17 +109,16 @@ export function RecordPaymentDialog({
         if (paymentError) throw paymentError;
 
         // Recalculate total received across all payments for this transaction
+        // The update above already committed, so fetched values are current
         const { data: allPayments, error: fetchError } = await supabase
           .from("payments")
           .select("amount_paid")
           .eq("transaction_id", transactionId);
         if (fetchError) throw fetchError;
 
-        // Sum all payments, replacing the updated one with new value
         const totalReceived = (allPayments || []).reduce((sum, p) => {
-          if (p === undefined) return sum;
-          return sum + Number((p as any).amount_paid || 0);
-        }, 0) - Number(payment.amount_paid) + newAmountPaid;
+          return sum + Number(p.amount_paid || 0);
+        }, 0);
 
         const { error: txError } = await supabase
           .from("transactions")
