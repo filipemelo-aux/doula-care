@@ -8,14 +8,27 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Heart, Loader2, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
+import { getCachedBranding, applyThemeToDOM } from "@/hooks/useOrgBranding";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [cachedLogo, setCachedLogo] = useState<string | null>(null);
+  const [cachedName, setCachedName] = useState<string | null>(null);
   const navigate = useNavigate();
   const { signIn, user, role, roleChecked, loading, isAdmin, isClient, isSuperAdmin, isFirstLogin } = useAuth();
+
+  // Apply cached org branding on login screen
+  useEffect(() => {
+    const cached = getCachedBranding();
+    if (cached) {
+      applyThemeToDOM(cached.primary, cached.secondary);
+      if (cached.logoUrl) setCachedLogo(cached.logoUrl);
+      if (cached.displayName) setCachedName(cached.displayName);
+    }
+  }, []);
 
   useEffect(() => {
     if (!loading && user && roleChecked && role) {
@@ -89,9 +102,9 @@ export default function Login() {
         <CardHeader className="text-center space-y-2">
           <div className="flex flex-col items-center gap-1.5">
             <div className="w-[4.5rem] h-[4.5rem] rounded-[40%] bg-[#FFF5EE] overflow-hidden">
-              <img src={logo} alt="Papo de Doula" className="w-full h-full object-cover mix-blend-multiply scale-[1.15]" />
+              <img src={cachedLogo || logo} alt={cachedName || "Papo de Doula"} className="w-full h-full object-cover mix-blend-multiply scale-[1.15]" />
             </div>
-            <CardTitle className="text-2xl font-display font-bold tracking-wide">Papo de Doula</CardTitle>
+            <CardTitle className="text-2xl font-display font-bold tracking-wide">{cachedName || "Papo de Doula"}</CardTitle>
           </div>
           <CardDescription>Entre com seu email e senha</CardDescription>
         </CardHeader>
