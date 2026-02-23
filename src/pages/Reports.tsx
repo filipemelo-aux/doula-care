@@ -332,22 +332,22 @@ export default function Reports() {
 
       {/* Tabs */}
       <Tabs defaultValue="financeiro" onValueChange={(v) => setActiveTab(v as ReportTab)} className="space-y-4">
-        <TabsList className="grid w-full grid-cols-4 gap-0">
-          <TabsTrigger value="financeiro" className="text-[10px] lg:text-sm gap-0.5 lg:gap-2 px-0.5 lg:px-3">
-            <DollarSign className="w-3 h-3 lg:w-4 lg:h-4 flex-shrink-0" />
-            <span className="truncate">Financ.</span>
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="financeiro" className="text-xs gap-1.5 px-2 lg:px-3">
+            <DollarSign className="w-4 h-4 flex-shrink-0" />
+            <span className="hidden lg:inline">Financeiro</span>
           </TabsTrigger>
-          <TabsTrigger value="clientes" className="text-[10px] lg:text-sm gap-0.5 lg:gap-2 px-0.5 lg:px-3">
-            <Users className="w-3 h-3 lg:w-4 lg:h-4 flex-shrink-0" />
-            <span className="truncate">Clientes</span>
+          <TabsTrigger value="clientes" className="text-xs gap-1.5 px-2 lg:px-3">
+            <Users className="w-4 h-4 flex-shrink-0" />
+            <span className="hidden lg:inline">Clientes</span>
           </TabsTrigger>
-          <TabsTrigger value="receitas" className="text-[10px] lg:text-sm gap-0.5 lg:gap-2 px-0.5 lg:px-3">
-            <CreditCard className="w-3 h-3 lg:w-4 lg:h-4 flex-shrink-0" />
-            <span className="truncate">Receitas</span>
+          <TabsTrigger value="receitas" className="text-xs gap-1.5 px-2 lg:px-3">
+            <CreditCard className="w-4 h-4 flex-shrink-0" />
+            <span className="hidden lg:inline">Receitas</span>
           </TabsTrigger>
-          <TabsTrigger value="despesas" className="text-[10px] lg:text-sm gap-0.5 lg:gap-2 px-0.5 lg:px-3">
-            <FileText className="w-3 h-3 lg:w-4 lg:h-4 flex-shrink-0" />
-            <span className="truncate">Despesas</span>
+          <TabsTrigger value="despesas" className="text-xs gap-1.5 px-2 lg:px-3">
+            <FileText className="w-4 h-4 flex-shrink-0" />
+            <span className="hidden lg:inline">Despesas</span>
           </TabsTrigger>
         </TabsList>
 
