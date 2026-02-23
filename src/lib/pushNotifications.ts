@@ -10,7 +10,7 @@ export type PushNotificationType =
   | "appointment_reminder"
   | "general";
 
-export type PushPriority = "high" | "normal";
+export type PushPriority = "normal" | "critica";
 
 const NOTIFICATION_ROUTES: Record<PushNotificationType, string> = {
   labor_started: "/admin",
@@ -22,6 +22,12 @@ const NOTIFICATION_ROUTES: Record<PushNotificationType, string> = {
   appointment_reminder: "/agenda",
   general: "/",
 };
+
+// Types that are always critical
+const CRITICAL_TYPES: PushNotificationType[] = [
+  "labor_started",
+  "new_contraction",
+];
 
 interface SendPushParams {
   user_ids?: string[];
@@ -41,12 +47,15 @@ export function getRouteForNotificationType(type: PushNotificationType): string 
 }
 
 export async function sendPushNotification(params: SendPushParams): Promise<void> {
-  // Auto-resolve URL from type if not explicitly set
+  const isCritical =
+    params.priority === "critica" ||
+    (params.type && CRITICAL_TYPES.includes(params.type));
+
   const resolvedParams = {
     ...params,
     url: params.url || (params.type ? getRouteForNotificationType(params.type) : "/"),
-    priority: params.priority || (params.type === "labor_started" || params.type === "new_contraction" ? "high" : "normal"),
-    require_interaction: params.require_interaction ?? params.priority === "high",
+    priority: isCritical ? "critica" : "normal",
+    require_interaction: params.require_interaction ?? isCritical,
   };
 
   try {

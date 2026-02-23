@@ -59,7 +59,7 @@ export function LaborStartButton({ laborStarted, onLaborStarted }: LaborStartBut
         title: "🚨 TRABALHO DE PARTO INICIADO",
         message: `${client.full_name} informou que o trabalho de parto começou!`,
         type: "labor_started",
-        priority: "high",
+        priority: "critica",
         require_interaction: true,
         tag: "labor-started",
       });

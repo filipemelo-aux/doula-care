@@ -258,6 +258,9 @@ export default function GestanteContractions() {
               message: `${client.full_name} está em trabalho de parto ativo! 3+ contrações em 10 min, duração ≥ 1 min.`,
               url: "/dashboard",
               tag: "active-labor-detected",
+              type: "labor_started",
+              priority: "critica",
+              require_interaction: true,
             });
           });
       });
