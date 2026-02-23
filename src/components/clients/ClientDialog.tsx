@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -31,6 +31,8 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
+import { format } from "date-fns";
+import { CheckCircle } from "lucide-react";
 
 import { maskPhone, maskCPF, maskCEP, maskCurrency, parseCurrency } from "@/lib/masks";
 import type { Tables } from "@/integrations/supabase/types";
@@ -75,6 +77,7 @@ interface ClientDialogProps {
 export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) {
   const queryClient = useQueryClient();
   const { user, organizationId } = useAuth();
+  const [entryAlreadyPaid, setEntryAlreadyPaid] = useState(false);
 
   const { data: planSettings } = useQuery({
     queryKey: ["plan-settings"],
@@ -119,6 +122,14 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
 
   const status = form.watch("status");
   const selectedPlan = form.watch("plan");
+  const watchedPaymentType = form.watch("payment_type");
+  const watchedFirstDueDate = form.watch("first_due_date");
+
+  // Date-based auto-pay logic
+  const today = format(new Date(), "yyyy-MM-dd");
+  const relevantDate = watchedPaymentType === "parcelado" && watchedFirstDueDate ? watchedFirstDueDate : today;
+  const isFirstDueDateInPast = relevantDate < today;
+  const isFirstDueDateTodayOrFuture = relevantDate >= today;
 
   // Update plan value when plan changes
   useEffect(() => {
@@ -159,7 +170,9 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
         plan_value: Number(client.plan_value) || 0,
         notes: client.notes || "",
       });
+      setEntryAlreadyPaid(false);
     } else {
+      setEntryAlreadyPaid(false);
       form.reset({
         full_name: "",
         phone: "",
@@ -270,10 +283,18 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
           ? getLocalDate(newClient.created_at)
           : getLocalDate(new Date().toISOString());
         
+        // Determine auto-received based on date logic
+        const todayStr = format(new Date(), "yyyy-MM-dd");
+        const firstDueDateStr = data.payment_type === "parcelado" && data.first_due_date 
+          ? data.first_due_date 
+          : clientCreatedDate;
+        const autoReceived = firstDueDateStr < todayStr ? (data.plan_value || 0) : (entryAlreadyPaid ? (data.plan_value || 0) : 0);
+
         const transactionPayload = {
           type: "receita" as const,
           description: `Contrato - ${data.full_name} - Plano ${planName}`,
           amount: data.plan_value || 0,
+          amount_received: autoReceived,
           date: clientCreatedDate,
           client_id: newClient.id,
           plan_id: planSetting?.id || null,
@@ -313,13 +334,17 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
             } else {
               dueDate.setMonth(dueDate.getMonth() + i);
             }
+            const dueDateStr = dueDate.toISOString().split("T")[0];
+            const isPastDue = dueDateStr < todayStr;
             return {
               client_id: newClient.id,
               installment_number: i + 1,
               total_installments: installmentCount,
               amount: installmentAmount,
-              due_date: dueDate.toISOString().split("T")[0],
-              status: "pendente",
+              amount_paid: isPastDue || entryAlreadyPaid ? installmentAmount : 0,
+              due_date: dueDateStr,
+              status: isPastDue || entryAlreadyPaid ? "pago" : "pendente",
+              paid_at: isPastDue || entryAlreadyPaid ? new Date().toISOString() : null,
               owner_id: user?.id || null,
               organization_id: organizationId || null,
             };
@@ -851,9 +876,29 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
                     </>
                   )}
                 </div>
-              </div>
 
-              {/* Observações */}
+                {/* Auto-pay logic indicator */}
+                {!client && (
+                  <div className="rounded-lg border p-3 space-y-1">
+                    {isFirstDueDateInPast ? (
+                      <p className="text-xs text-success flex items-center gap-1.5">
+                        <CheckCircle className="h-3.5 w-3.5" />
+                        A data é anterior a hoje — entrada será marcada como <strong>Recebida</strong> automaticamente.
+                      </p>
+                    ) : (
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={entryAlreadyPaid}
+                          onChange={(e) => setEntryAlreadyPaid(e.target.checked)}
+                          className="rounded border-border"
+                        />
+                        <span className="text-xs font-medium">Entrada já foi recebida?</span>
+                      </label>
+                    )}
+                  </div>
+                )}
+              </div>
               <FormField
                 control={form.control}
                 name="notes"
