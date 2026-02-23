@@ -26,16 +26,16 @@ export default function Dashboard() {
     if (!user) return;
     supabase
       .from("profiles")
-      .select("avatar_url")
+      .select("avatar_url, welcome_seen")
       .eq("user_id", user.id)
       .maybeSingle()
-      .then(({ data }) => setAvatarUrl(data?.avatar_url || null));
-
-    // Show welcome dialog on first admin access
-    const welcomeKey = `admin_welcome_seen_${user.id}`;
-    if (!localStorage.getItem(welcomeKey)) {
-      setShowWelcome(true);
-    }
+      .then(({ data }) => {
+        setAvatarUrl(data?.avatar_url || null);
+        // Show welcome dialog only if never seen before
+        if (data && !(data as any).welcome_seen) {
+          setShowWelcome(true);
+        }
+      });
   }, [user]);
 
   const { data: metrics } = useFinancialMetrics(period);
@@ -148,7 +148,13 @@ export default function Dashboard() {
         open={showWelcome}
         onClose={() => {
           setShowWelcome(false);
-          if (user) localStorage.setItem(`admin_welcome_seen_${user.id}`, "true");
+          if (user) {
+            supabase
+              .from("profiles")
+              .update({ welcome_seen: true } as any)
+              .eq("user_id", user.id)
+              .then();
+          }
         }}
         name={profileName}
       />
