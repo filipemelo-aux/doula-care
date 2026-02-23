@@ -38,6 +38,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Plus, TrendingUp, Search, Trash2, Zap, Check, X, CheckCircle, CreditCard, Banknote, Building2, QrCode, FileText, Users, Wrench, UserPlus, DollarSign, Eye } from "lucide-react";
 import { RecordPaymentDialog } from "@/components/financial/RecordPaymentDialog";
+import { RevenueDetailDialog } from "@/components/financial/RevenueDetailDialog";
 import { maskCurrency, parseCurrency, maskPhone } from "@/lib/masks";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useForm } from "react-hook-form";
@@ -126,6 +127,8 @@ export default function Financial() {
   const [entryAlreadyPaid, setEntryAlreadyPaid] = useState(false);
   const [avistaPaymentStatus, setAvistaPaymentStatus] = useState<"pago" | "parcial" | "pendente">("pendente");
   const [avistaPartialValue, setAvistaPartialValue] = useState<string>("");
+  const [detailDialogOpen, setDetailDialogOpen] = useState(false);
+  const [detailTransactionId, setDetailTransactionId] = useState<string | null>(null);
 
   const queryClient = useQueryClient();
 
@@ -406,6 +409,11 @@ export default function Financial() {
   const handleOpenPaymentDialog = (transaction: Transaction) => {
     setPaymentTransaction(transaction);
     setPaymentDialogOpen(true);
+  };
+
+  const handleOpenDetailDialog = (transactionId: string) => {
+    setDetailTransactionId(transactionId);
+    setDetailDialogOpen(true);
   };
 
   const handleStartEditInstallments = (transaction: Transaction) => {
@@ -809,7 +817,7 @@ export default function Financial() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            onClick={() => handleOpenPaymentDialog(transaction)}
+                            onClick={() => handleOpenDetailDialog(transaction.id)}
                             className="h-6 w-6 text-muted-foreground"
                             title="Ver detalhes"
                           >
@@ -967,7 +975,7 @@ export default function Financial() {
                               <Button
                                 variant="ghost"
                                 size="icon"
-                                onClick={() => handleOpenPaymentDialog(transaction)}
+                                onClick={() => handleOpenDetailDialog(transaction.id)}
                                 className="h-6 w-6 text-muted-foreground hover:text-foreground opacity-0 group-hover:opacity-100 transition-opacity"
                                 title="Ver detalhes"
                               >
@@ -1518,6 +1526,13 @@ export default function Financial() {
         transactionAmount={Number(paymentTransaction?.amount) || 0}
         transactionInstallments={Number(paymentTransaction?.installments) || 1}
         clientId={paymentTransaction?.client_id || null}
+      />
+
+      {/* Revenue Detail Dialog */}
+      <RevenueDetailDialog
+        open={detailDialogOpen}
+        onOpenChange={setDetailDialogOpen}
+        transactionId={detailTransactionId}
       />
     </div>
   );
