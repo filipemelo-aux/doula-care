@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useGestanteAuth } from "@/contexts/GestanteAuthContext";
 import { GestanteLayout } from "@/components/gestante/GestanteLayout";
@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -25,7 +26,8 @@ import {
   Sparkles,
   Check,
   X,
-  Trash2
+  Trash2,
+  Send
 } from "lucide-react";
 import { toast } from "sonner";
 import { formatBrazilDateTime } from "@/lib/utils";
@@ -47,6 +49,9 @@ interface ServiceRequest {
 export default function GestanteMessages() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
+  const [newMessage, setNewMessage] = useState("");
+  const [sending, setSending] = useState(false);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { client } = useGestanteAuth();
   const queryClient = useQueryClient();
 
@@ -198,10 +203,48 @@ export default function GestanteMessages() {
     }
   };
 
+  const handleSendMessage = async () => {
+    if (!client?.id || !newMessage.trim()) return;
+    setSending(true);
+    try {
+      const { error } = await supabase
+        .from("client_notifications")
+        .insert({
+          client_id: client.id,
+          title: `Mensagem de ${client.full_name}`,
+          message: newMessage.trim(),
+          read: false,
+          read_by_client: true,
+        });
+      if (error) throw error;
+
+      sendPushNotification({
+        send_to_admins: true,
+        title: `💬 Nova mensagem: ${client.full_name}`,
+        message: newMessage.trim().substring(0, 100),
+        url: "/admin",
+        tag: "client-message",
+      });
+
+      setNewMessage("");
+      fetchNotifications();
+      toast.success("Mensagem enviada!");
+    } catch (error) {
+      console.error("Error sending message:", error);
+      toast.error("Erro ao enviar mensagem");
+    } finally {
+      setSending(false);
+    }
+  };
+
   const unreadCount = notifications.filter(n => !(n as any).read_by_client).length + (pendingBudgets?.length || 0);
 
   const isBudgetNotification = (notification: Notification) => {
     return notification.title.startsWith("Orçamento:");
+  };
+
+  const isClientMessage = (notification: Notification) => {
+    return notification.title.startsWith("Mensagem de ");
   };
 
   const regularNotifications = notifications.filter(n => !isBudgetNotification(n));
@@ -262,12 +305,12 @@ export default function GestanteMessages() {
               <MessageCircle className="h-12 w-12 mx-auto text-primary/40 mb-4" />
               <h3 className="font-semibold text-lg mb-2">Nenhuma mensagem</h3>
               <p className="text-muted-foreground text-sm">
-                Você receberá aqui os comunicados e orientações da sua Doula
+                Envie mensagens e comprovantes para sua Doula usando o campo abaixo
               </p>
             </CardContent>
           </Card>
         ) : (
-          <ScrollArea className="h-[calc(100vh-12rem)]">
+          <ScrollArea className="h-[calc(100vh-18rem)]">
             <div className="space-y-3">
               {/* Pending budgets - highlighted */}
               {pendingBudgets?.map((budget) => (
@@ -335,41 +378,80 @@ export default function GestanteMessages() {
                 </Card>
               ))}
 
-              {/* Regular notifications */}
-              {regularNotifications.map((notification) => (
-                <Card
-                  key={notification.id}
-                  className={`transition-all ${
-                    (notification as any).read_by_client 
-                      ? "bg-background" 
-                      : "bg-primary/5 border-primary/20 shadow-sm"
-                  }`}
-                >
-                  <CardContent className="p-4">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          {(notification as any).read_by_client ? (
-                            <CheckCircle className="h-4 w-4 text-muted-foreground" />
-                          ) : (
-                            <Clock className="h-4 w-4 text-primary" />
-                          )}
-                          <p className="font-medium">{notification.title}</p>
-                        </div>
-                        <p className="text-sm text-muted-foreground mt-2">
+              {/* Regular notifications + client messages */}
+              {regularNotifications.map((notification) => {
+                const isMine = isClientMessage(notification);
+                return (
+                  <div
+                    key={notification.id}
+                    className={`flex ${isMine ? "justify-end" : "justify-start"}`}
+                  >
+                    <Card
+                      className={`max-w-[85%] transition-all ${
+                        isMine
+                          ? "bg-primary text-primary-foreground border-primary"
+                          : (notification as any).read_by_client
+                            ? "bg-background"
+                            : "bg-primary/5 border-primary/20 shadow-sm"
+                      }`}
+                    >
+                      <CardContent className="p-3">
+                        {!isMine && (
+                          <div className="flex items-center gap-2 mb-1">
+                            {(notification as any).read_by_client ? (
+                              <CheckCircle className="h-3.5 w-3.5 text-muted-foreground" />
+                            ) : (
+                              <Clock className="h-3.5 w-3.5 text-primary" />
+                            )}
+                            <p className="font-medium text-sm">{notification.title}</p>
+                          </div>
+                        )}
+                        <p className={`text-sm ${isMine ? "text-primary-foreground" : "text-muted-foreground"} ${!isMine ? "mt-1" : ""}`}>
                           {notification.message}
                         </p>
-                        <p className="text-xs text-muted-foreground mt-3">
-                          {formatBrazilDateTime(notification.created_at, "dd/MM/yyyy 'às' HH:mm")}
+                        <p className={`text-[10px] mt-2 ${isMine ? "text-primary-foreground/70 text-right" : "text-muted-foreground"}`}>
+                          {formatBrazilDateTime(notification.created_at, "dd/MM 'às' HH:mm")}
                         </p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+                      </CardContent>
+                    </Card>
+                  </div>
+                );
+              })}
             </div>
           </ScrollArea>
         )}
+
+        {/* Compose message area */}
+        <div className="fixed bottom-[6.5rem] left-0 right-0 z-40 bg-background border-t p-3">
+          <div className="container mx-auto max-w-2xl flex gap-2 items-end">
+            <Textarea
+              ref={textareaRef}
+              value={newMessage}
+              onChange={(e) => setNewMessage(e.target.value)}
+              placeholder="Escreva uma mensagem para sua Doula..."
+              className="min-h-[44px] max-h-[120px] resize-none text-sm"
+              rows={1}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSendMessage();
+                }
+              }}
+            />
+            <Button
+              size="icon"
+              onClick={handleSendMessage}
+              disabled={sending || !newMessage.trim()}
+              className="h-11 w-11 shrink-0"
+            >
+              {sending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Send className="h-4 w-4" />
+              )}
+            </Button>
+          </div>
+        </div>
       </div>
     </GestanteLayout>
   );

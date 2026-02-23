@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useGestanteAuth } from "@/contexts/GestanteAuthContext";
@@ -21,6 +22,7 @@ import {
   Check,
   QrCode,
   Loader2,
+  MessageCircle,
 } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -36,6 +38,7 @@ interface PaymentDetailsDialogProps {
 export function PaymentDetailsDialog({ open, onOpenChange }: PaymentDetailsDialogProps) {
   const { client } = useGestanteAuth();
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const navigate = useNavigate();
 
   // First try payments table, fallback to transactions
   const { data: payments, isLoading: paymentsLoading } = useQuery({
@@ -311,8 +314,20 @@ export function PaymentDetailsDialog({ open, onOpenChange }: PaymentDetailsDialo
                     </div>
 
                     <p className="text-xs text-muted-foreground text-center">
-                      Após o pagamento, envie o comprovante pela aba de mensagens
+                      Após o pagamento, envie o comprovante para sua Doula
                     </p>
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      className="w-full"
+                      onClick={() => {
+                        onOpenChange(false);
+                        navigate("/gestante/mensagens");
+                      }}
+                    >
+                      <MessageCircle className="h-4 w-4 mr-2" />
+                      Enviar comprovante via Mensagens
+                    </Button>
                   </CardContent>
                 </Card>
               );
