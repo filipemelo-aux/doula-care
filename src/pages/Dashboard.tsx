@@ -93,15 +93,13 @@ export default function Dashboard() {
           icon={Heart}
           onClick={() => setPuerperasDialogOpen(true)}
         />
-        {(metrics?.outros || 0) > 0 && (
-          <StatCard
-            title="Outros"
-            value={metrics.outros}
-            subtitle="Outras clientes"
-            icon={UserPlus}
-            onClick={() => setOutrosDialogOpen(true)}
-          />
-        )}
+        <StatCard
+          title="Outros"
+          value={metrics?.outros || 0}
+          subtitle="Outras clientes"
+          icon={UserPlus}
+          onClick={() => setOutrosDialogOpen(true)}
+        />
       </div>
 
       {/* Stats Grid - Row 2: Financial */}
