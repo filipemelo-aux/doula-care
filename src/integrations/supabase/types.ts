@@ -370,8 +370,10 @@ export type Database = {
           amount: number
           billing_cycle: string
           created_at: string
+          due_date: string | null
           id: string
           notes: string | null
+          notify_on_create: boolean
           organization_id: string
           paid_at: string | null
           payment_method: string | null
@@ -383,8 +385,10 @@ export type Database = {
           amount: number
           billing_cycle: string
           created_at?: string
+          due_date?: string | null
           id?: string
           notes?: string | null
+          notify_on_create?: boolean
           organization_id: string
           paid_at?: string | null
           payment_method?: string | null
@@ -396,8 +400,10 @@ export type Database = {
           amount?: number
           billing_cycle?: string
           created_at?: string
+          due_date?: string | null
           id?: string
           notes?: string | null
+          notify_on_create?: boolean
           organization_id?: string
           paid_at?: string | null
           payment_method?: string | null
@@ -408,6 +414,54 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "org_billing_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      org_notifications: {
+        Row: {
+          billing_id: string | null
+          created_at: string
+          id: string
+          message: string
+          organization_id: string
+          read: boolean
+          title: string
+          type: string
+        }
+        Insert: {
+          billing_id?: string | null
+          created_at?: string
+          id?: string
+          message: string
+          organization_id: string
+          read?: boolean
+          title: string
+          type?: string
+        }
+        Update: {
+          billing_id?: string | null
+          created_at?: string
+          id?: string
+          message?: string
+          organization_id?: string
+          read?: boolean
+          title?: string
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "org_notifications_billing_id_fkey"
+            columns: ["billing_id"]
+            isOneToOne: false
+            referencedRelation: "org_billing"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "org_notifications_organization_id_fkey"
             columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "organizations"
