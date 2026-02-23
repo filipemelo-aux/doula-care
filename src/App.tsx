@@ -16,6 +16,7 @@ import Settings from "./pages/Settings";
 import Agenda from "./pages/Agenda";
 import NotFound from "./pages/NotFound";
 import Register from "./pages/Register";
+import SuperAdminDashboard from "./pages/SuperAdminDashboard";
 import InstallAppBanner from "./components/pwa/InstallAppBanner";
 import UpdatePrompt from "./components/pwa/UpdatePrompt";
 import { NotificationListenerProvider } from "./components/notifications/NotificationListenerProvider";
@@ -48,6 +49,16 @@ const App = () => (
             <Route path="/" element={<Navigate to="/login" replace />} />
             <Route path="/admin/login" element={<Navigate to="/login" replace />} />
             <Route path="/gestante/login" element={<Navigate to="/login" replace />} />
+
+            {/* Super Admin */}
+            <Route
+              path="/super-admin"
+              element={
+                <ProtectedRoute allowedRoles={["super_admin"]}>
+                  <SuperAdminDashboard />
+                </ProtectedRoute>
+              }
+            />
 
             {/* Client (Gestante) routes */}
             <Route
