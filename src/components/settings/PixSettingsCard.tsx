@@ -30,7 +30,6 @@ export function PixSettingsCard() {
       const { data, error } = await supabase
         .from("admin_settings")
         .select("*")
-        .eq("owner_id", user.id)
         .maybeSingle();
       if (error) throw error;
       if (data) {
@@ -43,6 +42,8 @@ export function PixSettingsCard() {
     enabled: !!user,
   });
 
+  const { organizationId } = useAuth();
+
   const saveMutation = useMutation({
     mutationFn: async () => {
       if (!user) return;
@@ -50,6 +51,7 @@ export function PixSettingsCard() {
         .from("admin_settings")
         .upsert({
           owner_id: user.id,
+          organization_id: organizationId,
           pix_key: pixKey || null,
           pix_key_type: pixKeyType,
           pix_beneficiary_name: beneficiaryName || null,

@@ -87,11 +87,7 @@ import { usePlanLimits } from "@/hooks/usePlanLimits";
 // ─── Plan Types ──────────────────────────────────────────
 type PlanSetting = Tables<"plan_settings">;
 
-const planLabels = {
-  basico: "Básico",
-  intermediario: "Intermediário",
-  completo: "Completo",
-};
+const planLabels: Record<string, string> = {};
 
 const planSchema = z.object({
   name: z.string().min(2, "Nome obrigatório").max(100),
