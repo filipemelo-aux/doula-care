@@ -664,22 +664,62 @@ export default function Settings() {
                   onClick={async () => {
                     try {
                       toast.loading("Verificando atualizações...", { id: "update-check" });
+                      
                       // Clear all caches
                       if ("caches" in window) {
                         const names = await caches.keys();
                         await Promise.all(names.map((n) => caches.delete(n)));
                       }
-                      // Force SW update
+                      
                       if ("serviceWorker" in navigator) {
                         const reg = await navigator.serviceWorker.getRegistration();
                         if (reg) {
+                          // Force check for new SW
                           await reg.update();
+                          
+                          const waitForSW = (sw: ServiceWorker): Promise<void> =>
+                            new Promise((resolve) => {
+                              if (sw.state === "installed") { resolve(); return; }
+                              sw.addEventListener("statechange", () => {
+                                if (sw.state === "installed") resolve();
+                              });
+                              // Timeout fallback
+                              setTimeout(resolve, 5000);
+                            });
+
+                          // If there's a waiting or installing SW, wait and activate it
                           if (reg.waiting) {
                             reg.waiting.postMessage({ type: "SKIP_WAITING" });
+                          } else if (reg.installing) {
+                            await waitForSW(reg.installing);
+                            reg.waiting?.postMessage({ type: "SKIP_WAITING" });
+                          } else {
+                            // Listen for new update found after reg.update()
+                            await new Promise<void>((resolve) => {
+                              const onUpdate = () => {
+                                reg.removeEventListener("updatefound", onUpdate);
+                                const newSW = reg.installing;
+                                if (newSW) {
+                                  waitForSW(newSW).then(() => {
+                                    reg.waiting?.postMessage({ type: "SKIP_WAITING" });
+                                    resolve();
+                                  });
+                                } else {
+                                  resolve();
+                                }
+                              };
+                              reg.addEventListener("updatefound", onUpdate);
+                              // If no update found within 3s, resolve anyway
+                              setTimeout(() => {
+                                reg.removeEventListener("updatefound", onUpdate);
+                                resolve();
+                              }, 3000);
+                            });
                           }
                         }
                       }
-                      toast.success("Caches limpos! Recarregando...", { id: "update-check" });
+                      
+                      toast.success("Atualizado! Recarregando...", { id: "update-check" });
                       setTimeout(() => window.location.reload(), 600);
                     } catch (err) {
                       console.error(err);
