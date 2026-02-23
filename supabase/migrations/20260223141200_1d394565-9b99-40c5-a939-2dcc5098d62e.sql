@@ -1,0 +1,2 @@
+ALTER TABLE public.plan_settings DROP CONSTRAINT IF EXISTS plan_settings_plan_type_key;
+ALTER TABLE public.plan_settings ADD CONSTRAINT plan_settings_plan_type_org_key UNIQUE (plan_type, organization_id);
