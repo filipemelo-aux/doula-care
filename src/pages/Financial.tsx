@@ -44,6 +44,7 @@ import { z } from "zod";
 import { toast } from "sonner";
 import { format, parseISO } from "date-fns";
 import { formatBrazilDate, abbreviateName } from "@/lib/utils";
+import { maskCurrency, parseCurrency } from "@/lib/masks";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { Wallet, Calendar, Clock } from "lucide-react";
 import {
@@ -86,7 +87,11 @@ const transactionSchema = z.object({
   payment_method: z.enum(["pix", "cartao", "dinheiro", "transferencia", "boleto"]),
   payment_status: z.enum(["recebido", "a_receber", "parcial"]),
   notes: z.string().optional(),
+  payment_type: z.enum(["a_vista", "parcelado"]).default("a_vista"),
   installments: z.number().min(1).max(24).default(1),
+  installment_frequency: z.enum(["semanal", "quinzenal", "mensal", "manual"]).default("mensal"),
+  custom_interval_days: z.number().min(1).max(365).default(30),
+  first_due_date: z.string().optional(),
   installment_value: z.number().min(0).default(0),
 });
 
@@ -190,7 +195,10 @@ export default function Financial() {
 
   const createMutation = useMutation({
     mutationFn: async (data: TransactionFormData) => {
-      const { error } = await supabase.from("transactions").insert({
+      const installments = data.payment_type === "parcelado" ? (data.installments || 1) : 1;
+      const installmentValue = data.amount / installments;
+
+      const { data: newTransaction, error } = await supabase.from("transactions").insert({
         type: "receita",
         description: data.description,
         amount: data.amount,
@@ -199,10 +207,46 @@ export default function Financial() {
         plan_id: data.plan_id || null,
         payment_method: data.payment_method,
         notes: data.notes || null,
+        installments,
+        installment_value: installmentValue,
         owner_id: user?.id || null,
         organization_id: organizationId || null,
-      });
+      }).select("id").single();
       if (error) throw error;
+
+      // Create payment records with due dates if parcelado
+      if (data.payment_type === "parcelado" && installments > 1 && data.client_id) {
+        const firstDueDate = data.first_due_date ? new Date(data.first_due_date + "T12:00:00") : new Date();
+        const frequency = data.installment_frequency || "mensal";
+        const customDays = data.custom_interval_days || 30;
+
+        const paymentRecords = Array.from({ length: installments }, (_, i) => {
+          const dueDate = new Date(firstDueDate);
+          if (frequency === "semanal") {
+            dueDate.setDate(dueDate.getDate() + (7 * i));
+          } else if (frequency === "quinzenal") {
+            dueDate.setDate(dueDate.getDate() + (15 * i));
+          } else if (frequency === "manual") {
+            dueDate.setDate(dueDate.getDate() + (customDays * i));
+          } else {
+            dueDate.setMonth(dueDate.getMonth() + i);
+          }
+          return {
+            client_id: data.client_id!,
+            transaction_id: newTransaction.id,
+            installment_number: i + 1,
+            total_installments: installments,
+            amount: installmentValue,
+            due_date: dueDate.toISOString().split("T")[0],
+            status: "pendente",
+            owner_id: user?.id || null,
+            organization_id: organizationId || null,
+          };
+        });
+
+        const { error: paymentError } = await supabase.from("payments").insert(paymentRecords);
+        if (paymentError) console.error("Error creating payments:", paymentError);
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["transactions"] });
@@ -397,6 +441,12 @@ export default function Financial() {
       payment_method: "pix",
       payment_status: "a_receber",
       notes: "",
+      payment_type: "a_vista",
+      installments: 1,
+      installment_frequency: "mensal",
+      custom_interval_days: 30,
+      first_due_date: "",
+      installment_value: 0,
     });
     setDialogOpen(true);
   };
@@ -1199,20 +1249,18 @@ export default function Financial() {
                   name="amount"
                   render={({ field }) => (
                     <FormItem className="space-y-1">
-                      <FormLabel className="text-xs">Valor Total (R$) *</FormLabel>
+                      <FormLabel className="text-xs">Valor Total *</FormLabel>
                       <FormControl>
                         <Input
-                          type="number"
-                          step="0.01"
-                          min={0}
-                          {...field}
+                          value={field.value ? maskCurrency(String(Math.round(field.value * 100))) : ""}
                           onChange={(e) => {
-                            const value = Number(e.target.value);
-                            field.onChange(value);
+                            const numValue = parseCurrency(e.target.value);
+                            field.onChange(numValue);
                             const installments = form.getValues("installments") || 1;
-                            form.setValue("installment_value", value / installments);
+                            form.setValue("installment_value", numValue / installments);
                           }}
                           className="input-field h-8 text-sm"
+                          placeholder="R$ 0,00"
                         />
                       </FormControl>
                       <FormMessage />
@@ -1227,55 +1275,6 @@ export default function Financial() {
                       <FormLabel className="text-xs">Data *</FormLabel>
                       <FormControl>
                         <Input type="date" {...field} className="input-field h-8 text-sm" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              {/* Parcelamento */}
-              <div className="grid grid-cols-2 gap-2">
-                <FormField
-                  control={form.control}
-                  name="installments"
-                  render={({ field }) => (
-                    <FormItem className="space-y-1">
-                      <FormLabel className="text-xs">Nº de Parcelas</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          min={1}
-                          max={24}
-                          {...field}
-                          onChange={(e) => {
-                            const installments = Math.max(1, Number(e.target.value));
-                            field.onChange(installments);
-                            const amount = form.getValues("amount") || 0;
-                            form.setValue("installment_value", amount / installments);
-                          }}
-                          className="input-field h-8 text-sm"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="installment_value"
-                  render={({ field }) => (
-                    <FormItem className="space-y-1">
-                      <FormLabel className="text-xs">Valor da Parcela (R$)</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          step="0.01"
-                          min={0}
-                          {...field}
-                          onChange={(e) => field.onChange(Number(e.target.value))}
-                          className="input-field h-8 text-sm"
-                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -1308,23 +1307,55 @@ export default function Financial() {
                     </FormItem>
                   )}
                 />
-                {!selectedTransaction && (
+                <FormField
+                  control={form.control}
+                  name="payment_type"
+                  render={({ field }) => (
+                    <FormItem className="space-y-1">
+                      <FormLabel className="text-xs">Tipo de Pagamento</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger className="input-field h-8 text-sm">
+                            <SelectValue />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="a_vista">À Vista</SelectItem>
+                          <SelectItem value="parcelado">Parcelado</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              {form.watch("payment_type") === "parcelado" && (
+                <div className="grid grid-cols-2 gap-2">
                   <FormField
                     control={form.control}
-                    name="payment_status"
+                    name="installments"
                     render={({ field }) => (
                       <FormItem className="space-y-1">
-                        <FormLabel className="text-xs">Status *</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value}>
+                        <FormLabel className="text-xs">Parcelas</FormLabel>
+                        <Select
+                          onValueChange={(value) => {
+                            const inst = parseInt(value);
+                            field.onChange(inst);
+                            const amount = form.getValues("amount") || 0;
+                            form.setValue("installment_value", amount / inst);
+                          }}
+                          value={String(field.value || 1)}
+                        >
                           <FormControl>
                             <SelectTrigger className="input-field h-8 text-sm">
                               <SelectValue />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            {Object.entries(paymentStatusLabels).map(([value, label]) => (
-                              <SelectItem key={value} value={value}>
-                                {label}
+                            {Array.from({ length: 12 }, (_, i) => i + 1).map((num) => (
+                              <SelectItem key={num} value={String(num)}>
+                                {num}x {form.getValues("amount") ? `(${maskCurrency(String(Math.round((form.getValues("amount") / num) * 100)))})` : ""}
                               </SelectItem>
                             ))}
                           </SelectContent>
@@ -1333,8 +1364,93 @@ export default function Financial() {
                       </FormItem>
                     )}
                   />
-                )}
-              </div>
+                  <FormField
+                    control={form.control}
+                    name="installment_frequency"
+                    render={({ field }) => (
+                      <FormItem className="space-y-1">
+                        <FormLabel className="text-xs">Frequência</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value || "mensal"}>
+                          <FormControl>
+                            <SelectTrigger className="input-field h-8 text-sm">
+                              <SelectValue />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="semanal">Semanal (7 dias)</SelectItem>
+                            <SelectItem value="quinzenal">Quinzenal (15 dias)</SelectItem>
+                            <SelectItem value="mensal">Mensal</SelectItem>
+                            <SelectItem value="manual">Personalizado</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  {form.watch("installment_frequency") === "manual" && (
+                    <FormField
+                      control={form.control}
+                      name="custom_interval_days"
+                      render={({ field }) => (
+                        <FormItem className="space-y-1">
+                          <FormLabel className="text-xs">Intervalo (dias)</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              min={1}
+                              max={365}
+                              className="input-field h-8 text-sm"
+                              value={field.value || 30}
+                              onChange={(e) => field.onChange(parseInt(e.target.value) || 30)}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  )}
+                  <FormField
+                    control={form.control}
+                    name="first_due_date"
+                    render={({ field }) => (
+                      <FormItem className="space-y-1">
+                        <FormLabel className="text-xs">1º Vencimento</FormLabel>
+                        <FormControl>
+                          <Input type="date" {...field} className="input-field h-8 text-sm" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              )}
+
+              {!selectedTransaction && (
+                <FormField
+                  control={form.control}
+                  name="payment_status"
+                  render={({ field }) => (
+                    <FormItem className="space-y-1">
+                      <FormLabel className="text-xs">Status *</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger className="input-field h-8 text-sm">
+                            <SelectValue />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {Object.entries(paymentStatusLabels).map(([value, label]) => (
+                            <SelectItem key={value} value={value}>
+                              {label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
 
               <FormField
                 control={form.control}

@@ -32,7 +32,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 
-import { maskPhone, maskCPF, maskCEP } from "@/lib/masks";
+import { maskPhone, maskCPF, maskCEP, maskCurrency, parseCurrency } from "@/lib/masks";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Client = Tables<"clients">;
@@ -702,11 +702,10 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
                         <FormLabel className="text-xs">Valor (R$)</FormLabel>
                         <FormControl>
                           <Input 
-                            type="number" 
-                            step="0.01"
                             className="h-9 text-sm"
-                            value={field.value || ""}
-                            onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                            value={field.value ? maskCurrency(String(Math.round(field.value * 100))) : ""}
+                            onChange={(e) => field.onChange(parseCurrency(e.target.value))}
+                            placeholder="R$ 0,00"
                           />
                         </FormControl>
                         <FormMessage />
