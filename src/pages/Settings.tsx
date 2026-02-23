@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, lazy, Suspense } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -79,6 +79,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import type { Tables } from "@/integrations/supabase/types";
+import Plans from "@/pages/Plans";
 
 // ─── Plan Types ──────────────────────────────────────────
 type PlanSetting = Tables<"plan_settings">;
@@ -573,67 +574,7 @@ export default function Settings() {
 
         {/* ─── PLANS TAB ─── */}
         <TabsContent value="plans" className="space-y-6">
-          {loadingPlans ? (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {[...Array(3)].map((_, i) => <Skeleton key={i} className="h-96" />)}
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {plans?.map((plan) => {
-                const planType = plan.plan_type as keyof typeof planLabels;
-                const isCompleto = planType === "completo";
-                const isActive = plan.is_active !== false;
-
-                return (
-                  <Card
-                    key={plan.id}
-                    className={`relative overflow-hidden transition-all ${!isActive ? "opacity-60" : ""} ${isCompleto && isActive ? "border-primary/30 shadow-lg" : "card-glass"}`}
-                  >
-                    <div className="absolute top-3 right-3 flex items-center gap-2">
-                      {isCompleto && isActive && <Badge className="bg-primary text-primary-foreground text-xs">Popular</Badge>}
-                      <Badge variant="outline" className={isActive ? "bg-success/10 text-success border-success/20" : "bg-muted text-muted-foreground"}>
-                        {isActive ? "Ativo" : "Inativo"}
-                      </Badge>
-                    </div>
-
-                    <CardHeader className="pt-12">
-                      <Badge variant="outline" className="w-fit mb-2">{planLabels[planType]}</Badge>
-                      <CardTitle className="text-2xl font-display">{plan.name}</CardTitle>
-                      <CardDescription>{plan.description}</CardDescription>
-                    </CardHeader>
-
-                    <CardContent className="space-y-4">
-                      <div className="text-3xl font-bold text-foreground">{formatCurrency(Number(plan.default_value))}</div>
-                      <p className="text-sm text-muted-foreground">{clientCounts?.[planType] || 0} cliente(s) neste plano</p>
-
-                      <div className="space-y-2 min-h-[120px]">
-                        {plan.features?.map((feature, index) => (
-                          <div key={index} className="flex items-start gap-2">
-                            <Check className="w-4 h-4 text-success mt-0.5 shrink-0" />
-                            <span className="text-sm">{feature}</span>
-                          </div>
-                        ))}
-                      </div>
-
-                      <div className="flex gap-2 pt-4 border-t">
-                        <Button variant="outline" className="flex-1" onClick={() => handleEditPlan(plan)}>
-                          <Edit2 className="w-4 h-4 mr-2" /> Editar
-                        </Button>
-                        <Button
-                          variant={isActive ? "ghost" : "secondary"}
-                          size="icon"
-                          onClick={() => togglePlanMutation.mutate({ id: plan.id, is_active: !isActive })}
-                          title={isActive ? "Desativar" : "Ativar"}
-                        >
-                          {isActive ? <PowerOff className="w-4 h-4" /> : <Power className="w-4 h-4" />}
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
-          )}
+          <Plans />
         </TabsContent>
 
         {/* ─── PIX TAB ─── */}
