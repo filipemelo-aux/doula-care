@@ -795,7 +795,7 @@ function KpiCard({
           {icon}
           <span className="text-[10px] lg:text-xs text-muted-foreground truncate">{label}</span>
         </div>
-        <p className="text-[11px] lg:text-base font-bold text-foreground truncate">{value}</p>
+        <p className="text-xs lg:text-base font-bold text-foreground truncate">{value}</p>
       </CardContent>
     </Card>
   );
