@@ -529,7 +529,8 @@ export default function Financial() {
   // Client tab: has plan_id OR is auto-generated (contract-based)
   // Service tab: no plan_id AND not auto-generated (manual/service entries)
   const clientTransactions = transactions?.filter((t) => t.plan_id != null || t.is_auto_generated === true) || [];
-  const serviceTransactions = transactions?.filter((t) => t.plan_id == null && !t.is_auto_generated) || [];
+  const serviceTransactions = (transactions?.filter((t) => t.plan_id == null && !t.is_auto_generated) || [])
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
   const activeTabTransactions = revenueTab === "clientes" ? clientTransactions : serviceTransactions;
 
