@@ -22,7 +22,7 @@ export function PushPermissionModal({ open, onOpenChange }: PushPermissionModalP
 
   const handleActivate = useCallback(async () => {
     const result = await subscribe();
-    if (result) {
+    if (result === true) {
       setStep("success");
     } else {
       setStep("denied");
