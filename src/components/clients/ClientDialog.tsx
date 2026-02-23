@@ -283,16 +283,37 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
           ? getLocalDate(newClient.created_at)
           : getLocalDate(new Date().toISOString());
         
-        // Determine auto-received based on date logic
+        // Determine auto-received based on date logic — account for ALL paid installments
         const todayStr = format(new Date(), "yyyy-MM-dd");
-        const firstDueDateStr = data.payment_type === "parcelado" && data.first_due_date 
-          ? data.first_due_date 
-          : clientCreatedDate;
         const installmentCount = data.payment_type === "parcelado" ? (data.installments || 1) : 1;
-        const firstInstallmentVal = (data.plan_value || 0) / installmentCount;
-        const autoReceived = firstDueDateStr < todayStr 
-          ? (data.payment_type === "parcelado" ? firstInstallmentVal : (data.plan_value || 0))
-          : (entryAlreadyPaid ? firstInstallmentVal : 0);
+        const installmentVal = (data.plan_value || 0) / installmentCount;
+        let autoReceived = 0;
+
+        if (data.payment_type === "parcelado" && installmentCount > 1) {
+          const firstDueDate = data.first_due_date ? new Date(data.first_due_date + "T12:00:00") : new Date();
+          const frequency = data.installment_frequency || "mensal";
+          const customDays = data.custom_interval_days || 30;
+          for (let i = 0; i < installmentCount; i++) {
+            const dueDate = new Date(firstDueDate);
+            if (frequency === "semanal") dueDate.setDate(dueDate.getDate() + (7 * i));
+            else if (frequency === "quinzenal") dueDate.setDate(dueDate.getDate() + (15 * i));
+            else if (frequency === "manual") dueDate.setDate(dueDate.getDate() + (customDays * i));
+            else dueDate.setMonth(dueDate.getMonth() + i);
+            const dueDateStr = dueDate.toISOString().split("T")[0];
+            const isPastDue = dueDateStr < todayStr;
+            if (isPastDue || (entryAlreadyPaid && i === 0)) {
+              autoReceived += installmentVal;
+            }
+          }
+        } else {
+          // À vista or single installment
+          const firstDueDateStr = data.first_due_date || clientCreatedDate;
+          if (firstDueDateStr < todayStr) {
+            autoReceived = data.plan_value || 0;
+          } else if (entryAlreadyPaid) {
+            autoReceived = installmentVal;
+          }
+        }
 
         const transactionPayload = {
           type: "receita" as const,
