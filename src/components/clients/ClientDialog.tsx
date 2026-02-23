@@ -288,7 +288,11 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
         const firstDueDateStr = data.payment_type === "parcelado" && data.first_due_date 
           ? data.first_due_date 
           : clientCreatedDate;
-        const autoReceived = firstDueDateStr < todayStr ? (data.plan_value || 0) : (entryAlreadyPaid ? (data.plan_value || 0) : 0);
+        const installmentCount = data.payment_type === "parcelado" ? (data.installments || 1) : 1;
+        const firstInstallmentVal = (data.plan_value || 0) / installmentCount;
+        const autoReceived = firstDueDateStr < todayStr 
+          ? (data.payment_type === "parcelado" ? firstInstallmentVal : (data.plan_value || 0))
+          : (entryAlreadyPaid ? firstInstallmentVal : 0);
 
         const transactionPayload = {
           type: "receita" as const,
@@ -341,10 +345,10 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
               installment_number: i + 1,
               total_installments: installmentCount,
               amount: installmentAmount,
-              amount_paid: isPastDue || entryAlreadyPaid ? installmentAmount : 0,
+              amount_paid: isPastDue || (entryAlreadyPaid && i === 0) ? installmentAmount : 0,
               due_date: dueDateStr,
-              status: isPastDue || entryAlreadyPaid ? "pago" : "pendente",
-              paid_at: isPastDue || entryAlreadyPaid ? new Date().toISOString() : null,
+              status: isPastDue || (entryAlreadyPaid && i === 0) ? "pago" : "pendente",
+              paid_at: isPastDue || (entryAlreadyPaid && i === 0) ? new Date().toISOString() : null,
               owner_id: user?.id || null,
               organization_id: organizationId || null,
             };
