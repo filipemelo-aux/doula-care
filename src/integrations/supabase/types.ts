@@ -51,6 +51,8 @@ export type Database = {
           id: string
           notes: string | null
           owner_id: string | null
+          reminder_1h_sent: boolean
+          reminder_24h_sent: boolean
           scheduled_at: string
           title: string
           updated_at: string
@@ -61,6 +63,8 @@ export type Database = {
           id?: string
           notes?: string | null
           owner_id?: string | null
+          reminder_1h_sent?: boolean
+          reminder_24h_sent?: boolean
           scheduled_at: string
           title: string
           updated_at?: string
@@ -71,6 +75,8 @@ export type Database = {
           id?: string
           notes?: string | null
           owner_id?: string | null
+          reminder_1h_sent?: boolean
+          reminder_24h_sent?: boolean
           scheduled_at?: string
           title?: string
           updated_at?: string
