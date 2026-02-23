@@ -365,12 +365,64 @@ export type Database = {
           },
         ]
       }
+      org_billing: {
+        Row: {
+          amount: number
+          billing_cycle: string
+          created_at: string
+          id: string
+          notes: string | null
+          organization_id: string
+          paid_at: string | null
+          payment_method: string | null
+          reference_month: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          billing_cycle: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          organization_id: string
+          paid_at?: string | null
+          payment_method?: string | null
+          reference_month: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          billing_cycle?: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          organization_id?: string
+          paid_at?: string | null
+          payment_method?: string | null
+          reference_month?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "org_billing_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       organizations: {
         Row: {
+          billing_cycle: string | null
           created_at: string
           id: string
           logo_url: string | null
           name: string
+          next_billing_date: string | null
           nome_exibicao: string | null
           plan: Database["public"]["Enums"]["org_plan"]
           primary_color: string | null
@@ -380,10 +432,12 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          billing_cycle?: string | null
           created_at?: string
           id?: string
           logo_url?: string | null
           name: string
+          next_billing_date?: string | null
           nome_exibicao?: string | null
           plan?: Database["public"]["Enums"]["org_plan"]
           primary_color?: string | null
@@ -393,10 +447,12 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          billing_cycle?: string | null
           created_at?: string
           id?: string
           logo_url?: string | null
           name?: string
+          next_billing_date?: string | null
           nome_exibicao?: string | null
           plan?: Database["public"]["Enums"]["org_plan"]
           primary_color?: string | null
@@ -535,6 +591,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      platform_plan_pricing: {
+        Row: {
+          billing_cycle: string
+          created_at: string
+          id: string
+          is_active: boolean
+          plan: string
+          price: number
+          updated_at: string
+        }
+        Insert: {
+          billing_cycle: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          plan: string
+          price?: number
+          updated_at?: string
+        }
+        Update: {
+          billing_cycle?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          plan?: string
+          price?: number
+          updated_at?: string
+        }
+        Relationships: []
       }
       pregnancy_diary: {
         Row: {
