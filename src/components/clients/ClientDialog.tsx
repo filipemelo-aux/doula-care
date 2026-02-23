@@ -52,6 +52,7 @@ const clientSchema = z.object({
   companion_name: z.string().optional(),
   companion_phone: z.string().optional(),
   status: z.enum(["gestante", "lactante", "outro"]),
+  custom_status: z.string().optional(),
   pregnancy_weeks: z.number().min(0).max(42).optional().nullable(),
   dpp: z.string().optional().nullable(),
   baby_names: z.string().optional(),
@@ -105,6 +106,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
       companion_name: "",
       companion_phone: "",
       status: "gestante",
+      custom_status: "",
       pregnancy_weeks: null,
       dpp: null,
       baby_names: "",
@@ -157,6 +159,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
         companion_name: client.companion_name || "",
         companion_phone: client.companion_phone || "",
         status: client.status as "gestante" | "lactante" | "outro",
+        custom_status: (client as any).custom_status || "",
         pregnancy_weeks: client.pregnancy_weeks,
         dpp: client.dpp || null,
         baby_names: (client as any).baby_names?.join(", ") || "",
@@ -186,6 +189,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
         companion_name: "",
         companion_phone: "",
         status: "gestante",
+        custom_status: "",
         pregnancy_weeks: null,
         dpp: null,
         baby_names: "",
@@ -217,6 +221,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
         companion_name: data.companion_name || null,
         companion_phone: data.companion_phone || null,
         status: data.status,
+        custom_status: data.status === "outro" ? (data.custom_status || null) : null,
         pregnancy_weeks: data.status === "gestante" && data.dpp 
           ? calculateCurrentPregnancyWeeks(null, null, data.dpp) 
           : null,
@@ -676,6 +681,25 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
                       </FormItem>
                     )}
                   />
+                  {status === "outro" && (
+                    <FormField
+                      control={form.control}
+                      name="custom_status"
+                      render={({ field }) => (
+                        <FormItem className="space-y-1 md:col-span-2">
+                          <FormLabel className="text-xs">Definir status</FormLabel>
+                          <FormControl>
+                            <Input
+                              {...field}
+                              className="h-9 text-sm"
+                              placeholder="Ex: Tentante, Consultoria, etc."
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  )}
                   {status === "gestante" && (
                     <>
                       <FormField
