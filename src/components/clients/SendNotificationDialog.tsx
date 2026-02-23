@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -33,6 +34,7 @@ export function SendNotificationDialog({
   const [title, setTitle] = useState("");
   const [message, setMessage] = useState("");
   const queryClient = useQueryClient();
+  const { organizationId } = useAuth();
 
   const mutation = useMutation({
     mutationFn: async () => {
@@ -44,6 +46,7 @@ export function SendNotificationDialog({
           client_id: client.id,
           title,
           message,
+          organization_id: organizationId || null,
         });
 
       if (error) throw error;

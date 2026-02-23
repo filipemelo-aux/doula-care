@@ -73,7 +73,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    const { clientId, fullName, dpp } = await req.json();
+    const { clientId, fullName, dpp, organizationId } = await req.json();
 
     if (!clientId || !fullName || !dpp) {
       throw new Error("Missing required fields: clientId, fullName, dpp");
@@ -118,6 +118,10 @@ Deno.serve(async (req) => {
         if (altUserData.user) {
           await supabase.from("clients").update({ user_id: altUserData.user.id, first_login: true }).eq("id", clientId);
           await supabase.from("user_roles").insert({ user_id: altUserData.user.id, role: "client" });
+          // Set organization_id on the user's profile
+          if (organizationId) {
+            await supabase.from("profiles").update({ organization_id: organizationId }).eq("user_id", altUserData.user.id);
+          }
 
           return new Response(
             JSON.stringify({ message: "Usuário criado com sucesso", email: altEmail, user: { id: altUserData.user.id } }),
@@ -131,6 +135,10 @@ Deno.serve(async (req) => {
     if (userData.user) {
       await supabase.from("clients").update({ user_id: userData.user.id, first_login: true }).eq("id", clientId);
       await supabase.from("user_roles").insert({ user_id: userData.user.id, role: "client" });
+      // Set organization_id on the user's profile
+      if (organizationId) {
+        await supabase.from("profiles").update({ organization_id: organizationId }).eq("user_id", userData.user.id);
+      }
     }
 
     return new Response(

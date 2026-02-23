@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -98,6 +99,7 @@ const predefinedServices = [
 ];
 
 export default function Financial() {
+  const { user, organizationId } = useAuth();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -197,6 +199,8 @@ export default function Financial() {
         plan_id: data.plan_id || null,
         payment_method: data.payment_method,
         notes: data.notes || null,
+        owner_id: user?.id || null,
+        organization_id: organizationId || null,
       });
       if (error) throw error;
     },
@@ -399,7 +403,6 @@ export default function Financial() {
 
   const quickClientMutation = useMutation({
     mutationFn: async ({ name, phone }: { name: string; phone: string }) => {
-      const { data: userData } = await supabase.auth.getUser();
       const { data, error } = await supabase
         .from("clients")
         .insert({
@@ -409,7 +412,8 @@ export default function Financial() {
           plan: "basico",
           payment_method: "pix",
           payment_status: "pendente",
-          owner_id: userData.user?.id || null,
+          owner_id: user?.id || null,
+          organization_id: organizationId || null,
         })
         .select("id, full_name")
         .single();

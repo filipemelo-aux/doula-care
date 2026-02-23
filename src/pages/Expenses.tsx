@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -108,6 +109,7 @@ const expenseSchema = z.object({
 type ExpenseFormData = z.infer<typeof expenseSchema>;
 
 export default function Expenses() {
+  const { user, organizationId } = useAuth();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -154,6 +156,8 @@ export default function Expenses() {
         expense_category: data.expense_category,
         payment_method: data.payment_method,
         notes: data.notes || null,
+        owner_id: user?.id || null,
+        organization_id: organizationId || null,
       });
       if (error) throw error;
     },

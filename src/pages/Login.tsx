@@ -15,11 +15,13 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const navigate = useNavigate();
-  const { signIn, user, role, roleChecked, loading, isAdmin, isClient, isFirstLogin } = useAuth();
+  const { signIn, user, role, roleChecked, loading, isAdmin, isClient, isSuperAdmin, isFirstLogin } = useAuth();
 
   useEffect(() => {
     if (!loading && user && roleChecked && role) {
-      if (role === "admin" || role === "moderator") {
+      if (role === "super_admin") {
+        navigate("/super-admin", { replace: true });
+      } else if (role === "admin" || role === "moderator") {
         navigate("/admin", { replace: true });
       } else if (role === "client") {
         if (isFirstLogin) {

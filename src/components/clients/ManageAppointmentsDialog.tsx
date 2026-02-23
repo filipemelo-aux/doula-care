@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   Dialog,
   DialogContent,
@@ -41,6 +42,7 @@ export function ManageAppointmentsDialog({
   const [scheduledAt, setScheduledAt] = useState("");
   const [notes, setNotes] = useState("");
   const queryClient = useQueryClient();
+  const { user, organizationId } = useAuth();
 
   const { data: appointments, isLoading } = useQuery({
     queryKey: ["client-appointments", clientId],
@@ -64,6 +66,8 @@ export function ManageAppointmentsDialog({
         title,
         scheduled_at: new Date(scheduledAt).toISOString(),
         notes: notes || null,
+        owner_id: user?.id || null,
+        organization_id: organizationId || null,
       });
       if (error) throw error;
     },

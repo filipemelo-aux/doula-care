@@ -3,7 +3,7 @@ import { InAppNotificationListener } from "@/components/notifications/InAppNotif
 import { AutoPushPrompt } from "@/components/notifications/AutoPushPrompt";
 
 export function NotificationListenerProvider() {
-  const { user, role, client, isAdmin, isClient } = useAuth();
+  const { user, role, client, isAdmin, isClient, organizationId } = useAuth();
 
   if (!user || !role) return null;
 
@@ -13,6 +13,7 @@ export function NotificationListenerProvider() {
         userId={user.id}
         role={isClient ? "client" : "admin"}
         clientId={client?.id}
+        organizationId={organizationId}
       />
       <AutoPushPrompt userId={user.id} />
     </>

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   Dialog,
   DialogContent,
@@ -78,6 +79,7 @@ const puerperiumSymptoms = [
 ];
 
 export function DiaryEntryDialog({ open, onOpenChange, clientId, onSuccess, isPuerpera = false }: DiaryEntryDialogProps) {
+  const { organizationId } = useAuth();
   const [content, setContent] = useState("");
   const [emotion, setEmotion] = useState<string | null>(null);
   const [symptoms, setSymptoms] = useState<string[]>([]);
@@ -110,6 +112,7 @@ export function DiaryEntryDialog({ open, onOpenChange, clientId, onSuccess, isPu
           emotion,
           symptoms: symptoms.length > 0 ? symptoms : null,
           observations: observations.trim() || null,
+          organization_id: organizationId || null,
         });
 
       if (error) throw error;

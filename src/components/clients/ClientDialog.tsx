@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { calculateCurrentPregnancyWeeks } from "@/lib/pregnancy";
 import {
   Dialog,
@@ -73,6 +74,7 @@ interface ClientDialogProps {
 
 export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) {
   const queryClient = useQueryClient();
+  const { user, organizationId } = useAuth();
 
   const { data: planSettings } = useQuery({
     queryKey: ["plan-settings"],
@@ -216,6 +218,8 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
         payment_method: data.payment_method,
         plan_value: data.plan_value || 0,
         notes: data.notes || null,
+        owner_id: user?.id || null,
+        organization_id: organizationId || null,
       };
 
       if (client) {
@@ -280,6 +284,8 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
             ? (data.plan_value || 0) / data.installments 
             : (data.plan_value || 0),
           notes: `Receita gerada automaticamente ao cadastrar cliente`,
+          owner_id: user?.id || null,
+          organization_id: organizationId || null,
         };
 
         const { error: transactionError } = await supabase
@@ -314,6 +320,8 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
               amount: installmentAmount,
               due_date: dueDate.toISOString().split("T")[0],
               status: "pendente",
+              owner_id: user?.id || null,
+              organization_id: organizationId || null,
             };
           });
 
@@ -331,6 +339,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
                 clientId: newClient.id,
                 fullName: data.full_name,
                 dpp: data.dpp,
+                organizationId: organizationId || null,
               },
             });
 

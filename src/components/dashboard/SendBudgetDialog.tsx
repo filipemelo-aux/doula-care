@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -32,6 +33,7 @@ interface SendBudgetDialogProps {
 export function SendBudgetDialog({ open, onOpenChange, serviceRequest }: SendBudgetDialogProps) {
   const [budgetValue, setBudgetValue] = useState("");
   const queryClient = useQueryClient();
+  const { organizationId } = useAuth();
 
   const sendBudgetMutation = useMutation({
     mutationFn: async () => {
@@ -62,6 +64,7 @@ export function SendBudgetDialog({ open, onOpenChange, serviceRequest }: SendBud
           title: `Orçamento: ${serviceRequest.service_type}`,
           message: `Sua Doula enviou um orçamento de R$ ${value.toFixed(2).replace(".", ",")} para o serviço de ${serviceRequest.service_type}. Acesse suas mensagens para aceitar ou recusar.`,
           read: false,
+          organization_id: organizationId || null,
         });
 
       if (notifError) throw notifError;

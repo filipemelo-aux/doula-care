@@ -52,7 +52,7 @@ export default function GestanteMessages() {
   const [newMessage, setNewMessage] = useState("");
   const [sending, setSending] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const { client } = useGestanteAuth();
+  const { client, organizationId } = useGestanteAuth();
   const queryClient = useQueryClient();
 
   // Fetch regular notifications
@@ -215,6 +215,7 @@ export default function GestanteMessages() {
           message: newMessage.trim(),
           read: false,
           read_by_client: true,
+          organization_id: organizationId || null,
         });
       if (error) throw error;
 

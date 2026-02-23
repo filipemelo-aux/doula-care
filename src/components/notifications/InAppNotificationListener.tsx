@@ -8,9 +8,10 @@ interface InAppNotificationListenerProps {
   userId: string;
   role: "client" | "admin";
   clientId?: string;
+  organizationId?: string | null;
 }
 
-export function InAppNotificationListener({ userId, role, clientId }: InAppNotificationListenerProps) {
+export function InAppNotificationListener({ userId, role, clientId, organizationId }: InAppNotificationListenerProps) {
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
   const contractionChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
 
@@ -65,6 +66,7 @@ export function InAppNotificationListener({ userId, role, clientId }: InAppNotif
                     client_id: clientData.id,
                     title: "💕 Seu bebê está a caminho!",
                     message: "Sua Doula registrou que o trabalho de parto começou. Respire fundo, confie no seu corpo. Estarei com você!",
+                    organization_id: organizationId || null,
                   });
 
                   toast.success(`Trabalho de parto registrado para ${clientData.full_name}`, {

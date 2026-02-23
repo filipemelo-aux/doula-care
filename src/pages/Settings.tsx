@@ -100,7 +100,7 @@ const planSchema = z.object({
 type PlanFormData = z.infer<typeof planSchema>;
 
 export default function Settings() {
-  const { user, isAdmin, role, signOut, profileName } = useAuth();
+  const { user, isAdmin, role, signOut, profileName, organizationId } = useAuth();
   const callerIsAdmin = role === "admin";
   const callerIsModerator = role === "moderator";
   const queryClient = useQueryClient();
@@ -215,7 +215,7 @@ export default function Settings() {
   const createUserMutation = useMutation({
     mutationFn: async (userData: typeof newUserData) => {
       const { data, error } = await supabase.functions.invoke("create-admin-user", {
-        body: userData,
+        body: { ...userData, organizationId },
       });
       if (error) throw error;
       if (data.error) throw new Error(data.error);

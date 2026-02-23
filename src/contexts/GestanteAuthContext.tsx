@@ -9,6 +9,7 @@ export function useGestanteAuth() {
     session: auth.session,
     client: auth.client,
     loading: auth.loading,
+    organizationId: auth.organizationId,
     isAuthenticated: auth.isClient && !!auth.session,
     isFirstLogin: auth.isFirstLogin,
     signIn: async (username: string, password: string) => {
