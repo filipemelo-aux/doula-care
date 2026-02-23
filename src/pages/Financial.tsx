@@ -1303,7 +1303,7 @@ export default function Financial() {
                   name="date"
                   render={({ field }) => (
                     <FormItem className="space-y-1">
-                      <FormLabel className="text-xs">Data *</FormLabel>
+                      <FormLabel className="text-xs">Data do Serviço *</FormLabel>
                       <FormControl>
                         <Input type="date" {...field} className="input-field h-8 text-sm" />
                       </FormControl>
