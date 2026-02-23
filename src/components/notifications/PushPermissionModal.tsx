@@ -50,19 +50,39 @@ export function PushPermissionModal({ open, onOpenChange }: PushPermissionModalP
                 <Bell className="h-8 w-8 text-primary" />
               </div>
               <DialogTitle className="font-display text-xl">
-                Ativar notificações importantes
+                Fique sempre por dentro! 💛
               </DialogTitle>
               <DialogDescription className="text-sm leading-relaxed">
-                O Doula Care precisa de permissão para enviar notificações importantes, como{" "}
-                <strong>novas mensagens</strong>, <strong>registros no diário</strong> e{" "}
-                <strong>lembretes de consultas</strong>.
+                Ative as notificações para não perder nada importante:
               </DialogDescription>
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                Mesmo quando o aplicativo estiver fechado, você continuará recebendo avisos importantes.
-              </p>
             </DialogHeader>
 
-            <div className="space-y-3 pt-2">
+            <div className="space-y-2 py-2">
+              <div className="flex items-start gap-3 rounded-lg bg-muted/50 p-3">
+                <span className="text-lg">🤰</span>
+                <p className="text-sm text-foreground leading-relaxed">
+                  <strong>Mensagens das suas gestantes</strong> — saiba na hora quando elas precisarem de você
+                </p>
+              </div>
+              <div className="flex items-start gap-3 rounded-lg bg-muted/50 p-3">
+                <span className="text-lg">📅</span>
+                <p className="text-sm text-foreground leading-relaxed">
+                  <strong>Lembretes de consultas</strong> — nunca esqueça um compromisso importante
+                </p>
+              </div>
+              <div className="flex items-start gap-3 rounded-lg bg-muted/50 p-3">
+                <span className="text-lg">🚨</span>
+                <p className="text-sm text-foreground leading-relaxed">
+                  <strong>Alertas de parto</strong> — seja avisada imediatamente quando o momento chegar
+                </p>
+              </div>
+            </div>
+
+            <p className="text-xs text-muted-foreground text-center leading-relaxed">
+              Funciona mesmo com o app fechado. Sem spam, prometemos! ✨
+            </p>
+
+            <div className="space-y-3 pt-1">
               <Button
                 className="w-full gap-2"
                 size="lg"
@@ -78,7 +98,7 @@ export function PushPermissionModal({ open, onOpenChange }: PushPermissionModalP
               </Button>
               <Button
                 variant="ghost"
-                className="w-full text-muted-foreground"
+                className="w-full text-muted-foreground text-xs"
                 onClick={handleDismiss}
                 disabled={isLoading}
               >
