@@ -1,8 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -15,7 +14,10 @@ import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { format, addMonths } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Receipt, Plus, CheckCircle, Clock, AlertTriangle, XCircle, Bell } from "lucide-react";
+import {
+  Receipt, Plus, CheckCircle, Clock, AlertTriangle, XCircle, Bell,
+  CalendarDays, Building2,
+} from "lucide-react";
 import { maskCurrency, parseCurrency } from "@/lib/masks";
 
 interface BillingRow {
@@ -38,6 +40,29 @@ interface OrgBasic {
   plan: string;
   billing_cycle: string | null;
 }
+
+const statusConfig: Record<string, { icon: React.ReactNode; badgeClass: string; label: string }> = {
+  pago: {
+    icon: <CheckCircle className="h-3 w-3" />,
+    badgeClass: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 border-emerald-300/30",
+    label: "Pago",
+  },
+  atrasado: {
+    icon: <AlertTriangle className="h-3 w-3" />,
+    badgeClass: "bg-destructive/10 text-destructive border-destructive/20",
+    label: "Atrasado",
+  },
+  cancelado: {
+    icon: <XCircle className="h-3 w-3" />,
+    badgeClass: "bg-muted text-muted-foreground",
+    label: "Cancelado",
+  },
+  pendente: {
+    icon: <Clock className="h-3 w-3" />,
+    badgeClass: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 border-amber-300/30",
+    label: "Pendente",
+  },
+};
 
 export function OrgBillingCard() {
   const queryClient = useQueryClient();
@@ -111,9 +136,7 @@ export function OrgBillingCard() {
       }).select("id").single();
       if (error) throw error;
 
-      // Send notification to the doula's org
       if (notifyDoula) {
-        const org = orgs.find((o) => o.id === selectedOrg);
         const dueDateText = newDueDate
           ? ` Vencimento: ${format(new Date(newDueDate + "T12:00:00"), "dd/MM/yyyy", { locale: ptBR })}.`
           : "";
@@ -146,7 +169,6 @@ export function OrgBillingCard() {
       const { error } = await supabase.from("org_billing").update(updates).eq("id", id);
       if (error) throw error;
 
-      // Notify doula on status change
       const statusLabels: Record<string, string> = {
         pago: "Pagamento confirmado",
         atrasado: "Pagamento em atraso",
@@ -189,7 +211,6 @@ export function OrgBillingCard() {
       if (priceRow && priceRow.price > 0) {
         setNewAmount(maskCurrency(String(priceRow.price * 100)));
       }
-      // Auto-set due date to end of next month
       if (!newDueDate) {
         const nextMonth = addMonths(new Date(), 1);
         setNewDueDate(format(nextMonth, "yyyy-MM-dd"));
@@ -198,19 +219,6 @@ export function OrgBillingCard() {
   };
 
   const getOrgName = (orgId: string) => orgs.find((o) => o.id === orgId)?.name || orgId.slice(0, 8);
-
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "pago":
-        return <Badge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400"><CheckCircle className="h-3 w-3 mr-1" />Pago</Badge>;
-      case "atrasado":
-        return <Badge variant="destructive"><AlertTriangle className="h-3 w-3 mr-1" />Atrasado</Badge>;
-      case "cancelado":
-        return <Badge variant="secondary"><XCircle className="h-3 w-3 mr-1" />Cancelado</Badge>;
-      default:
-        return <Badge variant="outline"><Clock className="h-3 w-3 mr-1" />Pendente</Badge>;
-    }
-  };
 
   const formatCurrency = (v: number) =>
     v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -223,114 +231,144 @@ export function OrgBillingCard() {
     .filter((b) => b.status === "pago")
     .reduce((sum, b) => sum + Number(b.amount), 0);
 
+  const getStatusInfo = (status: string) => statusConfig[status] || statusConfig.pendente;
+
   return (
     <>
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between flex-wrap gap-3">
-            <div>
-              <CardTitle className="flex items-center gap-2">
-                <Receipt className="h-5 w-5 text-primary" />
-                Cobranças
-              </CardTitle>
-              <CardDescription>Gerencie pagamentos das doulas</CardDescription>
-            </div>
-            <Button size="sm" onClick={() => setShowCreateDialog(true)}>
-              <Plus className="h-4 w-4 mr-1" />
-              Nova Cobrança
-            </Button>
-          </div>
+      <div className="space-y-3">
+        <div className="flex items-center justify-between flex-wrap gap-2">
+          <h2 className="text-sm font-semibold text-foreground flex items-center gap-2">
+            <Receipt className="h-4 w-4 text-primary" />
+            Cobranças ({billings.length})
+          </h2>
+          <Button size="sm" className="h-8 text-xs" onClick={() => setShowCreateDialog(true)}>
+            <Plus className="h-3.5 w-3.5 mr-1" />
+            Nova Cobrança
+          </Button>
+        </div>
 
-          <div className="grid grid-cols-2 gap-3 mt-3">
-            <div className="bg-emerald-50 dark:bg-emerald-950/20 rounded-lg p-3 border border-emerald-200 dark:border-emerald-800/30">
-              <p className="text-xs text-muted-foreground">Recebido</p>
-              <p className="text-lg font-bold text-emerald-600">{formatCurrency(totalReceived)}</p>
-            </div>
-            <div className="bg-amber-50 dark:bg-amber-950/20 rounded-lg p-3 border border-amber-200 dark:border-amber-800/30">
-              <p className="text-xs text-muted-foreground">Pendente</p>
-              <p className="text-lg font-bold text-amber-600">{formatCurrency(totalPending)}</p>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="mb-4">
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-40 h-8 text-sm">
-                <SelectValue placeholder="Filtrar" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos</SelectItem>
-                <SelectItem value="pendente">Pendente</SelectItem>
-                <SelectItem value="pago">Pago</SelectItem>
-                <SelectItem value="atrasado">Atrasado</SelectItem>
-                <SelectItem value="cancelado">Cancelado</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+        {/* Summary cards */}
+        <div className="grid grid-cols-2 gap-3">
+          <Card className="bg-gradient-to-br from-emerald-50 to-emerald-100/50 dark:from-emerald-950/20 dark:to-emerald-900/10 border-emerald-300/30">
+            <CardContent className="p-4 flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-emerald-200/50 dark:bg-emerald-800/30 flex items-center justify-center">
+                <CheckCircle className="h-5 w-5 text-emerald-600" />
+              </div>
+              <div>
+                <p className="text-lg font-bold text-foreground">{formatCurrency(totalReceived)}</p>
+                <p className="text-[11px] text-muted-foreground leading-tight">Recebido</p>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className={totalPending > 0 ? "bg-gradient-to-br from-amber-50 to-amber-100/50 dark:from-amber-950/20 dark:to-amber-900/10 border-amber-300/30" : ""}>
+            <CardContent className="p-4 flex items-center gap-3">
+              <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${totalPending > 0 ? "bg-amber-200/50 dark:bg-amber-800/30" : "bg-muted"}`}>
+                <Clock className={`h-5 w-5 ${totalPending > 0 ? "text-amber-600" : "text-muted-foreground"}`} />
+              </div>
+              <div>
+                <p className="text-lg font-bold text-foreground">{formatCurrency(totalPending)}</p>
+                <p className="text-[11px] text-muted-foreground leading-tight">Pendente</p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
 
-          {isLoading ? (
-            <div className="space-y-3">
-              {[...Array(3)].map((_, i) => <Skeleton key={i} className="h-12 w-full" />)}
-            </div>
-          ) : billings.length === 0 ? (
-            <p className="text-center text-muted-foreground py-8">Nenhuma cobrança registrada</p>
-          ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Doula</TableHead>
-                    <TableHead>Referência</TableHead>
-                    <TableHead>Vencimento</TableHead>
-                    <TableHead>Valor</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Ações</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {billings.map((bill) => {
-                    const isOverdue = bill.due_date && bill.status === "pendente" && new Date(bill.due_date + "T23:59:59") < new Date();
-                    return (
-                      <TableRow key={bill.id} className={isOverdue ? "bg-destructive/5" : ""}>
-                        <TableCell className="font-medium">{getOrgName(bill.organization_id)}</TableCell>
-                        <TableCell className="text-muted-foreground">
-                          {format(new Date(bill.reference_month + "T12:00:00"), "MMM/yyyy", { locale: ptBR })}
-                        </TableCell>
-                        <TableCell className={isOverdue ? "text-destructive font-medium" : "text-muted-foreground"}>
-                          {bill.due_date
-                            ? format(new Date(bill.due_date + "T12:00:00"), "dd/MM/yyyy", { locale: ptBR })
-                            : "—"}
-                          {isOverdue && <AlertTriangle className="h-3 w-3 inline ml-1 text-destructive" />}
-                        </TableCell>
-                        <TableCell>{formatCurrency(Number(bill.amount))}</TableCell>
-                        <TableCell>{getStatusBadge(bill.status)}</TableCell>
-                        <TableCell>
-                          <Select
-                            value={bill.status}
-                            onValueChange={(status) =>
-                              updateStatusMutation.mutate({ id: bill.id, status, orgId: bill.organization_id })
-                            }
-                          >
-                            <SelectTrigger className="w-28 h-8 text-xs">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="pendente">Pendente</SelectItem>
-                              <SelectItem value="pago">Pago</SelectItem>
-                              <SelectItem value="atrasado">Atrasado</SelectItem>
-                              <SelectItem value="cancelado">Cancelado</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+        {/* Filter */}
+        <div>
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-36 h-8 text-xs">
+              <SelectValue placeholder="Filtrar" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos</SelectItem>
+              <SelectItem value="pendente">Pendente</SelectItem>
+              <SelectItem value="pago">Pago</SelectItem>
+              <SelectItem value="atrasado">Atrasado</SelectItem>
+              <SelectItem value="cancelado">Cancelado</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Billing cards */}
+        {isLoading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {[...Array(3)].map((_, i) => (
+              <Skeleton key={i} className="h-36 w-full rounded-xl" />
+            ))}
+          </div>
+        ) : billings.length === 0 ? (
+          <Card>
+            <CardContent className="py-12 text-center text-muted-foreground">
+              Nenhuma cobrança registrada
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {billings.map((bill) => {
+              const isOverdue = bill.due_date && bill.status === "pendente" && new Date(bill.due_date + "T23:59:59") < new Date();
+              const info = getStatusInfo(isOverdue ? "atrasado" : bill.status);
+              const orgName = getOrgName(bill.organization_id);
+              const initials = orgName.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase();
+
+              return (
+                <Card
+                  key={bill.id}
+                  className={`group hover:shadow-md transition-all duration-200 border-border/60 ${isOverdue ? "border-destructive/40" : ""}`}
+                >
+                  <CardContent className="p-4">
+                    <div className="flex items-start gap-3">
+                      <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
+                        <span className="text-sm font-bold text-primary">{initials}</span>
+                      </div>
+                      <div className="flex-1 min-w-0 space-y-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <h3 className="font-semibold text-sm text-foreground truncate">{orgName}</h3>
+                          <Badge variant="outline" className={`text-[10px] h-5 gap-0.5 ${info.badgeClass}`}>
+                            {info.icon}
+                            {info.label}
+                          </Badge>
+                        </div>
+                        <p className="text-lg font-bold text-foreground">{formatCurrency(Number(bill.amount))}</p>
+                        <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                          <span className="flex items-center gap-1">
+                            <CalendarDays className="h-3 w-3" />
+                            {format(new Date(bill.reference_month + "T12:00:00"), "MMM/yyyy", { locale: ptBR })}
+                          </span>
+                          {bill.due_date && (
+                            <span className={`flex items-center gap-1 ${isOverdue ? "text-destructive font-medium" : ""}`}>
+                              {isOverdue && <AlertTriangle className="h-3 w-3" />}
+                              Venc: {format(new Date(bill.due_date + "T12:00:00"), "dd/MM", { locale: ptBR })}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="mt-3 pt-3 border-t border-border/40">
+                      <Select
+                        value={bill.status}
+                        onValueChange={(status) =>
+                          updateStatusMutation.mutate({ id: bill.id, status, orgId: bill.organization_id })
+                        }
+                      >
+                        <SelectTrigger className="h-8 text-xs w-full">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="pendente">Pendente</SelectItem>
+                          <SelectItem value="pago">Pago</SelectItem>
+                          <SelectItem value="atrasado">Atrasado</SelectItem>
+                          <SelectItem value="cancelado">Cancelado</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        )}
+      </div>
 
       {/* Create billing dialog */}
       <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
@@ -374,7 +412,7 @@ export function OrgBillingCard() {
                   type="month"
                   value={newRefMonth}
                   onChange={(e) => setNewRefMonth(e.target.value)}
-                  className="h-9 text-sm lowercase"
+                  className="h-9 text-sm"
                 />
               </div>
             </div>
@@ -386,7 +424,7 @@ export function OrgBillingCard() {
                   value={newAmount}
                   onChange={(e) => setNewAmount(maskCurrency(e.target.value))}
                   placeholder="R$ 0,00"
-                  className="h-9 text-sm lowercase"
+                  className="h-9 text-sm"
                 />
               </div>
               <div className="space-y-1">
@@ -395,7 +433,7 @@ export function OrgBillingCard() {
                   type="date"
                   value={newDueDate}
                   onChange={(e) => setNewDueDate(e.target.value)}
-                  className="h-9 text-sm lowercase"
+                  className="h-9 text-sm"
                 />
               </div>
             </div>
