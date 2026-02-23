@@ -718,12 +718,16 @@ export default function Financial() {
                         </div>
                       </div>
 
-                      {/* Info: Client + Date */}
+                      {/* Info: Client + Date - date aligned with Pend. column */}
                       <div className="flex items-center min-w-0 overflow-hidden">
-                        <span className="text-xs text-muted-foreground truncate min-w-0 flex-1">
-                          {transaction.clients?.full_name ? abbreviateName(transaction.clients.full_name) : "—"}
-                        </span>
-                        <span className="text-xs text-muted-foreground flex-shrink-0 text-right ml-1">{formatBrazilDate(transaction.date, "dd/MM/yy")}</span>
+                        <div className="flex-1 min-w-0 flex items-center" style={{flexBasis: 0, flexGrow: 3}}>
+                          <span className="text-xs text-muted-foreground truncate min-w-0">
+                            {transaction.clients?.full_name ? abbreviateName(transaction.clients.full_name) : "—"}
+                          </span>
+                        </div>
+                        <div className="flex-1 min-w-0 px-1" style={{flexBasis: 0, flexGrow: 1}}>
+                          <span className="text-xs text-muted-foreground text-left block">{formatBrazilDate(transaction.date, "dd/MM/yy")}</span>
+                        </div>
                       </div>
 
                       {/* Values: flex layout */}
