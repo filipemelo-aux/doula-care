@@ -49,7 +49,7 @@ export function InAppNotificationListener({ userId, role, clientId, organization
               icon: <Baby className="h-5 w-5 text-primary" />,
               className: "border-2 border-primary/40 shadow-lg",
               action: {
-                label: "Registrar Parto",
+                label: "Registrar Trabalho de Parto",
                 onClick: async () => {
                   const { error } = await supabase
                     .from("clients")
