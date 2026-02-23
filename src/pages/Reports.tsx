@@ -221,7 +221,7 @@ export default function Reports() {
     queryKey: ["monthly-table-report"],
     queryFn: async () => {
       const months = [];
-      for (let i = 11; i >= 0; i--) {
+      for (let i = 0; i <= 11; i++) {
         const date = subMonths(new Date(), i);
         const start = startOfMonth(date);
         const end = endOfMonth(date);
