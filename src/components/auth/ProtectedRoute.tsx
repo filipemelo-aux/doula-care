@@ -43,6 +43,33 @@ export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) 
     return <Navigate to="/login" replace />;
   }
 
+  // Organization pending approval (skip for super_admin)
+  if (role !== "super_admin" && orgStatus === "pendente") {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background p-4">
+        <Card className="w-full max-w-md text-center">
+          <CardHeader>
+            <div className="flex justify-center mb-4">
+              <div className="w-16 h-16 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
+                <Loader2 className="w-8 h-8 text-amber-600 animate-spin" />
+              </div>
+            </div>
+            <CardTitle className="text-xl">Cadastro em Análise</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-muted-foreground text-sm">
+              Seu cadastro foi recebido e está aguardando aprovação do administrador da plataforma.
+              Você será notificada assim que seu acesso for liberado.
+            </p>
+            <Button variant="outline" onClick={signOut} className="w-full">
+              Sair
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   // Organization suspended (skip for super_admin)
   if (role !== "super_admin" && orgStatus === "suspenso") {
     return (

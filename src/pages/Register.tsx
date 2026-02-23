@@ -61,8 +61,8 @@ export default function Register() {
         return;
       }
 
-      toast.success("Conta criada com sucesso!", {
-        description: "Faça login para acessar seu painel.",
+      toast.success("Cadastro enviado com sucesso!", {
+        description: "Seu acesso será liberado após aprovação do administrador.",
       });
       navigate("/login");
     } catch (err) {

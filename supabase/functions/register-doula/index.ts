@@ -62,7 +62,7 @@ Deno.serve(async (req) => {
         name: fullName,
         responsible_email: email,
         plan: "free",
-        status: "ativo",
+        status: "pendente",
       })
       .select("id")
       .single();

@@ -13,7 +13,7 @@ interface ClientData {
   birth_occurred: boolean;
 }
 
-type OrgStatus = "ativo" | "suspenso";
+type OrgStatus = "ativo" | "suspenso" | "pendente";
 
 interface AuthContextType {
   user: User | null;
