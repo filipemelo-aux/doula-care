@@ -16,7 +16,7 @@ import { format, addMonths } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import {
   Receipt, Plus, CheckCircle, Clock, AlertTriangle, XCircle, Bell,
-  CalendarDays, Building2,
+  CalendarDays, Pencil, Trash2,
 } from "lucide-react";
 import { maskCurrency, parseCurrency } from "@/lib/masks";
 
@@ -68,6 +68,8 @@ export function OrgBillingCard() {
   const queryClient = useQueryClient();
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [editingBill, setEditingBill] = useState<BillingRow | null>(null);
+  const [deletingBill, setDeletingBill] = useState<BillingRow | null>(null);
   const [selectedOrg, setSelectedOrg] = useState("");
   const [newAmount, setNewAmount] = useState("");
   const [newCycle, setNewCycle] = useState<"monthly" | "annual">("monthly");
@@ -160,6 +162,61 @@ export function OrgBillingCard() {
     onError: () => toast.error("Erro ao criar cobrança"),
   });
 
+  const updateBillingMutation = useMutation({
+    mutationFn: async () => {
+      if (!editingBill) return;
+      const amount = parseCurrency(newAmount);
+      if (amount <= 0) throw new Error("Valor inválido");
+
+      const { error } = await supabase.from("org_billing").update({
+        amount,
+        billing_cycle: newCycle,
+        reference_month: `${newRefMonth}-01`,
+        due_date: newDueDate || null,
+        notes: newNotes || null,
+      }).eq("id", editingBill.id);
+      if (error) throw error;
+
+      if (notifyDoula) {
+        await supabase.from("org_notifications").insert({
+          organization_id: editingBill.organization_id,
+          title: "Cobrança atualizada",
+          message: `Sua cobrança foi atualizada para ${amount.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}.${newDueDate ? ` Vencimento: ${format(new Date(newDueDate + "T12:00:00"), "dd/MM/yyyy", { locale: ptBR })}.` : ""}`,
+          type: "billing",
+          billing_id: editingBill.id,
+        });
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["org-billing"] });
+      toast.success("Cobrança atualizada" + (notifyDoula ? " e doula notificada!" : "!"));
+      setEditingBill(null);
+      resetForm();
+    },
+    onError: () => toast.error("Erro ao atualizar cobrança"),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (bill: BillingRow) => {
+      const { error } = await supabase.from("org_billing").delete().eq("id", bill.id);
+      if (error) throw error;
+
+      await supabase.from("org_notifications").insert({
+        organization_id: bill.organization_id,
+        title: "Cobrança removida",
+        message: `A cobrança de ${Number(bill.amount).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })} foi cancelada/removida.`,
+        type: "billing",
+        billing_id: null,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["org-billing"] });
+      toast.success("Cobrança excluída e doula notificada!");
+      setDeletingBill(null);
+    },
+    onError: () => toast.error("Erro ao excluir cobrança"),
+  });
+
   const updateStatusMutation = useMutation({
     mutationFn: async ({ id, status, orgId }: { id: string; status: string; orgId: string }) => {
       const updates: Record<string, any> = { status };
@@ -201,6 +258,16 @@ export function OrgBillingCard() {
     setNotifyDoula(true);
   };
 
+  const openEditDialog = (bill: BillingRow) => {
+    setEditingBill(bill);
+    setNewAmount(maskCurrency(String(Number(bill.amount) * 100)));
+    setNewCycle(bill.billing_cycle as "monthly" | "annual");
+    setNewRefMonth(bill.reference_month.slice(0, 7));
+    setNewDueDate(bill.due_date || "");
+    setNewNotes(bill.notes || "");
+    setNotifyDoula(true);
+  };
+
   const handleOrgSelect = (orgId: string) => {
     setSelectedOrg(orgId);
     const org = orgs.find((o) => o.id === orgId);
@@ -233,6 +300,92 @@ export function OrgBillingCard() {
 
   const getStatusInfo = (status: string) => statusConfig[status] || statusConfig.pendente;
 
+  const BillingFormFields = ({ isEdit }: { isEdit: boolean }) => (
+    <div className="space-y-4">
+      {!isEdit && (
+        <div className="space-y-1">
+          <Label className="text-xs">Doula</Label>
+          <Select value={selectedOrg} onValueChange={handleOrgSelect}>
+            <SelectTrigger className="h-9 text-sm">
+              <SelectValue placeholder="Selecione a doula" />
+            </SelectTrigger>
+            <SelectContent>
+              {orgs.map((org) => (
+                <SelectItem key={org.id} value={org.id}>
+                  {org.name} ({org.plan})
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
+
+      <div className="grid grid-cols-2 gap-3">
+        <div className="space-y-1">
+          <Label className="text-xs">Ciclo</Label>
+          <Select value={newCycle} onValueChange={(v) => setNewCycle(v as any)}>
+            <SelectTrigger className="h-9 text-sm">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="monthly">Mensal</SelectItem>
+              <SelectItem value="annual">Anual</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-1">
+          <Label className="text-xs">Mês Referência</Label>
+          <Input
+            type="month"
+            value={newRefMonth}
+            onChange={(e) => setNewRefMonth(e.target.value)}
+            className="h-9 text-sm"
+          />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3">
+        <div className="space-y-1">
+          <Label className="text-xs">Valor</Label>
+          <Input
+            value={newAmount}
+            onChange={(e) => setNewAmount(maskCurrency(e.target.value))}
+            placeholder="R$ 0,00"
+            className="h-9 text-sm"
+          />
+        </div>
+        <div className="space-y-1">
+          <Label className="text-xs">Vencimento</Label>
+          <Input
+            type="date"
+            value={newDueDate}
+            onChange={(e) => setNewDueDate(e.target.value)}
+            className="h-9 text-sm"
+          />
+        </div>
+      </div>
+
+      <div className="space-y-1">
+        <Label className="text-xs">Observações</Label>
+        <Textarea
+          value={newNotes}
+          onChange={(e) => setNewNotes(e.target.value)}
+          placeholder="Opcional"
+          className="text-sm resize-none"
+          rows={2}
+        />
+      </div>
+
+      <div className="flex items-center justify-between rounded-lg border border-border p-3">
+        <div className="flex items-center gap-2">
+          <Bell className="h-4 w-4 text-primary" />
+          <Label className="text-sm font-normal">Notificar doula</Label>
+        </div>
+        <Switch checked={notifyDoula} onCheckedChange={setNotifyDoula} />
+      </div>
+    </div>
+  );
+
   return (
     <>
       <div className="space-y-3">
@@ -241,7 +394,7 @@ export function OrgBillingCard() {
             <Receipt className="h-4 w-4 text-primary" />
             Cobranças ({billings.length})
           </h2>
-          <Button size="sm" className="h-8 text-xs" onClick={() => setShowCreateDialog(true)}>
+          <Button size="sm" className="h-8 text-xs" onClick={() => { resetForm(); setShowCreateDialog(true); }}>
             <Plus className="h-3.5 w-3.5 mr-1" />
             Nova Cobrança
           </Button>
@@ -341,17 +494,20 @@ export function OrgBillingCard() {
                             </span>
                           )}
                         </div>
+                        {bill.notes && (
+                          <p className="text-[11px] text-muted-foreground truncate">{bill.notes}</p>
+                        )}
                       </div>
                     </div>
 
-                    <div className="mt-3 pt-3 border-t border-border/40">
+                    <div className="mt-3 pt-3 border-t border-border/40 flex items-center gap-2">
                       <Select
                         value={bill.status}
                         onValueChange={(status) =>
                           updateStatusMutation.mutate({ id: bill.id, status, orgId: bill.organization_id })
                         }
                       >
-                        <SelectTrigger className="h-8 text-xs w-full">
+                        <SelectTrigger className="h-8 text-xs flex-1">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -361,6 +517,22 @@ export function OrgBillingCard() {
                           <SelectItem value="cancelado">Cancelado</SelectItem>
                         </SelectContent>
                       </Select>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-8 w-8 p-0 flex-shrink-0"
+                        onClick={() => openEditDialog(bill)}
+                      >
+                        <Pencil className="h-3.5 w-3.5" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-8 w-8 p-0 flex-shrink-0 text-destructive hover:text-destructive"
+                        onClick={() => setDeletingBill(bill)}
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
                     </div>
                   </CardContent>
                 </Card>
@@ -370,99 +542,62 @@ export function OrgBillingCard() {
         )}
       </div>
 
-      {/* Create billing dialog */}
+      {/* Create dialog */}
       <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
             <DialogTitle>Nova Cobrança</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4">
-            <div className="space-y-1">
-              <Label className="text-xs">Doula</Label>
-              <Select value={selectedOrg} onValueChange={handleOrgSelect}>
-                <SelectTrigger className="h-9 text-sm">
-                  <SelectValue placeholder="Selecione a doula" />
-                </SelectTrigger>
-                <SelectContent>
-                  {orgs.map((org) => (
-                    <SelectItem key={org.id} value={org.id}>
-                      {org.name} ({org.plan})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+          <BillingFormFields isEdit={false} />
+          <Button
+            className="w-full"
+            onClick={() => createMutation.mutate()}
+            disabled={!selectedOrg || !newAmount || createMutation.isPending}
+          >
+            {createMutation.isPending ? "Criando..." : "Criar Cobrança"}
+          </Button>
+        </DialogContent>
+      </Dialog>
 
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1">
-                <Label className="text-xs">Ciclo</Label>
-                <Select value={newCycle} onValueChange={(v) => setNewCycle(v as any)}>
-                  <SelectTrigger className="h-9 text-sm">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="monthly">Mensal</SelectItem>
-                    <SelectItem value="annual">Anual</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-1">
-                <Label className="text-xs">Mês Referência</Label>
-                <Input
-                  type="month"
-                  value={newRefMonth}
-                  onChange={(e) => setNewRefMonth(e.target.value)}
-                  className="h-9 text-sm"
-                />
-              </div>
-            </div>
+      {/* Edit dialog */}
+      <Dialog open={!!editingBill} onOpenChange={(open) => { if (!open) { setEditingBill(null); resetForm(); } }}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Editar Cobrança</DialogTitle>
+          </DialogHeader>
+          <BillingFormFields isEdit={true} />
+          <Button
+            className="w-full"
+            onClick={() => updateBillingMutation.mutate()}
+            disabled={!newAmount || updateBillingMutation.isPending}
+          >
+            {updateBillingMutation.isPending ? "Salvando..." : "Salvar Alterações"}
+          </Button>
+        </DialogContent>
+      </Dialog>
 
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1">
-                <Label className="text-xs">Valor</Label>
-                <Input
-                  value={newAmount}
-                  onChange={(e) => setNewAmount(maskCurrency(e.target.value))}
-                  placeholder="R$ 0,00"
-                  className="h-9 text-sm"
-                />
-              </div>
-              <div className="space-y-1">
-                <Label className="text-xs">Vencimento</Label>
-                <Input
-                  type="date"
-                  value={newDueDate}
-                  onChange={(e) => setNewDueDate(e.target.value)}
-                  className="h-9 text-sm"
-                />
-              </div>
-            </div>
-
-            <div className="space-y-1">
-              <Label className="text-xs">Observações</Label>
-              <Textarea
-                value={newNotes}
-                onChange={(e) => setNewNotes(e.target.value)}
-                placeholder="Opcional"
-                className="text-sm resize-none"
-                rows={2}
-              />
-            </div>
-
-            <div className="flex items-center justify-between rounded-lg border border-border p-3">
-              <div className="flex items-center gap-2">
-                <Bell className="h-4 w-4 text-primary" />
-                <Label className="text-sm font-normal">Notificar doula</Label>
-              </div>
-              <Switch checked={notifyDoula} onCheckedChange={setNotifyDoula} />
-            </div>
-
+      {/* Delete confirmation dialog */}
+      <Dialog open={!!deletingBill} onOpenChange={(open) => { if (!open) setDeletingBill(null); }}>
+        <DialogContent className="max-w-xs">
+          <DialogHeader>
+            <DialogTitle>Excluir Cobrança</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            Tem certeza que deseja excluir esta cobrança de{" "}
+            <strong>{deletingBill ? formatCurrency(Number(deletingBill.amount)) : ""}</strong>?
+            A doula será notificada.
+          </p>
+          <div className="flex gap-2 pt-2">
+            <Button variant="outline" className="flex-1" onClick={() => setDeletingBill(null)}>
+              Cancelar
+            </Button>
             <Button
-              className="w-full"
-              onClick={() => createMutation.mutate()}
-              disabled={!selectedOrg || !newAmount || createMutation.isPending}
+              variant="destructive"
+              className="flex-1"
+              onClick={() => deletingBill && deleteMutation.mutate(deletingBill)}
+              disabled={deleteMutation.isPending}
             >
-              {createMutation.isPending ? "Criando..." : "Criar Cobrança"}
+              {deleteMutation.isPending ? "Excluindo..." : "Excluir"}
             </Button>
           </div>
         </DialogContent>
