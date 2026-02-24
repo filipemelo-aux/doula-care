@@ -145,7 +145,7 @@ export function ClientDetailsDialog({
   return (
     <>
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md max-h-[85vh] mx-4 rounded-lg">
+      <DialogContent className="max-w-md max-h-[85vh]">
         <DialogHeader>
           <DialogTitle className="font-display text-xl">
             Detalhes da Cliente
