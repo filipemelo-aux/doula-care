@@ -130,12 +130,11 @@
 }
 
 @layer base {
-  * {
-    @apply border-border;
-  }
-
   #lovable-badge {
     display: none !important;
+  }
+  * {
+    @apply border-border;
   }
 
   html,
