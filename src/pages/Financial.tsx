@@ -1521,7 +1521,24 @@ export default function Financial() {
                                   value={maskCurrency(String(Math.round(amt * 100)))}
                                   onChange={(e) => {
                                     const newAmounts = [...customInstallmentAmounts];
-                                    newAmounts[i] = parseCurrency(e.target.value);
+                                    const newVal = parseCurrency(e.target.value);
+                                    newAmounts[i] = newVal;
+                                    // Auto-distribute remaining among other installments
+                                    const othersCount = count - 1;
+                                    if (othersCount > 0) {
+                                      const remaining = total - newVal;
+                                      const perOther = Math.max(0, remaining / othersCount);
+                                      for (let j = 0; j < count; j++) {
+                                        if (j !== i) newAmounts[j] = Math.round(perOther * 100) / 100;
+                                      }
+                                      // Adjust rounding on last non-edited installment
+                                      const sumOthers = newAmounts.filter((_, j) => j !== i).reduce((a, b) => a + b, 0);
+                                      const roundDiff = remaining - sumOthers;
+                                      if (Math.abs(roundDiff) > 0.001) {
+                                        const lastOther = i === count - 1 ? count - 2 : count - 1;
+                                        newAmounts[lastOther] = Math.round((newAmounts[lastOther] + roundDiff) * 100) / 100;
+                                      }
+                                    }
                                     setCustomInstallmentAmounts(newAmounts);
                                   }}
                                   placeholder="R$ 0,00"
