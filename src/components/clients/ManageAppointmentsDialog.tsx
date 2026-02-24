@@ -124,6 +124,8 @@ export function ManageAppointmentsDialog({
                   type="datetime-local"
                   value={scheduledAt}
                   onChange={(e) => setScheduledAt(e.target.value)}
+                  onInput={(e) => setScheduledAt((e.target as HTMLInputElement).value)}
+                  onBlur={(e) => setScheduledAt(e.target.value)}
                   className="mt-1"
                 />
               </div>
