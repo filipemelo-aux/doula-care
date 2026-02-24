@@ -377,7 +377,7 @@ export default function GestanteMessages() {
                           <Button
                             size="sm"
                             variant="outline"
-                            className="flex-1 border-red-300 text-red-600 hover:bg-red-50"
+                            className="flex-1 border-red-300 text-red-600 hover:bg-red-50 hover:text-red-600"
                             onClick={() => rejectBudgetMutation.mutate(budget)}
                             disabled={acceptBudgetMutation.isPending || rejectBudgetMutation.isPending}
                           >
