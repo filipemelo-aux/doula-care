@@ -1,7 +1,7 @@
 /**
  * Global app version constant.
  * The version is injected at build time by Vite (vite.config.ts).
- * Format: MAJOR.MINOR.PATCH+YYMMDD.HHmm
+ * Format: MAJOR.MINOR.PATCH.MMDD (ex: 1.1.0.0224)
  * 
  * To bump version for important changes:
  * - Patch (1.0.x): bug fixes, small tweaks
@@ -12,4 +12,4 @@
  * The build suffix is added automatically.
  */
 declare const __APP_VERSION__: string;
-export const APP_VERSION: string = typeof __APP_VERSION__ !== "undefined" ? __APP_VERSION__ : "1.0.2";
+export const APP_VERSION: string = typeof __APP_VERSION__ !== "undefined" ? __APP_VERSION__ : "1.1.0";

@@ -4,12 +4,12 @@ import path from "path";
 import { componentTagger } from "lovable-tagger";
 import { VitePWA } from "vite-plugin-pwa";
 
-const APP_VERSION = "1.0.2";
+const APP_VERSION = "1.1.0";
 
-// Build identifier based on date: YYMMDD.HHmm
+// Short build suffix: MMDD
 const now = new Date();
-const BUILD_ID = `${String(now.getFullYear()).slice(2)}${String(now.getMonth() + 1).padStart(2, "0")}${String(now.getDate()).padStart(2, "0")}.${String(now.getHours()).padStart(2, "0")}${String(now.getMinutes()).padStart(2, "0")}`;
-const FULL_VERSION = `${APP_VERSION}+${BUILD_ID}`;
+const BUILD_ID = `${String(now.getMonth() + 1).padStart(2, "0")}${String(now.getDate()).padStart(2, "0")}`;
+const FULL_VERSION = `${APP_VERSION}.${BUILD_ID}`;
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
