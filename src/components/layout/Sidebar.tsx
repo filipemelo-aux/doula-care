@@ -10,11 +10,14 @@ import {
   Settings,
   ChevronLeft,
   CalendarDays,
+  Bell,
+  MessageCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { usePlanLimits } from "@/hooks/usePlanLimits";
+import { useAdminUnreadCounts } from "@/hooks/useAdminUnreadCounts";
 
 interface SidebarProps {
   isOpen: boolean;
@@ -24,6 +27,8 @@ interface SidebarProps {
 
 const navItems = [
   { to: "/admin", icon: LayoutDashboard, label: "Visão Geral" },
+  { to: "/notificacoes", icon: Bell, label: "Notificações", badgeKey: "notifications" as const },
+  { to: "/mensagens", icon: MessageCircle, label: "Mensagens", badgeKey: "messages" as const },
   { to: "/agenda", icon: CalendarDays, label: "Agenda" },
   { to: "/clientes", icon: Users, label: "Clientes" },
   { to: "/financeiro", icon: TrendingUp, label: "Financeiro" },
@@ -37,6 +42,13 @@ export function Sidebar({ isOpen, onToggle, onNavigate }: SidebarProps) {
   const navigate = useNavigate();
   const { planLabel, plan } = usePlanLimits();
   const { logoUrl: orgLogo, displayName } = useOrgBranding();
+  const { unreadMessages, unreadNotifications } = useAdminUnreadCounts();
+
+  const getBadgeCount = (key?: "notifications" | "messages") => {
+    if (key === "notifications") return unreadNotifications;
+    if (key === "messages") return unreadMessages;
+    return 0;
+  };
   const sidebarLogo = orgLogo || logo;
   const sidebarName = displayName || "Doula Care";
 
@@ -101,21 +113,32 @@ export function Sidebar({ isOpen, onToggle, onNavigate }: SidebarProps) {
       <nav className="flex-1 py-6 px-3 space-y-1 overflow-y-auto">
         {navItems.map((item) => {
           const isActive = location.pathname === item.to;
+          const badgeCount = getBadgeCount((item as any).badgeKey);
           return (
             <button
               key={item.to}
               onClick={() => handleNavClick(item.to)}
               className={cn(
-                "nav-link w-full text-left",
+                "nav-link w-full text-left relative",
                 isActive && "active",
                 !isOpen && "lg:justify-center lg:px-0"
               )}
               title={!isOpen ? item.label : undefined}
             >
-              <item.icon className={cn("w-5 h-5 shrink-0", isActive && "text-current")} />
-              <span className={cn("transition-opacity", !isOpen && "lg:hidden")}>
+              <div className="relative">
+                <item.icon className={cn("w-5 h-5 shrink-0", isActive && "text-current")} />
+                {badgeCount > 0 && !isOpen && (
+                  <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-destructive hidden lg:block" />
+                )}
+              </div>
+              <span className={cn("transition-opacity flex-1", !isOpen && "lg:hidden")}>
                 {item.label}
               </span>
+              {badgeCount > 0 && isOpen && (
+                <Badge variant="destructive" className="text-[10px] h-5 min-w-5 flex items-center justify-center ml-auto">
+                  {badgeCount}
+                </Badge>
+              )}
             </button>
           );
         })}

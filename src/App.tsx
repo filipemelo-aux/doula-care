@@ -17,6 +17,8 @@ import Agenda from "./pages/Agenda";
 import NotFound from "./pages/NotFound";
 import Register from "./pages/Register";
 import SuperAdminDashboard from "./pages/SuperAdminDashboard";
+import AdminNotifications from "./pages/AdminNotifications";
+import AdminMessages from "./pages/AdminMessages";
 import InstallAppBanner from "./components/pwa/InstallAppBanner";
 import UpdatePrompt from "./components/pwa/UpdatePrompt";
 import { NotificationListenerProvider } from "./components/notifications/NotificationListenerProvider";
@@ -119,6 +121,8 @@ const App = () => (
               }
             >
               <Route path="/admin" element={<Dashboard />} />
+              <Route path="/notificacoes" element={<AdminNotifications />} />
+              <Route path="/mensagens" element={<AdminMessages />} />
               <Route path="/agenda" element={<Agenda />} />
               <Route path="/clientes" element={<Clients />} />
               <Route path="/financeiro" element={<Financial />} />
