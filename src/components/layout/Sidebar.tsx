@@ -63,7 +63,7 @@ export function Sidebar({ isOpen, onToggle, onNavigate }: SidebarProps) {
   return (
     <aside
       className={cn(
-        "fixed lg:relative inset-y-0 left-0 z-40 flex flex-col bg-sidebar border-r border-sidebar-border transition-all duration-300 ease-in-out",
+        "fixed lg:relative inset-y-0 left-0 z-50 flex flex-col bg-sidebar border-r border-sidebar-border transition-all duration-300 ease-in-out",
         isOpen ? "w-64" : "w-0 lg:w-20",
         !isOpen && "overflow-hidden lg:overflow-visible"
       )}
