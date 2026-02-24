@@ -486,6 +486,25 @@ export default function GestanteDashboard() {
           </Card>
         </div>
 
+        {/* Contractions Card - only show if birth NOT registered */}
+        {!isPuerpera && (
+          <Card 
+            className="cursor-pointer hover:shadow-md transition-shadow active:scale-[0.98] bg-gradient-to-br from-orange-50 to-amber-50 border-orange-200 dark:from-orange-950/30 dark:to-amber-950/30 dark:border-orange-800"
+            onClick={() => navigate("/gestante/contracoes")}
+          >
+            <CardContent className="p-4 flex items-center gap-3">
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-orange-400 to-amber-500 flex items-center justify-center">
+                <Timer className="h-6 w-6 text-white" />
+              </div>
+              <div className="flex-1">
+                <p className="font-medium text-sm">Contador de Contrações</p>
+                <p className="text-xs text-muted-foreground">Registre e acompanhe suas contrações</p>
+              </div>
+              <ChevronRight className="h-4 w-4 text-muted-foreground" />
+            </CardContent>
+          </Card>
+        )}
+
         {/* Appointments */}
         {client?.id && <AppointmentsCard clientId={client.id} />}
 
@@ -522,24 +541,6 @@ export default function GestanteDashboard() {
           </Card>
         )}
 
-        {/* Contractions Quick Access - Show if labor started */}
-        {clientData?.labor_started_at && !clientData?.labor_started_at && (
-          <Card 
-            className="cursor-pointer hover:shadow-md transition-shadow active:scale-[0.98] bg-gradient-to-br from-orange-50 to-amber-50 border-orange-200"
-            onClick={() => navigate("/gestante/contracoes")}
-          >
-            <CardContent className="p-4 flex items-center gap-3">
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-orange-400 to-amber-500 flex items-center justify-center">
-                <Timer className="h-6 w-6 text-white" />
-              </div>
-              <div className="flex-1">
-                <p className="font-medium text-sm text-orange-800">Contador de Contrações</p>
-                <p className="text-xs text-orange-600">Registre suas contrações agora</p>
-              </div>
-              <ChevronRight className="h-4 w-4 text-orange-400" />
-            </CardContent>
-          </Card>
-        )}
 
         {/* Welcome Message for new users */}
         {clientData && !clientData.dpp && (
