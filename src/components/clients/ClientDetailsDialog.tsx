@@ -145,13 +145,13 @@ export function ClientDetailsDialog({
   return (
     <>
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg max-h-[90vh]">
+      <DialogContent className="max-w-md max-h-[85vh] mx-4 rounded-lg">
         <DialogHeader>
           <DialogTitle className="font-display text-xl">
             Detalhes da Cliente
           </DialogTitle>
         </DialogHeader>
-        <ScrollArea className="max-h-[calc(90vh-100px)] pr-4">
+        <ScrollArea className="max-h-[calc(85vh-100px)] pr-4">
           <div className="space-y-6">
             {/* Header */}
             <div className="flex items-center gap-4">
