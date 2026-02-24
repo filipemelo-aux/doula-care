@@ -279,16 +279,11 @@ export default function GestanteMessages() {
 
   return (
     <GestanteLayout>
-      <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-sm border-b">
-        <div className="px-4 lg:px-8 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center">
-              <MessageCircle className="w-5 h-5 text-primary-foreground" />
-            </div>
-            <div>
-              <h1 className="font-display font-semibold text-lg">Mensagens</h1>
-              <p className="text-xs text-muted-foreground">Comunicados da sua Doula</p>
-            </div>
+      <div className="p-3 lg:p-8 max-w-7xl mx-auto animate-fade-in">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-6">
+          <div className="page-header mb-0">
+            <h1 className="page-title">Mensagens</h1>
+            <p className="page-description">Comunicados da sua Doula</p>
           </div>
           <div className="flex items-center gap-2">
             {regularNotifications.length > 0 && (
@@ -320,9 +315,8 @@ export default function GestanteMessages() {
             )}
           </div>
         </div>
-      </header>
 
-      <div className="container mx-auto px-4 py-6">
+      
         {loading ? (
           <div className="flex items-center justify-center py-12">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />

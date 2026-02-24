@@ -297,20 +297,14 @@ export default function GestanteContractions() {
 
   return (
     <GestanteLayout>
-      {/* Header */}
-      <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-sm border-b">
-        <div className="container mx-auto px-4 py-4 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center">
-            <Timer className="w-5 h-5 text-primary-foreground" />
-          </div>
-          <div>
-            <h1 className="font-display font-semibold text-lg">Contrações</h1>
-            <p className="text-xs text-muted-foreground">Registre suas contrações</p>
-          </div>
+      <div className="container mx-auto p-3 lg:p-8 space-y-6 max-w-7xl animate-fade-in">
+        {/* Header */}
+        <div className="page-header">
+          <h1 className="page-title">Contrações</h1>
+          <p className="page-description">Registre suas contrações</p>
         </div>
-      </header>
 
-      <div className="container mx-auto px-4 py-6 space-y-6">
+      {/* Timer Card */}
         {/* Timer Card */}
         <Card className={cn(
           "overflow-hidden transition-all",
