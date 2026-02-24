@@ -133,7 +133,7 @@ export default function AdminMessages() {
           queryClient.invalidateQueries({ queryKey: ["admin-unread-messages-count"] });
         });
     }
-  }, [selectedClientId, selectedMessages.length]);
+  }, [selectedClientId, selectedMessages.length, queryClient]);
 
   // Scroll to bottom on new messages
   useEffect(() => {
@@ -278,8 +278,8 @@ export default function AdminMessages() {
                           {lastMsg && (
                             <p className="text-xs text-muted-foreground truncate mt-0.5">
                               {isClientMessage(lastMsg) ? "" : "Você: "}
-                              {lastMsg.message.substring(0, 40)}
-                              {lastMsg.message.length > 40 ? "..." : ""}
+                              {lastMsg.message.substring(0, 30)}
+                              {lastMsg.message.length > 30 ? "…" : ""}
                             </p>
                           )}
                         </div>
