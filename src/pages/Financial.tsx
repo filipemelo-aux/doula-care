@@ -1523,20 +1523,20 @@ export default function Financial() {
                                     const newAmounts = [...customInstallmentAmounts];
                                     const newVal = parseCurrency(e.target.value);
                                     newAmounts[i] = newVal;
-                                    // Auto-distribute remaining among other installments
-                                    const othersCount = count - 1;
-                                    if (othersCount > 0) {
-                                      const remaining = total - newVal;
-                                      const perOther = Math.max(0, remaining / othersCount);
-                                      for (let j = 0; j < count; j++) {
-                                        if (j !== i) newAmounts[j] = Math.round(perOther * 100) / 100;
+                                    // Auto-distribute remaining among NEXT installments only (not previous ones)
+                                    const nextCount = count - 1 - i;
+                                    if (nextCount > 0) {
+                                      const sumPrevious = newAmounts.slice(0, i).reduce((a, b) => a + b, 0);
+                                      const remaining = total - sumPrevious - newVal;
+                                      const perNext = Math.max(0, remaining / nextCount);
+                                      for (let j = i + 1; j < count; j++) {
+                                        newAmounts[j] = Math.round(perNext * 100) / 100;
                                       }
-                                      // Adjust rounding on last non-edited installment
-                                      const sumOthers = newAmounts.filter((_, j) => j !== i).reduce((a, b) => a + b, 0);
-                                      const roundDiff = remaining - sumOthers;
+                                      // Adjust rounding on last installment
+                                      const sumAll = newAmounts.reduce((a, b) => a + b, 0);
+                                      const roundDiff = total - sumAll;
                                       if (Math.abs(roundDiff) > 0.001) {
-                                        const lastOther = i === count - 1 ? count - 2 : count - 1;
-                                        newAmounts[lastOther] = Math.round((newAmounts[lastOther] + roundDiff) * 100) / 100;
+                                        newAmounts[count - 1] = Math.round((newAmounts[count - 1] + roundDiff) * 100) / 100;
                                       }
                                     }
                                     setCustomInstallmentAmounts(newAmounts);
