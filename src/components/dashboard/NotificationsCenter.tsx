@@ -98,6 +98,7 @@ export function NotificationsCenter({ fullPage = false }: NotificationsCenterPro
     client_name: string;
   } | null>(null);
   const [expandedNotifications, setExpandedNotifications] = useState<Set<string>>(new Set());
+  const [dismissedContractionClients, setDismissedContractionClients] = useState<Set<string>>(new Set());
   const queryClient = useQueryClient();
 
   // Fetch all clients for lookup (needed for diary/contraction notifications)
@@ -346,6 +347,29 @@ export function NotificationsCenter({ fullPage = false }: NotificationsCenterPro
     setBirthDialogOpen(true);
   };
 
+  const handleStartLabor = async (clientId: string) => {
+    const client = clientsMap.get(clientId);
+    if (!client) return;
+    
+    const { error } = await supabase
+      .from("clients")
+      .update({ labor_started_at: new Date().toISOString() })
+      .eq("id", clientId);
+
+    if (error) {
+      toast.error("Erro ao registrar trabalho de parto");
+      return;
+    }
+
+    toast.success(`Trabalho de parto registrado para ${client.full_name}`);
+    queryClient.invalidateQueries({ queryKey: ["birth-alert-clients"] });
+    queryClient.invalidateQueries({ queryKey: ["all-clients-lookup"] });
+  };
+
+  const handleDismissContraction = (clientId: string) => {
+    setDismissedContractionClients(prev => new Set([...prev, clientId]));
+  };
+
   const toggleExpanded = (id: string) => {
     setExpandedNotifications(prev => {
       const next = new Set(prev);
@@ -444,7 +468,8 @@ export function NotificationsCenter({ fullPage = false }: NotificationsCenterPro
         description: count > 1 ? `${count} contrações nas últimas 24h` : "1 contração registrada",
         timestamp: latestEntry.started_at,
         extraInfo: durationText,
-        priority: isUrgentContractions ? "high" : "medium"
+        priority: isUrgentContractions ? "high" : "medium",
+        clientId: client.id
       });
 
       // Remove from map so we don't duplicate
@@ -572,7 +597,8 @@ export function NotificationsCenter({ fullPage = false }: NotificationsCenterPro
         description: count > 1 ? `${count} contrações nas últimas 24h` : "1 contração registrada",
         timestamp: latestEntry.started_at,
         extraInfo: durationText,
-        priority: isActiveLabor ? "high" : "medium"
+        priority: isActiveLabor ? "high" : "medium",
+        clientId
       }]
     });
   });
@@ -840,66 +866,40 @@ export function NotificationsCenter({ fullPage = false }: NotificationsCenterPro
                                     Enviar Orçamento
                                   </Button>
                                 )}
-                                {/* Button on mobile - below content */}
-                                {notification.client && !notification.client.birth_occurred && (
-                                  notification.isInLabor ? (
-                                    <Button
-                                      size="sm"
-                                      variant="outline"
-                                      className="h-6 px-2 text-[10px] lg:text-xs border-dashed border-destructive/50 hover:bg-destructive/10 mt-1.5 w-full lg:hidden"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleRegisterBirth(notification.client as Client);
-                                      }}
-                                    >
-                                      <Baby className="h-3 w-3 mr-1 flex-shrink-0 text-destructive" />
-                                      <span className="text-destructive">Registrar nascimento</span>
-                                    </Button>
-                                  ) : (
-                                    <Button
-                                      size="sm"
-                                      variant="outline"
-                                      className="h-6 px-2 text-[10px] lg:text-xs border-dashed hover:bg-primary/10 mt-1.5 w-full lg:hidden"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleRegisterBirth(notification.client as Client);
-                                      }}
-                                    >
-                                      <CheckCircle className="h-3 w-3 mr-1 flex-shrink-0" />
-                                      Registrar nascimento
-                                    </Button>
-                                  )
-                                )}
-                              </div>
-                              {/* Button on desktop - right side */}
-                              {notification.client && !notification.client.birth_occurred && (
-                                notification.isInLabor ? (
+                                {/* Button on mobile - below content - ONLY for birth-type notifications */}
+                                {notification.client && !notification.client.birth_occurred && 
+                                 (notification.type === "birth_approaching" || notification.type === "post_term") &&
+                                 notification.isInLabor && (
                                   <Button
                                     size="sm"
                                     variant="outline"
-                                    className="h-7 px-2 text-xs border-dashed border-destructive/50 hover:bg-destructive/10 hidden lg:flex flex-shrink-0"
+                                    className="h-6 px-2 text-[10px] lg:text-xs border-dashed border-destructive/50 hover:bg-destructive/10 mt-1.5 w-full lg:hidden"
                                     onClick={(e) => {
                                       e.stopPropagation();
                                       handleRegisterBirth(notification.client as Client);
                                     }}
                                   >
-                                    <Baby className="h-3 w-3 mr-1 text-destructive" />
+                                    <Baby className="h-3 w-3 mr-1 flex-shrink-0 text-destructive" />
                                     <span className="text-destructive">Registrar nascimento</span>
                                   </Button>
-                                ) : (
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    className="h-7 px-2 text-xs border-dashed hover:bg-primary/10 hidden lg:flex flex-shrink-0"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleRegisterBirth(notification.client as Client);
-                                    }}
-                                  >
-                                    <CheckCircle className="h-3 w-3 mr-1" />
-                                    Registrar nascimento
-                                  </Button>
-                                )
+                                )}
+                              </div>
+                              {/* Button on desktop - right side - ONLY for birth-type with labor */}
+                              {notification.client && !notification.client.birth_occurred && 
+                               (notification.type === "birth_approaching" || notification.type === "post_term") &&
+                               notification.isInLabor && (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="h-7 px-2 text-xs border-dashed border-destructive/50 hover:bg-destructive/10 hidden lg:flex flex-shrink-0"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleRegisterBirth(notification.client as Client);
+                                  }}
+                                >
+                                  <Baby className="h-3 w-3 mr-1 text-destructive" />
+                                  <span className="text-destructive">Registrar nascimento</span>
+                                </Button>
                               )}
                               {/* Send budget button for service requests - desktop */}
                               {notification.type === "service_request" && notification.notificationId && (
@@ -924,16 +924,32 @@ export function NotificationsCenter({ fullPage = false }: NotificationsCenterPro
                         {/* Child notifications */}
                         <CollapsibleContent>
                           <div className="border-t border-border/50 mx-1 lg:mx-3 mb-1.5 lg:mb-3 pt-1.5 lg:pt-2 space-y-1 lg:space-y-2 overflow-x-hidden">
-                            {notification.children.map((child) => (
+                            {notification.children.map((child) => {
+                              const contractionClientId = child.clientId || notification.clientId;
+                              const contractionClient = contractionClientId ? clientsMap.get(contractionClientId) : notification.client;
+                              const isLaborStarted = contractionClient?.labor_started_at;
+                              const isProdromal = child.type === "new_contraction" && child.priority !== "high" && !isLaborStarted;
+                              const isActiveLaborPattern = child.type === "new_contraction" && child.priority === "high" && !isLaborStarted;
+                              const isDismissed = contractionClientId ? dismissedContractionClients.has(contractionClientId) : false;
+
+                              if (child.type === "new_contraction" && isProdromal && isDismissed) return null;
+
+                              return (
                               <div
                                 key={child.id}
                                 onClick={() => {
                                   if (child.type === "new_diary_entry" && notification.client) {
                                     setDiaryClient(notification.client);
                                     setDiaryDialogOpen(true);
-                                  } else if (child.type === "new_contraction" && notification.client) {
-                                    setContractionsClient(notification.client);
-                                    setContractionsDialogOpen(true);
+                                  } else if (child.type === "new_contraction") {
+                                    if (isProdromal && contractionClientId) {
+                                      handleDismissContraction(contractionClientId);
+                                    } else {
+                                      if (notification.client) {
+                                        setContractionsClient(notification.client);
+                                        setContractionsDialogOpen(true);
+                                      }
+                                    }
                                   }
                                 }}
                                 className={`p-1 lg:p-1.5 rounded-md border-l-2 ${
@@ -1023,8 +1039,38 @@ export function NotificationsCenter({ fullPage = false }: NotificationsCenterPro
                                     )}
                                   </div>
                                 </div>
+                                {/* Contraction action buttons */}
+                                {child.type === "new_contraction" && isActiveLaborPattern && contractionClientId && (
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="h-5 px-2 text-[9px] lg:text-[10px] border-dashed border-destructive/50 hover:bg-destructive/10 mt-1"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleStartLabor(contractionClientId);
+                                    }}
+                                  >
+                                    <Activity className="h-2.5 w-2.5 mr-1 text-destructive" />
+                                    <span className="text-destructive">Iniciar Trabalho de Parto</span>
+                                  </Button>
+                                )}
+                                {child.type === "new_contraction" && isLaborStarted && contractionClient && (
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="h-5 px-2 text-[9px] lg:text-[10px] border-dashed border-destructive/50 hover:bg-destructive/10 mt-1"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleRegisterBirth(contractionClient as Client);
+                                    }}
+                                  >
+                                    <Baby className="h-2.5 w-2.5 mr-1 text-destructive" />
+                                    <span className="text-destructive">Registrar Nascimento</span>
+                                  </Button>
+                                )}
                               </div>
-                            ))}
+                              );
+                            })}
                           </div>
                         </CollapsibleContent>
                       </div>
