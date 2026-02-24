@@ -122,6 +122,9 @@ export function ClientDetailsDialog({
       await queryClient.invalidateQueries({ queryKey: ["clients"] });
       await queryClient.invalidateQueries({ queryKey: ["client"] });
 
+      // Close the dialog so it reopens with fresh data
+      onOpenChange(false);
+
       toast.success("Dados de teste limpos!", {
         description: "Contrações, diário, mensagens, dados de parto e status foram resetados.",
       });
