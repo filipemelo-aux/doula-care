@@ -129,34 +129,23 @@ export default function GestanteDiary() {
 
   return (
     <GestanteLayout>
-      <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-sm border-b">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className={cn(
-              "w-10 h-10 rounded-full flex items-center justify-center",
-              isPuerpera 
-                ? "bg-gradient-to-br from-primary to-accent" 
-                : "bg-gradient-to-br from-primary to-accent"
-            )}>
-              <BookHeart className="w-5 h-5 text-primary-foreground" />
-            </div>
-            <div>
-              <h1 className="font-display font-semibold text-lg">
-                {isPuerpera ? "Diário do Puerpério" : "Diário da Gestação"}
-              </h1>
-              <p className="text-xs text-muted-foreground">
-                {isPuerpera ? "Sua jornada como mamãe" : "Seus momentos e sentimentos"}
-              </p>
-            </div>
+      <div className="p-3 lg:p-8 max-w-7xl mx-auto animate-fade-in">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-6">
+          <div className="page-header mb-0">
+            <h1 className="page-title">
+              {isPuerpera ? "Diário do Puerpério" : "Diário da Gestação"}
+            </h1>
+            <p className="page-description">
+              {isPuerpera ? "Sua jornada como mamãe" : "Seus momentos e sentimentos"}
+            </p>
           </div>
           <Button size="sm" onClick={() => setDialogOpen(true)}>
             <Plus className="h-4 w-4 mr-1" />
             Novo
           </Button>
         </div>
-      </header>
 
-      <div className="container mx-auto px-4 py-6">
+      
         {loading ? (
           <div className="flex items-center justify-center py-12">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />

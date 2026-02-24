@@ -109,9 +109,8 @@ export default function GestanteProfile() {
 
   return (
     <GestanteLayout>
-      {/* Header */}
-      <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-sm border-b">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+      <div className="p-3 lg:p-8 max-w-7xl mx-auto animate-fade-in space-y-4">
+        <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
             <AvatarUpload
               currentUrl={avatarUrl}
@@ -120,18 +119,17 @@ export default function GestanteProfile() {
               name={client?.full_name || ""}
               size="sm"
             />
-            <div>
-              <h1 className="font-display font-semibold text-lg">Meu Perfil</h1>
-              <p className="text-xs text-muted-foreground">{client?.full_name}</p>
+            <div className="page-header mb-0">
+              <h1 className="page-title">Meu Perfil</h1>
+              <p className="page-description">{client?.full_name}</p>
             </div>
           </div>
           <Button variant="ghost" size="icon" onClick={handleSignOut}>
             <LogOut className="h-5 w-5" />
           </Button>
         </div>
-      </header>
 
-      <div className="container mx-auto px-4 py-6 space-y-4">
+      
         {/* Plan Info */}
         <Card
           className="cursor-pointer hover:shadow-md transition-shadow active:scale-[0.99]"
