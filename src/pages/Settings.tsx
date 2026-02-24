@@ -741,7 +741,7 @@ export default function Settings() {
                 </div>
                 <div>
                   <h3 className="font-semibold text-foreground">Doula Care Dashboard</h3>
-                  <p className="text-sm text-muted-foreground">v{APP_VERSION} • Desenvolvido com ❤️ para profissionais de doula</p>
+                  <p className="text-sm text-muted-foreground">v{APP_VERSION} • Desenvolvido com ❤️ para Doulas</p>
                 </div>
               </div>
             </CardContent>
