@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -112,6 +112,18 @@ export default function Agenda() {
   const [aptDate, setAptDate] = useState("");
   const [aptNotes, setAptNotes] = useState("");
   const [aptClientId, setAptClientId] = useState("");
+  const dateInputRef = useRef<HTMLInputElement>(null);
+
+  // Poll the native date input value since Radix dialog can block change events from native pickers
+  useEffect(() => {
+    if (!appointmentDialog) return;
+    const interval = setInterval(() => {
+      if (dateInputRef.current && dateInputRef.current.value !== aptDate) {
+        setAptDate(dateInputRef.current.value);
+      }
+    }, 300);
+    return () => clearInterval(interval);
+  }, [appointmentDialog, aptDate]);
 
   // Delete confirmation
   const [deleteTarget, setDeleteTarget] = useState<{ type: "appointment" | "service"; id: string } | null>(null);
@@ -473,13 +485,14 @@ export default function Agenda() {
             </div>
             <div>
               <Label className="text-xs">Data e hora</Label>
-              <Input
+              <input
+                ref={dateInputRef}
                 type="datetime-local"
                 value={aptDate}
                 onChange={(e) => setAptDate(e.target.value)}
                 onInput={(e) => setAptDate((e.target as HTMLInputElement).value)}
                 onBlur={(e) => setAptDate(e.target.value)}
-                className="mt-1"
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 mt-1"
               />
             </div>
             <div>
