@@ -74,6 +74,10 @@ export function InAppNotificationListener({ userId, role, clientId, organization
                   });
                 },
               },
+              cancel: {
+                label: "Aguardar",
+                onClick: () => {},
+              },
             }
           );
         }
