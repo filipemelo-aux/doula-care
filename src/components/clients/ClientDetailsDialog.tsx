@@ -92,14 +92,18 @@ export function ClientDetailsDialog({
   const handleResetTestData = async () => {
     setResetting(true);
     try {
-      const [r1, r2, r3] = await Promise.all([
+      const [r1, r2, r3, r4, r5] = await Promise.all([
         supabase.from("contractions").delete().eq("client_id", client.id),
         supabase.from("pregnancy_diary").delete().eq("client_id", client.id),
         supabase.from("client_notifications").delete().eq("client_id", client.id),
+        supabase.from("service_requests").delete().eq("client_id", client.id),
+        supabase.from("appointments").delete().eq("client_id", client.id),
       ]);
       if (r1.error) throw r1.error;
       if (r2.error) throw r2.error;
       if (r3.error) throw r3.error;
+      if (r4.error) throw r4.error;
+      if (r5.error) throw r5.error;
 
       // Reset labor, birth, and status fields
       const { error: updateError } = await supabase
@@ -126,7 +130,7 @@ export function ClientDetailsDialog({
       onOpenChange(false);
 
       toast.success("Dados de teste limpos!", {
-        description: "Contrações, diário, mensagens, dados de parto e status foram resetados.",
+        description: "Contrações, diário, mensagens, serviços, consultas, dados de parto e status foram resetados.",
       });
     } catch (error) {
       console.error("Error resetting test data:", error);
@@ -401,7 +405,7 @@ export function ClientDetailsDialog({
           <AlertDialogHeader>
             <AlertDialogTitle>Limpar dados de teste?</AlertDialogTitle>
             <AlertDialogDescription>
-              Serão removidos: contrações, diário da gestante, mensagens e dados de parto/nascimento.
+              Serão removidos: contrações, diário da gestante, mensagens, solicitações de serviço, consultas agendadas e dados de parto/nascimento.
               <br /><br />
               <strong>Dados financeiros (plano, parcelas e transações) serão mantidos.</strong>
             </AlertDialogDescription>
