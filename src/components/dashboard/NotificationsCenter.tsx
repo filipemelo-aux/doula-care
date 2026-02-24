@@ -13,7 +13,7 @@ import { BirthRegistrationDialog } from "@/components/clients/BirthRegistrationD
 import { ClientDiaryDialog } from "@/components/dashboard/ClientDiaryDialog";
 import { ClientContractionsDialog } from "@/components/dashboard/ClientContractionsDialog";
 import { SendBudgetDialog } from "@/components/dashboard/SendBudgetDialog";
-import { formatBrazilDate, formatBrazilDateTime, abbreviateName } from "@/lib/utils";
+import { formatBrazilDate, formatBrazilDateTime, abbreviateName, cn } from "@/lib/utils";
 import type { Tables } from "@/integrations/supabase/types";
 import { toast } from "sonner";
 
@@ -79,7 +79,11 @@ interface ParentNotification {
   isRead?: boolean;
 }
 
-export function NotificationsCenter() {
+interface NotificationsCenterProps {
+  fullPage?: boolean;
+}
+
+export function NotificationsCenter({ fullPage = false }: NotificationsCenterProps) {
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [birthDialogOpen, setBirthDialogOpen] = useState(false);
   const [diaryDialogOpen, setDiaryDialogOpen] = useState(false);
@@ -671,7 +675,10 @@ export function NotificationsCenter() {
               <p className="text-xs text-muted-foreground/70 mt-1">Tudo em dia!</p>
             </div>
           ) : (
-            <div className="max-h-[300px] lg:max-h-[400px] overflow-y-auto overflow-x-hidden px-1.5 lg:px-4 pb-2 lg:pb-4">
+            <div className={cn(
+              "overflow-y-auto overflow-x-hidden px-1.5 lg:px-4 pb-2 lg:pb-4",
+              fullPage ? "max-h-[calc(100vh-14rem)]" : "max-h-[300px] lg:max-h-[400px]"
+            )}>
               <div className="space-y-1.5 lg:space-y-2 pt-1">
                 {parentNotifications.map((notification) => {
                   const hasChildren = notification.children.length > 0;
