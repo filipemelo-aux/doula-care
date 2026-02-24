@@ -178,7 +178,7 @@ export function ClientDetailsDialog({
                 </AvatarFallback>
               </Avatar>
               <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2 -ml-0.5">
+                <div className="flex items-center gap-2">
                   <Badge
                     variant="outline"
                     className={cn("badge-status border-0 shrink-0 pl-0", `badge-${client.status}`)}
