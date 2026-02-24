@@ -121,6 +121,7 @@ export default function Financial() {
   const [quickClientName, setQuickClientName] = useState("");
   const [quickClientPhone, setQuickClientPhone] = useState("");
   const [entryAlreadyPaid, setEntryAlreadyPaid] = useState(false);
+  const [customInstallmentAmounts, setCustomInstallmentAmounts] = useState<number[]>([]);
   const [avistaPaymentStatus, setAvistaPaymentStatus] = useState<"pago" | "parcial" | "pendente">("pendente");
   const [avistaPartialValue, setAvistaPartialValue] = useState<string>("");
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
@@ -275,6 +276,7 @@ export default function Financial() {
   const createMutation = useMutation({
     mutationFn: async (data: TransactionFormData) => {
       const installments = data.payment_type === "parcelado" ? (data.installments || 1) : 1;
+      const useCustomAmounts = data.installment_frequency === "manual" && customInstallmentAmounts.length === installments;
       const installmentValue = data.amount / installments;
 
       // Determine amount_received based on payment type
@@ -302,8 +304,9 @@ export default function Financial() {
           else dueDate.setMonth(dueDate.getMonth() + i);
           const dueDateStr = dueDate.toISOString().split("T")[0];
           const isPastDue = dueDateStr < todayStr;
+          const thisInstVal = useCustomAmounts ? customInstallmentAmounts[i] : installmentValue;
           if (isPastDue || (entryAlreadyPaid && i === 0)) {
-            autoReceived += installmentValue;
+            autoReceived += thisInstVal;
           }
         }
       }
@@ -345,13 +348,14 @@ export default function Financial() {
           const dueDateStr = dueDate.toISOString().split("T")[0];
           const todayStr = format(new Date(), "yyyy-MM-dd");
           const isPastDue = dueDateStr < todayStr;
+          const thisInstVal = useCustomAmounts ? customInstallmentAmounts[i] : installmentValue;
           return {
             client_id: data.client_id!,
             transaction_id: newTransaction.id,
             installment_number: i + 1,
             total_installments: installments,
-            amount: installmentValue,
-            amount_paid: isPastDue || (entryAlreadyPaid && i === 0) ? installmentValue : 0,
+            amount: thisInstVal,
+            amount_paid: isPastDue || (entryAlreadyPaid && i === 0) ? thisInstVal : 0,
             due_date: dueDateStr,
             status: isPastDue || (entryAlreadyPaid && i === 0) ? "pago" : "pendente",
             paid_at: isPastDue || (entryAlreadyPaid && i === 0) ? new Date().toISOString() : null,
@@ -524,6 +528,7 @@ export default function Financial() {
     setEntryAlreadyPaid(false);
     setAvistaPaymentStatus("pendente");
     setAvistaPartialValue("");
+    setCustomInstallmentAmounts([]);
     form.reset({
       description: "",
       amount: 0,
@@ -1476,6 +1481,62 @@ export default function Financial() {
                         </FormItem>
                       )}
                     />
+                  )}
+                  {form.watch("installment_frequency") === "manual" && (form.watch("installments") || 1) > 1 && (
+                    <div className="col-span-2 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <FormLabel className="text-xs font-medium">Valores por parcela</FormLabel>
+                        <button
+                          type="button"
+                          className="text-[10px] text-primary hover:underline"
+                          onClick={() => {
+                            const count = form.watch("installments") || 1;
+                            const total = form.watch("amount") || 0;
+                            setCustomInstallmentAmounts(Array(count).fill(total / count));
+                          }}
+                        >
+                          Dividir igualmente
+                        </button>
+                      </div>
+                      {(() => {
+                        const count = form.watch("installments") || 1;
+                        const total = form.watch("amount") || 0;
+                        if (customInstallmentAmounts.length !== count) {
+                          const equalVal = total / count;
+                          const initial = Array(count).fill(equalVal);
+                          if (customInstallmentAmounts.length === 0) {
+                            setTimeout(() => setCustomInstallmentAmounts(initial), 0);
+                          }
+                          return null;
+                        }
+                        const sumCustom = customInstallmentAmounts.reduce((a, b) => a + b, 0);
+                        const diff = Math.abs(sumCustom - total);
+                        return (
+                          <div className="space-y-1.5">
+                            {customInstallmentAmounts.map((amt, i) => (
+                              <div key={i} className="flex items-center gap-2">
+                                <span className="text-xs text-muted-foreground w-8 text-right">{i + 1}ª</span>
+                                <Input
+                                  className="input-field h-7 text-xs flex-1"
+                                  value={maskCurrency(String(Math.round(amt * 100)))}
+                                  onChange={(e) => {
+                                    const newAmounts = [...customInstallmentAmounts];
+                                    newAmounts[i] = parseCurrency(e.target.value);
+                                    setCustomInstallmentAmounts(newAmounts);
+                                  }}
+                                  placeholder="R$ 0,00"
+                                />
+                              </div>
+                            ))}
+                            {diff > 0.01 && (
+                              <p className="text-[10px] text-warning">
+                                Soma das parcelas: {maskCurrency(String(Math.round(sumCustom * 100)))} (diferença de {maskCurrency(String(Math.round(diff * 100)))})
+                              </p>
+                            )}
+                          </div>
+                        );
+                      })()}
+                    </div>
                   )}
                   <FormField
                     control={form.control}

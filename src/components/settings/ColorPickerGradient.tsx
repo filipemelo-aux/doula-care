@@ -56,6 +56,37 @@ function hexToHSL(hex: string): { h: number; s: number; l: number } {
   };
 }
 
+function HexInput({ value, onChange }: { value: string; onChange: (color: string) => void }) {
+  const [localValue, setLocalValue] = useState(value);
+
+  useEffect(() => {
+    setLocalValue(value);
+  }, [value]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let v = e.target.value;
+    if (!v.startsWith("#")) v = "#" + v;
+    // Allow partial typing
+    if (/^#[0-9a-fA-F]{0,6}$/.test(v)) {
+      setLocalValue(v);
+      if (v.length === 7) {
+        onChange(v);
+      }
+    }
+  };
+
+  return (
+    <input
+      type="text"
+      value={localValue}
+      onChange={handleChange}
+      maxLength={7}
+      className="w-[5.5rem] text-xs font-mono uppercase bg-muted/50 border border-border rounded-lg px-2 py-1.5 text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+      placeholder="#000000"
+    />
+  );
+}
+
 export function ColorPickerGradient({ value, onChange, label }: ColorPickerGradientProps) {
   const [isOpen, setIsOpen] = useState(false);
   const hsl = hexToHSL(value);
@@ -218,22 +249,7 @@ export function ColorPickerGradient({ value, onChange, label }: ColorPickerGradi
                 className="w-8 h-8 rounded-lg border border-border shrink-0"
                 style={{ backgroundColor: value }}
               />
-              <input
-                type="text"
-                value={value}
-                onChange={(e) => {
-                  let v = e.target.value;
-                  if (!v.startsWith("#")) v = "#" + v;
-                  if (/^#[0-9a-fA-F]{0,6}$/.test(v)) {
-                    if (v.length === 7) {
-                      onChange(v);
-                    }
-                  }
-                }}
-                maxLength={7}
-                className="w-[5.5rem] text-xs font-mono uppercase bg-muted/50 border border-border rounded-lg px-2 py-1.5 text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
-                placeholder="#000000"
-              />
+          <HexInput value={value} onChange={onChange} />
             </div>
             <button
               type="button"
