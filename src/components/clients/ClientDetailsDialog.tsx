@@ -206,36 +206,38 @@ export function ClientDetailsDialog({
             {client.user_id && (
               <>
                 <Separator />
-                <div className="flex flex-wrap gap-2">
+                <div className="flex items-center gap-2">
                   <Button
                     variant="outline"
-                    size="sm"
+                    size="icon"
+                    className="h-9 w-9"
                     onClick={() => setNotificationDialogOpen(true)}
+                    title="Enviar Notificação"
                   >
-                    <Bell className="w-4 h-4 mr-2" />
-                    Enviar Notificação
+                    <Bell className="w-4 h-4" />
                   </Button>
                   <Button
                     variant="outline"
-                    size="sm"
+                    size="icon"
+                    className="h-9 w-9"
                     onClick={() => setAppointmentsDialogOpen(true)}
+                    title="Consultas"
                   >
-                    <Calendar className="w-4 h-4 mr-2" />
-                    Consultas
+                    <Calendar className="w-4 h-4" />
                   </Button>
                   <Button
                     variant="outline"
-                    size="sm"
-                    className="border-amber-300 text-amber-700 hover:bg-amber-50 hover:text-amber-700"
+                    size="icon"
+                    className="h-9 w-9 border-amber-300 text-amber-700 hover:bg-amber-50 hover:text-amber-700"
                     disabled={resetting}
                     onClick={() => setResetConfirmOpen(true)}
+                    title="Limpar Dados de Teste"
                   >
                     {resetting ? (
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      <Loader2 className="w-4 h-4 animate-spin" />
                     ) : (
-                      <RotateCcw className="w-4 h-4 mr-2" />
+                      <RotateCcw className="w-4 h-4" />
                     )}
-                    Limpar Dados de Teste
                   </Button>
                 </div>
               </>
