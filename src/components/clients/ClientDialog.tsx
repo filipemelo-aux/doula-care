@@ -929,8 +929,15 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
                                     min={1}
                                     max={365}
                                     className="h-9 text-sm"
-                                    value={field.value || 30}
-                                    onChange={(e) => field.onChange(parseInt(e.target.value) || 30)}
+                                    value={field.value ?? ""}
+                                    onChange={(e) => {
+                                      const val = e.target.value;
+                                      field.onChange(val === "" ? "" : (parseInt(val) || 0));
+                                    }}
+                                    onBlur={(e) => {
+                                      const val = parseInt(e.target.value);
+                                      if (!val || val < 1) field.onChange(1);
+                                    }}
                                   />
                                 </FormControl>
                                 <FormMessage />
