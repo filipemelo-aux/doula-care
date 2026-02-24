@@ -6,6 +6,17 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
@@ -21,10 +32,14 @@ import {
   FileText,
   Bell,
   KeyRound,
+  RotateCcw,
+  Loader2,
 } from "lucide-react";
 import type { Tables } from "@/integrations/supabase/types";
 import { parseISO } from "date-fns";
 import { SendNotificationDialog } from "./SendNotificationDialog";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 type Client = Tables<"clients">;
 
@@ -67,8 +82,46 @@ export function ClientDetailsDialog({
 }: ClientDetailsDialogProps) {
   const [notificationDialogOpen, setNotificationDialogOpen] = useState(false);
   const [appointmentsDialogOpen, setAppointmentsDialogOpen] = useState(false);
+  const [resetting, setResetting] = useState(false);
 
   if (!client) return null;
+
+  const handleResetTestData = async () => {
+    setResetting(true);
+    try {
+      const [r1, r2, r3] = await Promise.all([
+        supabase.from("contractions").delete().eq("client_id", client.id),
+        supabase.from("pregnancy_diary").delete().eq("client_id", client.id),
+        supabase.from("client_notifications").delete().eq("client_id", client.id),
+      ]);
+      if (r1.error) throw r1.error;
+      if (r2.error) throw r2.error;
+      if (r3.error) throw r3.error;
+
+      // Reset labor and birth fields
+      const { error: updateError } = await supabase
+        .from("clients")
+        .update({
+          labor_started_at: null,
+          birth_occurred: false,
+          birth_date: null,
+          birth_time: null,
+          birth_weight: null,
+          birth_height: null,
+        })
+        .eq("id", client.id);
+      if (updateError) throw updateError;
+
+      toast.success("Dados de teste limpos!", {
+        description: "Contrações, diário, mensagens e dados de parto foram removidos.",
+      });
+    } catch (error) {
+      console.error("Error resetting test data:", error);
+      toast.error("Erro ao limpar dados de teste");
+    } finally {
+      setResetting(false);
+    }
+  };
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("pt-BR", {
@@ -156,6 +209,39 @@ export function ClientDetailsDialog({
                     <Calendar className="w-4 h-4 mr-2" />
                     Consultas
                   </Button>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="border-amber-300 text-amber-700 hover:bg-amber-50 hover:text-amber-700"
+                        disabled={resetting}
+                      >
+                        {resetting ? (
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        ) : (
+                          <RotateCcw className="w-4 h-4 mr-2" />
+                        )}
+                        Limpar Dados de Teste
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Limpar dados de teste?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Serão removidos: contrações, diário da gestante, mensagens e dados de parto/nascimento.
+                          <br /><br />
+                          <strong>Dados financeiros (plano, parcelas e transações) serão mantidos.</strong>
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleResetTestData}>
+                          Limpar dados
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                 </div>
               </>
             )}
