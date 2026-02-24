@@ -90,6 +90,7 @@ export function ClientDiaryDialog({
         queryClient.invalidateQueries({ queryKey: ["recent-diary-entries"] });
         queryClient.invalidateQueries({ queryKey: ["recent-diary-entries-by-client"] });
         queryClient.invalidateQueries({ queryKey: ["client-diary", client.id] });
+        queryClient.invalidateQueries({ queryKey: ["admin-unread-diary-count"] });
       }
     };
 

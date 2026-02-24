@@ -52,6 +52,7 @@ export default function GestanteMessages() {
   const [newMessage, setNewMessage] = useState("");
   const [sending, setSending] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
   const { client, organizationId } = useGestanteAuth();
   const queryClient = useQueryClient();
 
@@ -62,6 +63,25 @@ export default function GestanteMessages() {
     }
   }, [client?.id]);
 
+  // Realtime subscription for new messages
+  useEffect(() => {
+    if (!client?.id) return;
+    const channel = supabase
+      .channel("gestante-messages-realtime")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "client_notifications", filter: `client_id=eq.${client.id}` },
+        () => {
+          fetchNotifications();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [client?.id]);
+
   const fetchNotifications = async () => {
     if (!client?.id) return;
 
@@ -70,7 +90,7 @@ export default function GestanteMessages() {
         .from("client_notifications")
         .select("*")
         .eq("client_id", client.id)
-        .order("created_at", { ascending: false });
+        .order("created_at", { ascending: true });
 
       if (error) throw error;
       setNotifications(data || []);
@@ -97,10 +117,17 @@ export default function GestanteMessages() {
         .from("client_notifications")
         .update({ read_by_client: true })
         .in("id", ids);
+      // Invalidate admin queries so badges update
+      queryClient.invalidateQueries({ queryKey: ["admin-all-messages"] });
     } catch (error) {
       console.error("Error marking as read by client:", error);
     }
   };
+
+  // Scroll to bottom when messages change
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [notifications.length]);
 
   const { data: pendingBudgets } = useQuery({
     queryKey: ["my-pending-budgets", client?.id],
@@ -312,7 +339,7 @@ export default function GestanteMessages() {
           </Card>
         ) : (
           <ScrollArea className="h-[calc(100vh-18rem)]">
-            <div className="space-y-3">
+            <div className="space-y-3 flex flex-col">
               {/* Pending budgets - highlighted */}
               {pendingBudgets?.map((budget) => (
                 <Card
@@ -418,6 +445,7 @@ export default function GestanteMessages() {
                   </div>
                 );
               })}
+              <div ref={messagesEndRef} />
             </div>
           </ScrollArea>
         )}
