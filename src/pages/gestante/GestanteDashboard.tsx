@@ -15,7 +15,8 @@ import {
   LogOut,
   Sparkles,
   Scale,
-  Ruler
+  Ruler,
+  Clock
 } from "lucide-react";
 import { toast } from "sonner";
 import { format, differenceInDays } from "date-fns";
@@ -241,7 +242,7 @@ export default function GestanteDashboard() {
               </p>
               
               {/* Birth Details */}
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-6">
+               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6">
                 {clientData?.birth_date && (
                   <div className="bg-background/60 rounded-xl p-3 text-center">
                     <Calendar className="h-5 w-5 text-primary mx-auto mb-1" />
@@ -249,6 +250,13 @@ export default function GestanteDashboard() {
                     <p className="font-semibold text-sm">
                       {format(getLocalDate(clientData.birth_date), "dd/MM/yyyy", { locale: ptBR })}
                     </p>
+                  </div>
+                )}
+                {clientData?.birth_time && (
+                  <div className="bg-background/60 rounded-xl p-3 text-center">
+                    <Clock className="h-5 w-5 text-primary mx-auto mb-1" />
+                    <p className="text-xs text-muted-foreground">Hora</p>
+                    <p className="font-semibold text-sm">{clientData.birth_time.slice(0, 5)}</p>
                   </div>
                 )}
                 {clientData?.birth_weight && (
