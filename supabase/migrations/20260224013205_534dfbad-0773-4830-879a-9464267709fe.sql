@@ -1,0 +1,1 @@
+ALTER TABLE public.contractions ADD COLUMN IF NOT EXISTS read_by_admin boolean NOT NULL DEFAULT false;

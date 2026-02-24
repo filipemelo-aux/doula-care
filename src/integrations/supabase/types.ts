@@ -293,6 +293,7 @@ export type Database = {
           ended_at: string | null
           id: string
           organization_id: string | null
+          read_by_admin: boolean
           started_at: string
         }
         Insert: {
@@ -302,6 +303,7 @@ export type Database = {
           ended_at?: string | null
           id?: string
           organization_id?: string | null
+          read_by_admin?: boolean
           started_at?: string
         }
         Update: {
@@ -311,6 +313,7 @@ export type Database = {
           ended_at?: string | null
           id?: string
           organization_id?: string | null
+          read_by_admin?: boolean
           started_at?: string
         }
         Relationships: [
