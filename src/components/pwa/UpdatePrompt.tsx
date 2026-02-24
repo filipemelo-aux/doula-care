@@ -67,8 +67,8 @@ export default function UpdatePrompt() {
           <RefreshCw className="h-5 w-5 text-primary" />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold text-foreground">Nova versão disponível</p>
-          <p className="text-xs text-muted-foreground">v{APP_VERSION} — Atualize para a versão mais recente.</p>
+          <p className="text-sm font-semibold text-foreground">Nova versão disponível!</p>
+          <p className="text-xs text-muted-foreground">Versão {APP_VERSION} disponível. Atualize agora.</p>
         </div>
         <div className="flex items-center gap-1 flex-shrink-0">
           <Button size="sm" onClick={handleUpdate} className="text-xs h-8">
