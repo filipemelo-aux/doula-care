@@ -2,11 +2,12 @@ import { useState } from "react";
 import logo from "@/assets/logo.png";
 import { Outlet } from "react-router-dom";
 import { Sidebar } from "./Sidebar";
-import { Menu, LogOut } from "lucide-react";
+import { Menu, LogOut, ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { PushNotificationToggle } from "@/components/pwa/PushNotificationToggle";
 import { useOrgBranding } from "@/hooks/useOrgBranding";
+import { cn } from "@/lib/utils";
 
 export function DashboardLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -27,7 +28,7 @@ export function DashboardLayout() {
         onNavigate={handleNavigate}
       />
 
-      <div className="flex-1 flex flex-col min-h-screen">
+      <div className={cn("flex-1 flex flex-col min-h-screen transition-all duration-300", sidebarOpen ? "lg:ml-64" : "lg:ml-20")}>
         {/* Mobile Header */}
         <header className="lg:hidden h-16 border-b border-border flex items-center justify-between px-4 bg-card/50 backdrop-blur-sm sticky top-0 z-40">
           <div className="flex items-center">
@@ -57,6 +58,14 @@ export function DashboardLayout() {
         {/* Desktop Header */}
         <header className="hidden lg:flex h-16 border-b border-border items-center justify-between px-8 bg-card/50 backdrop-blur-sm sticky top-0 z-40">
           <div className="flex items-center gap-3">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              className="h-8 w-8 text-muted-foreground hover:text-foreground"
+            >
+              <ChevronLeft className={cn("h-4 w-4 transition-transform", !sidebarOpen && "rotate-180")} />
+            </Button>
             <div className="w-8 h-8 rounded-[40%] bg-[#FFF5EE] overflow-hidden">
               <img src={headerLogo} alt={headerName} className="w-full h-full object-cover mix-blend-multiply scale-[1.15]" />
             </div>
