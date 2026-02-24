@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { GestanteLayout } from "@/components/gestante/GestanteLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -267,6 +268,22 @@ export default function GestanteContractions() {
           });
       });
   }, [laborStatus, client?.id, client?.full_name]);
+
+  const navigate = useNavigate();
+
+  // Block access if birth already registered
+  if (!loading && client && (client as any).birth_occurred) {
+    return (
+      <GestanteLayout>
+        <div className="container mx-auto px-4 py-12 text-center space-y-4">
+          <Baby className="h-12 w-12 text-primary mx-auto" />
+          <h2 className="font-display font-bold text-lg">Seu bebê já nasceu! 🎉</h2>
+          <p className="text-sm text-muted-foreground">O contador de contrações não está mais disponível.</p>
+          <Button onClick={() => navigate("/gestante")} className="mt-4">Voltar ao início</Button>
+        </div>
+      </GestanteLayout>
+    );
+  }
 
   if (loading) {
     return (
