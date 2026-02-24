@@ -374,9 +374,12 @@ export function RecordPaymentDialog({
               }
               className="w-full"
             >
-              {recordPaymentMutation.isPending
-                ? "Registrando..."
-                : "Confirmar Pagamento"}
+              {recordPaymentMutation.isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin mr-1" />
+                  Registrando...
+                </>
+              ) : "Confirmar Pagamento"}
             </Button>
           </div>
         )}
