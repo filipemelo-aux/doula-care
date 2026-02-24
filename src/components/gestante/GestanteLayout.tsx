@@ -50,7 +50,7 @@ export function GestanteLayout({ children }: GestanteLayoutProps) {
       {/* Sidebar */}
       <aside
         className={cn(
-          "fixed lg:relative inset-y-0 left-0 z-40 flex flex-col bg-sidebar border-r border-sidebar-border transition-all duration-300 ease-in-out",
+          "fixed lg:relative inset-y-0 left-0 z-50 flex flex-col bg-sidebar border-r border-sidebar-border transition-all duration-300 ease-in-out",
           sidebarOpen ? "w-64" : "w-0 lg:w-20",
           !sidebarOpen && "overflow-hidden lg:overflow-visible"
         )}
