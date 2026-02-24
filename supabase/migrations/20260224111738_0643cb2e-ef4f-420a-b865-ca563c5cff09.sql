@@ -1,0 +1,1 @@
+ALTER TABLE public.plan_settings DROP CONSTRAINT plan_settings_plan_type_org_key;
