@@ -36,7 +36,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, TrendingDown, Search, Trash2, Edit2 } from "lucide-react";
+import { Plus, TrendingDown, Search, Trash2, Edit2, Loader2 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -382,7 +382,9 @@ export default function Expenses() {
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <div className="text-center py-8 text-muted-foreground">Carregando...</div>
+            <div className="flex justify-center py-8">
+              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            </div>
           ) : filteredExpenses && filteredExpenses.length > 0 ? (
             <>
               {/* Mobile Cards */}
@@ -670,11 +672,12 @@ export default function Expenses() {
                   size="sm"
                   disabled={createMutation.isPending || updateMutation.isPending}
                 >
-                  {createMutation.isPending || updateMutation.isPending
-                    ? "Salvando..."
-                    : selectedExpense
-                    ? "Atualizar"
-                    : "Registrar"}
+                  {createMutation.isPending || updateMutation.isPending ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin mr-1" />
+                      Salvando...
+                    </>
+                  ) : selectedExpense ? "Atualizar" : "Registrar"}
                 </Button>
               </div>
             </form>
@@ -696,8 +699,14 @@ export default function Expenses() {
             <AlertDialogAction
               onClick={confirmDelete}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={deleteMutation.isPending}
             >
-              Excluir
+              {deleteMutation.isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin mr-1" />
+                  Excluindo...
+                </>
+              ) : "Excluir"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

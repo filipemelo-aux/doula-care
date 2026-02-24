@@ -839,7 +839,14 @@ export default function Settings() {
               )} />
               <div className="flex justify-end gap-3 pt-4 border-t">
                 <Button type="button" variant="outline" onClick={() => setPlanDialogOpen(false)}>Cancelar</Button>
-                <Button type="submit" disabled={updatePlanMutation.isPending}>{updatePlanMutation.isPending ? "Salvando..." : "Salvar"}</Button>
+                <Button type="submit" disabled={updatePlanMutation.isPending}>
+                  {updatePlanMutation.isPending ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin mr-1" />
+                      Salvando...
+                    </>
+                  ) : "Salvar"}
+                </Button>
               </div>
             </form>
           </Form>

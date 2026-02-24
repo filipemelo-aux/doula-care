@@ -36,7 +36,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, TrendingUp, Search, Trash2, Zap, Check, X, CheckCircle, CreditCard, Banknote, Building2, QrCode, FileText, Users, Wrench, UserPlus, DollarSign, Eye } from "lucide-react";
+import { Plus, TrendingUp, Search, Trash2, Zap, Check, X, CheckCircle, CreditCard, Banknote, Building2, QrCode, FileText, Users, Wrench, UserPlus, DollarSign, Eye, Loader2 } from "lucide-react";
 import { RecordPaymentDialog } from "@/components/financial/RecordPaymentDialog";
 import { RevenueDetailDialog } from "@/components/financial/RevenueDetailDialog";
 import { maskCurrency, parseCurrency, maskPhone } from "@/lib/masks";
@@ -716,8 +716,8 @@ export default function Financial() {
         </CardHeader>
         <CardContent className="p-0">
           {isLoading ? (
-            <div className="text-center py-8 text-muted-foreground">
-              Carregando...
+            <div className="flex justify-center py-8">
+              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
             </div>
           ) : filteredTransactions && filteredTransactions.length > 0 ? (
             <>
@@ -1565,11 +1565,12 @@ export default function Financial() {
                   size="sm"
                   disabled={createMutation.isPending || updateMutation.isPending}
                 >
-                  {createMutation.isPending || updateMutation.isPending
-                    ? "Salvando..."
-                    : selectedTransaction
-                    ? "Atualizar"
-                    : "Registrar"}
+                  {createMutation.isPending || updateMutation.isPending ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin mr-1" />
+                      Salvando...
+                    </>
+                  ) : selectedTransaction ? "Atualizar" : "Registrar"}
                 </Button>
               </div>
             </form>
@@ -1591,8 +1592,14 @@ export default function Financial() {
             <AlertDialogAction
               onClick={confirmDelete}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={deleteMutation.isPending}
             >
-              Excluir
+              {deleteMutation.isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin mr-1" />
+                  Excluindo...
+                </>
+              ) : "Excluir"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

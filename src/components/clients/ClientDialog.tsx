@@ -32,7 +32,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { CheckCircle } from "lucide-react";
+import { CheckCircle, Loader2 } from "lucide-react";
 
 import { maskPhone, maskCPF, maskCEP, maskCurrency, parseCurrency } from "@/lib/masks";
 import type { Tables } from "@/integrations/supabase/types";
@@ -985,7 +985,12 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
                 disabled={mutation.isPending}
                 onClick={handleSubmitClick}
               >
-                {mutation.isPending ? "Salvando..." : client ? "Atualizar" : "Cadastrar"}
+                {mutation.isPending ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin mr-1" />
+                    Salvando...
+                  </>
+                ) : client ? "Atualizar" : "Cadastrar"}
               </Button>
             </div>
           </form>

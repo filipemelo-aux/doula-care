@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, Search, Edit2, Trash2, Eye } from "lucide-react";
+import { Plus, Search, Edit2, Trash2, Eye, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ClientDialog } from "@/components/clients/ClientDialog";
 import { ClientDetailsDialog } from "@/components/clients/ClientDetailsDialog";
@@ -205,8 +205,8 @@ export default function Clients() {
         </CardHeader>
         <CardContent className="p-0">
           {isLoading ? (
-            <div className="text-center py-8 text-muted-foreground">
-              Carregando...
+            <div className="flex justify-center py-8">
+              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
             </div>
           ) : filteredClients && filteredClients.length > 0 ? (
             <>
@@ -412,8 +412,14 @@ export default function Clients() {
             <AlertDialogAction
               onClick={confirmDelete}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={deleteMutation.isPending}
             >
-              Excluir
+              {deleteMutation.isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin mr-1" />
+                  Excluindo...
+                </>
+              ) : "Excluir"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
