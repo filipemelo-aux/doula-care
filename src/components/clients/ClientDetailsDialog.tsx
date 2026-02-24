@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { ManageAppointmentsDialog } from "./ManageAppointmentsDialog";
 import {
   Dialog,
@@ -84,6 +85,7 @@ export function ClientDetailsDialog({
   const [appointmentsDialogOpen, setAppointmentsDialogOpen] = useState(false);
   const [resetting, setResetting] = useState(false);
   const [resetConfirmOpen, setResetConfirmOpen] = useState(false);
+  const queryClient = useQueryClient();
 
   if (!client) return null;
 
@@ -99,7 +101,7 @@ export function ClientDetailsDialog({
       if (r2.error) throw r2.error;
       if (r3.error) throw r3.error;
 
-      // Reset labor and birth fields
+      // Reset labor, birth, and status fields
       const { error: updateError } = await supabase
         .from("clients")
         .update({
@@ -109,12 +111,19 @@ export function ClientDetailsDialog({
           birth_time: null,
           birth_weight: null,
           birth_height: null,
+          status: "gestante" as const,
+          custom_status: null,
+          baby_names: [],
         })
         .eq("id", client.id);
       if (updateError) throw updateError;
 
+      // Invalidate all related queries so UI refreshes everywhere
+      await queryClient.invalidateQueries({ queryKey: ["clients"] });
+      await queryClient.invalidateQueries({ queryKey: ["client"] });
+
       toast.success("Dados de teste limpos!", {
-        description: "Contrações, diário, mensagens e dados de parto foram removidos.",
+        description: "Contrações, diário, mensagens, dados de parto e status foram resetados.",
       });
     } catch (error) {
       console.error("Error resetting test data:", error);
