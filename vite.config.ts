@@ -3,12 +3,25 @@ import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import { componentTagger } from "lovable-tagger";
 import { VitePWA } from "vite-plugin-pwa";
+import fs from "fs";
 
 const APP_VERSION = "1.1.0";
 
-// Short build suffix: MMDD
+// Short build suffix: MMDD + optional counter for multiple builds per day
 const now = new Date();
-const BUILD_ID = `${String(now.getMonth() + 1).padStart(2, "0")}${String(now.getDate()).padStart(2, "0")}`;
+const TODAY = `${String(now.getMonth() + 1).padStart(2, "0")}${String(now.getDate()).padStart(2, "0")}`;
+
+let buildCount = 1;
+const counterFile = path.resolve(__dirname, "build-counter.json");
+try {
+  const raw = JSON.parse(fs.readFileSync(counterFile, "utf-8"));
+  if (raw.date === TODAY) {
+    buildCount = (raw.count || 1) + 1;
+  }
+} catch { /* first build or missing file */ }
+fs.writeFileSync(counterFile, JSON.stringify({ date: TODAY, count: buildCount }, null, 2));
+
+const BUILD_ID = buildCount === 1 ? TODAY : `${TODAY}${buildCount}`;
 const FULL_VERSION = `${APP_VERSION}.${BUILD_ID}`;
 
 // https://vitejs.dev/config/
