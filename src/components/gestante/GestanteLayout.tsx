@@ -5,6 +5,7 @@ import { useOrgBranding } from "@/hooks/useOrgBranding";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useGestanteAuth } from "@/contexts/GestanteAuthContext";
 import { 
+  LayoutDashboard,
   BookHeart, 
   MessageCircle, 
   Baby, 
@@ -23,7 +24,7 @@ interface GestanteLayoutProps {
 }
 
 const navItems = [
-  { to: "/gestante", icon: Baby, label: "Início" },
+  { to: "/gestante", icon: LayoutDashboard, label: "Visão Geral" },
   { to: "/gestante/diario", icon: BookHeart, label: "Diário" },
   { to: "/gestante/mensagens", icon: MessageCircle, label: "Mensagens" },
   { to: "/gestante/contracoes", icon: Timer, label: "Contrações" },
@@ -142,7 +143,7 @@ export function GestanteLayout({ children }: GestanteLayoutProps) {
             >
               <Menu className="h-5 w-5" />
             </Button>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 cursor-pointer" onClick={() => navigate("/gestante")}>
               <div className="w-8 h-8 rounded-[40%] bg-[#FFF5EE] overflow-hidden">
                 <img src={headerLogo} alt={headerName} className="w-full h-full object-cover mix-blend-multiply scale-[1.15]" />
               </div>
