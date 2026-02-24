@@ -473,7 +473,14 @@ export default function Agenda() {
             </div>
             <div>
               <Label className="text-xs">Data e hora</Label>
-              <Input type="datetime-local" value={aptDate} onChange={(e) => setAptDate(e.target.value)} className="mt-1" />
+              <Input
+                type="datetime-local"
+                value={aptDate}
+                onChange={(e) => setAptDate(e.target.value)}
+                onInput={(e) => setAptDate((e.target as HTMLInputElement).value)}
+                onBlur={(e) => setAptDate(e.target.value)}
+                className="mt-1"
+              />
             </div>
             <div>
               <Label className="text-xs">Observações (opcional)</Label>
