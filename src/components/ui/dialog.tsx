@@ -38,16 +38,27 @@ const DialogContent = React.forwardRef<
       onOpenAutoFocus={(e) => e.preventDefault()}
       onCloseAutoFocus={(e) => e.preventDefault()}
       onPointerDownOutside={(e) => {
-        // Prevent dialog from closing when interacting with Select dropdown (which uses Portal)
+        // Prevent dialog from closing when interacting with Select dropdown, date pickers, or other portaled elements
         const target = e.target as HTMLElement;
-        if (target?.closest('[data-radix-select-content]') || target?.closest('[role="listbox"]')) {
+        if (
+          target?.closest('[data-radix-select-content]') ||
+          target?.closest('[role="listbox"]') ||
+          target?.closest('[data-radix-popper-content-wrapper]') ||
+          target?.closest('.rdp') ||
+          target?.tagName === 'INPUT'
+        ) {
           e.preventDefault();
         }
       }}
       onInteractOutside={(e) => {
-        // Also prevent interact outside events from Select dropdowns
         const target = e.target as HTMLElement;
-        if (target?.closest('[data-radix-select-content]') || target?.closest('[role="listbox"]')) {
+        if (
+          target?.closest('[data-radix-select-content]') ||
+          target?.closest('[role="listbox"]') ||
+          target?.closest('[data-radix-popper-content-wrapper]') ||
+          target?.closest('.rdp') ||
+          target?.tagName === 'INPUT'
+        ) {
           e.preventDefault();
         }
       }}
