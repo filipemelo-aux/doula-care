@@ -177,17 +177,18 @@ export function ScheduledServicesCard({ clientId }: ScheduledServicesCardProps) 
                   )}
                 </div>
 
-                {svc.responded_at && (
-                  <p className="text-xs text-muted-foreground">
-                    📅 {formatBrazilDateTime(svc.responded_at, "dd/MM/yyyy")}
-                  </p>
-                )}
-
-                {svc.budget_value && (
-                  <p className="text-sm text-muted-foreground">
-                    R$ {svc.budget_value.toFixed(2).replace(".", ",")}
-                  </p>
-                )}
+                <div className="flex items-center justify-between">
+                  {svc.budget_value ? (
+                    <p className="text-sm text-muted-foreground">
+                      R$ {svc.budget_value.toFixed(2).replace(".", ",")}
+                    </p>
+                  ) : <span />}
+                  {svc.responded_at && (
+                    <p className="text-xs text-muted-foreground">
+                      📅 {formatBrazilDateTime(svc.responded_at, "dd/MM/yyyy")}
+                    </p>
+                  )}
+                </div>
 
                 <div className="flex gap-2 flex-wrap">
                   {!svc.completed_at && (
