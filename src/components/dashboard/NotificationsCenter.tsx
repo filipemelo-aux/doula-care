@@ -577,6 +577,22 @@ export function NotificationsCenter({ fullPage = false }: NotificationsCenterPro
     });
   });
 
+  // In dashboard mode (non-fullPage), filter out read diary notifications
+  if (!fullPage) {
+    // Remove read diary children from birth alert parents
+    parentNotifications.forEach(n => {
+      n.children = n.children.filter(c => !(c.type === "new_diary_entry" && c.isRead));
+    });
+
+    // Remove standalone read diary parent notifications
+    const filtered = parentNotifications.filter(n => {
+      if (n.type === "new_diary_entry" && n.isRead) return false;
+      return true;
+    });
+    parentNotifications.length = 0;
+    parentNotifications.push(...filtered);
+  }
+
   // Sort by priority (high priority children count too)
   parentNotifications.sort((a, b) => {
     const priorityOrder = { high: 0, medium: 1, low: 2 };
