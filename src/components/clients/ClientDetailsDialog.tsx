@@ -83,6 +83,7 @@ export function ClientDetailsDialog({
   const [notificationDialogOpen, setNotificationDialogOpen] = useState(false);
   const [appointmentsDialogOpen, setAppointmentsDialogOpen] = useState(false);
   const [resetting, setResetting] = useState(false);
+  const [resetConfirmOpen, setResetConfirmOpen] = useState(false);
 
   if (!client) return null;
 
@@ -142,6 +143,7 @@ export function ClientDetailsDialog({
     .join(", ");
 
   return (
+    <>
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg max-h-[90vh]">
         <DialogHeader>
@@ -209,39 +211,20 @@ export function ClientDetailsDialog({
                     <Calendar className="w-4 h-4 mr-2" />
                     Consultas
                   </Button>
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="border-amber-300 text-amber-700 hover:bg-amber-50 hover:text-amber-700"
-                        disabled={resetting}
-                      >
-                        {resetting ? (
-                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        ) : (
-                          <RotateCcw className="w-4 h-4 mr-2" />
-                        )}
-                        Limpar Dados de Teste
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Limpar dados de teste?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          Serão removidos: contrações, diário da gestante, mensagens e dados de parto/nascimento.
-                          <br /><br />
-                          <strong>Dados financeiros (plano, parcelas e transações) serão mantidos.</strong>
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                        <AlertDialogAction onClick={handleResetTestData}>
-                          Limpar dados
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="border-amber-300 text-amber-700 hover:bg-amber-50 hover:text-amber-700"
+                    disabled={resetting}
+                    onClick={() => setResetConfirmOpen(true)}
+                  >
+                    {resetting ? (
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    ) : (
+                      <RotateCcw className="w-4 h-4 mr-2" />
+                    )}
+                    Limpar Dados de Teste
+                  </Button>
                 </div>
               </>
             )}
@@ -398,5 +381,25 @@ export function ClientDetailsDialog({
         />
       )}
     </Dialog>
+
+      <AlertDialog open={resetConfirmOpen} onOpenChange={setResetConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Limpar dados de teste?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Serão removidos: contrações, diário da gestante, mensagens e dados de parto/nascimento.
+              <br /><br />
+              <strong>Dados financeiros (plano, parcelas e transações) serão mantidos.</strong>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleResetTestData}>
+              Limpar dados
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }
