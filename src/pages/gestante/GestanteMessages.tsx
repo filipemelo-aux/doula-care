@@ -334,72 +334,6 @@ export default function GestanteMessages() {
         ) : (
           <ScrollArea className="h-[calc(100vh-18rem)]">
             <div className="space-y-3 flex flex-col">
-              {/* Pending budgets - highlighted */}
-              {pendingBudgets?.map((budget) => (
-                <Card
-                  key={`budget-${budget.id}`}
-                  className="bg-secondary border-primary/20 shadow-sm"
-                >
-                  <CardContent className="p-4">
-                    <div className="flex items-start gap-3">
-                      <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                        <Sparkles className="h-5 w-5 text-primary" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <Badge className="bg-primary text-primary-foreground text-[10px]">
-                            Orçamento
-                          </Badge>
-                          <p className="font-medium text-foreground">{budget.service_type}</p>
-                        </div>
-                        <p className="text-2xl font-bold text-accent my-2">
-                          R$ {(budget.budget_value || 0).toFixed(2).replace(".", ",")}
-                        </p>
-                        <p className="text-sm text-muted-foreground mb-3">
-                          Sua Doula enviou este orçamento. Deseja aprovar?
-                        </p>
-                        <div className="flex gap-2">
-                          <Button
-                            size="sm"
-                            className="flex-1 bg-emerald-600 hover:bg-emerald-700"
-                            onClick={() => acceptBudgetMutation.mutate(budget)}
-                            disabled={acceptBudgetMutation.isPending || rejectBudgetMutation.isPending}
-                          >
-                            {acceptBudgetMutation.isPending ? (
-                              <Loader2 className="h-4 w-4 animate-spin" />
-                            ) : (
-                              <>
-                                <Check className="h-4 w-4 mr-1" />
-                                Aceitar
-                              </>
-                            )}
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="flex-1 border-red-300 text-red-600 hover:bg-red-50 hover:text-red-600"
-                            onClick={() => rejectBudgetMutation.mutate(budget)}
-                            disabled={acceptBudgetMutation.isPending || rejectBudgetMutation.isPending}
-                          >
-                            {rejectBudgetMutation.isPending ? (
-                              <Loader2 className="h-4 w-4 animate-spin" />
-                            ) : (
-                              <>
-                                <X className="h-4 w-4 mr-1" />
-                                Recusar
-                              </>
-                            )}
-                          </Button>
-                        </div>
-                        <p className="text-xs text-muted-foreground mt-3">
-                          {budget.budget_sent_at && formatBrazilDateTime(budget.budget_sent_at, "dd/MM/yyyy 'às' HH:mm")}
-                        </p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-
               {/* Regular notifications + client messages */}
               {regularNotifications.map((notification) => {
                 const isMine = isClientMessage(notification);
@@ -439,6 +373,66 @@ export default function GestanteMessages() {
                   </div>
                 );
               })}
+
+              {/* Pending budgets inline at the bottom */}
+              {pendingBudgets?.map((budget) => (
+                <div key={`budget-${budget.id}`} className="flex justify-start">
+                  <Card className="max-w-[85%] bg-secondary border-primary/20 shadow-sm">
+                    <CardContent className="p-3">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Sparkles className="h-4 w-4 text-primary" />
+                        <Badge className="bg-primary text-primary-foreground text-[10px]">
+                          Orçamento
+                        </Badge>
+                      </div>
+                      <p className="font-medium text-sm text-foreground">{budget.service_type}</p>
+                      <p className="text-xl font-bold text-accent my-2">
+                        R$ {(budget.budget_value || 0).toFixed(2).replace(".", ",")}
+                      </p>
+                      <p className="text-xs text-muted-foreground mb-3">
+                        Sua Doula enviou este orçamento. Deseja aprovar?
+                      </p>
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white"
+                          onClick={() => acceptBudgetMutation.mutate(budget)}
+                          disabled={acceptBudgetMutation.isPending || rejectBudgetMutation.isPending}
+                        >
+                          {acceptBudgetMutation.isPending ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <>
+                              <Check className="h-4 w-4 mr-1" />
+                              Aceitar
+                            </>
+                          )}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="flex-1 border-red-300 text-red-600 hover:bg-red-50 hover:text-red-600"
+                          onClick={() => rejectBudgetMutation.mutate(budget)}
+                          disabled={acceptBudgetMutation.isPending || rejectBudgetMutation.isPending}
+                        >
+                          {rejectBudgetMutation.isPending ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <>
+                              <X className="h-4 w-4 mr-1" />
+                              Recusar
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                      <p className="text-[10px] text-muted-foreground mt-2">
+                        {budget.budget_sent_at && formatBrazilDateTime(budget.budget_sent_at, "dd/MM 'às' HH:mm")}
+                      </p>
+                    </CardContent>
+                  </Card>
+                </div>
+              ))}
+
               <div ref={messagesEndRef} />
             </div>
           </ScrollArea>
