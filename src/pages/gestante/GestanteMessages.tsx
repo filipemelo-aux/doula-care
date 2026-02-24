@@ -445,8 +445,8 @@ export default function GestanteMessages() {
         )}
 
         {/* Compose message area */}
-        <div className="fixed bottom-[6.5rem] left-0 right-0 z-40 bg-background border-t p-3">
-          <div className="container mx-auto max-w-2xl flex gap-2 items-end">
+        <div className="sticky bottom-0 left-0 right-0 z-30 bg-background border-t p-3 mt-auto">
+          <div className="max-w-2xl mx-auto flex gap-2 items-end">
             <Textarea
               ref={textareaRef}
               value={newMessage}
