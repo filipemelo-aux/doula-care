@@ -1,4 +1,5 @@
-import { useQuery } from "@tanstack/react-query";
+import { useEffect } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Dialog,
@@ -29,6 +30,8 @@ export function ClientContractionsDialog({
   onOpenChange,
   client,
 }: ClientContractionsDialogProps) {
+  const queryClient = useQueryClient();
+
   const { data: contractions, isLoading } = useQuery({
     queryKey: ["client-contractions", client?.id],
     queryFn: async () => {
@@ -46,6 +49,32 @@ export function ClientContractionsDialog({
     },
     enabled: open && !!client?.id,
   });
+
+  // Mark unread contractions as read when dialog opens
+  useEffect(() => {
+    const markAsRead = async () => {
+      if (!open || !client?.id || !contractions) return;
+      
+      const unreadIds = contractions
+        .filter(c => !(c as any).read_by_admin)
+        .map(c => c.id);
+      
+      if (unreadIds.length === 0) return;
+
+      const { error } = await supabase
+        .from("contractions")
+        .update({ read_by_admin: true } as any)
+        .in("id", unreadIds);
+
+      if (!error) {
+        queryClient.invalidateQueries({ queryKey: ["recent-contractions"] });
+        queryClient.invalidateQueries({ queryKey: ["client-contractions", client.id] });
+      }
+    };
+
+    const timeout = setTimeout(markAsRead, 500);
+    return () => clearTimeout(timeout);
+  }, [open, client?.id, contractions, queryClient]);
 
   const formatDuration = (seconds: number | null) => {
     if (!seconds) return "—";

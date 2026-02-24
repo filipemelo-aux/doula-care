@@ -38,6 +38,7 @@ interface ContractionEntry {
   client_id: string;
   started_at: string;
   duration_seconds: number | null;
+  read_by_admin: boolean;
   client_name?: string;
 }
 
@@ -98,7 +99,7 @@ export function NotificationsCenter({ fullPage = false }: NotificationsCenterPro
     client_name: string;
   } | null>(null);
   const [expandedNotifications, setExpandedNotifications] = useState<Set<string>>(new Set());
-  const [dismissedContractionClients, setDismissedContractionClients] = useState<Set<string>>(new Set());
+  const [readContractionClients, setReadContractionClients] = useState<Set<string>>(new Set());
   const queryClient = useQueryClient();
 
   // Fetch all clients for lookup (needed for diary/contraction notifications)
@@ -193,7 +194,7 @@ export function NotificationsCenter({ fullPage = false }: NotificationsCenterPro
       // Only fetch contractions for gestante clients (not lactante)
       const { data, error } = await supabase
         .from("contractions")
-        .select("id, client_id, started_at, duration_seconds, clients!inner(full_name, status, birth_occurred)")
+        .select("id, client_id, started_at, duration_seconds, read_by_admin, clients!inner(full_name, status, birth_occurred)")
         .gte("started_at", twentyFourHoursAgo.toISOString())
         .eq("clients.status", "gestante")
         .eq("clients.birth_occurred", false)
@@ -209,6 +210,7 @@ export function NotificationsCenter({ fullPage = false }: NotificationsCenterPro
         client_id: entry.client_id,
         started_at: entry.started_at,
         duration_seconds: entry.duration_seconds,
+        read_by_admin: (entry as any).read_by_admin ?? false,
         client_name: (entry.clients as { full_name: string; status: string; birth_occurred: boolean } | null)?.full_name || "Cliente"
       })) as ContractionEntry[];
     },
@@ -366,8 +368,19 @@ export function NotificationsCenter({ fullPage = false }: NotificationsCenterPro
     queryClient.invalidateQueries({ queryKey: ["all-clients-lookup"] });
   };
 
-  const handleDismissContraction = (clientId: string) => {
-    setDismissedContractionClients(prev => new Set([...prev, clientId]));
+  const handleMarkContractionRead = async (clientId: string) => {
+    setReadContractionClients(prev => new Set([...prev, clientId]));
+    
+    // Mark all contractions for this client as read in DB
+    const { error } = await supabase
+      .from("contractions")
+      .update({ read_by_admin: true } as any)
+      .eq("client_id", clientId)
+      .eq("read_by_admin", false);
+
+    if (!error) {
+      queryClient.invalidateQueries({ queryKey: ["recent-contractions"] });
+    }
   };
 
   const toggleExpanded = (id: string) => {
@@ -383,15 +396,17 @@ export function NotificationsCenter({ fullPage = false }: NotificationsCenterPro
   };
 
   // Group contractions by client
-  const contractionsByClient = new Map<string, { entries: ContractionEntry[]; clientName: string }>();
+  const contractionsByClient = new Map<string, { entries: ContractionEntry[]; clientName: string; allRead: boolean }>();
   recentContractions?.forEach(entry => {
     const existing = contractionsByClient.get(entry.client_id);
     if (existing) {
       existing.entries.push(entry);
+      if (!entry.read_by_admin) existing.allRead = false;
     } else {
       contractionsByClient.set(entry.client_id, {
         entries: [entry],
-        clientName: entry.client_name || "Cliente"
+        clientName: entry.client_name || "Cliente",
+        allRead: entry.read_by_admin
       });
     }
   });
@@ -469,7 +484,8 @@ export function NotificationsCenter({ fullPage = false }: NotificationsCenterPro
         timestamp: latestEntry.started_at,
         extraInfo: durationText,
         priority: isUrgentContractions ? "high" : "medium",
-        clientId: client.id
+        clientId: client.id,
+        isRead: clientContractions.allRead || readContractionClients.has(client.id)
       });
 
       // Remove from map so we don't duplicate
@@ -573,13 +589,14 @@ export function NotificationsCenter({ fullPage = false }: NotificationsCenterPro
   });
 
   // Handle orphan contractions (clients not in 37+ weeks alert)
-  contractionsByClient.forEach(({ entries, clientName }, clientId) => {
+  contractionsByClient.forEach(({ entries, clientName, allRead }, clientId) => {
     const count = entries.length;
     const latestEntry = entries[0];
     const isActiveLabor = count >= 3;
     const durationText = latestEntry.duration_seconds 
       ? `${latestEntry.duration_seconds}s` 
       : "Em andamento";
+    const isRead = allRead || readContractionClients.has(clientId);
 
     // Create as parent since client isn't in birth alert
     parentNotifications.push({
@@ -590,6 +607,7 @@ export function NotificationsCenter({ fullPage = false }: NotificationsCenterPro
       priority: isActiveLabor ? "high" : "medium",
       icon: Timer,
       timestamp: latestEntry.started_at,
+      isRead,
       children: [{
         id: `contraction-${clientId}`,
         type: "new_contraction",
@@ -598,21 +616,27 @@ export function NotificationsCenter({ fullPage = false }: NotificationsCenterPro
         timestamp: latestEntry.started_at,
         extraInfo: durationText,
         priority: isActiveLabor ? "high" : "medium",
-        clientId
+        clientId,
+        isRead
       }]
     });
   });
 
-  // In dashboard mode (non-fullPage), filter out read diary notifications
+  // In dashboard mode (non-fullPage), filter out read notifications
   if (!fullPage) {
-    // Remove read diary children from birth alert parents
+    // Remove read diary and contraction children from birth alert parents
     parentNotifications.forEach(n => {
-      n.children = n.children.filter(c => !(c.type === "new_diary_entry" && c.isRead));
+      n.children = n.children.filter(c => {
+        if (c.type === "new_diary_entry" && c.isRead) return false;
+        if (c.type === "new_contraction" && c.isRead) return false;
+        return true;
+      });
     });
 
-    // Remove standalone read diary parent notifications
+    // Remove standalone read parent notifications (diary and orphan contractions)
     const filtered = parentNotifications.filter(n => {
       if (n.type === "new_diary_entry" && n.isRead) return false;
+      if (n.isRead && n.children.length === 0) return false;
       return true;
     });
     parentNotifications.length = 0;
@@ -928,11 +952,12 @@ export function NotificationsCenter({ fullPage = false }: NotificationsCenterPro
                               const contractionClientId = child.clientId || notification.clientId;
                               const contractionClient = contractionClientId ? clientsMap.get(contractionClientId) : notification.client;
                               const isLaborStarted = contractionClient?.labor_started_at;
-                              const isProdromal = child.type === "new_contraction" && child.priority !== "high" && !isLaborStarted;
+                              
                               const isActiveLaborPattern = child.type === "new_contraction" && child.priority === "high" && !isLaborStarted;
-                              const isDismissed = contractionClientId ? dismissedContractionClients.has(contractionClientId) : false;
+                              const isContractionRead = child.isRead || (contractionClientId ? readContractionClients.has(contractionClientId) : false);
 
-                              if (child.type === "new_contraction" && isProdromal && isDismissed) return null;
+                              // In dashboard mode, hide read contraction notifications
+                              if (!fullPage && child.type === "new_contraction" && isContractionRead) return null;
 
                               return (
                               <div
@@ -942,18 +967,18 @@ export function NotificationsCenter({ fullPage = false }: NotificationsCenterPro
                                     setDiaryClient(notification.client);
                                     setDiaryDialogOpen(true);
                                   } else if (child.type === "new_contraction") {
-                                    if (isProdromal && contractionClientId) {
-                                      handleDismissContraction(contractionClientId);
-                                    } else {
-                                      if (notification.client) {
-                                        setContractionsClient(notification.client);
-                                        setContractionsDialogOpen(true);
-                                      }
+                                    // Mark as read and open contractions dialog
+                                    if (contractionClientId) {
+                                      handleMarkContractionRead(contractionClientId);
+                                    }
+                                    if (notification.client) {
+                                      setContractionsClient(notification.client);
+                                      setContractionsDialogOpen(true);
                                     }
                                   }
                                 }}
                                 className={`p-1 lg:p-1.5 rounded-md border-l-2 ${
-                                  child.isRead
+                                  (child.isRead || isContractionRead)
                                     ? "bg-muted/20 border-l-muted-foreground/30 opacity-50"
                                     : child.type === "labor_started"
                                     ? "bg-destructive/10 border-l-destructive"
