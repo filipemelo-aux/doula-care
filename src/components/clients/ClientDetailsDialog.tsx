@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ManageAppointmentsDialog } from "./ManageAppointmentsDialog";
 import {
   Dialog,
@@ -35,10 +35,12 @@ import {
   KeyRound,
   RotateCcw,
   Loader2,
+  Eye,
 } from "lucide-react";
 import type { Tables } from "@/integrations/supabase/types";
 import { parseISO } from "date-fns";
 import { SendNotificationDialog } from "./SendNotificationDialog";
+import { RevenueDetailDialog } from "@/components/financial/RevenueDetailDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -85,7 +87,27 @@ export function ClientDetailsDialog({
   const [appointmentsDialogOpen, setAppointmentsDialogOpen] = useState(false);
   const [resetting, setResetting] = useState(false);
   const [resetConfirmOpen, setResetConfirmOpen] = useState(false);
+  const [revenueDetailOpen, setRevenueDetailOpen] = useState(false);
   const queryClient = useQueryClient();
+
+  // Query client's contract transaction to check installments
+  const { data: clientTransaction } = useQuery({
+    queryKey: ["client-transaction", client?.id],
+    queryFn: async () => {
+      if (!client) return null;
+      const { data, error } = await supabase
+        .from("transactions")
+        .select("id, installments, installment_value, amount, amount_received")
+        .eq("client_id", client.id)
+        .eq("type", "receita")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+    enabled: open && !!client,
+  });
 
   if (!client) return null;
 
@@ -355,6 +377,39 @@ export function ClientDetailsDialog({
                     {paymentStatusLabels[client.payment_status as keyof typeof paymentStatusLabels]}
                   </Badge>
                 </div>
+                {clientTransaction && (clientTransaction.installments || 1) > 1 && (
+                  <div className="col-span-2">
+                    <p className="text-muted-foreground">Pagamento</p>
+                    <div className="flex items-center justify-between mt-1">
+                      <p className="font-medium">
+                        Parcelado em {clientTransaction.installments}x de{" "}
+                        {formatCurrency(Number(clientTransaction.installment_value) || 0)}
+                      </p>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-7 text-xs gap-1"
+                        onClick={() => setRevenueDetailOpen(true)}
+                      >
+                        <Eye className="h-3 w-3" />
+                        Detalhes
+                      </Button>
+                    </div>
+                  </div>
+                )}
+                {clientTransaction && (clientTransaction.installments || 1) <= 1 && (
+                  <div className="col-span-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-7 text-xs gap-1 w-full"
+                      onClick={() => setRevenueDetailOpen(true)}
+                    >
+                      <Eye className="h-3 w-3" />
+                      Ver Detalhes Financeiros
+                    </Button>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -399,6 +454,14 @@ export function ClientDetailsDialog({
         />
       )}
     </Dialog>
+
+      {clientTransaction && (
+        <RevenueDetailDialog
+          open={revenueDetailOpen}
+          onOpenChange={setRevenueDetailOpen}
+          transactionId={clientTransaction.id}
+        />
+      )}
 
       <AlertDialog open={resetConfirmOpen} onOpenChange={setResetConfirmOpen}>
         <AlertDialogContent>
