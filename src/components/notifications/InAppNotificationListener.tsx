@@ -126,7 +126,7 @@ export function InAppNotificationListener({ userId, role, clientId, organization
             action: {
               label: "Ver",
               onClick: () => {
-                window.location.href = "/mensagens";
+                window.location.href = `/mensagens?clientId=${notification.client_id}`;
               },
             },
           });

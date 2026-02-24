@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent } from "@/components/ui/card";
@@ -29,7 +30,8 @@ type Client = Tables<"clients">;
 type Notification = Tables<"client_notifications">;
 
 export default function AdminMessages() {
-  const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
+  const [searchParams] = useSearchParams();
+  const [selectedClientId, setSelectedClientId] = useState<string | null>(searchParams.get("clientId"));
   const [newMessage, setNewMessage] = useState("");
   const [sending, setSending] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
