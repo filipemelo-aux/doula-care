@@ -177,6 +177,12 @@ export function ScheduledServicesCard({ clientId }: ScheduledServicesCardProps) 
                   )}
                 </div>
 
+                {svc.responded_at && (
+                  <p className="text-xs text-muted-foreground">
+                    📅 {formatBrazilDateTime(svc.responded_at, "dd/MM/yyyy")}
+                  </p>
+                )}
+
                 {svc.budget_value && (
                   <p className="text-sm text-muted-foreground">
                     R$ {svc.budget_value.toFixed(2).replace(".", ",")}
@@ -188,7 +194,7 @@ export function ScheduledServicesCard({ clientId }: ScheduledServicesCardProps) 
                     <Button
                       size="sm"
                       variant="outline"
-                      className="text-xs border-emerald-300 text-emerald-700 hover:bg-emerald-50"
+                      className="text-xs border-emerald-300 text-emerald-700 hover:bg-emerald-50 hover:text-emerald-700"
                       onClick={() => completeMutation.mutate(svc.id)}
                       disabled={completeMutation.isPending}
                     >
@@ -205,7 +211,7 @@ export function ScheduledServicesCard({ clientId }: ScheduledServicesCardProps) 
                     <Button
                       size="sm"
                       variant="outline"
-                      className="text-xs border-amber-300 text-amber-700 hover:bg-amber-50"
+                      className="text-xs border-amber-300 text-amber-700 hover:bg-amber-50 hover:text-amber-700"
                       onClick={() => {
                         setRatingDialog(svc);
                         setSelectedRating(0);
