@@ -287,8 +287,8 @@ export default function Agenda() {
       <div className="grid grid-cols-3 gap-3">
         <Card className="bg-warning/10 border-warning/30">
           <CardContent className="p-3 text-center">
-            <p className="text-2xl font-bold text-warning-foreground">{pendingServices}</p>
-            <p className="text-xs text-warning-foreground/80">Solicitações Pendentes</p>
+            <p className="text-2xl font-bold text-amber-700">{pendingServices}</p>
+            <p className="text-xs text-amber-700/80">Solicitações Pendentes</p>
           </CardContent>
         </Card>
         <Card className="bg-primary/10 border-primary/30">
@@ -299,8 +299,8 @@ export default function Agenda() {
         </Card>
         <Card className="bg-success/10 border-success/30">
           <CardContent className="p-3 text-center">
-            <p className="text-2xl font-bold text-success-foreground">{acceptedServices}</p>
-            <p className="text-xs text-success-foreground/80">Em Andamento</p>
+            <p className="text-2xl font-bold text-emerald-700">{acceptedServices}</p>
+            <p className="text-xs text-emerald-700/80">Em Andamento</p>
           </CardContent>
         </Card>
       </div>

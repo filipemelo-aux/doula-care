@@ -40,7 +40,10 @@ const DialogContent = React.forwardRef<
       onPointerDownOutside={(e) => {
         // Prevent dialog from closing when interacting with Select dropdown, date pickers, or other portaled elements
         const target = e.target as HTMLElement;
+        const dialogContent = (e.currentTarget as HTMLElement);
+        const hasActiveDateInput = dialogContent?.querySelector('input[type="datetime-local"]:focus, input[type="date"]:focus, input[type="time"]:focus');
         if (
+          hasActiveDateInput ||
           target?.closest('[data-radix-select-content]') ||
           target?.closest('[role="listbox"]') ||
           target?.closest('[data-radix-popper-content-wrapper]') ||
@@ -52,7 +55,10 @@ const DialogContent = React.forwardRef<
       }}
       onInteractOutside={(e) => {
         const target = e.target as HTMLElement;
+        const dialogContent = (e.currentTarget as HTMLElement);
+        const hasActiveDateInput = dialogContent?.querySelector('input[type="datetime-local"]:focus, input[type="date"]:focus, input[type="time"]:focus');
         if (
+          hasActiveDateInput ||
           target?.closest('[data-radix-select-content]') ||
           target?.closest('[role="listbox"]') ||
           target?.closest('[data-radix-popper-content-wrapper]') ||
