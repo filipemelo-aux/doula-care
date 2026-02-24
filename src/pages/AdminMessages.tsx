@@ -346,9 +346,9 @@ export default function AdminMessages() {
 
                 {/* Messages */}
                 <ScrollArea className="flex-1 p-3">
-                  <div className="space-y-3">
+                  <div className="space-y-3 min-h-full">
                     {selectedMessages.length === 0 ? (
-                      <div className="text-center py-12 text-sm text-muted-foreground">
+                      <div className="flex items-end justify-center min-h-[200px] text-sm text-muted-foreground pb-4">
                         Nenhuma mensagem ainda. Inicie a conversa!
                       </div>
                     ) : (
