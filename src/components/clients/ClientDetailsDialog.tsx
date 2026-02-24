@@ -166,8 +166,8 @@ export function ClientDetailsDialog({
         <ScrollArea className="max-h-[calc(85vh-100px)] pr-4">
           <div className="space-y-6">
             {/* Header */}
-            <div className="flex items-center gap-4">
-              <Avatar className="h-16 w-16">
+            <div className="flex items-start gap-4">
+              <Avatar className="h-16 w-16 shrink-0">
                 <AvatarFallback className="bg-primary/10 text-primary text-lg font-medium">
                   {client.full_name
                     .split(" ")
@@ -177,28 +177,28 @@ export function ClientDetailsDialog({
                     .toUpperCase()}
                 </AvatarFallback>
               </Avatar>
-              <div>
-                <h2 className="text-xl font-semibold text-foreground">
-                  {client.full_name}
-                </h2>
-                <div className="flex items-center gap-2 mt-1">
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2">
                   <Badge
                     variant="outline"
-                    className={cn("badge-status border-0", `badge-${client.status}`)}
+                    className={cn("badge-status border-0 shrink-0", `badge-${client.status}`)}
                   >
                     {statusLabels[client.status as keyof typeof statusLabels]}
                   </Badge>
                   {client.status === "gestante" && client.pregnancy_weeks && (
-                    <span className="text-sm text-muted-foreground">
-                      {client.pregnancy_weeks} semanas
-                    </span>
-                  )}
-                  {client.status === "gestante" && client.dpp && (
-                    <span className="text-sm text-muted-foreground">
-                      DPP: {formatBrazilDate(client.dpp)}
+                    <span className="text-xs text-muted-foreground">
+                      {client.pregnancy_weeks} sem
                     </span>
                   )}
                 </div>
+                <h2 className="text-lg font-semibold text-foreground mt-1 truncate">
+                  {client.full_name}
+                </h2>
+                {client.status === "gestante" && client.dpp && (
+                  <span className="text-sm text-muted-foreground">
+                    DPP: {formatBrazilDate(client.dpp)}
+                  </span>
+                )}
               </div>
             </div>
 
