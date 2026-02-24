@@ -32,3 +32,6 @@ verify_jwt = false
 
 [functions.check-billing-overdue]
 verify_jwt = false
+
+[functions.delete-organization]
+verify_jwt = false
