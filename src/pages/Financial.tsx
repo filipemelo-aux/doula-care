@@ -1513,8 +1513,15 @@ export default function Financial() {
                               min={1}
                               max={365}
                               className="input-field h-8 text-sm"
-                              value={field.value || 30}
-                              onChange={(e) => field.onChange(parseInt(e.target.value) || 30)}
+                              value={field.value ?? ""}
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                field.onChange(val === "" ? "" : (parseInt(val) || 0));
+                              }}
+                              onBlur={(e) => {
+                                const val = parseInt(e.target.value);
+                                if (!val || val < 1) field.onChange(1);
+                              }}
                             />
                           </FormControl>
                           <FormMessage />
