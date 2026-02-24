@@ -92,6 +92,26 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
     },
   });
 
+  // Fetch the auto-generated transaction for the client to get installment info
+  const { data: clientTransaction } = useQuery({
+    queryKey: ["client-transaction", client?.id],
+    queryFn: async () => {
+      if (!client?.id) return null;
+      const { data, error } = await supabase
+        .from("transactions")
+        .select("installments, installment_value, payment_method")
+        .eq("client_id", client.id)
+        .eq("is_auto_generated", true)
+        .eq("type", "receita")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!client?.id && open,
+  });
+
   const form = useForm<ClientFormData>({
     resolver: zodResolver(clientSchema),
     defaultValues: {
@@ -147,6 +167,8 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
   // Reset form when client changes
   useEffect(() => {
     if (client) {
+      const txInstallments = clientTransaction?.installments ? Number(clientTransaction.installments) : 1;
+      const isParcelado = txInstallments > 1;
       form.reset({
         full_name: client.full_name,
         phone: client.phone,
@@ -166,8 +188,8 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
         baby_names: (client as any).baby_names?.join(", ") || "",
         plan: client.plan as "basico" | "intermediario" | "completo",
         payment_method: client.payment_method as "pix" | "cartao" | "dinheiro" | "transferencia",
-        payment_type: "a_vista",
-        installments: 1,
+        payment_type: isParcelado ? "parcelado" : "a_vista",
+        installments: txInstallments,
         installment_frequency: "mensal",
         custom_interval_days: 30,
         first_due_date: "",
@@ -207,7 +229,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
         notes: "",
       });
     }
-  }, [client, form, planSettings]);
+  }, [client, form, planSettings, clientTransaction]);
 
   const mutation = useMutation({
     mutationFn: async (data: ClientFormData) => {
