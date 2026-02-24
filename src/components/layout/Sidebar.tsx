@@ -63,14 +63,14 @@ export function Sidebar({ isOpen, onToggle, onNavigate }: SidebarProps) {
   return (
     <aside
       className={cn(
-        "fixed lg:relative inset-y-0 left-0 z-50 flex flex-col bg-sidebar border-r border-sidebar-border transition-all duration-300 ease-in-out",
+        "fixed inset-y-0 left-0 z-50 flex flex-col bg-sidebar border-r border-sidebar-border transition-all duration-300 ease-in-out",
         isOpen ? "w-64" : "w-0 lg:w-20",
         !isOpen && "overflow-hidden lg:overflow-visible"
       )}
     >
-      {/* Logo */}
-      <div className="h-20 flex items-center justify-between px-6 border-b border-sidebar-border">
-        <div className={cn("flex items-center gap-3 transition-opacity", !isOpen && "lg:opacity-0")}>
+      {/* Logo - mobile only */}
+      <div className="lg:hidden h-20 flex items-center justify-between px-6 border-b border-sidebar-border">
+        <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-[40%] bg-[#FFF5EE] overflow-hidden">
             <img src={sidebarLogo} alt={sidebarName} className="w-full h-full object-cover mix-blend-multiply scale-[1.15]" />
           </div>
@@ -79,35 +79,7 @@ export function Sidebar({ isOpen, onToggle, onNavigate }: SidebarProps) {
             <p className="text-xs text-sidebar-foreground/60">Dashboard</p>
           </div>
         </div>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={onToggle}
-          className={cn(
-            "hidden lg:flex h-8 w-8 text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent",
-            !isOpen && "absolute right-2 top-6"
-          )}
-        >
-          <ChevronLeft className={cn("h-4 w-4 transition-transform", !isOpen && "rotate-180")} />
-        </Button>
       </div>
-
-      {/* Collapsed Logo and Expand Button */}
-      {!isOpen && (
-        <div className="hidden lg:flex h-20 absolute top-0 left-0 w-20 items-center justify-between px-2">
-          <div className="w-8 h-8 rounded-[40%] bg-[#FFF5EE] overflow-hidden">
-            <img src={sidebarLogo} alt={sidebarName} className="w-full h-full object-cover mix-blend-multiply scale-[1.15]" />
-          </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onToggle}
-            className="h-8 w-8 text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent"
-          >
-            <ChevronLeft className="h-4 w-4 rotate-180" />
-          </Button>
-        </div>
-      )}
 
       {/* Navigation */}
       <nav className="flex-1 py-6 px-3 space-y-1 overflow-y-auto">
