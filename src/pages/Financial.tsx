@@ -36,7 +36,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, TrendingUp, Search, Trash2, Zap, Check, X, CheckCircle, CreditCard, Banknote, Building2, QrCode, FileText, Users, Wrench, UserPlus, DollarSign, Eye, Loader2 } from "lucide-react";
+import { Plus, TrendingUp, Search, Trash2, Zap, Check, X, CheckCircle, CreditCard, Banknote, Building2, QrCode, FileText, Users, Wrench, UserPlus, DollarSign, Eye, Loader2, Pencil } from "lucide-react";
 import { RecordPaymentDialog } from "@/components/financial/RecordPaymentDialog";
 import { RevenueDetailDialog } from "@/components/financial/RevenueDetailDialog";
 import { maskCurrency, parseCurrency, maskPhone } from "@/lib/masks";
@@ -294,18 +294,10 @@ export default function Financial() {
         const firstDueDate = data.first_due_date ? new Date(data.first_due_date + "T12:00:00") : new Date();
         const frequency = data.installment_frequency || "mensal";
         const customDays = data.custom_interval_days || 30;
-        const todayStr = format(new Date(), "yyyy-MM-dd");
 
         for (let i = 0; i < installments; i++) {
-          const dueDate = new Date(firstDueDate);
-          if (frequency === "semanal") dueDate.setDate(dueDate.getDate() + (7 * i));
-          else if (frequency === "quinzenal") dueDate.setDate(dueDate.getDate() + (15 * i));
-          else if (frequency === "manual") dueDate.setDate(dueDate.getDate() + (customDays * i));
-          else dueDate.setMonth(dueDate.getMonth() + i);
-          const dueDateStr = dueDate.toISOString().split("T")[0];
-          const isPastDue = dueDateStr < todayStr;
           const thisInstVal = useCustomAmounts ? customInstallmentAmounts[i] : installmentValue;
-          if (isPastDue || (entryAlreadyPaid && i === 0)) {
+          if (entryAlreadyPaid && i === 0) {
             autoReceived += thisInstVal;
           }
         }
@@ -346,19 +338,18 @@ export default function Financial() {
             dueDate.setMonth(dueDate.getMonth() + i);
           }
           const dueDateStr = dueDate.toISOString().split("T")[0];
-          const todayStr = format(new Date(), "yyyy-MM-dd");
-          const isPastDue = dueDateStr < todayStr;
           const thisInstVal = useCustomAmounts ? customInstallmentAmounts[i] : installmentValue;
+          const isFirstPaid = entryAlreadyPaid && i === 0;
           return {
             client_id: data.client_id!,
             transaction_id: newTransaction.id,
             installment_number: i + 1,
             total_installments: installments,
             amount: thisInstVal,
-            amount_paid: isPastDue || (entryAlreadyPaid && i === 0) ? thisInstVal : 0,
+            amount_paid: isFirstPaid ? thisInstVal : 0,
             due_date: dueDateStr,
-            status: isPastDue || (entryAlreadyPaid && i === 0) ? "pago" : "pendente",
-            paid_at: isPastDue || (entryAlreadyPaid && i === 0) ? new Date().toISOString() : null,
+            status: isFirstPaid ? "pago" : "pendente",
+            paid_at: isFirstPaid ? new Date().toISOString() : null,
             owner_id: user?.id || null,
             organization_id: organizationId || null,
           };
@@ -387,6 +378,7 @@ export default function Financial() {
       const { error } = await supabase
         .from("transactions")
         .update({
+          description: data.description,
           amount: data.amount,
           date: data.date,
           payment_method: data.payment_method,
@@ -542,6 +534,36 @@ export default function Financial() {
       custom_interval_days: 30,
       first_due_date: "",
       installment_value: 0,
+    });
+    setDialogOpen(true);
+  };
+
+  const handleEditTransaction = (transaction: Transaction) => {
+    setSelectedTransaction(transaction);
+    setSelectedService(null);
+    setCustomServiceName("");
+    setShowCustomService(false);
+    setShowQuickClient(false);
+    setEntryAlreadyPaid(false);
+    setAvistaPaymentStatus("pendente");
+    setAvistaPartialValue("");
+    setCustomInstallmentAmounts([]);
+    const installments = Number(transaction.installments) || 1;
+    form.reset({
+      description: transaction.description,
+      amount: Number(transaction.amount),
+      date: transaction.date,
+      client_id: transaction.client_id || undefined,
+      plan_id: transaction.plan_id || undefined,
+      payment_method: (transaction.payment_method as any) || "pix",
+      payment_status: "a_receber",
+      notes: transaction.notes || "",
+      payment_type: installments > 1 ? "parcelado" : "a_vista",
+      installments,
+      installment_frequency: "mensal",
+      custom_interval_days: 30,
+      first_due_date: "",
+      installment_value: Number(transaction.installment_value) || 0,
     });
     setDialogOpen(true);
   };
@@ -881,6 +903,15 @@ export default function Financial() {
                           <Button
                             variant="ghost"
                             size="icon"
+                            onClick={() => handleEditTransaction(transaction)}
+                            className="h-6 w-6 text-muted-foreground"
+                            title="Editar"
+                          >
+                            <Pencil className="h-3 w-3" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
                             onClick={() => handleOpenDetailDialog(transaction.id)}
                             className="h-6 w-6 text-muted-foreground"
                             title="Ver detalhes"
@@ -1035,6 +1066,15 @@ export default function Financial() {
                                 title="Lançar pagamento"
                               >
                                 <DollarSign className="h-3.5 w-3.5" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleEditTransaction(transaction)}
+                                className="h-6 w-6 text-muted-foreground hover:text-foreground opacity-0 group-hover:opacity-100 transition-opacity"
+                                title="Editar"
+                              >
+                                <Pencil className="h-3.5 w-3.5" />
                               </Button>
                               <Button
                                 variant="ghost"
