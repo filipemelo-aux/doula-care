@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -114,6 +114,17 @@ export default function Agenda() {
   const [aptClientId, setAptClientId] = useState("");
   const dateInputRef = useRef<HTMLInputElement>(null);
 
+  // Poll native date input to sync value (Radix dialog blocks native picker events)
+  useEffect(() => {
+    if (!appointmentDialog) return;
+    const interval = setInterval(() => {
+      const val = dateInputRef.current?.value;
+      if (val && val !== aptDate) {
+        setAptDate(val);
+      }
+    }, 250);
+    return () => clearInterval(interval);
+  }, [appointmentDialog, aptDate]);
 
 
   // Delete confirmation
@@ -476,31 +487,15 @@ export default function Agenda() {
             </div>
             <div>
               <Label className="text-xs">Data e hora</Label>
-              <div className="flex gap-2 mt-1">
-                <input
-                  ref={dateInputRef}
-                  type="datetime-local"
-                  defaultValue={aptDate}
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 mt-0"
-                />
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="secondary"
-                  className="h-10 px-3 shrink-0"
-                  onClick={() => {
-                    if (dateInputRef.current?.value) {
-                      setAptDate(dateInputRef.current.value);
-                      toast.success("Data e hora aplicadas!");
-                    }
-                  }}
-                >
-                  OK
-                </Button>
-              </div>
+              <input
+                ref={dateInputRef}
+                type="datetime-local"
+                defaultValue={aptDate}
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 mt-1"
+              />
               {aptDate && (
                 <p className="text-xs text-muted-foreground mt-1">
-                  Selecionado: {format(new Date(aptDate), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+                  ✓ {format(new Date(aptDate), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
                 </p>
               )}
             </div>
