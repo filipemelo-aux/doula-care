@@ -58,12 +58,17 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Search for client matching name and CPF
+    // Format CPF for matching both stored formats
+    const formattedCpf = `${cleanCpf.slice(0,3)}.${cleanCpf.slice(3,6)}.${cleanCpf.slice(6,9)}-${cleanCpf.slice(9)}`;
+
+    // Search for client matching CPF (try both clean and formatted)
     const { data: clients, error: searchError } = await supabase
       .from("clients")
       .select("id, full_name, cpf, dpp, user_id, first_login")
-      .ilike("cpf", `%${cleanCpf}%`)
+      .or(`cpf.eq.${cleanCpf},cpf.eq.${formattedCpf}`)
       .limit(10);
+
+    console.log("Search params:", { cleanCpf, formattedCpf, fullName, clientsFound: clients?.length });
 
     if (searchError) throw searchError;
 
