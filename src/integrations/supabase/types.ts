@@ -649,6 +649,45 @@ export type Database = {
           },
         ]
       }
+      platform_plan_limits: {
+        Row: {
+          created_at: string
+          export_reports: boolean
+          id: string
+          max_clients: number | null
+          max_collaborators: number
+          multi_collaborators: boolean
+          plan: string
+          push_notifications: boolean
+          reports: boolean
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          export_reports?: boolean
+          id?: string
+          max_clients?: number | null
+          max_collaborators?: number
+          multi_collaborators?: boolean
+          plan: string
+          push_notifications?: boolean
+          reports?: boolean
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          export_reports?: boolean
+          id?: string
+          max_clients?: number | null
+          max_collaborators?: number
+          multi_collaborators?: boolean
+          plan?: string
+          push_notifications?: boolean
+          reports?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
       platform_plan_pricing: {
         Row: {
           billing_cycle: string

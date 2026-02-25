@@ -13,7 +13,7 @@ export interface PlanLimits {
   maxCollaborators: number;
 }
 
-const PLAN_LIMITS: Record<OrgPlan, PlanLimits> = {
+const DEFAULT_LIMITS: Record<OrgPlan, PlanLimits> = {
   free: {
     maxClients: 5,
     reports: false,
@@ -58,6 +58,21 @@ export function usePlanLimits() {
     enabled: !!organizationId,
   });
 
+  const plan = (orgData?.plan as OrgPlan) || "free";
+
+  const { data: dbLimits, isLoading: limitsLoading } = useQuery({
+    queryKey: ["platform-plan-limits", plan],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("platform_plan_limits" as any)
+        .select("*")
+        .eq("plan", plan)
+        .single();
+      if (error) return null;
+      return data as any;
+    },
+  });
+
   const { data: clientCount = 0, isLoading: countLoading } = useQuery({
     queryKey: ["client-count", organizationId],
     queryFn: async () => {
@@ -72,10 +87,19 @@ export function usePlanLimits() {
     enabled: !!organizationId,
   });
 
-  const plan = (orgData?.plan as OrgPlan) || "free";
-  const limits = PLAN_LIMITS[plan];
-  const isOrgSuspended = orgData?.status === "suspenso";
+  const fallback = DEFAULT_LIMITS[plan];
+  const limits: PlanLimits = dbLimits
+    ? {
+        maxClients: dbLimits.max_clients ?? null,
+        reports: dbLimits.reports ?? fallback.reports,
+        exportReports: dbLimits.export_reports ?? fallback.exportReports,
+        pushNotifications: dbLimits.push_notifications ?? fallback.pushNotifications,
+        multiCollaborators: dbLimits.multi_collaborators ?? fallback.multiCollaborators,
+        maxCollaborators: dbLimits.max_collaborators ?? fallback.maxCollaborators,
+      }
+    : fallback;
 
+  const isOrgSuspended = orgData?.status === "suspenso";
   const canAddClient = limits.maxClients === null || clientCount < limits.maxClients;
   const remainingClients = limits.maxClients !== null ? Math.max(0, limits.maxClients - clientCount) : null;
 
@@ -86,7 +110,7 @@ export function usePlanLimits() {
     canAddClient,
     remainingClients,
     isOrgSuspended,
-    isLoading: orgLoading || countLoading,
+    isLoading: orgLoading || countLoading || limitsLoading,
     planLabel: plan === "free" ? "Free" : plan === "pro" ? "Pro" : "Premium",
   };
 }
