@@ -72,12 +72,20 @@ Deno.serve(async (req) => {
 
     if (searchError) throw searchError;
 
-    // Find matching client (normalize name comparison)
+    // Find matching client (flexible name comparison)
     const normalizedInput = normalizeString(fullName);
+    const inputParts = normalizedInput.split(/[\s.]+/).filter(Boolean);
+    
     const matchingClient = clients?.find((c) => {
       const normalizedDbName = normalizeString(c.full_name);
-      return normalizedDbName === normalizedInput;
+      // Exact match
+      if (normalizedDbName === normalizedInput) return true;
+      // Flexible: all input parts must be present in the db name
+      const dbParts = normalizedDbName.split(/\s+/);
+      return inputParts.length >= 2 && inputParts.every((part) => dbParts.some((dp) => dp === part));
     });
+    
+    console.log("Name match:", { normalizedInput, inputParts, clientNames: clients?.map(c => c.full_name) });
 
     if (!matchingClient) {
       return new Response(
