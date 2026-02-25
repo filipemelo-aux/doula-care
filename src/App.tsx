@@ -19,7 +19,7 @@ import Register from "./pages/Register";
 import SuperAdminDashboard from "./pages/SuperAdminDashboard";
 import AdminNotifications from "./pages/AdminNotifications";
 import AdminMessages from "./pages/AdminMessages";
-import InstallAppBanner from "./components/pwa/InstallAppBanner";
+
 import UpdatePrompt from "./components/pwa/UpdatePrompt";
 import { NotificationListenerProvider } from "./components/notifications/NotificationListenerProvider";
 
@@ -40,7 +40,7 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
-          <InstallAppBanner />
+          
           <UpdatePrompt />
           <NotificationListenerProvider />
           <Routes>
