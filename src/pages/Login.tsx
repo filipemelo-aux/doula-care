@@ -171,7 +171,7 @@ export default function Login() {
               </Link>
             </div>
             <div>
-              Já é cliente?{" "}
+              Já tem a sua doula?{" "}
               <Link to="/recuperar-acesso" className="text-primary hover:underline font-medium">
                 Clique aqui
               </Link>
