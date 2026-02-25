@@ -22,7 +22,10 @@ import { toast } from "sonner";
 import { maskCurrency, parseCurrency } from "@/lib/masks";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { CheckCircle2, Clock, AlertTriangle, Loader2 } from "lucide-react";
+import { CheckCircle2, Clock, AlertTriangle, Loader2, CalendarIcon } from "lucide-react";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
 
 interface RecordPaymentDialogProps {
   open: boolean;
@@ -45,6 +48,7 @@ export function RecordPaymentDialog({
   const [selectedInstallment, setSelectedInstallment] = useState<string>("");
   const [paymentType, setPaymentType] = useState<"total" | "parcial">("total");
   const [partialValue, setPartialValue] = useState("");
+  const [paymentDate, setPaymentDate] = useState<Date>(new Date());
 
   // Fetch payments for this transaction (by transaction_id first, fallback to client_id)
   const { data: payments, isLoading } = useQuery({
@@ -115,6 +119,7 @@ export function RecordPaymentDialog({
       setSelectedInstallment("");
       setPaymentType("total");
       setPartialValue("");
+      setPaymentDate(new Date());
     }
   }, [open]);
 
@@ -149,7 +154,7 @@ export function RecordPaymentDialog({
 
         const { error: paymentError } = await supabase
           .from("payments")
-          .update({ amount_paid: newAmountPaid })
+          .update({ amount_paid: newAmountPaid, paid_at: newAmountPaid >= Number(payment.amount) ? paymentDate.toISOString() : null })
           .eq("id", selectedInstallment);
         if (paymentError) throw paymentError;
 
@@ -363,6 +368,35 @@ export function RecordPaymentDialog({
                 </p>
               </div>
             )}
+
+            {/* Payment date */}
+            <div className="space-y-2">
+              <Label className="text-xs font-medium">Data do Pagamento</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full h-9 text-sm justify-start text-left font-normal",
+                      !paymentDate && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {paymentDate ? format(paymentDate, "dd/MM/yyyy", { locale: ptBR }) : "Selecione a data"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={paymentDate}
+                    onSelect={(d) => d && setPaymentDate(d)}
+                    initialFocus
+                    className={cn("p-3 pointer-events-auto")}
+                    locale={ptBR}
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
 
             <Button
               onClick={() => recordPaymentMutation.mutate()}
