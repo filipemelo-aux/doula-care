@@ -163,11 +163,19 @@ export default function Login() {
               )}
             </Button>
           </form>
-          <div className="mt-4 text-center text-sm text-muted-foreground">
-            É doula?{" "}
-            <Link to="/cadastro" className="text-primary hover:underline font-medium">
-              Crie sua conta
-            </Link>
+          <div className="mt-4 text-center text-sm text-muted-foreground space-y-2">
+            <div>
+              É doula?{" "}
+              <Link to="/cadastro" className="text-primary hover:underline font-medium">
+                Crie sua conta
+              </Link>
+            </div>
+            <div>
+              Já é cliente?{" "}
+              <Link to="/recuperar-acesso" className="text-primary hover:underline font-medium">
+                Clique aqui
+              </Link>
+            </div>
           </div>
         </CardContent>
       </Card>
