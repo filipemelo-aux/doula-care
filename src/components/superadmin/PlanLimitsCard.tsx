@@ -170,7 +170,7 @@ export function PlanLimitsCard() {
                           type="number"
                           min={1}
                           value={maxClients ?? ""}
-                          onChange={(e) => setField(row.plan, "max_clients", parseInt(e.target.value) || 1)}
+                          onChange={(e) => setField(row.plan, "max_clients", e.target.value === "" ? "" : parseInt(e.target.value))}
                           className="h-8 text-sm flex-1"
                         />
                       )}
@@ -194,7 +194,7 @@ export function PlanLimitsCard() {
                       type="number"
                       min={1}
                       value={getValue(row, "max_collaborators") as number}
-                      onChange={(e) => setField(row.plan, "max_collaborators", parseInt(e.target.value) || 1)}
+                      onChange={(e) => setField(row.plan, "max_collaborators", e.target.value === "" ? "" : parseInt(e.target.value))}
                       className="h-8 text-sm"
                     />
                   </div>
