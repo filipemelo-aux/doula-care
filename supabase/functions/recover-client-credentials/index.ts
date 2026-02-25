@@ -61,7 +61,7 @@ Deno.serve(async (req) => {
     // Format CPF for matching both stored formats
     const formattedCpf = `${cleanCpf.slice(0,3)}.${cleanCpf.slice(3,6)}.${cleanCpf.slice(6,9)}-${cleanCpf.slice(9)}`;
 
-    // Search for client matching CPF (try both clean and formatted)
+    // Search for client by CPF only
     const { data: clients, error: searchError } = await supabase
       .from("clients")
       .select("id, full_name, cpf, dpp, user_id, first_login")
@@ -109,7 +109,7 @@ Deno.serve(async (req) => {
         JSON.stringify({
           found: true,
           alreadyChanged: true,
-          username: `${username}@gestante.doula.app`,
+          username,
           message: "Você já alterou sua senha. Use seu usuário para fazer login. Caso tenha esquecido a senha, entre em contato com sua doula.",
         }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
@@ -127,19 +127,12 @@ Deno.serve(async (req) => {
     const username = generateUsername(matchingClient.full_name);
     const password = generatePassword(matchingClient.dpp);
 
-    // Also check actual email from auth (in case of alt email)
-    let actualEmail = `${username}@gestante.doula.app`;
-    const { data: authUser } = await supabase.auth.admin.getUserById(matchingClient.user_id);
-    if (authUser?.user?.email) {
-      actualEmail = authUser.user.email;
-    }
-
     return new Response(
       JSON.stringify({
         found: true,
         alreadyChanged: false,
-        username: actualEmail,
-        password: password,
+        username,
+        password,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
     );
