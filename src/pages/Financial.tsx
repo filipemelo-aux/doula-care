@@ -114,7 +114,7 @@ export default function Financial() {
   const [editingInstallmentsId, setEditingInstallmentsId] = useState<string | null>(null);
   const [editingInstallmentsValue, setEditingInstallmentsValue] = useState<string>("");
   const [revenueTab, setRevenueTab] = useState<string>("clientes");
-  const [selectedService, setSelectedService] = useState<string | null>(null);
+  const [selectedServices, setSelectedServices] = useState<string[]>([]);
   const [customServiceName, setCustomServiceName] = useState<string>("");
   const [showCustomService, setShowCustomService] = useState(false);
   const [showQuickClient, setShowQuickClient] = useState(false);
@@ -359,24 +359,25 @@ export default function Financial() {
         if (paymentError) console.error("Error creating payments:", paymentError);
       }
 
-      // When creating a service revenue (serviço avulso), also create a service_request + appointment
-      if (revenueTab === "servicos" && data.client_id && selectedService) {
-        // Create service_request with status "accepted" (already confirmed revenue)
-        await supabase.from("service_requests").insert({
-          client_id: data.client_id,
-          service_type: selectedService,
-          status: "accepted",
-          budget_value: data.amount,
-          budget_sent_at: new Date().toISOString(),
-          responded_at: new Date().toISOString(),
-          organization_id: organizationId || null,
-        });
+      // When creating a service revenue (serviço avulso), also create service_requests + appointment for each service
+      if (revenueTab === "servicos" && data.client_id && selectedServices.length > 0) {
+        for (const svc of selectedServices) {
+          await supabase.from("service_requests").insert({
+            client_id: data.client_id,
+            service_type: svc,
+            status: "accepted",
+            budget_value: data.amount / selectedServices.length,
+            budget_sent_at: new Date().toISOString(),
+            responded_at: new Date().toISOString(),
+            organization_id: organizationId || null,
+          });
+        }
 
         // Create appointment so it appears in Agenda and client's reminders
         const serviceDate = new Date(data.date + "T10:00:00");
         await supabase.from("appointments").insert({
           client_id: data.client_id,
-          title: `Serviço: ${selectedService}`,
+          title: `Serviço: ${selectedServices.join(", ")}`,
           scheduled_at: serviceDate.toISOString(),
           notes: data.notes || null,
           owner_id: user?.id || null,
@@ -540,7 +541,7 @@ export default function Financial() {
 
   const handleOpenDialog = () => {
     setSelectedTransaction(null);
-    setSelectedService(null);
+    setSelectedServices([]);
     setCustomServiceName("");
     setShowCustomService(false);
     setShowQuickClient(false);
@@ -569,7 +570,7 @@ export default function Financial() {
 
   const handleEditTransaction = (transaction: Transaction) => {
     setSelectedTransaction(transaction);
-    setSelectedService(null);
+    setSelectedServices([]);
     setCustomServiceName("");
     setShowCustomService(false);
     setShowQuickClient(false);
@@ -605,7 +606,7 @@ export default function Financial() {
           full_name: name,
           phone: phone,
           status: "gestante",
-          plan: "basico",
+          plan: "avulso",
           payment_method: "pix",
           payment_status: "pendente",
           owner_id: user?.id || null,
@@ -630,17 +631,25 @@ export default function Financial() {
   });
 
   const handleSelectService = (serviceName: string) => {
-    setSelectedService(serviceName);
+    setSelectedServices(prev => {
+      const updated = prev.includes(serviceName) 
+        ? prev.filter(s => s !== serviceName) 
+        : [...prev, serviceName];
+      form.setValue("description", updated.length > 0 ? `Serviço: ${updated.join(", ")}` : "");
+      return updated;
+    });
     setShowCustomService(false);
     setCustomServiceName("");
-    form.setValue("description", `Serviço: ${serviceName}`);
   };
 
   const handleCustomServiceConfirm = () => {
     if (customServiceName.trim()) {
       const name = customServiceName.trim();
-      setSelectedService(name);
-      form.setValue("description", `Serviço: ${name}`);
+      setSelectedServices(prev => {
+        const updated = [...prev, name];
+        form.setValue("description", `Serviço: ${updated.join(", ")}`);
+        return updated;
+      });
       // Save as custom service for future use
       addCustomServiceMutation.mutate(name);
       setShowCustomService(false);
@@ -1188,7 +1197,7 @@ export default function Financial() {
                                 type="button"
                                 onClick={() => handleSelectService(service.name)}
                                 className={`flex flex-col items-center justify-center gap-1 p-2.5 rounded-lg border text-center transition-all w-full h-[4.5rem] ${
-                                  selectedService === service.name
+                                  selectedServices.includes(service.name)
                                     ? "border-primary bg-primary/10 ring-2 ring-primary"
                                     : "border-border hover:border-primary/50 hover:bg-muted/50"
                                 }`}
@@ -1200,7 +1209,7 @@ export default function Financial() {
                                 type="button"
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  if (selectedService === service.name) setSelectedService(null);
+                                  if (selectedServices.includes(service.name)) setSelectedServices(prev => prev.filter(s => s !== service.name));
                                   deleteCustomServiceMutation.mutate(service.id);
                                 }}
                                 className="absolute top-0 right-0 h-4 w-4 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center opacity-0 group-hover/service:opacity-100 transition-opacity z-10"
@@ -1227,7 +1236,7 @@ export default function Financial() {
                         className="w-full border-dashed gap-1.5 text-xs"
                         onClick={() => {
                           setShowCustomService(true);
-                          setSelectedService(null);
+                          setSelectedServices([]);
                         }}
                       >
                         <Plus className="h-3 w-3" />
@@ -1272,10 +1281,10 @@ export default function Financial() {
                       </div>
                     )}
 
-                    {selectedService && (
+                    {selectedServices.length > 0 && (
                       <p className="text-xs text-success flex items-center gap-1">
                         <CheckCircle className="h-3 w-3" />
-                        Serviço selecionado: <span className="font-medium">{selectedService}</span>
+                        {selectedServices.length === 1 ? "Serviço selecionado" : "Serviços selecionados"}: <span className="font-medium">{selectedServices.join(", ")}</span>
                       </p>
                     )}
                   </div>
@@ -1319,13 +1328,13 @@ export default function Financial() {
                         onClick={() => setShowQuickClient(true)}
                       >
                         <UserPlus className="h-3 w-3" />
-                        Cadastrar cliente rápida
+                        Cadastrar cliente avulsa
                       </Button>
                     ) : (
                       <div className="rounded-lg border border-dashed border-primary/40 bg-primary/5 p-3 space-y-2">
                         <p className="text-xs font-medium text-primary flex items-center gap-1">
                           <UserPlus className="h-3 w-3" />
-                          Cadastro Rápido de Cliente
+                          Cadastro de Cliente Avulsa
                         </p>
                         <Input
                           placeholder="Nome completo"

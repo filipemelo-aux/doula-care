@@ -188,6 +188,7 @@ export type Database = {
           payment_status: Database["public"]["Enums"]["payment_status"]
           phone: string
           plan: Database["public"]["Enums"]["plan_type"]
+          plan_setting_id: string | null
           plan_value: number | null
           preferred_name: string | null
           pregnancy_weeks: number | null
@@ -226,6 +227,7 @@ export type Database = {
           payment_status?: Database["public"]["Enums"]["payment_status"]
           phone: string
           plan?: Database["public"]["Enums"]["plan_type"]
+          plan_setting_id?: string | null
           plan_value?: number | null
           preferred_name?: string | null
           pregnancy_weeks?: number | null
@@ -264,6 +266,7 @@ export type Database = {
           payment_status?: Database["public"]["Enums"]["payment_status"]
           phone?: string
           plan?: Database["public"]["Enums"]["plan_type"]
+          plan_setting_id?: string | null
           plan_value?: number | null
           preferred_name?: string | null
           pregnancy_weeks?: number | null
@@ -281,6 +284,13 @@ export type Database = {
             columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "clients_plan_setting_id_fkey"
+            columns: ["plan_setting_id"]
+            isOneToOne: false
+            referencedRelation: "plan_settings"
             referencedColumns: ["id"]
           },
         ]
