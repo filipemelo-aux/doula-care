@@ -7,9 +7,11 @@ import fs from "fs";
 
 const APP_VERSION = "1.1.0";
 
-// Short build suffix: MMDD + optional counter for multiple builds per day
+// Short build suffix: MMDD using Brazil timezone to avoid UTC date shift
 const now = new Date();
-const TODAY = `${String(now.getMonth() + 1).padStart(2, "0")}${String(now.getDate()).padStart(2, "0")}`;
+// Force Brazil timezone (UTC-3) to get correct local date
+const brDate = new Date(now.toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
+const TODAY = `${String(brDate.getMonth() + 1).padStart(2, "0")}${String(brDate.getDate()).padStart(2, "0")}`;
 
 let buildCount = 1;
 const counterFile = path.resolve(__dirname, "build-counter.json");
