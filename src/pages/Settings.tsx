@@ -292,6 +292,7 @@ export default function Settings() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["plan-settings"] });
+      queryClient.invalidateQueries({ queryKey: ["clients"] });
       toast.success("Plano atualizado!");
       setPlanDialogOpen(false);
       setSelectedPlan(null);
@@ -306,6 +307,7 @@ export default function Settings() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["plan-settings"] });
+      queryClient.invalidateQueries({ queryKey: ["clients"] });
       toast.success("Status do plano atualizado!");
     },
     onError: () => toast.error("Erro ao atualizar status"),
