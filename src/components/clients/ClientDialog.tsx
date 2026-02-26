@@ -262,6 +262,9 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
           ? new Date().toISOString() 
           : undefined,
         plan: data.plan as any,
+        plan_setting_id: data.plan !== "avulso" 
+          ? (planSettings?.find(p => p.plan_type === data.plan)?.id || null) 
+          : null,
         payment_method: data.payment_method,
         plan_value: data.plan_value || 0,
         notes: data.notes || null,

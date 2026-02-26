@@ -1,0 +1,1 @@
+ALTER TABLE public.clients ADD COLUMN IF NOT EXISTS plan_setting_id uuid REFERENCES public.plan_settings(id) ON DELETE SET NULL;
