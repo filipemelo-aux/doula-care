@@ -73,6 +73,8 @@ export function ManageAppointmentsDialog({
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["client-appointments", clientId] });
+      queryClient.invalidateQueries({ queryKey: ["agenda-appointments"] });
+      queryClient.invalidateQueries({ queryKey: ["all-appointments"] });
       setTitle("");
       setScheduledAt("");
       setNotes("");
@@ -88,6 +90,8 @@ export function ManageAppointmentsDialog({
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["client-appointments", clientId] });
+      queryClient.invalidateQueries({ queryKey: ["agenda-appointments"] });
+      queryClient.invalidateQueries({ queryKey: ["all-appointments"] });
       toast.success("Consulta removida");
     },
     onError: () => toast.error("Erro ao remover consulta"),
