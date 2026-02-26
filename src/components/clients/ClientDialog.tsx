@@ -90,6 +90,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
       if (error) throw error;
       return data;
     },
+    staleTime: 0,
   });
 
   // Fetch the auto-generated transaction for the client to get installment info

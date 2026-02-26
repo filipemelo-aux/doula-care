@@ -121,6 +121,7 @@ export default function Plans() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["plan-settings"] });
+      queryClient.invalidateQueries({ queryKey: ["clients"] });
       toast.success("Plano criado com sucesso!");
       setDialogOpen(false);
     },
@@ -155,6 +156,7 @@ export default function Plans() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["plan-settings"] });
+      queryClient.invalidateQueries({ queryKey: ["clients"] });
       toast.success("Plano atualizado!");
       setDialogOpen(false);
       setSelectedPlan(null);
@@ -174,6 +176,7 @@ export default function Plans() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["plan-settings"] });
+      queryClient.invalidateQueries({ queryKey: ["clients"] });
       toast.success("Plano excluído!");
       setDeleteTarget(null);
     },
@@ -192,6 +195,7 @@ export default function Plans() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["plan-settings"] });
+      queryClient.invalidateQueries({ queryKey: ["clients"] });
       toast.success("Status do plano atualizado!");
     },
     onError: () => {
