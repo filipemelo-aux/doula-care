@@ -1,7 +1,7 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'app.lovable.2c48c3f3dcdf4fc1a578416d5bffa96a',
+  appId: 'app.lovable.doulacare',
   appName: 'doula-care',
   webDir: 'dist',
   server: {
