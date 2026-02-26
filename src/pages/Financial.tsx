@@ -358,11 +358,40 @@ export default function Financial() {
         const { error: paymentError } = await supabase.from("payments").insert(paymentRecords);
         if (paymentError) console.error("Error creating payments:", paymentError);
       }
+
+      // When creating a service revenue (serviço avulso), also create a service_request + appointment
+      if (revenueTab === "servicos" && data.client_id && selectedService) {
+        // Create service_request with status "accepted" (already confirmed revenue)
+        await supabase.from("service_requests").insert({
+          client_id: data.client_id,
+          service_type: selectedService,
+          status: "accepted",
+          budget_value: data.amount,
+          budget_sent_at: new Date().toISOString(),
+          responded_at: new Date().toISOString(),
+          organization_id: organizationId || null,
+        });
+
+        // Create appointment so it appears in Agenda and client's reminders
+        const serviceDate = new Date(data.date + "T10:00:00");
+        await supabase.from("appointments").insert({
+          client_id: data.client_id,
+          title: `Serviço: ${selectedService}`,
+          scheduled_at: serviceDate.toISOString(),
+          notes: data.notes || null,
+          owner_id: user?.id || null,
+          organization_id: organizationId || null,
+        });
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["transactions"] });
       queryClient.invalidateQueries({ queryKey: ["monthly-transactions"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
+      queryClient.invalidateQueries({ queryKey: ["agenda-appointments"] });
+      queryClient.invalidateQueries({ queryKey: ["agenda-services"] });
+      queryClient.invalidateQueries({ queryKey: ["all-appointments"] });
+      queryClient.invalidateQueries({ queryKey: ["client-appointments"] });
       toast.success("Receita registrada!");
       setDialogOpen(false);
       form.reset();
