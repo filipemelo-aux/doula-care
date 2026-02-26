@@ -819,7 +819,7 @@ export default function Financial() {
                         {transaction.is_auto_generated && (
                           <Zap className="w-3 h-3 text-warning flex-shrink-0" />
                         )}
-                        <p className="font-medium text-sm truncate min-w-0">{compactDesc}</p>
+                        <p className="font-medium text-sm truncate min-w-0 max-w-[calc(100vw-120px)]" title={compactDesc}>{compactDesc}</p>
                       </div>
 
                       {/* Info: Client + Date */}
@@ -1016,7 +1016,7 @@ export default function Financial() {
                                   {transaction.clients?.full_name || "—"}
                                 </span>
                               </div>
-                              <span className="text-xs text-muted-foreground truncate">
+                              <span className="text-xs text-muted-foreground truncate block max-w-[180px]" title={transaction.plan_settings?.name || transaction.description}>
                                 {transaction.plan_settings?.name || transaction.description.replace(/\s*-\s*Plano\s+/i, " - ")}
                               </span>
                             </div>
@@ -1282,9 +1282,9 @@ export default function Financial() {
                     )}
 
                     {selectedServices.length > 0 && (
-                      <p className="text-xs text-success flex items-center gap-1">
-                        <CheckCircle className="h-3 w-3" />
-                        {selectedServices.length === 1 ? "Serviço selecionado" : "Serviços selecionados"}: <span className="font-medium">{selectedServices.join(", ")}</span>
+                      <p className="text-xs text-success flex items-center gap-1 min-w-0">
+                        <CheckCircle className="h-3 w-3 flex-shrink-0" />
+                        <span className="truncate">{selectedServices.length === 1 ? "Serviço selecionado" : `${selectedServices.length} serviços selecionados`}: <span className="font-medium">{selectedServices.join(", ")}</span></span>
                       </p>
                     )}
                   </div>
