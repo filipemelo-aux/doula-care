@@ -1070,7 +1070,7 @@ export type Database = {
       org_status: "ativo" | "suspenso" | "pendente"
       payment_method: "pix" | "cartao" | "dinheiro" | "transferencia"
       payment_status: "pendente" | "pago" | "parcial"
-      plan_type: "basico" | "intermediario" | "completo"
+      plan_type: "basico" | "intermediario" | "completo" | "avulso"
       transaction_payment_method:
         | "pix"
         | "cartao"
@@ -1224,7 +1224,7 @@ export const Constants = {
       org_status: ["ativo", "suspenso", "pendente"],
       payment_method: ["pix", "cartao", "dinheiro", "transferencia"],
       payment_status: ["pendente", "pago", "parcial"],
-      plan_type: ["basico", "intermediario", "completo"],
+      plan_type: ["basico", "intermediario", "completo", "avulso"],
       transaction_payment_method: [
         "pix",
         "cartao",

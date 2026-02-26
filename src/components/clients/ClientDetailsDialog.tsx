@@ -59,10 +59,11 @@ const statusLabels = {
   outro: "Outro",
 };
 
-const planLabels = {
+const planLabels: Record<string, string> = {
   basico: "Básico",
   intermediario: "Intermediário",
   completo: "Completo",
+  avulso: "Avulso",
 };
 
 const paymentStatusLabels = {
