@@ -131,7 +131,32 @@ const PrivacyPolicy = () => {
 
           {/* 8 */}
           <section>
-            <h2 className="text-lg font-semibold text-foreground mb-2">8. Retenção de Dados</h2>
+            <h2 className="text-lg font-semibold text-foreground mb-2">8. Exclusão de Conta e Dados</h2>
+            <p>
+              Você pode solicitar a exclusão da sua conta e de todos os seus dados pessoais a
+              qualquer momento. Ao solicitar a exclusão, todos os dados associados à sua conta
+              serão permanentemente removidos dos nossos servidores, incluindo registros do
+              diário gestacional, contrações, agendamentos, pagamentos e informações de perfil.
+            </p>
+            <p className="mt-2">
+              Para solicitar a exclusão da sua conta e dados, acesse:
+            </p>
+            <p className="mt-2">
+              <Link
+                to="/excluir-conta"
+                className="text-primary underline hover:text-primary/80 font-medium"
+              >
+                Solicitar exclusão de conta e dados →
+              </Link>
+            </p>
+            <p className="mt-2 text-xs">
+              A exclusão será processada em até 30 dias úteis após a confirmação da solicitação.
+            </p>
+          </section>
+
+          {/* 9 */}
+          <section>
+            <h2 className="text-lg font-semibold text-foreground mb-2">9. Retenção de Dados</h2>
             <p>
               Os dados pessoais serão mantidos enquanto houver relação ativa entre a doula e a
               cliente ou enquanto necessário para cumprimento de obrigações legais. Após o
@@ -140,18 +165,18 @@ const PrivacyPolicy = () => {
             </p>
           </section>
 
-          {/* 9 */}
+          {/* 10 */}
           <section>
-            <h2 className="text-lg font-semibold text-foreground mb-2">9. Cookies e Tecnologias</h2>
+            <h2 className="text-lg font-semibold text-foreground mb-2">10. Cookies e Tecnologias</h2>
             <p>
               Utilizamos armazenamento local (localStorage) para manter a sessão de autenticação
               e preferências do usuário. Não utilizamos cookies de rastreamento de terceiros.
             </p>
           </section>
 
-          {/* 10 */}
+          {/* 11 */}
           <section>
-            <h2 className="text-lg font-semibold text-foreground mb-2">10. Alterações nesta Política</h2>
+            <h2 className="text-lg font-semibold text-foreground mb-2">11. Alterações nesta Política</h2>
             <p>
               Esta política poderá ser atualizada periodicamente. Notificaremos os usuários sobre
               alterações significativas por meio da plataforma. Recomendamos a revisão periódica
@@ -159,9 +184,9 @@ const PrivacyPolicy = () => {
             </p>
           </section>
 
-          {/* 11 */}
+          {/* 12 */}
           <section>
-            <h2 className="text-lg font-semibold text-foreground mb-2">11. Contato</h2>
+            <h2 className="text-lg font-semibold text-foreground mb-2">12. Contato</h2>
             <p>
               Em caso de dúvidas sobre esta Política de Privacidade ou sobre o tratamento de
               seus dados pessoais, entre em contato com a administração da plataforma pelo

@@ -18,6 +18,7 @@ import NotFound from "./pages/NotFound";
 import Register from "./pages/Register";
 import RecoverCredentials from "./pages/RecoverCredentials";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
+import DeleteAccount from "./pages/DeleteAccount";
 import SuperAdminDashboard from "./pages/SuperAdminDashboard";
 import AdminNotifications from "./pages/AdminNotifications";
 import AdminMessages from "./pages/AdminMessages";
@@ -51,6 +52,7 @@ const App = () => (
             <Route path="/cadastro" element={<Register />} />
             <Route path="/recuperar-acesso" element={<RecoverCredentials />} />
             <Route path="/politica-de-privacidade" element={<PrivacyPolicy />} />
+            <Route path="/excluir-conta" element={<DeleteAccount />} />
             {/* Legacy routes redirect to unified login */}
             <Route path="/" element={<Navigate to="/login" replace />} />
             <Route path="/admin/login" element={<Navigate to="/login" replace />} />
