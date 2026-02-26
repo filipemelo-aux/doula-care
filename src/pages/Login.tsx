@@ -176,6 +176,11 @@ export default function Login() {
                 Clique aqui
               </Link>
             </div>
+            <div className="mt-2">
+              <Link to="/politica-de-privacidade" className="text-xs text-muted-foreground/70 hover:text-primary hover:underline">
+                Política de Privacidade
+              </Link>
+            </div>
           </div>
         </CardContent>
       </Card>
