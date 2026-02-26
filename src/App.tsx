@@ -17,6 +17,7 @@ import Agenda from "./pages/Agenda";
 import NotFound from "./pages/NotFound";
 import Register from "./pages/Register";
 import RecoverCredentials from "./pages/RecoverCredentials";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
 import SuperAdminDashboard from "./pages/SuperAdminDashboard";
 import AdminNotifications from "./pages/AdminNotifications";
 import AdminMessages from "./pages/AdminMessages";
@@ -49,6 +50,7 @@ const App = () => (
             <Route path="/login" element={<Login />} />
             <Route path="/cadastro" element={<Register />} />
             <Route path="/recuperar-acesso" element={<RecoverCredentials />} />
+            <Route path="/politica-de-privacidade" element={<PrivacyPolicy />} />
             {/* Legacy routes redirect to unified login */}
             <Route path="/" element={<Navigate to="/login" replace />} />
             <Route path="/admin/login" element={<Navigate to="/login" replace />} />
