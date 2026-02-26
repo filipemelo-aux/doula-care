@@ -56,7 +56,7 @@ const clientSchema = z.object({
   pregnancy_weeks: z.number().min(0).max(42).optional().nullable(),
   dpp: z.string().optional().nullable(),
   baby_names: z.string().optional(),
-  plan: z.string().min(1, "Selecione um plano"),
+  plan_setting_id: z.string().min(1, "Selecione um plano"),
   payment_method: z.enum(["pix", "cartao", "dinheiro", "transferencia"]),
   payment_type: z.enum(["a_vista", "parcelado"]),
   installments: z.number().min(1).max(24).optional(),
@@ -132,7 +132,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
       pregnancy_weeks: null,
       dpp: null,
       baby_names: "",
-        plan: "",
+        plan_setting_id: "",
         payment_method: "pix",
         payment_type: "a_vista",
         installments: 1,
@@ -145,7 +145,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
   });
 
   const status = form.watch("status");
-  const selectedPlan = form.watch("plan");
+  const selectedPlanId = form.watch("plan_setting_id");
   const watchedPaymentType = form.watch("payment_type");
   const watchedFirstDueDate = form.watch("first_due_date");
 
@@ -155,19 +155,22 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
   const isFirstDueDateInPast = relevantDate < today;
   const isFirstDueDateTodayOrFuture = relevantDate >= today;
 
+  // Resolve selected plan setting from ID
+  const selectedPlanSetting = useMemo(() => {
+    if (!selectedPlanId || selectedPlanId === "avulso") return null;
+    return planSettings?.find(p => p.id === selectedPlanId) || null;
+  }, [selectedPlanId, planSettings]);
+
   // Update plan value when plan changes (not for avulso)
   useEffect(() => {
-    if (planSettings && selectedPlan && !client) {
-      if (selectedPlan === "avulso") {
+    if (planSettings && selectedPlanId && !client) {
+      if (selectedPlanId === "avulso") {
         form.setValue("plan_value", 0);
-      } else {
-        const planSetting = planSettings.find((p) => p.plan_type === selectedPlan);
-        if (planSetting) {
-          form.setValue("plan_value", Number(planSetting.default_value));
-        }
+      } else if (selectedPlanSetting) {
+        form.setValue("plan_value", Number(selectedPlanSetting.default_value));
       }
     }
-  }, [selectedPlan, planSettings, form, client]);
+  }, [selectedPlanId, selectedPlanSetting, planSettings, form, client]);
 
   // Reset form when client changes
   useEffect(() => {
@@ -191,7 +194,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
         pregnancy_weeks: client.pregnancy_weeks,
         dpp: client.dpp || null,
         baby_names: (client as any).baby_names?.join(", ") || "",
-        plan: client.plan,
+        plan_setting_id: (client as any).plan_setting_id || (planSettings?.find(p => p.plan_type === client.plan)?.id) || (client.plan === "avulso" ? "avulso" : ""),
         payment_method: client.payment_method as "pix" | "cartao" | "dinheiro" | "transferencia",
         payment_type: isParcelado ? "parcelado" : "a_vista",
         installments: txInstallments,
@@ -223,7 +226,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
         pregnancy_weeks: null,
         dpp: null,
         baby_names: "",
-        plan: "",
+        plan_setting_id: "",
         payment_method: "pix",
         payment_type: "a_vista",
         installments: 1,
@@ -262,10 +265,8 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
         pregnancy_weeks_set_at: data.status === "gestante" && data.dpp
           ? new Date().toISOString() 
           : undefined,
-        plan: data.plan as any,
-        plan_setting_id: data.plan !== "avulso" 
-          ? (planSettings?.find(p => p.plan_type === data.plan)?.id || null) 
-          : null,
+        plan: (data.plan_setting_id === "avulso" ? "avulso" : (planSettings?.find(p => p.id === data.plan_setting_id)?.plan_type || "basico")) as any,
+        plan_setting_id: data.plan_setting_id !== "avulso" ? data.plan_setting_id : null,
         payment_method: data.payment_method,
         plan_value: data.plan_value || 0,
         notes: data.notes || null,
@@ -281,9 +282,9 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
         if (error) throw error;
 
         // Update auto-generated transaction description if client name or plan changed
-        const planDisplayName = data.plan === "avulso" ? "Avulso" : (planSettings?.find(p => p.plan_type === data.plan)?.name || data.plan);
+        const resolvedPlanSetting = data.plan_setting_id !== "avulso" ? planSettings?.find(p => p.id === data.plan_setting_id) : null;
+        const planDisplayName = data.plan_setting_id === "avulso" ? "Avulso" : (resolvedPlanSetting?.name || "Plano");
         const newDescription = `Contrato - ${data.full_name} - ${planDisplayName}`;
-        
         const { error: transactionError } = await supabase
           .from("transactions")
           .update({ 
@@ -306,10 +307,10 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
         if (clientError) throw clientError;
 
         // Get plan settings to find the plan ID
-        const planSetting = planSettings?.find((p) => p.plan_type === data.plan);
+        const resolvedPlanSetting = data.plan_setting_id !== "avulso" ? planSettings?.find(p => p.id === data.plan_setting_id) : null;
 
         // Create automatic income transaction for the new client using client's created_at date in local timezone
-        const planDisplayName = data.plan === "avulso" ? "Avulso" : (planSettings?.find(p => p.plan_type === data.plan)?.name || data.plan);
+        const planDisplayName = data.plan_setting_id === "avulso" ? "Avulso" : (resolvedPlanSetting?.name || "Plano");
         const getLocalDate = (dateString: string) => {
           const date = new Date(dateString);
           const year = date.getFullYear();
@@ -362,7 +363,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
           amount_received: autoReceived,
           date: clientCreatedDate,
           client_id: newClient.id,
-          plan_id: planSetting?.id || null,
+          plan_id: resolvedPlanSetting?.id || null,
           payment_method: data.payment_method as "pix" | "cartao" | "dinheiro" | "transferencia" | "boleto",
           is_auto_generated: true,
           installments: data.payment_type === "parcelado" ? (data.installments || 1) : 1,
@@ -787,7 +788,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
                   <FormField
                     control={form.control}
-                    name="plan"
+                    name="plan_setting_id"
                     render={({ field }) => (
                       <FormItem className="space-y-1">
                         <FormLabel className="text-xs">Plano *</FormLabel>
@@ -799,7 +800,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
                           </FormControl>
                           <SelectContent>
                             {planSettings?.filter(p => p.is_active).map((plan) => (
-                              <SelectItem key={plan.id} value={plan.plan_type}>
+                              <SelectItem key={plan.id} value={plan.id}>
                                 {plan.name} — {maskCurrency(String(Math.round(Number(plan.default_value) * 100)))}
                               </SelectItem>
                             ))}
@@ -816,7 +817,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
                     render={({ field }) => (
                       <FormItem className="space-y-1">
                         <FormLabel className="text-xs">
-                          Valor (R$) {selectedPlan !== "avulso" && selectedPlan && "(do plano)"}
+                          Valor (R$) {selectedPlanId !== "avulso" && selectedPlanId && "(do plano)"}
                         </FormLabel>
                         <FormControl>
                           <Input 
@@ -824,7 +825,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
                             value={field.value ? maskCurrency(String(Math.round(field.value * 100))) : ""}
                             onChange={(e) => field.onChange(parseCurrency(e.target.value))}
                             placeholder="R$ 0,00"
-                            readOnly={selectedPlan !== "avulso" && !!selectedPlan}
+                            readOnly={selectedPlanId !== "avulso" && !!selectedPlanId}
                           />
                         </FormControl>
                         <FormMessage />
