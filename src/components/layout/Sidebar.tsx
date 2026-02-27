@@ -84,7 +84,19 @@ export function Sidebar({ isOpen, onToggle, onNavigate }: SidebarProps) {
       {/* Navigation */}
       <nav className="flex-1 py-6 px-3 space-y-1 overflow-y-auto">
         {navItems
-          .filter((item) => item.to !== "/relatorios" || limits.reports)
+          .filter((item) => {
+            const routeToLimit: Record<string, keyof typeof limits> = {
+              "/relatorios": "reports",
+              "/agenda": "agenda",
+              "/clientes": "clients",
+              "/financeiro": "financial",
+              "/despesas": "expenses",
+              "/notificacoes": "notifications",
+              "/mensagens": "messages",
+            };
+            const limitKey = routeToLimit[item.to];
+            return !limitKey || limits[limitKey];
+          })
           .map((item) => {
           const isActive = location.pathname === item.to;
           const badgeCount = getBadgeCount((item as any).badgeKey);

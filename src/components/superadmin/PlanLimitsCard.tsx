@@ -20,6 +20,12 @@ interface LimitsRow {
   push_notifications: boolean;
   multi_collaborators: boolean;
   max_collaborators: number;
+  agenda: boolean;
+  clients: boolean;
+  financial: boolean;
+  expenses: boolean;
+  notifications: boolean;
+  messages: boolean;
 }
 
 const planConfig: Record<string, { label: string; icon: React.ReactNode; badgeClass: string; gradientClass: string }> = {
@@ -202,8 +208,14 @@ export function PlanLimitsCard() {
                   {/* Toggles */}
                   <div className="space-y-2">
                     {([
+                      ["agenda", "Agenda"],
+                      ["clients", "Clientes"],
+                      ["financial", "Financeiro"],
+                      ["expenses", "Despesas"],
                       ["reports", "Relatórios"],
                       ["export_reports", "Exportar relatórios"],
+                      ["notifications", "Notificações"],
+                      ["messages", "Mensagens"],
                       ["push_notifications", "Push notifications"],
                       ["multi_collaborators", "Multi colaboradores"],
                     ] as const).map(([field, label]) => (

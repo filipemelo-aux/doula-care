@@ -661,36 +661,54 @@ export type Database = {
       }
       platform_plan_limits: {
         Row: {
+          agenda: boolean
+          clients: boolean
           created_at: string
+          expenses: boolean
           export_reports: boolean
+          financial: boolean
           id: string
           max_clients: number | null
           max_collaborators: number
+          messages: boolean
           multi_collaborators: boolean
+          notifications: boolean
           plan: string
           push_notifications: boolean
           reports: boolean
           updated_at: string
         }
         Insert: {
+          agenda?: boolean
+          clients?: boolean
           created_at?: string
+          expenses?: boolean
           export_reports?: boolean
+          financial?: boolean
           id?: string
           max_clients?: number | null
           max_collaborators?: number
+          messages?: boolean
           multi_collaborators?: boolean
+          notifications?: boolean
           plan: string
           push_notifications?: boolean
           reports?: boolean
           updated_at?: string
         }
         Update: {
+          agenda?: boolean
+          clients?: boolean
           created_at?: string
+          expenses?: boolean
           export_reports?: boolean
+          financial?: boolean
           id?: string
           max_clients?: number | null
           max_collaborators?: number
+          messages?: boolean
           multi_collaborators?: boolean
+          notifications?: boolean
           plan?: string
           push_notifications?: boolean
           reports?: boolean

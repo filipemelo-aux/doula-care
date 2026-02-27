@@ -11,6 +11,12 @@ export interface PlanLimits {
   pushNotifications: boolean;
   multiCollaborators: boolean;
   maxCollaborators: number;
+  agenda: boolean;
+  clients: boolean;
+  financial: boolean;
+  expenses: boolean;
+  notifications: boolean;
+  messages: boolean;
 }
 
 const DEFAULT_LIMITS: Record<OrgPlan, PlanLimits> = {
@@ -21,6 +27,12 @@ const DEFAULT_LIMITS: Record<OrgPlan, PlanLimits> = {
     pushNotifications: true,
     multiCollaborators: false,
     maxCollaborators: 1,
+    agenda: true,
+    clients: true,
+    financial: true,
+    expenses: true,
+    notifications: true,
+    messages: true,
   },
   pro: {
     maxClients: null,
@@ -29,6 +41,12 @@ const DEFAULT_LIMITS: Record<OrgPlan, PlanLimits> = {
     pushNotifications: true,
     multiCollaborators: false,
     maxCollaborators: 1,
+    agenda: true,
+    clients: true,
+    financial: true,
+    expenses: true,
+    notifications: true,
+    messages: true,
   },
   premium: {
     maxClients: null,
@@ -37,6 +55,12 @@ const DEFAULT_LIMITS: Record<OrgPlan, PlanLimits> = {
     pushNotifications: true,
     multiCollaborators: true,
     maxCollaborators: 5,
+    agenda: true,
+    clients: true,
+    financial: true,
+    expenses: true,
+    notifications: true,
+    messages: true,
   },
 };
 
@@ -97,6 +121,12 @@ export function usePlanLimits() {
         pushNotifications: dbLimits.push_notifications ?? fallback.pushNotifications,
         multiCollaborators: dbLimits.multi_collaborators ?? fallback.multiCollaborators,
         maxCollaborators: dbLimits.max_collaborators ?? fallback.maxCollaborators,
+        agenda: dbLimits.agenda ?? fallback.agenda,
+        clients: dbLimits.clients ?? fallback.clients,
+        financial: dbLimits.financial ?? fallback.financial,
+        expenses: dbLimits.expenses ?? fallback.expenses,
+        notifications: dbLimits.notifications ?? fallback.notifications,
+        messages: dbLimits.messages ?? fallback.messages,
       }
     : fallback;
 
