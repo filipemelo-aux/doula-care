@@ -71,6 +71,7 @@ export function usePlanLimits() {
       if (error) return null;
       return data as any;
     },
+    staleTime: 0,
   });
 
   const { data: clientCount = 0, isLoading: countLoading } = useQuery({
