@@ -10,6 +10,7 @@ import { Loader2, Building2, Users, Ban, CheckCircle, LogOut, BarChart3, Clock, 
 import { PlanPricingCard } from "@/components/superadmin/PlanPricingCard";
 import { PlanLimitsCard } from "@/components/superadmin/PlanLimitsCard";
 import { OrgBillingCard } from "@/components/superadmin/OrgBillingCard";
+import { UserManagementCard } from "@/components/superadmin/UserManagementCard";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
@@ -417,6 +418,7 @@ export default function SuperAdminDashboard() {
         <Tabs defaultValue="orgs" className="space-y-4">
           <TabsList className="w-full sm:w-auto">
             <TabsTrigger value="orgs" className="flex-1 sm:flex-initial">Organizações</TabsTrigger>
+            <TabsTrigger value="users" className="flex-1 sm:flex-initial">Usuários</TabsTrigger>
             <TabsTrigger value="billing" className="flex-1 sm:flex-initial">Planos & Cobranças</TabsTrigger>
           </TabsList>
 
@@ -458,6 +460,10 @@ export default function SuperAdminDashboard() {
                 </CardContent>
               </Card>
             )}
+          </TabsContent>
+
+          <TabsContent value="users" className="space-y-4">
+            <UserManagementCard />
           </TabsContent>
 
           <TabsContent value="billing" className="space-y-6">
