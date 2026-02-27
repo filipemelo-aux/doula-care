@@ -182,9 +182,22 @@ Deno.serve(async (req) => {
     }
 
     if (action === "reset-password") {
-      // Only super_admin or admin can reset passwords
-      if (!callerIsSuperAdmin && !callerIsAdmin) {
-        return new Response(JSON.stringify({ error: "Permissão insuficiente para resetar senhas" }), {
+      // Only super_admin can reset passwords, and only for admins/super_admins
+      if (!callerIsSuperAdmin) {
+        return new Response(JSON.stringify({ error: "Apenas super admin pode resetar senhas" }), {
+          status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      // Only allow resetting passwords for admin or super_admin users
+      const { data: targetRoles } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", userId);
+
+      const targetIsAdminOrSuper = targetRoles?.some((r) => r.role === "admin" || r.role === "super_admin");
+      if (!targetIsAdminOrSuper) {
+        return new Response(JSON.stringify({ error: "Só é possível resetar senhas de administradores" }), {
           status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
