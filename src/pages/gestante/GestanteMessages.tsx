@@ -27,13 +27,18 @@ import {
   Check,
   X,
   Trash2,
-  Send
+  Send,
+  Paperclip,
+  Camera,
+  Image as ImageIcon,
+  FileText,
 } from "lucide-react";
 import { toast } from "sonner";
 import { formatBrazilDateTime } from "@/lib/utils";
 import { Tables } from "@/integrations/supabase/types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { sendPushNotification } from "@/lib/pushNotifications";
+import { uploadMessageAttachment, compressImageIfNeeded } from "@/lib/uploadAttachment";
 
 type Notification = Tables<"client_notifications">;
 
@@ -51,8 +56,12 @@ export default function GestanteMessages() {
   const [loading, setLoading] = useState(true);
   const [newMessage, setNewMessage] = useState("");
   const [sending, setSending] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [filePreview, setFilePreview] = useState<string | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
   const { client, organizationId } = useGestanteAuth();
   const queryClient = useQueryClient();
 
@@ -63,7 +72,6 @@ export default function GestanteMessages() {
     }
   }, [client?.id]);
 
-  // Realtime subscription for new messages
   useEffect(() => {
     if (!client?.id) return;
     const channel = supabase
@@ -84,14 +92,12 @@ export default function GestanteMessages() {
 
   const fetchNotifications = async () => {
     if (!client?.id) return;
-
     try {
       const { data, error } = await supabase
         .from("client_notifications")
         .select("*")
         .eq("client_id", client.id)
         .order("created_at", { ascending: true });
-
       if (error) throw error;
       setNotifications(data || []);
     } catch (error) {
@@ -117,14 +123,12 @@ export default function GestanteMessages() {
         .from("client_notifications")
         .update({ read_by_client: true })
         .in("id", ids);
-      // Invalidate admin queries so badges update
       queryClient.invalidateQueries({ queryKey: ["admin-all-messages"] });
     } catch (error) {
       console.error("Error marking as read by client:", error);
     }
   };
 
-  // Scroll to bottom when messages change
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [notifications.length]);
@@ -133,14 +137,12 @@ export default function GestanteMessages() {
     queryKey: ["my-pending-budgets", client?.id],
     queryFn: async () => {
       if (!client?.id) return [];
-      
       const { data, error } = await supabase
         .from("service_requests")
         .select("*")
         .eq("client_id", client.id)
         .eq("status", "budget_sent")
         .order("budget_sent_at", { ascending: false });
-
       if (error) throw error;
       return data as ServiceRequest[];
     },
@@ -151,14 +153,11 @@ export default function GestanteMessages() {
   const acceptBudgetMutation = useMutation({
     mutationFn: async (request: ServiceRequest) => {
       if (!client?.id) throw new Error("Cliente não encontrado");
-
       const { data, error } = await supabase.functions.invoke("respond-budget", {
         body: { request_id: request.id, action: "accept" },
       });
-
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
-
       sendPushNotification({
         send_to_admins: true,
         title: `✅ Orçamento Aceito: ${request.service_type}`,
@@ -183,14 +182,11 @@ export default function GestanteMessages() {
   const rejectBudgetMutation = useMutation({
     mutationFn: async (request: ServiceRequest) => {
       if (!client?.id) throw new Error("Cliente não encontrado");
-
       const { data, error } = await supabase.functions.invoke("respond-budget", {
         body: { request_id: request.id, action: "reject" },
       });
-
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
-
       sendPushNotification({
         send_to_admins: true,
         title: `❌ Orçamento Recusado: ${request.service_type}`,
@@ -230,36 +226,72 @@ export default function GestanteMessages() {
     }
   };
 
+  const handleFileSelect = async (file: File) => {
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Arquivo muito grande. Máximo: 5MB");
+      return;
+    }
+    const compressed = await compressImageIfNeeded(file);
+    setSelectedFile(compressed);
+    if (compressed.type.startsWith("image/")) {
+      setFilePreview(URL.createObjectURL(compressed));
+    } else {
+      setFilePreview(null);
+    }
+  };
+
+  const clearSelectedFile = () => {
+    setSelectedFile(null);
+    if (filePreview) URL.revokeObjectURL(filePreview);
+    setFilePreview(null);
+  };
+
   const handleSendMessage = async () => {
-    if (!client?.id || !newMessage.trim()) return;
+    if (!client?.id || (!newMessage.trim() && !selectedFile)) return;
     setSending(true);
     try {
+      let attachmentUrl: string | null = null;
+      let attachmentType: string | null = null;
+
+      if (selectedFile) {
+        const { data: userData } = await supabase.auth.getUser();
+        const userId = userData?.user?.id || "anonymous";
+        const result = await uploadMessageAttachment(selectedFile, userId);
+        attachmentUrl = result.url;
+        attachmentType = result.type;
+      }
+
+      const messageText = newMessage.trim() || (attachmentType === "image" ? "📷 Foto" : "📎 Arquivo");
+
       const { error } = await supabase
         .from("client_notifications")
         .insert({
           client_id: client.id,
           title: `Mensagem de ${client.full_name}`,
-          message: newMessage.trim(),
+          message: messageText,
           read: false,
           read_by_client: true,
           organization_id: organizationId || null,
+          attachment_url: attachmentUrl,
+          attachment_type: attachmentType,
         });
       if (error) throw error;
 
       sendPushNotification({
         send_to_admins: true,
         title: `💬 Nova mensagem: ${client.full_name}`,
-        message: newMessage.trim().substring(0, 100),
+        message: messageText.substring(0, 100),
         url: "/admin",
         tag: "client-message",
       });
 
       setNewMessage("");
+      clearSelectedFile();
       fetchNotifications();
       toast.success("Mensagem enviada!");
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error sending message:", error);
-      toast.error("Erro ao enviar mensagem");
+      toast.error(error?.message || "Erro ao enviar mensagem");
     } finally {
       setSending(false);
     }
@@ -276,6 +308,33 @@ export default function GestanteMessages() {
   };
 
   const regularNotifications = notifications.filter(n => !isBudgetNotification(n));
+
+  const renderAttachment = (notification: any, isMine: boolean) => {
+    if (!notification.attachment_url) return null;
+    if (notification.attachment_type === "image") {
+      return (
+        <a href={notification.attachment_url} target="_blank" rel="noopener noreferrer" className="block mt-1">
+          <img
+            src={notification.attachment_url}
+            alt="Anexo"
+            className="rounded-lg max-w-[200px] max-h-[200px] object-cover border"
+            loading="lazy"
+          />
+        </a>
+      );
+    }
+    return (
+      <a
+        href={notification.attachment_url}
+        target="_blank"
+        rel="noopener noreferrer"
+        className={`flex items-center gap-1.5 mt-1 text-xs underline ${isMine ? "text-primary-foreground/80" : "text-primary"}`}
+      >
+        <FileText className="h-3.5 w-3.5" />
+        Ver arquivo
+      </a>
+    );
+  };
 
   return (
     <GestanteLayout>
@@ -316,7 +375,6 @@ export default function GestanteMessages() {
           </div>
         </div>
 
-      
         {loading ? (
           <div className="flex items-center justify-center py-12">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -334,7 +392,6 @@ export default function GestanteMessages() {
         ) : (
           <ScrollArea className="h-[calc(100vh-18rem)]">
             <div className="space-y-3 flex flex-col">
-              {/* Regular notifications + client messages */}
               {regularNotifications.map((notification) => {
                 const isMine = isClientMessage(notification);
                 return (
@@ -365,6 +422,7 @@ export default function GestanteMessages() {
                         <p className={`text-sm ${isMine ? "text-primary-foreground" : "text-muted-foreground"} ${!isMine ? "mt-1" : ""}`}>
                           {notification.message}
                         </p>
+                        {renderAttachment(notification, isMine)}
                         <p className={`text-[10px] mt-2 ${isMine ? "text-primary-foreground/70 text-right" : "text-muted-foreground"}`}>
                           {formatBrazilDateTime(notification.created_at, "dd/MM 'às' HH:mm")}
                         </p>
@@ -374,7 +432,6 @@ export default function GestanteMessages() {
                 );
               })}
 
-              {/* Pending budgets inline at the bottom */}
               {pendingBudgets?.map((budget) => (
                 <div key={`budget-${budget.id}`} className="flex justify-start">
                   <Card className="max-w-[85%] bg-secondary border-primary/20 shadow-sm">
@@ -438,14 +495,80 @@ export default function GestanteMessages() {
           </ScrollArea>
         )}
 
+        {/* File preview */}
+        {selectedFile && (
+          <div className="sticky bottom-14 left-0 right-0 z-30 bg-muted/80 backdrop-blur-sm border-t p-2">
+            <div className="max-w-2xl mx-auto flex items-center gap-2">
+              {filePreview ? (
+                <img src={filePreview} alt="Preview" className="h-12 w-12 rounded object-cover" />
+              ) : (
+                <div className="h-12 w-12 rounded bg-muted flex items-center justify-center">
+                  <FileText className="h-5 w-5 text-muted-foreground" />
+                </div>
+              )}
+              <span className="text-xs text-muted-foreground truncate flex-1">{selectedFile.name}</span>
+              <Button size="icon" variant="ghost" className="h-7 w-7" onClick={clearSelectedFile}>
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        )}
+
         {/* Compose message area */}
         <div className="sticky bottom-0 left-0 right-0 z-30 bg-background border-t p-3 mt-auto">
           <div className="max-w-2xl mx-auto flex gap-2 items-end">
+            {/* Hidden file inputs */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*,.pdf,.doc,.docx"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) handleFileSelect(file);
+                e.target.value = "";
+              }}
+            />
+            <input
+              ref={cameraInputRef}
+              type="file"
+              accept="image/*"
+              capture="environment"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) handleFileSelect(file);
+                e.target.value = "";
+              }}
+            />
+
+            {/* Attach buttons */}
+            <div className="flex flex-col gap-1 shrink-0">
+              <Button
+                size="icon"
+                variant="ghost"
+                className="h-8 w-8"
+                onClick={() => fileInputRef.current?.click()}
+                title="Anexar arquivo"
+              >
+                <Paperclip className="h-4 w-4" />
+              </Button>
+              <Button
+                size="icon"
+                variant="ghost"
+                className="h-8 w-8"
+                onClick={() => cameraInputRef.current?.click()}
+                title="Tirar foto"
+              >
+                <Camera className="h-4 w-4" />
+              </Button>
+            </div>
+
             <Textarea
               ref={textareaRef}
               value={newMessage}
               onChange={(e) => setNewMessage(e.target.value)}
-              placeholder="Escreva uma mensagem para sua Doula..."
+              placeholder="Escreva uma mensagem..."
               className="min-h-[44px] max-h-[120px] resize-none text-sm"
               rows={1}
               onKeyDown={(e) => {
@@ -458,7 +581,7 @@ export default function GestanteMessages() {
             <Button
               size="icon"
               onClick={handleSendMessage}
-              disabled={sending || !newMessage.trim()}
+              disabled={sending || (!newMessage.trim() && !selectedFile)}
               className="h-11 w-11 shrink-0"
             >
               {sending ? (
