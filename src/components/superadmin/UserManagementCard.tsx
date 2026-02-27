@@ -47,21 +47,33 @@ export function UserManagementCard() {
 
       const orgMap = new Map((orgs || []).map(o => [o.id, o.name]));
 
-      return (profiles || []).map(p => ({
-        ...p,
-        roles: (roles || []).filter(r => r.user_id === p.user_id).map(r => r.role),
-        org_name: p.organization_id ? orgMap.get(p.organization_id) || "—" : "—",
-      })) as UserWithRole[];
+      // Only show super_admins and admins (doulas)
+      const adminUserIds = new Set(
+        (roles || [])
+          .filter(r => r.role === "super_admin" || r.role === "admin")
+          .map(r => r.user_id)
+      );
+
+      return (profiles || [])
+        .filter(p => adminUserIds.has(p.user_id))
+        .map(p => ({
+          ...p,
+          roles: (roles || []).filter(r => r.user_id === p.user_id).map(r => r.role),
+          org_name: p.organization_id ? orgMap.get(p.organization_id) || "—" : "—",
+        })) as UserWithRole[];
     },
   });
 
   const deleteMutation = useMutation({
     mutationFn: async (userId: string) => {
-      const { data, error } = await supabase.functions.invoke("manage-admin-user", {
+      const res = await supabase.functions.invoke("manage-admin-user", {
         body: { action: "delete", userId },
       });
-      if (error) throw error;
-      if (data?.error) throw new Error(data.error);
+      if (res.error) {
+        const msg = typeof res.error === "object" && "message" in res.error ? res.error.message : String(res.error);
+        throw new Error(msg);
+      }
+      if (res.data?.error) throw new Error(res.data.error);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["super-admin-all-users"] });
@@ -73,12 +85,15 @@ export function UserManagementCard() {
 
   const resetMutation = useMutation({
     mutationFn: async (userId: string) => {
-      const { data, error } = await supabase.functions.invoke("manage-admin-user", {
+      const res = await supabase.functions.invoke("manage-admin-user", {
         body: { action: "reset-password", userId },
       });
-      if (error) throw error;
-      if (data?.error) throw new Error(data.error);
-      return data;
+      if (res.error) {
+        const msg = typeof res.error === "object" && "message" in res.error ? res.error.message : String(res.error);
+        throw new Error(msg);
+      }
+      if (res.data?.error) throw new Error(res.data.error);
+      return res.data;
     },
     onSuccess: (data, userId) => {
       setResetResult({ userId, password: data.newPassword });
@@ -133,7 +148,7 @@ export function UserManagementCard() {
             </div>
             <div>
               <CardTitle className="text-lg">Gerenciar Usuários</CardTitle>
-              <CardDescription>{users.length} usuários no sistema</CardDescription>
+              <CardDescription>{users.length} administradores no sistema</CardDescription>
             </div>
           </div>
         </CardHeader>
