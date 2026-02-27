@@ -114,6 +114,8 @@ export type Database = {
       }
       client_notifications: {
         Row: {
+          attachment_type: string | null
+          attachment_url: string | null
           client_id: string
           created_at: string
           id: string
@@ -124,6 +126,8 @@ export type Database = {
           title: string
         }
         Insert: {
+          attachment_type?: string | null
+          attachment_url?: string | null
           client_id: string
           created_at?: string
           id?: string
@@ -134,6 +138,8 @@ export type Database = {
           title: string
         }
         Update: {
+          attachment_type?: string | null
+          attachment_url?: string | null
           client_id?: string
           created_at?: string
           id?: string

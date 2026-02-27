@@ -16,15 +16,18 @@ import {
   Send,
   Search,
   ArrowLeft,
-  User,
   CheckCheck,
-  Clock,
+  Paperclip,
+  Camera,
+  FileText,
+  X,
 } from "lucide-react";
 import { toast } from "sonner";
 import { formatBrazilDateTime, abbreviateName } from "@/lib/utils";
 import { Tables } from "@/integrations/supabase/types";
 import { sendPushNotification } from "@/lib/pushNotifications";
 import { cn } from "@/lib/utils";
+import { uploadMessageAttachment, compressImageIfNeeded } from "@/lib/uploadAttachment";
 
 type Client = Tables<"clients">;
 type Notification = Tables<"client_notifications">;
@@ -35,11 +38,14 @@ export default function AdminMessages() {
   const [newMessage, setNewMessage] = useState("");
   const [sending, setSending] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [filePreview, setFilePreview] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
   const { organizationId } = useAuth();
   const queryClient = useQueryClient();
 
-  // Fetch all clients
   const { data: clients } = useQuery({
     queryKey: ["admin-message-clients"],
     queryFn: async () => {
@@ -52,7 +58,6 @@ export default function AdminMessages() {
     },
   });
 
-  // Fetch all messages (client_notifications)
   const { data: allMessages, isLoading } = useQuery({
     queryKey: ["admin-all-messages"],
     queryFn: async () => {
@@ -66,22 +71,8 @@ export default function AdminMessages() {
     refetchInterval: 10000,
   });
 
-  // Filter only message-type notifications (from client or admin messages)
-  const isMessage = (n: Notification) => {
-    return (
-      n.title.startsWith("Mensagem de ") ||
-      n.title === "Mensagem da Doula" ||
-      n.title.startsWith("💬") ||
-      // Admin-sent messages that aren't system notifications
-      (!n.title.startsWith("Orçamento:") &&
-        !n.title.includes("bebê está a caminho") &&
-        !n.title.includes("trabalho de parto") &&
-        !n.title.includes("Lembrete") &&
-        !n.title.includes("Pagamento"))
-    );
-  };
+  const isClientMessage = (n: Notification) => n.title.startsWith("Mensagem de ");
 
-  // Group messages by client
   const messagesByClient = new Map<string, Notification[]>();
   allMessages?.forEach((msg) => {
     if (!messagesByClient.has(msg.client_id)) {
@@ -90,7 +81,6 @@ export default function AdminMessages() {
     messagesByClient.get(msg.client_id)!.push(msg);
   });
 
-  // Get clients with conversations, sorted by last message
   const clientsWithMessages = clients
     ?.filter((c) => messagesByClient.has(c.id))
     ?.sort((a, b) => {
@@ -101,7 +91,6 @@ export default function AdminMessages() {
       return bLatest.localeCompare(aLatest);
     }) || [];
 
-  // Clients without messages (for starting new conversations)
   const clientsWithoutMessages = clients?.filter(
     (c) => !messagesByClient.has(c.id)
   ) || [];
@@ -119,7 +108,6 @@ export default function AdminMessages() {
       )
     : [];
 
-  // Mark messages as read when opening a client conversation
   useEffect(() => {
     if (!selectedClientId) return;
     const unreadMessages = selectedMessages.filter(
@@ -137,12 +125,10 @@ export default function AdminMessages() {
     }
   }, [selectedClientId, selectedMessages.length, queryClient]);
 
-  // Scroll to bottom on new messages
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [selectedMessages.length]);
 
-  // Realtime subscription
   useEffect(() => {
     const channel = supabase
       .channel("admin-messages-realtime")
@@ -168,42 +154,103 @@ export default function AdminMessages() {
 
   const getLastMessage = (clientId: string) => {
     const messages = messagesByClient.get(clientId) || [];
-    return messages[0]; // Already sorted desc
+    return messages[0];
   };
 
-  const isClientMessage = (n: Notification) => n.title.startsWith("Mensagem de ");
+  const handleFileSelect = async (file: File) => {
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Arquivo muito grande. Máximo: 5MB");
+      return;
+    }
+    const compressed = await compressImageIfNeeded(file);
+    setSelectedFile(compressed);
+    if (compressed.type.startsWith("image/")) {
+      setFilePreview(URL.createObjectURL(compressed));
+    } else {
+      setFilePreview(null);
+    }
+  };
+
+  const clearSelectedFile = () => {
+    setSelectedFile(null);
+    if (filePreview) URL.revokeObjectURL(filePreview);
+    setFilePreview(null);
+  };
 
   const handleSendMessage = async () => {
-    if (!selectedClientId || !newMessage.trim()) return;
+    if (!selectedClientId || (!newMessage.trim() && !selectedFile)) return;
     setSending(true);
     try {
+      let attachmentUrl: string | null = null;
+      let attachmentType: string | null = null;
+
+      if (selectedFile) {
+        const { data: userData } = await supabase.auth.getUser();
+        const userId = userData?.user?.id || "anonymous";
+        const result = await uploadMessageAttachment(selectedFile, userId);
+        attachmentUrl = result.url;
+        attachmentType = result.type;
+      }
+
+      const messageText = newMessage.trim() || (attachmentType === "image" ? "📷 Foto" : "📎 Arquivo");
+
       const { error } = await supabase.from("client_notifications").insert({
         client_id: selectedClientId,
         title: "Mensagem da Doula",
-        message: newMessage.trim(),
-        read: true, // Admin already saw it
+        message: messageText,
+        read: true,
         read_by_client: false,
         organization_id: organizationId || null,
+        attachment_url: attachmentUrl,
+        attachment_type: attachmentType,
       });
       if (error) throw error;
 
       sendPushNotification({
         client_ids: [selectedClientId],
         title: "💬 Nova mensagem da sua Doula",
-        message: newMessage.trim().substring(0, 100),
+        message: messageText.substring(0, 100),
         url: "/gestante/mensagens",
         tag: "doula-message",
       });
 
       setNewMessage("");
+      clearSelectedFile();
       queryClient.invalidateQueries({ queryKey: ["admin-all-messages"] });
       toast.success("Mensagem enviada!");
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error sending message:", error);
-      toast.error("Erro ao enviar mensagem");
+      toast.error(error?.message || "Erro ao enviar mensagem");
     } finally {
       setSending(false);
     }
+  };
+
+  const renderAttachment = (msg: any, isMine: boolean) => {
+    if (!msg.attachment_url) return null;
+    if (msg.attachment_type === "image") {
+      return (
+        <a href={msg.attachment_url} target="_blank" rel="noopener noreferrer" className="block mt-1">
+          <img
+            src={msg.attachment_url}
+            alt="Anexo"
+            className="rounded-lg max-w-[200px] max-h-[200px] object-cover border"
+            loading="lazy"
+          />
+        </a>
+      );
+    }
+    return (
+      <a
+        href={msg.attachment_url}
+        target="_blank"
+        rel="noopener noreferrer"
+        className={`flex items-center gap-1.5 mt-1 text-xs underline ${isMine ? "text-primary-foreground/80" : "text-primary"}`}
+      >
+        <FileText className="h-3.5 w-3.5" />
+        Ver arquivo
+      </a>
+    );
   };
 
   return (
@@ -371,6 +418,7 @@ export default function AdminMessages() {
                               )}
                             >
                               <p className="text-sm whitespace-pre-wrap">{msg.message}</p>
+                              {renderAttachment(msg, isMine)}
                               <div
                                 className={cn(
                                   "flex items-center gap-1 mt-1",
@@ -385,10 +433,7 @@ export default function AdminMessages() {
                                       : "text-muted-foreground"
                                   )}
                                 >
-                                  {formatBrazilDateTime(
-                                    msg.created_at,
-                                    "dd/MM HH:mm"
-                                  )}
+                                  {formatBrazilDateTime(msg.created_at, "dd/MM HH:mm")}
                                 </span>
                                 {isMine && (
                                   <CheckCheck
@@ -410,9 +455,72 @@ export default function AdminMessages() {
                   </div>
                 </ScrollArea>
 
+                {/* File preview */}
+                {selectedFile && (
+                  <div className="border-t bg-muted/50 p-2">
+                    <div className="flex items-center gap-2">
+                      {filePreview ? (
+                        <img src={filePreview} alt="Preview" className="h-12 w-12 rounded object-cover" />
+                      ) : (
+                        <div className="h-12 w-12 rounded bg-muted flex items-center justify-center">
+                          <FileText className="h-5 w-5 text-muted-foreground" />
+                        </div>
+                      )}
+                      <span className="text-xs text-muted-foreground truncate flex-1">{selectedFile.name}</span>
+                      <Button size="icon" variant="ghost" className="h-7 w-7" onClick={clearSelectedFile}>
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
                 {/* Compose */}
                 <div className="p-3 border-t border-border bg-card/50">
+                  {/* Hidden file inputs */}
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*,.pdf,.doc,.docx"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) handleFileSelect(file);
+                      e.target.value = "";
+                    }}
+                  />
+                  <input
+                    ref={cameraInputRef}
+                    type="file"
+                    accept="image/*"
+                    capture="environment"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) handleFileSelect(file);
+                      e.target.value = "";
+                    }}
+                  />
                   <div className="flex gap-2 items-end">
+                    <div className="flex flex-col gap-1 shrink-0">
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-8 w-8"
+                        onClick={() => fileInputRef.current?.click()}
+                        title="Anexar arquivo"
+                      >
+                        <Paperclip className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-8 w-8"
+                        onClick={() => cameraInputRef.current?.click()}
+                        title="Tirar foto"
+                      >
+                        <Camera className="h-4 w-4" />
+                      </Button>
+                    </div>
                     <Textarea
                       value={newMessage}
                       onChange={(e) => setNewMessage(e.target.value)}
@@ -429,7 +537,7 @@ export default function AdminMessages() {
                     <Button
                       size="icon"
                       onClick={handleSendMessage}
-                      disabled={sending || !newMessage.trim()}
+                      disabled={sending || (!newMessage.trim() && !selectedFile)}
                       className="h-11 w-11 shrink-0"
                     >
                       {sending ? (

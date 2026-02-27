@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useGestanteAuth } from "@/contexts/GestanteAuthContext";
+import { uploadMessageAttachment, compressImageIfNeeded } from "@/lib/uploadAttachment";
 import {
   Dialog,
   DialogContent,
@@ -23,6 +24,8 @@ import {
   QrCode,
   Loader2,
   MessageCircle,
+  Camera,
+  Paperclip,
 } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -36,9 +39,44 @@ interface PaymentDetailsDialogProps {
 }
 
 export function PaymentDetailsDialog({ open, onOpenChange }: PaymentDetailsDialogProps) {
-  const { client } = useGestanteAuth();
+  const { client, organizationId } = useGestanteAuth();
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [sendingReceipt, setSendingReceipt] = useState(false);
   const navigate = useNavigate();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+
+  const handleSendReceipt = async (file: File) => {
+    if (!client?.id) return;
+    setSendingReceipt(true);
+    try {
+      const compressed = await compressImageIfNeeded(file);
+      const { data: userData } = await supabase.auth.getUser();
+      const userId = userData?.user?.id || "anonymous";
+      const result = await uploadMessageAttachment(compressed, userId);
+
+      await supabase.from("client_notifications").insert({
+        client_id: client.id,
+        title: `Mensagem de ${client.full_name}`,
+        message: "📎 Comprovante de pagamento Pix",
+        read: false,
+        read_by_client: true,
+        organization_id: organizationId || null,
+        attachment_url: result.url,
+        attachment_type: result.type,
+      });
+
+      toast.success("Comprovante enviado!", {
+        description: "Sua Doula receberá na área de mensagens.",
+      });
+      onOpenChange(false);
+      navigate("/gestante/mensagens");
+    } catch (error: any) {
+      toast.error(error?.message || "Erro ao enviar comprovante");
+    } finally {
+      setSendingReceipt(false);
+    }
+  };
 
   // First try payments table, fallback to transactions
   const { data: payments, isLoading: paymentsLoading } = useQuery({
@@ -314,10 +352,67 @@ export function PaymentDetailsDialog({ open, onOpenChange }: PaymentDetailsDialo
                     </div>
 
                     <p className="text-xs text-muted-foreground text-center">
-                      Após o pagamento, envie o comprovante para sua Doula
+                      Após o pagamento, envie o comprovante abaixo
                     </p>
+
+                    {/* Hidden file inputs */}
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*,.pdf"
+                      className="hidden"
+                      onChange={(e) => {
+                        const f = e.target.files?.[0];
+                        if (f) handleSendReceipt(f);
+                        e.target.value = "";
+                      }}
+                    />
+                    <input
+                      ref={cameraInputRef}
+                      type="file"
+                      accept="image/*"
+                      capture="environment"
+                      className="hidden"
+                      onChange={(e) => {
+                        const f = e.target.files?.[0];
+                        if (f) handleSendReceipt(f);
+                        e.target.value = "";
+                      }}
+                    />
+
+                    <div className="grid grid-cols-2 gap-2">
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        className="w-full"
+                        disabled={sendingReceipt}
+                        onClick={() => cameraInputRef.current?.click()}
+                      >
+                        {sendingReceipt ? (
+                          <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                        ) : (
+                          <Camera className="h-4 w-4 mr-2" />
+                        )}
+                        Tirar foto
+                      </Button>
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        className="w-full"
+                        disabled={sendingReceipt}
+                        onClick={() => fileInputRef.current?.click()}
+                      >
+                        {sendingReceipt ? (
+                          <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                        ) : (
+                          <Paperclip className="h-4 w-4 mr-2" />
+                        )}
+                        Anexar arquivo
+                      </Button>
+                    </div>
+
                     <Button
-                      variant="secondary"
+                      variant="outline"
                       size="sm"
                       className="w-full"
                       onClick={() => {
@@ -326,7 +421,7 @@ export function PaymentDetailsDialog({ open, onOpenChange }: PaymentDetailsDialo
                       }}
                     >
                       <MessageCircle className="h-4 w-4 mr-2" />
-                      Enviar comprovante via Mensagens
+                      Ir para Mensagens
                     </Button>
                   </CardContent>
                 </Card>
