@@ -5,6 +5,13 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+function generateDefaultPassword(fullName: string): string {
+  const firstName = (fullName || "User").trim().split(/\s+/)[0];
+  const firstLetter = firstName.charAt(0).toUpperCase();
+  const digits = Array.from({ length: 5 }, () => Math.floor(Math.random() * 10)).join("");
+  return `${firstLetter}${digits}`;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -35,43 +42,48 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Check caller roles
     const { data: callerRoles } = await supabase
       .from("user_roles")
       .select("role")
       .eq("user_id", callingUser.id)
-      .in("role", ["admin", "moderator"]);
+      .in("role", ["admin", "moderator", "super_admin"]);
 
     if (!callerRoles || callerRoles.length === 0) {
-      return new Response(JSON.stringify({ error: "Admin or moderator role required" }), {
+      return new Response(JSON.stringify({ error: "Admin, moderator or super_admin role required" }), {
         status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // Get caller's organization
-    const { data: callerProfile } = await supabase
-      .from("profiles")
-      .select("organization_id")
-      .eq("user_id", callingUser.id)
-      .single();
-
-    const callerOrgId = callerProfile?.organization_id;
-
-    if (callerOrgId) {
-      const { data: org } = await supabase
-        .from("organizations")
-        .select("status")
-        .eq("id", callerOrgId)
-        .single();
-
-      if (org?.status === "suspenso") {
-        return new Response(JSON.stringify({ error: "Sua organização está suspensa" }), {
-          status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-    }
-
+    const callerIsSuperAdmin = callerRoles.some((r) => r.role === "super_admin");
     const callerIsAdmin = callerRoles.some((r) => r.role === "admin");
     const callerIsModerator = callerRoles.some((r) => r.role === "moderator");
+
+    // Get caller's organization (not needed for super_admin)
+    let callerOrgId: string | null = null;
+    if (!callerIsSuperAdmin) {
+      const { data: callerProfile } = await supabase
+        .from("profiles")
+        .select("organization_id")
+        .eq("user_id", callingUser.id)
+        .single();
+
+      callerOrgId = callerProfile?.organization_id;
+
+      if (callerOrgId) {
+        const { data: org } = await supabase
+          .from("organizations")
+          .select("status")
+          .eq("id", callerOrgId)
+          .single();
+
+        if (org?.status === "suspenso") {
+          return new Response(JSON.stringify({ error: "Sua organização está suspensa" }), {
+            status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+      }
+    }
 
     const { action, userId, fullName, role, email } = await req.json();
 
@@ -81,17 +93,19 @@ Deno.serve(async (req) => {
       });
     }
 
-    // ORG ISOLATION: Verify target user belongs to same org
-    const { data: targetProfile } = await supabase
-      .from("profiles")
-      .select("organization_id")
-      .eq("user_id", userId)
-      .maybeSingle();
+    // ORG ISOLATION: super_admin skips org check
+    if (!callerIsSuperAdmin) {
+      const { data: targetProfile } = await supabase
+        .from("profiles")
+        .select("organization_id")
+        .eq("user_id", userId)
+        .maybeSingle();
 
-    if (callerOrgId && targetProfile?.organization_id !== callerOrgId) {
-      return new Response(JSON.stringify({ error: "Usuário não pertence à sua organização" }), {
-        status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      if (callerOrgId && targetProfile?.organization_id !== callerOrgId) {
+        return new Response(JSON.stringify({ error: "Usuário não pertence à sua organização" }), {
+          status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
     }
 
     // Prevent self-deletion
@@ -101,8 +115,8 @@ Deno.serve(async (req) => {
       });
     }
 
-    // If caller is moderator, check that target is NOT an admin
-    if (callerIsModerator && !callerIsAdmin) {
+    // If caller is moderator (not super_admin), check that target is NOT an admin
+    if (callerIsModerator && !callerIsAdmin && !callerIsSuperAdmin) {
       const { data: targetRoles } = await supabase
         .from("user_roles")
         .select("role")
@@ -163,6 +177,32 @@ Deno.serve(async (req) => {
       if (deleteError) throw deleteError;
 
       return new Response(JSON.stringify({ success: true, message: "Usuário excluído" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    if (action === "reset-password") {
+      // Only super_admin or admin can reset passwords
+      if (!callerIsSuperAdmin && !callerIsAdmin) {
+        return new Response(JSON.stringify({ error: "Permissão insuficiente para resetar senhas" }), {
+          status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      // Get user's name for password generation
+      const { data: targetProfile } = await supabase
+        .from("profiles")
+        .select("full_name")
+        .eq("user_id", userId)
+        .maybeSingle();
+
+      const userName = targetProfile?.full_name || "User";
+      const newPassword = generateDefaultPassword(userName);
+
+      const { error: updateError } = await supabase.auth.admin.updateUserById(userId, { password: newPassword });
+      if (updateError) throw updateError;
+
+      return new Response(JSON.stringify({ success: true, message: "Senha resetada", newPassword }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
