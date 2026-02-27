@@ -83,33 +83,32 @@ export function Sidebar({ isOpen, onToggle, onNavigate }: SidebarProps) {
 
       {/* Navigation */}
       <nav className="flex-1 py-6 px-3 space-y-1 overflow-y-auto">
-        {navItems
-          .filter((item) => {
-            const routeToLimit: Record<string, keyof typeof limits> = {
-              "/relatorios": "reports",
-              "/agenda": "agenda",
-              "/clientes": "clients",
-              "/financeiro": "financial",
-              "/despesas": "expenses",
-              "/notificacoes": "notifications",
-              "/mensagens": "messages",
-            };
-            const limitKey = routeToLimit[item.to];
-            return !limitKey || limits[limitKey];
-          })
-          .map((item) => {
-          const isActive = location.pathname === item.to;
-          const badgeCount = getBadgeCount((item as any).badgeKey);
+        {navItems.map((item) => {
+          const routeToLimit: Record<string, keyof typeof limits> = {
+            "/relatorios": "reports",
+            "/agenda": "agenda",
+            "/clientes": "clients",
+            "/financeiro": "financial",
+            "/despesas": "expenses",
+            "/notificacoes": "notifications",
+            "/mensagens": "messages",
+          };
+          const limitKey = routeToLimit[item.to];
+          const isDisabled = limitKey ? !limits[limitKey] : false;
+          const isActive = !isDisabled && location.pathname === item.to;
+          const badgeCount = isDisabled ? 0 : getBadgeCount((item as any).badgeKey);
           return (
             <button
               key={item.to}
-              onClick={() => handleNavClick(item.to)}
+              onClick={() => !isDisabled && handleNavClick(item.to)}
+              disabled={isDisabled}
               className={cn(
                 "nav-link w-full text-left relative",
                 isActive && "active",
-                !isOpen && "lg:justify-center lg:px-0"
+                !isOpen && "lg:justify-center lg:px-0",
+                isDisabled && "opacity-40 cursor-not-allowed hover:bg-transparent"
               )}
-              title={!isOpen ? item.label : undefined}
+              title={!isOpen ? item.label : isDisabled ? "Recurso indisponível no seu plano" : undefined}
             >
               <div className="relative">
                 <item.icon className={cn("w-5 h-5 shrink-0", isActive && "text-current")} />
