@@ -269,11 +269,37 @@ export default function Reports() {
           {/* Desktop: filters inline */}
           <div className="hidden lg:flex items-center gap-2 flex-shrink-0">
             <PeriodFilter selected={period} onChange={setPeriod} />
+            {limits.exportReports && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" className="gap-1.5" disabled={exporting}>
+                    {exporting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
+                    Exportar
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => handleExport("csv")}>
+                    <FileText className="w-4 h-4 mr-2" /> CSV
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleExport("pdf")}>
+                    <FileText className="w-4 h-4 mr-2" /> PDF
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleExport("xlsx")}>
+                    <FileText className="w-4 h-4 mr-2" /> Excel
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+          </div>
+        </div>
+        {/* Mobile: filters on second line */}
+        <div className="flex lg:hidden items-center gap-0">
+          <PeriodFilter selected={period} onChange={setPeriod} />
+          {limits.exportReports && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm" className="gap-1.5" disabled={exporting}>
+                <Button variant="outline" size="sm" className="gap-1.5 flex-shrink-0" disabled={exporting}>
                   {exporting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
-                  Exportar
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
@@ -288,29 +314,7 @@ export default function Reports() {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-          </div>
-        </div>
-        {/* Mobile: filters on second line */}
-        <div className="flex lg:hidden items-center gap-0">
-          <PeriodFilter selected={period} onChange={setPeriod} />
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="gap-1.5 flex-shrink-0" disabled={exporting}>
-                {exporting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => handleExport("csv")}>
-                <FileText className="w-4 h-4 mr-2" /> CSV
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleExport("pdf")}>
-                <FileText className="w-4 h-4 mr-2" /> PDF
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleExport("xlsx")}>
-                <FileText className="w-4 h-4 mr-2" /> Excel
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          )}
         </div>
       </div>
 

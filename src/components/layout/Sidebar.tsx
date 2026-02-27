@@ -40,7 +40,7 @@ const navItems = [
 export function Sidebar({ isOpen, onToggle, onNavigate }: SidebarProps) {
   const location = useLocation();
   const navigate = useNavigate();
-  const { planLabel, plan } = usePlanLimits();
+  const { planLabel, plan, limits } = usePlanLimits();
   const { logoUrl: orgLogo, displayName } = useOrgBranding();
   const { unreadMessages, unreadNotifications } = useAdminUnreadCounts();
 
@@ -83,7 +83,9 @@ export function Sidebar({ isOpen, onToggle, onNavigate }: SidebarProps) {
 
       {/* Navigation */}
       <nav className="flex-1 py-6 px-3 space-y-1 overflow-y-auto">
-        {navItems.map((item) => {
+        {navItems
+          .filter((item) => item.to !== "/relatorios" || limits.reports)
+          .map((item) => {
           const isActive = location.pathname === item.to;
           const badgeCount = getBadgeCount((item as any).badgeKey);
           return (
