@@ -80,9 +80,6 @@ export default function GestanteServices() {
         </div>
 
         <div className="space-y-6">
-          {/* Available services to request */}
-          <ServiceRequestButtons />
-
           {/* Upcoming service appointments */}
           {serviceAppointments && serviceAppointments.length > 0 && (
             <div className="space-y-3">
@@ -119,6 +116,9 @@ export default function GestanteServices() {
 
           {/* Scheduled/accepted services with completion & rating */}
           {client?.id && <ScheduledServicesCard clientId={client.id} />}
+
+          {/* Available services to request */}
+          <ServiceRequestButtons />
 
           {/* Pending & other status requests */}
           {pendingRequests && pendingRequests.length > 0 && (
