@@ -596,7 +596,7 @@ function AppointmentRow({
   const today = isToday(date);
 
   return (
-    <div className={`flex items-center gap-3 rounded-lg p-3 border bg-background hover:bg-muted/30 transition-colors ${past ? "opacity-50" : ""}`}>
+    <div className={`flex items-center gap-3 rounded-lg p-3 border bg-background hover:bg-muted/30 transition-colors overflow-hidden ${past ? "opacity-50" : ""}`}>
       <div className="text-center min-w-[44px]">
         <p className="text-[10px] text-muted-foreground uppercase">{format(date, "MMM", { locale: ptBR })}</p>
         <p className="text-lg font-bold leading-tight">{format(date, "dd")}</p>
