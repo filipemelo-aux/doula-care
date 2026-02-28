@@ -107,9 +107,9 @@ export function ContractEditorDialog({
     enabled: open && !!clientId,
   });
 
-  // Fetch plan settings for this client's plan
-  const { data: planSetting } = useQuery({
-    queryKey: ["client-plan-setting", client?.plan_setting_id],
+  // Fetch linked plan setting (if any)
+  const { data: linkedPlanSetting, isLoading: isLinkedPlanLoading } = useQuery({
+    queryKey: ["client-linked-plan-setting", client?.plan_setting_id],
     queryFn: async () => {
       if (!client?.plan_setting_id) return null;
       const { data, error } = await supabase
@@ -122,6 +122,47 @@ export function ContractEditorDialog({
     },
     enabled: open && !!client?.plan_setting_id,
   });
+
+  // Fallback: active plans with same plan type (for legacy/misaligned links)
+  const { data: sameTypePlanSettings = [], isLoading: isSameTypePlansLoading } = useQuery({
+    queryKey: ["client-plan-settings-by-type", organizationId, client?.plan],
+    queryFn: async () => {
+      if (!organizationId || !client?.plan) return [];
+      const { data, error } = await supabase
+        .from("plan_settings")
+        .select("*")
+        .eq("organization_id", organizationId)
+        .eq("is_active", true)
+        .eq("plan_type", client.plan)
+        .order("updated_at", { ascending: false });
+      if (error) throw error;
+      return data ?? [];
+    },
+    enabled: open && !!organizationId && !!client?.plan,
+  });
+
+  const planSetting = useMemo(() => {
+    const linkedFeatures = (linkedPlanSetting?.features ?? []).filter(
+      (item): item is string => typeof item === "string" && item.trim().length > 0,
+    );
+    if (linkedFeatures.length > 0) return linkedPlanSetting;
+
+    const sameTypeWithFeatures = sameTypePlanSettings.find(
+      (plan) =>
+        Array.isArray(plan.features) &&
+        plan.features.some((item) => typeof item === "string" && item.trim().length > 0),
+    );
+
+    return sameTypeWithFeatures ?? linkedPlanSetting ?? sameTypePlanSettings[0] ?? null;
+  }, [linkedPlanSetting, sameTypePlanSettings]);
+
+  const normalizedPlanFeatures = useMemo(
+    () =>
+      (planSetting?.features ?? [])
+        .filter((item): item is string => typeof item === "string" && item.trim().length > 0)
+        .map((item) => item.trim()),
+    [planSetting],
+  );
 
   // Fetch organization info
   const { data: org } = useQuery({
@@ -164,21 +205,30 @@ export function ContractEditorDialog({
     }
   }, [contract, open]);
 
-  // Build service description from plan features (runs after planSetting loads)
+  // Build service description from plan features (runs after plan data loads)
   useEffect(() => {
     if (!open || contract) return;
-    // If client has no plan linked, nothing to auto-fill
-    if (!client?.plan_setting_id) return;
-    // Wait for planSetting to actually load (not undefined/loading)
-    if (planSetting === undefined) return;
-    if (planSetting?.features && planSetting.features.length > 0) {
-      setServiceDescription(planSetting.features.join(";\n") + ".");
-    } else if (planSetting?.description) {
-      setServiceDescription(planSetting.description);
-    } else if (planSetting?.name) {
-      setServiceDescription(`Serviços conforme o plano "${planSetting.name}".`);
+    if ((client?.plan_setting_id && isLinkedPlanLoading) || (client?.plan && isSameTypePlansLoading)) return;
+
+    if (normalizedPlanFeatures.length > 0) {
+      setServiceDescription(normalizedPlanFeatures.join(";\n") + ".");
+    } else if (planSetting?.description?.trim()) {
+      setServiceDescription(planSetting.description.trim());
+    } else if (planSetting?.name?.trim()) {
+      setServiceDescription(`Serviços conforme o plano "${planSetting.name.trim()}".`);
+    } else {
+      setServiceDescription("");
     }
-  }, [planSetting, open, contract, client?.plan_setting_id]);
+  }, [
+    planSetting,
+    normalizedPlanFeatures,
+    open,
+    contract,
+    client?.plan_setting_id,
+    client?.plan,
+    isLinkedPlanLoading,
+    isSameTypePlansLoading,
+  ]);
 
   const formatCurrency = (value: number) =>
     new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
@@ -192,7 +242,7 @@ export function ContractEditorDialog({
   }, [client]);
 
   const generateContract = () => {
-    const planName = planSetting?.name || "Não especificado";
+    const planName = planSetting?.name?.trim() || "Não especificado";
     const planValue = client?.plan_value ? formatCurrency(Number(client.plan_value)) : "A definir";
     const paymentMethod = client?.payment_method ? paymentMethodLabels[client.payment_method] || client.payment_method : "A definir";
     const clientCpf = client?.cpf || "Não informado";
@@ -464,9 +514,9 @@ ${client?.city || "[Cidade]"}, ${todayFormatted}.`;
                         />
                         {planSetting && (
                           <p className="text-[10px] text-muted-foreground mt-1">
-                            {planSetting.features && planSetting.features.length > 0
-                              ? `Preenchido com os serviços do plano "${planSetting.name}"`
-                              : `Plano "${planSetting.name}" sem serviços cadastrados — adicione os serviços manualmente ou cadastre-os nas configurações do plano`}
+                            {normalizedPlanFeatures.length > 0
+                              ? `Preenchido com os serviços do plano "${planSetting.name?.trim() || "Selecionado"}"`
+                              : `Plano "${planSetting.name?.trim() || "Selecionado"}" sem serviços cadastrados — adicione os serviços manualmente ou cadastre-os nas configurações do plano`}
                           </p>
                         )}
                       </div>
