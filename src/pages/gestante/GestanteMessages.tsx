@@ -170,6 +170,9 @@ export default function GestanteMessages() {
     },
     onSuccess: (_, request) => {
       queryClient.invalidateQueries({ queryKey: ["my-pending-budgets"] });
+      queryClient.invalidateQueries({ queryKey: ["my-pending-services"] });
+      queryClient.invalidateQueries({ queryKey: ["scheduled-services"] });
+      queryClient.invalidateQueries({ queryKey: ["my-service-requests"] });
       toast.success("Orçamento aceito!", {
         description: `O serviço de ${request.service_type} foi adicionado aos seus pagamentos.`,
       });
@@ -199,6 +202,9 @@ export default function GestanteMessages() {
     },
     onSuccess: (_, request) => {
       queryClient.invalidateQueries({ queryKey: ["my-pending-budgets"] });
+      queryClient.invalidateQueries({ queryKey: ["my-pending-services"] });
+      queryClient.invalidateQueries({ queryKey: ["scheduled-services"] });
+      queryClient.invalidateQueries({ queryKey: ["my-service-requests"] });
       toast.info("Orçamento recusado", {
         description: `Você recusou o serviço de ${request.service_type}.`,
       });

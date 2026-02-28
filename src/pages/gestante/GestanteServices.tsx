@@ -72,6 +72,7 @@ export default function GestanteServices() {
       queryClient.invalidateQueries({ queryKey: ["my-pending-services"] });
       queryClient.invalidateQueries({ queryKey: ["scheduled-services"] });
       queryClient.invalidateQueries({ queryKey: ["my-service-requests"] });
+      queryClient.invalidateQueries({ queryKey: ["my-pending-budgets"] });
       if (variables.action === "accept") {
         if (data?.status === "date_proposed") {
           toast.success("Orçamento aceito!", {
