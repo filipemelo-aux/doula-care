@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Calendar, Plus, Trash2, Loader2, Info } from "lucide-react";
+import { Calendar, Plus, Trash2, Loader2, Eye } from "lucide-react";
 import { AppointmentDetailDialog } from "@/components/clients/AppointmentDetailDialog";
 import { toast } from "sonner";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -185,29 +185,34 @@ export function ManageAppointmentsDialog({
                         <p className="text-base font-bold">{format(date, "dd")}</p>
                       </div>
                       <div className="flex-1 min-w-0 overflow-hidden">
-                        <p className="font-medium text-sm truncate">{apt.title}</p>
+                        <p className="font-medium text-sm truncate" title={apt.title}>{apt.title}</p>
                         <p className="text-xs text-muted-foreground">
                           {format(date, "EEEE, HH:mm", { locale: ptBR })}
                         </p>
                         {apt.notes && (
                           <p className="text-xs text-muted-foreground truncate">{apt.notes}</p>
                         )}
-                        <button
-                          className="text-[11px] text-primary hover:underline mt-0.5"
-                          onClick={() => setDetailApt(apt)}
-                        >
-                          Ver detalhes
-                        </button>
                       </div>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 text-destructive hover:text-destructive flex-shrink-0"
-                        onClick={() => deleteMutation.mutate(apt.id)}
-                        disabled={deleteMutation.isPending}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                      <div className="flex items-center gap-0.5 flex-shrink-0">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-muted-foreground hover:text-primary"
+                          onClick={() => setDetailApt(apt)}
+                          title="Ver detalhes"
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-destructive hover:text-destructive flex-shrink-0"
+                          onClick={() => deleteMutation.mutate(apt.id)}
+                          disabled={deleteMutation.isPending}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </div>
                   );
                 })}
