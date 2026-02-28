@@ -41,6 +41,7 @@ export function UpcomingAppointments() {
       const { data, error } = await supabase
         .from("appointments")
         .select("*, clients(full_name)")
+        .not("title", "like", "Serviço:%")
         .gte("scheduled_at", new Date().toISOString().split("T")[0])
         .order("scheduled_at", { ascending: true });
 
