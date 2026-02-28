@@ -98,11 +98,16 @@ Deno.serve(async (req) => {
           });
         }
 
+        // Format scheduled date for notification
+        const scheduledDateStr = serviceRequest.scheduled_date
+          ? new Date(serviceRequest.scheduled_date).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" })
+          : "";
+
         // Notify admin
         await supabase.from("client_notifications").insert({
           client_id: clientData.id,
           title: `✅ Data Aceita: ${serviceRequest.service_type}`,
-          message: `${clientData.full_name} aceitou a data proposta para ${serviceRequest.service_type}.`,
+          message: `${clientData.full_name} aceitou a data proposta${scheduledDateStr ? ` (${scheduledDateStr})` : ""} para ${serviceRequest.service_type}.`,
           read: false,
         });
       } else {
@@ -177,10 +182,14 @@ Deno.serve(async (req) => {
         .eq("id", request_id);
       if (updateError) throw updateError;
 
+      const proposedDateStr = serviceRequest.scheduled_date
+        ? new Date(serviceRequest.scheduled_date).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" })
+        : "";
+
       await supabase.from("client_notifications").insert({
         client_id: clientData.id,
         title: `📅 Confirme a Data: ${serviceRequest.service_type}`,
-        message: `${clientData.full_name} aceitou o orçamento, mas a data proposta é diferente. Confirme a nova data.`,
+        message: `${clientData.full_name} aceitou o orçamento, mas a data proposta é diferente${proposedDateStr ? ` (${proposedDateStr})` : ""}. Confirme a nova data.`,
         read: false,
       });
 
@@ -210,11 +219,17 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Format confirmed date for notification
+    const confirmedDate = serviceRequest.scheduled_date || serviceRequest.preferred_date;
+    const confirmedDateStr = confirmedDate
+      ? new Date(confirmedDate).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" })
+      : "";
+
     // Notify admin
     await supabase.from("client_notifications").insert({
       client_id: clientData.id,
       title: `✅ Orçamento Aceito: ${serviceRequest.service_type}`,
-      message: `${clientData.full_name} aceitou o orçamento de R$ ${(serviceRequest.budget_value || 0).toFixed(2).replace(".", ",")} para ${serviceRequest.service_type}.`,
+      message: `${clientData.full_name} aceitou o orçamento de R$ ${(serviceRequest.budget_value || 0).toFixed(2).replace(".", ",")} para ${serviceRequest.service_type}.${confirmedDateStr ? ` Data confirmada: ${confirmedDateStr}.` : ""}`,
       read: false,
     });
 

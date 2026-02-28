@@ -49,6 +49,8 @@ interface ServiceRequest {
   budget_value: number | null;
   budget_sent_at: string | null;
   created_at: string;
+  scheduled_date: string | null;
+  preferred_date: string | null;
 }
 
 export default function GestanteMessages() {
@@ -446,6 +448,20 @@ export default function GestanteMessages() {
                       <p className="text-xl font-bold text-accent my-2">
                         R$ {(budget.budget_value || 0).toFixed(2).replace(".", ",")}
                       </p>
+                      {/* Show date info */}
+                      {budget.scheduled_date && (
+                        <p className="text-xs text-primary font-medium mb-1">
+                          📅 Data: {formatBrazilDateTime(budget.scheduled_date, "dd/MM/yyyy 'às' HH:mm")}
+                          {budget.preferred_date && budget.scheduled_date !== budget.preferred_date && (
+                            <span className="text-orange-600 ml-1">(diferente da sua preferência)</span>
+                          )}
+                        </p>
+                      )}
+                      {!budget.scheduled_date && budget.preferred_date && (
+                        <p className="text-xs text-muted-foreground mb-1">
+                          📅 Data solicitada: {formatBrazilDateTime(budget.preferred_date, "dd/MM/yyyy 'às' HH:mm")}
+                        </p>
+                      )}
                       <p className="text-xs text-muted-foreground mb-3">
                         Sua Doula enviou este orçamento. Deseja aprovar?
                       </p>
