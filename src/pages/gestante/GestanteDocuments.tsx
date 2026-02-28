@@ -8,10 +8,9 @@ import { Badge } from "@/components/ui/badge";
 import { FileText, Download, Eye, CheckCircle, Clock, Loader2 } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { useState } from "react";
+import { useState, lazy, Suspense } from "react";
 import { ContractSignDialog } from "@/components/gestante/ContractSignDialog";
 import { toast } from "sonner";
-import jsPDF from "jspdf";
 
 export default function GestanteDocuments() {
   const { client } = useGestanteAuth();
@@ -32,8 +31,9 @@ export default function GestanteDocuments() {
     enabled: !!client?.id,
   });
 
-  const generatePdf = (contract: any) => {
+  const generatePdf = async (contract: any) => {
     try {
+      const { default: jsPDF } = await import("jspdf");
       const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
       const pageWidth = pdf.internal.pageSize.getWidth();
       const margin = 20;
