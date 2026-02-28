@@ -14,7 +14,8 @@ import {
   LogOut,
   Menu,
   ChevronLeft,
-  Briefcase
+  Briefcase,
+  FileText
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -28,6 +29,7 @@ const navItems = [
   { to: "/gestante", icon: LayoutDashboard, label: "Visão Geral" },
   { to: "/gestante/contracoes", icon: Timer, label: "Contrações" },
   { to: "/gestante/servicos", icon: Briefcase, label: "Serviços" },
+  { to: "/gestante/documentos", icon: FileText, label: "Documentos" },
   { to: "/gestante/mensagens", icon: MessageCircle, label: "Mensagens" },
   { to: "/gestante/diario", icon: BookHeart, label: "Diário" },
   { to: "/gestante/perfil", icon: User, label: "Perfil" },
