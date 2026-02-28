@@ -67,9 +67,6 @@ export default function GestanteServices() {
           {/* Scheduled/accepted services with completion & rating */}
           {client?.id && <ScheduledServicesCard clientId={client.id} organizationId={clientOrganizationId} />}
 
-          {/* Available services to request */}
-          <ServiceRequestButtons />
-
           {/* Pending & other status requests */}
           {pendingRequests && pendingRequests.length > 0 && (
             <div className="space-y-3">
@@ -123,6 +120,9 @@ export default function GestanteServices() {
               <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
             </div>
           )}
+
+          {/* Available services to request */}
+          <ServiceRequestButtons />
         </div>
       </div>
     </GestanteLayout>
