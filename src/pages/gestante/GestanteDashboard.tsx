@@ -16,17 +16,19 @@ import {
   Sparkles,
   Scale,
   Ruler,
-  Clock
+  Clock,
+  Briefcase
 } from "lucide-react";
 import { toast } from "sonner";
 import { format, differenceInDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Tables } from "@/integrations/supabase/types";
+import { useQuery } from "@tanstack/react-query";
 import { getLocalDate } from "@/lib/utils";
 import { GestanteLayout } from "@/components/gestante/GestanteLayout";
 import { useNavigate } from "react-router-dom";
 import { LaborStartButton } from "@/components/gestante/LaborStartButton";
-import { ServiceRequestButtons } from "@/components/gestante/ServiceRequestButton";
+
 import { AppointmentsCard } from "@/components/gestante/AppointmentsCard";
 import { ScheduledServicesCard } from "@/components/gestante/ScheduledServicesCard";
 import { OverduePaymentAlert } from "@/components/gestante/OverduePaymentAlert";
@@ -357,8 +359,22 @@ export default function GestanteDashboard() {
           {/* Scheduled Services */}
           {client?.id && <ScheduledServicesCard clientId={client.id} />}
 
-          {/* Service Request Buttons */}
-          <ServiceRequestButtons />
+          {/* Services Quick Access */}
+          <Card 
+            className="cursor-pointer hover:shadow-md transition-shadow active:scale-[0.98]"
+            onClick={() => navigate("/gestante/servicos")}
+          >
+            <CardContent className="p-4 flex items-center gap-3">
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-100 to-teal-200 flex items-center justify-center">
+                <Briefcase className="h-6 w-6 text-emerald-600" />
+              </div>
+              <div className="flex-1">
+                <p className="font-medium text-sm">Serviços</p>
+                <p className="text-xs text-muted-foreground">Solicitar e acompanhar</p>
+              </div>
+              <ChevronRight className="h-4 w-4 text-muted-foreground" />
+            </CardContent>
+          </Card>
 
           {/* Welcome to Motherhood Message */}
           <Card className="bg-gradient-to-br from-secondary to-primary/5 border-primary/20">
@@ -518,6 +534,23 @@ export default function GestanteDashboard() {
 
         {/* Scheduled Services */}
         {client?.id && <ScheduledServicesCard clientId={client.id} />}
+
+        {/* Services Quick Access */}
+        <Card 
+          className="cursor-pointer hover:shadow-md transition-shadow active:scale-[0.98]"
+          onClick={() => navigate("/gestante/servicos")}
+        >
+          <CardContent className="p-4 flex items-center gap-3">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-100 to-teal-200 flex items-center justify-center">
+              <Briefcase className="h-6 w-6 text-emerald-600" />
+            </div>
+            <div className="flex-1">
+              <p className="font-medium text-sm">Serviços</p>
+              <p className="text-xs text-muted-foreground">Solicitar e acompanhar</p>
+            </div>
+            <ChevronRight className="h-4 w-4 text-muted-foreground" />
+          </CardContent>
+        </Card>
 
         {/* Labor Started - Welcoming Message */}
         {clientData?.labor_started_at && (

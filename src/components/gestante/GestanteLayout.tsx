@@ -13,7 +13,8 @@ import {
   User,
   LogOut,
   Menu,
-  ChevronLeft
+  ChevronLeft,
+  Briefcase
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -25,6 +26,7 @@ interface GestanteLayoutProps {
 
 const navItems = [
   { to: "/gestante", icon: LayoutDashboard, label: "Visão Geral" },
+  { to: "/gestante/servicos", icon: Briefcase, label: "Serviços" },
   { to: "/gestante/diario", icon: BookHeart, label: "Diário" },
   { to: "/gestante/mensagens", icon: MessageCircle, label: "Mensagens" },
   { to: "/gestante/contracoes", icon: Timer, label: "Contrações" },
