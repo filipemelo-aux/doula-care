@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { ContractEditorDialog } from "./ContractEditorDialog";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { ManageAppointmentsDialog } from "./ManageAppointmentsDialog";
+
 import {
   Dialog,
   DialogContent,
@@ -32,7 +32,6 @@ import {
   CreditCard,
   Calendar,
   FileText,
-  Bell,
   KeyRound,
   RotateCcw,
   Loader2,
@@ -40,7 +39,7 @@ import {
 } from "lucide-react";
 import type { Tables } from "@/integrations/supabase/types";
 import { parseISO } from "date-fns";
-import { SendNotificationDialog } from "./SendNotificationDialog";
+
 import { RevenueDetailDialog } from "@/components/financial/RevenueDetailDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -85,8 +84,6 @@ export function ClientDetailsDialog({
   onOpenChange,
   client,
 }: ClientDetailsDialogProps) {
-  const [notificationDialogOpen, setNotificationDialogOpen] = useState(false);
-  const [appointmentsDialogOpen, setAppointmentsDialogOpen] = useState(false);
   const [contractDialogOpen, setContractDialogOpen] = useState(false);
   const [resetting, setResetting] = useState(false);
   const [resetConfirmOpen, setResetConfirmOpen] = useState(false);
@@ -235,47 +232,29 @@ export function ClientDetailsDialog({
             {client.user_id && (
               <>
                 <Separator />
-                <div className="flex items-center gap-2">
+            <div className="flex flex-col gap-2">
                   <Button
                     variant="outline"
-                    size="icon"
-                    className="h-9 w-9"
-                    onClick={() => setNotificationDialogOpen(true)}
-                    title="Enviar Notificação"
-                  >
-                    <Bell className="w-4 h-4" />
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    className="h-9 w-9"
-                    onClick={() => setAppointmentsDialogOpen(true)}
-                    title="Consultas"
-                  >
-                    <Calendar className="w-4 h-4" />
-                  </Button>
-                   <Button
-                    variant="outline"
-                    size="icon"
-                    className="h-9 w-9"
+                    size="sm"
+                    className="gap-2 justify-start"
                     onClick={() => setContractDialogOpen(true)}
-                    title="Contrato"
                   >
                     <FileText className="w-4 h-4" />
+                    Contrato
                   </Button>
                   <Button
                     variant="outline"
-                    size="icon"
-                    className="h-9 w-9 border-amber-300 text-amber-700 hover:bg-amber-50 hover:text-amber-700"
+                    size="sm"
+                    className="gap-2 justify-start border-amber-300 text-amber-700 hover:bg-amber-50 hover:text-amber-700"
                     disabled={resetting}
                     onClick={() => setResetConfirmOpen(true)}
-                    title="Limpar Dados de Teste"
                   >
                     {resetting ? (
                       <Loader2 className="w-4 h-4 animate-spin" />
                     ) : (
                       <RotateCcw className="w-4 h-4" />
                     )}
+                    Limpar dados da usuária
                   </Button>
                 </div>
               </>
@@ -451,20 +430,6 @@ export function ClientDetailsDialog({
         </ScrollArea>
       </DialogContent>
 
-      <SendNotificationDialog
-        open={notificationDialogOpen}
-        onOpenChange={setNotificationDialogOpen}
-        client={client}
-      />
-
-      {client && (
-        <ManageAppointmentsDialog
-          open={appointmentsDialogOpen}
-          onOpenChange={setAppointmentsDialogOpen}
-          clientId={client.id}
-          clientName={client.full_name}
-        />
-      )}
 
       {client && (
         <ContractEditorDialog
@@ -487,11 +452,21 @@ export function ClientDetailsDialog({
       <AlertDialog open={resetConfirmOpen} onOpenChange={setResetConfirmOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Limpar dados de teste?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Serão removidos: contrações, diário da gestante, mensagens, solicitações de serviço, consultas agendadas e dados de parto/nascimento.
-              <br /><br />
-              <strong>Dados financeiros (plano, parcelas e transações) serão mantidos.</strong>
+            <AlertDialogTitle>Limpar dados da usuária?</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="text-sm text-muted-foreground">
+                <p className="mb-2">As seguintes informações serão apagadas permanentemente:</p>
+                <ul className="list-disc pl-5 space-y-1 mb-3">
+                  <li>Contrações registradas</li>
+                  <li>Diário da gestante</li>
+                  <li>Notificações enviadas</li>
+                  <li>Solicitações de serviço</li>
+                  <li>Consultas agendadas</li>
+                  <li>Dados de trabalho de parto e nascimento</li>
+                  <li>Status será resetado para "Gestante"</li>
+                </ul>
+                <p><strong>Dados financeiros (plano, parcelas e transações) serão mantidos.</strong></p>
+              </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
