@@ -107,9 +107,9 @@ export function ContractEditorDialog({
     enabled: open && !!clientId,
   });
 
-  // Fetch linked plan setting (if any)
-  const { data: linkedPlanSetting, isLoading: isLinkedPlanLoading } = useQuery({
-    queryKey: ["client-linked-plan-setting", client?.plan_setting_id],
+  // Fetch linked plan setting by plan_setting_id
+  const { data: planSetting, isLoading: isPlanLoading } = useQuery({
+    queryKey: ["client-plan-setting", client?.plan_setting_id],
     queryFn: async () => {
       if (!client?.plan_setting_id) return null;
       const { data, error } = await supabase
@@ -122,39 +122,6 @@ export function ContractEditorDialog({
     },
     enabled: open && !!client?.plan_setting_id,
   });
-
-  // Fallback: active plans with same plan type (for legacy/misaligned links)
-  const { data: sameTypePlanSettings = [], isLoading: isSameTypePlansLoading } = useQuery({
-    queryKey: ["client-plan-settings-by-type", organizationId, client?.plan],
-    queryFn: async () => {
-      if (!organizationId || !client?.plan) return [];
-      const { data, error } = await supabase
-        .from("plan_settings")
-        .select("*")
-        .eq("organization_id", organizationId)
-        .eq("is_active", true)
-        .eq("plan_type", client.plan)
-        .order("updated_at", { ascending: false });
-      if (error) throw error;
-      return data ?? [];
-    },
-    enabled: open && !!organizationId && !!client?.plan,
-  });
-
-  const planSetting = useMemo(() => {
-    const linkedFeatures = (linkedPlanSetting?.features ?? []).filter(
-      (item): item is string => typeof item === "string" && item.trim().length > 0,
-    );
-    if (linkedFeatures.length > 0) return linkedPlanSetting;
-
-    const sameTypeWithFeatures = sameTypePlanSettings.find(
-      (plan) =>
-        Array.isArray(plan.features) &&
-        plan.features.some((item) => typeof item === "string" && item.trim().length > 0),
-    );
-
-    return sameTypeWithFeatures ?? linkedPlanSetting ?? sameTypePlanSettings[0] ?? null;
-  }, [linkedPlanSetting, sameTypePlanSettings]);
 
   const normalizedPlanFeatures = useMemo(
     () =>
@@ -208,7 +175,7 @@ export function ContractEditorDialog({
   // Build service description from plan features (runs after plan data loads)
   useEffect(() => {
     if (!open || contract) return;
-    if ((client?.plan_setting_id && isLinkedPlanLoading) || (client?.plan && isSameTypePlansLoading)) return;
+    if (client?.plan_setting_id && isPlanLoading) return;
 
     if (normalizedPlanFeatures.length > 0) {
       setServiceDescription(normalizedPlanFeatures.join(";\n") + ".");
@@ -225,9 +192,7 @@ export function ContractEditorDialog({
     open,
     contract,
     client?.plan_setting_id,
-    client?.plan,
-    isLinkedPlanLoading,
-    isSameTypePlansLoading,
+    isPlanLoading,
   ]);
 
   const formatCurrency = (value: number) =>
