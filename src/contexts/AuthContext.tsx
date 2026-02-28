@@ -11,6 +11,7 @@ interface ClientData {
   first_login: boolean;
   status: "tentante" | "gestante" | "lactante" | "outro";
   birth_occurred: boolean;
+  organization_id: string | null;
 }
 
 type OrgStatus = "ativo" | "suspenso" | "pendente";
@@ -73,7 +74,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const { data, error } = await supabase
         .from("clients")
-        .select("id, full_name, first_login, status, birth_occurred")
+        .select("id, full_name, first_login, status, birth_occurred, organization_id")
         .eq("user_id", userId)
         .maybeSingle();
 
@@ -114,21 +115,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const clientData = await fetchClientData(currentSession.user.id);
         setClient(clientData);
         setProfileName(clientData?.full_name || null);
-        try {
-          const { data: profile } = await supabase
-            .from("profiles")
-            .select("organization_id")
-            .eq("user_id", currentSession.user.id)
-            .maybeSingle();
-          const orgId = profile?.organization_id || null;
-          setOrganizationId(orgId);
-          if (orgId) {
-            const { data: org } = await supabase.from("organizations").select("status").eq("id", orgId).single();
-            setOrgStatus((org?.status as OrgStatus) || null);
+        const orgIdFromClient = clientData?.organization_id || null;
+        if (orgIdFromClient) {
+          setOrganizationId(orgIdFromClient);
+          const { data: org } = await supabase.from("organizations").select("status").eq("id", orgIdFromClient).single();
+          setOrgStatus((org?.status as OrgStatus) || null);
+        } else {
+          try {
+            const { data: profile } = await supabase
+              .from("profiles")
+              .select("organization_id")
+              .eq("user_id", currentSession.user.id)
+              .maybeSingle();
+            const orgId = profile?.organization_id || null;
+            setOrganizationId(orgId);
+            if (orgId) {
+              const { data: org } = await supabase.from("organizations").select("status").eq("id", orgId).single();
+              setOrgStatus((org?.status as OrgStatus) || null);
+            }
+          } catch {
+            setOrganizationId(null);
+            setOrgStatus(null);
           }
-        } catch {
-          setOrganizationId(null);
-          setOrgStatus(null);
         }
       } else {
         setClient(null);

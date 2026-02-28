@@ -28,20 +28,21 @@ export function ServiceRequestButtons() {
   const queryClient = useQueryClient();
 
   const isGestante = client?.status === "gestante";
+  const clientOrganizationId = client?.organization_id || organizationId || null;
 
   const { data: services = [] } = useQuery({
-    queryKey: ["client-available-services", organizationId],
+    queryKey: ["client-available-services", client?.id, clientOrganizationId],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("custom_services")
         .select("id, name, icon")
-        .eq("organization_id", organizationId!)
+        .eq("organization_id", clientOrganizationId!)
         .eq("is_active", true)
         .order("name");
       if (error) throw error;
       return (data || []) as CustomService[];
     },
-    enabled: !!organizationId,
+    enabled: !!client?.id && !!clientOrganizationId,
   });
 
   // Filter: gestantes can't see Laserterapia
@@ -57,7 +58,7 @@ export function ServiceRequestButtons() {
         client_id: client.id,
         service_type: service.name,
         status: "pending",
-        organization_id: organizationId || null,
+        organization_id: clientOrganizationId,
       });
       if (error) throw error;
     },
