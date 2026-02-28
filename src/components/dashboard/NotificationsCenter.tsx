@@ -97,6 +97,7 @@ export function NotificationsCenter({ fullPage = false }: NotificationsCenterPro
     client_id: string;
     service_type: string;
     client_name: string;
+    preferred_date?: string | null;
   } | null>(null);
   const [expandedNotifications, setExpandedNotifications] = useState<Set<string>>(new Set());
   const [readContractionClients, setReadContractionClients] = useState<Set<string>>(new Set());
@@ -223,7 +224,7 @@ export function NotificationsCenter({ fullPage = false }: NotificationsCenterPro
     queryFn: async () => {
       const { data, error } = await supabase
         .from("service_requests")
-        .select("id, client_id, service_type, status, created_at, clients(full_name)")
+        .select("id, client_id, service_type, status, created_at, preferred_date, clients(full_name)")
         .eq("status", "pending")
         .order("created_at", { ascending: false });
 
@@ -251,6 +252,7 @@ export function NotificationsCenter({ fullPage = false }: NotificationsCenterPro
       client_id: request.client_id,
       service_type: request.service_type,
       client_name: request.client_name || "Cliente",
+      preferred_date: (request as any).preferred_date || null,
     });
     setBudgetDialogOpen(true);
   };
