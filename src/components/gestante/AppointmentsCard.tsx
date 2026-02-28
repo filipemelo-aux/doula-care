@@ -66,7 +66,7 @@ export function AppointmentsCard({ clientId }: AppointmentsCardProps) {
             return (
               <div
                 key={apt.id}
-                className={`flex items-center gap-3 rounded-lg p-3 ${
+                className={`flex items-start gap-3 rounded-lg p-3 ${
                   today
                     ? "bg-blue-100/80 border border-blue-300"
                     : "bg-background/60"
@@ -81,12 +81,12 @@ export function AppointmentsCard({ clientId }: AppointmentsCardProps) {
                   </p>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="font-medium text-sm truncate">{apt.title}</p>
+                  <p className="font-medium text-sm break-words">{apt.title}</p>
                   <p className="text-xs text-muted-foreground">
                     {format(date, "EEEE, HH:mm", { locale: ptBR })}
                   </p>
                   {apt.notes && (
-                    <p className="text-xs text-muted-foreground mt-0.5 truncate">{apt.notes}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5 break-words">{apt.notes}</p>
                   )}
                 </div>
                 {today && (
