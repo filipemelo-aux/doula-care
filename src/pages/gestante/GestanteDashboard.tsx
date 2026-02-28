@@ -42,7 +42,8 @@ export default function GestanteDashboard() {
   const [unreadMessages, setUnreadMessages] = useState(0);
   const [preferredName, setPreferredName] = useState<string | null>(null);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
-  const { client, user, signOut } = useGestanteAuth();
+  const { client, user, signOut, organizationId: authOrgId } = useGestanteAuth();
+  const clientOrganizationId = client?.organization_id || authOrgId || null;
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -375,7 +376,7 @@ export default function GestanteDashboard() {
           {client?.id && <AppointmentsCard clientId={client.id} />}
 
           {/* Scheduled Services */}
-          {client?.id && <ScheduledServicesCard clientId={client.id} />}
+          {client?.id && <ScheduledServicesCard clientId={client.id} organizationId={clientOrganizationId} />}
 
 
 
@@ -537,7 +538,7 @@ export default function GestanteDashboard() {
         {client?.id && <AppointmentsCard clientId={client.id} />}
 
         {/* Scheduled Services */}
-        {client?.id && <ScheduledServicesCard clientId={client.id} />}
+        {client?.id && <ScheduledServicesCard clientId={client.id} organizationId={clientOrganizationId} />}
 
 
 

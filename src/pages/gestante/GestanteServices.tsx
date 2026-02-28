@@ -37,17 +37,23 @@ const statusConfig: Record<string, { label: string; icon: React.ElementType; cla
 };
 
 export default function GestanteServices() {
-  const { client } = useGestanteAuth();
+  const { client, organizationId } = useGestanteAuth();
+  const clientOrganizationId = client?.organization_id || organizationId || null;
 
   const { data: pendingRequests, isLoading } = useQuery({
     queryKey: ["my-pending-services", client?.id],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from("service_requests")
         .select("id, service_type, status, budget_value, budget_sent_at, responded_at, completed_at, scheduled_date, created_at")
         .eq("client_id", client!.id)
-        .in("status", ["pending", "budget_sent", "rejected"])
-        .order("created_at", { ascending: false });
+        .in("status", ["pending", "budget_sent", "rejected"]);
+
+      if (clientOrganizationId) {
+        query = query.eq("organization_id", clientOrganizationId);
+      }
+
+      const { data, error } = await query.order("created_at", { ascending: false });
       if (error) throw error;
       return data as ServiceRequest[];
     },
@@ -115,7 +121,7 @@ export default function GestanteServices() {
           )}
 
           {/* Scheduled/accepted services with completion & rating */}
-          {client?.id && <ScheduledServicesCard clientId={client.id} />}
+          {client?.id && <ScheduledServicesCard clientId={client.id} organizationId={clientOrganizationId} />}
 
           {/* Available services to request */}
           <ServiceRequestButtons />
