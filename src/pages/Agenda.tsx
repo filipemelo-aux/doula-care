@@ -606,14 +606,16 @@ function AppointmentRow({
           <p className="text-lg font-bold leading-tight">{format(date, "dd")}</p>
         </div>
         <div className="w-0 flex-1 overflow-hidden">
-          <div className="flex items-center gap-2 min-w-0">
-            <p className="block w-full font-medium text-sm min-w-0 flex-1 truncate" title={apt.title}>{apt.title}</p>
-            {today && <Badge variant="secondary" className="text-[10px] px-1.5 py-0 flex-shrink-0">Hoje</Badge>}
-          </div>
+          <p className="block w-full font-medium text-sm truncate" title={apt.title}>{apt.title}</p>
           <p className="text-xs text-muted-foreground truncate">{displayName(apt.clients?.full_name || "")}</p>
           <p className="text-xs text-muted-foreground flex items-center gap-1 min-w-0">
             <Clock className="h-3 w-3 flex-shrink-0" />
             <span className="truncate min-w-0">{format(date, "EEEE, HH:mm", { locale: ptBR })}</span>
+            {today && (
+              <Badge variant="secondary" className="text-[10px] px-1.5 py-0 flex-shrink-0 ml-1">
+                Hoje
+              </Badge>
+            )}
           </p>
           {apt.notes && <p className="text-xs text-muted-foreground truncate mt-0.5">{apt.notes}</p>}
         </div>
