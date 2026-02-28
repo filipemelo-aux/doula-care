@@ -315,21 +315,21 @@ export default function GestanteDashboard() {
 
           {/* Quick Actions for Puérpera */}
           <div className="grid grid-cols-2 gap-3">
-            <Card 
-              className="cursor-pointer hover:shadow-md transition-shadow active:scale-[0.98]"
-              onClick={() => navigate("/gestante/diario")}
-            >
-              <CardContent className="p-4 flex items-center gap-3">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/15 to-primary/25 flex items-center justify-center">
-                  <BookHeart className="h-6 w-6 text-primary" />
-                </div>
-                <div className="flex-1">
-                  <p className="font-medium text-sm">Diário</p>
-                  <p className="text-xs text-muted-foreground">Registrar momento</p>
-                </div>
-                <ChevronRight className="h-4 w-4 text-muted-foreground" />
-              </CardContent>
-            </Card>
+          <Card 
+            className="cursor-pointer hover:shadow-md transition-shadow active:scale-[0.98]"
+            onClick={() => navigate("/gestante/servicos")}
+          >
+            <CardContent className="p-4 flex items-center gap-3">
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-100 to-teal-200 flex items-center justify-center">
+                <Briefcase className="h-6 w-6 text-emerald-600" />
+              </div>
+              <div className="flex-1">
+                <p className="font-medium text-sm">Serviços</p>
+                <p className="text-xs text-muted-foreground">Massagem, yoga, fotografia...</p>
+              </div>
+              <ChevronRight className="h-4 w-4 text-muted-foreground" />
+            </CardContent>
+          </Card>
 
             <Card 
               className="cursor-pointer hover:shadow-md transition-shadow active:scale-[0.98] relative"
@@ -359,22 +359,8 @@ export default function GestanteDashboard() {
           {/* Scheduled Services */}
           {client?.id && <ScheduledServicesCard clientId={client.id} />}
 
-          {/* Services Quick Access */}
-          <Card 
-            className="cursor-pointer hover:shadow-md transition-shadow active:scale-[0.98]"
-            onClick={() => navigate("/gestante/servicos")}
-          >
-            <CardContent className="p-4 flex items-center gap-3">
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-100 to-teal-200 flex items-center justify-center">
-                <Briefcase className="h-6 w-6 text-emerald-600" />
-              </div>
-              <div className="flex-1">
-                <p className="font-medium text-sm">Serviços</p>
-                <p className="text-xs text-muted-foreground">Solicitar e acompanhar</p>
-              </div>
-              <ChevronRight className="h-4 w-4 text-muted-foreground" />
-            </CardContent>
-          </Card>
+
+
 
           {/* Welcome to Motherhood Message */}
           <Card className="bg-gradient-to-br from-secondary to-primary/5 border-primary/20">
@@ -474,15 +460,15 @@ export default function GestanteDashboard() {
         <div className="grid grid-cols-2 gap-3">
           <Card 
             className="cursor-pointer hover:shadow-md transition-shadow active:scale-[0.98]"
-            onClick={() => navigate("/gestante/diario")}
+            onClick={() => navigate("/gestante/servicos")}
           >
             <CardContent className="p-4 flex items-center gap-3">
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/15 to-primary/25 flex items-center justify-center">
-                <BookHeart className="h-6 w-6 text-primary" />
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-100 to-teal-200 flex items-center justify-center">
+                <Briefcase className="h-6 w-6 text-emerald-600" />
               </div>
               <div className="flex-1">
-                <p className="font-medium text-sm">Diário</p>
-                <p className="text-xs text-muted-foreground">Registrar momento</p>
+                <p className="font-medium text-sm">Serviços</p>
+                <p className="text-xs text-muted-foreground">Massagem, yoga, fotografia...</p>
               </div>
               <ChevronRight className="h-4 w-4 text-muted-foreground" />
             </CardContent>
@@ -535,22 +521,8 @@ export default function GestanteDashboard() {
         {/* Scheduled Services */}
         {client?.id && <ScheduledServicesCard clientId={client.id} />}
 
-        {/* Services Quick Access */}
-        <Card 
-          className="cursor-pointer hover:shadow-md transition-shadow active:scale-[0.98]"
-          onClick={() => navigate("/gestante/servicos")}
-        >
-          <CardContent className="p-4 flex items-center gap-3">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-100 to-teal-200 flex items-center justify-center">
-              <Briefcase className="h-6 w-6 text-emerald-600" />
-            </div>
-            <div className="flex-1">
-              <p className="font-medium text-sm">Serviços</p>
-              <p className="text-xs text-muted-foreground">Solicitar e acompanhar</p>
-            </div>
-            <ChevronRight className="h-4 w-4 text-muted-foreground" />
-          </CardContent>
-        </Card>
+
+
 
         {/* Labor Started - Welcoming Message */}
         {clientData?.labor_started_at && (
