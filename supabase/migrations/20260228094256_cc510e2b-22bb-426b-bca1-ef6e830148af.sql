@@ -1,0 +1,1 @@
+ALTER TABLE public.service_requests ADD COLUMN scheduled_date timestamp with time zone;
