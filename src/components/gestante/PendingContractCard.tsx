@@ -53,9 +53,9 @@ export function PendingContractCard() {
               <FileText className={`h-5 w-5 ${isPending ? "text-amber-700" : "text-green-700"}`} />
             </div>
 
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-1">
-                <p className="font-semibold text-sm truncate">{contract.title}</p>
+            <div className="flex-1 min-w-0 overflow-hidden">
+              <div className="flex items-start gap-2 mb-1 flex-wrap">
+                <p className="font-semibold text-sm break-words line-clamp-2">{contract.title}</p>
                 <Badge
                   variant="outline"
                   className={`shrink-0 text-[10px] ${
