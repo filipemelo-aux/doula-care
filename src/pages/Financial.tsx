@@ -113,7 +113,7 @@ export default function Financial() {
   const [paymentTransaction, setPaymentTransaction] = useState<Transaction | null>(null);
   const [editingInstallmentsId, setEditingInstallmentsId] = useState<string | null>(null);
   const [editingInstallmentsValue, setEditingInstallmentsValue] = useState<string>("");
-  const [revenueTab, setRevenueTab] = useState<string>("clientes");
+  const [revenueTab, setRevenueTab] = useState<string>("contratos");
   const [selectedServices, setSelectedServices] = useState<string[]>([]);
   const [customServiceName, setCustomServiceName] = useState<string>("");
   const [showCustomService, setShowCustomService] = useState(false);
@@ -664,7 +664,7 @@ export default function Financial() {
   const serviceTransactions = (transactions?.filter((t) => t.plan_id == null && !t.is_auto_generated) || [])
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
-  const activeTabTransactions = revenueTab === "clientes" ? clientTransactions : serviceTransactions;
+  const activeTabTransactions = revenueTab === "contratos" ? clientTransactions : serviceTransactions;
 
   const filteredTransactions = activeTabTransactions.filter(
     (t) =>
@@ -768,9 +768,9 @@ export default function Financial() {
         <CardHeader className="px-3 py-3 lg:p-6">
           <Tabs value={revenueTab} onValueChange={setRevenueTab} className="w-full">
             <TabsList className="w-full">
-              <TabsTrigger value="clientes" className="flex-1 gap-1.5">
-                <Users className="h-3.5 w-3.5" />
-                Clientes ({clientTransactions.length})
+              <TabsTrigger value="contratos" className="flex-1 gap-1.5">
+                <FileText className="h-3.5 w-3.5" />
+                Contratos ({clientTransactions.length})
               </TabsTrigger>
               <TabsTrigger value="servicos" className="flex-1 gap-1.5">
                 <Wrench className="h-3.5 w-3.5" />
