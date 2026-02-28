@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -24,9 +24,11 @@ import {
   Clock,
   Trash2,
   Wand2,
-  PenLine,
+  Upload,
   Eye,
   Edit,
+  X,
+  Download,
 } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
@@ -73,7 +75,7 @@ export function ContractEditorDialog({
   const [content, setContent] = useState("");
   const [editing, setEditing] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
-  const [mode, setMode] = useState<"auto" | "manual">("auto");
+  const [mode, setMode] = useState<"auto" | "attach">("auto");
   const [previewing, setPreviewing] = useState(false);
 
   // Auto-generate form fields
@@ -81,6 +83,11 @@ export function ContractEditorDialog({
   const [doulaCpf, setDoulaCpf] = useState("");
   const [serviceDescription, setServiceDescription] = useState("");
   const [additionalClauses, setAdditionalClauses] = useState("");
+
+  // File upload state
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
 
   // Fetch existing contract
   const { data: contract, isLoading } = useQuery({
@@ -231,6 +238,42 @@ ${client?.city || "[Cidade]"}, ${todayFormatted}.`;
     setPreviewing(true);
   };
 
+  const uploadFileMutation = useMutation({
+    mutationFn: async () => {
+      if (!selectedFile) throw new Error("Nenhum arquivo selecionado");
+      setUploading(true);
+
+      const ext = selectedFile.name.split(".").pop();
+      const filePath = `${clientId}/${Date.now()}.${ext}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("contracts")
+        .upload(filePath, selectedFile, { upsert: true });
+      if (uploadError) throw uploadError;
+
+      const { data: urlData } = supabase.storage
+        .from("contracts")
+        .getPublicUrl(filePath);
+
+      const { error } = await supabase.from("client_contracts").insert({
+        client_id: clientId,
+        organization_id: organizationId,
+        title,
+        content: "Contrato anexado em arquivo.",
+        file_url: urlData.publicUrl,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["client-contract", clientId] });
+      setEditing(false);
+      setSelectedFile(null);
+      toast.success("Contrato anexado com sucesso!");
+    },
+    onError: () => toast.error("Erro ao anexar contrato"),
+    onSettled: () => setUploading(false),
+  });
+
   const saveMutation = useMutation({
     mutationFn: async () => {
       if (contract) {
@@ -356,16 +399,16 @@ ${client?.city || "[Cidade]"}, ${todayFormatted}.`;
                 {!contract && editing && !previewing && (
                   <Tabs
                     value={mode}
-                    onValueChange={(v) => setMode(v as "auto" | "manual")}
+                    onValueChange={(v) => setMode(v as "auto" | "attach")}
                   >
                     <TabsList className="w-full">
                       <TabsTrigger value="auto" className="flex-1 gap-1.5">
                         <Wand2 className="h-3.5 w-3.5" />
                         Gerar automático
                       </TabsTrigger>
-                      <TabsTrigger value="manual" className="flex-1 gap-1.5">
-                        <PenLine className="h-3.5 w-3.5" />
-                        Escrever manualmente
+                      <TabsTrigger value="attach" className="flex-1 gap-1.5">
+                        <Upload className="h-3.5 w-3.5" />
+                        Anexar contrato
                       </TabsTrigger>
                     </TabsList>
 
@@ -460,7 +503,11 @@ ${client?.city || "[Cidade]"}, ${todayFormatted}.`;
                       </div>
                     </TabsContent>
 
-                    <TabsContent value="manual" className="space-y-3 mt-3">
+                    <TabsContent value="attach" className="space-y-3 mt-3">
+                      <p className="text-xs text-muted-foreground">
+                        Anexe um contrato existente em PDF ou imagem. A cliente poderá
+                        visualizá-lo e assiná-lo digitalmente.
+                      </p>
                       <div>
                         <Label className="text-xs">Título do Contrato</Label>
                         <Input
@@ -469,15 +516,59 @@ ${client?.city || "[Cidade]"}, ${todayFormatted}.`;
                           className="mt-1"
                         />
                       </div>
-                      <div>
-                        <Label className="text-xs">Conteúdo do Contrato</Label>
-                        <Textarea
-                          value={content}
-                          onChange={(e) => setContent(e.target.value)}
-                          className="mt-1 min-h-[300px] text-sm leading-relaxed"
-                          placeholder="Escreva ou cole o contrato aqui..."
-                        />
-                      </div>
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept=".pdf,.jpg,.jpeg,.png,.webp"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            if (file.size > 10 * 1024 * 1024) {
+                              toast.error("Arquivo muito grande. Máximo 10MB.");
+                              return;
+                            }
+                            setSelectedFile(file);
+                          }
+                        }}
+                      />
+                      {!selectedFile ? (
+                        <div
+                          className="rounded-lg border-2 border-dashed border-primary/30 bg-muted/20 p-8 text-center cursor-pointer hover:bg-muted/40 transition-colors"
+                          onClick={() => fileInputRef.current?.click()}
+                        >
+                          <Upload className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
+                          <p className="text-sm font-medium text-muted-foreground">
+                            Clique para selecionar um arquivo
+                          </p>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            PDF, JPG, PNG ou WEBP (máx. 10MB)
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="rounded-lg border bg-muted/20 p-3 flex items-center gap-3">
+                          <FileText className="h-8 w-8 text-primary shrink-0" />
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm font-medium truncate">
+                              {selectedFile.name}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              {(selectedFile.size / 1024).toFixed(0)} KB
+                            </p>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="shrink-0 h-8 w-8 p-0"
+                            onClick={() => {
+                              setSelectedFile(null);
+                              if (fileInputRef.current) fileInputRef.current.value = "";
+                            }}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      )}
                     </TabsContent>
                   </Tabs>
                 )}
@@ -522,6 +613,33 @@ ${client?.city || "[Cidade]"}, ${todayFormatted}.`;
                 {/* Existing contract view (read/edit) */}
                 {contract && (
                   <div className="space-y-3">
+                    {/* File attachment indicator */}
+                    {(contract as any).file_url && (
+                      <div className="rounded-lg border bg-muted/20 p-3 flex items-center gap-3">
+                        <FileText className="h-8 w-8 text-primary shrink-0" />
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-medium">Contrato anexado</p>
+                          <p className="text-xs text-muted-foreground">
+                            Arquivo enviado pela doula
+                          </p>
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="shrink-0 gap-1"
+                          asChild
+                        >
+                          <a
+                            href={(contract as any).file_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            <Download className="h-3.5 w-3.5" />
+                            Abrir
+                          </a>
+                        </Button>
+                      </div>
+                    )}
                     <div>
                       <Label className="text-xs">Título do Contrato</Label>
                       <Input
@@ -531,15 +649,17 @@ ${client?.city || "[Cidade]"}, ${todayFormatted}.`;
                         disabled={!editing || isSigned}
                       />
                     </div>
-                    <div>
-                      <Label className="text-xs">Conteúdo do Contrato</Label>
-                      <Textarea
-                        value={content}
-                        onChange={(e) => setContent(e.target.value)}
-                        className="mt-1 min-h-[300px] text-sm leading-relaxed"
-                        disabled={!editing || isSigned}
-                      />
-                    </div>
+                    {!(contract as any).file_url && (
+                      <div>
+                        <Label className="text-xs">Conteúdo do Contrato</Label>
+                        <Textarea
+                          value={content}
+                          onChange={(e) => setContent(e.target.value)}
+                          className="mt-1 min-h-[300px] text-sm leading-relaxed"
+                          disabled={!editing || isSigned}
+                        />
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -589,17 +709,18 @@ ${client?.city || "[Cidade]"}, ${todayFormatted}.`;
                 Gerar Contrato
               </Button>
             )}
-            {!contract && editing && !previewing && mode === "manual" && (
+            {!contract && editing && !previewing && mode === "attach" && (
               <Button
                 size="sm"
                 className="w-full"
-                disabled={!content.trim() || !title.trim() || saveMutation.isPending}
-                onClick={() => saveMutation.mutate()}
+                disabled={!selectedFile || !title.trim() || uploading}
+                onClick={() => uploadFileMutation.mutate()}
               >
-                {saveMutation.isPending && (
+                {uploading && (
                   <Loader2 className="h-4 w-4 animate-spin mr-1" />
                 )}
-                Criar Contrato
+                <Upload className="h-4 w-4 mr-1" />
+                Anexar Contrato
               </Button>
             )}
             {!contract && editing && previewing && (

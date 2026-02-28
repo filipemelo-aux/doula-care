@@ -117,6 +117,7 @@ export type Database = {
           client_id: string
           content: string
           created_at: string
+          file_url: string | null
           id: string
           organization_id: string | null
           signature_data: string | null
@@ -132,6 +133,7 @@ export type Database = {
           client_id: string
           content: string
           created_at?: string
+          file_url?: string | null
           id?: string
           organization_id?: string | null
           signature_data?: string | null
@@ -147,6 +149,7 @@ export type Database = {
           client_id?: string
           content?: string
           created_at?: string
+          file_url?: string | null
           id?: string
           organization_id?: string | null
           signature_data?: string | null

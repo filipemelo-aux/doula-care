@@ -15,7 +15,7 @@ import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { FileText, PenTool, Type, Loader2, CheckCircle, RotateCcw } from "lucide-react";
+import { FileText, PenTool, Type, Loader2, CheckCircle, RotateCcw, Download } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -190,9 +190,31 @@ export function ContractSignDialog({ open, onOpenChange, contractId }: ContractS
 
         <ScrollArea className="max-h-[calc(95vh-200px)] px-6">
           {/* Contract Content */}
-          <div className="rounded-lg border bg-muted/20 p-4 mb-4">
-            <p className="text-sm leading-relaxed whitespace-pre-wrap">{contract?.content}</p>
-          </div>
+          {(contract as any)?.file_url ? (
+            <div className="rounded-lg border bg-muted/20 p-4 mb-4 flex items-center gap-3">
+              <FileText className="h-8 w-8 text-primary shrink-0" />
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-medium">Contrato anexado</p>
+                <p className="text-xs text-muted-foreground">
+                  Visualize o contrato antes de assinar
+                </p>
+              </div>
+              <Button variant="outline" size="sm" className="shrink-0 gap-1" asChild>
+                <a
+                  href={(contract as any).file_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <Download className="h-3.5 w-3.5" />
+                  Abrir
+                </a>
+              </Button>
+            </div>
+          ) : (
+            <div className="rounded-lg border bg-muted/20 p-4 mb-4">
+              <p className="text-sm leading-relaxed whitespace-pre-wrap">{contract?.content}</p>
+            </div>
+          )}
 
           {/* Already signed view */}
           {isSigned && contract?.signature_data && (
