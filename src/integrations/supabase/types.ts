@@ -889,6 +889,7 @@ export type Database = {
           created_at: string
           id: string
           organization_id: string | null
+          preferred_date: string | null
           rating: number | null
           rating_comment: string | null
           rating_photos: string[] | null
@@ -906,6 +907,7 @@ export type Database = {
           created_at?: string
           id?: string
           organization_id?: string | null
+          preferred_date?: string | null
           rating?: number | null
           rating_comment?: string | null
           rating_photos?: string[] | null
@@ -923,6 +925,7 @@ export type Database = {
           created_at?: string
           id?: string
           organization_id?: string | null
+          preferred_date?: string | null
           rating?: number | null
           rating_comment?: string | null
           rating_photos?: string[] | null

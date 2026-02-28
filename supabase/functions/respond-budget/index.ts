@@ -39,9 +39,9 @@ Deno.serve(async (req) => {
     }
 
     const { request_id, action } = await req.json();
-    if (!request_id || !["accept", "reject"].includes(action)) {
+    if (!request_id || !["accept", "reject", "accept_date", "reject_date"].includes(action)) {
       return new Response(
-        JSON.stringify({ error: "request_id and action (accept/reject) required" }),
+        JSON.stringify({ error: "request_id and action (accept/reject/accept_date/reject_date) required" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -60,6 +60,74 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Handle date acceptance/rejection
+    if (action === "accept_date" || action === "reject_date") {
+      const { data: serviceRequest } = await supabase
+        .from("service_requests")
+        .select("*")
+        .eq("id", request_id)
+        .eq("client_id", clientData.id)
+        .eq("status", "date_proposed")
+        .maybeSingle();
+
+      if (!serviceRequest) {
+        return new Response(JSON.stringify({ error: "Service request not found or not in date_proposed status" }), {
+          status: 404,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      if (action === "accept_date") {
+        // Client accepted proposed date → move to accepted (in progress)
+        const { error: updateError } = await supabase
+          .from("service_requests")
+          .update({ status: "accepted", responded_at: new Date().toISOString() })
+          .eq("id", request_id);
+        if (updateError) throw updateError;
+
+        // Create transaction if budget exists
+        if (serviceRequest.budget_value) {
+          await supabase.from("transactions").insert({
+            client_id: clientData.id,
+            type: "receita",
+            description: `Serviço aprovado: ${serviceRequest.service_type}`,
+            amount: serviceRequest.budget_value,
+            date: new Date().toISOString().split("T")[0],
+            payment_method: "pix",
+            is_auto_generated: true,
+          });
+        }
+
+        // Notify admin
+        await supabase.from("client_notifications").insert({
+          client_id: clientData.id,
+          title: `✅ Data Aceita: ${serviceRequest.service_type}`,
+          message: `${clientData.full_name} aceitou a data proposta para ${serviceRequest.service_type}.`,
+          read: false,
+        });
+      } else {
+        // Client rejected proposed date → back to budget_sent so doula can propose again
+        const { error: updateError } = await supabase
+          .from("service_requests")
+          .update({ status: "budget_sent", scheduled_date: null })
+          .eq("id", request_id);
+        if (updateError) throw updateError;
+
+        await supabase.from("client_notifications").insert({
+          client_id: clientData.id,
+          title: `❌ Data Recusada: ${serviceRequest.service_type}`,
+          message: `${clientData.full_name} recusou a data proposta para ${serviceRequest.service_type}. Proponha uma nova data.`,
+          read: false,
+        });
+      }
+
+      return new Response(
+        JSON.stringify({ success: true, status: action === "accept_date" ? "accepted" : "budget_sent" }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Original budget accept/reject flow
     const { data: serviceRequest } = await supabase
       .from("service_requests")
       .select("*")
@@ -75,18 +143,62 @@ Deno.serve(async (req) => {
       });
     }
 
-    const newStatus = action === "accept" ? "accepted" : "rejected";
+    if (action === "reject") {
+      const { error: updateError } = await supabase
+        .from("service_requests")
+        .update({ status: "rejected", responded_at: new Date().toISOString() })
+        .eq("id", request_id);
+      if (updateError) throw updateError;
 
-    // Update service request
+      await supabase.from("client_notifications").insert({
+        client_id: clientData.id,
+        title: `❌ Orçamento Recusado: ${serviceRequest.service_type}`,
+        message: `${clientData.full_name} recusou o orçamento de R$ ${(serviceRequest.budget_value || 0).toFixed(2).replace(".", ",")} para ${serviceRequest.service_type}.`,
+        read: false,
+      });
+
+      return new Response(
+        JSON.stringify({ success: true, status: "rejected" }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // action === "accept"
+    // Check if doula proposed a different date than client's preferred date
+    const datesDiffer = serviceRequest.preferred_date &&
+      serviceRequest.scheduled_date &&
+      serviceRequest.preferred_date !== serviceRequest.scheduled_date;
+
+    if (datesDiffer) {
+      // Budget accepted but date needs confirmation → date_proposed
+      const { error: updateError } = await supabase
+        .from("service_requests")
+        .update({ status: "date_proposed", responded_at: new Date().toISOString() })
+        .eq("id", request_id);
+      if (updateError) throw updateError;
+
+      await supabase.from("client_notifications").insert({
+        client_id: clientData.id,
+        title: `📅 Confirme a Data: ${serviceRequest.service_type}`,
+        message: `${clientData.full_name} aceitou o orçamento, mas a data proposta é diferente. Confirme a nova data.`,
+        read: false,
+      });
+
+      return new Response(
+        JSON.stringify({ success: true, status: "date_proposed" }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Dates match or no preferred date → directly accepted
     const { error: updateError } = await supabase
       .from("service_requests")
-      .update({ status: newStatus, responded_at: new Date().toISOString() })
+      .update({ status: "accepted", responded_at: new Date().toISOString() })
       .eq("id", request_id);
-
     if (updateError) throw updateError;
 
-    // If accepted, create transaction (using service role - no RLS issue)
-    if (action === "accept" && serviceRequest.budget_value) {
+    // Create transaction
+    if (serviceRequest.budget_value) {
       await supabase.from("transactions").insert({
         client_id: clientData.id,
         type: "receita",
@@ -98,18 +210,16 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Create notification for admin
-    const emoji = action === "accept" ? "✅" : "❌";
-    const actionText = action === "accept" ? "Aceito" : "Recusado";
+    // Notify admin
     await supabase.from("client_notifications").insert({
       client_id: clientData.id,
-      title: `${emoji} Orçamento ${actionText}: ${serviceRequest.service_type}`,
-      message: `${clientData.full_name} ${action === "accept" ? "aceitou" : "recusou"} o orçamento de R$ ${(serviceRequest.budget_value || 0).toFixed(2).replace(".", ",")} para ${serviceRequest.service_type}.`,
+      title: `✅ Orçamento Aceito: ${serviceRequest.service_type}`,
+      message: `${clientData.full_name} aceitou o orçamento de R$ ${(serviceRequest.budget_value || 0).toFixed(2).replace(".", ",")} para ${serviceRequest.service_type}.`,
       read: false,
     });
 
     return new Response(
-      JSON.stringify({ success: true, status: newStatus }),
+      JSON.stringify({ success: true, status: "accepted" }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error) {

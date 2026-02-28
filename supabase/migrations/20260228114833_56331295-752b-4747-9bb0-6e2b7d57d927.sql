@@ -1,0 +1,1 @@
+ALTER TABLE public.service_requests ADD COLUMN preferred_date timestamp with time zone DEFAULT NULL;

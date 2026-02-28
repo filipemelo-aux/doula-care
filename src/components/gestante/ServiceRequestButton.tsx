@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useGestanteAuth } from "@/contexts/GestanteAuthContext";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
 import {
   Dialog,
   DialogContent,
@@ -13,7 +14,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Loader2, ChevronRight, Wrench } from "lucide-react";
+import { Loader2, ChevronRight, Calendar } from "lucide-react";
 
 interface CustomService {
   id: string;
@@ -24,6 +25,7 @@ interface CustomService {
 export function ServiceRequestButtons() {
   const [selectedService, setSelectedService] = useState<CustomService | null>(null);
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
+  const [preferredDate, setPreferredDate] = useState("");
   const { client, organizationId } = useGestanteAuth();
   const queryClient = useQueryClient();
 
@@ -54,22 +56,28 @@ export function ServiceRequestButtons() {
   const requestMutation = useMutation({
     mutationFn: async (service: CustomService) => {
       if (!client?.id) throw new Error("Cliente não encontrado");
-      const { error } = await supabase.from("service_requests").insert({
+      const insertData: Record<string, unknown> = {
         client_id: client.id,
         service_type: service.name,
         status: "pending",
         organization_id: clientOrganizationId,
-      });
+      };
+      if (preferredDate) {
+        insertData.preferred_date = new Date(preferredDate).toISOString();
+      }
+      const { error } = await supabase.from("service_requests").insert(insertData as any);
       if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["service-requests"] });
       queryClient.invalidateQueries({ queryKey: ["my-service-requests"] });
+      queryClient.invalidateQueries({ queryKey: ["my-pending-services"] });
       toast.success("Solicitação enviada com sucesso!", {
         description: "Sua Doula receberá uma notificação e enviará o orçamento.",
       });
       setConfirmDialogOpen(false);
       setSelectedService(null);
+      setPreferredDate("");
     },
     onError: () => {
       toast.error("Erro ao enviar solicitação", {
@@ -80,6 +88,7 @@ export function ServiceRequestButtons() {
 
   const handleServiceClick = (service: CustomService) => {
     setSelectedService(service);
+    setPreferredDate("");
     setConfirmDialogOpen(true);
   };
 
@@ -130,9 +139,26 @@ export function ServiceRequestButtons() {
               )}
             </DialogTitle>
             <DialogDescription>
-              Ao confirmar, sua Doula receberá sua solicitação e enviará um orçamento para sua aprovação.
+              Escolha uma data de preferência para o atendimento. Sua Doula confirmará ou sugerirá outra data.
             </DialogDescription>
           </DialogHeader>
+
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label htmlFor="preferred-date" className="text-sm flex items-center gap-1.5">
+                <Calendar className="h-4 w-4" />
+                Data de preferência
+              </Label>
+              <input
+                id="preferred-date"
+                type="datetime-local"
+                value={preferredDate}
+                onChange={(e) => setPreferredDate(e.target.value)}
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              />
+            </div>
+          </div>
+
           <DialogFooter className="gap-2">
             <Button
               variant="outline"
@@ -143,7 +169,7 @@ export function ServiceRequestButtons() {
             </Button>
             <Button
               onClick={handleConfirmRequest}
-              disabled={requestMutation.isPending}
+              disabled={requestMutation.isPending || !preferredDate}
             >
               {requestMutation.isPending ? (
                 <>
