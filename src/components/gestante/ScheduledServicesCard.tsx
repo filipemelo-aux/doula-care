@@ -31,9 +31,10 @@ interface ServiceRequest {
 
 interface ScheduledServicesCardProps {
   clientId: string;
+  organizationId?: string | null;
 }
 
-export function ScheduledServicesCard({ clientId }: ScheduledServicesCardProps) {
+export function ScheduledServicesCard({ clientId, organizationId }: ScheduledServicesCardProps) {
   const [ratingDialog, setRatingDialog] = useState<ServiceRequest | null>(null);
   const [selectedRating, setSelectedRating] = useState(0);
   const [ratingComment, setRatingComment] = useState("");
@@ -44,15 +45,19 @@ export function ScheduledServicesCard({ clientId }: ScheduledServicesCardProps) 
   const queryClient = useQueryClient();
 
   const { data: services } = useQuery({
-    queryKey: ["scheduled-services", clientId],
+    queryKey: ["scheduled-services", clientId, organizationId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from("service_requests")
         .select("id, service_type, status, budget_value, responded_at, completed_at, scheduled_date, rating, rating_comment, rating_photos")
         .eq("client_id", clientId)
-        .eq("status", "accepted")
-        .order("responded_at", { ascending: false });
+        .eq("status", "accepted");
 
+      if (organizationId) {
+        query = query.eq("organization_id", organizationId);
+      }
+
+      const { data, error } = await query.order("responded_at", { ascending: false });
       if (error) throw error;
       return data as ServiceRequest[];
     },
