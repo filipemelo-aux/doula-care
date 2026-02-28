@@ -325,7 +325,7 @@ export default function GestanteDashboard() {
               </div>
               <div className="flex-1">
                 <p className="font-medium text-sm">Serviços</p>
-                <p className="text-xs text-muted-foreground">Massagem, yoga, fotografia...</p>
+                <p className="text-xs text-muted-foreground">Laserterapia, Taping...</p>
               </div>
               <ChevronRight className="h-4 w-4 text-muted-foreground" />
             </CardContent>
@@ -468,7 +468,7 @@ export default function GestanteDashboard() {
               </div>
               <div className="flex-1">
                 <p className="font-medium text-sm">Serviços</p>
-                <p className="text-xs text-muted-foreground">Massagem, yoga, fotografia...</p>
+                <p className="text-xs text-muted-foreground">Laserterapia, Taping...</p>
               </div>
               <ChevronRight className="h-4 w-4 text-muted-foreground" />
             </CardContent>
