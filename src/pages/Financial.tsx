@@ -435,13 +435,31 @@ export default function Financial() {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
+      // Get the transaction before deleting to check if it's a service
+      const { data: tx } = await supabase
+        .from("transactions")
+        .select("description, client_id, date")
+        .eq("id", id)
+        .single();
+
       const { error } = await supabase.from("transactions").delete().eq("id", id);
       if (error) throw error;
+
+      // If it's a service transaction, also delete matching appointment
+      if (tx && tx.description?.startsWith("Serviço:") && tx.client_id) {
+        await supabase
+          .from("appointments")
+          .delete()
+          .eq("client_id", tx.client_id)
+          .eq("title", tx.description);
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["transactions"] });
       queryClient.invalidateQueries({ queryKey: ["monthly-transactions"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
+      queryClient.invalidateQueries({ queryKey: ["agenda-appointments"] });
+      queryClient.invalidateQueries({ queryKey: ["all-appointments"] });
       toast.success("Receita excluída!");
     },
     onError: () => {
