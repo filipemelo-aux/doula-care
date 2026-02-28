@@ -7,7 +7,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar, Trash2, Loader2, Plus, Clock } from "lucide-react";
+import { Calendar, Trash2, Loader2, Plus, Clock, Info } from "lucide-react";
+import { AppointmentDetailDialog } from "@/components/clients/AppointmentDetailDialog";
 import { format, isToday } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
@@ -32,6 +33,7 @@ export function UpcomingAppointments() {
   const [selectedClient, setSelectedClient] = useState<{ id: string; name: string } | null>(null);
   const [pickClientOpen, setPickClientOpen] = useState(false);
   const [pickedClientId, setPickedClientId] = useState("");
+  const [detailApt, setDetailApt] = useState<AppointmentWithClient | null>(null);
 
   const { data: appointments, isLoading } = useQuery({
     queryKey: ["all-appointments"],
@@ -122,7 +124,7 @@ export function UpcomingAppointments() {
                   return (
                     <div
                       key={apt.id}
-                      className="flex items-center gap-3 rounded-lg p-3 border bg-background hover:bg-muted/30 transition-colors"
+                      className="flex items-center gap-3 rounded-lg p-3 border bg-background hover:bg-muted/30 transition-colors overflow-hidden"
                     >
                       <div className="text-center min-w-[44px]">
                         <p className="text-[10px] text-muted-foreground uppercase">
@@ -130,7 +132,7 @@ export function UpcomingAppointments() {
                         </p>
                         <p className="text-lg font-bold leading-tight">{format(date, "dd")}</p>
                       </div>
-                      <div className="flex-1 min-w-0">
+                      <div className="flex-1 min-w-0 overflow-hidden">
                         <p className="font-medium text-sm truncate">{apt.title}</p>
                         <p className="text-xs text-muted-foreground truncate" title={apt.clients?.full_name}>
                           {displayName(apt.clients?.full_name || "")}
@@ -144,8 +146,14 @@ export function UpcomingAppointments() {
                             </Badge>
                           )}
                         </p>
+                        <button
+                          className="text-[11px] text-primary hover:underline mt-0.5"
+                          onClick={() => setDetailApt(apt)}
+                        >
+                          Ver detalhes
+                        </button>
                       </div>
-                      <div className="flex items-center gap-1">
+                      <div className="flex items-center gap-1 flex-shrink-0">
                         <Button
                           variant="ghost"
                           size="icon"
@@ -208,6 +216,17 @@ export function UpcomingAppointments() {
           clientName={selectedClient.name}
         />
       )}
+
+      <AppointmentDetailDialog
+        open={!!detailApt}
+        onOpenChange={(open) => !open && setDetailApt(null)}
+        appointment={detailApt ? {
+          title: detailApt.title,
+          scheduled_at: detailApt.scheduled_at,
+          notes: detailApt.notes,
+          clientName: detailApt.clients?.full_name,
+        } : null}
+      />
     </>
   );
 }

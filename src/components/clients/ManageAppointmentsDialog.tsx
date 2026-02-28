@@ -12,7 +12,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Calendar, Plus, Trash2, Loader2 } from "lucide-react";
+import { Calendar, Plus, Trash2, Loader2, Info } from "lucide-react";
+import { AppointmentDetailDialog } from "@/components/clients/AppointmentDetailDialog";
 import { toast } from "sonner";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
@@ -41,6 +42,7 @@ export function ManageAppointmentsDialog({
   const [title, setTitle] = useState("");
   const [scheduledAt, setScheduledAt] = useState("");
   const [notes, setNotes] = useState("");
+  const [detailApt, setDetailApt] = useState<Appointment | null>(null);
   const queryClient = useQueryClient();
   const { user, organizationId } = useAuth();
 
@@ -172,7 +174,7 @@ export function ManageAppointmentsDialog({
                   return (
                     <div
                       key={apt.id}
-                      className={`flex items-center gap-3 rounded-lg p-3 border ${
+                      className={`flex items-center gap-3 rounded-lg p-3 border overflow-hidden ${
                         past ? "opacity-50 bg-muted/20" : "bg-background"
                       }`}
                     >
@@ -182,7 +184,7 @@ export function ManageAppointmentsDialog({
                         </p>
                         <p className="text-base font-bold">{format(date, "dd")}</p>
                       </div>
-                      <div className="flex-1 min-w-0">
+                      <div className="flex-1 min-w-0 overflow-hidden">
                         <p className="font-medium text-sm truncate">{apt.title}</p>
                         <p className="text-xs text-muted-foreground">
                           {format(date, "EEEE, HH:mm", { locale: ptBR })}
@@ -190,11 +192,17 @@ export function ManageAppointmentsDialog({
                         {apt.notes && (
                           <p className="text-xs text-muted-foreground truncate">{apt.notes}</p>
                         )}
+                        <button
+                          className="text-[11px] text-primary hover:underline mt-0.5"
+                          onClick={() => setDetailApt(apt)}
+                        >
+                          Ver detalhes
+                        </button>
                       </div>
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-8 w-8 text-destructive hover:text-destructive"
+                        className="h-8 w-8 text-destructive hover:text-destructive flex-shrink-0"
                         onClick={() => deleteMutation.mutate(apt.id)}
                         disabled={deleteMutation.isPending}
                       >
@@ -211,6 +219,16 @@ export function ManageAppointmentsDialog({
             )}
           </div>
         </ScrollArea>
+
+        <AppointmentDetailDialog
+          open={!!detailApt}
+          onOpenChange={(open) => !open && setDetailApt(null)}
+          appointment={detailApt ? {
+            title: detailApt.title,
+            scheduled_at: detailApt.scheduled_at,
+            notes: detailApt.notes,
+          } : null}
+        />
       </DialogContent>
     </Dialog>
   );
