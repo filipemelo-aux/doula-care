@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useGestanteAuth } from "@/contexts/GestanteAuthContext";
 import {
@@ -15,7 +16,7 @@ import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { FileText, PenTool, Type, Loader2, CheckCircle, RotateCcw, Download } from "lucide-react";
+import { FileText, PenTool, Type, Loader2, CheckCircle, RotateCcw, Download, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -29,12 +30,14 @@ interface ContractSignDialogProps {
 export function ContractSignDialog({ open, onOpenChange, contractId }: ContractSignDialogProps) {
   const { client } = useGestanteAuth();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const [hasDrawn, setHasDrawn] = useState(false);
   const [typedName, setTypedName] = useState("");
   const [signMethod, setSignMethod] = useState<"draw" | "type">("draw");
   const [agreed, setAgreed] = useState(false);
+  const [justSigned, setJustSigned] = useState(false);
 
   const { data: contract, isLoading } = useQuery({
     queryKey: ["gestante-contract", contractId],
@@ -152,8 +155,7 @@ export function ContractSignDialog({ open, onOpenChange, contractId }: ContractS
       queryClient.invalidateQueries({ queryKey: ["gestante-pending-contract"] });
       queryClient.invalidateQueries({ queryKey: ["gestante-contracts"] });
       queryClient.invalidateQueries({ queryKey: ["client-contract"] });
-      toast.success("Contrato assinado com sucesso! Você pode acessá-lo a qualquer momento em Documentos.", { duration: 6000 });
-      onOpenChange(false);
+      setJustSigned(true);
     },
     onError: () => toast.error("Erro ao assinar contrato"),
   });
@@ -176,151 +178,188 @@ export function ContractSignDialog({ open, onOpenChange, contractId }: ContractS
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg max-h-[95vh] p-0">
-        <DialogHeader className="px-6 pt-6 pb-2">
-          <DialogTitle className="font-display flex items-center gap-2">
-            <FileText className="h-5 w-5" />
-            {contract?.title || "Contrato"}
-          </DialogTitle>
-          {isSigned && (
-            <Badge className="w-fit border-green-300 bg-green-50 text-green-700" variant="outline">
-              <CheckCircle className="h-3 w-3 mr-1" />
-              Assinado em {contract?.signed_at && format(new Date(contract.signed_at), "dd/MM/yyyy", { locale: ptBR })}
-            </Badge>
-          )}
-        </DialogHeader>
-
-        <ScrollArea className="max-h-[calc(95vh-200px)] px-6">
-          {/* Contract Content */}
-          {(contract as any)?.file_url ? (
-            <div className="rounded-lg border bg-muted/20 p-4 mb-4 flex items-center gap-3">
-              <FileText className="h-8 w-8 text-primary shrink-0" />
-              <div className="min-w-0 flex-1">
-                <p className="text-sm font-medium">Contrato anexado</p>
-                <p className="text-xs text-muted-foreground">
-                  Visualize o contrato antes de assinar
-                </p>
-              </div>
-              <Button variant="outline" size="sm" className="shrink-0 gap-1" asChild>
-                <a
-                  href={(contract as any).file_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <Download className="h-3.5 w-3.5" />
-                  Abrir
-                </a>
+        {justSigned ? (
+          /* Success screen after signing */
+          <div className="px-6 py-10 text-center space-y-4">
+            <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mx-auto">
+              <CheckCircle className="h-8 w-8 text-green-600" />
+            </div>
+            <div>
+              <h3 className="font-display text-lg font-semibold">Contrato assinado!</h3>
+              <p className="text-sm text-muted-foreground mt-2 leading-relaxed">
+                Seu contrato foi assinado com sucesso. Você pode acessá-lo a qualquer momento na área de <strong>Documentos</strong>, onde também é possível baixar o PDF.
+              </p>
+            </div>
+            <div className="flex flex-col gap-2 pt-2">
+              <Button
+                className="w-full gap-2"
+                onClick={() => {
+                  onOpenChange(false);
+                  navigate("/gestante/documentos");
+                }}
+              >
+                <FileText className="h-4 w-4" />
+                Ir para Documentos
+                <ArrowRight className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                className="w-full text-muted-foreground"
+                onClick={() => onOpenChange(false)}
+              >
+                Fechar
               </Button>
             </div>
-          ) : (
-            <div className="rounded-lg border bg-muted/20 p-4 mb-4">
-              <p className="text-sm leading-relaxed whitespace-pre-wrap">{contract?.content}</p>
-            </div>
-          )}
+          </div>
+        ) : (
+          <>
+            <DialogHeader className="px-6 pt-6 pb-2">
+              <DialogTitle className="font-display flex items-center gap-2">
+                <FileText className="h-5 w-5" />
+                {contract?.title || "Contrato"}
+              </DialogTitle>
+              {isSigned && (
+                <Badge className="w-fit border-green-300 bg-green-50 text-green-700" variant="outline">
+                  <CheckCircle className="h-3 w-3 mr-1" />
+                  Assinado em {contract?.signed_at && format(new Date(contract.signed_at), "dd/MM/yyyy", { locale: ptBR })}
+                </Badge>
+              )}
+            </DialogHeader>
 
-          {/* Already signed view */}
-          {isSigned && contract?.signature_data && (
-            <div className="rounded-lg border bg-green-50/50 p-4 space-y-2 mb-4">
-              <p className="text-xs font-medium text-muted-foreground">Sua assinatura:</p>
-              {contract.signature_type === "drawn" ? (
-                <div className="bg-background rounded border p-2 flex justify-center">
-                  <img src={contract.signature_data} alt="Assinatura" className="max-h-24" />
+            <ScrollArea className="max-h-[calc(95vh-200px)] px-6">
+              {/* Contract Content */}
+              {(contract as any)?.file_url ? (
+                <div className="rounded-lg border bg-muted/20 p-4 mb-4 flex items-center gap-3">
+                  <FileText className="h-8 w-8 text-primary shrink-0" />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium">Contrato anexado</p>
+                    <p className="text-xs text-muted-foreground">
+                      Visualize o contrato antes de assinar
+                    </p>
+                  </div>
+                  <Button variant="outline" size="sm" className="shrink-0 gap-1" asChild>
+                    <a
+                      href={(contract as any).file_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <Download className="h-3.5 w-3.5" />
+                      Abrir
+                    </a>
+                  </Button>
                 </div>
               ) : (
-                <p className="font-serif text-3xl text-center italic text-foreground py-2">
-                  {contract.signature_data}
-                </p>
+                <div className="rounded-lg border bg-muted/20 p-4 mb-4">
+                  <p className="text-sm leading-relaxed whitespace-pre-wrap">{contract?.content}</p>
+                </div>
               )}
-            </div>
-          )}
 
-          {/* Signing area */}
-          {!isSigned && (
-            <div className="space-y-4 mb-4">
-              <Tabs value={signMethod} onValueChange={(v) => setSignMethod(v as "draw" | "type")}>
-                <TabsList className="w-full">
-                  <TabsTrigger value="draw" className="flex-1 gap-1.5">
-                    <PenTool className="h-3.5 w-3.5" />
-                    Desenhar
-                  </TabsTrigger>
-                  <TabsTrigger value="type" className="flex-1 gap-1.5">
-                    <Type className="h-3.5 w-3.5" />
-                    Digitar
-                  </TabsTrigger>
-                </TabsList>
-
-                <TabsContent value="draw" className="space-y-2 mt-3">
-                  <Label className="text-xs">Desenhe sua assinatura abaixo:</Label>
-                  <div className="relative rounded-lg border-2 border-dashed border-primary/30 bg-background">
-                    <canvas
-                      ref={canvasRef}
-                      className="w-full h-32 touch-none cursor-crosshair"
-                      onMouseDown={startDraw}
-                      onMouseMove={draw}
-                      onMouseUp={stopDraw}
-                      onMouseLeave={stopDraw}
-                      onTouchStart={startDraw}
-                      onTouchMove={draw}
-                      onTouchEnd={stopDraw}
-                    />
-                    {!hasDrawn && (
-                      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                        <p className="text-sm text-muted-foreground/50">Assine aqui</p>
-                      </div>
-                    )}
-                  </div>
-                  {hasDrawn && (
-                    <Button variant="ghost" size="sm" className="text-xs gap-1" onClick={clearCanvas}>
-                      <RotateCcw className="h-3 w-3" />
-                      Limpar
-                    </Button>
-                  )}
-                </TabsContent>
-
-                <TabsContent value="type" className="space-y-2 mt-3">
-                  <Label className="text-xs">Digite seu nome completo:</Label>
-                  <Input
-                    value={typedName}
-                    onChange={(e) => setTypedName(e.target.value)}
-                    placeholder="Seu nome completo"
-                    className="text-lg"
-                  />
-                  {typedName.trim().length >= 3 && (
-                    <div className="rounded-lg border bg-muted/20 p-4">
-                      <p className="text-xs text-muted-foreground mb-1">Prévia:</p>
-                      <p className="font-serif text-3xl text-center italic">{typedName}</p>
+              {/* Already signed view */}
+              {isSigned && contract?.signature_data && (
+                <div className="rounded-lg border bg-green-50/50 p-4 space-y-2 mb-4">
+                  <p className="text-xs font-medium text-muted-foreground">Sua assinatura:</p>
+                  {contract.signature_type === "drawn" ? (
+                    <div className="bg-background rounded border p-2 flex justify-center">
+                      <img src={contract.signature_data} alt="Assinatura" className="max-h-24" />
                     </div>
+                  ) : (
+                    <p className="font-serif text-3xl text-center italic text-foreground py-2">
+                      {contract.signature_data}
+                    </p>
                   )}
-                </TabsContent>
-              </Tabs>
+                </div>
+              )}
 
-              {/* Agreement checkbox */}
-              <label className="flex items-start gap-2 cursor-pointer select-none">
-                <input
-                  type="checkbox"
-                  checked={agreed}
-                  onChange={(e) => setAgreed(e.target.checked)}
-                  className="mt-0.5 h-4 w-4 rounded border-border accent-primary"
-                />
-                <span className="text-xs text-muted-foreground leading-relaxed">
-                  Declaro que li e concordo com todos os termos deste contrato. Minha assinatura digital tem validade jurídica conforme a legislação vigente.
-                </span>
-              </label>
-            </div>
-          )}
-        </ScrollArea>
+              {/* Signing area */}
+              {!isSigned && (
+                <div className="space-y-4 mb-4">
+                  <Tabs value={signMethod} onValueChange={(v) => setSignMethod(v as "draw" | "type")}>
+                    <TabsList className="w-full">
+                      <TabsTrigger value="draw" className="flex-1 gap-1.5">
+                        <PenTool className="h-3.5 w-3.5" />
+                        Desenhar
+                      </TabsTrigger>
+                      <TabsTrigger value="type" className="flex-1 gap-1.5">
+                        <Type className="h-3.5 w-3.5" />
+                        Digitar
+                      </TabsTrigger>
+                    </TabsList>
 
-        {!isSigned && (
-          <DialogFooter className="px-6 pb-6">
-            <Button
-              className="w-full"
-              disabled={!canSign || signMutation.isPending}
-              onClick={() => signMutation.mutate()}
-            >
-              {signMutation.isPending && <Loader2 className="h-4 w-4 animate-spin mr-1" />}
-              <CheckCircle className="h-4 w-4 mr-1" />
-              Assinar Contrato
-            </Button>
-          </DialogFooter>
+                    <TabsContent value="draw" className="space-y-2 mt-3">
+                      <Label className="text-xs">Desenhe sua assinatura abaixo:</Label>
+                      <div className="relative rounded-lg border-2 border-dashed border-primary/30 bg-background">
+                        <canvas
+                          ref={canvasRef}
+                          className="w-full h-32 touch-none cursor-crosshair"
+                          onMouseDown={startDraw}
+                          onMouseMove={draw}
+                          onMouseUp={stopDraw}
+                          onMouseLeave={stopDraw}
+                          onTouchStart={startDraw}
+                          onTouchMove={draw}
+                          onTouchEnd={stopDraw}
+                        />
+                        {!hasDrawn && (
+                          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                            <p className="text-sm text-muted-foreground/50">Assine aqui</p>
+                          </div>
+                        )}
+                      </div>
+                      {hasDrawn && (
+                        <Button variant="ghost" size="sm" className="text-xs gap-1" onClick={clearCanvas}>
+                          <RotateCcw className="h-3 w-3" />
+                          Limpar
+                        </Button>
+                      )}
+                    </TabsContent>
+
+                    <TabsContent value="type" className="space-y-2 mt-3">
+                      <Label className="text-xs">Digite seu nome completo:</Label>
+                      <Input
+                        value={typedName}
+                        onChange={(e) => setTypedName(e.target.value)}
+                        placeholder="Seu nome completo"
+                        className="text-lg"
+                      />
+                      {typedName.trim().length >= 3 && (
+                        <div className="rounded-lg border bg-muted/20 p-4">
+                          <p className="text-xs text-muted-foreground mb-1">Prévia:</p>
+                          <p className="font-serif text-3xl text-center italic">{typedName}</p>
+                        </div>
+                      )}
+                    </TabsContent>
+                  </Tabs>
+
+                  {/* Agreement checkbox */}
+                  <label className="flex items-start gap-2 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={agreed}
+                      onChange={(e) => setAgreed(e.target.checked)}
+                      className="mt-0.5 h-4 w-4 rounded border-border accent-primary"
+                    />
+                    <span className="text-xs text-muted-foreground leading-relaxed">
+                      Declaro que li e concordo com todos os termos deste contrato. Minha assinatura digital tem validade jurídica conforme a legislação vigente.
+                    </span>
+                  </label>
+                </div>
+              )}
+            </ScrollArea>
+
+            {!isSigned && (
+              <DialogFooter className="px-6 pb-6">
+                <Button
+                  className="w-full"
+                  disabled={!canSign || signMutation.isPending}
+                  onClick={() => signMutation.mutate()}
+                >
+                  {signMutation.isPending && <Loader2 className="h-4 w-4 animate-spin mr-1" />}
+                  <CheckCircle className="h-4 w-4 mr-1" />
+                  Assinar Contrato
+                </Button>
+              </DialogFooter>
+            )}
+          </>
         )}
       </DialogContent>
     </Dialog>
