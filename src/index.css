@@ -279,4 +279,34 @@
   .safe-area-bottom {
     padding-bottom: env(safe-area-inset-bottom, 0);
   }
+
+  /* Dialog content containment — prevent elements from cutting on edges */
+  [data-radix-dialog-content],
+  [data-radix-alert-dialog-content] {
+    box-sizing: border-box;
+    word-break: break-word;
+    overflow-wrap: break-word;
+  }
+
+  [data-radix-dialog-content] > *,
+  [data-radix-alert-dialog-content] > * {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  [data-radix-dialog-content] input,
+  [data-radix-dialog-content] textarea,
+  [data-radix-dialog-content] select,
+  [data-radix-alert-dialog-content] input,
+  [data-radix-alert-dialog-content] textarea,
+  [data-radix-alert-dialog-content] select {
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
+  [data-radix-dialog-content] img,
+  [data-radix-alert-dialog-content] img {
+    max-width: 100%;
+    height: auto;
+  }
 }
