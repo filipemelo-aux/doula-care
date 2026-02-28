@@ -224,13 +224,37 @@ export default function Agenda() {
 
   const deleteMutation = useMutation({
     mutationFn: async (target: { type: string; id: string }) => {
-      const table = target.type === "appointment" ? "appointments" : "service_requests";
-      const { error } = await supabase.from(table).delete().eq("id", target.id);
-      if (error) throw error;
+      if (target.type === "appointment") {
+        // Get the appointment before deleting to check if it's a service
+        const { data: apt } = await supabase
+          .from("appointments")
+          .select("title, client_id")
+          .eq("id", target.id)
+          .single();
+
+        const { error } = await supabase.from("appointments").delete().eq("id", target.id);
+        if (error) throw error;
+
+        // If it's a service appointment, also delete matching transaction
+        if (apt && apt.title?.startsWith("Serviço:") && apt.client_id) {
+          await supabase
+            .from("transactions")
+            .delete()
+            .eq("client_id", apt.client_id)
+            .eq("description", apt.title);
+        }
+      } else {
+        const { error } = await supabase.from("service_requests").delete().eq("id", target.id);
+        if (error) throw error;
+      }
     },
     onSuccess: (_, target) => {
-      queryClient.invalidateQueries({ queryKey: target.type === "appointment" ? ["agenda-appointments"] : ["agenda-services"] });
+      queryClient.invalidateQueries({ queryKey: ["agenda-appointments"] });
+      queryClient.invalidateQueries({ queryKey: ["agenda-services"] });
       queryClient.invalidateQueries({ queryKey: ["all-appointments"] });
+      queryClient.invalidateQueries({ queryKey: ["transactions"] });
+      queryClient.invalidateQueries({ queryKey: ["monthly-transactions"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
       toast.success("Removido com sucesso!");
       setDeleteTarget(null);
     },
