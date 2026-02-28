@@ -62,15 +62,21 @@ export default function GestanteServices() {
 
   // Fetch upcoming service appointments (titles starting with "Serviço:")
   const { data: serviceAppointments } = useQuery({
-    queryKey: ["my-service-appointments", client?.id],
+    queryKey: ["my-service-appointments", client?.id, clientOrganizationId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from("appointments")
         .select("id, title, scheduled_at, notes")
         .eq("client_id", client!.id)
         .like("title", "Serviço:%")
         .gte("scheduled_at", new Date().toISOString())
         .order("scheduled_at", { ascending: true });
+
+      if (clientOrganizationId) {
+        query = query.eq("organization_id", clientOrganizationId);
+      }
+
+      const { data, error } = await query;
       if (error) throw error;
       return data as Appointment[];
     },
