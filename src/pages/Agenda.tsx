@@ -601,14 +601,14 @@ function AppointmentRow({
         <p className="text-[10px] text-muted-foreground uppercase">{format(date, "MMM", { locale: ptBR })}</p>
         <p className="text-lg font-bold leading-tight">{format(date, "dd")}</p>
       </div>
-      <div className="flex-1 min-w-0">
+      <div className="flex-1 min-w-0 overflow-hidden">
         <div className="flex items-center gap-2">
           <p className="font-medium text-sm truncate">{apt.title}</p>
-          {today && <Badge variant="secondary" className="text-[10px] px-1.5 py-0">Hoje</Badge>}
+          {today && <Badge variant="secondary" className="text-[10px] px-1.5 py-0 flex-shrink-0">Hoje</Badge>}
         </div>
         <p className="text-xs text-muted-foreground truncate">{displayName(apt.clients?.full_name || "")}</p>
         <p className="text-xs text-muted-foreground flex items-center gap-1">
-          <Clock className="h-3 w-3" />
+          <Clock className="h-3 w-3 flex-shrink-0" />
           {format(date, "EEEE, HH:mm", { locale: ptBR })}
         </p>
         {apt.notes && <p className="text-xs text-muted-foreground truncate mt-0.5">{apt.notes}</p>}
@@ -646,9 +646,9 @@ function ServiceRow({
       <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
         <Briefcase className="h-5 w-5 text-primary" />
       </div>
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2 flex-wrap">
-          <p className="font-medium text-sm">{svc.service_type}</p>
+      <div className="flex-1 min-w-0 overflow-hidden">
+        <div className="flex items-center gap-2 min-w-0">
+          <p className="font-medium text-sm truncate">{svc.service_type}</p>
           <Badge variant="outline" className={`text-[10px] px-1.5 py-0 ${config.color}`}>{config.label}</Badge>
         </div>
         <p className="text-xs text-muted-foreground truncate">{displayName(svc.clients?.full_name || "")}</p>
