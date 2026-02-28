@@ -21,12 +21,6 @@ interface ServiceRequest {
   created_at: string;
 }
 
-interface Appointment {
-  id: string;
-  title: string;
-  scheduled_at: string;
-  notes: string | null;
-}
 
 const statusConfig: Record<string, { label: string; icon: React.ElementType; className: string }> = {
   pending: { label: "Pendente", icon: Clock, className: "bg-amber-100 text-amber-800 border-amber-300" },
@@ -60,28 +54,6 @@ export default function GestanteServices() {
     enabled: !!client?.id,
   });
 
-  // Fetch upcoming service appointments (titles starting with "Serviço:")
-  const { data: serviceAppointments } = useQuery({
-    queryKey: ["my-service-appointments", client?.id, clientOrganizationId],
-    queryFn: async () => {
-      let query = supabase
-        .from("appointments")
-        .select("id, title, scheduled_at, notes")
-        .eq("client_id", client!.id)
-        .like("title", "Serviço:%")
-        .gte("scheduled_at", new Date().toISOString())
-        .order("scheduled_at", { ascending: true });
-
-      if (clientOrganizationId) {
-        query = query.eq("organization_id", clientOrganizationId);
-      }
-
-      const { data, error } = await query;
-      if (error) throw error;
-      return data as Appointment[];
-    },
-    enabled: !!client?.id,
-  });
 
   return (
     <GestanteLayout>
@@ -92,40 +64,6 @@ export default function GestanteServices() {
         </div>
 
         <div className="space-y-6">
-          {/* Upcoming service appointments */}
-          {serviceAppointments && serviceAppointments.length > 0 && (
-            <div className="space-y-3">
-              <h3 className="font-display font-semibold text-sm text-muted-foreground px-1">
-                Próximos Agendamentos
-              </h3>
-              <div className="space-y-2">
-                {serviceAppointments.map((apt) => {
-                  const serviceName = apt.title.replace("Serviço: ", "");
-                  return (
-                    <Card key={apt.id} className="border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
-                      <CardContent className="p-3">
-                        <div className="flex items-center justify-between mb-1">
-                          <p className="font-medium text-sm">{serviceName}</p>
-                          <Badge variant="outline" className="text-[10px] bg-primary/10 text-primary border-primary/30">
-                            <Calendar className="h-3 w-3 mr-1" />
-                            Agendado
-                          </Badge>
-                        </div>
-                        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                          <Calendar className="h-3.5 w-3.5" />
-                          <span>{formatBrazilDateTime(apt.scheduled_at, "dd/MM/yyyy 'às' HH:mm")}</span>
-                        </div>
-                        {apt.notes && (
-                          <p className="text-xs text-muted-foreground mt-1 italic">{apt.notes}</p>
-                        )}
-                      </CardContent>
-                    </Card>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
           {/* Scheduled/accepted services with completion & rating */}
           {client?.id && <ScheduledServicesCard clientId={client.id} organizationId={clientOrganizationId} />}
 
