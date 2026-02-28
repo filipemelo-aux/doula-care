@@ -184,6 +184,24 @@ export default function GestanteDashboard() {
   const babyAge = calculateBabyAge();
   const isPuerpera = clientData?.status === "lactante" && clientData?.birth_occurred;
 
+  const { data: orgServices } = useQuery({
+    queryKey: ["dashboard-org-services", clientData?.organization_id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("custom_services")
+        .select("name")
+        .eq("organization_id", clientData!.organization_id!)
+        .eq("is_active", true)
+        .limit(2);
+      return data ?? [];
+    },
+    enabled: !!clientData?.organization_id,
+  });
+
+  const serviceExamples = orgServices && orgServices.length > 0
+    ? orgServices.map(s => s.name).join(", ") + "..."
+    : "Solicitar e acompanhar";
+
   const displayName = preferredName || client?.full_name?.split(" ")[0] || "";
 
   if (loading) {
@@ -325,7 +343,7 @@ export default function GestanteDashboard() {
               </div>
               <div className="flex-1">
                 <p className="font-medium text-sm">Serviços</p>
-                <p className="text-xs text-muted-foreground">Laserterapia, Taping...</p>
+                <p className="text-xs text-muted-foreground">{serviceExamples}</p>
               </div>
               <ChevronRight className="h-4 w-4 text-muted-foreground" />
             </CardContent>
@@ -468,7 +486,7 @@ export default function GestanteDashboard() {
               </div>
               <div className="flex-1">
                 <p className="font-medium text-sm">Serviços</p>
-                <p className="text-xs text-muted-foreground">Laserterapia, Taping...</p>
+                <p className="text-xs text-muted-foreground">{serviceExamples}</p>
               </div>
               <ChevronRight className="h-4 w-4 text-muted-foreground" />
             </CardContent>
