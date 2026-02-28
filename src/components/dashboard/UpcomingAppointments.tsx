@@ -124,7 +124,7 @@ export function UpcomingAppointments() {
                   return (
                     <div
                       key={apt.id}
-                      className="flex items-center gap-3 rounded-lg p-3 border bg-background hover:bg-muted/30 transition-colors overflow-hidden"
+                      className="flex w-full max-w-full min-w-0 items-center gap-3 rounded-lg p-3 border bg-background hover:bg-muted/30 transition-colors overflow-hidden"
                     >
                       <div className="text-center min-w-[44px]">
                         <p className="text-[10px] text-muted-foreground uppercase">
@@ -132,14 +132,14 @@ export function UpcomingAppointments() {
                         </p>
                         <p className="text-lg font-bold leading-tight">{format(date, "dd")}</p>
                       </div>
-                      <div className="flex-1 min-w-0 overflow-hidden">
-                        <p className="font-medium text-sm truncate" title={apt.title}>{apt.title}</p>
+                      <div className="w-0 flex-1 overflow-hidden">
+                        <p className="block w-full font-medium text-sm truncate" title={apt.title}>{apt.title}</p>
                         <p className="text-xs text-muted-foreground truncate" title={apt.clients?.full_name}>
                           {displayName(apt.clients?.full_name || "")}
                         </p>
-                        <p className="text-xs text-muted-foreground flex items-center gap-1">
+                        <p className="text-xs text-muted-foreground flex items-center gap-1 min-w-0">
                           <Clock className="h-3 w-3 flex-shrink-0" />
-                          {format(date, "EEEE, HH:mm", { locale: ptBR })}
+                          <span className="truncate min-w-0">{format(date, "EEEE, HH:mm", { locale: ptBR })}</span>
                           {today && (
                             <Badge variant="secondary" className="text-[10px] px-1.5 py-0 flex-shrink-0 ml-1">
                               Hoje

@@ -174,7 +174,7 @@ export function ManageAppointmentsDialog({
                   return (
                     <div
                       key={apt.id}
-                      className={`flex items-center gap-3 rounded-lg p-3 border overflow-hidden ${
+                      className={`flex w-full max-w-full min-w-0 items-center gap-3 rounded-lg p-3 border overflow-hidden ${
                         past ? "opacity-50 bg-muted/20" : "bg-background"
                       }`}
                     >
@@ -184,8 +184,8 @@ export function ManageAppointmentsDialog({
                         </p>
                         <p className="text-base font-bold">{format(date, "dd")}</p>
                       </div>
-                      <div className="flex-1 min-w-0 overflow-hidden">
-                        <p className="font-medium text-sm truncate" title={apt.title}>{apt.title}</p>
+                      <div className="w-0 flex-1 overflow-hidden">
+                        <p className="block w-full font-medium text-sm truncate" title={apt.title}>{apt.title}</p>
                         <p className="text-xs text-muted-foreground">
                           {format(date, "EEEE, HH:mm", { locale: ptBR })}
                         </p>
