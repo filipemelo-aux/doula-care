@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -16,7 +16,18 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import { FileText, Loader2, CheckCircle, Clock, Trash2, Plus, Eye } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  FileText,
+  Loader2,
+  CheckCircle,
+  Clock,
+  Trash2,
+  Wand2,
+  PenLine,
+  Eye,
+  Edit,
+} from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -30,23 +41,48 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import type { Tables } from "@/integrations/supabase/types";
+
+type Client = Tables<"clients">;
 
 interface ContractEditorDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   clientId: string;
   clientName: string;
+  client?: Client | null;
 }
 
-export function ContractEditorDialog({ open, onOpenChange, clientId, clientName }: ContractEditorDialogProps) {
-  const { organizationId } = useAuth();
+const paymentMethodLabels: Record<string, string> = {
+  pix: "Pix",
+  cartao: "Cartão de Crédito/Débito",
+  dinheiro: "Dinheiro",
+  transferencia: "Transferência Bancária",
+};
+
+export function ContractEditorDialog({
+  open,
+  onOpenChange,
+  clientId,
+  clientName,
+  client,
+}: ContractEditorDialogProps) {
+  const { organizationId, profileName } = useAuth();
   const queryClient = useQueryClient();
-  const [title, setTitle] = useState("Contrato de Prestação de Serviços");
+  const [title, setTitle] = useState("Contrato de Prestação de Serviços de Doula");
   const [content, setContent] = useState("");
   const [editing, setEditing] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
-  const [viewingSignature, setViewingSignature] = useState(false);
+  const [mode, setMode] = useState<"auto" | "manual">("auto");
+  const [previewing, setPreviewing] = useState(false);
 
+  // Auto-generate form fields
+  const [doulaName, setDoulaName] = useState("");
+  const [doulaCpf, setDoulaCpf] = useState("");
+  const [serviceDescription, setServiceDescription] = useState("");
+  const [additionalClauses, setAdditionalClauses] = useState("");
+
+  // Fetch existing contract
   const { data: contract, isLoading } = useQuery({
     queryKey: ["client-contract", clientId],
     queryFn: async () => {
@@ -63,17 +99,137 @@ export function ContractEditorDialog({ open, onOpenChange, clientId, clientName 
     enabled: open && !!clientId,
   });
 
+  // Fetch plan settings for this client's plan
+  const { data: planSetting } = useQuery({
+    queryKey: ["client-plan-setting", client?.plan_setting_id],
+    queryFn: async () => {
+      if (!client?.plan_setting_id) return null;
+      const { data, error } = await supabase
+        .from("plan_settings")
+        .select("*")
+        .eq("id", client.plan_setting_id)
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    enabled: open && !!client?.plan_setting_id,
+  });
+
+  // Fetch organization info
+  const { data: org } = useQuery({
+    queryKey: ["org-info", organizationId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("organizations")
+        .select("name, nome_exibicao")
+        .eq("id", organizationId!)
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    enabled: open && !!organizationId,
+  });
+
+  // Set doula name from profile
+  useEffect(() => {
+    if (profileName && !doulaName) {
+      setDoulaName(profileName);
+    }
+  }, [profileName]);
+
+  // Build service description from plan features
+  useEffect(() => {
+    if (planSetting?.features && planSetting.features.length > 0 && !serviceDescription) {
+      setServiceDescription(planSetting.features.join(";\n") + ".");
+    }
+  }, [planSetting]);
+
   useEffect(() => {
     if (contract) {
       setTitle(contract.title);
       setContent(contract.content);
       setEditing(false);
+      setPreviewing(false);
     } else {
-      setTitle("Contrato de Prestação de Serviços");
+      setTitle("Contrato de Prestação de Serviços de Doula");
       setContent("");
       setEditing(true);
+      setPreviewing(false);
     }
   }, [contract]);
+
+  const formatCurrency = (value: number) =>
+    new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
+
+  const todayFormatted = format(new Date(), "dd 'de' MMMM 'de' yyyy", { locale: ptBR });
+
+  const clientAddress = useMemo(() => {
+    if (!client) return "Endereço não informado";
+    const parts = [client.street, client.number, client.neighborhood, client.city, client.state, client.zip_code].filter(Boolean);
+    return parts.length > 0 ? parts.join(", ") : "Endereço não informado";
+  }, [client]);
+
+  const generateContract = () => {
+    const planName = planSetting?.name || "Não especificado";
+    const planValue = client?.plan_value ? formatCurrency(Number(client.plan_value)) : "A definir";
+    const paymentMethod = client?.payment_method ? paymentMethodLabels[client.payment_method] || client.payment_method : "A definir";
+    const clientCpf = client?.cpf || "Não informado";
+    const orgName = org?.nome_exibicao || org?.name || doulaName;
+
+    const generatedContent = `CONTRATO DE PRESTAÇÃO DE SERVIÇOS DE DOULA
+
+CONTRATANTE: ${clientName}
+CPF: ${clientCpf}
+Endereço: ${clientAddress}
+${client?.phone ? `Telefone: ${client.phone}` : ""}
+
+CONTRATADA: ${doulaName}
+${doulaCpf ? `CPF: ${doulaCpf}` : ""}
+${orgName !== doulaName ? `Empresa: ${orgName}` : ""}
+
+CLÁUSULA PRIMEIRA — DO OBJETO
+O presente contrato tem por objeto a prestação de serviços de acompanhamento como Doula, conforme o plano "${planName}", abrangendo os seguintes serviços:
+
+${serviceDescription || "Serviços conforme plano contratado."}
+
+CLÁUSULA SEGUNDA — DO VALOR E PAGAMENTO
+O valor total dos serviços é de ${planValue}, a ser pago via ${paymentMethod}.
+
+Parágrafo único: O não pagamento nas datas acordadas poderá acarretar a suspensão dos serviços até a regularização.
+
+CLÁUSULA TERCEIRA — DAS OBRIGAÇÕES DA CONTRATADA
+a) Prestar os serviços descritos na Cláusula Primeira com dedicação, ética e respeito;
+b) Manter sigilo sobre todas as informações pessoais e clínicas da contratante;
+c) Estar disponível nos horários previamente acordados;
+d) Fornecer orientações baseadas em evidências científicas atualizadas.
+
+CLÁUSULA QUARTA — DAS OBRIGAÇÕES DA CONTRATANTE
+a) Fornecer informações verdadeiras sobre seu estado de saúde;
+b) Efetuar os pagamentos nas datas acordadas;
+c) Comunicar com antecedência eventuais cancelamentos ou remarcações;
+d) Seguir as orientações fornecidas pela doula dentro de suas possibilidades.
+
+CLÁUSULA QUINTA — DO CANCELAMENTO E RESCISÃO
+a) A contratante poderá cancelar o contrato a qualquer momento, sendo devidos os valores proporcionais aos serviços já prestados;
+b) A contratada poderá rescindir o contrato em caso de inadimplência superior a 30 (trinta) dias ou impossibilidade de continuidade;
+c) Em caso de cancelamento por parte da contratante, não haverá reembolso dos valores já pagos referentes a serviços prestados.
+
+CLÁUSULA SEXTA — DA RESPONSABILIDADE
+A doula não realiza procedimentos médicos, diagnósticos ou prescrições. Seu papel é de suporte emocional, físico e informativo. Decisões médicas são de responsabilidade da equipe de saúde e da contratante.
+
+CLÁUSULA SÉTIMA — DA CONFIDENCIALIDADE
+Todas as informações compartilhadas durante o acompanhamento são confidenciais e não serão divulgadas a terceiros sem autorização expressa da contratante, exceto em casos previstos por lei.
+${additionalClauses ? `\n${additionalClauses}\n` : ""}
+CLÁUSULA OITAVA — DO FORO
+Fica eleito o foro da comarca de ${client?.city || "[cidade]"}, ${client?.state || "[estado]"}, para dirimir quaisquer dúvidas oriundas deste contrato.
+
+E por estarem de acordo, as partes assinam o presente contrato digitalmente.
+
+${client?.city || "[Cidade]"}, ${todayFormatted}.`;
+
+    setContent(generatedContent);
+    setPreviewing(true);
+  };
 
   const saveMutation = useMutation({
     mutationFn: async () => {
@@ -98,6 +254,7 @@ export function ContractEditorDialog({ open, onOpenChange, clientId, clientName 
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["client-contract", clientId] });
       setEditing(false);
+      setPreviewing(false);
       toast.success(contract ? "Contrato atualizado!" : "Contrato criado!");
     },
     onError: () => toast.error("Erro ao salvar contrato"),
@@ -114,9 +271,10 @@ export function ContractEditorDialog({ open, onOpenChange, clientId, clientName 
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["client-contract", clientId] });
-      setTitle("Contrato de Prestação de Serviços");
+      setTitle("Contrato de Prestação de Serviços de Doula");
       setContent("");
       setEditing(true);
+      setPreviewing(false);
       setDeleteConfirmOpen(false);
       toast.success("Contrato removido!");
     },
@@ -128,29 +286,30 @@ export function ContractEditorDialog({ open, onOpenChange, clientId, clientName 
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-lg max-h-[90vh]">
-          <DialogHeader>
+        <DialogContent className="max-w-lg max-h-[90vh] p-0">
+          <DialogHeader className="px-6 pt-6 pb-2">
             <DialogTitle className="font-display flex items-center gap-2">
               <FileText className="h-5 w-5" />
               Contrato — {clientName}
             </DialogTitle>
           </DialogHeader>
 
-          <ScrollArea className="max-h-[calc(90vh-160px)] pr-2">
+          <ScrollArea className="max-h-[calc(90vh-160px)] px-6">
             {isLoading ? (
               <div className="flex items-center justify-center py-12">
                 <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
               </div>
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-4 pb-4">
                 {/* Status Badge */}
                 {contract && (
                   <div className="flex items-center justify-between">
                     <Badge
                       variant="outline"
-                      className={isSigned
-                        ? "border-green-300 bg-green-50 text-green-700"
-                        : "border-amber-300 bg-amber-50 text-amber-700"
+                      className={
+                        isSigned
+                          ? "border-green-300 bg-green-50 text-green-700"
+                          : "border-amber-300 bg-amber-50 text-amber-700"
                       }
                     >
                       {isSigned ? (
@@ -161,7 +320,10 @@ export function ContractEditorDialog({ open, onOpenChange, clientId, clientName 
                     </Badge>
                     {isSigned && contract.signed_at && (
                       <span className="text-xs text-muted-foreground">
-                        Assinado em {format(new Date(contract.signed_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+                        Assinado em{" "}
+                        {format(new Date(contract.signed_at), "dd/MM/yyyy 'às' HH:mm", {
+                          locale: ptBR,
+                        })}
                       </span>
                     )}
                   </div>
@@ -170,13 +332,15 @@ export function ContractEditorDialog({ open, onOpenChange, clientId, clientName 
                 {/* Signature Preview */}
                 {isSigned && contract?.signature_data && (
                   <div className="rounded-lg border bg-muted/30 p-3 space-y-2">
-                    <p className="text-xs font-medium text-muted-foreground">Assinatura da cliente:</p>
+                    <p className="text-xs font-medium text-muted-foreground">
+                      Assinatura da cliente:
+                    </p>
                     {contract.signature_type === "drawn" ? (
                       <div className="bg-background rounded border p-2 flex justify-center">
                         <img src={contract.signature_data} alt="Assinatura" className="max-h-20" />
                       </div>
                     ) : (
-                      <p className="font-signature text-2xl text-center italic text-foreground">
+                      <p className="font-serif text-2xl text-center italic text-foreground">
                         {contract.signature_data}
                       </p>
                     )}
@@ -188,45 +352,202 @@ export function ContractEditorDialog({ open, onOpenChange, clientId, clientName 
                   </div>
                 )}
 
-                {/* Title */}
-                <div>
-                  <Label className="text-xs">Título do Contrato</Label>
-                  <Input
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    className="mt-1"
-                    disabled={!editing || isSigned}
-                  />
-                </div>
+                {/* Mode selector - only for new contracts */}
+                {!contract && editing && !previewing && (
+                  <Tabs
+                    value={mode}
+                    onValueChange={(v) => setMode(v as "auto" | "manual")}
+                  >
+                    <TabsList className="w-full">
+                      <TabsTrigger value="auto" className="flex-1 gap-1.5">
+                        <Wand2 className="h-3.5 w-3.5" />
+                        Gerar automático
+                      </TabsTrigger>
+                      <TabsTrigger value="manual" className="flex-1 gap-1.5">
+                        <PenLine className="h-3.5 w-3.5" />
+                        Escrever manualmente
+                      </TabsTrigger>
+                    </TabsList>
 
-                {/* Content */}
-                <div>
-                  <Label className="text-xs">Conteúdo do Contrato</Label>
-                  <Textarea
-                    value={content}
-                    onChange={(e) => setContent(e.target.value)}
-                    className="mt-1 min-h-[300px] text-sm leading-relaxed"
-                    placeholder={`Escreva o contrato aqui...
+                    <TabsContent value="auto" className="space-y-3 mt-3">
+                      <p className="text-xs text-muted-foreground">
+                        Preencha os campos abaixo. Os dados da cliente e do plano já estão
+                        preenchidos automaticamente.
+                      </p>
 
-Exemplo:
-CONTRATO DE PRESTAÇÃO DE SERVIÇOS DE DOULA
+                      <div>
+                        <Label className="text-xs">Nome da Doula / Contratada</Label>
+                        <Input
+                          value={doulaName}
+                          onChange={(e) => setDoulaName(e.target.value)}
+                          className="mt-1"
+                          placeholder="Seu nome completo"
+                        />
+                      </div>
 
-CONTRATANTE: ${clientName}
-CONTRATADA: [Seu nome]
+                      <div>
+                        <Label className="text-xs">CPF da Doula (opcional)</Label>
+                        <Input
+                          value={doulaCpf}
+                          onChange={(e) => setDoulaCpf(e.target.value)}
+                          className="mt-1"
+                          placeholder="000.000.000-00"
+                        />
+                      </div>
 
-CLÁUSULA PRIMEIRA - DO OBJETO
-O presente contrato tem por objeto a prestação de serviços de acompanhamento como Doula durante a gestação, parto e pós-parto.
+                      <div>
+                        <Label className="text-xs">Serviços inclusos no contrato</Label>
+                        <Textarea
+                          value={serviceDescription}
+                          onChange={(e) => setServiceDescription(e.target.value)}
+                          className="mt-1 min-h-[100px] text-sm"
+                          placeholder="Descreva os serviços inclusos..."
+                        />
+                        {planSetting?.features && planSetting.features.length > 0 && (
+                          <p className="text-[10px] text-muted-foreground mt-1">
+                            Preenchido com os serviços do plano "{planSetting.name}"
+                          </p>
+                        )}
+                      </div>
 
-CLÁUSULA SEGUNDA - DOS SERVIÇOS
-...`}
-                    disabled={!editing || isSigned}
-                  />
-                </div>
+                      <div>
+                        <Label className="text-xs">Cláusulas adicionais (opcional)</Label>
+                        <Textarea
+                          value={additionalClauses}
+                          onChange={(e) => setAdditionalClauses(e.target.value)}
+                          className="mt-1 min-h-[80px] text-sm"
+                          placeholder="Adicione cláusulas extras se necessário..."
+                        />
+                      </div>
+
+                      {/* Summary of auto-filled data */}
+                      <div className="rounded-lg border bg-muted/20 p-3 space-y-1 text-xs">
+                        <p className="font-medium text-muted-foreground mb-2">
+                          Dados preenchidos automaticamente:
+                        </p>
+                        <p>
+                          <span className="text-muted-foreground">Cliente:</span>{" "}
+                          {clientName}
+                        </p>
+                        {client?.cpf && (
+                          <p>
+                            <span className="text-muted-foreground">CPF:</span> {client.cpf}
+                          </p>
+                        )}
+                        <p>
+                          <span className="text-muted-foreground">Endereço:</span>{" "}
+                          {clientAddress}
+                        </p>
+                        {planSetting && (
+                          <p>
+                            <span className="text-muted-foreground">Plano:</span>{" "}
+                            {planSetting.name}
+                          </p>
+                        )}
+                        {client?.plan_value && (
+                          <p>
+                            <span className="text-muted-foreground">Valor:</span>{" "}
+                            {formatCurrency(Number(client.plan_value))}
+                          </p>
+                        )}
+                        {client?.payment_method && (
+                          <p>
+                            <span className="text-muted-foreground">Pagamento:</span>{" "}
+                            {paymentMethodLabels[client.payment_method] ||
+                              client.payment_method}
+                          </p>
+                        )}
+                      </div>
+                    </TabsContent>
+
+                    <TabsContent value="manual" className="space-y-3 mt-3">
+                      <div>
+                        <Label className="text-xs">Título do Contrato</Label>
+                        <Input
+                          value={title}
+                          onChange={(e) => setTitle(e.target.value)}
+                          className="mt-1"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-xs">Conteúdo do Contrato</Label>
+                        <Textarea
+                          value={content}
+                          onChange={(e) => setContent(e.target.value)}
+                          className="mt-1 min-h-[300px] text-sm leading-relaxed"
+                          placeholder="Escreva ou cole o contrato aqui..."
+                        />
+                      </div>
+                    </TabsContent>
+                  </Tabs>
+                )}
+
+                {/* Preview of generated contract */}
+                {!contract && editing && previewing && (
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <p className="text-xs font-medium text-muted-foreground flex items-center gap-1">
+                        <Eye className="h-3 w-3" />
+                        Prévia do contrato gerado
+                      </p>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-xs gap-1 h-7"
+                        onClick={() => setPreviewing(false)}
+                      >
+                        <Edit className="h-3 w-3" />
+                        Voltar e editar
+                      </Button>
+                    </div>
+                    <div>
+                      <Label className="text-xs">Título</Label>
+                      <Input
+                        value={title}
+                        onChange={(e) => setTitle(e.target.value)}
+                        className="mt-1"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs">Conteúdo (você pode editar antes de salvar)</Label>
+                      <Textarea
+                        value={content}
+                        onChange={(e) => setContent(e.target.value)}
+                        className="mt-1 min-h-[350px] text-sm leading-relaxed"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* Existing contract view (read/edit) */}
+                {contract && (
+                  <div className="space-y-3">
+                    <div>
+                      <Label className="text-xs">Título do Contrato</Label>
+                      <Input
+                        value={title}
+                        onChange={(e) => setTitle(e.target.value)}
+                        className="mt-1"
+                        disabled={!editing || isSigned}
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs">Conteúdo do Contrato</Label>
+                      <Textarea
+                        value={content}
+                        onChange={(e) => setContent(e.target.value)}
+                        className="mt-1 min-h-[300px] text-sm leading-relaxed"
+                        disabled={!editing || isSigned}
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </ScrollArea>
 
-          <DialogFooter className="flex-row gap-2">
+          <DialogFooter className="flex-row gap-2 px-6 pb-6">
+            {/* Existing contract actions */}
             {contract && !isSigned && !editing && (
               <>
                 <Button
@@ -238,22 +559,61 @@ CLÁUSULA SEGUNDA - DOS SERVIÇOS
                   <Trash2 className="h-3.5 w-3.5 mr-1" />
                   Excluir
                 </Button>
-                <Button
-                  size="sm"
-                  onClick={() => setEditing(true)}
-                >
+                <Button size="sm" onClick={() => setEditing(true)}>
                   Editar
                 </Button>
               </>
             )}
-            {editing && !isSigned && (
+            {contract && editing && !isSigned && (
               <Button
                 size="sm"
                 disabled={!content.trim() || !title.trim() || saveMutation.isPending}
                 onClick={() => saveMutation.mutate()}
               >
-                {saveMutation.isPending && <Loader2 className="h-4 w-4 animate-spin mr-1" />}
-                {contract ? "Salvar alterações" : "Criar Contrato"}
+                {saveMutation.isPending && (
+                  <Loader2 className="h-4 w-4 animate-spin mr-1" />
+                )}
+                Salvar alterações
+              </Button>
+            )}
+
+            {/* New contract actions */}
+            {!contract && editing && !previewing && mode === "auto" && (
+              <Button
+                size="sm"
+                className="w-full"
+                disabled={!doulaName.trim()}
+                onClick={generateContract}
+              >
+                <Wand2 className="h-4 w-4 mr-1" />
+                Gerar Contrato
+              </Button>
+            )}
+            {!contract && editing && !previewing && mode === "manual" && (
+              <Button
+                size="sm"
+                className="w-full"
+                disabled={!content.trim() || !title.trim() || saveMutation.isPending}
+                onClick={() => saveMutation.mutate()}
+              >
+                {saveMutation.isPending && (
+                  <Loader2 className="h-4 w-4 animate-spin mr-1" />
+                )}
+                Criar Contrato
+              </Button>
+            )}
+            {!contract && editing && previewing && (
+              <Button
+                size="sm"
+                className="w-full"
+                disabled={!content.trim() || !title.trim() || saveMutation.isPending}
+                onClick={() => saveMutation.mutate()}
+              >
+                {saveMutation.isPending && (
+                  <Loader2 className="h-4 w-4 animate-spin mr-1" />
+                )}
+                <CheckCircle className="h-4 w-4 mr-1" />
+                Salvar Contrato
               </Button>
             )}
           </DialogFooter>
