@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -162,8 +162,20 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
   }, [selectedPlanId, planSettings]);
 
   // Update plan value when plan changes (not for avulso)
+  const prevPlanIdRef = useRef<string | null>(null);
   useEffect(() => {
-    if (planSettings && selectedPlanId && !client) {
+    if (planSettings && selectedPlanId) {
+      // On edit mode, only update if the user actually changed the plan selection
+      if (client && prevPlanIdRef.current === null) {
+        // First render with client data — just record, don't change
+        prevPlanIdRef.current = selectedPlanId;
+        return;
+      }
+      if (client && prevPlanIdRef.current === selectedPlanId) {
+        return; // No plan change, keep current value
+      }
+      prevPlanIdRef.current = selectedPlanId;
+
       if (selectedPlanId === "avulso") {
         form.setValue("plan_value", 0);
       } else if (selectedPlanSetting) {
