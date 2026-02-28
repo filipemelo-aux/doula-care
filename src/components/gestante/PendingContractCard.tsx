@@ -54,11 +54,11 @@ export function PendingContractCard() {
             </div>
 
             <div className="flex-1 min-w-0 overflow-hidden">
-              <div className="flex items-start gap-2 mb-1 flex-wrap">
-                <p className="font-semibold text-sm break-words line-clamp-2">{contract.title}</p>
+              <div className="flex flex-col gap-1 mb-1">
+                <p className="font-semibold text-sm break-words whitespace-normal">{contract.title}</p>
                 <Badge
                   variant="outline"
-                  className={`shrink-0 text-[10px] ${
+                  className={`w-fit shrink-0 text-[10px] ${
                     isPending
                       ? "border-amber-300 bg-amber-100 text-amber-800"
                       : "border-green-300 bg-green-100 text-green-800"
