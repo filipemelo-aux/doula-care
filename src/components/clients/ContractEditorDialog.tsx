@@ -145,20 +145,7 @@ export function ContractEditorDialog({
     }
   }, [profileName]);
 
-  // Build service description from plan features when opening without existing contract
-  useEffect(() => {
-    if (!open || contract) return;
-    if (planSetting?.features && planSetting.features.length > 0) {
-      setServiceDescription(planSetting.features.join(";\n") + ".");
-    } else if (planSetting?.description) {
-      setServiceDescription(planSetting.description);
-    } else if (planSetting?.name) {
-      setServiceDescription(`Serviços conforme o plano "${planSetting.name}".`);
-    } else {
-      setServiceDescription("");
-    }
-  }, [planSetting, open, contract]);
-
+  // Reset form when dialog opens/closes or contract loads
   useEffect(() => {
     if (contract) {
       setTitle(contract.title);
@@ -173,8 +160,25 @@ export function ContractEditorDialog({
       setAdditionalClauses("");
       setDoulaCpf("");
       setSelectedFile(null);
+      setServiceDescription("");
     }
   }, [contract, open]);
+
+  // Build service description from plan features (runs after planSetting loads)
+  useEffect(() => {
+    if (!open || contract) return;
+    // If client has no plan linked, nothing to auto-fill
+    if (!client?.plan_setting_id) return;
+    // Wait for planSetting to actually load (not undefined/loading)
+    if (planSetting === undefined) return;
+    if (planSetting?.features && planSetting.features.length > 0) {
+      setServiceDescription(planSetting.features.join(";\n") + ".");
+    } else if (planSetting?.description) {
+      setServiceDescription(planSetting.description);
+    } else if (planSetting?.name) {
+      setServiceDescription(`Serviços conforme o plano "${planSetting.name}".`);
+    }
+  }, [planSetting, open, contract, client?.plan_setting_id]);
 
   const formatCurrency = (value: number) =>
     new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
