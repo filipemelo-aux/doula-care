@@ -64,8 +64,8 @@ export default function AdminMessages() {
       const { data, error } = await supabase
         .from("client_notifications")
         .select("*")
+        .or("title.eq.Mensagem da Doula,title.like.Mensagem de %")
         .order("created_at", { ascending: false });
-      if (error) throw error;
       return data as Notification[];
     },
     refetchInterval: 10000,
