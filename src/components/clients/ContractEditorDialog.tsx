@@ -144,12 +144,15 @@ export function ContractEditorDialog({
     }
   }, [profileName]);
 
-  // Build service description from plan features
+  // Build service description from plan features when opening without existing contract
   useEffect(() => {
-    if (planSetting?.features && planSetting.features.length > 0 && !serviceDescription) {
+    if (!open || contract) return;
+    if (planSetting?.features && planSetting.features.length > 0) {
       setServiceDescription(planSetting.features.join(";\n") + ".");
+    } else {
+      setServiceDescription("");
     }
-  }, [planSetting]);
+  }, [planSetting, open, contract]);
 
   useEffect(() => {
     if (contract) {
@@ -157,13 +160,16 @@ export function ContractEditorDialog({
       setContent(contract.content);
       setEditing(false);
       setPreviewing(false);
-    } else {
+    } else if (open) {
       setTitle("Contrato de Prestação de Serviços de Doula");
       setContent("");
       setEditing(true);
       setPreviewing(false);
+      setAdditionalClauses("");
+      setDoulaCpf("");
+      setSelectedFile(null);
     }
-  }, [contract]);
+  }, [contract, open]);
 
   const formatCurrency = (value: number) =>
     new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
