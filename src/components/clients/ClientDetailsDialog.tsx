@@ -437,6 +437,7 @@ export function ClientDetailsDialog({
           onOpenChange={setContractDialogOpen}
           clientId={client.id}
           clientName={client.full_name}
+          client={client}
         />
       )}
     </Dialog>
