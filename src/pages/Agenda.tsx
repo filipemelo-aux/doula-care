@@ -259,7 +259,10 @@ export default function Agenda() {
   };
 
   // ─── Filtering ───────────────────────────────────────────
-  const filteredAppointments = (appointments || []).filter((apt) => {
+  // Only real appointments (exclude service-generated ones)
+  const onlyConsultas = (appointments || []).filter((apt) => !apt.title.startsWith("Serviço:"));
+
+  const filteredAppointments = onlyConsultas.filter((apt) => {
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
       return apt.title.toLowerCase().includes(term) || apt.clients?.full_name.toLowerCase().includes(term);
@@ -285,7 +288,12 @@ export default function Agenda() {
   // ─── Stats ───────────────────────────────────────────────
   const pendingServices = (services || []).filter(s => s.status === "pending").length;
   const budgetSentServices = (services || []).filter(s => s.status === "budget_sent").length;
-  const acceptedServices = (services || []).filter(s => s.status === "accepted" && !s.completed_at).length;
+  const todayStr = format(new Date(), "yyyy-MM-dd");
+  const acceptedServices = (services || []).filter(s => {
+    if (s.status !== "accepted" || s.completed_at) return false;
+    const svcDate = s.budget_sent_at ? s.budget_sent_at.split("T")[0] : s.created_at.split("T")[0];
+    return svcDate >= todayStr;
+  }).length;
 
   return (
     <div className="space-y-4 lg:space-y-6 overflow-x-hidden">
@@ -390,13 +398,21 @@ export default function Agenda() {
                   </div>
                 </section>
               )}
-              {filteredServices.filter(s => s.status === "accepted" && !s.completed_at).length > 0 && (
+              {filteredServices.filter(s => {
+                if (s.status !== "accepted" || s.completed_at) return false;
+                const svcDate = s.budget_sent_at ? s.budget_sent_at.split("T")[0] : s.created_at.split("T")[0];
+                return svcDate >= todayStr;
+              }).length > 0 && (
                 <section>
                   <h2 className="text-sm font-semibold text-muted-foreground mb-3 flex items-center gap-2">
                     <CheckCircle className="h-4 w-4" /> Serviços em andamento
                   </h2>
                   <div className="space-y-2">
-                    {filteredServices.filter(s => s.status === "accepted" && !s.completed_at).map((svc) => (
+                    {filteredServices.filter(s => {
+                      if (s.status !== "accepted" || s.completed_at) return false;
+                      const svcDate = s.budget_sent_at ? s.budget_sent_at.split("T")[0] : s.created_at.split("T")[0];
+                      return svcDate >= todayStr;
+                    }).map((svc) => (
                       <ServiceRow key={svc.id} svc={svc} displayName={displayName} onSendBudget={() => {}} onDelete={(id) => setDeleteTarget({ type: "service", id })} onViewPhotos={setViewingPhotos} />
                     ))}
                   </div>
