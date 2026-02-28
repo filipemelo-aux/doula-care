@@ -293,7 +293,7 @@ export default function Agenda() {
         </div>
         <Button onClick={() => setAppointmentDialog(true)}>
           <Plus className="h-4 w-4 mr-1" />
-          Nova Consulta
+          + Novo registro
         </Button>
       </div>
 
