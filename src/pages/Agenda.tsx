@@ -351,7 +351,12 @@ export default function Agenda() {
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="w-full grid grid-cols-3">
-          <TabsTrigger value="all">Tudo</TabsTrigger>
+          <TabsTrigger value="all">
+            Tudo
+            {(futureApts.length + (services || []).length) > 0 && (
+              <Badge variant="secondary" className="ml-1.5 text-[10px] px-1.5 py-0">{futureApts.length + (services || []).length}</Badge>
+            )}
+          </TabsTrigger>
           <TabsTrigger value="appointments">
             Consultas
             {futureApts.length > 0 && (
