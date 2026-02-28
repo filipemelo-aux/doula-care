@@ -611,9 +611,9 @@ function AppointmentRow({
             {today && <Badge variant="secondary" className="text-[10px] px-1.5 py-0 flex-shrink-0">Hoje</Badge>}
           </div>
           <p className="text-xs text-muted-foreground truncate">{displayName(apt.clients?.full_name || "")}</p>
-          <p className="text-xs text-muted-foreground flex items-center gap-1">
+          <p className="text-xs text-muted-foreground flex items-center gap-1 min-w-0">
             <Clock className="h-3 w-3 flex-shrink-0" />
-            {format(date, "EEEE, HH:mm", { locale: ptBR })}
+            <span className="truncate min-w-0">{format(date, "EEEE, HH:mm", { locale: ptBR })}</span>
           </p>
           {apt.notes && <p className="text-xs text-muted-foreground truncate mt-0.5">{apt.notes}</p>}
           <button
