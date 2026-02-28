@@ -99,6 +99,7 @@ export default function GestanteMessages() {
         .from("client_notifications")
         .select("*")
         .eq("client_id", client.id)
+        .or("title.eq.Mensagem da Doula,title.like.Mensagem de %")
         .order("created_at", { ascending: true });
       if (error) throw error;
       setNotifications(data || []);
@@ -315,7 +316,7 @@ export default function GestanteMessages() {
     return notification.title.startsWith("Mensagem de ");
   };
 
-  const regularNotifications = notifications.filter(n => !isBudgetNotification(n));
+  const regularNotifications = notifications;
 
   const renderAttachment = (notification: any, isMine: boolean) => {
     if (!notification.attachment_url) return null;
