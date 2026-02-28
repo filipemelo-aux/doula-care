@@ -52,6 +52,7 @@ import { ptBR } from "date-fns/locale";
 import { fromZonedTime, toZonedTime } from "date-fns-tz";
 import { toast } from "sonner";
 import { SendBudgetDialog } from "@/components/dashboard/SendBudgetDialog";
+import { NewServiceDialog } from "@/components/agenda/NewServiceDialog";
 
 // ─── Types ───────────────────────────────────────────────
 interface AppointmentWithClient {
@@ -109,6 +110,7 @@ export default function Agenda() {
 
   // Appointment form
   const [appointmentDialog, setAppointmentDialog] = useState(false);
+  const [serviceDialog, setServiceDialog] = useState(false);
   const [editingAppointment, setEditingAppointment] = useState<AppointmentWithClient | null>(null);
   const [aptTitle, setAptTitle] = useState("");
   const [aptDate, setAptDate] = useState("");
@@ -293,10 +295,16 @@ export default function Agenda() {
           <h1 className="page-title">Agenda</h1>
           <p className="page-description">Consultas e serviços em um só lugar</p>
         </div>
-        <Button onClick={() => setAppointmentDialog(true)}>
-          <Plus className="h-4 w-4 mr-1" />
-          Novo registro
-        </Button>
+        <div className="flex gap-2">
+          <Button onClick={() => setAppointmentDialog(true)} variant="outline">
+            <Calendar className="h-4 w-4 mr-1" />
+            Nova consulta
+          </Button>
+          <Button onClick={() => setServiceDialog(true)}>
+            <Briefcase className="h-4 w-4 mr-1" />
+            Novo serviço
+          </Button>
+        </div>
       </div>
 
       {/* Quick Stats */}
@@ -361,7 +369,7 @@ export default function Agenda() {
               {futureApts.length > 0 && (
                 <section>
                   <h2 className="text-sm font-semibold text-muted-foreground mb-3 flex items-center gap-2">
-                    <Calendar className="h-4 w-4" /> Próximas Consultas
+                    <Calendar className="h-4 w-4" /> Próximos Compromissos
                   </h2>
                   <div className="space-y-2">
                     {futureApts.slice(0, 5).map((apt) => (
@@ -540,6 +548,12 @@ export default function Agenda() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* New Service Dialog */}
+      <NewServiceDialog
+        open={serviceDialog}
+        onOpenChange={setServiceDialog}
+      />
 
       {/* Budget Dialog */}
       <SendBudgetDialog
