@@ -44,7 +44,9 @@ import {
   CheckCircle,
   Send,
   Eye,
+  Info,
 } from "lucide-react";
+import { AppointmentDetailDialog } from "@/components/clients/AppointmentDetailDialog";
 import { format, isToday, isPast, isFuture, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { fromZonedTime, toZonedTime } from "date-fns-tz";
@@ -592,36 +594,55 @@ function AppointmentRow({
   displayName: (name: string) => string;
   past?: boolean;
 }) {
+  const [detailOpen, setDetailOpen] = useState(false);
   const date = new Date(apt.scheduled_at);
   const today = isToday(date);
 
   return (
-    <div className={`flex items-center gap-3 rounded-lg p-3 border bg-background hover:bg-muted/30 transition-colors overflow-hidden ${past ? "opacity-50" : ""}`}>
-      <div className="text-center min-w-[44px]">
-        <p className="text-[10px] text-muted-foreground uppercase">{format(date, "MMM", { locale: ptBR })}</p>
-        <p className="text-lg font-bold leading-tight">{format(date, "dd")}</p>
-      </div>
-      <div className="flex-1 min-w-0 overflow-hidden">
-        <div className="flex items-center gap-2">
-          <p className="font-medium text-sm truncate">{apt.title}</p>
-          {today && <Badge variant="secondary" className="text-[10px] px-1.5 py-0 flex-shrink-0">Hoje</Badge>}
+    <>
+      <div className={`flex items-center gap-3 rounded-lg p-3 border bg-background hover:bg-muted/30 transition-colors overflow-hidden ${past ? "opacity-50" : ""}`}>
+        <div className="text-center min-w-[44px]">
+          <p className="text-[10px] text-muted-foreground uppercase">{format(date, "MMM", { locale: ptBR })}</p>
+          <p className="text-lg font-bold leading-tight">{format(date, "dd")}</p>
         </div>
-        <p className="text-xs text-muted-foreground truncate">{displayName(apt.clients?.full_name || "")}</p>
-        <p className="text-xs text-muted-foreground flex items-center gap-1">
-          <Clock className="h-3 w-3 flex-shrink-0" />
-          {format(date, "EEEE, HH:mm", { locale: ptBR })}
-        </p>
-        {apt.notes && <p className="text-xs text-muted-foreground truncate mt-0.5">{apt.notes}</p>}
+        <div className="flex-1 min-w-0 overflow-hidden">
+          <div className="flex items-center gap-2">
+            <p className="font-medium text-sm truncate">{apt.title}</p>
+            {today && <Badge variant="secondary" className="text-[10px] px-1.5 py-0 flex-shrink-0">Hoje</Badge>}
+          </div>
+          <p className="text-xs text-muted-foreground truncate">{displayName(apt.clients?.full_name || "")}</p>
+          <p className="text-xs text-muted-foreground flex items-center gap-1">
+            <Clock className="h-3 w-3 flex-shrink-0" />
+            {format(date, "EEEE, HH:mm", { locale: ptBR })}
+          </p>
+          {apt.notes && <p className="text-xs text-muted-foreground truncate mt-0.5">{apt.notes}</p>}
+          <button
+            className="text-[11px] text-primary hover:underline mt-0.5"
+            onClick={() => setDetailOpen(true)}
+          >
+            Ver detalhes
+          </button>
+        </div>
+        <div className="flex items-center gap-1 flex-shrink-0">
+          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onEdit(apt)} title="Editar">
+            <Edit2 className="h-3.5 w-3.5" />
+          </Button>
+          <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => onDelete(apt.id)} title="Excluir">
+            <Trash2 className="h-3.5 w-3.5" />
+          </Button>
+        </div>
       </div>
-      <div className="flex items-center gap-1">
-        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onEdit(apt)} title="Editar">
-          <Edit2 className="h-3.5 w-3.5" />
-        </Button>
-        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => onDelete(apt.id)} title="Excluir">
-          <Trash2 className="h-3.5 w-3.5" />
-        </Button>
-      </div>
-    </div>
+      <AppointmentDetailDialog
+        open={detailOpen}
+        onOpenChange={setDetailOpen}
+        appointment={{
+          title: apt.title,
+          scheduled_at: apt.scheduled_at,
+          notes: apt.notes,
+          clientName: apt.clients?.full_name,
+        }}
+      />
+    </>
   );
 }
 
