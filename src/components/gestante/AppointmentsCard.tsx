@@ -40,6 +40,7 @@ export function AppointmentsCard({ clientId }: AppointmentsCardProps) {
       .from("appointments")
       .select("id, title, scheduled_at, notes")
       .eq("client_id", clientId)
+      .not("title", "like", "Serviço:%")
       .gte("scheduled_at", new Date().toISOString().split("T")[0])
       .order("scheduled_at", { ascending: true })
       .limit(5);
