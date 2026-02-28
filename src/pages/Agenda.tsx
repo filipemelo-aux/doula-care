@@ -600,14 +600,14 @@ function AppointmentRow({
 
   return (
     <>
-      <div className={`flex items-center gap-3 rounded-lg p-3 border bg-background hover:bg-muted/30 transition-colors overflow-hidden ${past ? "opacity-50" : ""}`}>
+      <div className={`flex w-full max-w-full min-w-0 items-center gap-3 rounded-lg p-3 border bg-background hover:bg-muted/30 transition-colors overflow-hidden ${past ? "opacity-50" : ""}`}>
         <div className="text-center min-w-[44px]">
           <p className="text-[10px] text-muted-foreground uppercase">{format(date, "MMM", { locale: ptBR })}</p>
           <p className="text-lg font-bold leading-tight">{format(date, "dd")}</p>
         </div>
-        <div className="flex-1 min-w-0 overflow-hidden">
+        <div className="w-0 flex-1 overflow-hidden">
           <div className="flex items-center gap-2 min-w-0">
-            <p className="font-medium text-sm min-w-0 flex-1 truncate" title={apt.title}>{apt.title}</p>
+            <p className="block w-full font-medium text-sm min-w-0 flex-1 truncate" title={apt.title}>{apt.title}</p>
             {today && <Badge variant="secondary" className="text-[10px] px-1.5 py-0 flex-shrink-0">Hoje</Badge>}
           </div>
           <p className="text-xs text-muted-foreground truncate">{displayName(apt.clients?.full_name || "")}</p>
@@ -616,14 +616,11 @@ function AppointmentRow({
             <span className="truncate min-w-0">{format(date, "EEEE, HH:mm", { locale: ptBR })}</span>
           </p>
           {apt.notes && <p className="text-xs text-muted-foreground truncate mt-0.5">{apt.notes}</p>}
-          <button
-            className="text-[11px] text-primary hover:underline mt-0.5"
-            onClick={() => setDetailOpen(true)}
-          >
-            Ver detalhes
-          </button>
         </div>
         <div className="flex items-center gap-1 flex-shrink-0">
+          <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary" onClick={() => setDetailOpen(true)} title="Ver detalhes">
+            <Eye className="h-3.5 w-3.5" />
+          </Button>
           <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onEdit(apt)} title="Editar">
             <Edit2 className="h-3.5 w-3.5" />
           </Button>
