@@ -150,8 +150,9 @@ export function ContractSignDialog({ open, onOpenChange, contractId }: ContractS
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["gestante-contract"] });
       queryClient.invalidateQueries({ queryKey: ["gestante-pending-contract"] });
+      queryClient.invalidateQueries({ queryKey: ["gestante-contracts"] });
       queryClient.invalidateQueries({ queryKey: ["client-contract"] });
-      toast.success("Contrato assinado com sucesso!");
+      toast.success("Contrato assinado com sucesso! Você pode acessá-lo a qualquer momento em Documentos.", { duration: 6000 });
       onOpenChange(false);
     },
     onError: () => toast.error("Erro ao assinar contrato"),
