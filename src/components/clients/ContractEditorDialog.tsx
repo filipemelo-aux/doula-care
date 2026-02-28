@@ -33,6 +33,7 @@ import {
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { maskCPF } from "@/lib/masks";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -339,15 +340,15 @@ ${client?.city || "[Cidade]"}, ${todayFormatted}.`;
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-lg max-h-[90vh] p-0">
-          <DialogHeader className="px-6 pt-6 pb-2">
-            <DialogTitle className="font-display flex items-center gap-2">
-              <FileText className="h-5 w-5" />
-              Contrato — {clientName}
+        <DialogContent className="max-w-lg max-h-[90vh] p-0 overflow-y-auto">
+          <DialogHeader className="px-4 sm:px-6 pt-6 pb-2">
+            <DialogTitle className="font-display flex items-center gap-2 text-base">
+              <FileText className="h-5 w-5 shrink-0" />
+              <span className="truncate">Contrato — {clientName}</span>
             </DialogTitle>
           </DialogHeader>
 
-          <ScrollArea className="max-h-[calc(90vh-160px)] px-6">
+          <ScrollArea className="max-h-[calc(90vh-160px)] px-4 sm:px-6">
             {isLoading ? (
               <div className="flex items-center justify-center py-12">
                 <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
@@ -442,9 +443,10 @@ ${client?.city || "[Cidade]"}, ${todayFormatted}.`;
                         <Label className="text-xs">CPF da Doula (opcional)</Label>
                         <Input
                           value={doulaCpf}
-                          onChange={(e) => setDoulaCpf(e.target.value)}
-                          className="mt-1"
+                          onChange={(e) => setDoulaCpf(maskCPF(e.target.value))}
+                          className="mt-1 lowercase"
                           placeholder="000.000.000-00"
+                          maxLength={14}
                         />
                       </div>
 
@@ -678,7 +680,7 @@ ${client?.city || "[Cidade]"}, ${todayFormatted}.`;
             )}
           </ScrollArea>
 
-          <DialogFooter className="flex-row gap-2 px-6 pb-6">
+          <DialogFooter className="flex-row gap-2 px-4 sm:px-6 pb-6">
             {/* Existing contract actions */}
             {contract && !isSigned && !editing && (
               <>
