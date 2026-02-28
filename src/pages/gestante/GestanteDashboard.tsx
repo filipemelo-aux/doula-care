@@ -185,22 +185,28 @@ export default function GestanteDashboard() {
   const babyAge = calculateBabyAge();
   const isPuerpera = clientData?.status === "lactante" && clientData?.birth_occurred;
 
+  const isGestante = clientData?.status === "gestante";
+
   const { data: orgServices } = useQuery({
-    queryKey: ["dashboard-org-services", clientData?.organization_id],
+    queryKey: ["dashboard-org-services", clientData?.organization_id, isGestante],
     queryFn: async () => {
       const { data } = await supabase
         .from("custom_services")
         .select("name")
         .eq("organization_id", clientData!.organization_id!)
-        .eq("is_active", true)
-        .limit(2);
+        .eq("is_active", true);
       return data ?? [];
     },
     enabled: !!clientData?.organization_id,
   });
 
-  const serviceExamples = orgServices && orgServices.length > 0
-    ? orgServices.map(s => s.name).join(", ") + "..."
+  const filteredServices = (orgServices ?? []).filter((s) => {
+    if (isGestante && s.name.toLowerCase() === "laserterapia") return false;
+    return true;
+  });
+
+  const serviceExamples = filteredServices.length > 0
+    ? filteredServices.slice(0, 2).map(s => s.name).join(", ") + "..."
     : "Solicitar e acompanhar";
 
   const displayName = preferredName || client?.full_name?.split(" ")[0] || "";
