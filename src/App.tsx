@@ -33,6 +33,7 @@ import GestanteDiary from "./pages/gestante/GestanteDiary";
 import GestanteMessages from "./pages/gestante/GestanteMessages";
 import GestanteProfile from "./pages/gestante/GestanteProfile";
 import GestanteContractions from "./pages/gestante/GestanteContractions";
+import GestanteServices from "./pages/gestante/GestanteServices";
 
 const queryClient = new QueryClient();
 
@@ -106,6 +107,14 @@ const App = () => (
               element={
                 <ProtectedRoute allowedRoles={["client"]}>
                   <GestanteContractions />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/gestante/servicos"
+              element={
+                <ProtectedRoute allowedRoles={["client"]}>
+                  <GestanteServices />
                 </ProtectedRoute>
               }
             />
