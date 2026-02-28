@@ -149,6 +149,10 @@ export function ContractEditorDialog({
     if (!open || contract) return;
     if (planSetting?.features && planSetting.features.length > 0) {
       setServiceDescription(planSetting.features.join(";\n") + ".");
+    } else if (planSetting?.description) {
+      setServiceDescription(planSetting.description);
+    } else if (planSetting?.name) {
+      setServiceDescription(`Serviços conforme o plano "${planSetting.name}".`);
     } else {
       setServiceDescription("");
     }
@@ -452,9 +456,11 @@ ${client?.city || "[Cidade]"}, ${todayFormatted}.`;
                           className="mt-1 min-h-[100px] text-sm"
                           placeholder="Descreva os serviços inclusos..."
                         />
-                        {planSetting?.features && planSetting.features.length > 0 && (
+                        {planSetting && (
                           <p className="text-[10px] text-muted-foreground mt-1">
-                            Preenchido com os serviços do plano "{planSetting.name}"
+                            {planSetting.features && planSetting.features.length > 0
+                              ? `Preenchido com os serviços do plano "${planSetting.name}"`
+                              : `Plano "${planSetting.name}" sem serviços cadastrados — adicione os serviços manualmente ou cadastre-os nas configurações do plano`}
                           </p>
                         )}
                       </div>
