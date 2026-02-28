@@ -294,12 +294,19 @@
     max-width: 100%;
   }
 
+  /* Force inset focus rings inside dialogs so they don't clip */
   [data-radix-dialog-content] input,
   [data-radix-dialog-content] textarea,
   [data-radix-dialog-content] select,
+  [data-radix-dialog-content] button,
+  [data-radix-dialog-content] [role="combobox"],
   [data-radix-alert-dialog-content] input,
   [data-radix-alert-dialog-content] textarea,
-  [data-radix-alert-dialog-content] select {
+  [data-radix-alert-dialog-content] select,
+  [data-radix-alert-dialog-content] button,
+  [data-radix-alert-dialog-content] [role="combobox"] {
+    --tw-ring-offset-width: 0px;
+    --tw-ring-inset: inset;
     max-width: 100%;
     box-sizing: border-box;
   }
