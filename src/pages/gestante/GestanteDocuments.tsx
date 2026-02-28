@@ -154,10 +154,10 @@ export default function GestanteDocuments() {
 
   return (
     <GestanteLayout>
-      <div className="p-4 md:p-8 max-w-2xl mx-auto space-y-6">
-        <div>
-          <h2 className="text-xl font-display font-bold text-foreground">Documentos</h2>
-          <p className="text-sm text-muted-foreground mt-1">Seus contratos e documentos</p>
+      <div className="p-3 lg:p-8 max-w-7xl mx-auto animate-fade-in">
+        <div className="page-header">
+          <h1 className="page-title">Documentos</h1>
+          <p className="page-description">Seus contratos e documentos</p>
         </div>
 
         {isLoading ? (
