@@ -606,8 +606,8 @@ function AppointmentRow({
           <p className="text-lg font-bold leading-tight">{format(date, "dd")}</p>
         </div>
         <div className="flex-1 min-w-0 overflow-hidden">
-          <div className="flex items-center gap-2">
-            <p className="font-medium text-sm truncate">{apt.title}</p>
+          <div className="flex items-center gap-2 min-w-0">
+            <p className="font-medium text-sm min-w-0 flex-1 truncate" title={apt.title}>{apt.title}</p>
             {today && <Badge variant="secondary" className="text-[10px] px-1.5 py-0 flex-shrink-0">Hoje</Badge>}
           </div>
           <p className="text-xs text-muted-foreground truncate">{displayName(apt.clients?.full_name || "")}</p>
