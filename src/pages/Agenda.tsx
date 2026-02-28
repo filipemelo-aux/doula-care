@@ -360,8 +360,8 @@ export default function Agenda() {
           </TabsTrigger>
           <TabsTrigger value="services">
             Serviços
-            {pendingServices > 0 && (
-              <Badge variant="destructive" className="ml-1.5 text-[10px] px-1.5 py-0">{pendingServices}</Badge>
+            {(services || []).length > 0 && (
+              <Badge variant="secondary" className="ml-1.5 text-[10px] px-1.5 py-0">{(services || []).length}</Badge>
             )}
           </TabsTrigger>
         </TabsList>
