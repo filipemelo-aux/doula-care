@@ -4,7 +4,7 @@ import { ServiceRequestButtons } from "@/components/gestante/ServiceRequestButto
 import { ScheduledServicesCard } from "@/components/gestante/ScheduledServicesCard";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Briefcase, Clock, CheckCircle, XCircle, Send, Loader2 } from "lucide-react";
+import { Clock, CheckCircle, XCircle, Send, Loader2 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { formatBrazilDateTime } from "@/lib/utils";
@@ -48,72 +48,67 @@ export default function GestanteServices() {
 
   return (
     <GestanteLayout>
-      <div className="bg-gradient-to-b from-primary/15 to-background px-4 lg:px-8 py-4">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/15 to-primary/25 flex items-center justify-center">
-            <Briefcase className="h-5 w-5 text-primary" />
-          </div>
-          <div>
-            <h1 className="font-display font-bold text-base">Serviços</h1>
-            <p className="text-xs text-muted-foreground">Solicite e acompanhe seus serviços</p>
-          </div>
+      <div className="p-3 lg:p-8 max-w-7xl mx-auto animate-fade-in">
+        <div className="page-header">
+          <h1 className="page-title">Serviços</h1>
+          <p className="page-description">Solicite e acompanhe seus serviços</p>
         </div>
-      </div>
 
-      <div className="container mx-auto px-4 py-6 space-y-6">
-        {/* Available services to request */}
-        <ServiceRequestButtons />
+        <div className="space-y-6">
+          {/* Available services to request */}
+          <ServiceRequestButtons />
 
-        {/* Scheduled/accepted services with completion & rating */}
-        {client?.id && <ScheduledServicesCard clientId={client.id} />}
+          {/* Scheduled/accepted services with completion & rating */}
+          {client?.id && <ScheduledServicesCard clientId={client.id} />}
 
-        {/* Pending & other status requests */}
-        {pendingRequests && pendingRequests.length > 0 && (
-          <div className="space-y-3">
-            <h3 className="font-display font-semibold text-sm text-muted-foreground px-1">
-              Solicitações
-            </h3>
-            <div className="space-y-2">
-              {pendingRequests.map((svc) => {
-                const status = svc.completed_at ? "completed" : svc.status;
-                const config = statusConfig[status] || statusConfig.pending;
-                const StatusIcon = config.icon;
+          {/* Pending & other status requests */}
+          {pendingRequests && pendingRequests.length > 0 && (
+            <div className="space-y-3">
+              <h3 className="font-display font-semibold text-sm text-muted-foreground px-1">
+                Solicitações
+              </h3>
+              <div className="space-y-2">
+                {pendingRequests.map((svc) => {
+                  const status = svc.completed_at ? "completed" : svc.status;
+                  const config = statusConfig[status] || statusConfig.pending;
+                  const StatusIcon = config.icon;
 
-                return (
-                  <Card key={svc.id}>
-                    <CardContent className="p-3">
-                      <div className="flex items-center justify-between mb-1">
-                        <p className="font-medium text-sm">{svc.service_type}</p>
-                        <Badge variant="outline" className={`text-[10px] ${config.className}`}>
-                          <StatusIcon className="h-3 w-3 mr-1" />
-                          {config.label}
-                        </Badge>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        {svc.budget_value ? (
-                          <p className="text-sm text-muted-foreground">
-                            R$ {svc.budget_value.toFixed(2).replace(".", ",")}
+                  return (
+                    <Card key={svc.id}>
+                      <CardContent className="p-3">
+                        <div className="flex items-center justify-between mb-1">
+                          <p className="font-medium text-sm">{svc.service_type}</p>
+                          <Badge variant="outline" className={`text-[10px] ${config.className}`}>
+                            <StatusIcon className="h-3 w-3 mr-1" />
+                            {config.label}
+                          </Badge>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          {svc.budget_value ? (
+                            <p className="text-sm text-muted-foreground">
+                              R$ {svc.budget_value.toFixed(2).replace(".", ",")}
+                            </p>
+                          ) : (
+                            <p className="text-xs text-muted-foreground italic">Aguardando orçamento</p>
+                          )}
+                          <p className="text-xs text-muted-foreground">
+                            {formatBrazilDateTime(svc.created_at, "dd/MM/yyyy")}
                           </p>
-                        ) : (
-                          <p className="text-xs text-muted-foreground italic">Aguardando orçamento</p>
-                        )}
-                        <p className="text-xs text-muted-foreground">
-                          {formatBrazilDateTime(svc.created_at, "dd/MM/yyyy")}
-                        </p>
-                      </div>
-                    </CardContent>
-                  </Card>
-                );
-              })}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {isLoading && (
-          <div className="flex justify-center py-8">
-            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-          </div>
-        )}
+          {isLoading && (
+            <div className="flex justify-center py-8">
+              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            </div>
+          )}
+        </div>
       </div>
     </GestanteLayout>
   );
