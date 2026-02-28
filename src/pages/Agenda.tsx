@@ -78,6 +78,7 @@ interface ServiceRequestFull {
   created_at: string;
   client_id: string;
   scheduled_date: string | null;
+  preferred_date: string | null;
   clients: { full_name: string };
 }
 
@@ -86,12 +87,13 @@ interface ClientOption {
   full_name: string;
 }
 
-type ServiceStatusFilter = "all" | "pending" | "budget_sent" | "accepted" | "completed" | "rejected";
+type ServiceStatusFilter = "all" | "pending" | "budget_sent" | "date_proposed" | "accepted" | "completed" | "rejected";
 
 // ─── Status helpers ──────────────────────────────────────
 const statusConfig: Record<string, { label: string; color: string }> = {
   pending: { label: "Pendente", color: "bg-yellow-100 text-yellow-800 border-yellow-300" },
   budget_sent: { label: "Orçamento Enviado", color: "bg-purple-100 text-purple-800 border-purple-300" },
+  date_proposed: { label: "Data Proposta", color: "bg-orange-100 text-orange-800 border-orange-300" },
   accepted: { label: "Aceito", color: "bg-emerald-100 text-emerald-800 border-emerald-300" },
   rejected: { label: "Recusado", color: "bg-red-100 text-red-800 border-red-300" },
   completed: { label: "Concluído", color: "bg-blue-100 text-blue-800 border-blue-300" },
@@ -153,7 +155,7 @@ export default function Agenda() {
   const [deleteTarget, setDeleteTarget] = useState<{ type: "appointment" | "service"; id: string } | null>(null);
 
   // Budget dialog
-  const [budgetRequest, setBudgetRequest] = useState<{ id: string; client_id: string; service_type: string; client_name: string } | null>(null);
+  const [budgetRequest, setBudgetRequest] = useState<{ id: string; client_id: string; service_type: string; client_name: string; preferred_date?: string | null } | null>(null);
 
   // Photo viewer
   const [viewingPhotos, setViewingPhotos] = useState<{ photos: string[]; comment: string | null; rating: number } | null>(null);
@@ -428,14 +430,14 @@ export default function Agenda() {
                   </div>
                 </section>
               )}
-              {filteredServices.filter(s => s.status === "pending" || s.status === "budget_sent").length > 0 && (
+              {filteredServices.filter(s => s.status === "pending" || s.status === "budget_sent" || s.status === "date_proposed").length > 0 && (
                 <section>
                   <h2 className="text-sm font-semibold text-muted-foreground mb-3 flex items-center gap-2">
                     <Briefcase className="h-4 w-4" /> Serviços que precisam de atenção
                   </h2>
                   <div className="space-y-2">
-                    {filteredServices.filter(s => s.status === "pending" || s.status === "budget_sent").map((svc) => (
-                      <ServiceRow key={svc.id} svc={svc} displayName={displayName} onSendBudget={(s) => setBudgetRequest({ id: s.id, client_id: s.client_id, service_type: s.service_type, client_name: s.clients?.full_name || "" })} onDelete={(id) => setDeleteTarget({ type: "service", id })} onViewPhotos={setViewingPhotos} onSchedule={(s) => { setSchedulingService(s); setSvcScheduleDate(s.scheduled_date ? format(toZonedTime(new Date(s.scheduled_date), "America/Sao_Paulo"), "yyyy-MM-dd'T'HH:mm") : ""); }} />
+                    {filteredServices.filter(s => s.status === "pending" || s.status === "budget_sent" || s.status === "date_proposed").map((svc) => (
+                      <ServiceRow key={svc.id} svc={svc} displayName={displayName} onSendBudget={(s) => setBudgetRequest({ id: s.id, client_id: s.client_id, service_type: s.service_type, client_name: s.clients?.full_name || "", preferred_date: s.preferred_date })} onDelete={(id) => setDeleteTarget({ type: "service", id })} onViewPhotos={setViewingPhotos} onSchedule={(s) => { setSchedulingService(s); setSvcScheduleDate(s.scheduled_date ? format(toZonedTime(new Date(s.scheduled_date), "America/Sao_Paulo"), "yyyy-MM-dd'T'HH:mm") : ""); }} />
                     ))}
                   </div>
                 </section>
@@ -498,12 +500,13 @@ export default function Agenda() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">Todos os status</SelectItem>
-                    <SelectItem value="pending">Pendentes</SelectItem>
-                    <SelectItem value="budget_sent">Orçamento Enviado</SelectItem>
-                    <SelectItem value="accepted">Aceitos</SelectItem>
-                    <SelectItem value="completed">Concluídos</SelectItem>
-                    <SelectItem value="rejected">Recusados</SelectItem>
+                     <SelectItem value="all">Todos os status</SelectItem>
+                     <SelectItem value="pending">Pendentes</SelectItem>
+                     <SelectItem value="budget_sent">Orçamento Enviado</SelectItem>
+                     <SelectItem value="date_proposed">Data Proposta</SelectItem>
+                     <SelectItem value="accepted">Aceitos</SelectItem>
+                     <SelectItem value="completed">Concluídos</SelectItem>
+                     <SelectItem value="rejected">Recusados</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -511,7 +514,7 @@ export default function Agenda() {
               <div className="space-y-2">
                 {filteredServices.length > 0 ? (
                   filteredServices.map((svc) => (
-                    <ServiceRow key={svc.id} svc={svc} displayName={displayName} onSendBudget={(s) => setBudgetRequest({ id: s.id, client_id: s.client_id, service_type: s.service_type, client_name: s.clients?.full_name || "" })} onDelete={(id) => setDeleteTarget({ type: "service", id })} onViewPhotos={setViewingPhotos} onSchedule={(s) => { setSchedulingService(s); setSvcScheduleDate(s.scheduled_date ? format(toZonedTime(new Date(s.scheduled_date), "America/Sao_Paulo"), "yyyy-MM-dd'T'HH:mm") : ""); }} />
+                    <ServiceRow key={svc.id} svc={svc} displayName={displayName} onSendBudget={(s) => setBudgetRequest({ id: s.id, client_id: s.client_id, service_type: s.service_type, client_name: s.clients?.full_name || "", preferred_date: s.preferred_date })} onDelete={(id) => setDeleteTarget({ type: "service", id })} onViewPhotos={setViewingPhotos} onSchedule={(s) => { setSchedulingService(s); setSvcScheduleDate(s.scheduled_date ? format(toZonedTime(new Date(s.scheduled_date), "America/Sao_Paulo"), "yyyy-MM-dd'T'HH:mm") : ""); }} />
                   ))
                 ) : (
                   <EmptyState icon={Briefcase} message="Nenhum serviço encontrado" />
@@ -808,6 +811,12 @@ function ServiceRow({
         )}
         {svc.budget_value && (
           <p className="text-xs font-semibold text-primary">R$ {svc.budget_value.toFixed(2).replace(".", ",")}</p>
+        )}
+        {svc.preferred_date && !hasScheduledDate && (
+          <p className="text-xs text-muted-foreground flex items-center gap-1">
+            <Calendar className="h-3 w-3 flex-shrink-0" />
+            <span>Preferência: {format(toZonedTime(new Date(svc.preferred_date), "America/Sao_Paulo"), "dd/MM 'às' HH:mm", { locale: ptBR })}</span>
+          </p>
         )}
         {svc.rating && (
           <div className="flex items-center gap-1 mt-0.5">
