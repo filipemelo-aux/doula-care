@@ -77,6 +77,7 @@ interface ServiceRequestFull {
   rating_photos: string[] | null;
   created_at: string;
   client_id: string;
+  scheduled_date: string | null;
   clients: { full_name: string };
 }
 
@@ -118,6 +119,11 @@ export default function Agenda() {
   const [aptClientId, setAptClientId] = useState("");
   const dateInputRef = useRef<HTMLInputElement>(null);
 
+  // Schedule service date
+  const [schedulingService, setSchedulingService] = useState<ServiceRequestFull | null>(null);
+  const [svcScheduleDate, setSvcScheduleDate] = useState("");
+  const svcDateInputRef = useRef<HTMLInputElement>(null);
+
   // Poll native date input to sync value (Radix dialog blocks native picker events)
   useEffect(() => {
     if (!appointmentDialog) return;
@@ -129,6 +135,18 @@ export default function Agenda() {
     }, 250);
     return () => clearInterval(interval);
   }, [appointmentDialog, aptDate]);
+
+  // Poll native date input for service scheduling
+  useEffect(() => {
+    if (!schedulingService) return;
+    const interval = setInterval(() => {
+      const val = svcDateInputRef.current?.value;
+      if (val && val !== svcScheduleDate) {
+        setSvcScheduleDate(val);
+      }
+    }, 250);
+    return () => clearInterval(interval);
+  }, [schedulingService, svcScheduleDate]);
 
 
   // Delete confirmation
@@ -232,7 +250,26 @@ export default function Agenda() {
     onError: () => toast.error("Erro ao remover"),
   });
 
-  // ─── Helpers ─────────────────────────────────────────────
+  const scheduleServiceMutation = useMutation({
+    mutationFn: async () => {
+      if (!schedulingService || !svcScheduleDate) return;
+      const scheduledUtc = fromZonedTime(svcScheduleDate, "America/Sao_Paulo").toISOString();
+      const { error } = await supabase
+        .from("service_requests")
+        .update({ scheduled_date: scheduledUtc })
+        .eq("id", schedulingService.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["agenda-services"] });
+      setSchedulingService(null);
+      setSvcScheduleDate("");
+      toast.success("Data agendada!");
+    },
+    onError: () => toast.error("Erro ao agendar data"),
+  });
+
+
   const closeAppointmentDialog = () => {
     setAppointmentDialog(false);
     setEditingAppointment(null);
@@ -398,7 +435,7 @@ export default function Agenda() {
                   </h2>
                   <div className="space-y-2">
                     {filteredServices.filter(s => s.status === "pending" || s.status === "budget_sent").map((svc) => (
-                      <ServiceRow key={svc.id} svc={svc} displayName={displayName} onSendBudget={(s) => setBudgetRequest({ id: s.id, client_id: s.client_id, service_type: s.service_type, client_name: s.clients?.full_name || "" })} onDelete={(id) => setDeleteTarget({ type: "service", id })} onViewPhotos={setViewingPhotos} />
+                      <ServiceRow key={svc.id} svc={svc} displayName={displayName} onSendBudget={(s) => setBudgetRequest({ id: s.id, client_id: s.client_id, service_type: s.service_type, client_name: s.clients?.full_name || "" })} onDelete={(id) => setDeleteTarget({ type: "service", id })} onViewPhotos={setViewingPhotos} onSchedule={(s) => { setSchedulingService(s); setSvcScheduleDate(s.scheduled_date ? format(toZonedTime(new Date(s.scheduled_date), "America/Sao_Paulo"), "yyyy-MM-dd'T'HH:mm") : ""); }} />
                     ))}
                   </div>
                 </section>
@@ -418,7 +455,7 @@ export default function Agenda() {
                       const svcDate = s.budget_sent_at ? s.budget_sent_at.split("T")[0] : s.created_at.split("T")[0];
                       return svcDate >= todayStr;
                     }).map((svc) => (
-                      <ServiceRow key={svc.id} svc={svc} displayName={displayName} onSendBudget={() => {}} onDelete={(id) => setDeleteTarget({ type: "service", id })} onViewPhotos={setViewingPhotos} />
+                      <ServiceRow key={svc.id} svc={svc} displayName={displayName} onSendBudget={() => {}} onDelete={(id) => setDeleteTarget({ type: "service", id })} onViewPhotos={setViewingPhotos} onSchedule={(s) => { setSchedulingService(s); setSvcScheduleDate(s.scheduled_date ? format(toZonedTime(new Date(s.scheduled_date), "America/Sao_Paulo"), "yyyy-MM-dd'T'HH:mm") : ""); }} />
                     ))}
                   </div>
                 </section>
@@ -474,7 +511,7 @@ export default function Agenda() {
               <div className="space-y-2">
                 {filteredServices.length > 0 ? (
                   filteredServices.map((svc) => (
-                    <ServiceRow key={svc.id} svc={svc} displayName={displayName} onSendBudget={(s) => setBudgetRequest({ id: s.id, client_id: s.client_id, service_type: s.service_type, client_name: s.clients?.full_name || "" })} onDelete={(id) => setDeleteTarget({ type: "service", id })} onViewPhotos={setViewingPhotos} />
+                    <ServiceRow key={svc.id} svc={svc} displayName={displayName} onSendBudget={(s) => setBudgetRequest({ id: s.id, client_id: s.client_id, service_type: s.service_type, client_name: s.clients?.full_name || "" })} onDelete={(id) => setDeleteTarget({ type: "service", id })} onViewPhotos={setViewingPhotos} onSchedule={(s) => { setSchedulingService(s); setSvcScheduleDate(s.scheduled_date ? format(toZonedTime(new Date(s.scheduled_date), "America/Sao_Paulo"), "yyyy-MM-dd'T'HH:mm") : ""); }} />
                   ))
                 ) : (
                   <EmptyState icon={Briefcase} message="Nenhum serviço encontrado" />
@@ -610,6 +647,47 @@ export default function Agenda() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Schedule Service Date */}
+      <Dialog open={!!schedulingService} onOpenChange={(o) => { if (!o) { setSchedulingService(null); setSvcScheduleDate(""); } }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="font-display flex items-center gap-2">
+              <Calendar className="h-5 w-5" />
+              Agendar Data do Serviço
+            </DialogTitle>
+            <DialogDescription>
+              {schedulingService?.service_type} — {displayName(schedulingService?.clients?.full_name || "")}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label className="text-xs">Data e hora</Label>
+              <input
+                ref={svcDateInputRef}
+                type="datetime-local"
+                defaultValue={svcScheduleDate}
+                key={schedulingService?.id}
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 mt-1"
+              />
+              {svcScheduleDate && (
+                <p className="text-xs text-muted-foreground mt-1">
+                  ✓ {format(new Date(svcScheduleDate), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+                </p>
+              )}
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              disabled={!svcScheduleDate || scheduleServiceMutation.isPending}
+              onClick={() => scheduleServiceMutation.mutate()}
+            >
+              {scheduleServiceMutation.isPending && <Loader2 className="h-4 w-4 animate-spin mr-1" />}
+              Agendar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
@@ -686,27 +764,48 @@ function ServiceRow({
   onSendBudget,
   onDelete,
   onViewPhotos,
+  onSchedule,
 }: {
   svc: ServiceRequestFull;
   displayName: (name: string) => string;
   onSendBudget: (svc: ServiceRequestFull) => void;
   onDelete: (id: string) => void;
   onViewPhotos: (data: { photos: string[]; comment: string | null; rating: number }) => void;
+  onSchedule: (svc: ServiceRequestFull) => void;
 }) {
   const status = getServiceStatus(svc);
   const config = statusConfig[status] || statusConfig.pending;
+  const hasScheduledDate = !!svc.scheduled_date;
+  const scheduledDate = hasScheduledDate ? toZonedTime(new Date(svc.scheduled_date!), "America/Sao_Paulo") : null;
 
   return (
     <div className="flex items-center gap-3 rounded-lg p-3 border bg-background hover:bg-muted/30 transition-colors">
-      <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
-        <Briefcase className="h-5 w-5 text-primary" />
-      </div>
+      {/* Date column - like appointments */}
+      {hasScheduledDate && scheduledDate ? (
+        <div className="text-center min-w-[44px]">
+          <p className="text-[10px] text-muted-foreground uppercase">{format(scheduledDate, "MMM", { locale: ptBR })}</p>
+          <p className="text-lg font-bold leading-tight">{format(scheduledDate, "dd")}</p>
+        </div>
+      ) : (
+        <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+          <Briefcase className="h-5 w-5 text-primary" />
+        </div>
+      )}
       <div className="flex-1 min-w-0 overflow-hidden">
         <div className="flex items-center gap-2 min-w-0">
           <p className="font-medium text-sm truncate">{svc.service_type}</p>
           <Badge variant="outline" className={`text-[10px] px-1.5 py-0 ${config.color}`}>{config.label}</Badge>
         </div>
         <p className="text-xs text-muted-foreground truncate">{displayName(svc.clients?.full_name || "")}</p>
+        {hasScheduledDate && scheduledDate && (
+          <p className="text-xs text-muted-foreground flex items-center gap-1">
+            <Clock className="h-3 w-3 flex-shrink-0" />
+            <span>{format(scheduledDate, "EEEE, HH:mm", { locale: ptBR })}</span>
+            {isToday(scheduledDate) && (
+              <Badge variant="secondary" className="text-[10px] px-1.5 py-0 flex-shrink-0 ml-1">Hoje</Badge>
+            )}
+          </p>
+        )}
         {svc.budget_value && (
           <p className="text-xs font-semibold text-primary">R$ {svc.budget_value.toFixed(2).replace(".", ",")}</p>
         )}
@@ -734,6 +833,11 @@ function ServiceRow({
           <Button variant="outline" size="sm" className="h-8 text-xs" onClick={() => onSendBudget(svc)}>
             <Send className="h-3.5 w-3.5 mr-1" />
             Orçar
+          </Button>
+        )}
+        {(status === "accepted" || status === "pending" || status === "budget_sent") && (
+          <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary" onClick={() => onSchedule(svc)} title={hasScheduledDate ? "Alterar data" : "Agendar data"}>
+            <Calendar className="h-3.5 w-3.5" />
           </Button>
         )}
         <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => onDelete(svc.id)} title="Excluir">

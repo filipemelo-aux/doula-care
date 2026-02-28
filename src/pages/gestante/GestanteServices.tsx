@@ -17,6 +17,7 @@ interface ServiceRequest {
   budget_sent_at: string | null;
   responded_at: string | null;
   completed_at: string | null;
+  scheduled_date: string | null;
   created_at: string;
 }
 
@@ -43,7 +44,7 @@ export default function GestanteServices() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("service_requests")
-        .select("id, service_type, status, budget_value, budget_sent_at, responded_at, completed_at, created_at")
+        .select("id, service_type, status, budget_value, budget_sent_at, responded_at, completed_at, scheduled_date, created_at")
         .eq("client_id", client!.id)
         .in("status", ["pending", "budget_sent", "rejected"])
         .order("created_at", { ascending: false });
@@ -153,6 +154,12 @@ export default function GestanteServices() {
                             {formatBrazilDateTime(svc.created_at, "dd/MM/yyyy")}
                           </p>
                         </div>
+                        {svc.scheduled_date && (
+                          <div className="flex items-center gap-1.5 text-xs text-primary mt-1.5">
+                            <Calendar className="h-3.5 w-3.5" />
+                            <span>{formatBrazilDateTime(svc.scheduled_date, "dd/MM/yyyy 'às' HH:mm")}</span>
+                          </div>
+                        )}
                       </CardContent>
                     </Card>
                   );

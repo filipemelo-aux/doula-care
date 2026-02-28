@@ -23,6 +23,7 @@ interface ServiceRequest {
   budget_value: number | null;
   responded_at: string | null;
   completed_at: string | null;
+  scheduled_date: string | null;
   rating: number | null;
   rating_comment: string | null;
   rating_photos: string[] | null;
@@ -47,7 +48,7 @@ export function ScheduledServicesCard({ clientId }: ScheduledServicesCardProps) 
     queryFn: async () => {
       const { data, error } = await supabase
         .from("service_requests")
-        .select("id, service_type, status, budget_value, responded_at, completed_at, rating, rating_comment, rating_photos")
+        .select("id, service_type, status, budget_value, responded_at, completed_at, scheduled_date, rating, rating_comment, rating_photos")
         .eq("client_id", clientId)
         .eq("status", "accepted")
         .order("responded_at", { ascending: false });
@@ -183,11 +184,15 @@ export function ScheduledServicesCard({ clientId }: ScheduledServicesCardProps) 
                       R$ {svc.budget_value.toFixed(2).replace(".", ",")}
                     </p>
                   ) : <span />}
-                  {svc.responded_at && (
+                  {svc.scheduled_date ? (
+                    <p className="text-xs text-primary font-medium">
+                      📅 {formatBrazilDateTime(svc.scheduled_date, "dd/MM/yyyy 'às' HH:mm")}
+                    </p>
+                  ) : svc.responded_at ? (
                     <p className="text-xs text-muted-foreground">
                       📅 {formatBrazilDateTime(svc.responded_at, "dd/MM/yyyy")}
                     </p>
-                  )}
+                  ) : null}
                 </div>
 
                 <div className="flex gap-2 flex-wrap">

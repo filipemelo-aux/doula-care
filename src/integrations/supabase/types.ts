@@ -893,6 +893,7 @@ export type Database = {
           rating_comment: string | null
           rating_photos: string[] | null
           responded_at: string | null
+          scheduled_date: string | null
           service_type: string
           status: string
           updated_at: string
@@ -909,6 +910,7 @@ export type Database = {
           rating_comment?: string | null
           rating_photos?: string[] | null
           responded_at?: string | null
+          scheduled_date?: string | null
           service_type: string
           status?: string
           updated_at?: string
@@ -925,6 +927,7 @@ export type Database = {
           rating_comment?: string | null
           rating_photos?: string[] | null
           responded_at?: string | null
+          scheduled_date?: string | null
           service_type?: string
           status?: string
           updated_at?: string
