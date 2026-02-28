@@ -32,6 +32,7 @@ import { LaborStartButton } from "@/components/gestante/LaborStartButton";
 import { AppointmentsCard } from "@/components/gestante/AppointmentsCard";
 import { ScheduledServicesCard } from "@/components/gestante/ScheduledServicesCard";
 import { OverduePaymentAlert } from "@/components/gestante/OverduePaymentAlert";
+import { PendingContractCard } from "@/components/gestante/PendingContractCard";
 
 
 type Client = Tables<"clients">;
@@ -248,6 +249,7 @@ export default function GestanteDashboard() {
         <div className="container mx-auto px-4 py-6 space-y-6">
           {/* Overdue Payment Alert */}
           <OverduePaymentAlert />
+          <PendingContractCard />
 
           {/* Congratulations Card */}
           <Card className="overflow-hidden bg-gradient-to-br from-primary/10 via-primary/20 to-accent/20 border-primary/30 shadow-lg">
@@ -430,6 +432,7 @@ export default function GestanteDashboard() {
       <div className="container mx-auto px-4 py-6 space-y-6">
         {/* Overdue Payment Alert */}
         <OverduePaymentAlert />
+        <PendingContractCard />
 
         {/* Pregnancy Progress + Labor Button Row */}
         {gestationalAge && (

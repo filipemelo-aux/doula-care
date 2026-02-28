@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { ContractEditorDialog } from "./ContractEditorDialog";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ManageAppointmentsDialog } from "./ManageAppointmentsDialog";
 import {
@@ -86,6 +87,7 @@ export function ClientDetailsDialog({
 }: ClientDetailsDialogProps) {
   const [notificationDialogOpen, setNotificationDialogOpen] = useState(false);
   const [appointmentsDialogOpen, setAppointmentsDialogOpen] = useState(false);
+  const [contractDialogOpen, setContractDialogOpen] = useState(false);
   const [resetting, setResetting] = useState(false);
   const [resetConfirmOpen, setResetConfirmOpen] = useState(false);
   const [revenueDetailOpen, setRevenueDetailOpen] = useState(false);
@@ -251,6 +253,15 @@ export function ClientDetailsDialog({
                     title="Consultas"
                   >
                     <Calendar className="w-4 h-4" />
+                  </Button>
+                   <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-9 w-9"
+                    onClick={() => setContractDialogOpen(true)}
+                    title="Contrato"
+                  >
+                    <FileText className="w-4 h-4" />
                   </Button>
                   <Button
                     variant="outline"
@@ -450,6 +461,15 @@ export function ClientDetailsDialog({
         <ManageAppointmentsDialog
           open={appointmentsDialogOpen}
           onOpenChange={setAppointmentsDialogOpen}
+          clientId={client.id}
+          clientName={client.full_name}
+        />
+      )}
+
+      {client && (
+        <ContractEditorDialog
+          open={contractDialogOpen}
+          onOpenChange={setContractDialogOpen}
           clientId={client.id}
           clientName={client.full_name}
         />
