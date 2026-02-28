@@ -32,6 +32,7 @@ export function EditContactDialog({
 }: EditContactDialogProps) {
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
+    preferred_name: "",
     phone: "",
     zip_code: "",
     street: "",
@@ -46,6 +47,7 @@ export function EditContactDialog({
   useEffect(() => {
     if (client) {
       setFormData({
+        preferred_name: client.preferred_name || "",
         phone: client.phone || "",
         zip_code: client.zip_code || "",
         street: client.street || "",
@@ -100,6 +102,7 @@ export function EditContactDialog({
       const { error } = await supabase
         .from("clients")
         .update({
+          preferred_name: formData.preferred_name || null,
           phone: formData.phone,
           zip_code: formData.zip_code,
           street: formData.street,
@@ -136,6 +139,16 @@ export function EditContactDialog({
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="preferred_name">Como gostaria de ser chamada</Label>
+            <Input
+              id="preferred_name"
+              value={formData.preferred_name}
+              onChange={(e) => handleChange("preferred_name", e.target.value)}
+              placeholder="Seu nome ou apelido"
+            />
+          </div>
+
           <div className="space-y-2">
             <Label htmlFor="phone">Telefone</Label>
             <Input
