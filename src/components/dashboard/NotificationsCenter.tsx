@@ -239,6 +239,7 @@ export function NotificationsCenter({ fullPage = false }: NotificationsCenterPro
         service_type: entry.service_type,
         status: entry.status,
         created_at: entry.created_at,
+        preferred_date: entry.preferred_date,
         client_name: (entry.clients as { full_name: string } | null)?.full_name || "Cliente"
       })) as ServiceRequest[];
     },
