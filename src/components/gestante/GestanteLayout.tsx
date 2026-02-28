@@ -26,10 +26,10 @@ interface GestanteLayoutProps {
 
 const navItems = [
   { to: "/gestante", icon: LayoutDashboard, label: "Visão Geral" },
-  { to: "/gestante/servicos", icon: Briefcase, label: "Serviços" },
-  { to: "/gestante/diario", icon: BookHeart, label: "Diário" },
-  { to: "/gestante/mensagens", icon: MessageCircle, label: "Mensagens" },
   { to: "/gestante/contracoes", icon: Timer, label: "Contrações" },
+  { to: "/gestante/servicos", icon: Briefcase, label: "Serviços" },
+  { to: "/gestante/mensagens", icon: MessageCircle, label: "Mensagens" },
+  { to: "/gestante/diario", icon: BookHeart, label: "Diário" },
   { to: "/gestante/perfil", icon: User, label: "Perfil" },
 ];
 
