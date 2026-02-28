@@ -35,6 +35,7 @@ export function ServiceRequestButtons() {
       const { data, error } = await supabase
         .from("custom_services")
         .select("id, name, icon")
+        .eq("organization_id", organizationId!)
         .eq("is_active", true)
         .order("name");
       if (error) throw error;
