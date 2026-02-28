@@ -606,7 +606,7 @@ function AppointmentRow({
           <p className="text-lg font-bold leading-tight">{format(date, "dd")}</p>
         </div>
         <div className="w-0 flex-1 overflow-hidden">
-          <p className="block w-full font-medium text-sm truncate" title={apt.title}>{apt.title}</p>
+          <p className="block w-full font-medium text-sm line-clamp-2 break-words" title={apt.title}>{apt.title}</p>
           <p className="text-xs text-muted-foreground truncate">{displayName(apt.clients?.full_name || "")}</p>
           <p className="text-xs text-muted-foreground flex items-center gap-1 min-w-0">
             <Clock className="h-3 w-3 flex-shrink-0" />
