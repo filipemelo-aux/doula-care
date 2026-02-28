@@ -166,37 +166,34 @@ export function ScheduledServicesCard({ clientId }: ScheduledServicesCardProps) 
             <h2 className="font-display font-semibold text-base">Serviços Agendados</h2>
           </div>
 
-          <div className="space-y-2">
-            {services.map((svc) => (
-              <div key={svc.id} className="bg-background/60 rounded-lg p-3 space-y-2">
-                <div className="flex items-center justify-between">
-                  <p className="font-medium text-sm">{svc.service_type}</p>
-                  {svc.completed_at ? (
-                    <Badge className="bg-emerald-600 text-white text-[10px]">Concluído</Badge>
-                  ) : (
+          {/* Active/scheduled services */}
+          {services.filter(s => !s.completed_at).length > 0 && (
+            <div className="space-y-2">
+              {services.filter(s => !s.completed_at).map((svc) => (
+                <div key={svc.id} className="bg-background/60 rounded-lg p-3 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <p className="font-medium text-sm">{svc.service_type}</p>
                     <Badge variant="outline" className="text-[10px] border-amber-300 text-amber-700">Agendado</Badge>
-                  )}
-                </div>
+                  </div>
 
-                <div className="flex items-center justify-between">
-                  {svc.budget_value ? (
-                    <p className="text-sm text-muted-foreground">
-                      R$ {svc.budget_value.toFixed(2).replace(".", ",")}
-                    </p>
-                  ) : <span />}
-                  {svc.scheduled_date ? (
-                    <p className="text-xs text-primary font-medium">
-                      📅 {formatBrazilDateTime(svc.scheduled_date, "dd/MM/yyyy 'às' HH:mm")}
-                    </p>
-                  ) : svc.responded_at ? (
-                    <p className="text-xs text-muted-foreground">
-                      📅 {formatBrazilDateTime(svc.responded_at, "dd/MM/yyyy")}
-                    </p>
-                  ) : null}
-                </div>
+                  <div className="flex items-center justify-between">
+                    {svc.budget_value ? (
+                      <p className="text-sm text-muted-foreground">
+                        R$ {svc.budget_value.toFixed(2).replace(".", ",")}
+                      </p>
+                    ) : <span />}
+                    {svc.scheduled_date ? (
+                      <p className="text-xs text-primary font-medium">
+                        📅 {formatBrazilDateTime(svc.scheduled_date, "dd/MM/yyyy 'às' HH:mm")}
+                      </p>
+                    ) : svc.responded_at ? (
+                      <p className="text-xs text-muted-foreground">
+                        📅 {formatBrazilDateTime(svc.responded_at, "dd/MM/yyyy")}
+                      </p>
+                    ) : null}
+                  </div>
 
-                <div className="flex gap-2 flex-wrap">
-                  {!svc.completed_at && (
+                  <div className="flex gap-2 flex-wrap">
                     <Button
                       size="sm"
                       variant="outline"
@@ -211,57 +208,87 @@ export function ScheduledServicesCard({ clientId }: ScheduledServicesCardProps) 
                       )}
                       Marcar Concluído
                     </Button>
-                  )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
 
-                  {svc.completed_at && !svc.rating && (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="text-xs border-amber-300 text-amber-700 hover:bg-amber-50 hover:text-amber-700"
-                      onClick={() => {
-                        setRatingDialog(svc);
-                        setSelectedRating(0);
-                        setRatingComment("");
-                        setSelectedPhotos([]);
-                        setPhotoPreviewUrls([]);
-                      }}
-                    >
-                      <Star className="h-3 w-3 mr-1" />
-                      Avaliar
-                    </Button>
-                  )}
+          {/* Completed/finalized services - reduced & opaque */}
+          {services.filter(s => !!s.completed_at).length > 0 && (
+            <div className="space-y-2 mt-3">
+              <p className="text-xs font-medium text-muted-foreground/70 px-1">Serviços Finalizados</p>
+              {services.filter(s => !!s.completed_at).map((svc) => (
+                <div key={svc.id} className="bg-background/30 rounded-lg p-2.5 space-y-1.5 opacity-60">
+                  <div className="flex items-center justify-between">
+                    <p className="font-medium text-xs">{svc.service_type}</p>
+                    <Badge className="bg-muted text-muted-foreground text-[10px] border-0">Concluído</Badge>
+                  </div>
 
-                  {svc.rating && (
-                    <div className="flex items-center gap-1">
-                      <div className="flex items-center gap-0.5">
-                        {[1, 2, 3, 4, 5].map((s) => (
-                          <Star
-                            key={s}
-                            className={`h-3.5 w-3.5 ${s <= svc.rating! ? "text-amber-400 fill-amber-400" : "text-muted-foreground/30"}`}
-                          />
-                        ))}
+                  <div className="flex items-center justify-between">
+                    {svc.budget_value ? (
+                      <p className="text-xs text-muted-foreground">
+                        R$ {svc.budget_value.toFixed(2).replace(".", ",")}
+                      </p>
+                    ) : <span />}
+                    {svc.scheduled_date ? (
+                      <p className="text-[10px] text-muted-foreground">
+                        📅 {formatBrazilDateTime(svc.scheduled_date, "dd/MM/yyyy")}
+                      </p>
+                    ) : null}
+                  </div>
+
+                  <div className="flex gap-2 flex-wrap items-center">
+                    {!svc.rating && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="text-xs h-6 border-amber-300 text-amber-700 hover:bg-amber-50 hover:text-amber-700"
+                        onClick={() => {
+                          setRatingDialog(svc);
+                          setSelectedRating(0);
+                          setRatingComment("");
+                          setSelectedPhotos([]);
+                          setPhotoPreviewUrls([]);
+                        }}
+                      >
+                        <Star className="h-3 w-3 mr-1" />
+                        Avaliar
+                      </Button>
+                    )}
+
+                    {svc.rating && (
+                      <div className="flex items-center gap-1">
+                        <div className="flex items-center gap-0.5">
+                          {[1, 2, 3, 4, 5].map((s) => (
+                            <Star
+                              key={s}
+                              className={`h-3 w-3 ${s <= svc.rating! ? "text-amber-400 fill-amber-400" : "text-muted-foreground/30"}`}
+                            />
+                          ))}
+                        </div>
+                        {svc.rating_photos && svc.rating_photos.length > 0 && (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="text-xs h-5 px-1"
+                            onClick={() => setViewingPhotos(svc.rating_photos!)}
+                          >
+                            <ImageIcon className="h-3 w-3 mr-0.5" />
+                            {svc.rating_photos.length}
+                          </Button>
+                        )}
                       </div>
-                      {svc.rating_photos && svc.rating_photos.length > 0 && (
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="text-xs h-6 px-1.5"
-                          onClick={() => setViewingPhotos(svc.rating_photos!)}
-                        >
-                          <ImageIcon className="h-3 w-3 mr-0.5" />
-                          {svc.rating_photos.length}
-                        </Button>
-                      )}
-                    </div>
+                    )}
+                  </div>
+
+                  {svc.rating_comment && (
+                    <p className="text-[10px] text-muted-foreground italic">"{svc.rating_comment}"</p>
                   )}
                 </div>
-
-                {svc.rating_comment && (
-                  <p className="text-xs text-muted-foreground italic">"{svc.rating_comment}"</p>
-                )}
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
 
