@@ -26,6 +26,17 @@ fs.writeFileSync(counterFile, JSON.stringify({ date: TODAY, count: buildCount },
 const BUILD_ID = buildCount === 1 ? TODAY : `${TODAY}${buildCount}`;
 const FULL_VERSION = `${APP_VERSION}.${BUILD_ID}`;
 
+// Inject version into sw-push.js so cache busting stays in sync
+const swPushPath = path.resolve(__dirname, "public/sw-push.js");
+const swPushSource = fs.readFileSync(swPushPath, "utf-8");
+const updatedSw = swPushSource.replace(
+  /const CACHE_VERSION = "v[^"]*";/,
+  `const CACHE_VERSION = "v${APP_VERSION}";`
+);
+if (updatedSw !== swPushSource) {
+  fs.writeFileSync(swPushPath, updatedSw);
+}
+
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
   server: {
@@ -83,12 +94,12 @@ export default defineConfig(({ mode }) => ({
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
         navigateFallbackDenylist: [/^\/~oauth/],
         importScripts: ["/sw-push.js"],
-        runtimeCaching: [
+      runtimeCaching: [
           {
             urlPattern: /^https:\/\/gjnvxzsforfrxjanxqnq\.supabase\.co\/.*/i,
             handler: "NetworkFirst",
             options: {
-              cacheName: `supabase-api-cache-${APP_VERSION}`,
+              cacheName: `supabase-api-v${APP_VERSION}`,
               expiration: {
                 maxEntries: 50,
                 maxAgeSeconds: 300,
