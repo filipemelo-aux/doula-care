@@ -7,7 +7,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar, Trash2, Loader2, Plus, Clock, Info } from "lucide-react";
+import { Calendar, Trash2, Loader2, Plus, Clock, Eye } from "lucide-react";
 import { AppointmentDetailDialog } from "@/components/clients/AppointmentDetailDialog";
 import { format, isToday } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -133,12 +133,12 @@ export function UpcomingAppointments() {
                         <p className="text-lg font-bold leading-tight">{format(date, "dd")}</p>
                       </div>
                       <div className="flex-1 min-w-0 overflow-hidden">
-                        <p className="font-medium text-sm truncate">{apt.title}</p>
+                        <p className="font-medium text-sm truncate" title={apt.title}>{apt.title}</p>
                         <p className="text-xs text-muted-foreground truncate" title={apt.clients?.full_name}>
                           {displayName(apt.clients?.full_name || "")}
                         </p>
                         <p className="text-xs text-muted-foreground flex items-center gap-1">
-                          <Clock className="h-3 w-3" />
+                          <Clock className="h-3 w-3 flex-shrink-0" />
                           {format(date, "EEEE, HH:mm", { locale: ptBR })}
                           {today && (
                             <Badge variant="secondary" className="text-[10px] px-1.5 py-0 flex-shrink-0 ml-1">
@@ -146,14 +146,17 @@ export function UpcomingAppointments() {
                             </Badge>
                           )}
                         </p>
-                        <button
-                          className="text-[11px] text-primary hover:underline mt-0.5"
-                          onClick={() => setDetailApt(apt)}
-                        >
-                          Ver detalhes
-                        </button>
                       </div>
                       <div className="flex items-center gap-1 flex-shrink-0">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-muted-foreground hover:text-primary"
+                          onClick={() => setDetailApt(apt)}
+                          title="Ver detalhes"
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
                         <Button
                           variant="ghost"
                           size="icon"
