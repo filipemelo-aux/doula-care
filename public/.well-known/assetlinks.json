@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.doulacare.app",
+      "sha256_cert_fingerprints": [
+        "07:F7:7D:48:4C:53:52:3C:16:89:D8:F1:7E:A9:9E:5D:0B:C4:23:EC:13:A7:3C:29:A6:9D:FD:3E:A6:11:2D:65"
+      ]
+    }
+  }
+]
