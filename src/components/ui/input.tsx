@@ -5,8 +5,8 @@ import { toTitleCase } from "@/lib/masks";
 
 const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
   ({ className, type, onChange, value, defaultValue, ...props }, ref) => {
-    // Check if lowercase class is present
-    const shouldBeLowercase = className?.includes("lowercase");
+    // Check if lowercase class is present or if type forces lowercase
+    const shouldBeLowercase = className?.includes("lowercase") || type === "email";
     // Never transform password, number, or email fields
     const isExemptType = type === "number" || type === "email" || type === "password";
     const shouldTransform = !isExemptType && !shouldBeLowercase;
@@ -26,8 +26,8 @@ const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
     };
 
     // Transform controlled value and defaultValue
-    const transformedValue = shouldTransform && typeof value === "string" ? toTitleCase(value) : value;
-    const transformedDefault = shouldTransform && typeof defaultValue === "string" ? toTitleCase(defaultValue) : defaultValue;
+    const transformedValue = shouldTransform && typeof value === "string" ? toTitleCase(value) : (shouldBeLowercase && typeof value === "string" ? value.toLowerCase() : value);
+    const transformedDefault = shouldTransform && typeof defaultValue === "string" ? toTitleCase(defaultValue) : (shouldBeLowercase && typeof defaultValue === "string" ? defaultValue.toLowerCase() : defaultValue);
 
     return (
       <input
