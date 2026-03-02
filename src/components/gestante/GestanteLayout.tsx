@@ -4,6 +4,8 @@ import logo from "@/assets/logo.png";
 import { useOrgBranding } from "@/hooks/useOrgBranding";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useGestanteAuth } from "@/contexts/GestanteAuthContext";
+import { useGestanteUnreadCount } from "@/hooks/useGestanteUnreadCount";
+import { Badge } from "@/components/ui/badge";
 import { 
   LayoutDashboard,
   BookHeart, 
@@ -39,8 +41,9 @@ export function GestanteLayout({ children }: GestanteLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
-  const { signOut } = useGestanteAuth();
+  const { signOut, client } = useGestanteAuth();
   const { logoUrl: orgLogo, displayName } = useOrgBranding();
+  const unreadMessages = useGestanteUnreadCount(client?.id);
   const headerLogo = orgLogo || logo;
   const headerName = displayName || "Doula Care";
 
@@ -103,21 +106,32 @@ export function GestanteLayout({ children }: GestanteLayoutProps) {
         <nav className="flex-1 py-6 px-3 space-y-1 overflow-y-auto">
           {navItems.map((item) => {
             const isActive = location.pathname === item.to;
+            const badgeCount = item.to === "/gestante/mensagens" ? unreadMessages : 0;
             return (
               <button
                 key={item.to}
                 onClick={() => handleNavClick(item.to)}
                 className={cn(
-                  "nav-link w-full text-left",
+                  "nav-link w-full text-left relative",
                   isActive && "active",
                   !sidebarOpen && "lg:justify-center lg:px-0"
                 )}
                 title={!sidebarOpen ? item.label : undefined}
               >
-                <item.icon className={cn("w-5 h-5 shrink-0", isActive && "text-current")} />
+                <div className="relative">
+                  <item.icon className={cn("w-5 h-5 shrink-0", isActive && "text-current")} />
+                  {badgeCount > 0 && !sidebarOpen && (
+                    <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-destructive hidden lg:block" />
+                  )}
+                </div>
                 <span className={cn("transition-opacity flex-1", !sidebarOpen && "lg:hidden")}>
                   {item.label}
                 </span>
+                {badgeCount > 0 && sidebarOpen && (
+                  <Badge variant="destructive" className="text-[10px] h-5 min-w-5 flex items-center justify-center ml-auto">
+                    {badgeCount}
+                  </Badge>
+                )}
               </button>
             );
           })}
