@@ -23,8 +23,7 @@ try {
 } catch { /* first build or missing file */ }
 fs.writeFileSync(counterFile, JSON.stringify({ date: TODAY, count: buildCount }, null, 2));
 
-const BUILD_ID = buildCount === 1 ? TODAY : `${TODAY}${buildCount}`;
-const FULL_VERSION = `${APP_VERSION}.${BUILD_ID}`;
+const FULL_VERSION = `${APP_VERSION}.${TODAY}.${buildCount}`;
 
 // Inject version into sw-push.js so cache busting stays in sync
 const swPushPath = path.resolve(__dirname, "public/sw-push.js");
