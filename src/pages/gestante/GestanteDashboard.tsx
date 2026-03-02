@@ -24,6 +24,7 @@ import { format, differenceInDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Tables } from "@/integrations/supabase/types";
 import { useQuery } from "@tanstack/react-query";
+import { useGestanteUnreadCount } from "@/hooks/useGestanteUnreadCount";
 import { getLocalDate } from "@/lib/utils";
 import { GestanteLayout } from "@/components/gestante/GestanteLayout";
 import { useNavigate } from "react-router-dom";
@@ -40,17 +41,18 @@ type Client = Tables<"clients">;
 export default function GestanteDashboard() {
   const [clientData, setClientData] = useState<Client | null>(null);
   const [loading, setLoading] = useState(true);
-  const [unreadMessages, setUnreadMessages] = useState(0);
   const [preferredName, setPreferredName] = useState<string | null>(null);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const { client, user, signOut, organizationId: authOrgId } = useGestanteAuth();
   const clientOrganizationId = client?.organization_id || authOrgId || null;
   const navigate = useNavigate();
 
+  // Reactive unread count via shared hook
+  const unreadMessages = useGestanteUnreadCount(client?.id);
+
   useEffect(() => {
     if (user) {
       fetchFullClientData();
-      fetchUnreadCount();
       checkPaymentMessages();
       // Fetch avatar
       supabase
@@ -110,22 +112,7 @@ export default function GestanteDashboard() {
     }
   };
 
-  const fetchUnreadCount = async () => {
-    if (!client?.id) return;
-
-    try {
-      const { count, error } = await supabase
-        .from("client_notifications")
-        .select("*", { count: "exact", head: true })
-        .eq("client_id", client.id)
-        .eq("read_by_client", false);
-
-      if (error) throw error;
-      setUnreadMessages(count || 0);
-    } catch (error) {
-      console.error("Error fetching unread count:", error);
-    }
-  };
+  // fetchUnreadCount is now handled by useQuery above
 
   // Check for unread payment messages and redirect if found
   const checkPaymentMessages = async () => {

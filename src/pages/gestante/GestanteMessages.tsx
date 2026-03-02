@@ -127,6 +127,7 @@ export default function GestanteMessages() {
         .update({ read_by_client: true })
         .in("id", ids);
       queryClient.invalidateQueries({ queryKey: ["admin-all-messages"] });
+      queryClient.invalidateQueries({ queryKey: ["gestante-unread-messages"] });
     } catch (error) {
       console.error("Error marking as read by client:", error);
     }
