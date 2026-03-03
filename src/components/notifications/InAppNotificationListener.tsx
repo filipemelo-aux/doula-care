@@ -236,5 +236,11 @@ export function InAppNotificationListener({ userId, role, clientId, organization
     };
   }, [userId, role, clientId]);
 
-  return null;
+  return (
+    <ClientContractionsDialog
+      open={contractionsDialogOpen}
+      onOpenChange={setContractionsDialogOpen}
+      client={contractionsClient}
+    />
+  );
 }
