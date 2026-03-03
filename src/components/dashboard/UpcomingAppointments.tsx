@@ -47,7 +47,7 @@ export function UpcomingAppointments() {
         .select("*, clients(full_name)")
         .not("title", "like", "Serviço:%")
         .gte("scheduled_at", new Date().toISOString().split("T")[0])
-        .order("scheduled_at", { ascending: true });
+        .order("scheduled_at", { ascending: false });
 
       if (error) throw error;
       return data as unknown as AppointmentWithClient[];
