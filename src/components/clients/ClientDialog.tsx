@@ -114,7 +114,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
       if (!client?.id) return null;
       const { data, error } = await supabase
         .from("transactions")
-        .select("installments, installment_value, payment_method, date")
+        .select("id, installments, installment_value, payment_method, date")
         .eq("client_id", client.id)
         .eq("is_auto_generated", true)
         .eq("type", "receita")
@@ -123,6 +123,35 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
         .maybeSingle();
       if (error) throw error;
       return data;
+    },
+    enabled: !!client?.id && open,
+  });
+
+  const { data: clientInstallmentPayments } = useQuery({
+    queryKey: ["client-installment-payments", client?.id, clientTransaction?.id],
+    queryFn: async () => {
+      if (!client?.id) return [];
+
+      if (clientTransaction?.id) {
+        const { data: byTx, error: byTxErr } = await supabase
+          .from("payments")
+          .select("amount, amount_paid, due_date, installment_number, total_installments, transaction_id")
+          .eq("transaction_id", clientTransaction.id)
+          .order("installment_number", { ascending: true });
+
+        if (byTxErr) throw byTxErr;
+        if (byTx && byTx.length > 0) return byTx;
+      }
+
+      const { data: legacy, error: legacyErr } = await supabase
+        .from("payments")
+        .select("amount, amount_paid, due_date, installment_number, total_installments, transaction_id")
+        .eq("client_id", client.id)
+        .is("transaction_id", null)
+        .order("installment_number", { ascending: true });
+
+      if (legacyErr) throw legacyErr;
+      return legacy || [];
     },
     enabled: !!client?.id && open,
   });
@@ -176,6 +205,9 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
   const watchedPaymentType = form.watch("payment_type");
   const watchedFirstDueDate = form.watch("first_due_date");
   const watchedPaymentDateAvista = form.watch("payment_date_avista");
+  const watchedInstallments = form.watch("installments") || 1;
+  const watchedInstallmentFrequency = form.watch("installment_frequency") || "mensal";
+  const watchedPlanValue = form.watch("plan_value") || 0;
 
   // Date-based auto-pay logic
   const today = format(new Date(), "yyyy-MM-dd");
@@ -219,6 +251,17 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
     if (client) {
       const txInstallments = clientTransaction?.installments ? Number(clientTransaction.installments) : 1;
       const isParcelado = txInstallments > 1;
+      const sortedPayments = (clientInstallmentPayments || [])
+        .slice()
+        .sort((a, b) => Number(a.installment_number || 0) - Number(b.installment_number || 0));
+      const hasCustomInstallments = sortedPayments.length > 1 &&
+        sortedPayments.some((p, _, arr) => Math.abs(Number(p.amount || 0) - Number(arr[0]?.amount || 0)) > 0.01);
+      const firstInstallment = sortedPayments[0];
+      const firstDueDate = firstInstallment?.due_date || "";
+      const isFirstInstallmentPaid = !!firstInstallment &&
+        Number(firstInstallment.amount || 0) > 0 &&
+        Number(firstInstallment.amount_paid || 0) >= Number(firstInstallment.amount || 0);
+
       form.reset({
         full_name: client.full_name,
         phone: client.phone,
@@ -243,9 +286,9 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
         discount_percent: 0,
         payment_date_avista: isParcelado ? "" : (clientTransaction?.date || ""),
         installments: txInstallments,
-        installment_frequency: "mensal",
+        installment_frequency: hasCustomInstallments ? "manual" : "mensal",
         custom_interval_days: 30,
-        first_due_date: "",
+        first_due_date: firstDueDate,
         plan_value: Number(client.plan_value) || 0,
         prenatal_type: (client as any).prenatal_type || "",
         prenatal_high_risk: (client as any).prenatal_high_risk || false,
@@ -259,8 +302,12 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
         instagram_acompanhante: (client as any).instagram_acompanhante || "",
         notes: client.notes || "",
       });
-      setEntryAlreadyPaid(false);
-      setCustomInstallmentAmounts([]);
+      setEntryAlreadyPaid(isParcelado ? isFirstInstallmentPaid : false);
+      setCustomInstallmentAmounts(
+        isParcelado && hasCustomInstallments && sortedPayments.length === txInstallments
+          ? sortedPayments.map((p) => Number(p.amount) || 0)
+          : []
+      );
       const teamData = (client as any).prenatal_team;
       setPrenatalTeam(Array.isArray(teamData) ? teamData : []);
     } else {
@@ -308,7 +355,26 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
         notes: "",
       });
     }
-  }, [client, form, planSettings, clientTransaction]);
+  }, [client, form, planSettings, clientTransaction, clientInstallmentPayments]);
+
+  useEffect(() => {
+    if (watchedPaymentType !== "parcelado" || watchedInstallmentFrequency !== "manual") return;
+    if (watchedInstallments <= 1) {
+      if (customInstallmentAmounts.length > 0) setCustomInstallmentAmounts([]);
+      return;
+    }
+
+    if (customInstallmentAmounts.length !== watchedInstallments) {
+      const equalValue = watchedInstallments > 0 ? watchedPlanValue / watchedInstallments : 0;
+      setCustomInstallmentAmounts(Array(watchedInstallments).fill(equalValue));
+    }
+  }, [
+    watchedPaymentType,
+    watchedInstallmentFrequency,
+    watchedInstallments,
+    watchedPlanValue,
+    customInstallmentAmounts.length,
+  ]);
 
   const mutation = useMutation({
     mutationFn: async (data: ClientFormData) => {
@@ -379,10 +445,11 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
         const todayStr = format(new Date(), "yyyy-MM-dd");
         const aVistaDate = data.payment_date_avista || clientTransaction?.date || todayStr;
         const autoReceivedForAvista = data.payment_type === "a_vista" && aVistaDate <= todayStr ? finalPlanValue : 0;
+        const transactionId = clientTransaction?.id || null;
 
-        const { error: transactionError } = await supabase
+        let transactionUpdateQuery = supabase
           .from("transactions")
-          .update({ 
+          .update({
             description: newDescription,
             amount: finalPlanValue,
             payment_method: data.payment_method as any,
@@ -392,21 +459,32 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
               date: aVistaDate,
               amount_received: autoReceivedForAvista,
             } : {}),
-          })
-          .eq("client_id", client.id)
-          .eq("is_auto_generated", true);
-        
+          });
+
+        transactionUpdateQuery = transactionId
+          ? transactionUpdateQuery.eq("id", transactionId)
+          : transactionUpdateQuery.eq("client_id", client.id).eq("is_auto_generated", true);
+
+        const { error: transactionError } = await transactionUpdateQuery;
+
         if (transactionError) {
           console.error("Error updating transaction:", transactionError);
         }
 
         // Recreate payment records if parcelado with installments > 1
         if (data.payment_type === "parcelado" && installmentCount > 1) {
-          // Delete existing payment records for this client
-          const { error: deleteErr } = await supabase
-            .from("payments")
-            .delete()
-            .eq("client_id", client.id);
+          // Delete old contract-related payments (current and legacy)
+          const deleteOps = transactionId
+            ? [
+                supabase.from("payments").delete().eq("transaction_id", transactionId),
+                supabase.from("payments").delete().eq("client_id", client.id).is("transaction_id", null),
+              ]
+            : [
+                supabase.from("payments").delete().eq("client_id", client.id).is("transaction_id", null),
+              ];
+
+          const deleteResults = await Promise.all(deleteOps);
+          const deleteErr = deleteResults.find((res) => res.error)?.error;
           if (deleteErr) console.error("Error deleting old payments:", deleteErr);
 
           const installmentAmount = finalPlanValue / installmentCount;
@@ -425,6 +503,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
             const thisAmt = useCustomAmts ? customInstallmentAmounts[i] : installmentAmount;
             return {
               client_id: client.id,
+              transaction_id: transactionId,
               installment_number: i + 1,
               total_installments: installmentCount,
               amount: thisAmt,
@@ -443,18 +522,29 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
           if (paymentError) console.error("Error creating payments:", paymentError);
 
           const autoReceivedParcelado = paymentRecords.reduce((sum, p) => sum + Number(p.amount_paid || 0), 0);
-          const { error: txAmountError } = await supabase
+          let txAmountUpdateQuery = supabase
             .from("transactions")
-            .update({ amount_received: autoReceivedParcelado })
-            .eq("client_id", client.id)
-            .eq("is_auto_generated", true);
+            .update({ amount_received: autoReceivedParcelado });
+
+          txAmountUpdateQuery = transactionId
+            ? txAmountUpdateQuery.eq("id", transactionId)
+            : txAmountUpdateQuery.eq("client_id", client.id).eq("is_auto_generated", true);
+
+          const { error: txAmountError } = await txAmountUpdateQuery;
           if (txAmountError) console.error("Error updating transaction amount_received:", txAmountError);
         } else {
-          // If switched to à vista, delete existing payment records
-          const { error: deleteErr } = await supabase
-            .from("payments")
-            .delete()
-            .eq("client_id", client.id);
+          // If switched to à vista, delete contract-related payment records
+          const deleteOps = transactionId
+            ? [
+                supabase.from("payments").delete().eq("transaction_id", transactionId),
+                supabase.from("payments").delete().eq("client_id", client.id).is("transaction_id", null),
+              ]
+            : [
+                supabase.from("payments").delete().eq("client_id", client.id).is("transaction_id", null),
+              ];
+
+          const deleteResults = await Promise.all(deleteOps);
+          const deleteErr = deleteResults.find((res) => res.error)?.error;
           if (deleteErr) console.error("Error deleting old payments:", deleteErr);
         }
       } else {
@@ -535,9 +625,11 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
           organization_id: organizationId || null,
         };
 
-        const { error: transactionError } = await supabase
+        const { data: createdTransaction, error: transactionError } = await supabase
           .from("transactions")
-          .insert([transactionPayload]);
+          .insert([transactionPayload])
+          .select("id")
+          .single();
         if (transactionError) throw transactionError;
 
         // Create payment records with due dates if parcelado
@@ -566,8 +658,8 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
             const thisAmt = useCustomAmts ? customInstallmentAmounts[i] : installmentAmount;
             return {
               client_id: newClient.id,
+              transaction_id: createdTransaction.id,
               installment_number: i + 1,
-              total_installments: installmentCount,
               amount: thisAmt,
               amount_paid: isPastDue || (entryAlreadyPaid && i === 0) ? thisAmt : 0,
               due_date: dueDateStr,
@@ -1217,13 +1309,8 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
                           {(() => {
                             const count = form.watch("installments") || 1;
                             const total = form.watch("plan_value") || 0;
-                            // Initialize if empty or count changed
+                            // Wait for useEffect to sync array length when installments change
                             if (customInstallmentAmounts.length !== count) {
-                              const equalVal = total / count;
-                              const initial = Array(count).fill(equalVal);
-                              if (customInstallmentAmounts.length === 0) {
-                                setTimeout(() => setCustomInstallmentAmounts(initial), 0);
-                              }
                               return null;
                             }
                             const sumCustom = customInstallmentAmounts.reduce((a, b) => a + b, 0);
@@ -1296,16 +1383,10 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
                   )}
                 </div>
 
-                {/* Auto-pay logic indicator */}
-                {!client && (
+                {/* Entrada no parcelado */}
+                {watchedPaymentType === "parcelado" && (
                   <div className="rounded-lg border p-3 space-y-1">
-                    {watchedPaymentType === "a_vista" ? (
-                      <p className="text-xs text-muted-foreground">
-                        {isFirstDueDateInPast
-                          ? "Pagamento à vista será marcado como recebido automaticamente pela data informada."
-                          : "Pagamento à vista ficará pendente até a data informada."}
-                      </p>
-                    ) : isFirstDueDateInPast ? (
+                    {isFirstDueDateInPast ? (
                       <p className="text-xs text-success flex items-center gap-1.5">
                         <CheckCircle className="h-3.5 w-3.5" />
                         A data é anterior a hoje — entrada será marcada como <strong>Recebida</strong> automaticamente.
