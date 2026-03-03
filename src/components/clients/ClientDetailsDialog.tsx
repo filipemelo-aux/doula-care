@@ -38,6 +38,9 @@ import {
   Eye,
   Stethoscope,
   AlertTriangle,
+  Camera,
+  Instagram,
+  Heart,
 } from "lucide-react";
 import type { Tables } from "@/integrations/supabase/types";
 import { parseISO } from "date-fns";
@@ -450,6 +453,93 @@ export function ClientDetailsDialog({
                             </div>
                           ))}
                         </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </>
+            )}
+
+            {/* Saúde e Restrições */}
+            {((client as any).comorbidades || (client as any).alergias || (client as any).restricao_aromaterapia) && (
+              <>
+                <Separator />
+                <div className="space-y-3">
+                  <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                    <Heart className="w-4 h-4" />
+                    Saúde e Restrições
+                  </h3>
+                  <div className="space-y-2 text-sm">
+                    {(client as any).comorbidades && (
+                      <div>
+                        <p className="text-muted-foreground text-xs">Comorbidades</p>
+                        <p className="font-medium whitespace-pre-wrap">{(client as any).comorbidades}</p>
+                      </div>
+                    )}
+                    {(client as any).alergias && (
+                      <div>
+                        <p className="text-muted-foreground text-xs">Alergias</p>
+                        <p className="font-medium whitespace-pre-wrap">{(client as any).alergias}</p>
+                      </div>
+                    )}
+                    {(client as any).restricao_aromaterapia && (
+                      <div>
+                        <p className="text-muted-foreground text-xs">Restrições em Aromaterapia</p>
+                        <p className="font-medium whitespace-pre-wrap">{(client as any).restricao_aromaterapia}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </>
+            )}
+
+            {/* Fotógrafa */}
+            {(client as any).has_fotografa && (
+              <>
+                <Separator />
+                <div className="space-y-3">
+                  <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                    <Camera className="w-4 h-4" />
+                    Fotógrafa
+                  </h3>
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    {(client as any).fotografa_name && (
+                      <div>
+                        <p className="text-muted-foreground">Nome</p>
+                        <p className="font-medium">{(client as any).fotografa_name}</p>
+                      </div>
+                    )}
+                    {(client as any).fotografa_phone && (
+                      <div>
+                        <p className="text-muted-foreground">Telefone</p>
+                        <p className="font-medium">{(client as any).fotografa_phone}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </>
+            )}
+
+            {/* Redes Sociais */}
+            {((client as any).instagram_gestante || (client as any).instagram_acompanhante) && (
+              <>
+                <Separator />
+                <div className="space-y-3">
+                  <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                    <Instagram className="w-4 h-4" />
+                    Redes Sociais
+                  </h3>
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    {(client as any).instagram_gestante && (
+                      <div>
+                        <p className="text-muted-foreground">Gestante</p>
+                        <p className="font-medium">{(client as any).instagram_gestante}</p>
+                      </div>
+                    )}
+                    {(client as any).instagram_acompanhante && (
+                      <div>
+                        <p className="text-muted-foreground">Acompanhante</p>
+                        <p className="font-medium">{(client as any).instagram_acompanhante}</p>
                       </div>
                     )}
                   </div>

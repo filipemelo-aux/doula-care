@@ -66,6 +66,14 @@ const clientSchema = z.object({
   plan_value: z.number().min(0).optional(),
   prenatal_type: z.string().optional(),
   prenatal_high_risk: z.boolean().optional(),
+  comorbidades: z.string().optional(),
+  alergias: z.string().optional(),
+  restricao_aromaterapia: z.string().optional(),
+  has_fotografa: z.boolean().optional(),
+  fotografa_name: z.string().optional(),
+  fotografa_phone: z.string().optional(),
+  instagram_gestante: z.string().optional(),
+  instagram_acompanhante: z.string().optional(),
   notes: z.string().optional(),
 });
 
@@ -145,6 +153,14 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
         plan_value: 0,
         prenatal_type: "",
         prenatal_high_risk: false,
+        comorbidades: "",
+        alergias: "",
+        restricao_aromaterapia: "",
+        has_fotografa: false,
+        fotografa_name: "",
+        fotografa_phone: "",
+        instagram_gestante: "",
+        instagram_acompanhante: "",
         notes: "",
       },
   });
@@ -221,6 +237,14 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
         plan_value: Number(client.plan_value) || 0,
         prenatal_type: (client as any).prenatal_type || "",
         prenatal_high_risk: (client as any).prenatal_high_risk || false,
+        comorbidades: (client as any).comorbidades || "",
+        alergias: (client as any).alergias || "",
+        restricao_aromaterapia: (client as any).restricao_aromaterapia || "",
+        has_fotografa: (client as any).has_fotografa || false,
+        fotografa_name: (client as any).fotografa_name || "",
+        fotografa_phone: (client as any).fotografa_phone || "",
+        instagram_gestante: (client as any).instagram_gestante || "",
+        instagram_acompanhante: (client as any).instagram_acompanhante || "",
         notes: client.notes || "",
       });
       setEntryAlreadyPaid(false);
@@ -258,6 +282,14 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
         plan_value: 0,
         prenatal_type: "",
         prenatal_high_risk: false,
+        comorbidades: "",
+        alergias: "",
+        restricao_aromaterapia: "",
+        has_fotografa: false,
+        fotografa_name: "",
+        fotografa_phone: "",
+        instagram_gestante: "",
+        instagram_acompanhante: "",
         notes: "",
       });
     }
@@ -296,6 +328,14 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
         prenatal_type: data.prenatal_type || null,
         prenatal_high_risk: data.prenatal_high_risk || false,
         prenatal_team: data.prenatal_type === "equipe_particular" ? prenatalTeam.filter(m => m.name.trim()) : [],
+        comorbidades: data.comorbidades || null,
+        alergias: data.alergias || null,
+        restricao_aromaterapia: data.restricao_aromaterapia || null,
+        has_fotografa: data.has_fotografa || false,
+        fotografa_name: data.has_fotografa ? (data.fotografa_name || null) : null,
+        fotografa_phone: data.has_fotografa ? (data.fotografa_phone || null) : null,
+        instagram_gestante: data.instagram_gestante || null,
+        instagram_acompanhante: data.instagram_acompanhante || null,
         notes: data.notes || null,
         owner_id: user?.id || null,
         organization_id: organizationId || null,
@@ -1191,6 +1231,147 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
                     ))}
                   </div>
                 )}
+              </div>
+
+              {/* Saúde e Restrições */}
+              <div className="space-y-3 rounded-lg border p-3">
+                <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Saúde e Restrições</h4>
+                <FormField
+                  control={form.control}
+                  name="comorbidades"
+                  render={({ field }) => (
+                    <FormItem className="space-y-1">
+                      <FormLabel className="text-xs">Comorbidades</FormLabel>
+                      <FormControl>
+                        <Textarea {...field} className="min-h-[50px] resize-none text-sm" placeholder="Ex: diabetes gestacional, hipertensão..." />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="alergias"
+                  render={({ field }) => (
+                    <FormItem className="space-y-1">
+                      <FormLabel className="text-xs">Alergias</FormLabel>
+                      <FormControl>
+                        <Textarea {...field} className="min-h-[50px] resize-none text-sm" placeholder="Ex: dipirona, látex, amendoim..." />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="restricao_aromaterapia"
+                  render={({ field }) => (
+                    <FormItem className="space-y-1">
+                      <FormLabel className="text-xs">Restrições em Aromaterapia</FormLabel>
+                      <FormControl>
+                        <Textarea {...field} className="min-h-[50px] resize-none text-sm" placeholder="Ex: óleo de canela, hortelã-pimenta..." />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              {/* Fotógrafa */}
+              <div className="space-y-3 rounded-lg border p-3">
+                <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Fotógrafa</h4>
+                <FormField
+                  control={form.control}
+                  name="has_fotografa"
+                  render={({ field }) => (
+                    <FormItem className="space-y-1">
+                      <FormLabel className="text-xs">Tem fotógrafa?</FormLabel>
+                      <Select
+                        onValueChange={(v) => field.onChange(v === "true")}
+                        value={field.value ? "true" : "false"}
+                      >
+                        <FormControl>
+                          <SelectTrigger className="h-9 text-sm">
+                            <SelectValue />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="false">Não</SelectItem>
+                          <SelectItem value="true">Sim</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                {form.watch("has_fotografa") && (
+                  <div className="grid grid-cols-2 gap-3">
+                    <FormField
+                      control={form.control}
+                      name="fotografa_name"
+                      render={({ field }) => (
+                        <FormItem className="space-y-1">
+                          <FormLabel className="text-xs">Nome</FormLabel>
+                          <FormControl>
+                            <Input {...field} className="h-9 text-sm" placeholder="Nome da fotógrafa" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="fotografa_phone"
+                      render={({ field }) => (
+                        <FormItem className="space-y-1">
+                          <FormLabel className="text-xs">Telefone</FormLabel>
+                          <FormControl>
+                            <Input
+                              {...field}
+                              className="h-9 text-sm"
+                              placeholder="(00) 00000-0000"
+                              onChange={(e) => field.onChange(maskPhone(e.target.value))}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                )}
+              </div>
+
+              {/* Redes Sociais */}
+              <div className="space-y-3 rounded-lg border p-3">
+                <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Redes Sociais</h4>
+                <div className="grid grid-cols-2 gap-3">
+                  <FormField
+                    control={form.control}
+                    name="instagram_gestante"
+                    render={({ field }) => (
+                      <FormItem className="space-y-1">
+                        <FormLabel className="text-xs">Instagram da Gestante</FormLabel>
+                        <FormControl>
+                          <Input {...field} className="h-9 text-sm lowercase" placeholder="@usuario" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="instagram_acompanhante"
+                    render={({ field }) => (
+                      <FormItem className="space-y-1">
+                        <FormLabel className="text-xs">Instagram do Acompanhante</FormLabel>
+                        <FormControl>
+                          <Input {...field} className="h-9 text-sm lowercase" placeholder="@usuario" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
               </div>
 
               <FormField

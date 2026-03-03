@@ -234,6 +234,7 @@ export type Database = {
       }
       clients: {
         Row: {
+          alergias: string | null
           baby_names: string[] | null
           birth_date: string | null
           birth_height: number | null
@@ -241,6 +242,7 @@ export type Database = {
           birth_time: string | null
           birth_weight: number | null
           city: string | null
+          comorbidades: string | null
           companion_name: string | null
           companion_phone: string | null
           cpf: string | null
@@ -248,8 +250,13 @@ export type Database = {
           custom_status: string | null
           dpp: string | null
           first_login: boolean | null
+          fotografa_name: string | null
+          fotografa_phone: string | null
           full_name: string
+          has_fotografa: boolean | null
           id: string
+          instagram_acompanhante: string | null
+          instagram_gestante: string | null
           labor_started_at: string | null
           neighborhood: string | null
           notes: string | null
@@ -268,6 +275,7 @@ export type Database = {
           prenatal_high_risk: boolean | null
           prenatal_team: Json | null
           prenatal_type: string | null
+          restricao_aromaterapia: string | null
           state: string | null
           status: Database["public"]["Enums"]["client_status"]
           street: string | null
@@ -276,6 +284,7 @@ export type Database = {
           zip_code: string | null
         }
         Insert: {
+          alergias?: string | null
           baby_names?: string[] | null
           birth_date?: string | null
           birth_height?: number | null
@@ -283,6 +292,7 @@ export type Database = {
           birth_time?: string | null
           birth_weight?: number | null
           city?: string | null
+          comorbidades?: string | null
           companion_name?: string | null
           companion_phone?: string | null
           cpf?: string | null
@@ -290,8 +300,13 @@ export type Database = {
           custom_status?: string | null
           dpp?: string | null
           first_login?: boolean | null
+          fotografa_name?: string | null
+          fotografa_phone?: string | null
           full_name: string
+          has_fotografa?: boolean | null
           id?: string
+          instagram_acompanhante?: string | null
+          instagram_gestante?: string | null
           labor_started_at?: string | null
           neighborhood?: string | null
           notes?: string | null
@@ -310,6 +325,7 @@ export type Database = {
           prenatal_high_risk?: boolean | null
           prenatal_team?: Json | null
           prenatal_type?: string | null
+          restricao_aromaterapia?: string | null
           state?: string | null
           status?: Database["public"]["Enums"]["client_status"]
           street?: string | null
@@ -318,6 +334,7 @@ export type Database = {
           zip_code?: string | null
         }
         Update: {
+          alergias?: string | null
           baby_names?: string[] | null
           birth_date?: string | null
           birth_height?: number | null
@@ -325,6 +342,7 @@ export type Database = {
           birth_time?: string | null
           birth_weight?: number | null
           city?: string | null
+          comorbidades?: string | null
           companion_name?: string | null
           companion_phone?: string | null
           cpf?: string | null
@@ -332,8 +350,13 @@ export type Database = {
           custom_status?: string | null
           dpp?: string | null
           first_login?: boolean | null
+          fotografa_name?: string | null
+          fotografa_phone?: string | null
           full_name?: string
+          has_fotografa?: boolean | null
           id?: string
+          instagram_acompanhante?: string | null
+          instagram_gestante?: string | null
           labor_started_at?: string | null
           neighborhood?: string | null
           notes?: string | null
@@ -352,6 +375,7 @@ export type Database = {
           prenatal_high_risk?: boolean | null
           prenatal_team?: Json | null
           prenatal_type?: string | null
+          restricao_aromaterapia?: string | null
           state?: string | null
           status?: Database["public"]["Enums"]["client_status"]
           street?: string | null
