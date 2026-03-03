@@ -1065,21 +1065,22 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
                               <FormLabel className="text-xs">Desconto à Vista (%)</FormLabel>
                               <FormControl>
                                 <Input
-                                  type="number"
-                                  min={0}
-                                  max={100}
-                                  step="0.01"
+                                  type="text"
+                                  inputMode="decimal"
                                   className="h-9 text-sm"
-                                  value={field.value ?? ""}
+                                  value={field.value === 0 || field.value === undefined || field.value === null ? "" : String(field.value)}
                                   onChange={(e) => {
-                                    const rawValue = e.target.value;
+                                    const rawValue = e.target.value.replace(/[^0-9.,]/g, "");
                                     if (rawValue === "") {
-                                      field.onChange(undefined);
+                                      field.onChange(0);
                                       return;
                                     }
-                                    const parsed = Number(rawValue);
+                                    const parsed = parseFloat(rawValue.replace(",", "."));
                                     if (Number.isNaN(parsed)) return;
                                     field.onChange(Math.min(100, Math.max(0, parsed)));
+                                  }}
+                                  onBlur={() => {
+                                    if (!field.value) field.onChange(0);
                                   }}
                                   placeholder="0"
                                 />
