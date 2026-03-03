@@ -36,6 +36,8 @@ import {
   RotateCcw,
   Loader2,
   Eye,
+  Stethoscope,
+  AlertTriangle,
 } from "lucide-react";
 import type { Tables } from "@/integrations/supabase/types";
 import { parseISO } from "date-fns";
@@ -403,6 +405,42 @@ export function ClientDetailsDialog({
                 )}
               </div>
             </div>
+
+            {/* Prenatal Info */}
+            {((client as any).prenatal_type || (client as any).prenatal_high_risk) && (
+              <>
+                <Separator />
+                <div className="space-y-3">
+                  <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                    <Stethoscope className="w-4 h-4" />
+                    Pré-natal
+                  </h3>
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    {(client as any).prenatal_type && (
+                      <div>
+                        <p className="text-muted-foreground">Tipo</p>
+                        <p className="font-medium">
+                          {{ sus: "SUS", plano: "Plano de Saúde", particular: "Particular" }[(client as any).prenatal_type as string] || (client as any).prenatal_type}
+                        </p>
+                      </div>
+                    )}
+                    <div>
+                      <p className="text-muted-foreground">Alto Risco</p>
+                      <div className="flex items-center gap-1">
+                        {(client as any).prenatal_high_risk ? (
+                          <Badge variant="destructive" className="text-xs">
+                            <AlertTriangle className="w-3 h-3 mr-1" />
+                            Sim
+                          </Badge>
+                        ) : (
+                          <span className="font-medium">Não</span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
 
             {/* Notes */}
             {client.notes && (

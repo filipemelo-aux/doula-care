@@ -64,6 +64,8 @@ const clientSchema = z.object({
   custom_interval_days: z.number().min(1).max(365).optional(),
   first_due_date: z.string().optional(),
   plan_value: z.number().min(0).optional(),
+  prenatal_type: z.string().optional(),
+  prenatal_high_risk: z.boolean().optional(),
   notes: z.string().optional(),
 });
 
@@ -140,6 +142,8 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
         custom_interval_days: 30,
         first_due_date: "",
         plan_value: 0,
+        prenatal_type: "",
+        prenatal_high_risk: false,
         notes: "",
       },
   });
@@ -214,6 +218,8 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
         custom_interval_days: 30,
         first_due_date: "",
         plan_value: Number(client.plan_value) || 0,
+        prenatal_type: (client as any).prenatal_type || "",
+        prenatal_high_risk: (client as any).prenatal_high_risk || false,
         notes: client.notes || "",
       });
       setEntryAlreadyPaid(false);
@@ -246,6 +252,8 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
         custom_interval_days: 30,
         first_due_date: "",
         plan_value: 0,
+        prenatal_type: "",
+        prenatal_high_risk: false,
         notes: "",
       });
     }
@@ -281,6 +289,8 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
         plan_setting_id: data.plan_setting_id !== "avulso" ? data.plan_setting_id : null,
         payment_method: data.payment_method,
         plan_value: data.plan_value || 0,
+        prenatal_type: data.prenatal_type || null,
+        prenatal_high_risk: data.prenatal_high_risk || false,
         notes: data.notes || null,
         owner_id: user?.id || null,
         organization_id: organizationId || null,
@@ -1072,6 +1082,59 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
                   </div>
                 )}
               </div>
+              {/* Pré-natal */}
+              <div className="space-y-3 rounded-lg border p-3">
+                <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Pré-natal</h4>
+                <div className="grid grid-cols-2 gap-3">
+                  <FormField
+                    control={form.control}
+                    name="prenatal_type"
+                    render={({ field }) => (
+                      <FormItem className="space-y-1">
+                        <FormLabel className="text-xs">Tipo de Pré-natal</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value || ""}>
+                          <FormControl>
+                            <SelectTrigger className="h-9 text-sm">
+                              <SelectValue placeholder="Selecione" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="sus">SUS</SelectItem>
+                            <SelectItem value="plano">Plano de Saúde</SelectItem>
+                            <SelectItem value="particular">Particular</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="prenatal_high_risk"
+                    render={({ field }) => (
+                      <FormItem className="space-y-1">
+                        <FormLabel className="text-xs">Alto Risco?</FormLabel>
+                        <Select 
+                          onValueChange={(v) => field.onChange(v === "true")} 
+                          value={field.value ? "true" : "false"}
+                        >
+                          <FormControl>
+                            <SelectTrigger className="h-9 text-sm">
+                              <SelectValue />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="false">Não</SelectItem>
+                            <SelectItem value="true">Sim</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
+
               <FormField
                 control={form.control}
                 name="notes"
