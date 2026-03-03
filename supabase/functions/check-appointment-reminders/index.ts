@@ -41,7 +41,7 @@ Deno.serve(async (req) => {
     // Find appointments needing 24h reminder (between 23h and 25h from now, not yet sent)
     const { data: remind24h } = await supabase
       .from("appointments")
-      .select("id, title, scheduled_at, client_id, clients(full_name, user_id)")
+      .select("id, title, scheduled_at, client_id, organization_id, clients(full_name, user_id)")
       .eq("reminder_24h_sent", false)
       .gte("scheduled_at", new Date(now.getTime() + 23 * 60 * 60 * 1000).toISOString())
       .lte("scheduled_at", new Date(now.getTime() + 25 * 60 * 60 * 1000).toISOString());
