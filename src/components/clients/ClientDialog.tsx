@@ -488,6 +488,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
         const useCustomAmounts = data.installment_frequency === "manual" && customInstallmentAmounts.length === installmentCount;
         const installmentVal = useCustomAmounts ? 0 : finalPlanValue / installmentCount;
         let autoReceived = 0;
+        const aVistaDate = data.payment_date_avista || clientCreatedDate;
 
         if (data.payment_type === "parcelado" && installmentCount > 1) {
           const firstDueDate = data.first_due_date ? new Date(data.first_due_date + "T12:00:00") : new Date();
@@ -508,7 +509,6 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
           }
         } else {
           // À vista or single installment
-          const aVistaDate = data.payment_date_avista || clientCreatedDate;
           if (aVistaDate <= todayStr) {
             autoReceived = finalPlanValue;
           }
