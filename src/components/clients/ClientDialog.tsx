@@ -92,6 +92,8 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
   const queryClient = useQueryClient();
   const { user, organizationId } = useAuth();
   const [entryAlreadyPaid, setEntryAlreadyPaid] = useState(false);
+  const [entryType, setEntryType] = useState<"equal" | "percentage">("equal");
+  const [entryPercentage, setEntryPercentage] = useState<number>(0);
   const [customInstallmentAmounts, setCustomInstallmentAmounts] = useState<number[]>([]);
   const [prenatalTeam, setPrenatalTeam] = useState<{name: string; role: string}[]>([]);
 
@@ -303,6 +305,8 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
         notes: client.notes || "",
       });
       setEntryAlreadyPaid(isParcelado ? isFirstInstallmentPaid : false);
+      setEntryType("equal");
+      setEntryPercentage(0);
       setCustomInstallmentAmounts(
         isParcelado && hasCustomInstallments && sortedPayments.length === txInstallments
           ? sortedPayments.map((p) => Number(p.amount) || 0)
@@ -312,6 +316,8 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
       setPrenatalTeam(Array.isArray(teamData) ? teamData : []);
     } else {
       setEntryAlreadyPaid(false);
+      setEntryType("equal");
+      setEntryPercentage(0);
       setCustomInstallmentAmounts([]);
       setPrenatalTeam([]);
       form.reset({
@@ -365,8 +371,21 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
     }
 
     if (customInstallmentAmounts.length !== watchedInstallments) {
-      const equalValue = watchedInstallments > 0 ? watchedPlanValue / watchedInstallments : 0;
-      setCustomInstallmentAmounts(Array(watchedInstallments).fill(equalValue));
+      if (entryType === "percentage" && entryPercentage > 0 && entryPercentage < 100) {
+        const entryValue = Math.round(watchedPlanValue * (entryPercentage / 100) * 100) / 100;
+        const remaining = watchedPlanValue - entryValue;
+        const perInstallment = Math.round((remaining / (watchedInstallments - 1)) * 100) / 100;
+        const amounts = Array(watchedInstallments).fill(perInstallment);
+        amounts[0] = entryValue;
+        // Fix rounding on last
+        const sumSoFar = amounts.reduce((a: number, b: number) => a + b, 0);
+        const roundingDiff = Math.round((watchedPlanValue - sumSoFar) * 100) / 100;
+        if (Math.abs(roundingDiff) > 0.001) amounts[amounts.length - 1] += roundingDiff;
+        setCustomInstallmentAmounts(amounts);
+      } else {
+        const equalValue = watchedInstallments > 0 ? watchedPlanValue / watchedInstallments : 0;
+        setCustomInstallmentAmounts(Array(watchedInstallments).fill(equalValue));
+      }
     }
   }, [
     watchedPaymentType,
@@ -375,6 +394,23 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
     watchedPlanValue,
     customInstallmentAmounts.length,
   ]);
+
+  // Recalculate installments when entry percentage changes
+  useEffect(() => {
+    if (watchedPaymentType !== "parcelado" || watchedInstallmentFrequency !== "manual") return;
+    if (watchedInstallments <= 1 || entryType !== "percentage") return;
+    if (entryPercentage <= 0 || entryPercentage >= 100) return;
+
+    const entryValue = Math.round(watchedPlanValue * (entryPercentage / 100) * 100) / 100;
+    const remaining = watchedPlanValue - entryValue;
+    const perInstallment = Math.round((remaining / (watchedInstallments - 1)) * 100) / 100;
+    const amounts = Array(watchedInstallments).fill(perInstallment);
+    amounts[0] = entryValue;
+    const sumSoFar = amounts.reduce((a: number, b: number) => a + b, 0);
+    const roundingDiff = Math.round((watchedPlanValue - sumSoFar) * 100) / 100;
+    if (Math.abs(roundingDiff) > 0.001) amounts[amounts.length - 1] += roundingDiff;
+    setCustomInstallmentAmounts(amounts);
+  }, [entryType, entryPercentage]);
 
   const mutation = useMutation({
     mutationFn: async (data: ClientFormData) => {
@@ -1393,7 +1429,63 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
 
                 {/* Entrada no parcelado */}
                 {watchedPaymentType === "parcelado" && (
-                  <div className="rounded-lg border p-3 space-y-1">
+                  <div className="rounded-lg border p-3 space-y-3">
+                    {/* Entry percentage option - only for manual/personalizado */}
+                    {watchedInstallmentFrequency === "manual" && watchedInstallments > 1 && (
+                      <div className="space-y-2">
+                        <p className="text-xs font-medium text-muted-foreground">Valor da entrada</p>
+                        <div className="flex gap-2">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setEntryType("equal");
+                              setEntryPercentage(0);
+                            }}
+                            className={`flex-1 text-xs py-1.5 px-2 rounded-md border transition-colors ${
+                              entryType === "equal"
+                                ? "bg-primary text-primary-foreground border-primary"
+                                : "bg-muted/30 text-muted-foreground border-border hover:bg-muted/50"
+                            }`}
+                          >
+                            Parcelas iguais
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setEntryType("percentage")}
+                            className={`flex-1 text-xs py-1.5 px-2 rounded-md border transition-colors ${
+                              entryType === "percentage"
+                                ? "bg-primary text-primary-foreground border-primary"
+                                : "bg-muted/30 text-muted-foreground border-border hover:bg-muted/50"
+                            }`}
+                          >
+                            Entrada em %
+                          </button>
+                        </div>
+                        {entryType === "percentage" && (
+                          <div className="flex items-center gap-2">
+                            <Input
+                              type="number"
+                              min={1}
+                              max={99}
+                              className="h-8 text-xs w-20"
+                              value={entryPercentage || ""}
+                              onChange={(e) => {
+                                const val = Math.min(99, Math.max(0, Number(e.target.value)));
+                                setEntryPercentage(val);
+                              }}
+                              placeholder="Ex: 30"
+                            />
+                            <span className="text-xs text-muted-foreground">%</span>
+                            {entryPercentage > 0 && watchedPlanValue > 0 && (
+                              <span className="text-xs text-foreground font-medium">
+                                = {maskCurrency(String(Math.round(watchedPlanValue * (entryPercentage / 100) * 100)))}
+                              </span>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    )}
+
                     {isFirstDueDateInPast ? (
                       <p className="text-xs text-success flex items-center gap-1.5">
                         <CheckCircle className="h-3.5 w-3.5" />
