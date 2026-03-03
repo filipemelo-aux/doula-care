@@ -92,6 +92,8 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
   const queryClient = useQueryClient();
   const { user, organizationId } = useAuth();
   const [entryAlreadyPaid, setEntryAlreadyPaid] = useState(false);
+  const [entryType, setEntryType] = useState<"equal" | "percentage">("equal");
+  const [entryPercentage, setEntryPercentage] = useState<number>(0);
   const [customInstallmentAmounts, setCustomInstallmentAmounts] = useState<number[]>([]);
   const [prenatalTeam, setPrenatalTeam] = useState<{name: string; role: string}[]>([]);
 
