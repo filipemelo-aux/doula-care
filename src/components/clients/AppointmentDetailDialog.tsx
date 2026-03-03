@@ -4,7 +4,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Calendar, Clock, FileText } from "lucide-react";
+import { Calendar, Clock, FileText, CheckCircle } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -16,6 +16,8 @@ interface AppointmentDetailDialogProps {
     scheduled_at: string;
     notes?: string | null;
     clientName?: string;
+    completed_at?: string | null;
+    completion_notes?: string | null;
   } | null;
 }
 
