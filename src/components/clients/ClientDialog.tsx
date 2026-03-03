@@ -375,7 +375,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
           .from("transactions")
           .update({ 
             description: newDescription,
-            amount: data.plan_value || 0,
+            amount: finalPlanValue,
           })
           .eq("client_id", client.id)
           .eq("is_auto_generated", true);
