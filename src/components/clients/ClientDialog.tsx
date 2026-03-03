@@ -406,7 +406,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
 
   // Recalculate installments when entry percentage changes
   useEffect(() => {
-    if (watchedPaymentType !== "parcelado" || watchedInstallmentFrequency !== "manual") return;
+    if (watchedPaymentType !== "parcelado") return;
     if (watchedInstallments <= 1 || entryType !== "percentage") return;
     if (entryPercentage <= 0 || entryPercentage >= 100) return;
 
