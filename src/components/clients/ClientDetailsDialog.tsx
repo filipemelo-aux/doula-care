@@ -38,6 +38,9 @@ import {
   Eye,
   Stethoscope,
   AlertTriangle,
+  Camera,
+  Instagram,
+  Heart,
 } from "lucide-react";
 import type { Tables } from "@/integrations/supabase/types";
 import { parseISO } from "date-fns";
