@@ -1161,7 +1161,26 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
                                       value={maskCurrency(String(Math.round(amt * 100)))}
                                       onChange={(e) => {
                                         const newAmounts = [...customInstallmentAmounts];
-                                        newAmounts[i] = parseCurrency(e.target.value);
+                                        const newVal = parseCurrency(e.target.value);
+                                        const oldVal = newAmounts[i];
+                                        newAmounts[i] = newVal;
+                                        // Forward-only redistribution: distribute remaining to subsequent installments
+                                        const subsequentCount = newAmounts.length - i - 1;
+                                        if (subsequentCount > 0) {
+                                          const diff = oldVal - newVal;
+                                          const totalRemaining = newAmounts.slice(i + 1).reduce((a, b) => a + b, 0) + diff;
+                                          const perSubsequent = Math.round((totalRemaining / subsequentCount) * 100) / 100;
+                                          for (let j = i + 1; j < newAmounts.length; j++) {
+                                            newAmounts[j] = perSubsequent;
+                                          }
+                                          // Fix rounding on last installment
+                                          const sumSoFar = newAmounts.reduce((a, b) => a + b, 0);
+                                          const totalTarget = form.watch("plan_value") || 0;
+                                          const roundingDiff = Math.round((totalTarget - sumSoFar) * 100) / 100;
+                                          if (Math.abs(roundingDiff) > 0.001) {
+                                            newAmounts[newAmounts.length - 1] = Math.round((newAmounts[newAmounts.length - 1] + roundingDiff) * 100) / 100;
+                                          }
+                                        }
                                         setCustomInstallmentAmounts(newAmounts);
                                       }}
                                       placeholder="R$ 0,00"
