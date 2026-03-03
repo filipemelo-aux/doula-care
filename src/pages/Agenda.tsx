@@ -419,7 +419,7 @@ export default function Agenda() {
                   </h2>
                   <div className="space-y-2">
                     {futureApts.slice(0, 5).map((apt) => (
-                      <AppointmentRow key={apt.id} apt={apt} onEdit={openEditAppointment} onDelete={(id) => setDeleteTarget({ type: "appointment", id })} displayName={displayName} />
+                      <AppointmentRow key={apt.id} apt={apt} onEdit={openEditAppointment} onDelete={(id) => setDeleteTarget({ type: "appointment", id })} displayName={displayName} onCompleted={() => queryClient.invalidateQueries({ queryKey: ["agenda-appointments"] })} />
                     ))}
                   </div>
                 </section>
@@ -465,7 +465,7 @@ export default function Agenda() {
                   <h2 className="text-sm font-semibold text-muted-foreground mb-3">Próximas</h2>
                   <div className="space-y-2">
                     {futureApts.map((apt) => (
-                      <AppointmentRow key={apt.id} apt={apt} onEdit={openEditAppointment} onDelete={(id) => setDeleteTarget({ type: "appointment", id })} displayName={displayName} />
+                      <AppointmentRow key={apt.id} apt={apt} onEdit={openEditAppointment} onDelete={(id) => setDeleteTarget({ type: "appointment", id })} displayName={displayName} onCompleted={() => queryClient.invalidateQueries({ queryKey: ["agenda-appointments"] })} />
                     ))}
                   </div>
                 </section>
@@ -475,7 +475,7 @@ export default function Agenda() {
                   <h2 className="text-sm font-semibold text-muted-foreground mb-3">Histórico</h2>
                   <div className="space-y-2">
                     {pastApts.map((apt) => (
-                      <AppointmentRow key={apt.id} apt={apt} onEdit={openEditAppointment} onDelete={(id) => setDeleteTarget({ type: "appointment", id })} displayName={displayName} past />
+                      <AppointmentRow key={apt.id} apt={apt} onEdit={openEditAppointment} onDelete={(id) => setDeleteTarget({ type: "appointment", id })} displayName={displayName} past onCompleted={() => queryClient.invalidateQueries({ queryKey: ["agenda-appointments"] })} />
                     ))}
                   </div>
                 </section>
