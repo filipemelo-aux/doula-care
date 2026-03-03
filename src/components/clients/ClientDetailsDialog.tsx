@@ -253,6 +253,11 @@ export function ClientDetailsDialog({
                     DPP: {formatBrazilDate(client.dpp)}
                   </span>
                 )}
+                {client.status === "gestante" && (client as any).birth_location && (
+                  <span className="text-sm text-muted-foreground">
+                    🏥 {(client as any).birth_location}
+                  </span>
+                )}
               </div>
             </div>
 
