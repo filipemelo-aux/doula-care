@@ -420,7 +420,7 @@ export function ClientDetailsDialog({
                       <div>
                         <p className="text-muted-foreground">Tipo</p>
                         <p className="font-medium">
-                          {{ sus: "SUS", plano: "Plano de Saúde", particular: "Particular" }[(client as any).prenatal_type as string] || (client as any).prenatal_type}
+                          {{ sus: "SUS", plano: "Plano de Saúde", particular: "Particular", equipe_particular: "Equipe Particular" }[(client as any).prenatal_type as string] || (client as any).prenatal_type}
                         </p>
                       </div>
                     )}
@@ -437,6 +437,21 @@ export function ClientDetailsDialog({
                         )}
                       </div>
                     </div>
+                    {(client as any).prenatal_type === "equipe_particular" && Array.isArray((client as any).prenatal_team) && (client as any).prenatal_team.length > 0 && (
+                      <div className="col-span-2 space-y-2">
+                        <p className="text-muted-foreground">Equipe</p>
+                        <div className="space-y-1">
+                          {((client as any).prenatal_team as {name: string; role: string}[]).map((member, i) => (
+                            <div key={i} className="flex items-center gap-2 text-sm">
+                              <span className="font-medium">{member.name}</span>
+                              {member.role && (
+                                <span className="text-muted-foreground">— {member.role}</span>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               </>

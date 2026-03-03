@@ -82,6 +82,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
   const { user, organizationId } = useAuth();
   const [entryAlreadyPaid, setEntryAlreadyPaid] = useState(false);
   const [customInstallmentAmounts, setCustomInstallmentAmounts] = useState<number[]>([]);
+  const [prenatalTeam, setPrenatalTeam] = useState<{name: string; role: string}[]>([]);
 
   const { data: planSettings } = useQuery({
     queryKey: ["plan-settings"],
@@ -224,9 +225,12 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
       });
       setEntryAlreadyPaid(false);
       setCustomInstallmentAmounts([]);
+      const teamData = (client as any).prenatal_team;
+      setPrenatalTeam(Array.isArray(teamData) ? teamData : []);
     } else {
       setEntryAlreadyPaid(false);
       setCustomInstallmentAmounts([]);
+      setPrenatalTeam([]);
       form.reset({
         full_name: "",
         phone: "",
@@ -291,6 +295,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
         plan_value: data.plan_value || 0,
         prenatal_type: data.prenatal_type || null,
         prenatal_high_risk: data.prenatal_high_risk || false,
+        prenatal_team: data.prenatal_type === "equipe_particular" ? prenatalTeam.filter(m => m.name.trim()) : [],
         notes: data.notes || null,
         owner_id: user?.id || null,
         organization_id: organizationId || null,
@@ -1102,6 +1107,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
                             <SelectItem value="sus">SUS</SelectItem>
                             <SelectItem value="plano">Plano de Saúde</SelectItem>
                             <SelectItem value="particular">Particular</SelectItem>
+                            <SelectItem value="equipe_particular">Equipe Particular</SelectItem>
                           </SelectContent>
                         </Select>
                         <FormMessage />
@@ -1133,6 +1139,58 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
                     )}
                   />
                 </div>
+                {form.watch("prenatal_type") === "equipe_particular" && (
+                  <div className="col-span-full space-y-2">
+                    <div className="flex items-center justify-between">
+                      <FormLabel className="text-xs">Equipe</FormLabel>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 text-xs gap-1 px-2"
+                        onClick={() => setPrenatalTeam([...prenatalTeam, { name: "", role: "" }])}
+                      >
+                        + Adicionar
+                      </Button>
+                    </div>
+                    {prenatalTeam.length === 0 && (
+                      <p className="text-xs text-muted-foreground">Nenhum integrante adicionado.</p>
+                    )}
+                    {prenatalTeam.map((member, i) => (
+                      <div key={i} className="flex items-center gap-2">
+                        <Input
+                          className="h-8 text-xs flex-1"
+                          placeholder="Nome"
+                          value={member.name}
+                          onChange={(e) => {
+                            const updated = [...prenatalTeam];
+                            updated[i] = { ...updated[i], name: e.target.value };
+                            setPrenatalTeam(updated);
+                          }}
+                        />
+                        <Input
+                          className="h-8 text-xs flex-1"
+                          placeholder="Função"
+                          value={member.role}
+                          onChange={(e) => {
+                            const updated = [...prenatalTeam];
+                            updated[i] = { ...updated[i], role: e.target.value };
+                            setPrenatalTeam(updated);
+                          }}
+                        />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                          onClick={() => setPrenatalTeam(prenatalTeam.filter((_, j) => j !== i))}
+                        >
+                          ×
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
               <FormField
