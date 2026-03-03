@@ -258,8 +258,23 @@ export function ManageAppointmentsDialog({
             title: detailApt.title,
             scheduled_at: detailApt.scheduled_at,
             notes: detailApt.notes,
+            completion_notes: detailApt.completion_notes,
+            completed_at: detailApt.completed_at,
           } : null}
         />
+
+        {completeApt && (
+          <AppointmentCompleteDialog
+            open={!!completeApt}
+            onOpenChange={(open) => !open && setCompleteApt(null)}
+            appointmentId={completeApt.id}
+            appointmentTitle={completeApt.title}
+            onCompleted={() => {
+              queryClient.invalidateQueries({ queryKey: ["client-appointments", clientId] });
+              queryClient.invalidateQueries({ queryKey: ["all-appointments"] });
+            }}
+          />
+        )}
       </DialogContent>
     </Dialog>
   );
