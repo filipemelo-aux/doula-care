@@ -855,6 +855,23 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
                           </FormItem>
                         )}
                       />
+                      <FormField
+                        control={form.control}
+                        name="birth_location"
+                        render={({ field }) => (
+                          <FormItem className="space-y-1 md:col-span-3">
+                            <FormLabel className="text-xs">Local do Parto</FormLabel>
+                            <FormControl>
+                              <Input 
+                                {...field} 
+                                className="h-9 text-sm" 
+                                placeholder="Ex: Hospital São Lucas, Domiciliar..."
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
                     </>
                   )}
                 </div>
