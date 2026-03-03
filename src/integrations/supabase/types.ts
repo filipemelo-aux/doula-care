@@ -265,6 +265,8 @@ export type Database = {
           preferred_name: string | null
           pregnancy_weeks: number | null
           pregnancy_weeks_set_at: string | null
+          prenatal_high_risk: boolean | null
+          prenatal_type: string | null
           state: string | null
           status: Database["public"]["Enums"]["client_status"]
           street: string | null
@@ -304,6 +306,8 @@ export type Database = {
           preferred_name?: string | null
           pregnancy_weeks?: number | null
           pregnancy_weeks_set_at?: string | null
+          prenatal_high_risk?: boolean | null
+          prenatal_type?: string | null
           state?: string | null
           status?: Database["public"]["Enums"]["client_status"]
           street?: string | null
@@ -343,6 +347,8 @@ export type Database = {
           preferred_name?: string | null
           pregnancy_weeks?: number | null
           pregnancy_weeks_set_at?: string | null
+          prenatal_high_risk?: boolean | null
+          prenatal_type?: string | null
           state?: string | null
           status?: Database["public"]["Enums"]["client_status"]
           street?: string | null
