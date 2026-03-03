@@ -428,8 +428,8 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
           }
         } else {
           // À vista or single installment
-          const firstDueDateStr = data.first_due_date || clientCreatedDate;
-          if (firstDueDateStr < todayStr) {
+          const aVistaDate = data.payment_date_avista || clientCreatedDate;
+          if (aVistaDate <= todayStr) {
             autoReceived = data.plan_value || 0;
           } else if (entryAlreadyPaid) {
             autoReceived = installmentVal;
