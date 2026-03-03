@@ -309,6 +309,12 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
 
   const mutation = useMutation({
     mutationFn: async (data: ClientFormData) => {
+      // Apply discount for à vista payments
+      const discountPercent = data.payment_type === "a_vista" ? (data.discount_percent || 0) : 0;
+      const finalPlanValue = discountPercent > 0 
+        ? Math.round((data.plan_value || 0) * (1 - discountPercent / 100) * 100) / 100
+        : (data.plan_value || 0);
+
       const payload = {
         full_name: data.full_name,
         phone: data.phone,
