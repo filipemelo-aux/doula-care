@@ -127,20 +127,31 @@ Deno.serve(async (req) => {
           );
         }
 
-        // Notify admins
-        const { data: adminRoles } = await supabase
-          .from("user_roles")
-          .select("user_id")
-          .in("role", ["admin", "moderator"]);
+        // Notify admins IN THE SAME ORGANIZATION as the appointment
+        if (apt.organization_id) {
+          const { data: orgProfiles } = await supabase
+            .from("profiles")
+            .select("user_id")
+            .eq("organization_id", apt.organization_id);
 
-        if (adminRoles && adminRoles.length > 0) {
-          await sendPush(
-            adminRoles.map((r) => r.user_id),
-            "📅 Consulta Amanhã",
-            `"${apt.title}" com ${client?.full_name || "cliente"} às ${timeStr}`,
-            "/agenda",
-            `apt-admin-24h-${apt.id}`
-          );
+          if (orgProfiles && orgProfiles.length > 0) {
+            const orgUserIds = orgProfiles.map(p => p.user_id);
+            const { data: adminRoles } = await supabase
+              .from("user_roles")
+              .select("user_id")
+              .in("role", ["admin", "moderator"])
+              .in("user_id", orgUserIds);
+
+            if (adminRoles && adminRoles.length > 0) {
+              await sendPush(
+                adminRoles.map((r) => r.user_id),
+                "📅 Consulta Amanhã",
+                `"${apt.title}" com ${client?.full_name || "cliente"} às ${timeStr}`,
+                "/agenda",
+                `apt-admin-24h-${apt.id}`
+              );
+            }
+          }
         }
 
         // Mark as sent
