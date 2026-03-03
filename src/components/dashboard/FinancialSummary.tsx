@@ -66,15 +66,9 @@ export function FinancialSummary() {
     );
   }
 
-  const income = transactions
-    ?.filter((t) => t.type === "receita")
-    .reduce((sum, t) => sum + Number(t.amount), 0) || 0;
-
-  const expenses = transactions
-    ?.filter((t) => t.type === "despesa")
-    .reduce((sum, t) => sum + Number(t.amount), 0) || 0;
-
-  const balance = income - expenses;
+  const income = financials?.income || 0;
+  const expenses = financials?.expenses || 0;
+  const balance = financials?.balance || 0;
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("pt-BR", {
