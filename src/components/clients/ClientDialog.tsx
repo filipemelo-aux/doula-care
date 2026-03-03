@@ -454,10 +454,10 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
           is_auto_generated: true,
           installments: data.payment_type === "parcelado" ? (data.installments || 1) : 1,
           installment_value: useCustomAmounts
-            ? (data.plan_value || 0) / installmentCount
+            ? finalPlanValue / installmentCount
             : (data.payment_type === "parcelado" && data.installments 
-              ? (data.plan_value || 0) / data.installments 
-              : (data.plan_value || 0)),
+              ? finalPlanValue / data.installments 
+              : finalPlanValue),
           notes: `Receita gerada automaticamente ao cadastrar cliente`,
           owner_id: user?.id || null,
           organization_id: organizationId || null,
@@ -472,7 +472,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
         if (data.payment_type === "parcelado" && data.installments && data.installments > 1) {
           const installmentCount = data.installments;
           const useCustomAmts = data.installment_frequency === "manual" && customInstallmentAmounts.length === installmentCount;
-          const installmentAmount = (data.plan_value || 0) / installmentCount;
+          const installmentAmount = finalPlanValue / installmentCount;
           const firstDueDate = data.first_due_date ? new Date(data.first_due_date + "T12:00:00") : new Date();
           
           const frequency = data.installment_frequency || "mensal";
