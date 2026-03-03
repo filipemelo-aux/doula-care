@@ -266,6 +266,7 @@ export type Database = {
           pregnancy_weeks: number | null
           pregnancy_weeks_set_at: string | null
           prenatal_high_risk: boolean | null
+          prenatal_team: Json | null
           prenatal_type: string | null
           state: string | null
           status: Database["public"]["Enums"]["client_status"]
@@ -307,6 +308,7 @@ export type Database = {
           pregnancy_weeks?: number | null
           pregnancy_weeks_set_at?: string | null
           prenatal_high_risk?: boolean | null
+          prenatal_team?: Json | null
           prenatal_type?: string | null
           state?: string | null
           status?: Database["public"]["Enums"]["client_status"]
@@ -348,6 +350,7 @@ export type Database = {
           pregnancy_weeks?: number | null
           pregnancy_weeks_set_at?: string | null
           prenatal_high_risk?: boolean | null
+          prenatal_team?: Json | null
           prenatal_type?: string | null
           state?: string | null
           status?: Database["public"]["Enums"]["client_status"]
