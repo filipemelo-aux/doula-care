@@ -447,6 +447,11 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
         const autoReceivedForAvista = data.payment_type === "a_vista" && aVistaDate <= todayStr ? finalPlanValue : 0;
         const transactionId = clientTransaction?.id || null;
 
+        // For parcelado, update date to first_due_date (entry date); for à vista use aVistaDate
+        const transactionDate = data.payment_type === "parcelado"
+          ? (data.first_due_date || todayStr)
+          : aVistaDate;
+
         let transactionUpdateQuery = supabase
           .from("transactions")
           .update({
@@ -455,8 +460,8 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
             payment_method: data.payment_method as any,
             installments: installmentCount,
             installment_value: finalPlanValue / installmentCount,
+            date: transactionDate,
             ...(data.payment_type === "a_vista" ? {
-              date: aVistaDate,
               amount_received: autoReceivedForAvista,
             } : {}),
           });
@@ -498,7 +503,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
             else if (frequency === "quinzenal") dueDate.setDate(dueDate.getDate() + (15 * i));
             else if (frequency === "manual") dueDate.setDate(dueDate.getDate() + (customDays * i));
             else dueDate.setMonth(dueDate.getMonth() + i);
-            const dueDateStr = dueDate.toISOString().split("T")[0];
+            const dueDateStr = `${dueDate.getFullYear()}-${String(dueDate.getMonth() + 1).padStart(2, "0")}-${String(dueDate.getDate()).padStart(2, "0")}`;
             const isPastDue = dueDateStr < todayStr;
             const thisAmt = useCustomAmts ? customInstallmentAmounts[i] : installmentAmount;
             return {
@@ -707,6 +712,8 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
       queryClient.invalidateQueries({ queryKey: ["recent-clients"] });
       queryClient.invalidateQueries({ queryKey: ["transactions"] });
       queryClient.invalidateQueries({ queryKey: ["financial-summary"] });
+      queryClient.invalidateQueries({ queryKey: ["financial-metrics"] });
+      queryClient.invalidateQueries({ queryKey: ["monthly-transactions"] });
       queryClient.invalidateQueries({ queryKey: ["birth-alert-clients"] });
       toast.success(client ? "Cliente atualizada!" : "Cliente cadastrada com receita!");
       onOpenChange(false);
