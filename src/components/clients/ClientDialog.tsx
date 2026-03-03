@@ -1439,8 +1439,8 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
                 {/* Entrada no parcelado */}
                 {watchedPaymentType === "parcelado" && (
                   <div className="rounded-lg border p-3 space-y-3">
-                    {/* Entry percentage option - only for manual/personalizado */}
-                    {watchedInstallmentFrequency === "manual" && watchedInstallments > 1 && (
+                    {/* Entry percentage option */}
+                    {watchedInstallments > 1 && (
                       <div className="space-y-2">
                         <p className="text-xs font-medium text-muted-foreground">Valor da entrada</p>
                         <div className="flex gap-2">
