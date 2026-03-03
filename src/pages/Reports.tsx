@@ -102,14 +102,24 @@ export default function Reports() {
         const date = subMonths(new Date(), i);
         const start = startOfMonth(date);
         const end = endOfMonth(date);
+        const startStr = format(start, "yyyy-MM-dd");
+        const endStr = format(end, "yyyy-MM-dd");
 
-        const { data: transactions } = await supabase
-          .from("transactions")
-          .select("*")
-          .gte("date", format(start, "yyyy-MM-dd"))
-          .lte("date", format(end, "yyyy-MM-dd"));
+        const [{ data: transactions }, { data: payments }] = await Promise.all([
+          supabase.from("transactions").select("*").gte("date", startStr).lte("date", endStr),
+          supabase.from("payments").select("amount_paid, status").gte("due_date", startStr).lte("due_date", endStr),
+        ]);
 
-        const income = transactions?.filter((t) => t.type === "receita").reduce((sum, t) => sum + Number(t.amount_received || 0), 0) || 0;
+        // Received from payments (installments attributed to their due_date month)
+        const receivedFromPayments = (payments || [])
+          .filter((p) => p.status === "pago" || p.status === "parcial")
+          .reduce((sum, p) => sum + Number(p.amount_paid || 0), 0);
+        // Received from service/manual transactions (non-auto-generated)
+        const receivedFromServices = (transactions || [])
+          .filter((t) => t.type === "receita" && t.is_auto_generated === false)
+          .reduce((sum, t) => sum + Number(t.amount_received || 0), 0);
+        const income = receivedFromPayments + receivedFromServices;
+
         const contracted = transactions?.filter((t) => t.type === "receita").reduce((sum, t) => sum + Number(t.amount), 0) || 0;
         const expenses = transactions?.filter((t) => t.type === "despesa").reduce((sum, t) => sum + Number(t.amount), 0) || 0;
 
