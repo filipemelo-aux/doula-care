@@ -215,7 +215,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
     ? (watchedFirstDueDate || today)
     : (watchedPaymentDateAvista || today);
   const isFirstDueDateInPast = relevantDate < today;
-  const isFirstDueDateTodayOrFuture = relevantDate >= today;
+  
 
   // Resolve selected plan setting from ID
   const selectedPlanSetting = useMemo(() => {
@@ -660,6 +660,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
               client_id: newClient.id,
               transaction_id: createdTransaction.id,
               installment_number: i + 1,
+              total_installments: installmentCount,
               amount: thisAmt,
               amount_paid: isPastDue || (entryAlreadyPaid && i === 0) ? thisAmt : 0,
               due_date: dueDateStr,
