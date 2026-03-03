@@ -170,7 +170,7 @@ export function InAppNotificationListener({ userId, role, clientId, organization
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [userId, role]);
+  }, [userId, role, organizationId]);
 
   // Listen for client_notifications inserts (client only — admins use NotificationsCenter)
   useEffect(() => {
