@@ -49,7 +49,7 @@ Deno.serve(async (req) => {
     // Find appointments needing 1h reminder (between 30min and 1.5h from now, not yet sent)
     const { data: remind1h } = await supabase
       .from("appointments")
-      .select("id, title, scheduled_at, client_id, clients(full_name, user_id)")
+      .select("id, title, scheduled_at, client_id, organization_id, clients(full_name, user_id)")
       .eq("reminder_1h_sent", false)
       .gte("scheduled_at", new Date(now.getTime() + 30 * 60 * 1000).toISOString())
       .lte("scheduled_at", new Date(now.getTime() + 90 * 60 * 1000).toISOString());
@@ -176,19 +176,31 @@ Deno.serve(async (req) => {
           );
         }
 
-        const { data: adminRoles } = await supabase
-          .from("user_roles")
-          .select("user_id")
-          .in("role", ["admin", "moderator"]);
+        // Notify admins IN THE SAME ORGANIZATION as the appointment
+        if (apt.organization_id) {
+          const { data: orgProfiles } = await supabase
+            .from("profiles")
+            .select("user_id")
+            .eq("organization_id", apt.organization_id);
 
-        if (adminRoles && adminRoles.length > 0) {
-          await sendPush(
-            adminRoles.map((r) => r.user_id),
-            "⏰ Consulta em 1 hora!",
-            `"${apt.title}" com ${client?.full_name || "cliente"} às ${timeStr}`,
-            "/agenda",
-            `apt-admin-1h-${apt.id}`
-          );
+          if (orgProfiles && orgProfiles.length > 0) {
+            const orgUserIds = orgProfiles.map(p => p.user_id);
+            const { data: adminRoles } = await supabase
+              .from("user_roles")
+              .select("user_id")
+              .in("role", ["admin", "moderator"])
+              .in("user_id", orgUserIds);
+
+            if (adminRoles && adminRoles.length > 0) {
+              await sendPush(
+                adminRoles.map((r) => r.user_id),
+                "⏰ Consulta em 1 hora!",
+                `"${apt.title}" com ${client?.full_name || "cliente"} às ${timeStr}`,
+                "/agenda",
+                `apt-admin-1h-${apt.id}`
+              );
+            }
+          }
         }
 
         await supabase.from("appointments").update({ reminder_1h_sent: true }).eq("id", apt.id);
