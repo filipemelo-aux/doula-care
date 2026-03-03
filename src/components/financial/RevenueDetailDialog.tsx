@@ -134,7 +134,13 @@ export function RevenueDetailDialog({ open, onOpenChange, transactionId }: Reven
             </div>
             <div>
               <span className="text-[10px] uppercase text-muted-foreground">Parcelas</span>
-              <p className="text-sm font-semibold">{installments}x de {formatCurrency(installmentValue)}</p>
+              {isAvista ? (
+                <p className="text-sm font-semibold">À vista</p>
+              ) : payments && payments.length > 0 && payments.some((p, i, arr) => i > 0 && Number(p.amount) !== Number(arr[0].amount)) ? (
+                <p className="text-sm font-semibold">{installments}x personalizadas</p>
+              ) : (
+                <p className="text-sm font-semibold">{installments}x de {formatCurrency(installmentValue)}</p>
+              )}
             </div>
             <div>
               <span className="text-[10px] uppercase text-muted-foreground">Recebido</span>

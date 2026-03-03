@@ -811,7 +811,7 @@ function MetricCell({ label, value, color }: { label: string; value: number; col
     <div className="min-w-0">
       <p className="text-[10px] text-muted-foreground truncate">{label}</p>
       <p className={`text-xs font-semibold truncate ${color}`}>
-        {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", notation: "compact" }).format(value)}
+        {formatCurrency(value)}
       </p>
     </div>
   );
