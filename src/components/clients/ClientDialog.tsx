@@ -973,6 +973,65 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
                       </FormItem>
                     )}
                   />
+                  {form.watch("payment_type") === "a_vista" && (
+                    <>
+                      <FormField
+                        control={form.control}
+                        name="discount_percent"
+                        render={({ field }) => {
+                          const planVal = form.watch("plan_value") || 0;
+                          const disc = field.value || 0;
+                          const discountedVal = planVal * (1 - disc / 100);
+                          return (
+                            <FormItem className="space-y-1">
+                              <FormLabel className="text-xs">Desconto à Vista (%)</FormLabel>
+                              <FormControl>
+                                <Input
+                                  type="number"
+                                  min={0}
+                                  max={100}
+                                  className="h-9 text-sm"
+                                  value={field.value ?? ""}
+                                  onChange={(e) => {
+                                    const val = parseFloat(e.target.value) || 0;
+                                    field.onChange(Math.min(100, Math.max(0, val)));
+                                    // Update plan_value with discount applied
+                                    const originalVal = form.watch("plan_value") || 0;
+                                    // We don't modify plan_value directly - the discount is applied at save time
+                                  }}
+                                  placeholder="0"
+                                />
+                              </FormControl>
+                              {disc > 0 && (
+                                <p className="text-[10px] text-muted-foreground">
+                                  Valor com desconto: {discountedVal.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+                                </p>
+                              )}
+                              <FormMessage />
+                            </FormItem>
+                          );
+                        }}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="payment_date_avista"
+                        render={({ field }) => (
+                          <FormItem className="space-y-1">
+                            <FormLabel className="text-xs">Data do Pagamento</FormLabel>
+                            <FormControl>
+                              <Input 
+                                type="date" 
+                                className="h-9 text-sm"
+                                value={field.value || ""}
+                                onChange={(e) => field.onChange(e.target.value)}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </>
+                  )}
                    {form.watch("payment_type") === "parcelado" && (
                     <>
                       <FormField
