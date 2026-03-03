@@ -1,8 +1,12 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Bell, AlertTriangle, Baby } from "lucide-react";
+import { Bell, AlertTriangle, Baby, History } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ClientContractionsDialog } from "@/components/dashboard/ClientContractionsDialog";
+import { Tables } from "@/integrations/supabase/types";
+
+type Client = Tables<"clients">;
 
 interface InAppNotificationListenerProps {
   userId: string;
@@ -14,6 +18,13 @@ interface InAppNotificationListenerProps {
 export function InAppNotificationListener({ userId, role, clientId, organizationId }: InAppNotificationListenerProps) {
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
   const contractionChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
+  const [contractionsClient, setContractionsClient] = useState<Client | null>(null);
+  const [contractionsDialogOpen, setContractionsDialogOpen] = useState(false);
+
+  const openContractionsHistory = useCallback((client: Client) => {
+    setContractionsClient(client);
+    setContractionsDialogOpen(true);
+  }, []);
 
   // Listen for new contractions (admin only) to offer labor registration
   useEffect(() => {
