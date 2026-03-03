@@ -367,21 +367,79 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
           .eq("id", client.id);
         if (error) throw error;
 
-        // Update auto-generated transaction description if client name or plan changed
+        // Update auto-generated transaction
         const resolvedPlanSetting = data.plan_setting_id !== "avulso" ? planSettings?.find(p => p.id === data.plan_setting_id) : null;
         const planDisplayName = data.plan_setting_id === "avulso" ? "Avulso" : (resolvedPlanSetting?.name || "Plano");
         const newDescription = `Contrato - ${data.full_name} - ${planDisplayName}`;
+        const installmentCount = data.payment_type === "parcelado" ? (data.installments || 1) : 1;
+        const useCustomAmts = data.installment_frequency === "manual" && customInstallmentAmounts.length === installmentCount;
+
         const { error: transactionError } = await supabase
           .from("transactions")
           .update({ 
             description: newDescription,
             amount: finalPlanValue,
+            payment_method: data.payment_method as any,
+            installments: installmentCount,
+            installment_value: useCustomAmts
+              ? finalPlanValue / installmentCount
+              : finalPlanValue / installmentCount,
           })
           .eq("client_id", client.id)
           .eq("is_auto_generated", true);
         
         if (transactionError) {
           console.error("Error updating transaction:", transactionError);
+        }
+
+        // Recreate payment records if parcelado with installments > 1
+        if (data.payment_type === "parcelado" && installmentCount > 1) {
+          // Delete existing payment records for this client
+          const { error: deleteErr } = await supabase
+            .from("payments")
+            .delete()
+            .eq("client_id", client.id);
+          if (deleteErr) console.error("Error deleting old payments:", deleteErr);
+
+          const installmentAmount = finalPlanValue / installmentCount;
+          const firstDueDate = data.first_due_date ? new Date(data.first_due_date + "T12:00:00") : new Date();
+          const frequency = data.installment_frequency || "mensal";
+          const customDays = data.custom_interval_days || 30;
+          const todayStr = format(new Date(), "yyyy-MM-dd");
+
+          const paymentRecords = Array.from({ length: installmentCount }, (_, i) => {
+            const dueDate = new Date(firstDueDate);
+            if (frequency === "semanal") dueDate.setDate(dueDate.getDate() + (7 * i));
+            else if (frequency === "quinzenal") dueDate.setDate(dueDate.getDate() + (15 * i));
+            else if (frequency === "manual") dueDate.setDate(dueDate.getDate() + (customDays * i));
+            else dueDate.setMonth(dueDate.getMonth() + i);
+            const dueDateStr = dueDate.toISOString().split("T")[0];
+            const thisAmt = useCustomAmts ? customInstallmentAmounts[i] : installmentAmount;
+            return {
+              client_id: client.id,
+              installment_number: i + 1,
+              total_installments: installmentCount,
+              amount: thisAmt,
+              amount_paid: 0,
+              due_date: dueDateStr,
+              status: "pendente",
+              paid_at: null,
+              owner_id: user?.id || null,
+              organization_id: organizationId || null,
+            };
+          });
+
+          const { error: paymentError } = await supabase
+            .from("payments")
+            .insert(paymentRecords);
+          if (paymentError) console.error("Error creating payments:", paymentError);
+        } else {
+          // If switched to à vista, delete existing payment records
+          const { error: deleteErr } = await supabase
+            .from("payments")
+            .delete()
+            .eq("client_id", client.id);
+          if (deleteErr) console.error("Error deleting old payments:", deleteErr);
         }
       } else {
         // Create client and get the ID and created_at
@@ -1161,7 +1219,26 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
                                       value={maskCurrency(String(Math.round(amt * 100)))}
                                       onChange={(e) => {
                                         const newAmounts = [...customInstallmentAmounts];
-                                        newAmounts[i] = parseCurrency(e.target.value);
+                                        const newVal = parseCurrency(e.target.value);
+                                        const oldVal = newAmounts[i];
+                                        newAmounts[i] = newVal;
+                                        // Forward-only redistribution: distribute remaining to subsequent installments
+                                        const subsequentCount = newAmounts.length - i - 1;
+                                        if (subsequentCount > 0) {
+                                          const diff = oldVal - newVal;
+                                          const totalRemaining = newAmounts.slice(i + 1).reduce((a, b) => a + b, 0) + diff;
+                                          const perSubsequent = Math.round((totalRemaining / subsequentCount) * 100) / 100;
+                                          for (let j = i + 1; j < newAmounts.length; j++) {
+                                            newAmounts[j] = perSubsequent;
+                                          }
+                                          // Fix rounding on last installment
+                                          const sumSoFar = newAmounts.reduce((a, b) => a + b, 0);
+                                          const totalTarget = form.watch("plan_value") || 0;
+                                          const roundingDiff = Math.round((totalTarget - sumSoFar) * 100) / 100;
+                                          if (Math.abs(roundingDiff) > 0.001) {
+                                            newAmounts[newAmounts.length - 1] = Math.round((newAmounts[newAmounts.length - 1] + roundingDiff) * 100) / 100;
+                                          }
+                                        }
                                         setCustomInstallmentAmounts(newAmounts);
                                       }}
                                       placeholder="R$ 0,00"
