@@ -114,7 +114,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
       if (!client?.id) return null;
       const { data, error } = await supabase
         .from("transactions")
-        .select("installments, installment_value, payment_method")
+        .select("installments, installment_value, payment_method, date")
         .eq("client_id", client.id)
         .eq("is_auto_generated", true)
         .eq("type", "receita")
@@ -175,10 +175,13 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
   const selectedPlanId = form.watch("plan_setting_id");
   const watchedPaymentType = form.watch("payment_type");
   const watchedFirstDueDate = form.watch("first_due_date");
+  const watchedPaymentDateAvista = form.watch("payment_date_avista");
 
   // Date-based auto-pay logic
   const today = format(new Date(), "yyyy-MM-dd");
-  const relevantDate = watchedPaymentType === "parcelado" && watchedFirstDueDate ? watchedFirstDueDate : today;
+  const relevantDate = watchedPaymentType === "parcelado"
+    ? (watchedFirstDueDate || today)
+    : (watchedPaymentDateAvista || today);
   const isFirstDueDateInPast = relevantDate < today;
   const isFirstDueDateTodayOrFuture = relevantDate >= today;
 
@@ -238,7 +241,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
         payment_method: client.payment_method as "pix" | "cartao" | "dinheiro" | "transferencia",
         payment_type: isParcelado ? "parcelado" : "a_vista",
         discount_percent: 0,
-        payment_date_avista: "",
+        payment_date_avista: isParcelado ? "" : (clientTransaction?.date || ""),
         installments: txInstallments,
         installment_frequency: "mensal",
         custom_interval_days: 30,
@@ -373,6 +376,9 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
         const newDescription = `Contrato - ${data.full_name} - ${planDisplayName}`;
         const installmentCount = data.payment_type === "parcelado" ? (data.installments || 1) : 1;
         const useCustomAmts = data.installment_frequency === "manual" && customInstallmentAmounts.length === installmentCount;
+        const todayStr = format(new Date(), "yyyy-MM-dd");
+        const aVistaDate = data.payment_date_avista || clientTransaction?.date || todayStr;
+        const autoReceivedForAvista = data.payment_type === "a_vista" && aVistaDate <= todayStr ? finalPlanValue : 0;
 
         const { error: transactionError } = await supabase
           .from("transactions")
@@ -381,9 +387,11 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
             amount: finalPlanValue,
             payment_method: data.payment_method as any,
             installments: installmentCount,
-            installment_value: useCustomAmts
-              ? finalPlanValue / installmentCount
-              : finalPlanValue / installmentCount,
+            installment_value: finalPlanValue / installmentCount,
+            ...(data.payment_type === "a_vista" ? {
+              date: aVistaDate,
+              amount_received: autoReceivedForAvista,
+            } : {}),
           })
           .eq("client_id", client.id)
           .eq("is_auto_generated", true);
@@ -405,7 +413,6 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
           const firstDueDate = data.first_due_date ? new Date(data.first_due_date + "T12:00:00") : new Date();
           const frequency = data.installment_frequency || "mensal";
           const customDays = data.custom_interval_days || 30;
-          const todayStr = format(new Date(), "yyyy-MM-dd");
 
           const paymentRecords = Array.from({ length: installmentCount }, (_, i) => {
             const dueDate = new Date(firstDueDate);
@@ -414,16 +421,17 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
             else if (frequency === "manual") dueDate.setDate(dueDate.getDate() + (customDays * i));
             else dueDate.setMonth(dueDate.getMonth() + i);
             const dueDateStr = dueDate.toISOString().split("T")[0];
+            const isPastDue = dueDateStr < todayStr;
             const thisAmt = useCustomAmts ? customInstallmentAmounts[i] : installmentAmount;
             return {
               client_id: client.id,
               installment_number: i + 1,
               total_installments: installmentCount,
               amount: thisAmt,
-              amount_paid: 0,
+              amount_paid: isPastDue ? thisAmt : 0,
               due_date: dueDateStr,
-              status: "pendente",
-              paid_at: null,
+              status: isPastDue ? "pago" : "pendente",
+              paid_at: isPastDue ? `${dueDateStr}T12:00:00` : null,
               owner_id: user?.id || null,
               organization_id: organizationId || null,
             };
@@ -433,6 +441,14 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
             .from("payments")
             .insert(paymentRecords);
           if (paymentError) console.error("Error creating payments:", paymentError);
+
+          const autoReceivedParcelado = paymentRecords.reduce((sum, p) => sum + Number(p.amount_paid || 0), 0);
+          const { error: txAmountError } = await supabase
+            .from("transactions")
+            .update({ amount_received: autoReceivedParcelado })
+            .eq("client_id", client.id)
+            .eq("is_auto_generated", true);
+          if (txAmountError) console.error("Error updating transaction amount_received:", txAmountError);
         } else {
           // If switched to à vista, delete existing payment records
           const { error: deleteErr } = await supabase
@@ -495,8 +511,6 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
           const aVistaDate = data.payment_date_avista || clientCreatedDate;
           if (aVistaDate <= todayStr) {
             autoReceived = finalPlanValue;
-          } else if (entryAlreadyPaid) {
-            autoReceived = installmentVal;
           }
         }
 
@@ -505,7 +519,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
           description: `Contrato - ${data.full_name} - ${planDisplayName}`,
           amount: finalPlanValue,
           amount_received: autoReceived,
-          date: clientCreatedDate,
+          date: data.payment_type === "a_vista" ? aVistaDate : clientCreatedDate,
           client_id: newClient.id,
           plan_id: resolvedPlanSetting?.id || null,
           payment_method: data.payment_method as "pix" | "cartao" | "dinheiro" | "transferencia" | "boleto",
@@ -1044,7 +1058,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
                         name="discount_percent"
                         render={({ field }) => {
                           const planVal = form.watch("plan_value") || 0;
-                          const disc = field.value || 0;
+                          const disc = Number(field.value ?? 0);
                           const discountedVal = planVal * (1 - disc / 100);
                           return (
                             <FormItem className="space-y-1">
@@ -1054,14 +1068,18 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
                                   type="number"
                                   min={0}
                                   max={100}
+                                  step="0.01"
                                   className="h-9 text-sm"
                                   value={field.value ?? ""}
                                   onChange={(e) => {
-                                    const val = parseFloat(e.target.value) || 0;
-                                    field.onChange(Math.min(100, Math.max(0, val)));
-                                    // Update plan_value with discount applied
-                                    const originalVal = form.watch("plan_value") || 0;
-                                    // We don't modify plan_value directly - the discount is applied at save time
+                                    const rawValue = e.target.value;
+                                    if (rawValue === "") {
+                                      field.onChange(undefined);
+                                      return;
+                                    }
+                                    const parsed = Number(rawValue);
+                                    if (Number.isNaN(parsed)) return;
+                                    field.onChange(Math.min(100, Math.max(0, parsed)));
                                   }}
                                   placeholder="0"
                                 />
@@ -1280,7 +1298,13 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
                 {/* Auto-pay logic indicator */}
                 {!client && (
                   <div className="rounded-lg border p-3 space-y-1">
-                    {isFirstDueDateInPast ? (
+                    {watchedPaymentType === "a_vista" ? (
+                      <p className="text-xs text-muted-foreground">
+                        {isFirstDueDateInPast
+                          ? "Pagamento à vista será marcado como recebido automaticamente pela data informada."
+                          : "Pagamento à vista ficará pendente até a data informada."}
+                      </p>
+                    ) : isFirstDueDateInPast ? (
                       <p className="text-xs text-success flex items-center gap-1.5">
                         <CheckCircle className="h-3.5 w-3.5" />
                         A data é anterior a hoje — entrada será marcada como <strong>Recebida</strong> automaticamente.
