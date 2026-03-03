@@ -401,8 +401,10 @@ export function ClientDetailsDialog({
                     <p className="text-muted-foreground">Pagamento</p>
                     <div className="flex items-center justify-between mt-1">
                       <p className="font-medium">
-                        Parcelado em {clientTransaction.installments}x de{" "}
-                        {formatCurrency(Number(clientTransaction.installment_value) || 0)}
+                        {hasCustomInstallments
+                          ? `${clientTransaction.installments}x — Parcelas personalizadas`
+                          : `Parcelado em ${clientTransaction.installments}x de ${formatCurrency(Number(clientTransaction.installment_value) || 0)}`
+                        }
                       </p>
                       <Button
                         variant="outline"
