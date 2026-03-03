@@ -47,6 +47,7 @@ import {
   Info,
 } from "lucide-react";
 import { AppointmentDetailDialog } from "@/components/clients/AppointmentDetailDialog";
+import { AppointmentCompleteDialog } from "@/components/clients/AppointmentCompleteDialog";
 import { format, isToday, isPast, isFuture, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { fromZonedTime, toZonedTime } from "date-fns-tz";
@@ -60,6 +61,8 @@ interface AppointmentWithClient {
   title: string;
   scheduled_at: string;
   notes: string | null;
+  completed_at: string | null;
+  completion_notes: string | null;
   client_id: string;
   clients: { full_name: string };
 }
@@ -416,7 +419,7 @@ export default function Agenda() {
                   </h2>
                   <div className="space-y-2">
                     {futureApts.slice(0, 5).map((apt) => (
-                      <AppointmentRow key={apt.id} apt={apt} onEdit={openEditAppointment} onDelete={(id) => setDeleteTarget({ type: "appointment", id })} displayName={displayName} />
+                      <AppointmentRow key={apt.id} apt={apt} onEdit={openEditAppointment} onDelete={(id) => setDeleteTarget({ type: "appointment", id })} displayName={displayName} onCompleted={() => queryClient.invalidateQueries({ queryKey: ["agenda-appointments"] })} />
                     ))}
                   </div>
                 </section>
@@ -462,7 +465,7 @@ export default function Agenda() {
                   <h2 className="text-sm font-semibold text-muted-foreground mb-3">Próximas</h2>
                   <div className="space-y-2">
                     {futureApts.map((apt) => (
-                      <AppointmentRow key={apt.id} apt={apt} onEdit={openEditAppointment} onDelete={(id) => setDeleteTarget({ type: "appointment", id })} displayName={displayName} />
+                      <AppointmentRow key={apt.id} apt={apt} onEdit={openEditAppointment} onDelete={(id) => setDeleteTarget({ type: "appointment", id })} displayName={displayName} onCompleted={() => queryClient.invalidateQueries({ queryKey: ["agenda-appointments"] })} />
                     ))}
                   </div>
                 </section>
@@ -472,7 +475,7 @@ export default function Agenda() {
                   <h2 className="text-sm font-semibold text-muted-foreground mb-3">Histórico</h2>
                   <div className="space-y-2">
                     {pastApts.map((apt) => (
-                      <AppointmentRow key={apt.id} apt={apt} onEdit={openEditAppointment} onDelete={(id) => setDeleteTarget({ type: "appointment", id })} displayName={displayName} past />
+                      <AppointmentRow key={apt.id} apt={apt} onEdit={openEditAppointment} onDelete={(id) => setDeleteTarget({ type: "appointment", id })} displayName={displayName} past onCompleted={() => queryClient.invalidateQueries({ queryKey: ["agenda-appointments"] })} />
                     ))}
                   </div>
                 </section>
@@ -654,26 +657,36 @@ function AppointmentRow({
   onDelete,
   displayName,
   past,
+  onCompleted,
 }: {
   apt: AppointmentWithClient;
   onEdit: (apt: AppointmentWithClient) => void;
   onDelete: (id: string) => void;
   displayName: (name: string) => string;
   past?: boolean;
+  onCompleted?: () => void;
 }) {
   const [detailOpen, setDetailOpen] = useState(false);
+  const [completeOpen, setCompleteOpen] = useState(false);
   const date = new Date(apt.scheduled_at);
   const today = isToday(date);
 
   return (
     <>
-      <div className={`flex w-full max-w-full min-w-0 items-center gap-3 rounded-lg p-3 border bg-background hover:bg-muted/30 transition-colors overflow-hidden ${past ? "opacity-50" : ""}`}>
+      <div className={`flex w-full max-w-full min-w-0 items-center gap-3 rounded-lg p-3 border bg-background hover:bg-muted/30 transition-colors overflow-hidden ${apt.completed_at ? "opacity-60" : past ? "opacity-50" : ""}`}>
         <div className="text-center min-w-[44px]">
           <p className="text-[10px] text-muted-foreground uppercase">{format(date, "MMM", { locale: ptBR })}</p>
           <p className="text-lg font-bold leading-tight">{format(date, "dd")}</p>
         </div>
         <div className="w-0 flex-1 overflow-hidden">
-          <p className="block w-full font-medium text-sm line-clamp-2 break-words" title={apt.title}>{apt.title}</p>
+          <div className="flex items-center gap-1.5">
+            <p className="block font-medium text-sm line-clamp-2 break-words" title={apt.title}>{apt.title}</p>
+            {apt.completed_at && (
+              <Badge variant="secondary" className="text-[10px] px-1.5 py-0 flex-shrink-0 bg-green-100 text-green-700">
+                Concluída
+              </Badge>
+            )}
+          </div>
           <p className="text-xs text-muted-foreground truncate">{displayName(apt.clients?.full_name || "")}</p>
           <p className="text-xs text-muted-foreground flex items-center gap-1 min-w-0">
             <Clock className="h-3 w-3 flex-shrink-0" />
@@ -685,8 +698,16 @@ function AppointmentRow({
             )}
           </p>
           {apt.notes && <p className="text-xs text-muted-foreground truncate mt-0.5">{apt.notes}</p>}
+          {apt.completion_notes && (
+            <p className="text-xs text-primary truncate mt-0.5" title={apt.completion_notes}>📝 {apt.completion_notes}</p>
+          )}
         </div>
         <div className="flex items-center gap-1 flex-shrink-0">
+          {!apt.completed_at && (
+            <Button variant="ghost" size="icon" className="h-8 w-8 text-green-600 hover:text-green-700" onClick={() => setCompleteOpen(true)} title="Concluir consulta">
+              <CheckCircle className="h-3.5 w-3.5" />
+            </Button>
+          )}
           <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary" onClick={() => setDetailOpen(true)} title="Ver detalhes">
             <Eye className="h-3.5 w-3.5" />
           </Button>
@@ -706,7 +727,16 @@ function AppointmentRow({
           scheduled_at: apt.scheduled_at,
           notes: apt.notes,
           clientName: apt.clients?.full_name,
+          completed_at: apt.completed_at,
+          completion_notes: apt.completion_notes,
         }}
+      />
+      <AppointmentCompleteDialog
+        open={completeOpen}
+        onOpenChange={setCompleteOpen}
+        appointmentId={apt.id}
+        appointmentTitle={apt.title}
+        onCompleted={() => onCompleted?.()}
       />
     </>
   );
