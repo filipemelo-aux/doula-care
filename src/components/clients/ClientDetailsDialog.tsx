@@ -114,6 +114,29 @@ export function ClientDetailsDialog({
     enabled: open && !!client,
   });
 
+  // Query payment records to detect custom/personalized installments
+  const { data: clientPayments } = useQuery({
+    queryKey: ["client-payments-detail", clientTransaction?.id],
+    queryFn: async () => {
+      if (!clientTransaction?.id) return null;
+      const { data, error } = await supabase
+        .from("payments")
+        .select("amount")
+        .eq("transaction_id", clientTransaction.id)
+        .order("installment_number", { ascending: true });
+      if (error) throw error;
+      return data;
+    },
+    enabled: open && !!clientTransaction?.id,
+  });
+
+  // Detect if payments have custom (non-equal) amounts
+  const hasCustomInstallments = (() => {
+    if (!clientPayments || clientPayments.length <= 1) return false;
+    const firstAmt = Number(clientPayments[0].amount);
+    return clientPayments.some(p => Math.abs(Number(p.amount) - firstAmt) > 0.01);
+  })();
+
   if (!client) return null;
 
   const handleResetTestData = async () => {
