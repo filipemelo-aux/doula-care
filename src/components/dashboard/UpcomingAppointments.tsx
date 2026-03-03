@@ -37,6 +37,7 @@ export function UpcomingAppointments() {
   const [pickClientOpen, setPickClientOpen] = useState(false);
   const [pickedClientId, setPickedClientId] = useState("");
   const [detailApt, setDetailApt] = useState<AppointmentWithClient | null>(null);
+  const [completeApt, setCompleteApt] = useState<AppointmentWithClient | null>(null);
 
   const { data: appointments, isLoading } = useQuery({
     queryKey: ["all-appointments"],
