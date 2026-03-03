@@ -7,8 +7,9 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar, Trash2, Loader2, Plus, Clock, Eye } from "lucide-react";
+import { Calendar, Trash2, Loader2, Plus, Clock, Eye, CheckCircle } from "lucide-react";
 import { AppointmentDetailDialog } from "@/components/clients/AppointmentDetailDialog";
+import { AppointmentCompleteDialog } from "@/components/clients/AppointmentCompleteDialog";
 import { format, isToday } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
@@ -21,6 +22,8 @@ interface AppointmentWithClient {
   title: string;
   scheduled_at: string;
   notes: string | null;
+  completed_at: string | null;
+  completion_notes: string | null;
   client_id: string;
   clients: {
     full_name: string;
@@ -34,6 +37,7 @@ export function UpcomingAppointments() {
   const [pickClientOpen, setPickClientOpen] = useState(false);
   const [pickedClientId, setPickedClientId] = useState("");
   const [detailApt, setDetailApt] = useState<AppointmentWithClient | null>(null);
+  const [completeApt, setCompleteApt] = useState<AppointmentWithClient | null>(null);
 
   const { data: appointments, isLoading } = useQuery({
     queryKey: ["all-appointments"],
@@ -149,6 +153,22 @@ export function UpcomingAppointments() {
                         </p>
                       </div>
                       <div className="flex items-center gap-1 flex-shrink-0">
+                        {!apt.completed_at && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-green-600 hover:text-green-700"
+                            onClick={() => setCompleteApt(apt)}
+                            title="Concluir consulta"
+                          >
+                            <CheckCircle className="h-4 w-4" />
+                          </Button>
+                        )}
+                        {apt.completed_at && (
+                          <Badge variant="secondary" className="text-[10px] px-1.5 py-0 bg-green-100 text-green-700 mr-1">
+                            ✓
+                          </Badge>
+                        )}
                         <Button
                           variant="ghost"
                           size="icon"
@@ -229,8 +249,22 @@ export function UpcomingAppointments() {
           scheduled_at: detailApt.scheduled_at,
           notes: detailApt.notes,
           clientName: detailApt.clients?.full_name,
+          completed_at: detailApt.completed_at,
+          completion_notes: detailApt.completion_notes,
         } : null}
       />
+
+      {completeApt && (
+        <AppointmentCompleteDialog
+          open={!!completeApt}
+          onOpenChange={(open) => !open && setCompleteApt(null)}
+          appointmentId={completeApt.id}
+          appointmentTitle={completeApt.title}
+          onCompleted={() => {
+            queryClient.invalidateQueries({ queryKey: ["all-appointments"] });
+          }}
+        />
+      )}
     </>
   );
 }

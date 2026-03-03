@@ -175,7 +175,7 @@ export function RevenueDetailDialog({ open, onOpenChange, transactionId }: Reven
           <div className="grid grid-cols-2 gap-3">
             <div>
               <span className="text-[10px] uppercase text-muted-foreground">
-                {isAvista ? "Data do Pagamento" : "Data do Lançamento"}
+                {isAvista ? "Data do Pagamento" : "Data pagamento da entrada"}
               </span>
               <p className="text-sm">{format(parseISO(transaction.date), "dd/MM/yyyy")}</p>
             </div>
