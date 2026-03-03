@@ -238,6 +238,7 @@ export type Database = {
           baby_names: string[] | null
           birth_date: string | null
           birth_height: number | null
+          birth_location: string | null
           birth_occurred: boolean | null
           birth_time: string | null
           birth_weight: number | null
@@ -288,6 +289,7 @@ export type Database = {
           baby_names?: string[] | null
           birth_date?: string | null
           birth_height?: number | null
+          birth_location?: string | null
           birth_occurred?: boolean | null
           birth_time?: string | null
           birth_weight?: number | null
@@ -338,6 +340,7 @@ export type Database = {
           baby_names?: string[] | null
           birth_date?: string | null
           birth_height?: number | null
+          birth_location?: string | null
           birth_occurred?: boolean | null
           birth_time?: string | null
           birth_weight?: number | null

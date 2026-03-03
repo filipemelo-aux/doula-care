@@ -56,9 +56,12 @@ const clientSchema = z.object({
   pregnancy_weeks: z.number().min(0).max(42).optional().nullable(),
   dpp: z.string().optional().nullable(),
   baby_names: z.string().optional(),
+  birth_location: z.string().optional(),
   plan_setting_id: z.string().min(1, "Selecione um plano"),
   payment_method: z.enum(["pix", "cartao", "dinheiro", "transferencia"]),
   payment_type: z.enum(["a_vista", "parcelado"]),
+  discount_percent: z.number().min(0).max(100).optional(),
+  payment_date_avista: z.string().optional(),
   installments: z.number().min(1).max(24).optional(),
   installment_frequency: z.enum(["semanal", "quinzenal", "mensal", "manual"]).optional(),
   custom_interval_days: z.number().min(1).max(365).optional(),
@@ -143,9 +146,12 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
       pregnancy_weeks: null,
       dpp: null,
       baby_names: "",
+      birth_location: "",
         plan_setting_id: "",
         payment_method: "pix",
         payment_type: "a_vista",
+        discount_percent: 0,
+        payment_date_avista: "",
         installments: 1,
         installment_frequency: "mensal",
         custom_interval_days: 30,
@@ -227,9 +233,12 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
         pregnancy_weeks: client.pregnancy_weeks,
         dpp: client.dpp || null,
         baby_names: (client as any).baby_names?.join(", ") || "",
+        birth_location: (client as any).birth_location || "",
         plan_setting_id: (client as any).plan_setting_id || (planSettings?.find(p => p.plan_type === client.plan)?.id) || (client.plan === "avulso" ? "avulso" : ""),
         payment_method: client.payment_method as "pix" | "cartao" | "dinheiro" | "transferencia",
         payment_type: isParcelado ? "parcelado" : "a_vista",
+        discount_percent: 0,
+        payment_date_avista: "",
         installments: txInstallments,
         installment_frequency: "mensal",
         custom_interval_days: 30,
@@ -272,9 +281,12 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
         pregnancy_weeks: null,
         dpp: null,
         baby_names: "",
+        birth_location: "",
         plan_setting_id: "",
         payment_method: "pix",
         payment_type: "a_vista",
+        discount_percent: 0,
+        payment_date_avista: "",
         installments: 1,
         installment_frequency: "mensal",
         custom_interval_days: 30,
@@ -297,6 +309,12 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
 
   const mutation = useMutation({
     mutationFn: async (data: ClientFormData) => {
+      // Apply discount for à vista payments
+      const discountPercent = data.payment_type === "a_vista" ? (data.discount_percent || 0) : 0;
+      const finalPlanValue = discountPercent > 0 
+        ? Math.round((data.plan_value || 0) * (1 - discountPercent / 100) * 100) / 100
+        : (data.plan_value || 0);
+
       const payload = {
         full_name: data.full_name,
         phone: data.phone,
@@ -324,7 +342,8 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
         plan: (data.plan_setting_id === "avulso" ? "avulso" : (planSettings?.find(p => p.id === data.plan_setting_id)?.plan_type || "basico")) as any,
         plan_setting_id: data.plan_setting_id !== "avulso" ? data.plan_setting_id : null,
         payment_method: data.payment_method,
-        plan_value: data.plan_value || 0,
+        plan_value: finalPlanValue,
+        birth_location: data.status === "gestante" ? (data.birth_location || null) : null,
         prenatal_type: data.prenatal_type || null,
         prenatal_high_risk: data.prenatal_high_risk || false,
         prenatal_team: data.prenatal_type === "equipe_particular" ? prenatalTeam.filter(m => m.name.trim()) : [],
@@ -356,7 +375,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
           .from("transactions")
           .update({ 
             description: newDescription,
-            amount: data.plan_value || 0,
+            amount: finalPlanValue,
           })
           .eq("client_id", client.id)
           .eq("is_auto_generated", true);
@@ -393,7 +412,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
         const todayStr = format(new Date(), "yyyy-MM-dd");
         const installmentCount = data.payment_type === "parcelado" ? (data.installments || 1) : 1;
         const useCustomAmounts = data.installment_frequency === "manual" && customInstallmentAmounts.length === installmentCount;
-        const installmentVal = useCustomAmounts ? 0 : (data.plan_value || 0) / installmentCount;
+        const installmentVal = useCustomAmounts ? 0 : finalPlanValue / installmentCount;
         let autoReceived = 0;
 
         if (data.payment_type === "parcelado" && installmentCount > 1) {
@@ -415,9 +434,9 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
           }
         } else {
           // À vista or single installment
-          const firstDueDateStr = data.first_due_date || clientCreatedDate;
-          if (firstDueDateStr < todayStr) {
-            autoReceived = data.plan_value || 0;
+          const aVistaDate = data.payment_date_avista || clientCreatedDate;
+          if (aVistaDate <= todayStr) {
+            autoReceived = finalPlanValue;
           } else if (entryAlreadyPaid) {
             autoReceived = installmentVal;
           }
@@ -426,7 +445,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
         const transactionPayload = {
           type: "receita" as const,
           description: `Contrato - ${data.full_name} - ${planDisplayName}`,
-          amount: data.plan_value || 0,
+          amount: finalPlanValue,
           amount_received: autoReceived,
           date: clientCreatedDate,
           client_id: newClient.id,
@@ -435,10 +454,10 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
           is_auto_generated: true,
           installments: data.payment_type === "parcelado" ? (data.installments || 1) : 1,
           installment_value: useCustomAmounts
-            ? (data.plan_value || 0) / installmentCount
+            ? finalPlanValue / installmentCount
             : (data.payment_type === "parcelado" && data.installments 
-              ? (data.plan_value || 0) / data.installments 
-              : (data.plan_value || 0)),
+              ? finalPlanValue / data.installments 
+              : finalPlanValue),
           notes: `Receita gerada automaticamente ao cadastrar cliente`,
           owner_id: user?.id || null,
           organization_id: organizationId || null,
@@ -453,7 +472,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
         if (data.payment_type === "parcelado" && data.installments && data.installments > 1) {
           const installmentCount = data.installments;
           const useCustomAmts = data.installment_frequency === "manual" && customInstallmentAmounts.length === installmentCount;
-          const installmentAmount = (data.plan_value || 0) / installmentCount;
+          const installmentAmount = finalPlanValue / installmentCount;
           const firstDueDate = data.first_due_date ? new Date(data.first_due_date + "T12:00:00") : new Date();
           
           const frequency = data.installment_frequency || "mensal";
@@ -842,6 +861,23 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
                           </FormItem>
                         )}
                       />
+                      <FormField
+                        control={form.control}
+                        name="birth_location"
+                        render={({ field }) => (
+                          <FormItem className="space-y-1 md:col-span-3">
+                            <FormLabel className="text-xs">Local do Parto</FormLabel>
+                            <FormControl>
+                              <Input 
+                                {...field} 
+                                className="h-9 text-sm" 
+                                placeholder="Ex: Hospital São Lucas, Domiciliar..."
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
                     </>
                   )}
                 </div>
@@ -943,6 +979,65 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
                       </FormItem>
                     )}
                   />
+                  {form.watch("payment_type") === "a_vista" && (
+                    <>
+                      <FormField
+                        control={form.control}
+                        name="discount_percent"
+                        render={({ field }) => {
+                          const planVal = form.watch("plan_value") || 0;
+                          const disc = field.value || 0;
+                          const discountedVal = planVal * (1 - disc / 100);
+                          return (
+                            <FormItem className="space-y-1">
+                              <FormLabel className="text-xs">Desconto à Vista (%)</FormLabel>
+                              <FormControl>
+                                <Input
+                                  type="number"
+                                  min={0}
+                                  max={100}
+                                  className="h-9 text-sm"
+                                  value={field.value ?? ""}
+                                  onChange={(e) => {
+                                    const val = parseFloat(e.target.value) || 0;
+                                    field.onChange(Math.min(100, Math.max(0, val)));
+                                    // Update plan_value with discount applied
+                                    const originalVal = form.watch("plan_value") || 0;
+                                    // We don't modify plan_value directly - the discount is applied at save time
+                                  }}
+                                  placeholder="0"
+                                />
+                              </FormControl>
+                              {disc > 0 && (
+                                <p className="text-[10px] text-muted-foreground">
+                                  Valor com desconto: {discountedVal.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+                                </p>
+                              )}
+                              <FormMessage />
+                            </FormItem>
+                          );
+                        }}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="payment_date_avista"
+                        render={({ field }) => (
+                          <FormItem className="space-y-1">
+                            <FormLabel className="text-xs">Data do Pagamento</FormLabel>
+                            <FormControl>
+                              <Input 
+                                type="date" 
+                                className="h-9 text-sm"
+                                value={field.value || ""}
+                                onChange={(e) => field.onChange(e.target.value)}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </>
+                  )}
                    {form.watch("payment_type") === "parcelado" && (
                     <>
                       <FormField
