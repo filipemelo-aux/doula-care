@@ -82,6 +82,7 @@ export function RevenueDetailDialog({ open, onOpenChange, transactionId }: Reven
   const progressPercent = totalAmount > 0 ? Math.min(100, (receivedAmount / totalAmount) * 100) : 0;
   const installments = Number(transaction.installments) || 1;
   const installmentValue = Number(transaction.installment_value) || totalAmount / installments;
+  const isAvista = installments <= 1;
 
   const statusInfo = pendingAmount === 0
     ? { label: "Quitado", variant: "default" as const, icon: CheckCircle, color: "text-success" }
@@ -166,7 +167,9 @@ export function RevenueDetailDialog({ open, onOpenChange, transactionId }: Reven
           {/* Details */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <span className="text-[10px] uppercase text-muted-foreground">Data do Lançamento</span>
+              <span className="text-[10px] uppercase text-muted-foreground">
+                {isAvista ? "Data do Pagamento" : "Data do Lançamento"}
+              </span>
               <p className="text-sm">{format(parseISO(transaction.date), "dd/MM/yyyy")}</p>
             </div>
             <div>
