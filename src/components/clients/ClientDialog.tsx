@@ -486,7 +486,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
         const planDisplayName = data.plan_setting_id === "avulso" ? "Avulso" : (resolvedPlanSetting?.name || "Plano");
         const newDescription = `Contrato - ${data.full_name} - ${planDisplayName}`;
         const installmentCount = data.payment_type === "parcelado" ? (data.installments || 1) : 1;
-        const useCustomAmts = data.installment_frequency === "manual" && customInstallmentAmounts.length === installmentCount;
+        const useCustomAmts = (data.installment_frequency === "manual" || (entryType === "percentage" && entryPercentage > 0)) && customInstallmentAmounts.length === installmentCount;
         const todayStr = format(new Date(), "yyyy-MM-dd");
         const aVistaDate = data.payment_date_avista || clientTransaction?.date || todayStr;
         const autoReceivedForAvista = data.payment_type === "a_vista" && aVistaDate <= todayStr ? finalPlanValue : 0;
@@ -625,7 +625,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
         // Determine auto-received based on date logic — account for ALL paid installments
         const todayStr = format(new Date(), "yyyy-MM-dd");
         const installmentCount = data.payment_type === "parcelado" ? (data.installments || 1) : 1;
-        const useCustomAmounts = data.installment_frequency === "manual" && customInstallmentAmounts.length === installmentCount;
+        const useCustomAmounts = (data.installment_frequency === "manual" || (entryType === "percentage" && entryPercentage > 0)) && customInstallmentAmounts.length === installmentCount;
         const installmentVal = useCustomAmounts ? 0 : finalPlanValue / installmentCount;
         let autoReceived = 0;
         const aVistaDate = data.payment_date_avista || clientCreatedDate;
@@ -685,7 +685,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
         // Create payment records with due dates if parcelado
         if (data.payment_type === "parcelado" && data.installments && data.installments > 1) {
           const installmentCount = data.installments;
-          const useCustomAmts = data.installment_frequency === "manual" && customInstallmentAmounts.length === installmentCount;
+          const useCustomAmts = (data.installment_frequency === "manual" || (entryType === "percentage" && entryPercentage > 0)) && customInstallmentAmounts.length === installmentCount;
           const installmentAmount = finalPlanValue / installmentCount;
           const firstDueDate = data.first_due_date ? new Date(data.first_due_date + "T12:00:00") : new Date();
           
