@@ -364,20 +364,27 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
   }, [client, form, planSettings, clientTransaction, clientInstallmentPayments]);
 
   useEffect(() => {
-    if (watchedPaymentType !== "parcelado" || watchedInstallmentFrequency !== "manual") return;
+    if (watchedPaymentType !== "parcelado") return;
+    // For manual frequency, always sync custom amounts; for others, only when percentage entry is used
+    const isManual = watchedInstallmentFrequency === "manual";
+    const isPercentageEntry = entryType === "percentage" && entryPercentage > 0 && entryPercentage < 100;
+    if (!isManual && !isPercentageEntry) {
+      // Clear custom amounts when switching away from percentage on non-manual
+      if (customInstallmentAmounts.length > 0 && !isManual) setCustomInstallmentAmounts([]);
+      return;
+    }
     if (watchedInstallments <= 1) {
       if (customInstallmentAmounts.length > 0) setCustomInstallmentAmounts([]);
       return;
     }
 
     if (customInstallmentAmounts.length !== watchedInstallments) {
-      if (entryType === "percentage" && entryPercentage > 0 && entryPercentage < 100) {
+      if (isPercentageEntry) {
         const entryValue = Math.round(watchedPlanValue * (entryPercentage / 100) * 100) / 100;
         const remaining = watchedPlanValue - entryValue;
         const perInstallment = Math.round((remaining / (watchedInstallments - 1)) * 100) / 100;
         const amounts = Array(watchedInstallments).fill(perInstallment);
         amounts[0] = entryValue;
-        // Fix rounding on last
         const sumSoFar = amounts.reduce((a: number, b: number) => a + b, 0);
         const roundingDiff = Math.round((watchedPlanValue - sumSoFar) * 100) / 100;
         if (Math.abs(roundingDiff) > 0.001) amounts[amounts.length - 1] += roundingDiff;
@@ -393,11 +400,13 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
     watchedInstallments,
     watchedPlanValue,
     customInstallmentAmounts.length,
+    entryType,
+    entryPercentage,
   ]);
 
   // Recalculate installments when entry percentage changes
   useEffect(() => {
-    if (watchedPaymentType !== "parcelado" || watchedInstallmentFrequency !== "manual") return;
+    if (watchedPaymentType !== "parcelado") return;
     if (watchedInstallments <= 1 || entryType !== "percentage") return;
     if (entryPercentage <= 0 || entryPercentage >= 100) return;
 
@@ -477,7 +486,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
         const planDisplayName = data.plan_setting_id === "avulso" ? "Avulso" : (resolvedPlanSetting?.name || "Plano");
         const newDescription = `Contrato - ${data.full_name} - ${planDisplayName}`;
         const installmentCount = data.payment_type === "parcelado" ? (data.installments || 1) : 1;
-        const useCustomAmts = data.installment_frequency === "manual" && customInstallmentAmounts.length === installmentCount;
+        const useCustomAmts = (data.installment_frequency === "manual" || (entryType === "percentage" && entryPercentage > 0)) && customInstallmentAmounts.length === installmentCount;
         const todayStr = format(new Date(), "yyyy-MM-dd");
         const aVistaDate = data.payment_date_avista || clientTransaction?.date || todayStr;
         const autoReceivedForAvista = data.payment_type === "a_vista" && aVistaDate <= todayStr ? finalPlanValue : 0;
@@ -616,7 +625,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
         // Determine auto-received based on date logic — account for ALL paid installments
         const todayStr = format(new Date(), "yyyy-MM-dd");
         const installmentCount = data.payment_type === "parcelado" ? (data.installments || 1) : 1;
-        const useCustomAmounts = data.installment_frequency === "manual" && customInstallmentAmounts.length === installmentCount;
+        const useCustomAmounts = (data.installment_frequency === "manual" || (entryType === "percentage" && entryPercentage > 0)) && customInstallmentAmounts.length === installmentCount;
         const installmentVal = useCustomAmounts ? 0 : finalPlanValue / installmentCount;
         let autoReceived = 0;
         const aVistaDate = data.payment_date_avista || clientCreatedDate;
@@ -676,7 +685,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
         // Create payment records with due dates if parcelado
         if (data.payment_type === "parcelado" && data.installments && data.installments > 1) {
           const installmentCount = data.installments;
-          const useCustomAmts = data.installment_frequency === "manual" && customInstallmentAmounts.length === installmentCount;
+          const useCustomAmts = (data.installment_frequency === "manual" || (entryType === "percentage" && entryPercentage > 0)) && customInstallmentAmounts.length === installmentCount;
           const installmentAmount = finalPlanValue / installmentCount;
           const firstDueDate = data.first_due_date ? new Date(data.first_due_date + "T12:00:00") : new Date();
           
@@ -1430,8 +1439,8 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
                 {/* Entrada no parcelado */}
                 {watchedPaymentType === "parcelado" && (
                   <div className="rounded-lg border p-3 space-y-3">
-                    {/* Entry percentage option - only for manual/personalizado */}
-                    {watchedInstallmentFrequency === "manual" && watchedInstallments > 1 && (
+                    {/* Entry percentage option */}
+                    {watchedInstallments > 1 && (
                       <div className="space-y-2">
                         <p className="text-xs font-medium text-muted-foreground">Valor da entrada</p>
                         <div className="flex gap-2">
