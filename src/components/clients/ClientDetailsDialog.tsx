@@ -222,7 +222,7 @@ export function ClientDetailsDialog({
                     </span>
                   )}
                 </div>
-                <h2 className="text-lg font-semibold text-foreground mt-1 truncate">
+                <h2 className="text-lg font-semibold text-foreground mt-1 break-words">
                   {client.full_name}
                 </h2>
                 {client.status === "gestante" && client.dpp && (
