@@ -72,6 +72,20 @@ export function AppointmentDetailDialog({
               <p className="text-sm break-words whitespace-pre-wrap">{appointment.notes}</p>
             </div>
           )}
+
+          {appointment.completed_at && (
+            <div className="p-3 rounded-lg bg-green-50 border border-green-200">
+              <p className="text-xs text-green-700 mb-1 flex items-center gap-1 font-medium">
+                <CheckCircle className="h-3 w-3" /> Consulta Concluída
+              </p>
+              <p className="text-xs text-green-600">
+                {format(new Date(appointment.completed_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+              </p>
+              {appointment.completion_notes && (
+                <p className="text-sm break-words whitespace-pre-wrap mt-2 text-green-800">{appointment.completion_notes}</p>
+              )}
+            </div>
+          )}
         </div>
       </DialogContent>
     </Dialog>
