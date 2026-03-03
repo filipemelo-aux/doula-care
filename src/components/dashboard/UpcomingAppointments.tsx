@@ -153,6 +153,22 @@ export function UpcomingAppointments() {
                         </p>
                       </div>
                       <div className="flex items-center gap-1 flex-shrink-0">
+                        {!apt.completed_at && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-green-600 hover:text-green-700"
+                            onClick={() => setCompleteApt(apt)}
+                            title="Concluir consulta"
+                          >
+                            <CheckCircle className="h-4 w-4" />
+                          </Button>
+                        )}
+                        {apt.completed_at && (
+                          <Badge variant="secondary" className="text-[10px] px-1.5 py-0 bg-green-100 text-green-700 mr-1">
+                            ✓
+                          </Badge>
+                        )}
                         <Button
                           variant="ghost"
                           size="icon"
