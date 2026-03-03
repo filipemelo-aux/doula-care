@@ -114,6 +114,29 @@ export function ClientDetailsDialog({
     enabled: open && !!client,
   });
 
+  // Query payment records to detect custom/personalized installments
+  const { data: clientPayments } = useQuery({
+    queryKey: ["client-payments-detail", clientTransaction?.id],
+    queryFn: async () => {
+      if (!clientTransaction?.id) return null;
+      const { data, error } = await supabase
+        .from("payments")
+        .select("amount")
+        .eq("transaction_id", clientTransaction.id)
+        .order("installment_number", { ascending: true });
+      if (error) throw error;
+      return data;
+    },
+    enabled: open && !!clientTransaction?.id,
+  });
+
+  // Detect if payments have custom (non-equal) amounts
+  const hasCustomInstallments = (() => {
+    if (!clientPayments || clientPayments.length <= 1) return false;
+    const firstAmt = Number(clientPayments[0].amount);
+    return clientPayments.some(p => Math.abs(Number(p.amount) - firstAmt) > 0.01);
+  })();
+
   if (!client) return null;
 
   const handleResetTestData = async () => {
@@ -222,7 +245,7 @@ export function ClientDetailsDialog({
                     </span>
                   )}
                 </div>
-                <h2 className="text-lg font-semibold text-foreground mt-1 truncate">
+                <h2 className="text-lg font-semibold text-foreground mt-1 break-words">
                   {client.full_name}
                 </h2>
                 {client.status === "gestante" && client.dpp && (
@@ -378,8 +401,10 @@ export function ClientDetailsDialog({
                     <p className="text-muted-foreground">Pagamento</p>
                     <div className="flex items-center justify-between mt-1">
                       <p className="font-medium">
-                        Parcelado em {clientTransaction.installments}x de{" "}
-                        {formatCurrency(Number(clientTransaction.installment_value) || 0)}
+                        {hasCustomInstallments
+                          ? `${clientTransaction.installments}x — Parcelas personalizadas`
+                          : `Parcelado em ${clientTransaction.installments}x de ${formatCurrency(Number(clientTransaction.installment_value) || 0)}`
+                        }
                       </p>
                       <Button
                         variant="outline"
