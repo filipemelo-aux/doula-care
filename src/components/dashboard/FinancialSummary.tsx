@@ -11,17 +11,43 @@ export function FinancialSummary() {
   const monthStart = startOfMonth(currentMonth);
   const monthEnd = endOfMonth(currentMonth);
 
-  const { data: transactions, isLoading } = useQuery({
+  const { data: financials, isLoading } = useQuery({
     queryKey: ["monthly-transactions", format(currentMonth, "yyyy-MM")],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("transactions")
-        .select("*")
-        .gte("date", format(monthStart, "yyyy-MM-dd"))
-        .lte("date", format(monthEnd, "yyyy-MM-dd"));
+      const startStr = format(monthStart, "yyyy-MM-dd");
+      const endStr = format(monthEnd, "yyyy-MM-dd");
+
+      const [{ data: transactions, error }, { data: payments }] = await Promise.all([
+        supabase
+          .from("transactions")
+          .select("*")
+          .gte("date", startStr)
+          .lte("date", endStr),
+        supabase
+          .from("payments")
+          .select("amount_paid, status")
+          .gte("due_date", startStr)
+          .lte("due_date", endStr),
+      ]);
 
       if (error) throw error;
-      return data;
+
+      const incomeTransactions = transactions?.filter((t) => t.type === "receita") || [];
+      const expenseTransactions = transactions?.filter((t) => t.type === "despesa") || [];
+
+      // Received from installment payments (by due_date)
+      const receivedFromPayments = (payments || [])
+        .filter((p) => p.status === "pago" || p.status === "parcial")
+        .reduce((sum, p) => sum + Number(p.amount_paid || 0), 0);
+      // Received from service/manual transactions
+      const receivedFromServices = incomeTransactions
+        .filter((t) => t.is_auto_generated === false)
+        .reduce((sum, t) => sum + Number(t.amount_received || 0), 0);
+
+      const income = receivedFromPayments + receivedFromServices;
+      const expenses = expenseTransactions.reduce((sum, t) => sum + Number(t.amount), 0);
+
+      return { income, expenses, balance: income - expenses };
     },
   });
 
@@ -40,15 +66,9 @@ export function FinancialSummary() {
     );
   }
 
-  const income = transactions
-    ?.filter((t) => t.type === "receita")
-    .reduce((sum, t) => sum + Number(t.amount), 0) || 0;
-
-  const expenses = transactions
-    ?.filter((t) => t.type === "despesa")
-    .reduce((sum, t) => sum + Number(t.amount), 0) || 0;
-
-  const balance = income - expenses;
+  const income = financials?.income || 0;
+  const expenses = financials?.expenses || 0;
+  const balance = financials?.balance || 0;
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("pt-BR", {
