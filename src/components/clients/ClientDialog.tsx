@@ -364,20 +364,27 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
   }, [client, form, planSettings, clientTransaction, clientInstallmentPayments]);
 
   useEffect(() => {
-    if (watchedPaymentType !== "parcelado" || watchedInstallmentFrequency !== "manual") return;
+    if (watchedPaymentType !== "parcelado") return;
+    // For manual frequency, always sync custom amounts; for others, only when percentage entry is used
+    const isManual = watchedInstallmentFrequency === "manual";
+    const isPercentageEntry = entryType === "percentage" && entryPercentage > 0 && entryPercentage < 100;
+    if (!isManual && !isPercentageEntry) {
+      // Clear custom amounts when switching away from percentage on non-manual
+      if (customInstallmentAmounts.length > 0 && !isManual) setCustomInstallmentAmounts([]);
+      return;
+    }
     if (watchedInstallments <= 1) {
       if (customInstallmentAmounts.length > 0) setCustomInstallmentAmounts([]);
       return;
     }
 
     if (customInstallmentAmounts.length !== watchedInstallments) {
-      if (entryType === "percentage" && entryPercentage > 0 && entryPercentage < 100) {
+      if (isPercentageEntry) {
         const entryValue = Math.round(watchedPlanValue * (entryPercentage / 100) * 100) / 100;
         const remaining = watchedPlanValue - entryValue;
         const perInstallment = Math.round((remaining / (watchedInstallments - 1)) * 100) / 100;
         const amounts = Array(watchedInstallments).fill(perInstallment);
         amounts[0] = entryValue;
-        // Fix rounding on last
         const sumSoFar = amounts.reduce((a: number, b: number) => a + b, 0);
         const roundingDiff = Math.round((watchedPlanValue - sumSoFar) * 100) / 100;
         if (Math.abs(roundingDiff) > 0.001) amounts[amounts.length - 1] += roundingDiff;
@@ -393,6 +400,8 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
     watchedInstallments,
     watchedPlanValue,
     customInstallmentAmounts.length,
+    entryType,
+    entryPercentage,
   ]);
 
   // Recalculate installments when entry percentage changes
