@@ -225,9 +225,12 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
       });
       setEntryAlreadyPaid(false);
       setCustomInstallmentAmounts([]);
+      const teamData = (client as any).prenatal_team;
+      setPrenatalTeam(Array.isArray(teamData) ? teamData : []);
     } else {
       setEntryAlreadyPaid(false);
       setCustomInstallmentAmounts([]);
+      setPrenatalTeam([]);
       form.reset({
         full_name: "",
         phone: "",
@@ -292,6 +295,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
         plan_value: data.plan_value || 0,
         prenatal_type: data.prenatal_type || null,
         prenatal_high_risk: data.prenatal_high_risk || false,
+        prenatal_team: data.prenatal_type === "equipe_particular" ? prenatalTeam.filter(m => m.name.trim()) : [],
         notes: data.notes || null,
         owner_id: user?.id || null,
         organization_id: organizationId || null,
