@@ -1,8 +1,12 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Bell, AlertTriangle, Baby } from "lucide-react";
+import { Bell, AlertTriangle, Baby, History } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ClientContractionsDialog } from "@/components/dashboard/ClientContractionsDialog";
+import { Tables } from "@/integrations/supabase/types";
+
+type Client = Tables<"clients">;
 
 interface InAppNotificationListenerProps {
   userId: string;
@@ -14,6 +18,13 @@ interface InAppNotificationListenerProps {
 export function InAppNotificationListener({ userId, role, clientId, organizationId }: InAppNotificationListenerProps) {
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
   const contractionChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
+  const [contractionsClient, setContractionsClient] = useState<Client | null>(null);
+  const [contractionsDialogOpen, setContractionsDialogOpen] = useState(false);
+
+  const openContractionsHistory = useCallback((client: Client) => {
+    setContractionsClient(client);
+    setContractionsDialogOpen(true);
+  }, []);
 
   // Listen for new contractions (admin only) to offer labor registration
   useEffect(() => {
@@ -41,15 +52,36 @@ export function InAppNotificationListener({ userId, role, clientId, organization
           if (!clientData || clientData.labor_started_at) return;
 
           // First contraction without labor started — offer to register
+          // Use fixed toast ID per client so only latest contraction shows
+          const toastId = `contraction-${clientData.id}`;
+          
           toast(
             `⏱️ ${clientData.full_name} registrou uma contração`,
             {
-              description: "Deseja registrar que o trabalho de parto iniciou?",
+              id: toastId,
+              description: (
+                <div className="flex flex-col gap-2 mt-1">
+                  <span>Deseja registrar que o trabalho de parto iniciou?</span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full gap-2"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toast.dismiss(toastId);
+                      openContractionsHistory(clientData as Client);
+                    }}
+                  >
+                    <History className="h-4 w-4" />
+                    Ver Histórico de Contrações
+                  </Button>
+                </div>
+              ),
               duration: 60000,
               icon: <Baby className="h-5 w-5 text-primary" />,
               className: "border-2 border-primary/40 shadow-lg",
               action: {
-                label: "Registrar Trabalho de Parto",
+                label: "Registrar Parto",
                 onClick: async () => {
                   const { error } = await supabase
                     .from("clients")
@@ -61,7 +93,6 @@ export function InAppNotificationListener({ userId, role, clientId, organization
                     return;
                   }
 
-                  // Send notification to the client
                   await supabase.from("client_notifications").insert({
                     client_id: clientData.id,
                     title: "💕 Seu bebê está a caminho!",
@@ -205,5 +236,11 @@ export function InAppNotificationListener({ userId, role, clientId, organization
     };
   }, [userId, role, clientId]);
 
-  return null;
+  return (
+    <ClientContractionsDialog
+      open={contractionsDialogOpen}
+      onOpenChange={setContractionsDialogOpen}
+      client={contractionsClient}
+    />
+  );
 }
