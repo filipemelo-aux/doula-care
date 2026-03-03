@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Calendar } from "lucide-react";
-import { format, startOfMonth, endOfMonth, startOfYear, subMonths } from "date-fns";
+import { format, startOfMonth, endOfMonth, subMonths } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 export type PeriodOption = "month" | "quarter" | "semester" | "year";
@@ -21,7 +21,7 @@ export function getPeriodDates(period: PeriodOption): { start: Date; end: Date }
     case "semester":
       return { start: startOfMonth(subMonths(now, 5)), end: endOfMonth(now) };
     case "year":
-      return { start: startOfYear(now), end: endOfMonth(now) };
+      return { start: startOfMonth(subMonths(now, 11)), end: endOfMonth(now) };
   }
 }
 
@@ -36,7 +36,7 @@ export function getPeriodLabel(period: PeriodOption): string {
     case "semester":
       return `${format(start, "MMM", { locale: ptBR })} - ${format(end, "MMM yyyy", { locale: ptBR })}`;
     case "year":
-      return format(start, "yyyy");
+      return `${format(start, "MMM yyyy", { locale: ptBR })} - ${format(end, "MMM yyyy", { locale: ptBR })}`;
   }
 }
 
