@@ -16,6 +16,7 @@ import { Calendar, Plus, Trash2, Loader2, Eye, CheckCircle } from "lucide-react"
 import { AppointmentDetailDialog } from "@/components/clients/AppointmentDetailDialog";
 import { AppointmentCompleteDialog } from "@/components/clients/AppointmentCompleteDialog";
 import { Badge } from "@/components/ui/badge";
+import { toast } from "sonner";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
