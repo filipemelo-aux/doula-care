@@ -65,7 +65,8 @@ export function RevenueDetailDialog({ open, onOpenChange, transactionId }: Reven
           .select("*")
           .eq("client_id", transaction.client_id)
           .is("transaction_id", null)
-          .order("installment_number");
+          .eq("total_installments", Number(transaction.installments || 1))
+          .order("installment_number", { ascending: true });
         if (clientErr) throw clientErr;
         return byClient || [];
       }

@@ -116,18 +116,34 @@ export function ClientDetailsDialog({
 
   // Query payment records to detect custom/personalized installments
   const { data: clientPayments } = useQuery({
-    queryKey: ["client-payments-detail", clientTransaction?.id],
+    queryKey: ["client-payments-detail", client?.id, clientTransaction?.id, clientTransaction?.installments],
     queryFn: async () => {
-      if (!clientTransaction?.id) return null;
-      const { data, error } = await supabase
+      if (!client?.id) return [];
+
+      if (clientTransaction?.id) {
+        const { data: byTx, error: byTxErr } = await supabase
+          .from("payments")
+          .select("amount, installment_number, total_installments")
+          .eq("transaction_id", clientTransaction.id)
+          .order("installment_number", { ascending: true });
+
+        if (byTxErr) throw byTxErr;
+        if (byTx && byTx.length > 0) return byTx;
+      }
+
+      const totalInstallments = Number(clientTransaction?.installments || 1);
+      const { data: legacy, error: legacyErr } = await supabase
         .from("payments")
-        .select("amount")
-        .eq("transaction_id", clientTransaction.id)
+        .select("amount, installment_number, total_installments")
+        .eq("client_id", client.id)
+        .is("transaction_id", null)
+        .eq("total_installments", totalInstallments)
         .order("installment_number", { ascending: true });
-      if (error) throw error;
-      return data;
+
+      if (legacyErr) throw legacyErr;
+      return legacy || [];
     },
-    enabled: open && !!clientTransaction?.id,
+    enabled: open && !!client?.id && (Number(clientTransaction?.installments || 1) > 1),
   });
 
   // Detect if payments have custom (non-equal) amounts
