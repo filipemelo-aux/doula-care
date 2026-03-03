@@ -38,6 +38,7 @@ export function InAppNotificationListener({ userId, role, clientId, organization
           event: "INSERT",
           schema: "public",
           table: "contractions",
+          ...(organizationId ? { filter: `organization_id=eq.${organizationId}` } : {}),
         },
         async (payload) => {
           const contraction = payload.new as { client_id: string };
@@ -136,6 +137,7 @@ export function InAppNotificationListener({ userId, role, clientId, organization
           event: "INSERT",
           schema: "public",
           table: "client_notifications",
+          ...(organizationId ? { filter: `organization_id=eq.${organizationId}` } : {}),
         },
         async (payload) => {
           const notification = payload.new as {
