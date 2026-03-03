@@ -305,6 +305,8 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
         notes: client.notes || "",
       });
       setEntryAlreadyPaid(isParcelado ? isFirstInstallmentPaid : false);
+      setEntryType("equal");
+      setEntryPercentage(0);
       setCustomInstallmentAmounts(
         isParcelado && hasCustomInstallments && sortedPayments.length === txInstallments
           ? sortedPayments.map((p) => Number(p.amount) || 0)
@@ -314,6 +316,8 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
       setPrenatalTeam(Array.isArray(teamData) ? teamData : []);
     } else {
       setEntryAlreadyPaid(false);
+      setEntryType("equal");
+      setEntryPercentage(0);
       setCustomInstallmentAmounts([]);
       setPrenatalTeam([]);
       form.reset({
