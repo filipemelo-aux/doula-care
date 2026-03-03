@@ -12,9 +12,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Calendar, Plus, Trash2, Loader2, Eye } from "lucide-react";
+import { Calendar, Plus, Trash2, Loader2, Eye, CheckCircle } from "lucide-react";
 import { AppointmentDetailDialog } from "@/components/clients/AppointmentDetailDialog";
-import { toast } from "sonner";
+import { AppointmentCompleteDialog } from "@/components/clients/AppointmentCompleteDialog";
+import { Badge } from "@/components/ui/badge";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -45,6 +46,7 @@ export function ManageAppointmentsDialog({
   const [scheduledAt, setScheduledAt] = useState("");
   const [notes, setNotes] = useState("");
   const [detailApt, setDetailApt] = useState<Appointment | null>(null);
+  const [completeApt, setCompleteApt] = useState<Appointment | null>(null);
   const queryClient = useQueryClient();
   const { user, organizationId } = useAuth();
 
