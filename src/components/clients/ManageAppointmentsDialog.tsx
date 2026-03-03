@@ -180,7 +180,7 @@ export function ManageAppointmentsDialog({
                     <div
                       key={apt.id}
                       className={`flex w-full max-w-full min-w-0 items-center gap-3 rounded-lg p-3 border overflow-hidden ${
-                        past ? "opacity-50 bg-muted/20" : "bg-background"
+                        apt.completed_at ? "opacity-60 bg-muted/20" : past ? "opacity-50 bg-muted/20" : "bg-background"
                       }`}
                     >
                       <div className="text-center min-w-[40px]">
@@ -190,15 +190,36 @@ export function ManageAppointmentsDialog({
                         <p className="text-base font-bold">{format(date, "dd")}</p>
                       </div>
                       <div className="w-0 flex-1 overflow-hidden">
-                        <p className="block w-full font-medium text-sm truncate" title={apt.title}>{apt.title}</p>
+                        <div className="flex items-center gap-1.5">
+                          <p className="block font-medium text-sm truncate" title={apt.title}>{apt.title}</p>
+                          {apt.completed_at && (
+                            <Badge variant="secondary" className="text-[10px] px-1.5 py-0 flex-shrink-0 bg-green-100 text-green-700">
+                              Concluída
+                            </Badge>
+                          )}
+                        </div>
                         <p className="text-xs text-muted-foreground">
                           {format(date, "EEEE, HH:mm", { locale: ptBR })}
                         </p>
                         {apt.notes && (
                           <p className="text-xs text-muted-foreground truncate">{apt.notes}</p>
                         )}
+                        {apt.completion_notes && (
+                          <p className="text-xs text-primary truncate" title={apt.completion_notes}>📝 {apt.completion_notes}</p>
+                        )}
                       </div>
                       <div className="flex items-center gap-0.5 flex-shrink-0">
+                        {!apt.completed_at && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-green-600 hover:text-green-700"
+                            onClick={() => setCompleteApt(apt)}
+                            title="Concluir consulta"
+                          >
+                            <CheckCircle className="h-4 w-4" />
+                          </Button>
+                        )}
                         <Button
                           variant="ghost"
                           size="icon"
