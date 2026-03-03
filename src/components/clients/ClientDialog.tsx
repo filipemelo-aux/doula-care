@@ -412,7 +412,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
         const todayStr = format(new Date(), "yyyy-MM-dd");
         const installmentCount = data.payment_type === "parcelado" ? (data.installments || 1) : 1;
         const useCustomAmounts = data.installment_frequency === "manual" && customInstallmentAmounts.length === installmentCount;
-        const installmentVal = useCustomAmounts ? 0 : (data.plan_value || 0) / installmentCount;
+        const installmentVal = useCustomAmounts ? 0 : finalPlanValue / installmentCount;
         let autoReceived = 0;
 
         if (data.payment_type === "parcelado" && installmentCount > 1) {
@@ -436,7 +436,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
           // À vista or single installment
           const aVistaDate = data.payment_date_avista || clientCreatedDate;
           if (aVistaDate <= todayStr) {
-            autoReceived = data.plan_value || 0;
+            autoReceived = finalPlanValue;
           } else if (entryAlreadyPaid) {
             autoReceived = installmentVal;
           }
@@ -445,7 +445,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
         const transactionPayload = {
           type: "receita" as const,
           description: `Contrato - ${data.full_name} - ${planDisplayName}`,
-          amount: data.plan_value || 0,
+          amount: finalPlanValue,
           amount_received: autoReceived,
           date: clientCreatedDate,
           client_id: newClient.id,
