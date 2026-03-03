@@ -31,6 +31,8 @@ interface Appointment {
   title: string;
   scheduled_at: string;
   notes: string | null;
+  completed_at: string | null;
+  completion_notes: string | null;
 }
 
 export function ManageAppointmentsDialog({

@@ -21,6 +21,8 @@ interface AppointmentWithClient {
   title: string;
   scheduled_at: string;
   notes: string | null;
+  completed_at: string | null;
+  completion_notes: string | null;
   client_id: string;
   clients: {
     full_name: string;
