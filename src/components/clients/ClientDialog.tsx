@@ -337,6 +337,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
         plan_setting_id: data.plan_setting_id !== "avulso" ? data.plan_setting_id : null,
         payment_method: data.payment_method,
         plan_value: data.plan_value || 0,
+        birth_location: data.status === "gestante" ? (data.birth_location || null) : null,
         prenatal_type: data.prenatal_type || null,
         prenatal_high_risk: data.prenatal_high_risk || false,
         prenatal_team: data.prenatal_type === "equipe_particular" ? prenatalTeam.filter(m => m.name.trim()) : [],
