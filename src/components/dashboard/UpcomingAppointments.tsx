@@ -249,8 +249,22 @@ export function UpcomingAppointments() {
           scheduled_at: detailApt.scheduled_at,
           notes: detailApt.notes,
           clientName: detailApt.clients?.full_name,
+          completed_at: detailApt.completed_at,
+          completion_notes: detailApt.completion_notes,
         } : null}
       />
+
+      {completeApt && (
+        <AppointmentCompleteDialog
+          open={!!completeApt}
+          onOpenChange={(open) => !open && setCompleteApt(null)}
+          appointmentId={completeApt.id}
+          appointmentTitle={completeApt.title}
+          onCompleted={() => {
+            queryClient.invalidateQueries({ queryKey: ["all-appointments"] });
+          }}
+        />
+      )}
     </>
   );
 }
