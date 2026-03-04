@@ -970,6 +970,12 @@ export function NotificationsCenter({ fullPage = false }: NotificationsCenterPro
                                     {formatBrazilDateTime(notification.timestamp, "dd/MM 'às' HH:mm")}
                                   </p>
                                 )}
+                                {notification.type === "appointment_request" && notification.timestamp && (
+                                  <p className="text-[10px] lg:text-xs text-primary mt-0.5 flex items-center gap-1">
+                                    <Clock className="h-2.5 w-2.5 lg:h-3 lg:w-3 flex-shrink-0" />
+                                    {formatBrazilDateTime(notification.timestamp, "dd/MM 'às' HH:mm")}
+                                  </p>
+                                )}
                                 {/* Send budget button for service requests - mobile */}
                                 {notification.type === "service_request" && notification.notificationId && (
                                   <Button
@@ -984,6 +990,21 @@ export function NotificationsCenter({ fullPage = false }: NotificationsCenterPro
                                   >
                                     <Send className="h-3 w-3 mr-1 flex-shrink-0" />
                                     Enviar Orçamento
+                                  </Button>
+                                )}
+                                {/* Ver Agenda button for appointment requests - mobile */}
+                                {notification.type === "appointment_request" && (
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="h-6 px-2 text-[10px] lg:text-xs border-dashed border-primary/50 hover:bg-primary/10 mt-1.5 w-full lg:hidden"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      window.location.href = "/agenda";
+                                    }}
+                                  >
+                                    <CalendarCheck className="h-3 w-3 mr-1 flex-shrink-0 text-primary" />
+                                    <span className="text-primary">Ver Agenda</span>
                                   </Button>
                                 )}
                                 {/* Button on mobile - below content - ONLY for birth-type notifications */}
