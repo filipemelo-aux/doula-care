@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { ContractEditorDialog } from "./ContractEditorDialog";
+import { ClientFileDialog } from "./ClientFileDialog";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 import {
@@ -90,6 +91,7 @@ export function ClientDetailsDialog({
   client,
 }: ClientDetailsDialogProps) {
   const [contractDialogOpen, setContractDialogOpen] = useState(false);
+  const [clientFileOpen, setClientFileOpen] = useState(false);
   const [resetting, setResetting] = useState(false);
   const [resetConfirmOpen, setResetConfirmOpen] = useState(false);
   const [revenueDetailOpen, setRevenueDetailOpen] = useState(false);
@@ -290,6 +292,15 @@ export function ClientDetailsDialog({
                   >
                     <FileText className="w-4 h-4" />
                     Contrato
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-2 justify-start"
+                    onClick={() => setClientFileOpen(true)}
+                  >
+                    <Eye className="w-4 h-4" />
+                    Ficha da Cliente
                   </Button>
                   <Button
                     variant="outline"
@@ -667,6 +678,12 @@ export function ClientDetailsDialog({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <ClientFileDialog
+        open={clientFileOpen}
+        onOpenChange={setClientFileOpen}
+        client={client}
+      />
     </>
   );
 }
