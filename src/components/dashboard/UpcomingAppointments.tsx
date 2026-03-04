@@ -42,12 +42,14 @@ export function UpcomingAppointments() {
   const { data: appointments, isLoading } = useQuery({
     queryKey: ["all-appointments"],
     queryFn: async () => {
+      const todayStart = new Date();
+      todayStart.setHours(0, 0, 0, 0);
       const { data, error } = await supabase
         .from("appointments")
         .select("*, clients(full_name)")
         .not("title", "like", "Serviço:%")
-        .gte("scheduled_at", new Date().toISOString().split("T")[0])
-        .order("scheduled_at", { ascending: false });
+        .gte("scheduled_at", todayStart.toISOString())
+        .order("scheduled_at", { ascending: true });
 
       if (error) throw error;
       return data as unknown as AppointmentWithClient[];
