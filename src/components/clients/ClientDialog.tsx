@@ -41,7 +41,7 @@ type Client = Tables<"clients">;
 
 const clientSchema = z.object({
   full_name: z.string().min(2, "Nome deve ter pelo menos 2 caracteres").max(100),
-  phone: z.string().min(10, "Telefone inválido").max(20),
+  phone: z.string().optional().default(""),
   cpf: z.string().optional(),
   street: z.string().optional(),
   number: z.string().optional(),
@@ -51,14 +51,14 @@ const clientSchema = z.object({
   zip_code: z.string().optional(),
   companion_name: z.string().optional(),
   companion_phone: z.string().optional(),
-  status: z.enum(["gestante", "lactante", "outro"]),
+  status: z.enum(["gestante", "lactante", "outro"]).optional().default("gestante"),
   custom_status: z.string().optional(),
   pregnancy_weeks: z.number().min(0).max(42).optional().nullable(),
-  dpp: z.string().optional().nullable(),
+  dpp: z.string().min(1, "DPP é obrigatória").nullable(),
   baby_names: z.string().optional(),
   birth_location: z.string().optional(),
-  plan_setting_id: z.string().min(1, "Selecione um plano"),
-  payment_method: z.enum(["pix", "cartao", "dinheiro", "transferencia"]),
+  plan_setting_id: z.string().optional().default(""),
+  payment_method: z.enum(["pix", "cartao", "dinheiro", "transferencia"]).optional().default("pix"),
   payment_type: z.enum(["a_vista", "parcelado"]),
   discount_percent: z.number().min(0).max(100).optional(),
   payment_date_avista: z.string().optional(),
@@ -431,7 +431,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
 
       const payload = {
         full_name: data.full_name,
-        phone: data.phone,
+        phone: data.phone || "",
         cpf: data.cpf || null,
         street: data.street || null,
         number: data.number || null,
@@ -441,7 +441,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
         zip_code: data.zip_code || null,
         companion_name: data.companion_name || null,
         companion_phone: data.companion_phone || null,
-        status: data.status,
+        status: data.status || "gestante",
         custom_status: data.status === "outro" ? (data.custom_status || null) : null,
         pregnancy_weeks: data.status === "gestante" && data.dpp 
           ? calculateCurrentPregnancyWeeks(null, null, data.dpp) 
@@ -453,9 +453,9 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
         pregnancy_weeks_set_at: data.status === "gestante" && data.dpp
           ? new Date().toISOString() 
           : undefined,
-        plan: (data.plan_setting_id === "avulso" ? "avulso" : (planSettings?.find(p => p.id === data.plan_setting_id)?.plan_type || "basico")) as any,
-        plan_setting_id: data.plan_setting_id !== "avulso" ? data.plan_setting_id : null,
-        payment_method: data.payment_method,
+        plan: (data.plan_setting_id === "avulso" ? "avulso" : data.plan_setting_id ? (planSettings?.find(p => p.id === data.plan_setting_id)?.plan_type || "basico") : "basico") as any,
+        plan_setting_id: data.plan_setting_id && data.plan_setting_id !== "avulso" ? data.plan_setting_id : null,
+        payment_method: data.payment_method || "pix",
         plan_value: finalPlanValue,
         birth_location: data.status === "gestante" ? (data.birth_location || null) : null,
         prenatal_type: data.prenatal_type || null,
@@ -606,6 +606,8 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
           .single();
         if (clientError) throw clientError;
 
+        // Only create financial records if a plan was selected
+        if (data.plan_setting_id) {
         // Get plan settings to find the plan ID
         const resolvedPlanSetting = data.plan_setting_id !== "avulso" ? planSettings?.find(p => p.id === data.plan_setting_id) : null;
 
@@ -726,8 +728,9 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
             .insert(paymentRecords);
           if (paymentError) console.error("Error creating payments:", paymentError);
         }
+        } // end if plan_setting_id
 
-        // Create user for client if DPP is set (gestante with expected delivery date)
+
         if (data.dpp && data.status === "gestante") {
           try {
             const response = await supabase.functions.invoke("create-client-user", {
