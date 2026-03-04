@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { ContractEditorDialog } from "./ContractEditorDialog";
+import { ClientFileDialog } from "./ClientFileDialog";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 import {
