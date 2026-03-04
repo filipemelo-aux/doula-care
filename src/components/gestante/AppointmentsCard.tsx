@@ -10,6 +10,7 @@ interface Appointment {
   title: string;
   scheduled_at: string;
   notes: string | null;
+  completed_at: string | null;
 }
 
 interface AppointmentsCardProps {
@@ -38,9 +39,10 @@ export function AppointmentsCard({ clientId }: AppointmentsCardProps) {
   const fetchAppointments = async () => {
     const { data } = await supabase
       .from("appointments")
-      .select("id, title, scheduled_at, notes")
+      .select("id, title, scheduled_at, notes, completed_at")
       .eq("client_id", clientId)
       .not("title", "like", "Serviço:%")
+      .is("completed_at", null)
       .gte("scheduled_at", new Date().toISOString().split("T")[0])
       .order("scheduled_at", { ascending: true })
       .limit(5);
