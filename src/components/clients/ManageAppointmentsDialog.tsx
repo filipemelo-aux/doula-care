@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Calendar, Plus, Trash2, Loader2, Eye, CheckCircle } from "lucide-react";
+import { Calendar, Plus, Trash2, Loader2, Eye, CheckCircle, Undo2 } from "lucide-react";
 import { AppointmentDetailDialog } from "@/components/clients/AppointmentDetailDialog";
 import { AppointmentCompleteDialog } from "@/components/clients/AppointmentCompleteDialog";
 import { Badge } from "@/components/ui/badge";
@@ -102,6 +102,23 @@ export function ManageAppointmentsDialog({
       toast.success("Consulta removida");
     },
     onError: () => toast.error("Erro ao remover consulta"),
+  });
+
+  const uncompleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from("appointments")
+        .update({ completed_at: null, completion_notes: null })
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["client-appointments", clientId] });
+      queryClient.invalidateQueries({ queryKey: ["agenda-appointments"] });
+      queryClient.invalidateQueries({ queryKey: ["all-appointments"] });
+      toast.success("Consulta reaberta!");
+    },
+    onError: () => toast.error("Erro ao reabrir consulta"),
   });
 
   const isPast = (dateStr: string) => new Date(dateStr) < new Date();
@@ -209,7 +226,7 @@ export function ManageAppointmentsDialog({
                         )}
                       </div>
                       <div className="flex items-center gap-0.5 flex-shrink-0">
-                        {!apt.completed_at && (
+                        {!apt.completed_at ? (
                           <Button
                             variant="ghost"
                             size="icon"
@@ -218,6 +235,17 @@ export function ManageAppointmentsDialog({
                             title="Concluir consulta"
                           >
                             <CheckCircle className="h-4 w-4" />
+                          </Button>
+                        ) : (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-amber-600 hover:text-amber-700"
+                            onClick={() => uncompleteMutation.mutate(apt.id)}
+                            disabled={uncompleteMutation.isPending}
+                            title="Reabrir consulta"
+                          >
+                            <Undo2 className="h-4 w-4" />
                           </Button>
                         )}
                         <Button
