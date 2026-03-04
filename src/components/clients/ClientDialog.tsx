@@ -450,7 +450,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
         baby_names: data.baby_names 
           ? data.baby_names.split(",").map(n => n.trim()).filter(n => n.length > 0)
           : [],
-        pregnancy_weeks_set_at: data.status === "gestante" && data.dpp
+        pregnancy_weeks_set_at: data.dpp
           ? new Date().toISOString() 
           : undefined,
         plan: (data.plan_setting_id === "avulso" ? "avulso" : data.plan_setting_id ? (planSettings?.find(p => p.id === data.plan_setting_id)?.plan_type || "basico") : "basico") as any,
