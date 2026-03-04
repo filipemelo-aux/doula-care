@@ -864,6 +864,8 @@ export function NotificationsCenter({ fullPage = false }: NotificationsCenterPro
                             ? "bg-primary/5 border-primary/20"
                             : notification.type === "service_request"
                             ? "bg-purple-500/5 border-purple-500/20"
+                            : notification.type === "appointment_request"
+                            ? "bg-primary/5 border-primary/20"
                             : "bg-warning/5 border-warning/20"
                         }`}
                       >
