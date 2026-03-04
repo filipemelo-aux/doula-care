@@ -1163,6 +1163,8 @@ export function NotificationsCenter({ fullPage = false }: NotificationsCenterPro
                                         ? "text-orange-600"
                                         : child.type === "service_request"
                                         ? "text-purple-700"
+                                        : child.type === "appointment_request"
+                                        ? "text-primary"
                                         : "text-emerald-700"
                                     }`}>
                                       {child.title}
@@ -1180,6 +1182,8 @@ export function NotificationsCenter({ fullPage = false }: NotificationsCenterPro
                                           ? "text-orange-500"
                                           : child.type === "service_request"
                                           ? "text-purple-600"
+                                          : child.type === "appointment_request"
+                                          ? "text-primary"
                                           : "text-emerald-600"
                                       }`}>
                                         <Clock className="h-2.5 w-2.5 flex-shrink-0" />
