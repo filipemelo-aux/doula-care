@@ -366,7 +366,28 @@ export function NotificationsCenter({ fullPage = false }: NotificationsCenterPro
     };
   }, [queryClient]);
 
-  // Real-time subscription for clients (labor_started_at, birth, status)
+  // Real-time subscription for appointment requests
+  useEffect(() => {
+    const channel = supabase
+      .channel('appointment-requests-realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'appointment_requests'
+        },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ["appointment-requests-pending"] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient]);
+
   useEffect(() => {
     const channel = supabase
       .channel('clients-realtime-notifications')
