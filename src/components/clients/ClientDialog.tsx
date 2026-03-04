@@ -59,7 +59,7 @@ const clientSchema = z.object({
   birth_location: z.string().optional(),
   plan_setting_id: z.string().optional().default(""),
   payment_method: z.enum(["pix", "cartao", "dinheiro", "transferencia"]).optional().default("pix"),
-  payment_type: z.enum(["a_vista", "parcelado"]),
+  payment_type: z.enum(["a_vista", "parcelado"]).optional().default("a_vista"),
   discount_percent: z.number().min(0).max(100).optional(),
   payment_date_avista: z.string().optional(),
   installments: z.number().min(1).max(24).optional(),
