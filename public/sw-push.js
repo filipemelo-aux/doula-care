@@ -5,6 +5,12 @@ const CACHE_PREFIX = "doula-care-";
 const CACHE_VERSION = "v1.1.0";
 const CURRENT_CACHE = CACHE_PREFIX + CACHE_VERSION;
 
+// --- TWA detection flag ---
+// When the web app detects it's running inside a TWA, it sends a message
+// to set this flag. The SW then skips showNotification to avoid duplicates
+// (the TWA notification delegation already handles display natively).
+let isTWAEnvironment = false;
+
 self.addEventListener("activate", (event) => {
   event.waitUntil(
     caches.keys().then((keys) =>
@@ -20,10 +26,15 @@ self.addEventListener("activate", (event) => {
   );
 });
 
-// Listen for SKIP_WAITING message from the client
+// Listen for messages from the client
 self.addEventListener("message", (event) => {
   if (event.data?.type === "SKIP_WAITING") {
     self.skipWaiting();
+  }
+  // TWA detection: the web app signals when running inside a TWA
+  if (event.data?.type === "SET_TWA_MODE") {
+    isTWAEnvironment = true;
+    console.log("[SW] TWA mode enabled — SW notifications suppressed (delegation active)");
   }
 });
 
@@ -33,22 +44,13 @@ self.addEventListener("push", (event) => {
 
   const handlePush = async () => {
     try {
-      // Check if running inside a TWA with notification delegation.
-      // When the TWA delegates notifications, it handles display natively —
-      // showing via SW would cause duplicates referencing "Google Chrome".
-      const visibleClients = await clients.matchAll({ type: "window", includeUncontrolled: true });
-      const isTWA = visibleClients.some(
-        (c) => c.visibilityState === "visible" && c.url.includes(self.location.origin)
-      );
-
-      // If no visible clients exist and we're getting a push, the TWA delegation
-      // is likely handling it natively. However, if the app is in background (no
-      // visible clients), the TWA delegation may still work. We use a simpler
-      // heuristic: check if the TWA notification delegation flag was set.
-      // The safest approach: always let TWA delegation handle it when the app
-      // is installed as TWA by checking the referrer/display-mode.
-      // Since TWA delegation re-posts the notification natively, we skip SW display
-      // when we detect the TWA environment via the lack of standalone display windows.
+      // If running inside a TWA with notification delegation enabled,
+      // the Android app handles notification display natively.
+      // Showing via SW would cause duplicate notifications referencing "Google Chrome".
+      if (isTWAEnvironment) {
+        console.log("[SW] Push received but suppressed (TWA delegation active)");
+        return;
+      }
 
       const data = event.data.json();
       const { title, body, icon, badge, url, tag, priority, require_interaction, type } = data;
