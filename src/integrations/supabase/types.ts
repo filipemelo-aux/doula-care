@@ -55,6 +55,60 @@ export type Database = {
           },
         ]
       }
+      appointment_requests: {
+        Row: {
+          admin_notes: string | null
+          client_id: string
+          created_at: string
+          id: string
+          organization_id: string | null
+          reason: string | null
+          requested_date: string
+          requested_time: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          client_id: string
+          created_at?: string
+          id?: string
+          organization_id?: string | null
+          reason?: string | null
+          requested_date: string
+          requested_time: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          admin_notes?: string | null
+          client_id?: string
+          created_at?: string
+          id?: string
+          organization_id?: string | null
+          reason?: string | null
+          requested_date?: string
+          requested_time?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appointment_requests_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointment_requests_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       appointments: {
         Row: {
           client_id: string
@@ -485,6 +539,41 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "custom_services_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      doula_availability: {
+        Row: {
+          available_date: string
+          created_at: string
+          end_time: string
+          id: string
+          organization_id: string
+          start_time: string
+        }
+        Insert: {
+          available_date: string
+          created_at?: string
+          end_time: string
+          id?: string
+          organization_id: string
+          start_time: string
+        }
+        Update: {
+          available_date?: string
+          created_at?: string
+          end_time?: string
+          id?: string
+          organization_id?: string
+          start_time?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "doula_availability_organization_id_fkey"
             columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "organizations"
