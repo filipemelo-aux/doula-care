@@ -1598,6 +1598,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
                             updated[i] = { ...updated[i], name: e.target.value };
                             setPrenatalTeam(updated);
                           }}
+                          mask="name"
                         />
                         <Input
                           className="h-8 text-xs flex-1"
