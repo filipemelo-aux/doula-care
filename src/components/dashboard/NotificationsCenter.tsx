@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Bell, Baby, CheckCircle, AlertTriangle, Calendar, Clock, Activity, BookHeart, Timer, ChevronDown, ChevronRight, Sparkles, Send } from "lucide-react";
+import { Bell, Baby, CheckCircle, AlertTriangle, Calendar, Clock, Activity, BookHeart, Timer, ChevronDown, ChevronRight, Sparkles, Send, History, CalendarCheck, Pause } from "lucide-react";
 import { calculateCurrentPregnancyWeeks, calculateCurrentPregnancyDays, isPostTerm } from "@/lib/pregnancy";
 import { BirthRegistrationDialog } from "@/components/clients/BirthRegistrationDialog";
 import { ClientDiaryDialog } from "@/components/dashboard/ClientDiaryDialog";
@@ -49,11 +49,23 @@ interface ServiceRequest {
   status: string;
   created_at: string;
   client_name?: string;
+  preferred_date?: string | null;
+}
+
+interface AppointmentRequest {
+  id: string;
+  client_id: string;
+  requested_date: string;
+  requested_time: string;
+  reason: string | null;
+  status: string;
+  created_at: string;
+  client_name?: string;
 }
 
 interface ChildNotification {
   id: string;
-  type: "labor_started" | "new_contraction" | "new_diary_entry" | "service_request";
+  type: "labor_started" | "new_contraction" | "new_diary_entry" | "service_request" | "appointment_request";
   title: string;
   description: string;
   timestamp?: string;
@@ -66,7 +78,7 @@ interface ChildNotification {
 
 interface ParentNotification {
   id: string;
-  type: "birth_approaching" | "post_term" | "new_diary_entry" | "service_request";
+  type: "birth_approaching" | "post_term" | "new_diary_entry" | "service_request" | "appointment_request";
   title: string;
   description: string;
   client?: EnrichedClient;
@@ -79,6 +91,7 @@ interface ParentNotification {
   notificationId?: string;
   isRead?: boolean;
 }
+
 
 interface NotificationsCenterProps {
   fullPage?: boolean;
@@ -246,6 +259,35 @@ export function NotificationsCenter({ fullPage = false }: NotificationsCenterPro
     refetchInterval: 30000,
   });
 
+  // Fetch pending appointment requests
+  const { data: appointmentRequests, isLoading: loadingAppointmentRequests } = useQuery({
+    queryKey: ["appointment-requests-pending"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("appointment_requests")
+        .select("id, client_id, requested_date, requested_time, reason, status, created_at, clients(full_name)")
+        .eq("status", "pending")
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        console.error("Error fetching appointment requests:", error);
+        throw error;
+      }
+      
+      return data.map(entry => ({
+        id: entry.id,
+        client_id: entry.client_id,
+        requested_date: entry.requested_date,
+        requested_time: entry.requested_time,
+        reason: entry.reason,
+        status: entry.status,
+        created_at: entry.created_at,
+        client_name: (entry.clients as { full_name: string } | null)?.full_name || "Cliente"
+      })) as AppointmentRequest[];
+    },
+    refetchInterval: 30000,
+  });
+
   // Handle opening budget dialog
   const handleOpenBudgetDialog = (request: ServiceRequest) => {
     setSelectedServiceRequest({
@@ -324,7 +366,28 @@ export function NotificationsCenter({ fullPage = false }: NotificationsCenterPro
     };
   }, [queryClient]);
 
-  // Real-time subscription for clients (labor_started_at, birth, status)
+  // Real-time subscription for appointment requests
+  useEffect(() => {
+    const channel = supabase
+      .channel('appointment-requests-realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'appointment_requests'
+        },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ["appointment-requests-pending"] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient]);
+
   useEffect(() => {
     const channel = supabase
       .channel('clients-realtime-notifications')
@@ -482,8 +545,8 @@ export function NotificationsCenter({ fullPage = false }: NotificationsCenterPro
       children.push({
         id: `contraction-${client.id}`,
         type: "new_contraction",
-        title: isUrgentContractions ? "Contrações Urgentes" : count >= 3 ? "Contrações Frequentes" : "Nova Contração",
-        description: count > 1 ? `${count} contrações nas últimas 24h` : "1 contração registrada",
+        title: isUrgentContractions ? "⚠️ Contrações Urgentes" : "Última Contração",
+        description: `Duração: ${durationText}` + (count > 1 ? ` • ${count} total nas 24h` : ""),
         timestamp: latestEntry.started_at,
         extraInfo: durationText,
         priority: isUrgentContractions ? "high" : "medium",
@@ -591,6 +654,33 @@ export function NotificationsCenter({ fullPage = false }: NotificationsCenterPro
     });
   });
 
+  // Parent: Appointment requests from clients
+  appointmentRequests?.forEach(request => {
+    const clientName = request.client_name || "Cliente";
+    const dateStr = formatBrazilDate(request.requested_date, "dd/MM");
+    const timeStr = request.requested_time?.slice(0, 5) || "";
+    
+    parentNotifications.push({
+      id: `appointment-req-${request.id}`,
+      type: "appointment_request",
+      title: `Solicitação de Consulta`,
+      description: abbreviateName(clientName),
+      priority: "medium",
+      icon: CalendarCheck,
+      timestamp: request.created_at,
+      children: [{
+        id: `appointment-req-child-${request.id}`,
+        type: "appointment_request",
+        title: `${dateStr} às ${timeStr}`,
+        description: request.reason || "Sem motivo informado",
+        timestamp: request.created_at,
+        priority: "medium",
+        notificationId: request.id
+      }],
+      notificationId: request.id
+    });
+  });
+
   // Handle orphan contractions (clients not in 37+ weeks alert)
   contractionsByClient.forEach(({ entries, clientName, allRead }, clientId) => {
     const count = entries.length;
@@ -614,8 +704,8 @@ export function NotificationsCenter({ fullPage = false }: NotificationsCenterPro
       children: [{
         id: `contraction-${clientId}`,
         type: "new_contraction",
-        title: isActiveLabor ? "Contrações Frequentes" : "Nova Contração",
-        description: count > 1 ? `${count} contrações nas últimas 24h` : "1 contração registrada",
+        title: isActiveLabor ? "⚠️ Contrações Urgentes" : "Última Contração",
+        description: `Duração: ${durationText}` + (count > 1 ? ` • ${count} total nas 24h` : ""),
         timestamp: latestEntry.started_at,
         extraInfo: durationText,
         priority: isActiveLabor ? "high" : "medium",
@@ -665,16 +755,17 @@ export function NotificationsCenter({ fullPage = false }: NotificationsCenterPro
     return bTime - aTime;
   });
 
-  const isLoading = loadingBirth || loadingDiary || loadingContractions || loadingServiceRequests;
+  const isLoading = loadingBirth || loadingDiary || loadingContractions || loadingServiceRequests || loadingAppointmentRequests;
   const hasNotifications = parentNotifications.length > 0;
   const highPriorityCount = parentNotifications.filter(n => 
     n.priority === "high" || n.children.some(c => c.priority === "high")
   ).length;
   
-  // Unread count: unread diary entries + pending service requests
+  // Unread count: unread diary entries + pending service requests + pending appointment requests
   const unreadDiaryCount = recentDiaryEntries?.filter(e => !e.read_by_admin).length || 0;
   const pendingServiceCount = serviceRequests?.length || 0;
-  const unreadCount = unreadDiaryCount + pendingServiceCount + highPriorityCount;
+  const pendingAppointmentCount = appointmentRequests?.length || 0;
+  const unreadCount = unreadDiaryCount + pendingServiceCount + pendingAppointmentCount + highPriorityCount;
 
   // Auto-expand notifications with high priority children
   useEffect(() => {
@@ -773,6 +864,8 @@ export function NotificationsCenter({ fullPage = false }: NotificationsCenterPro
                             ? "bg-primary/5 border-primary/20"
                             : notification.type === "service_request"
                             ? "bg-purple-500/5 border-purple-500/20"
+                            : notification.type === "appointment_request"
+                            ? "bg-primary/5 border-primary/20"
                             : "bg-warning/5 border-warning/20"
                         }`}
                       >
@@ -796,7 +889,7 @@ export function NotificationsCenter({ fullPage = false }: NotificationsCenterPro
                               <div className={`w-7 h-7 lg:w-8 lg:h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
                                 isPostTerm
                                   ? "bg-destructive/15"
-                                  : notification.type === "new_diary_entry"
+                                  : notification.type === "new_diary_entry" || notification.type === "appointment_request"
                                   ? "bg-primary/15"
                                   : notification.type === "service_request"
                                   ? "bg-purple-500/15"
@@ -805,7 +898,7 @@ export function NotificationsCenter({ fullPage = false }: NotificationsCenterPro
                                 <notification.icon className={`h-3.5 w-3.5 lg:h-4 lg:w-4 ${
                                   isPostTerm
                                     ? "text-destructive"
-                                    : notification.type === "new_diary_entry"
+                                    : notification.type === "new_diary_entry" || notification.type === "appointment_request"
                                     ? "text-primary"
                                     : notification.type === "service_request"
                                     ? "text-purple-600"
@@ -817,7 +910,7 @@ export function NotificationsCenter({ fullPage = false }: NotificationsCenterPro
                                   <span className={`text-[11px] lg:text-xs font-medium truncate ${
                                     isPostTerm
                                       ? "text-destructive"
-                                      : notification.type === "new_diary_entry"
+                                      : notification.type === "new_diary_entry" || notification.type === "appointment_request"
                                       ? "text-primary"
                                       : notification.type === "service_request"
                                       ? "text-purple-600"
@@ -877,6 +970,12 @@ export function NotificationsCenter({ fullPage = false }: NotificationsCenterPro
                                     {formatBrazilDateTime(notification.timestamp, "dd/MM 'às' HH:mm")}
                                   </p>
                                 )}
+                                {notification.type === "appointment_request" && notification.timestamp && (
+                                  <p className="text-[10px] lg:text-xs text-primary mt-0.5 flex items-center gap-1">
+                                    <Clock className="h-2.5 w-2.5 lg:h-3 lg:w-3 flex-shrink-0" />
+                                    {formatBrazilDateTime(notification.timestamp, "dd/MM 'às' HH:mm")}
+                                  </p>
+                                )}
                                 {/* Send budget button for service requests - mobile */}
                                 {notification.type === "service_request" && notification.notificationId && (
                                   <Button
@@ -891,6 +990,21 @@ export function NotificationsCenter({ fullPage = false }: NotificationsCenterPro
                                   >
                                     <Send className="h-3 w-3 mr-1 flex-shrink-0" />
                                     Enviar Orçamento
+                                  </Button>
+                                )}
+                                {/* Ver Agenda button for appointment requests - mobile */}
+                                {notification.type === "appointment_request" && (
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="h-6 px-2 text-[10px] lg:text-xs border-dashed border-primary/50 hover:bg-primary/10 mt-1.5 w-full lg:hidden"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      window.location.href = "/agenda";
+                                    }}
+                                  >
+                                    <CalendarCheck className="h-3 w-3 mr-1 flex-shrink-0 text-primary" />
+                                    <span className="text-primary">Ver Agenda</span>
                                   </Button>
                                 )}
                                 {/* Button on mobile - below content - ONLY for birth-type notifications */}
@@ -944,6 +1058,21 @@ export function NotificationsCenter({ fullPage = false }: NotificationsCenterPro
                                   Enviar Orçamento
                                 </Button>
                               )}
+                              {/* Ver Agenda button for appointment requests - desktop */}
+                              {notification.type === "appointment_request" && (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="h-7 px-2 text-xs border-dashed border-primary/50 hover:bg-primary/10 hidden lg:flex flex-shrink-0"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    window.location.href = "/agenda";
+                                  }}
+                                >
+                                  <CalendarCheck className="h-3 w-3 mr-1 text-primary" />
+                                  <span className="text-primary">Ver Agenda</span>
+                                </Button>
+                              )}
                             </div>
                           </div>
                         </CollapsibleTrigger>
@@ -991,6 +1120,8 @@ export function NotificationsCenter({ fullPage = false }: NotificationsCenterPro
                                     ? "bg-orange-500/10 border-l-orange-500"
                                     : child.type === "service_request"
                                     ? "bg-purple-500/10 border-l-purple-500"
+                                    : child.type === "appointment_request"
+                                    ? "bg-primary/10 border-l-primary"
                                     : "bg-emerald-500/10 border-l-emerald-500"
                                 } ${child.type === "new_diary_entry" ? "cursor-pointer hover:bg-emerald-500/20 transition-colors" : ""} ${child.type === "new_contraction" ? "cursor-pointer hover:bg-orange-500/20 transition-colors" : ""}`}
                               >
@@ -1004,6 +1135,8 @@ export function NotificationsCenter({ fullPage = false }: NotificationsCenterPro
                                       ? "bg-orange-500/20"
                                       : child.type === "service_request"
                                       ? "bg-purple-500/20"
+                                      : child.type === "appointment_request"
+                                      ? "bg-primary/20"
                                       : "bg-emerald-500/20"
                                   }`}>
                                     {child.type === "labor_started" ? (
@@ -1012,6 +1145,8 @@ export function NotificationsCenter({ fullPage = false }: NotificationsCenterPro
                                       <BookHeart className="h-2.5 w-2.5 text-emerald-600" />
                                     ) : child.type === "service_request" ? (
                                       <Sparkles className="h-2.5 w-2.5 text-purple-600" />
+                                    ) : child.type === "appointment_request" ? (
+                                      <CalendarCheck className="h-2.5 w-2.5 text-primary" />
                                     ) : (
                                       <Timer className={`h-2.5 w-2.5 ${
                                         child.priority === "high" ? "text-destructive" : "text-orange-500"
@@ -1028,6 +1163,8 @@ export function NotificationsCenter({ fullPage = false }: NotificationsCenterPro
                                         ? "text-orange-600"
                                         : child.type === "service_request"
                                         ? "text-purple-700"
+                                        : child.type === "appointment_request"
+                                        ? "text-primary"
                                         : "text-emerald-700"
                                     }`}>
                                       {child.title}
@@ -1045,6 +1182,8 @@ export function NotificationsCenter({ fullPage = false }: NotificationsCenterPro
                                           ? "text-orange-500"
                                           : child.type === "service_request"
                                           ? "text-purple-600"
+                                          : child.type === "appointment_request"
+                                          ? "text-primary"
                                           : "text-emerald-600"
                                       }`}>
                                         <Clock className="h-2.5 w-2.5 flex-shrink-0" />
@@ -1068,32 +1207,90 @@ export function NotificationsCenter({ fullPage = false }: NotificationsCenterPro
                                   </div>
                                 </div>
                                 {/* Contraction action buttons */}
-                                {child.type === "new_contraction" && isActiveLaborPattern && contractionClientId && (
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    className="h-5 px-2 text-[9px] lg:text-[10px] border-dashed border-destructive/50 hover:bg-destructive/10 mt-1"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleStartLabor(contractionClientId);
-                                    }}
-                                  >
-                                    <Activity className="h-2.5 w-2.5 mr-1 text-destructive" />
-                                    <span className="text-destructive">Iniciar Trabalho de Parto</span>
-                                  </Button>
+                                {child.type === "new_contraction" && contractionClientId && (
+                                  <div className="flex flex-wrap gap-1 mt-1.5">
+                                    {/* History button - always show */}
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      className="h-5 px-2 text-[9px] lg:text-[10px] border-dashed border-orange-300 hover:bg-orange-500/10"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        if (contractionClientId) {
+                                          handleMarkContractionRead(contractionClientId);
+                                        }
+                                        const client = contractionClient || notification.client;
+                                        if (client) {
+                                          setContractionsClient(client as Client);
+                                          setContractionsDialogOpen(true);
+                                        }
+                                      }}
+                                    >
+                                      <History className="h-2.5 w-2.5 mr-1 text-orange-500" />
+                                      <span className="text-orange-600">Ver Histórico</span>
+                                    </Button>
+                                    {/* Start labor - only when not already started and urgent pattern */}
+                                    {!isLaborStarted && (
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        className="h-5 px-2 text-[9px] lg:text-[10px] border-dashed border-destructive/50 hover:bg-destructive/10"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleStartLabor(contractionClientId);
+                                        }}
+                                      >
+                                        <Activity className="h-2.5 w-2.5 mr-1 text-destructive" />
+                                        <span className="text-destructive">Registrar Parto</span>
+                                      </Button>
+                                    )}
+                                    {/* Register birth - only when labor already started */}
+                                    {isLaborStarted && contractionClient && (
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        className="h-5 px-2 text-[9px] lg:text-[10px] border-dashed border-destructive/50 hover:bg-destructive/10"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleRegisterBirth(contractionClient as Client);
+                                        }}
+                                      >
+                                        <Baby className="h-2.5 w-2.5 mr-1 text-destructive" />
+                                        <span className="text-destructive">Registrar Nascimento</span>
+                                      </Button>
+                                    )}
+                                    {/* Wait button */}
+                                    {!isContractionRead && (
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        className="h-5 px-2 text-[9px] lg:text-[10px] border-dashed border-muted-foreground/50 hover:bg-muted/30"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          if (contractionClientId) {
+                                            handleMarkContractionRead(contractionClientId);
+                                          }
+                                        }}
+                                      >
+                                        <Pause className="h-2.5 w-2.5 mr-1 text-muted-foreground" />
+                                        <span className="text-muted-foreground">Aguardar</span>
+                                      </Button>
+                                    )}
+                                  </div>
                                 )}
-                                {child.type === "new_contraction" && isLaborStarted && contractionClient && (
+                                {/* Appointment request action - go to agenda */}
+                                {child.type === "appointment_request" && (
                                   <Button
                                     size="sm"
                                     variant="outline"
-                                    className="h-5 px-2 text-[9px] lg:text-[10px] border-dashed border-destructive/50 hover:bg-destructive/10 mt-1"
+                                    className="h-5 px-2 text-[9px] lg:text-[10px] border-dashed border-primary/50 hover:bg-primary/10 mt-1"
                                     onClick={(e) => {
                                       e.stopPropagation();
-                                      handleRegisterBirth(contractionClient as Client);
+                                      window.location.href = "/agenda";
                                     }}
                                   >
-                                    <Baby className="h-2.5 w-2.5 mr-1 text-destructive" />
-                                    <span className="text-destructive">Registrar Nascimento</span>
+                                    <CalendarCheck className="h-2.5 w-2.5 mr-1 text-primary" />
+                                    <span className="text-primary">Ver Agenda</span>
                                   </Button>
                                 )}
                               </div>
