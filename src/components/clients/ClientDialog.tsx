@@ -731,7 +731,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
         } // end if plan_setting_id
 
 
-        if (data.dpp && data.status === "gestante") {
+        if (data.dpp && (data.status || "gestante") === "gestante") {
           try {
             const response = await supabase.functions.invoke("create-client-user", {
               body: {
