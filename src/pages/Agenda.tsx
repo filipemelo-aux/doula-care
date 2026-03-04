@@ -423,7 +423,6 @@ export default function Agenda() {
       )}
 
       {/* Tabs */}
-      <>
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="w-full grid grid-cols-3">
           <TabsTrigger value="all">
