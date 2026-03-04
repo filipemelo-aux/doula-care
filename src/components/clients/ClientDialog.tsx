@@ -728,8 +728,9 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
             .insert(paymentRecords);
           if (paymentError) console.error("Error creating payments:", paymentError);
         }
+        } // end if plan_setting_id
 
-        // Create user for client if DPP is set (gestante with expected delivery date)
+
         if (data.dpp && data.status === "gestante") {
           try {
             const response = await supabase.functions.invoke("create-client-user", {
