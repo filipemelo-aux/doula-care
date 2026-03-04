@@ -704,8 +704,8 @@ export function NotificationsCenter({ fullPage = false }: NotificationsCenterPro
       children: [{
         id: `contraction-${clientId}`,
         type: "new_contraction",
-        title: isActiveLabor ? "Contrações Frequentes" : "Nova Contração",
-        description: count > 1 ? `${count} contrações nas últimas 24h` : "1 contração registrada",
+        title: isActiveLabor ? "⚠️ Contrações Urgentes" : "Última Contração",
+        description: `Duração: ${durationText}` + (count > 1 ? ` • ${count} total nas 24h` : ""),
         timestamp: latestEntry.started_at,
         extraInfo: durationText,
         priority: isActiveLabor ? "high" : "medium",
