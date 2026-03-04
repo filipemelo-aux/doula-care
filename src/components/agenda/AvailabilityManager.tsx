@@ -131,10 +131,23 @@ export function AvailabilityManager() {
   const batchMutation = useMutation({
     mutationFn: async () => {
       const periods = hoursToPeriods(batchStartHours);
-      const inserts = batchDates.flatMap((date) =>
+      const dateStrings = batchDates.map((d) => format(d, "yyyy-MM-dd"));
+
+      // First, delete existing availability for all selected dates
+      for (const dateStr of dateStrings) {
+        const { error: delError } = await supabase
+          .from("doula_availability")
+          .delete()
+          .eq("organization_id", organizationId!)
+          .eq("available_date", dateStr);
+        if (delError) throw delError;
+      }
+
+      // Then insert new slots
+      const inserts = dateStrings.flatMap((dateStr) =>
         periods.map((p) => ({
           organization_id: organizationId!,
-          available_date: format(date, "yyyy-MM-dd"),
+          available_date: dateStr,
           start_time: p.start,
           end_time: p.end,
         }))
