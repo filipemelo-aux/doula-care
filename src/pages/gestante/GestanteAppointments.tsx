@@ -145,6 +145,14 @@ export default function GestanteAppointments() {
       toast.success("Solicitação enviada!", {
         description: "Sua doula irá confirmar a consulta.",
       });
+
+      // Notify doula via push notification
+      sendPushNotification({
+        send_to_admins: true,
+        title: "📅 Nova Solicitação de Consulta",
+        message: `${client?.full_name || "Uma cliente"} solicitou uma consulta.`,
+        type: "appointment_reminder",
+      });
     },
     onError: () => toast.error("Erro ao solicitar consulta"),
   });
