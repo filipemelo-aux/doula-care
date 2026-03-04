@@ -175,7 +175,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
       status: "gestante",
       custom_status: "",
       pregnancy_weeks: null,
-      dpp: null,
+      dpp: "",
       baby_names: "",
       birth_location: "",
         plan_setting_id: "",
