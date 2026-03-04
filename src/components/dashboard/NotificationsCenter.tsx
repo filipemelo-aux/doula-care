@@ -92,21 +92,6 @@ interface ParentNotification {
   isRead?: boolean;
 }
 
-interface ParentNotification {
-  id: string;
-  type: "birth_approaching" | "post_term" | "new_diary_entry" | "service_request";
-  title: string;
-  description: string;
-  client?: EnrichedClient;
-  priority: "high" | "medium" | "low";
-  icon: typeof Baby;
-  timestamp?: string;
-  children: ChildNotification[];
-  isInLabor?: boolean;
-  clientId?: string;
-  notificationId?: string;
-  isRead?: boolean;
-}
 
 interface NotificationsCenterProps {
   fullPage?: boolean;
