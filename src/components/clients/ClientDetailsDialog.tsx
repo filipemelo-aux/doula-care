@@ -296,6 +296,15 @@ export function ClientDetailsDialog({
                   <Button
                     variant="outline"
                     size="sm"
+                    className="gap-2 justify-start"
+                    onClick={() => setClientFileOpen(true)}
+                  >
+                    <Eye className="w-4 h-4" />
+                    Ficha da Cliente
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
                     className="gap-2 justify-start border-amber-300 text-amber-700 hover:bg-amber-50 hover:text-amber-700"
                     disabled={resetting}
                     onClick={() => setResetConfirmOpen(true)}
