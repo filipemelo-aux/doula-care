@@ -57,7 +57,7 @@ const clientSchema = z.object({
   dpp: z.string().min(1, "DPP é obrigatória"),
   baby_names: z.string().optional(),
   birth_location: z.string().optional(),
-  plan_setting_id: z.string().optional().default(""),
+  plan_setting_id: z.string().min(1, "Selecione um plano"),
   payment_method: z.enum(["pix", "cartao", "dinheiro", "transferencia"]).optional().default("pix"),
   payment_type: z.enum(["a_vista", "parcelado"]).optional().default("a_vista"),
   discount_percent: z.number().min(0).max(100).optional(),
