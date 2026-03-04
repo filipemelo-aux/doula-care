@@ -92,7 +92,6 @@ export function ClientAccessCard({ clientsWithAccounts, loadingClients }: Client
   const [resettingClientId, setResettingClientId] = useState<string | null>(null);
   const [resetConfirmClient, setResetConfirmClient] = useState<Client | null>(null);
   const [resettingData, setResettingData] = useState(false);
-  const [resettingClientId, setResettingClientId] = useState<string | null>(null);
   const provisionMutation = useMutation({
     mutationFn: async () => {
       const { data, error } = await supabase.functions.invoke("provision-existing-clients");
