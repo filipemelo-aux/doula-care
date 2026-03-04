@@ -410,15 +410,20 @@ export default function Agenda() {
         </ToggleGroup>
       </div>
 
-      {/* Calendar View */}
-      {viewMode === "calendar" ? (
+      {/* Calendar View - always visible */}
+      {viewMode === "calendar" && (
         <div className="space-y-6">
           <AgendaCalendarView appointments={onlyConsultas} />
           <AvailabilityManager />
         </div>
-      ) : (
-      <>
+      )}
+
+      {viewMode === "list" && (
+        <AgendaCalendarView appointments={onlyConsultas} />
+      )}
+
       {/* Tabs */}
+      <>
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="w-full grid grid-cols-3">
           <TabsTrigger value="all">
