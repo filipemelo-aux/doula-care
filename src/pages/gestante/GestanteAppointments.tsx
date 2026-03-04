@@ -17,6 +17,7 @@ import { format, isSameDay, isFuture, isToday } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
 import { formatBrazilDateTime } from "@/lib/utils";
+import { sendPushNotification } from "@/lib/pushNotifications";
 import { cn } from "@/lib/utils";
 
 interface AvailabilitySlot {
