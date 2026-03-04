@@ -242,6 +242,7 @@ export function EditContactDialog({
               value={formData.instagram_gestante}
               onChange={(e) => handleChange("instagram_gestante", e.target.value)}
               placeholder="@seuinstagram"
+              className="lowercase"
             />
           </div>
 
@@ -315,13 +316,14 @@ export function EditContactDialog({
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="state">Estado</Label>
-                  <Input
-                    id="state"
-                    value={formData.state}
-                    onChange={(e) => handleChange("state", e.target.value)}
-                    placeholder="UF"
-                    maxLength={2}
-                  />
+                    <Input
+                      id="state"
+                      value={formData.state}
+                      onChange={(e) => handleChange("state", e.target.value)}
+                      placeholder="UF"
+                      maxLength={2}
+                      mask="uppercase"
+                    />
                 </div>
               </div>
             </div>
