@@ -11,8 +11,18 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
-import { Baby, Copy, Eye, EyeOff, Loader2, UserPlus, RotateCcw } from "lucide-react";
+import { Baby, Copy, Eye, EyeOff, Loader2, UserPlus, RotateCcw, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import {
   Tooltip,
