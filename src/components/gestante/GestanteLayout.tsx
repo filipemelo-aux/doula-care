@@ -30,6 +30,7 @@ interface GestanteLayoutProps {
 const navItems = [
   { to: "/gestante", icon: LayoutDashboard, label: "Visão Geral" },
   { to: "/gestante/contracoes", icon: Timer, label: "Contrações" },
+  { to: "/gestante/consultas", icon: Baby, label: "Consultas" },
   { to: "/gestante/servicos", icon: Briefcase, label: "Serviços" },
   { to: "/gestante/documentos", icon: FileText, label: "Documentos" },
   { to: "/gestante/mensagens", icon: MessageCircle, label: "Mensagens" },
