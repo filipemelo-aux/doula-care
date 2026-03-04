@@ -584,34 +584,7 @@ export function ClientDetailsDialog({
         />
       )}
 
-      <AlertDialog open={resetConfirmOpen} onOpenChange={setResetConfirmOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Limpar dados da usuária?</AlertDialogTitle>
-            <AlertDialogDescription asChild>
-              <div className="text-sm text-muted-foreground">
-                <p className="mb-2">As seguintes informações serão apagadas permanentemente:</p>
-                <ul className="list-disc pl-5 space-y-1 mb-3">
-                  <li>Contrações registradas</li>
-                  <li>Diário da gestante</li>
-                  <li>Notificações enviadas</li>
-                  <li>Solicitações de serviço</li>
-                  <li>Consultas agendadas</li>
-                  <li>Dados de trabalho de parto e nascimento</li>
-                  <li>Status será resetado para "Gestante"</li>
-                </ul>
-                <p><strong>Dados financeiros (plano, parcelas e transações) serão mantidos.</strong></p>
-              </div>
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleResetTestData}>
-              Limpar dados
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      
 
       <ClientFileDialog
         open={clientFileOpen}
