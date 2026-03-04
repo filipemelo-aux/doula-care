@@ -155,7 +155,7 @@ export default function Agenda() {
       const { data, error } = await supabase
         .from("appointments")
         .select("*, clients(full_name)")
-        .order("scheduled_at", { ascending: false });
+        .order("scheduled_at", { ascending: true });
       if (error) throw error;
       return data as unknown as AppointmentWithClient[];
     },
