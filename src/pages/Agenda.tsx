@@ -59,6 +59,7 @@ import { SendBudgetDialog } from "@/components/dashboard/SendBudgetDialog";
 import { NewServiceDialog } from "@/components/agenda/NewServiceDialog";
 import { AgendaCalendarView } from "@/components/agenda/AgendaCalendarView";
 import { AvailabilityManager } from "@/components/agenda/AvailabilityManager";
+import { AppointmentRequestsSection } from "@/components/agenda/AppointmentRequestsSection";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 
 // ─── Types ───────────────────────────────────────────────
@@ -448,6 +449,9 @@ export default function Agenda() {
           <>
             {/* ─── ALL TAB ─── */}
             <TabsContent value="all" className="space-y-6 mt-4">
+              {/* Appointment Requests from clients */}
+              <AppointmentRequestsSection />
+
               {futureApts.length > 0 && (
                 <section>
                   <h2 className="text-sm font-semibold text-muted-foreground mb-3 flex items-center gap-2">

@@ -17,6 +17,7 @@ import { format, isSameDay, isFuture, isToday } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
 import { formatBrazilDateTime } from "@/lib/utils";
+import { sendPushNotification } from "@/lib/pushNotifications";
 import { cn } from "@/lib/utils";
 
 interface AvailabilitySlot {
@@ -143,6 +144,14 @@ export default function GestanteAppointments() {
       setReason("");
       toast.success("Solicitação enviada!", {
         description: "Sua doula irá confirmar a consulta.",
+      });
+
+      // Notify doula via push notification
+      sendPushNotification({
+        send_to_admins: true,
+        title: "📅 Nova Solicitação de Consulta",
+        message: `${client?.full_name || "Uma cliente"} solicitou uma consulta.`,
+        type: "appointment_reminder",
       });
     },
     onError: () => toast.error("Erro ao solicitar consulta"),

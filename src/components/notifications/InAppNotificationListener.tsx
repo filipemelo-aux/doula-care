@@ -123,6 +123,52 @@ export function InAppNotificationListener({ userId, role, clientId, organization
         supabase.removeChannel(contractionChannelRef.current);
       }
     };
+  }, [userId, role, organizationId, openContractionsHistory]);
+
+  // Listen for new appointment requests (admin only)
+  useEffect(() => {
+    if (role !== "admin" || !organizationId) return;
+
+    const channel = supabase
+      .channel(`admin-appointment-requests-${userId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "appointment_requests",
+          filter: `organization_id=eq.${organizationId}`,
+        },
+        async (payload) => {
+          const request = payload.new as { client_id: string; requested_date: string; requested_time: string };
+          
+          const { data: clientData } = await supabase
+            .from("clients")
+            .select("full_name")
+            .eq("id", request.client_id)
+            .maybeSingle();
+
+          if (clientData) {
+            toast(`📅 ${clientData.full_name} solicitou uma consulta`, {
+              description: `${request.requested_date} às ${request.requested_time?.slice(0, 5)}`,
+              duration: 15000,
+              icon: <Bell className="h-5 w-5 text-primary" />,
+              className: "border-2 border-primary/30 shadow-lg",
+              action: {
+                label: "Ver Agenda",
+                onClick: () => {
+                  window.location.href = "/agenda";
+                },
+              },
+            });
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [userId, role, organizationId]);
 
   // Listen for client_notifications inserts (admin — new messages from clients)
