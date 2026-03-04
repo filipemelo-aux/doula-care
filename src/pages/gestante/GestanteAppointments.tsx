@@ -153,14 +153,17 @@ export default function GestanteAppointments() {
     ? (availability || []).filter((a) => a.available_date === format(selectedDate, "yyyy-MM-dd"))
     : [];
 
-  // Generate time options from slots
+  // Generate time options from slots, filtering out occupied
   const timeOptions: string[] = [];
+  const selectedDateStr = selectedDate ? format(selectedDate, "yyyy-MM-dd") : "";
   selectedDaySlots.forEach((slot) => {
     const start = parseInt(slot.start_time.split(":")[0]);
     const end = parseInt(slot.end_time.split(":")[0]);
     for (let h = start; h < end; h++) {
-      timeOptions.push(`${String(h).padStart(2, "0")}:00`);
-      timeOptions.push(`${String(h).padStart(2, "0")}:30`);
+      const t1 = `${String(h).padStart(2, "0")}:00`;
+      const t2 = `${String(h).padStart(2, "0")}:30`;
+      if (!occupiedSlots?.has(`${selectedDateStr}_${t1}`)) timeOptions.push(t1);
+      if (!occupiedSlots?.has(`${selectedDateStr}_${t2}`)) timeOptions.push(t2);
     }
   });
 
