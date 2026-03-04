@@ -208,6 +208,7 @@ export function EditContactDialog({
               value={formData.preferred_name}
               onChange={(e) => handleChange("preferred_name", e.target.value)}
               placeholder="Seu nome ou apelido"
+              mask="name"
             />
           </div>
 
@@ -218,6 +219,8 @@ export function EditContactDialog({
               value={formData.cpf}
               onChange={(e) => handleChange("cpf", e.target.value)}
               placeholder="000.000.000-00"
+              inputMode="numeric"
+              maxLength={14}
             />
           </div>
 
@@ -249,6 +252,7 @@ export function EditContactDialog({
               value={formData.baby_names}
               onChange={(e) => handleChange("baby_names", e.target.value)}
               placeholder="Separe por vírgula"
+              mask="name"
             />
           </div>
 
@@ -417,6 +421,7 @@ export function EditContactDialog({
                   value={formData.companion_name}
                   onChange={(e) => handleChange("companion_name", e.target.value)}
                   placeholder="Nome completo"
+                  mask="name"
                 />
               </div>
               <div className="space-y-2">
@@ -462,6 +467,7 @@ export function EditContactDialog({
                       value={formData.fotografa_name}
                       onChange={(e) => handleChange("fotografa_name", e.target.value)}
                       placeholder="Nome"
+                      mask="name"
                     />
                   </div>
                   <div className="space-y-2">
