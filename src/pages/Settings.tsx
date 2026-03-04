@@ -469,7 +469,7 @@ export default function Settings() {
                         <div className="space-y-4 py-4">
                           <div className="space-y-2">
                             <Label>Nome Completo</Label>
-                            <Input value={newUserData.fullName} onChange={(e) => setNewUserData({ ...newUserData, fullName: e.target.value })} placeholder="Nome do usuário" />
+                            <Input value={newUserData.fullName} onChange={(e) => setNewUserData({ ...newUserData, fullName: e.target.value })} placeholder="Nome do usuário" mask="name" />
                           </div>
                           <div className="space-y-2">
                             <Label>Email</Label>
@@ -760,7 +760,7 @@ export default function Settings() {
           <div className="space-y-4 py-2">
             <div className="space-y-2">
               <Label>Nome</Label>
-              <Input value={editName} onChange={(e) => setEditName(e.target.value)} placeholder="Nome completo" />
+              <Input value={editName} onChange={(e) => setEditName(e.target.value)} placeholder="Nome completo" mask="name" />
             </div>
             <div className="space-y-2">
               <Label>Email</Label>
