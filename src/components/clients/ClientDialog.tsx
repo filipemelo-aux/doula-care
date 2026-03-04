@@ -54,12 +54,12 @@ const clientSchema = z.object({
   status: z.enum(["gestante", "lactante", "outro"]).optional().default("gestante"),
   custom_status: z.string().optional(),
   pregnancy_weeks: z.number().min(0).max(42).optional().nullable(),
-  dpp: z.string().min(1, "DPP é obrigatória").nullable(),
+  dpp: z.string().min(1, "DPP é obrigatória"),
   baby_names: z.string().optional(),
   birth_location: z.string().optional(),
   plan_setting_id: z.string().optional().default(""),
   payment_method: z.enum(["pix", "cartao", "dinheiro", "transferencia"]).optional().default("pix"),
-  payment_type: z.enum(["a_vista", "parcelado"]),
+  payment_type: z.enum(["a_vista", "parcelado"]).optional().default("a_vista"),
   discount_percent: z.number().min(0).max(100).optional(),
   payment_date_avista: z.string().optional(),
   installments: z.number().min(1).max(24).optional(),
@@ -175,7 +175,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
       status: "gestante",
       custom_status: "",
       pregnancy_weeks: null,
-      dpp: null,
+      dpp: "",
       baby_names: "",
       birth_location: "",
         plan_setting_id: "",
@@ -279,7 +279,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
         status: client.status as "gestante" | "lactante" | "outro",
         custom_status: (client as any).custom_status || "",
         pregnancy_weeks: client.pregnancy_weeks,
-        dpp: client.dpp || null,
+        dpp: client.dpp || "",
         baby_names: (client as any).baby_names?.join(", ") || "",
         birth_location: (client as any).birth_location || "",
         plan_setting_id: (client as any).plan_setting_id || (planSettings?.find(p => p.plan_type === client.plan)?.id) || (client.plan === "avulso" ? "avulso" : ""),
@@ -335,7 +335,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
         status: "gestante",
         custom_status: "",
         pregnancy_weeks: null,
-        dpp: null,
+        dpp: "",
         baby_names: "",
         birth_location: "",
         plan_setting_id: "",
@@ -443,14 +443,14 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
         companion_phone: data.companion_phone || null,
         status: data.status || "gestante",
         custom_status: data.status === "outro" ? (data.custom_status || null) : null,
-        pregnancy_weeks: data.status === "gestante" && data.dpp 
+        pregnancy_weeks: data.dpp 
           ? calculateCurrentPregnancyWeeks(null, null, data.dpp) 
           : null,
-        dpp: data.status === "gestante" ? data.dpp || null : null,
+        dpp: data.dpp || null,
         baby_names: data.baby_names 
           ? data.baby_names.split(",").map(n => n.trim()).filter(n => n.length > 0)
           : [],
-        pregnancy_weeks_set_at: data.status === "gestante" && data.dpp
+        pregnancy_weeks_set_at: data.dpp
           ? new Date().toISOString() 
           : undefined,
         plan: (data.plan_setting_id === "avulso" ? "avulso" : data.plan_setting_id ? (planSettings?.find(p => p.id === data.plan_setting_id)?.plan_type || "basico") : "basico") as any,
@@ -731,7 +731,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
         } // end if plan_setting_id
 
 
-        if (data.dpp && data.status === "gestante") {
+        if (data.dpp && (data.status || "gestante") === "gestante") {
           try {
             const response = await supabase.functions.invoke("create-client-user", {
               body: {
