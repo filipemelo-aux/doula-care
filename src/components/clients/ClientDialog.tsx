@@ -446,7 +446,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
         pregnancy_weeks: data.status === "gestante" && data.dpp 
           ? calculateCurrentPregnancyWeeks(null, null, data.dpp) 
           : null,
-        dpp: data.status === "gestante" ? data.dpp || null : null,
+        dpp: data.dpp || null,
         baby_names: data.baby_names 
           ? data.baby_names.split(",").map(n => n.trim()).filter(n => n.length > 0)
           : [],
