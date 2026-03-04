@@ -431,7 +431,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
 
       const payload = {
         full_name: data.full_name,
-        phone: data.phone,
+        phone: data.phone || "",
         cpf: data.cpf || null,
         street: data.street || null,
         number: data.number || null,
