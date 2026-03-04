@@ -82,7 +82,7 @@ export function ClientDetailsDialog({
   const [clientFileOpen, setClientFileOpen] = useState(false);
   
   const [revenueDetailOpen, setRevenueDetailOpen] = useState(false);
-  const queryClient = useQueryClient();
+  
 
   // Query client's contract transaction to check installments
   const { data: clientTransaction } = useQuery({
