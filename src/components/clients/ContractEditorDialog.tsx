@@ -455,6 +455,7 @@ ${client?.city || "[Cidade]"}, ${todayFormatted}.`;
                           onChange={(e) => setDoulaName(e.target.value)}
                           className="mt-1"
                           placeholder="Seu nome completo"
+                          mask="name"
                         />
                       </div>
 
@@ -463,7 +464,7 @@ ${client?.city || "[Cidade]"}, ${todayFormatted}.`;
                         <Input
                           value={doulaCpf}
                           onChange={(e) => setDoulaCpf(maskCPF(e.target.value))}
-                          className="mt-1 lowercase"
+                          className="mt-1"
                           placeholder="000.000.000-00"
                           maxLength={14}
                         />

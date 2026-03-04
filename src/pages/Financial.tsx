@@ -1360,6 +1360,7 @@ export default function Financial() {
                           onChange={(e) => setQuickClientName(e.target.value)}
                           className="input-field h-8 text-sm"
                           autoFocus
+                          mask="name"
                         />
                         <Input
                           placeholder="(00) 00000-0000"

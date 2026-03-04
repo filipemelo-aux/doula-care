@@ -115,6 +115,7 @@ export default function RecoverCredentials() {
                   onChange={(e) => setFullName(e.target.value)}
                   required
                   className="input-field"
+                  mask="name"
                 />
               </div>
               <div className="space-y-2">

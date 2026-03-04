@@ -75,6 +75,7 @@ export function WelcomeNameDialog({ fullName, userId, onComplete }: WelcomeNameD
             placeholder="Seu nome ou apelido"
             className="text-center text-lg font-medium border-primary/30 focus:border-primary bg-background/80"
             autoFocus
+            mask="name"
           />
           <Button
             type="submit"

@@ -22,7 +22,7 @@ import {
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Tables } from "@/integrations/supabase/types";
-import { maskPhone, maskCEP } from "@/lib/masks";
+import { maskPhone, maskCEP, maskCPF } from "@/lib/masks";
 
 type Client = Tables<"clients">;
 
@@ -102,6 +102,10 @@ export function EditContactDialog({
         value = maskPhone(value);
       } else if (field === "zip_code") {
         value = maskCEP(value);
+      } else if (field === "cpf") {
+        value = maskCPF(value);
+      } else if (field === "state") {
+        value = value.toUpperCase();
       }
     }
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -204,6 +208,7 @@ export function EditContactDialog({
               value={formData.preferred_name}
               onChange={(e) => handleChange("preferred_name", e.target.value)}
               placeholder="Seu nome ou apelido"
+              mask="name"
             />
           </div>
 
@@ -214,6 +219,8 @@ export function EditContactDialog({
               value={formData.cpf}
               onChange={(e) => handleChange("cpf", e.target.value)}
               placeholder="000.000.000-00"
+              inputMode="numeric"
+              maxLength={14}
             />
           </div>
 
@@ -235,6 +242,7 @@ export function EditContactDialog({
               value={formData.instagram_gestante}
               onChange={(e) => handleChange("instagram_gestante", e.target.value)}
               placeholder="@seuinstagram"
+              className="lowercase"
             />
           </div>
 
@@ -245,6 +253,7 @@ export function EditContactDialog({
               value={formData.baby_names}
               onChange={(e) => handleChange("baby_names", e.target.value)}
               placeholder="Separe por vírgula"
+              mask="name"
             />
           </div>
 
@@ -307,13 +316,14 @@ export function EditContactDialog({
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="state">Estado</Label>
-                  <Input
-                    id="state"
-                    value={formData.state}
-                    onChange={(e) => handleChange("state", e.target.value)}
-                    placeholder="UF"
-                    maxLength={2}
-                  />
+                    <Input
+                      id="state"
+                      value={formData.state}
+                      onChange={(e) => handleChange("state", e.target.value)}
+                      placeholder="UF"
+                      maxLength={2}
+                      mask="uppercase"
+                    />
                 </div>
               </div>
             </div>
@@ -413,6 +423,7 @@ export function EditContactDialog({
                   value={formData.companion_name}
                   onChange={(e) => handleChange("companion_name", e.target.value)}
                   placeholder="Nome completo"
+                  mask="name"
                 />
               </div>
               <div className="space-y-2">
@@ -458,6 +469,7 @@ export function EditContactDialog({
                       value={formData.fotografa_name}
                       onChange={(e) => handleChange("fotografa_name", e.target.value)}
                       placeholder="Nome"
+                      mask="name"
                     />
                   </div>
                   <div className="space-y-2">

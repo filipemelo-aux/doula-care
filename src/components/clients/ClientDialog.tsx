@@ -803,7 +803,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
                       <FormItem className="space-y-1">
                         <FormLabel className="text-xs">Nome Completo *</FormLabel>
                         <FormControl>
-                          <Input {...field} className="h-9 text-sm" placeholder="Nome da cliente" />
+                          <Input {...field} className="h-9 text-sm" placeholder="Nome da cliente" mask="name" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -948,7 +948,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
                       <FormItem className="space-y-1">
                         <FormLabel className="text-xs">Estado</FormLabel>
                         <FormControl>
-                          <Input {...field} className="h-9 text-sm" placeholder="UF" maxLength={2} />
+                          <Input {...field} className="h-9 text-sm" placeholder="UF" maxLength={2} mask="uppercase" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -970,7 +970,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
                       <FormItem className="space-y-1">
                         <FormLabel className="text-xs">Nome do Acompanhante</FormLabel>
                         <FormControl>
-                          <Input {...field} className="h-9 text-sm" placeholder="Nome do acompanhante" />
+                          <Input {...field} className="h-9 text-sm" placeholder="Nome do acompanhante" mask="name" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -1075,6 +1075,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
                                 {...field} 
                                 className="h-9 text-sm" 
                                 placeholder="Nome1, Nome2..."
+                                mask="name"
                               />
                             </FormControl>
                             <FormMessage />
@@ -1597,6 +1598,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
                             updated[i] = { ...updated[i], name: e.target.value };
                             setPrenatalTeam(updated);
                           }}
+                          mask="name"
                         />
                         <Input
                           className="h-8 text-xs flex-1"
@@ -1703,7 +1705,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
                         <FormItem className="space-y-1">
                           <FormLabel className="text-xs">Nome</FormLabel>
                           <FormControl>
-                            <Input {...field} className="h-9 text-sm" placeholder="Nome da fotógrafa" />
+                            <Input {...field} className="h-9 text-sm" placeholder="Nome da fotógrafa" mask="name" />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
