@@ -49,16 +49,44 @@ interface ServiceRequest {
   status: string;
   created_at: string;
   client_name?: string;
+  preferred_date?: string | null;
+}
+
+interface AppointmentRequest {
+  id: string;
+  client_id: string;
+  requested_date: string;
+  requested_time: string;
+  reason: string | null;
+  status: string;
+  created_at: string;
+  client_name?: string;
 }
 
 interface ChildNotification {
   id: string;
-  type: "labor_started" | "new_contraction" | "new_diary_entry" | "service_request";
+  type: "labor_started" | "new_contraction" | "new_diary_entry" | "service_request" | "appointment_request";
   title: string;
   description: string;
   timestamp?: string;
   extraInfo?: string;
   priority: "high" | "medium" | "low";
+  clientId?: string;
+  notificationId?: string;
+  isRead?: boolean;
+}
+
+interface ParentNotification {
+  id: string;
+  type: "birth_approaching" | "post_term" | "new_diary_entry" | "service_request" | "appointment_request";
+  title: string;
+  description: string;
+  client?: EnrichedClient;
+  priority: "high" | "medium" | "low";
+  icon: typeof Baby;
+  timestamp?: string;
+  children: ChildNotification[];
+  isInLabor?: boolean;
   clientId?: string;
   notificationId?: string;
   isRead?: boolean;
