@@ -563,8 +563,6 @@ export default function Agenda() {
           </>
         )}
       </Tabs>
-      </>
-      )}
 
       {/* ─── Dialogs ─── */}
 
