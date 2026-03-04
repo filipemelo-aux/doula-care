@@ -329,21 +329,37 @@ export default function GestanteDashboard() {
 
           {/* Quick Actions for Puérpera */}
           <div className="grid grid-cols-2 gap-3">
-          <Card 
-            className="cursor-pointer hover:shadow-md transition-shadow active:scale-[0.98]"
-            onClick={() => navigate("/gestante/servicos")}
-          >
-            <CardContent className="p-4 flex items-center gap-3">
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-100 to-teal-200 flex items-center justify-center">
-                <Briefcase className="h-6 w-6 text-emerald-600" />
-              </div>
-              <div className="flex-1">
-                <p className="font-medium text-sm">Serviços</p>
-                <p className="text-xs text-muted-foreground">{serviceExamples}</p>
-              </div>
-              <ChevronRight className="h-4 w-4 text-muted-foreground" />
-            </CardContent>
-          </Card>
+            <Card 
+              className="cursor-pointer hover:shadow-md transition-shadow active:scale-[0.98]"
+              onClick={() => navigate("/gestante/consultas")}
+            >
+              <CardContent className="p-4 flex items-center gap-3">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-100 to-violet-200 flex items-center justify-center">
+                  <Calendar className="h-6 w-6 text-purple-600" />
+                </div>
+                <div className="flex-1">
+                  <p className="font-medium text-sm">Consultas</p>
+                  <p className="text-xs text-muted-foreground">Agendar e acompanhar</p>
+                </div>
+                <ChevronRight className="h-4 w-4 text-muted-foreground" />
+              </CardContent>
+            </Card>
+
+            <Card 
+              className="cursor-pointer hover:shadow-md transition-shadow active:scale-[0.98]"
+              onClick={() => navigate("/gestante/servicos")}
+            >
+              <CardContent className="p-4 flex items-center gap-3">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-100 to-teal-200 flex items-center justify-center">
+                  <Briefcase className="h-6 w-6 text-emerald-600" />
+                </div>
+                <div className="flex-1">
+                  <p className="font-medium text-sm">Serviços</p>
+                  <p className="text-xs text-muted-foreground">{serviceExamples}</p>
+                </div>
+                <ChevronRight className="h-4 w-4 text-muted-foreground" />
+              </CardContent>
+            </Card>
 
             <Card 
               className="cursor-pointer hover:shadow-md transition-shadow active:scale-[0.98] relative"
@@ -473,6 +489,22 @@ export default function GestanteDashboard() {
 
         {/* Quick Actions */}
         <div className="grid grid-cols-2 gap-3">
+          <Card 
+            className="cursor-pointer hover:shadow-md transition-shadow active:scale-[0.98]"
+            onClick={() => navigate("/gestante/consultas")}
+          >
+            <CardContent className="p-4 flex items-center gap-3">
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-100 to-violet-200 flex items-center justify-center">
+                <Calendar className="h-6 w-6 text-purple-600" />
+              </div>
+              <div className="flex-1">
+                <p className="font-medium text-sm">Consultas</p>
+                <p className="text-xs text-muted-foreground">Agendar e acompanhar</p>
+              </div>
+              <ChevronRight className="h-4 w-4 text-muted-foreground" />
+            </CardContent>
+          </Card>
+
           <Card 
             className="cursor-pointer hover:shadow-md transition-shadow active:scale-[0.98]"
             onClick={() => navigate("/gestante/servicos")}
