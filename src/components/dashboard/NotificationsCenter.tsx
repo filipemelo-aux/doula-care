@@ -654,6 +654,33 @@ export function NotificationsCenter({ fullPage = false }: NotificationsCenterPro
     });
   });
 
+  // Parent: Appointment requests from clients
+  appointmentRequests?.forEach(request => {
+    const clientName = request.client_name || "Cliente";
+    const dateStr = formatBrazilDate(request.requested_date, "dd/MM");
+    const timeStr = request.requested_time?.slice(0, 5) || "";
+    
+    parentNotifications.push({
+      id: `appointment-req-${request.id}`,
+      type: "appointment_request",
+      title: `Solicitação de Consulta`,
+      description: abbreviateName(clientName),
+      priority: "medium",
+      icon: CalendarCheck,
+      timestamp: request.created_at,
+      children: [{
+        id: `appointment-req-child-${request.id}`,
+        type: "appointment_request",
+        title: `${dateStr} às ${timeStr}`,
+        description: request.reason || "Sem motivo informado",
+        timestamp: request.created_at,
+        priority: "medium",
+        notificationId: request.id
+      }],
+      notificationId: request.id
+    });
+  });
+
   // Handle orphan contractions (clients not in 37+ weeks alert)
   contractionsByClient.forEach(({ entries, clientName, allRead }, clientId) => {
     const count = entries.length;
@@ -728,16 +755,17 @@ export function NotificationsCenter({ fullPage = false }: NotificationsCenterPro
     return bTime - aTime;
   });
 
-  const isLoading = loadingBirth || loadingDiary || loadingContractions || loadingServiceRequests;
+  const isLoading = loadingBirth || loadingDiary || loadingContractions || loadingServiceRequests || loadingAppointmentRequests;
   const hasNotifications = parentNotifications.length > 0;
   const highPriorityCount = parentNotifications.filter(n => 
     n.priority === "high" || n.children.some(c => c.priority === "high")
   ).length;
   
-  // Unread count: unread diary entries + pending service requests
+  // Unread count: unread diary entries + pending service requests + pending appointment requests
   const unreadDiaryCount = recentDiaryEntries?.filter(e => !e.read_by_admin).length || 0;
   const pendingServiceCount = serviceRequests?.length || 0;
-  const unreadCount = unreadDiaryCount + pendingServiceCount + highPriorityCount;
+  const pendingAppointmentCount = appointmentRequests?.length || 0;
+  const unreadCount = unreadDiaryCount + pendingServiceCount + pendingAppointmentCount + highPriorityCount;
 
   // Auto-expand notifications with high priority children
   useEffect(() => {
