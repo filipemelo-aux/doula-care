@@ -71,6 +71,16 @@ const emotionLabels: Record<string, string> = {
   grateful: "🙏 Grata",
 };
 
+const serviceRequestStatusLabels: Record<string, string> = {
+  pending: "Pendente",
+  budget_sent: "Orçamento enviado",
+  approved: "Aprovado",
+  scheduled: "Agendado",
+  completed: "Concluído",
+  cancelled: "Cancelado",
+  rejected: "Rejeitado",
+};
+
 export function ClientFileDialog({ open, onOpenChange, client }: ClientFileDialogProps) {
   const { data: appointments, isLoading: loadingAppts } = useQuery({
     queryKey: ["client-file-appointments", client?.id],
@@ -129,6 +139,62 @@ export function ClientFileDialog({ open, onOpenChange, client }: ClientFileDialo
     enabled: open && !!client,
   });
 
+  const { data: payments } = useQuery({
+    queryKey: ["client-file-payments", client?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("payments")
+        .select("*")
+        .eq("client_id", client!.id)
+        .order("installment_number", { ascending: true });
+      if (error) throw error;
+      return data;
+    },
+    enabled: open && !!client,
+  });
+
+  const { data: serviceRequests } = useQuery({
+    queryKey: ["client-file-services", client?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("service_requests")
+        .select("*")
+        .eq("client_id", client!.id)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+    enabled: open && !!client,
+  });
+
+  const { data: contracts } = useQuery({
+    queryKey: ["client-file-contracts", client?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("client_contracts")
+        .select("*")
+        .eq("client_id", client!.id)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+    enabled: open && !!client,
+  });
+
+  const { data: notifications } = useQuery({
+    queryKey: ["client-file-notifications", client?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("client_notifications")
+        .select("*")
+        .eq("client_id", client!.id)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+    enabled: open && !!client,
+  });
+
   const isLoading = loadingAppts || loadingDiary || loadingContractions;
 
   if (!client) return null;
@@ -174,10 +240,7 @@ export function ClientFileDialog({ open, onOpenChange, client }: ClientFileDialo
       const maxWidth = pageWidth - marginLeft * 2;
 
       const addText = (text: string, fontSize = 10, bold = false) => {
-        if (y > 270) {
-          doc.addPage();
-          y = 20;
-        }
+        if (y > 270) { doc.addPage(); y = 20; }
         doc.setFontSize(fontSize);
         doc.setFont("helvetica", bold ? "bold" : "normal");
         const lines = doc.splitTextToSize(text, maxWidth);
@@ -210,6 +273,7 @@ export function ClientFileDialog({ open, onOpenChange, client }: ClientFileDialo
       if (client.dpp) addText(`DPP: ${formatDate(client.dpp)}`);
       if (client.pregnancy_weeks) addText(`Semanas de gestação: ${client.pregnancy_weeks}`);
       if (address) addText(`Endereço: ${address}`);
+      addText(`Cadastrada em: ${formatDateTime(client.created_at)}`);
 
       // Companion
       if (client.companion_name || client.companion_phone) {
@@ -236,7 +300,7 @@ export function ClientFileDialog({ open, onOpenChange, client }: ClientFileDialo
         if (client.restricao_aromaterapia) addText(`Restrição aromaterapia: ${client.restricao_aromaterapia}`);
         if (prenatalTeam) {
           addText("Equipe de pré-natal:");
-          prenatalTeam.forEach((m: any) => addText(`  • ${m.name} — ${m.role}`));
+          prenatalTeam.forEach((m: any) => addText(`  • ${m.name}${m.role ? ` — ${m.role}` : ""}`));
         }
       }
 
@@ -245,6 +309,12 @@ export function ClientFileDialog({ open, onOpenChange, client }: ClientFileDialo
         addSection("Fotógrafa");
         if (client.fotografa_name) addText(`Nome: ${client.fotografa_name}`);
         if (client.fotografa_phone) addText(`Telefone: ${client.fotografa_phone}`);
+      }
+
+      // Labor
+      if (client.labor_started_at) {
+        addSection("Trabalho de Parto");
+        addText(`Início: ${formatDateTime(client.labor_started_at)}`);
       }
 
       // Birth
@@ -257,12 +327,33 @@ export function ClientFileDialog({ open, onOpenChange, client }: ClientFileDialo
         if (client.baby_names && client.baby_names.length > 0) addText(`Nome(s): ${client.baby_names.join(", ")}`);
       }
 
-      // Plan
+      // Plan & Payment
       addSection("Plano e Pagamento");
       addText(`Plano: ${planLabels[client.plan] || client.plan}`);
       addText(`Valor: ${formatCurrency(Number(client.plan_value) || 0)}`);
       addText(`Pagamento: ${paymentMethodLabels[client.payment_method] || client.payment_method}`);
       addText(`Status: ${paymentStatusLabels[client.payment_status] || client.payment_status}`);
+
+      if (payments && payments.length > 1) {
+        addText("");
+        addText("Parcelas:", 10, true);
+        payments.forEach((p) => {
+          const statusStr = p.status === "pago" ? "✅ Pago" : p.status === "parcial" ? "⚠️ Parcial" : "⏳ Pendente";
+          const dueStr = p.due_date ? ` — Vence: ${formatDate(p.due_date)}` : "";
+          addText(`  ${p.installment_number}/${p.total_installments}: ${formatCurrency(Number(p.amount))} [${statusStr}]${dueStr}`);
+        });
+      }
+
+      // Contract
+      if (contracts && contracts.length > 0) {
+        addSection("Contratos");
+        contracts.forEach((c) => {
+          const st = c.status === "signed" ? "✅ Assinado" : "⏳ Pendente";
+          addText(`${c.title} [${st}]`, 10, true);
+          if (c.signed_at) addText(`  Assinado em: ${formatDateTime(c.signed_at)}`);
+          if (c.signer_name) addText(`  Assinante: ${c.signer_name}`);
+        });
+      }
 
       // Appointments
       if (appointments && appointments.length > 0) {
@@ -272,6 +363,20 @@ export function ClientFileDialog({ open, onOpenChange, client }: ClientFileDialo
           addText(`${formatDateTime(apt.scheduled_at)} — ${apt.title} [${status}]`, 10, true);
           if (apt.notes) addText(`  Observações: ${apt.notes}`);
           if (apt.completion_notes) addText(`  Notas de conclusão: ${apt.completion_notes}`);
+        });
+      }
+
+      // Service Requests
+      if (serviceRequests && serviceRequests.length > 0) {
+        addSection(`Solicitações de Serviço (${serviceRequests.length})`);
+        serviceRequests.forEach((sr) => {
+          const st = serviceRequestStatusLabels[sr.status] || sr.status;
+          addText(`${sr.service_type} — ${st}`, 10, true);
+          addText(`  Solicitado em: ${formatDateTime(sr.created_at)}`);
+          if (sr.budget_value) addText(`  Orçamento: ${formatCurrency(Number(sr.budget_value))}`);
+          if (sr.scheduled_date) addText(`  Agendado: ${formatDateTime(sr.scheduled_date)}`);
+          if (sr.rating) addText(`  Avaliação: ${"⭐".repeat(sr.rating)}`);
+          if (sr.rating_comment) addText(`  Comentário: ${sr.rating_comment}`);
         });
       }
 
@@ -293,6 +398,15 @@ export function ClientFileDialog({ open, onOpenChange, client }: ClientFileDialo
         contractions.forEach((c) => {
           const dur = c.duration_seconds ? `${c.duration_seconds}s` : "em andamento";
           addText(`${formatDateTime(c.started_at)} — Duração: ${dur}`);
+        });
+      }
+
+      // Notifications
+      if (notifications && notifications.length > 0) {
+        addSection(`Notificações Enviadas (${notifications.length})`);
+        notifications.forEach((n) => {
+          addText(`${formatDateTime(n.created_at)} — ${n.title}`, 10, true);
+          addText(`  ${n.message}`);
         });
       }
 
@@ -340,7 +454,8 @@ export function ClientFileDialog({ open, onOpenChange, client }: ClientFileDialo
                 />
                 {client.dpp && <Field label="DPP" value={formatDate(client.dpp)} />}
                 {client.pregnancy_weeks && <Field label="Semanas" value={`${client.pregnancy_weeks}`} />}
-                {address && <Field label="Endereço" value={address} />}
+                {address && <Field label="Endereço" value={address} fullWidth />}
+                <Field label="Cadastrada em" value={formatDateTime(client.created_at)} />
               </Section>
 
               {/* Companion */}
@@ -365,16 +480,18 @@ export function ClientFileDialog({ open, onOpenChange, client }: ClientFileDialo
                   {client.birth_location && <Field label="Local do parto" value={client.birth_location} />}
                   {client.prenatal_type && <Field label="Pré-natal" value={prenatalTypeLabels[client.prenatal_type] || client.prenatal_type} />}
                   {client.prenatal_high_risk && (
-                    <Badge variant="destructive" className="text-xs">Alto Risco</Badge>
+                    <div className="col-span-2">
+                      <Badge variant="destructive" className="text-xs">⚠️ Alto Risco</Badge>
+                    </div>
                   )}
-                  {client.comorbidades && <Field label="Comorbidades" value={client.comorbidades} />}
-                  {client.alergias && <Field label="Alergias" value={client.alergias} />}
-                  {client.restricao_aromaterapia && <Field label="Restrição aromaterapia" value={client.restricao_aromaterapia} />}
+                  {client.comorbidades && <Field label="Comorbidades" value={client.comorbidades} fullWidth />}
+                  {client.alergias && <Field label="Alergias" value={client.alergias} fullWidth />}
+                  {client.restricao_aromaterapia && <Field label="Restrição aromaterapia" value={client.restricao_aromaterapia} fullWidth />}
                   {prenatalTeam && (
-                    <div>
+                    <div className="col-span-2">
                       <p className="text-muted-foreground text-xs">Equipe</p>
                       {prenatalTeam.map((m: any, i: number) => (
-                        <p key={i} className="font-medium">{m.name} — {m.role}</p>
+                        <p key={i} className="font-medium">{m.name}{m.role ? ` — ${m.role}` : ""}</p>
                       ))}
                     </div>
                   )}
@@ -386,6 +503,13 @@ export function ClientFileDialog({ open, onOpenChange, client }: ClientFileDialo
                 <Section title="Fotógrafa">
                   {client.fotografa_name && <Field label="Nome" value={client.fotografa_name} />}
                   {client.fotografa_phone && <Field label="Telefone" value={client.fotografa_phone} />}
+                </Section>
+              )}
+
+              {/* Labor */}
+              {client.labor_started_at && (
+                <Section title="Trabalho de Parto">
+                  <Field label="Início" value={formatDateTime(client.labor_started_at)} />
                 </Section>
               )}
 
@@ -402,7 +526,7 @@ export function ClientFileDialog({ open, onOpenChange, client }: ClientFileDialo
                 </Section>
               )}
 
-              {/* Plan */}
+              {/* Plan & Payment */}
               <Section title="Plano e Pagamento">
                 <Field label="Plano" value={planLabels[client.plan] || client.plan} />
                 <Field label="Valor" value={formatCurrency(Number(client.plan_value) || 0)} />
@@ -410,10 +534,49 @@ export function ClientFileDialog({ open, onOpenChange, client }: ClientFileDialo
                 <Field label="Status" value={paymentStatusLabels[client.payment_status] || client.payment_status} />
               </Section>
 
+              {/* Installments */}
+              {payments && payments.length > 1 && (
+                <Section title={`Parcelas (${payments.length})`}>
+                  <div className="col-span-2 space-y-1">
+                    {payments.map((p) => (
+                      <div key={p.id} className="flex items-center justify-between p-2 rounded-md bg-muted/50 text-xs">
+                        <span className="font-medium">{p.installment_number}/{p.total_installments} — {formatCurrency(Number(p.amount))}</span>
+                        <div className="flex items-center gap-2">
+                          {p.due_date && <span className="text-muted-foreground">{formatDate(p.due_date)}</span>}
+                          <Badge variant={p.status === "pago" ? "default" : "outline"} className="text-[10px] h-5">
+                            {p.status === "pago" ? "Pago" : p.status === "parcial" ? "Parcial" : "Pendente"}
+                          </Badge>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </Section>
+              )}
+
+              {/* Contracts */}
+              {contracts && contracts.length > 0 && (
+                <Section title={`Contratos (${contracts.length})`}>
+                  <div className="col-span-2 space-y-2">
+                    {contracts.map((c) => (
+                      <div key={c.id} className="p-2 rounded-md bg-muted/50 space-y-1">
+                        <div className="flex items-center justify-between gap-2">
+                          <p className="font-medium text-xs">{c.title}</p>
+                          <Badge variant={c.status === "signed" ? "default" : "outline"} className="text-[10px] h-5 shrink-0">
+                            {c.status === "signed" ? "Assinado" : "Pendente"}
+                          </Badge>
+                        </div>
+                        {c.signed_at && <p className="text-xs text-muted-foreground">Assinado em {formatDateTime(c.signed_at)}</p>}
+                        {c.signer_name && <p className="text-xs text-muted-foreground">Assinante: {c.signer_name}</p>}
+                      </div>
+                    ))}
+                  </div>
+                </Section>
+              )}
+
               {/* Appointments */}
               {appointments && appointments.length > 0 && (
                 <Section title={`Consultas (${appointments.length})`}>
-                  <div className="space-y-3">
+                  <div className="col-span-2 space-y-3">
                     {appointments.map((apt) => (
                       <div key={apt.id} className="p-2 rounded-md bg-muted/50 space-y-1">
                         <div className="flex items-center justify-between gap-2">
@@ -435,10 +598,41 @@ export function ClientFileDialog({ open, onOpenChange, client }: ClientFileDialo
                 </Section>
               )}
 
+              {/* Service Requests */}
+              {serviceRequests && serviceRequests.length > 0 && (
+                <Section title={`Solicitações de Serviço (${serviceRequests.length})`}>
+                  <div className="col-span-2 space-y-3">
+                    {serviceRequests.map((sr) => (
+                      <div key={sr.id} className="p-2 rounded-md bg-muted/50 space-y-1">
+                        <div className="flex items-center justify-between gap-2">
+                          <p className="font-medium text-xs">{sr.service_type}</p>
+                          <Badge variant="outline" className="text-[10px] h-5 shrink-0">
+                            {serviceRequestStatusLabels[sr.status] || sr.status}
+                          </Badge>
+                        </div>
+                        <p className="text-muted-foreground text-xs">{formatDateTime(sr.created_at)}</p>
+                        {sr.budget_value && (
+                          <p className="text-xs"><span className="text-muted-foreground">Orçamento:</span> {formatCurrency(Number(sr.budget_value))}</p>
+                        )}
+                        {sr.scheduled_date && (
+                          <p className="text-xs"><span className="text-muted-foreground">Agendado:</span> {formatDateTime(sr.scheduled_date)}</p>
+                        )}
+                        {sr.rating && (
+                          <p className="text-xs"><span className="text-muted-foreground">Avaliação:</span> {"⭐".repeat(sr.rating)}</p>
+                        )}
+                        {sr.rating_comment && (
+                          <p className="text-xs"><span className="text-muted-foreground">Comentário:</span> {sr.rating_comment}</p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </Section>
+              )}
+
               {/* Diary */}
               {diaryEntries && diaryEntries.length > 0 && (
                 <Section title={`Diário (${diaryEntries.length})`}>
-                  <div className="space-y-3">
+                  <div className="col-span-2 space-y-3">
                     {diaryEntries.map((entry) => (
                       <div key={entry.id} className="p-2 rounded-md bg-muted/50 space-y-1">
                         <div className="flex items-center justify-between gap-2">
@@ -467,7 +661,7 @@ export function ClientFileDialog({ open, onOpenChange, client }: ClientFileDialo
               {/* Contractions */}
               {contractions && contractions.length > 0 && (
                 <Section title={`Contrações (${contractions.length})`}>
-                  <div className="space-y-1">
+                  <div className="col-span-2 space-y-1">
                     {contractions.map((c) => (
                       <div key={c.id} className="flex items-center justify-between p-2 rounded-md bg-muted/50">
                         <p className="text-xs">{formatDateTime(c.started_at)}</p>
@@ -480,10 +674,28 @@ export function ClientFileDialog({ open, onOpenChange, client }: ClientFileDialo
                 </Section>
               )}
 
+              {/* Notifications sent */}
+              {notifications && notifications.length > 0 && (
+                <Section title={`Notificações Enviadas (${notifications.length})`}>
+                  <div className="col-span-2 space-y-2">
+                    {notifications.map((n) => (
+                      <div key={n.id} className="p-2 rounded-md bg-muted/50 space-y-1">
+                        <div className="flex items-center justify-between gap-2">
+                          <p className="font-medium text-xs">{n.title}</p>
+                          <p className="text-[10px] text-muted-foreground shrink-0">{formatDateTime(n.created_at)}</p>
+                        </div>
+                        <p className="text-xs text-muted-foreground">{n.message}</p>
+                      </div>
+                    ))}
+                  </div>
+                </Section>
+              )}
+
               {/* Empty state */}
               {(!appointments || appointments.length === 0) &&
                 (!diaryEntries || diaryEntries.length === 0) &&
-                (!contractions || contractions.length === 0) && (
+                (!contractions || contractions.length === 0) &&
+                (!serviceRequests || serviceRequests.length === 0) && (
                   <p className="text-center text-muted-foreground py-4">
                     Nenhum registro de acompanhamento encontrado.
                   </p>
@@ -506,9 +718,9 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   );
 }
 
-function Field({ label, value }: { label: string; value: string }) {
+function Field({ label, value, fullWidth }: { label: string; value: string; fullWidth?: boolean }) {
   return (
-    <div className="col-span-2 sm:col-span-1">
+    <div className={fullWidth ? "col-span-2" : "col-span-2 sm:col-span-1"}>
       <p className="text-muted-foreground text-xs">{label}</p>
       <p className="font-medium break-words">{value}</p>
     </div>
