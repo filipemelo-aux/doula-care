@@ -441,7 +441,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
         zip_code: data.zip_code || null,
         companion_name: data.companion_name || null,
         companion_phone: data.companion_phone || null,
-        status: data.status,
+        status: data.status || "gestante",
         custom_status: data.status === "outro" ? (data.custom_status || null) : null,
         pregnancy_weeks: data.status === "gestante" && data.dpp 
           ? calculateCurrentPregnancyWeeks(null, null, data.dpp) 
