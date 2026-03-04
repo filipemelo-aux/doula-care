@@ -320,6 +320,7 @@ export function ContractSignDialog({ open, onOpenChange, contractId }: ContractS
                         onChange={(e) => setTypedName(e.target.value)}
                         placeholder="Seu nome completo"
                         className="text-lg"
+                        mask="name"
                       />
                       {typedName.trim().length >= 3 && (
                         <div className="rounded-lg border bg-muted/20 p-4">
