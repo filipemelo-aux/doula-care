@@ -91,6 +91,7 @@ export function ClientDetailsDialog({
   client,
 }: ClientDetailsDialogProps) {
   const [contractDialogOpen, setContractDialogOpen] = useState(false);
+  const [clientFileOpen, setClientFileOpen] = useState(false);
   const [resetting, setResetting] = useState(false);
   const [resetConfirmOpen, setResetConfirmOpen] = useState(false);
   const [revenueDetailOpen, setRevenueDetailOpen] = useState(false);
