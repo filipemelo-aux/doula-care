@@ -54,7 +54,7 @@ const clientSchema = z.object({
   status: z.enum(["gestante", "lactante", "outro"]).optional().default("gestante"),
   custom_status: z.string().optional(),
   pregnancy_weeks: z.number().min(0).max(42).optional().nullable(),
-  dpp: z.string().min(1, "DPP é obrigatória").nullable(),
+  dpp: z.string().min(1, "DPP é obrigatória"),
   baby_names: z.string().optional(),
   birth_location: z.string().optional(),
   plan_setting_id: z.string().optional().default(""),
