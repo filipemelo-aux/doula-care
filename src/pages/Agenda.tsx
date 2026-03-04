@@ -122,6 +122,7 @@ export default function Agenda() {
   const [aptDate, setAptDate] = useState("");
   const [aptNotes, setAptNotes] = useState("");
   const [aptClientId, setAptClientId] = useState("");
+  const [aptStatus, setAptStatus] = useState<"pendente" | "concluida">("pendente");
   const dateInputRef = useRef<HTMLInputElement>(null);
 
 
@@ -195,13 +196,21 @@ export default function Agenda() {
       const scheduledUtc = fromZonedTime(aptDate, "America/Sao_Paulo").toISOString();
 
       if (editingAppointment) {
+        const updateData: Record<string, unknown> = {
+          title: aptTitle,
+          scheduled_at: scheduledUtc,
+          notes: aptNotes || null,
+        };
+        // Handle status toggle
+        if (aptStatus === "concluida" && !editingAppointment.completed_at) {
+          updateData.completed_at = new Date().toISOString();
+        } else if (aptStatus === "pendente" && editingAppointment.completed_at) {
+          updateData.completed_at = null;
+          updateData.completion_notes = null;
+        }
         const { error } = await supabase
           .from("appointments")
-          .update({
-            title: aptTitle,
-            scheduled_at: scheduledUtc,
-            notes: aptNotes || null,
-          })
+          .update(updateData)
           .eq("id", editingAppointment.id);
         if (error) throw error;
       } else {
@@ -273,6 +282,7 @@ export default function Agenda() {
     setAptDate("");
     setAptNotes("");
     setAptClientId("");
+    setAptStatus("pendente");
   };
 
   const openEditAppointment = (apt: AppointmentWithClient) => {
@@ -282,6 +292,7 @@ export default function Agenda() {
     setAptDate(format(zonedDate, "yyyy-MM-dd'T'HH:mm"));
     setAptNotes(apt.notes || "");
     setAptClientId(apt.client_id);
+    setAptStatus(apt.completed_at ? "concluida" : "pendente");
     setAppointmentDialog(true);
   };
 
@@ -568,6 +579,20 @@ export default function Agenda() {
               <Label className="text-xs">Observações (opcional)</Label>
               <Textarea placeholder="Observações..." value={aptNotes} onChange={(e) => setAptNotes(e.target.value)} rows={2} className="mt-1" />
             </div>
+            {editingAppointment && (
+              <div>
+                <Label className="text-xs">Status</Label>
+                <Select value={aptStatus} onValueChange={(v) => setAptStatus(v as "pendente" | "concluida")}>
+                  <SelectTrigger className="mt-1">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="pendente">Pendente</SelectItem>
+                    <SelectItem value="concluida">Concluída</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
           </div>
           <DialogFooter>
             <Button
