@@ -1120,6 +1120,8 @@ export function NotificationsCenter({ fullPage = false }: NotificationsCenterPro
                                     ? "bg-orange-500/10 border-l-orange-500"
                                     : child.type === "service_request"
                                     ? "bg-purple-500/10 border-l-purple-500"
+                                    : child.type === "appointment_request"
+                                    ? "bg-primary/10 border-l-primary"
                                     : "bg-emerald-500/10 border-l-emerald-500"
                                 } ${child.type === "new_diary_entry" ? "cursor-pointer hover:bg-emerald-500/20 transition-colors" : ""} ${child.type === "new_contraction" ? "cursor-pointer hover:bg-orange-500/20 transition-colors" : ""}`}
                               >
