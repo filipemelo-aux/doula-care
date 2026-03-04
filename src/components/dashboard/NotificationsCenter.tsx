@@ -259,6 +259,35 @@ export function NotificationsCenter({ fullPage = false }: NotificationsCenterPro
     refetchInterval: 30000,
   });
 
+  // Fetch pending appointment requests
+  const { data: appointmentRequests, isLoading: loadingAppointmentRequests } = useQuery({
+    queryKey: ["appointment-requests-pending"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("appointment_requests")
+        .select("id, client_id, requested_date, requested_time, reason, status, created_at, clients(full_name)")
+        .eq("status", "pending")
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        console.error("Error fetching appointment requests:", error);
+        throw error;
+      }
+      
+      return data.map(entry => ({
+        id: entry.id,
+        client_id: entry.client_id,
+        requested_date: entry.requested_date,
+        requested_time: entry.requested_time,
+        reason: entry.reason,
+        status: entry.status,
+        created_at: entry.created_at,
+        client_name: (entry.clients as { full_name: string } | null)?.full_name || "Cliente"
+      })) as AppointmentRequest[];
+    },
+    refetchInterval: 30000,
+  });
+
   // Handle opening budget dialog
   const handleOpenBudgetDialog = (request: ServiceRequest) => {
     setSelectedServiceRequest({
