@@ -22,7 +22,7 @@ import {
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Tables } from "@/integrations/supabase/types";
-import { maskPhone, maskCEP } from "@/lib/masks";
+import { maskPhone, maskCEP, maskCPF } from "@/lib/masks";
 
 type Client = Tables<"clients">;
 
