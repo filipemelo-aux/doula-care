@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import jsPDF from "jspdf";
+import type jsPDF from "jspdf";
 import {
   Dialog,
   DialogContent,
