@@ -94,6 +94,44 @@ export default function GestanteAppointments() {
     enabled: !!clientOrganizationId,
   });
 
+  // Fetch occupied slots (appointments + scheduled services)
+  const { data: occupiedSlots } = useQuery({
+    queryKey: ["occupied-slots-appointments", clientOrganizationId],
+    queryFn: async () => {
+      const today = new Date().toISOString();
+      const [aptsRes, srRes] = await Promise.all([
+        supabase
+          .from("appointments")
+          .select("scheduled_at")
+          .eq("organization_id", clientOrganizationId!)
+          .gte("scheduled_at", today)
+          .is("completed_at", null),
+        supabase
+          .from("service_requests")
+          .select("scheduled_date")
+          .eq("organization_id", clientOrganizationId!)
+          .in("status", ["accepted", "date_proposed"])
+          .not("scheduled_date", "is", null),
+      ]);
+      
+      const occupied: string[] = [];
+      (aptsRes.data || []).forEach((a: any) => {
+        if (a.scheduled_at) {
+          const d = new Date(a.scheduled_at);
+          occupied.push(`${format(d, "yyyy-MM-dd")}_${format(d, "HH:mm")}`);
+        }
+      });
+      (srRes.data || []).forEach((s: any) => {
+        if (s.scheduled_date) {
+          const d = new Date(s.scheduled_date);
+          occupied.push(`${format(d, "yyyy-MM-dd")}_${format(d, "HH:mm")}`);
+        }
+      });
+      return new Set(occupied);
+    },
+    enabled: !!clientOrganizationId,
+  });
+
   // Fetch my appointment requests
   const { data: requests, isLoading: loadingRequests } = useQuery({
     queryKey: ["my-appointment-requests", client?.id],
