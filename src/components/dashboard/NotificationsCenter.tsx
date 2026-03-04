@@ -545,8 +545,8 @@ export function NotificationsCenter({ fullPage = false }: NotificationsCenterPro
       children.push({
         id: `contraction-${client.id}`,
         type: "new_contraction",
-        title: isUrgentContractions ? "Contrações Urgentes" : count >= 3 ? "Contrações Frequentes" : "Nova Contração",
-        description: count > 1 ? `${count} contrações nas últimas 24h` : "1 contração registrada",
+        title: isUrgentContractions ? "⚠️ Contrações Urgentes" : "Última Contração",
+        description: `Duração: ${durationText}` + (count > 1 ? ` • ${count} total nas 24h` : ""),
         timestamp: latestEntry.started_at,
         extraInfo: durationText,
         priority: isUrgentContractions ? "high" : "medium",
