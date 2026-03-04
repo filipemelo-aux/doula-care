@@ -130,6 +130,7 @@ export default function GestanteAppointments() {
     mutationFn: async () => {
       const { error } = await supabase.from("appointment_requests").insert({
         client_id: client!.id,
+        organization_id: clientOrganizationId,
         requested_date: format(selectedDate!, "yyyy-MM-dd"),
         requested_time: selectedTime,
         reason: reason || null,
