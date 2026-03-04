@@ -1159,32 +1159,90 @@ export function NotificationsCenter({ fullPage = false }: NotificationsCenterPro
                                   </div>
                                 </div>
                                 {/* Contraction action buttons */}
-                                {child.type === "new_contraction" && isActiveLaborPattern && contractionClientId && (
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    className="h-5 px-2 text-[9px] lg:text-[10px] border-dashed border-destructive/50 hover:bg-destructive/10 mt-1"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleStartLabor(contractionClientId);
-                                    }}
-                                  >
-                                    <Activity className="h-2.5 w-2.5 mr-1 text-destructive" />
-                                    <span className="text-destructive">Iniciar Trabalho de Parto</span>
-                                  </Button>
+                                {child.type === "new_contraction" && contractionClientId && (
+                                  <div className="flex flex-wrap gap-1 mt-1.5">
+                                    {/* History button - always show */}
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      className="h-5 px-2 text-[9px] lg:text-[10px] border-dashed border-orange-300 hover:bg-orange-500/10"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        if (contractionClientId) {
+                                          handleMarkContractionRead(contractionClientId);
+                                        }
+                                        const client = contractionClient || notification.client;
+                                        if (client) {
+                                          setContractionsClient(client as Client);
+                                          setContractionsDialogOpen(true);
+                                        }
+                                      }}
+                                    >
+                                      <History className="h-2.5 w-2.5 mr-1 text-orange-500" />
+                                      <span className="text-orange-600">Ver Histórico</span>
+                                    </Button>
+                                    {/* Start labor - only when not already started and urgent pattern */}
+                                    {!isLaborStarted && (
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        className="h-5 px-2 text-[9px] lg:text-[10px] border-dashed border-destructive/50 hover:bg-destructive/10"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleStartLabor(contractionClientId);
+                                        }}
+                                      >
+                                        <Activity className="h-2.5 w-2.5 mr-1 text-destructive" />
+                                        <span className="text-destructive">Registrar Parto</span>
+                                      </Button>
+                                    )}
+                                    {/* Register birth - only when labor already started */}
+                                    {isLaborStarted && contractionClient && (
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        className="h-5 px-2 text-[9px] lg:text-[10px] border-dashed border-destructive/50 hover:bg-destructive/10"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleRegisterBirth(contractionClient as Client);
+                                        }}
+                                      >
+                                        <Baby className="h-2.5 w-2.5 mr-1 text-destructive" />
+                                        <span className="text-destructive">Registrar Nascimento</span>
+                                      </Button>
+                                    )}
+                                    {/* Wait button */}
+                                    {!isContractionRead && (
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        className="h-5 px-2 text-[9px] lg:text-[10px] border-dashed border-muted-foreground/50 hover:bg-muted/30"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          if (contractionClientId) {
+                                            handleMarkContractionRead(contractionClientId);
+                                          }
+                                        }}
+                                      >
+                                        <Pause className="h-2.5 w-2.5 mr-1 text-muted-foreground" />
+                                        <span className="text-muted-foreground">Aguardar</span>
+                                      </Button>
+                                    )}
+                                  </div>
                                 )}
-                                {child.type === "new_contraction" && isLaborStarted && contractionClient && (
+                                {/* Appointment request action - go to agenda */}
+                                {child.type === "appointment_request" && (
                                   <Button
                                     size="sm"
                                     variant="outline"
-                                    className="h-5 px-2 text-[9px] lg:text-[10px] border-dashed border-destructive/50 hover:bg-destructive/10 mt-1"
+                                    className="h-5 px-2 text-[9px] lg:text-[10px] border-dashed border-primary/50 hover:bg-primary/10 mt-1"
                                     onClick={(e) => {
                                       e.stopPropagation();
-                                      handleRegisterBirth(contractionClient as Client);
+                                      window.location.href = "/agenda";
                                     }}
                                   >
-                                    <Baby className="h-2.5 w-2.5 mr-1 text-destructive" />
-                                    <span className="text-destructive">Registrar Nascimento</span>
+                                    <CalendarCheck className="h-2.5 w-2.5 mr-1 text-primary" />
+                                    <span className="text-primary">Ver Agenda</span>
                                   </Button>
                                 )}
                               </div>
