@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import type jsPDF from "jspdf";
+
 import {
   Dialog,
   DialogContent,
@@ -164,8 +164,9 @@ export function ClientFileDialog({ open, onOpenChange, client }: ClientFileDialo
     return null;
   })();
 
-  const handleExportPDF = () => {
+  const handleExportPDF = async () => {
     try {
+      const { default: jsPDF } = await import("jspdf");
       const doc = new jsPDF();
       let y = 20;
       const marginLeft = 15;
