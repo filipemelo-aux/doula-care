@@ -606,6 +606,8 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
           .single();
         if (clientError) throw clientError;
 
+        // Only create financial records if a plan was selected
+        if (data.plan_setting_id) {
         // Get plan settings to find the plan ID
         const resolvedPlanSetting = data.plan_setting_id !== "avulso" ? planSettings?.find(p => p.id === data.plan_setting_id) : null;
 
