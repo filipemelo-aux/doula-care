@@ -889,7 +889,7 @@ export function NotificationsCenter({ fullPage = false }: NotificationsCenterPro
                               <div className={`w-7 h-7 lg:w-8 lg:h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
                                 isPostTerm
                                   ? "bg-destructive/15"
-                                  : notification.type === "new_diary_entry"
+                                  : notification.type === "new_diary_entry" || notification.type === "appointment_request"
                                   ? "bg-primary/15"
                                   : notification.type === "service_request"
                                   ? "bg-purple-500/15"
@@ -898,7 +898,7 @@ export function NotificationsCenter({ fullPage = false }: NotificationsCenterPro
                                 <notification.icon className={`h-3.5 w-3.5 lg:h-4 lg:w-4 ${
                                   isPostTerm
                                     ? "text-destructive"
-                                    : notification.type === "new_diary_entry"
+                                    : notification.type === "new_diary_entry" || notification.type === "appointment_request"
                                     ? "text-primary"
                                     : notification.type === "service_request"
                                     ? "text-purple-600"
