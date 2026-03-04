@@ -1007,10 +1007,9 @@ export function NotificationsCenter({ fullPage = false }: NotificationsCenterPro
                                     <span className="text-primary">Ver Agenda</span>
                                   </Button>
                                 )}
-                                {/* Button on mobile - below content - ONLY for birth-type notifications */}
+                                {/* Button on mobile - below content - for birth-type notifications */}
                                 {notification.client && !notification.client.birth_occurred && 
-                                 (notification.type === "birth_approaching" || notification.type === "post_term") &&
-                                 notification.isInLabor && (
+                                 (notification.type === "birth_approaching" || notification.type === "post_term") && (
                                   <Button
                                     size="sm"
                                     variant="outline"
@@ -1025,10 +1024,9 @@ export function NotificationsCenter({ fullPage = false }: NotificationsCenterPro
                                   </Button>
                                 )}
                               </div>
-                              {/* Button on desktop - right side - ONLY for birth-type with labor */}
+                              {/* Button on desktop - right side - for birth-type notifications */}
                               {notification.client && !notification.client.birth_occurred && 
-                               (notification.type === "birth_approaching" || notification.type === "post_term") &&
-                               notification.isInLabor && (
+                               (notification.type === "birth_approaching" || notification.type === "post_term") && (
                                 <Button
                                   size="sm"
                                   variant="outline"
