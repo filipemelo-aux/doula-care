@@ -343,6 +343,7 @@ export function ClientAccessCard({ clientsWithAccounts, loadingClients }: Client
                         )}
                       </TableCell>
                       <TableCell className="px-2 py-1.5">
+                        <div className="flex items-center gap-0.5">
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <Button
@@ -353,6 +354,32 @@ export function ClientAccessCard({ clientsWithAccounts, loadingClients }: Client
                               disabled={resettingClientId === client.id}
                             >
                               {resettingClientId === client.id ? (
+                                <Loader2 className="h-3 w-3 animate-spin" />
+                              ) : (
+                                <RotateCcw className="h-3 w-3" />
+                              )}
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Resetar senha</p>
+                          </TooltipContent>
+                        </Tooltip>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-6 w-6 text-destructive hover:text-destructive"
+                              onClick={() => setResetConfirmClient(client)}
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Limpar dados da usuária</p>
+                          </TooltipContent>
+                        </Tooltip>
+                        </div>
                                 <Loader2 className="h-3 w-3 animate-spin" />
                               ) : (
                                 <RotateCcw className="h-3 w-3" />
