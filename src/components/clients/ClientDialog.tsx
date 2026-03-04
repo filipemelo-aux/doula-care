@@ -443,7 +443,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
         companion_phone: data.companion_phone || null,
         status: data.status || "gestante",
         custom_status: data.status === "outro" ? (data.custom_status || null) : null,
-        pregnancy_weeks: data.status === "gestante" && data.dpp 
+        pregnancy_weeks: data.dpp 
           ? calculateCurrentPregnancyWeeks(null, null, data.dpp) 
           : null,
         dpp: data.dpp || null,
