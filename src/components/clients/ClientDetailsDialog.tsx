@@ -678,6 +678,12 @@ export function ClientDetailsDialog({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <ClientFileDialog
+        open={clientFileOpen}
+        onOpenChange={setClientFileOpen}
+        client={client}
+      />
     </>
   );
 }
