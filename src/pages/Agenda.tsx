@@ -333,7 +333,7 @@ export default function Agenda() {
   });
 
   const futureApts = filteredAppointments.filter((a) => isFuture(new Date(a.scheduled_at)) || isToday(new Date(a.scheduled_at)));
-  const pastApts = filteredAppointments.filter((a) => isPast(new Date(a.scheduled_at)) && !isToday(new Date(a.scheduled_at)));
+  const pastApts = filteredAppointments.filter((a) => isPast(new Date(a.scheduled_at)) && !isToday(new Date(a.scheduled_at))).sort((a, b) => new Date(b.scheduled_at).getTime() - new Date(a.scheduled_at).getTime());
 
   const isLoading = loadingApts || loadingSvc;
 
@@ -410,14 +410,18 @@ export default function Agenda() {
         </ToggleGroup>
       </div>
 
-      {/* Calendar View */}
-      {viewMode === "calendar" ? (
+      {/* Calendar View - always visible */}
+      {viewMode === "calendar" && (
         <div className="space-y-6">
           <AgendaCalendarView appointments={onlyConsultas} />
           <AvailabilityManager />
         </div>
-      ) : (
-      <>
+      )}
+
+      {viewMode === "list" && (
+        <AgendaCalendarView appointments={onlyConsultas} />
+      )}
+
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="w-full grid grid-cols-3">
@@ -558,8 +562,6 @@ export default function Agenda() {
           </>
         )}
       </Tabs>
-      </>
-      )}
 
       {/* ─── Dialogs ─── */}
 
