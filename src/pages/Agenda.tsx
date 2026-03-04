@@ -333,7 +333,7 @@ export default function Agenda() {
   });
 
   const futureApts = filteredAppointments.filter((a) => isFuture(new Date(a.scheduled_at)) || isToday(new Date(a.scheduled_at)));
-  const pastApts = filteredAppointments.filter((a) => isPast(new Date(a.scheduled_at)) && !isToday(new Date(a.scheduled_at)));
+  const pastApts = filteredAppointments.filter((a) => isPast(new Date(a.scheduled_at)) && !isToday(new Date(a.scheduled_at))).sort((a, b) => new Date(b.scheduled_at).getTime() - new Date(a.scheduled_at).getTime());
 
   const isLoading = loadingApts || loadingSvc;
 
