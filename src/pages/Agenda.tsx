@@ -45,6 +45,9 @@ import {
   Send,
   Eye,
   Info,
+  List,
+  CalendarDays,
+  CalendarCheck,
 } from "lucide-react";
 import { AppointmentDetailDialog } from "@/components/clients/AppointmentDetailDialog";
 import { AppointmentCompleteDialog } from "@/components/clients/AppointmentCompleteDialog";
@@ -54,6 +57,9 @@ import { fromZonedTime, toZonedTime } from "date-fns-tz";
 import { toast } from "sonner";
 import { SendBudgetDialog } from "@/components/dashboard/SendBudgetDialog";
 import { NewServiceDialog } from "@/components/agenda/NewServiceDialog";
+import { AgendaCalendarView } from "@/components/agenda/AgendaCalendarView";
+import { AvailabilityManager } from "@/components/agenda/AvailabilityManager";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 
 // ─── Types ───────────────────────────────────────────────
 interface AppointmentWithClient {
@@ -113,6 +119,7 @@ export default function Agenda() {
   const [activeTab, setActiveTab] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
   const [serviceStatusFilter, setServiceStatusFilter] = useState<ServiceStatusFilter>("all");
+  const [viewMode, setViewMode] = useState<"list" | "calendar">("list");
 
   // Appointment form
   const [appointmentDialog, setAppointmentDialog] = useState(false);
