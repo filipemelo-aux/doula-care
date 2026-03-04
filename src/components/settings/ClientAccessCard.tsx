@@ -159,6 +159,54 @@ export function ClientAccessCard({ clientsWithAccounts, loadingClients }: Client
     }
   };
 
+  const handleResetTestData = async () => {
+    if (!resetConfirmClient) return;
+    setResettingData(true);
+    try {
+      const clientId = resetConfirmClient.id;
+      const [r1, r2, r3, r4, r5] = await Promise.all([
+        supabase.from("contractions").delete().eq("client_id", clientId),
+        supabase.from("pregnancy_diary").delete().eq("client_id", clientId),
+        supabase.from("client_notifications").delete().eq("client_id", clientId),
+        supabase.from("service_requests").delete().eq("client_id", clientId),
+        supabase.from("appointments").delete().eq("client_id", clientId),
+      ]);
+      if (r1.error) throw r1.error;
+      if (r2.error) throw r2.error;
+      if (r3.error) throw r3.error;
+      if (r4.error) throw r4.error;
+      if (r5.error) throw r5.error;
+
+      const { error: updateError } = await supabase
+        .from("clients")
+        .update({
+          labor_started_at: null,
+          birth_occurred: false,
+          birth_date: null,
+          birth_time: null,
+          birth_weight: null,
+          birth_height: null,
+          status: "gestante" as const,
+          custom_status: null,
+          baby_names: [],
+        })
+        .eq("id", clientId);
+      if (updateError) throw updateError;
+
+      queryClient.invalidateQueries({ queryKey: ["clients"] });
+      queryClient.invalidateQueries({ queryKey: ["clients-with-accounts"] });
+      setResetConfirmClient(null);
+      toast.success("Dados limpos!", {
+        description: "Contrações, diário, mensagens, serviços, consultas e dados de parto resetados.",
+      });
+    } catch (error) {
+      console.error("Error resetting test data:", error);
+      toast.error("Erro ao limpar dados");
+    } finally {
+      setResettingData(false);
+    }
+  };
+
   return (
     <Card className="card-glass">
       <CardHeader className="pb-2 px-3 sm:px-6">
