@@ -380,16 +380,6 @@ export function ClientAccessCard({ clientsWithAccounts, loadingClients }: Client
                           </TooltipContent>
                         </Tooltip>
                         </div>
-                                <Loader2 className="h-3 w-3 animate-spin" />
-                              ) : (
-                                <RotateCcw className="h-3 w-3" />
-                              )}
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>Resetar senha</p>
-                          </TooltipContent>
-                        </Tooltip>
                       </TableCell>
                     </TableRow>
                   );
@@ -403,6 +393,36 @@ export function ClientAccessCard({ clientsWithAccounts, loadingClients }: Client
           </p>
         )}
       </CardContent>
+
+      <AlertDialog open={!!resetConfirmClient} onOpenChange={(open) => !open && setResetConfirmClient(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Limpar dados de {resetConfirmClient?.full_name?.split(' ')[0]}?</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="text-sm text-muted-foreground">
+                <p className="mb-2">As seguintes informações serão apagadas permanentemente:</p>
+                <ul className="list-disc pl-5 space-y-1 mb-3">
+                  <li>Contrações registradas</li>
+                  <li>Diário da gestante</li>
+                  <li>Notificações enviadas</li>
+                  <li>Solicitações de serviço</li>
+                  <li>Consultas agendadas</li>
+                  <li>Dados de trabalho de parto e nascimento</li>
+                  <li>Status será resetado para "Gestante"</li>
+                </ul>
+                <p><strong>Dados financeiros serão mantidos.</strong></p>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleResetTestData} disabled={resettingData}>
+              {resettingData ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+              Limpar dados
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   );
 }
