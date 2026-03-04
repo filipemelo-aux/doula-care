@@ -453,9 +453,9 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
         pregnancy_weeks_set_at: data.status === "gestante" && data.dpp
           ? new Date().toISOString() 
           : undefined,
-        plan: (data.plan_setting_id === "avulso" ? "avulso" : (planSettings?.find(p => p.id === data.plan_setting_id)?.plan_type || "basico")) as any,
-        plan_setting_id: data.plan_setting_id !== "avulso" ? data.plan_setting_id : null,
-        payment_method: data.payment_method,
+        plan: (data.plan_setting_id === "avulso" ? "avulso" : data.plan_setting_id ? (planSettings?.find(p => p.id === data.plan_setting_id)?.plan_type || "basico") : "basico") as any,
+        plan_setting_id: data.plan_setting_id && data.plan_setting_id !== "avulso" ? data.plan_setting_id : null,
+        payment_method: data.payment_method || "pix",
         plan_value: finalPlanValue,
         birth_location: data.status === "gestante" ? (data.birth_location || null) : null,
         prenatal_type: data.prenatal_type || null,
