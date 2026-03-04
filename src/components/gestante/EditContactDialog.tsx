@@ -102,6 +102,10 @@ export function EditContactDialog({
         value = maskPhone(value);
       } else if (field === "zip_code") {
         value = maskCEP(value);
+      } else if (field === "cpf") {
+        value = maskCPF(value);
+      } else if (field === "state") {
+        value = value.toUpperCase();
       }
     }
     setFormData((prev) => ({ ...prev, [field]: value }));
