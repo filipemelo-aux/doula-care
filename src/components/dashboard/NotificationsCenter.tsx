@@ -1058,6 +1058,21 @@ export function NotificationsCenter({ fullPage = false }: NotificationsCenterPro
                                   Enviar Orçamento
                                 </Button>
                               )}
+                              {/* Ver Agenda button for appointment requests - desktop */}
+                              {notification.type === "appointment_request" && (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="h-7 px-2 text-xs border-dashed border-primary/50 hover:bg-primary/10 hidden lg:flex flex-shrink-0"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    window.location.href = "/agenda";
+                                  }}
+                                >
+                                  <CalendarCheck className="h-3 w-3 mr-1 text-primary" />
+                                  <span className="text-primary">Ver Agenda</span>
+                                </Button>
+                              )}
                             </div>
                           </div>
                         </CollapsibleTrigger>
