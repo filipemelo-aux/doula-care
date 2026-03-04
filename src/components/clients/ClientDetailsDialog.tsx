@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { ContractEditorDialog } from "./ContractEditorDialog";
 import { ClientFileDialog } from "./ClientFileDialog";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 
 import {
   Dialog,
@@ -9,17 +9,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
@@ -34,8 +23,7 @@ import {
   Calendar,
   FileText,
   KeyRound,
-  RotateCcw,
-  Loader2,
+  
   Eye,
   Stethoscope,
   AlertTriangle,
@@ -92,10 +80,9 @@ export function ClientDetailsDialog({
 }: ClientDetailsDialogProps) {
   const [contractDialogOpen, setContractDialogOpen] = useState(false);
   const [clientFileOpen, setClientFileOpen] = useState(false);
-  const [resetting, setResetting] = useState(false);
-  const [resetConfirmOpen, setResetConfirmOpen] = useState(false);
+  
   const [revenueDetailOpen, setRevenueDetailOpen] = useState(false);
-  const queryClient = useQueryClient();
+  
 
   // Query client's contract transaction to check installments
   const { data: clientTransaction } = useQuery({
@@ -157,56 +144,7 @@ export function ClientDetailsDialog({
 
   if (!client) return null;
 
-  const handleResetTestData = async () => {
-    setResetting(true);
-    try {
-      const [r1, r2, r3, r4, r5] = await Promise.all([
-        supabase.from("contractions").delete().eq("client_id", client.id),
-        supabase.from("pregnancy_diary").delete().eq("client_id", client.id),
-        supabase.from("client_notifications").delete().eq("client_id", client.id),
-        supabase.from("service_requests").delete().eq("client_id", client.id),
-        supabase.from("appointments").delete().eq("client_id", client.id),
-      ]);
-      if (r1.error) throw r1.error;
-      if (r2.error) throw r2.error;
-      if (r3.error) throw r3.error;
-      if (r4.error) throw r4.error;
-      if (r5.error) throw r5.error;
-
-      // Reset labor, birth, and status fields
-      const { error: updateError } = await supabase
-        .from("clients")
-        .update({
-          labor_started_at: null,
-          birth_occurred: false,
-          birth_date: null,
-          birth_time: null,
-          birth_weight: null,
-          birth_height: null,
-          status: "gestante" as const,
-          custom_status: null,
-          baby_names: [],
-        })
-        .eq("id", client.id);
-      if (updateError) throw updateError;
-
-      // Invalidate all related queries so UI refreshes everywhere
-      await queryClient.invalidateQueries({ queryKey: ["clients"] });
-      await queryClient.invalidateQueries({ queryKey: ["client"] });
-
-      // Close the dialog so it reopens with fresh data
-      onOpenChange(false);
-
-      toast.success("Dados de teste limpos!", {
-        description: "Contrações, diário, mensagens, serviços, consultas, dados de parto e status foram resetados.",
-      });
-    } catch (error) {
-      console.error("Error resetting test data:", error);
-      toast.error("Erro ao limpar dados de teste");
-    } finally {
-      setResetting(false);
-    }
-  };
+  
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("pt-BR", {
@@ -280,45 +218,29 @@ export function ClientDetailsDialog({
             </div>
 
             {/* Quick Actions */}
-            {client.user_id && (
-              <>
-                <Separator />
+            <Separator />
             <div className="flex flex-col gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="gap-2 justify-start"
-                    onClick={() => setContractDialogOpen(true)}
-                  >
-                    <FileText className="w-4 h-4" />
-                    Contrato
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="gap-2 justify-start"
-                    onClick={() => setClientFileOpen(true)}
-                  >
-                    <Eye className="w-4 h-4" />
-                    Ficha da Cliente
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="gap-2 justify-start border-amber-300 text-amber-700 hover:bg-amber-50 hover:text-amber-700"
-                    disabled={resetting}
-                    onClick={() => setResetConfirmOpen(true)}
-                  >
-                    {resetting ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                    ) : (
-                      <RotateCcw className="w-4 h-4" />
-                    )}
-                    Limpar dados da usuária
-                  </Button>
-                </div>
-              </>
-            )}
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-2 justify-start"
+                onClick={() => setClientFileOpen(true)}
+              >
+                <Eye className="w-4 h-4" />
+                Ficha da Cliente
+              </Button>
+              {client.user_id && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-2 justify-start"
+                  onClick={() => setContractDialogOpen(true)}
+                >
+                  <FileText className="w-4 h-4" />
+                  Contrato
+                </Button>
+              )}
+            </div>
 
             {!client.user_id && client.status === "gestante" && client.dpp && (
               <div className="p-3 bg-muted/50 rounded-lg text-sm text-muted-foreground flex items-center gap-2">
@@ -650,34 +572,7 @@ export function ClientDetailsDialog({
         />
       )}
 
-      <AlertDialog open={resetConfirmOpen} onOpenChange={setResetConfirmOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Limpar dados da usuária?</AlertDialogTitle>
-            <AlertDialogDescription asChild>
-              <div className="text-sm text-muted-foreground">
-                <p className="mb-2">As seguintes informações serão apagadas permanentemente:</p>
-                <ul className="list-disc pl-5 space-y-1 mb-3">
-                  <li>Contrações registradas</li>
-                  <li>Diário da gestante</li>
-                  <li>Notificações enviadas</li>
-                  <li>Solicitações de serviço</li>
-                  <li>Consultas agendadas</li>
-                  <li>Dados de trabalho de parto e nascimento</li>
-                  <li>Status será resetado para "Gestante"</li>
-                </ul>
-                <p><strong>Dados financeiros (plano, parcelas e transações) serão mantidos.</strong></p>
-              </div>
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleResetTestData}>
-              Limpar dados
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      
 
       <ClientFileDialog
         open={clientFileOpen}

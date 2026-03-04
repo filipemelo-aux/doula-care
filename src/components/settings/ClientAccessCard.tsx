@@ -11,8 +11,18 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
-import { Baby, Copy, Eye, EyeOff, Loader2, UserPlus, RotateCcw } from "lucide-react";
+import { Baby, Copy, Eye, EyeOff, Loader2, UserPlus, RotateCcw, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import {
   Tooltip,
@@ -80,6 +90,8 @@ export function ClientAccessCard({ clientsWithAccounts, loadingClients }: Client
   const queryClient = useQueryClient();
   const [showPasswords, setShowPasswords] = useState<Record<string, boolean>>({});
   const [resettingClientId, setResettingClientId] = useState<string | null>(null);
+  const [resetConfirmClient, setResetConfirmClient] = useState<Client | null>(null);
+  const [resettingData, setResettingData] = useState(false);
   const provisionMutation = useMutation({
     mutationFn: async () => {
       const { data, error } = await supabase.functions.invoke("provision-existing-clients");
@@ -144,6 +156,54 @@ export function ClientAccessCard({ clientsWithAccounts, loadingClients }: Client
   const handleResetPassword = (clientId: string, clientName: string) => {
     if (confirm(`Deseja resetar a senha de ${clientName}?\n\nA nova senha será o dia e mês da DPP (formato DDMM).`)) {
       resetPasswordMutation.mutate(clientId);
+    }
+  };
+
+  const handleResetTestData = async () => {
+    if (!resetConfirmClient) return;
+    setResettingData(true);
+    try {
+      const clientId = resetConfirmClient.id;
+      const [r1, r2, r3, r4, r5] = await Promise.all([
+        supabase.from("contractions").delete().eq("client_id", clientId),
+        supabase.from("pregnancy_diary").delete().eq("client_id", clientId),
+        supabase.from("client_notifications").delete().eq("client_id", clientId),
+        supabase.from("service_requests").delete().eq("client_id", clientId),
+        supabase.from("appointments").delete().eq("client_id", clientId),
+      ]);
+      if (r1.error) throw r1.error;
+      if (r2.error) throw r2.error;
+      if (r3.error) throw r3.error;
+      if (r4.error) throw r4.error;
+      if (r5.error) throw r5.error;
+
+      const { error: updateError } = await supabase
+        .from("clients")
+        .update({
+          labor_started_at: null,
+          birth_occurred: false,
+          birth_date: null,
+          birth_time: null,
+          birth_weight: null,
+          birth_height: null,
+          status: "gestante" as const,
+          custom_status: null,
+          baby_names: [],
+        })
+        .eq("id", clientId);
+      if (updateError) throw updateError;
+
+      queryClient.invalidateQueries({ queryKey: ["clients"] });
+      queryClient.invalidateQueries({ queryKey: ["clients-with-accounts"] });
+      setResetConfirmClient(null);
+      toast.success("Dados limpos!", {
+        description: "Contrações, diário, mensagens, serviços, consultas e dados de parto resetados.",
+      });
+    } catch (error) {
+      console.error("Error resetting test data:", error);
+      toast.error("Erro ao limpar dados");
+    } finally {
+      setResettingData(false);
     }
   };
 
@@ -283,6 +343,7 @@ export function ClientAccessCard({ clientsWithAccounts, loadingClients }: Client
                         )}
                       </TableCell>
                       <TableCell className="px-2 py-1.5">
+                        <div className="flex items-center gap-0.5">
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <Button
@@ -303,6 +364,22 @@ export function ClientAccessCard({ clientsWithAccounts, loadingClients }: Client
                             <p>Resetar senha</p>
                           </TooltipContent>
                         </Tooltip>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-6 w-6 text-destructive hover:text-destructive"
+                              onClick={() => setResetConfirmClient(client)}
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Limpar dados da usuária</p>
+                          </TooltipContent>
+                        </Tooltip>
+                        </div>
                       </TableCell>
                     </TableRow>
                   );
@@ -316,6 +393,36 @@ export function ClientAccessCard({ clientsWithAccounts, loadingClients }: Client
           </p>
         )}
       </CardContent>
+
+      <AlertDialog open={!!resetConfirmClient} onOpenChange={(open) => !open && setResetConfirmClient(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Limpar dados de {resetConfirmClient?.full_name?.split(' ')[0]}?</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="text-sm text-muted-foreground">
+                <p className="mb-2">As seguintes informações serão apagadas permanentemente:</p>
+                <ul className="list-disc pl-5 space-y-1 mb-3">
+                  <li>Contrações registradas</li>
+                  <li>Diário da gestante</li>
+                  <li>Notificações enviadas</li>
+                  <li>Solicitações de serviço</li>
+                  <li>Consultas agendadas</li>
+                  <li>Dados de trabalho de parto e nascimento</li>
+                  <li>Status será resetado para "Gestante"</li>
+                </ul>
+                <p><strong>Dados financeiros serão mantidos.</strong></p>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleResetTestData} disabled={resettingData}>
+              {resettingData ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+              Limpar dados
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   );
 }
