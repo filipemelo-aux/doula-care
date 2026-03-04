@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { ContractEditorDialog } from "./ContractEditorDialog";
 import { ClientFileDialog } from "./ClientFileDialog";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 
 import {
   Dialog,
@@ -9,17 +9,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
@@ -34,8 +23,7 @@ import {
   Calendar,
   FileText,
   KeyRound,
-  RotateCcw,
-  Loader2,
+  
   Eye,
   Stethoscope,
   AlertTriangle,
