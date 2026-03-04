@@ -1135,6 +1135,8 @@ export function NotificationsCenter({ fullPage = false }: NotificationsCenterPro
                                       ? "bg-orange-500/20"
                                       : child.type === "service_request"
                                       ? "bg-purple-500/20"
+                                      : child.type === "appointment_request"
+                                      ? "bg-primary/20"
                                       : "bg-emerald-500/20"
                                   }`}>
                                     {child.type === "labor_started" ? (
@@ -1143,6 +1145,8 @@ export function NotificationsCenter({ fullPage = false }: NotificationsCenterPro
                                       <BookHeart className="h-2.5 w-2.5 text-emerald-600" />
                                     ) : child.type === "service_request" ? (
                                       <Sparkles className="h-2.5 w-2.5 text-purple-600" />
+                                    ) : child.type === "appointment_request" ? (
+                                      <CalendarCheck className="h-2.5 w-2.5 text-primary" />
                                     ) : (
                                       <Timer className={`h-2.5 w-2.5 ${
                                         child.priority === "high" ? "text-destructive" : "text-orange-500"
