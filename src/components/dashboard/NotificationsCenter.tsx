@@ -910,7 +910,7 @@ export function NotificationsCenter({ fullPage = false }: NotificationsCenterPro
                                   <span className={`text-[11px] lg:text-xs font-medium truncate ${
                                     isPostTerm
                                       ? "text-destructive"
-                                      : notification.type === "new_diary_entry"
+                                      : notification.type === "new_diary_entry" || notification.type === "appointment_request"
                                       ? "text-primary"
                                       : notification.type === "service_request"
                                       ? "text-purple-600"
