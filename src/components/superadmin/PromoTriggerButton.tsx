@@ -20,6 +20,7 @@ import { Label } from "@/components/ui/label";
 import { Gift, Loader2, Crown, Trash2, Zap } from "lucide-react";
 import { toast } from "sonner";
 import { addDays, format } from "date-fns";
+import { sendPushNotification } from "@/lib/pushNotifications";
 import { ptBR } from "date-fns/locale";
 
 interface PromoTriggerButtonProps {
