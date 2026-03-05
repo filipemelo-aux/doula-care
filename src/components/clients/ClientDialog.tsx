@@ -423,8 +423,8 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
 
   const mutation = useMutation({
     mutationFn: async (data: ClientFormData) => {
-      // Apply discount for à vista payments
-      const discountPercent = data.payment_type === "a_vista" ? (data.discount_percent || 0) : 0;
+      // Apply discount for any payment type
+      const discountPercent = data.discount_percent || 0;
       const finalPlanValue = discountPercent > 0 
         ? Math.round((data.plan_value || 0) * (1 - discountPercent / 100) * 100) / 100
         : (data.plan_value || 0);
@@ -1200,69 +1200,67 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
                       </FormItem>
                     )}
                   />
+                  <FormField
+                    control={form.control}
+                    name="discount_percent"
+                    render={({ field }) => {
+                      const planVal = form.watch("plan_value") || 0;
+                      const disc = Number(field.value ?? 0);
+                      const discountedVal = planVal * (1 - disc / 100);
+                      return (
+                        <FormItem className="space-y-1">
+                          <FormLabel className="text-xs">Desconto (%)</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="text"
+                              inputMode="decimal"
+                              className="h-9 text-sm"
+                              value={field.value === 0 || field.value === undefined || field.value === null ? "" : String(field.value)}
+                              onChange={(e) => {
+                                const rawValue = e.target.value.replace(/[^0-9.,]/g, "");
+                                if (rawValue === "") {
+                                  field.onChange(0);
+                                  return;
+                                }
+                                const parsed = parseFloat(rawValue.replace(",", "."));
+                                if (Number.isNaN(parsed)) return;
+                                field.onChange(Math.min(100, Math.max(0, parsed)));
+                              }}
+                              onBlur={() => {
+                                if (!field.value) field.onChange(0);
+                              }}
+                              placeholder="0"
+                            />
+                          </FormControl>
+                          {disc > 0 && (
+                            <p className="text-[10px] text-muted-foreground">
+                              Valor com desconto: {discountedVal.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+                            </p>
+                          )}
+                          <FormMessage />
+                        </FormItem>
+                      );
+                    }}
+                  />
                   {form.watch("payment_type") === "a_vista" && (
-                    <>
-                      <FormField
-                        control={form.control}
-                        name="discount_percent"
-                        render={({ field }) => {
-                          const planVal = form.watch("plan_value") || 0;
-                          const disc = Number(field.value ?? 0);
-                          const discountedVal = planVal * (1 - disc / 100);
-                          return (
-                            <FormItem className="space-y-1">
-                              <FormLabel className="text-xs">Desconto à Vista (%)</FormLabel>
-                              <FormControl>
-                                <Input
-                                  type="text"
-                                  inputMode="decimal"
-                                  className="h-9 text-sm"
-                                  value={field.value === 0 || field.value === undefined || field.value === null ? "" : String(field.value)}
-                                  onChange={(e) => {
-                                    const rawValue = e.target.value.replace(/[^0-9.,]/g, "");
-                                    if (rawValue === "") {
-                                      field.onChange(0);
-                                      return;
-                                    }
-                                    const parsed = parseFloat(rawValue.replace(",", "."));
-                                    if (Number.isNaN(parsed)) return;
-                                    field.onChange(Math.min(100, Math.max(0, parsed)));
-                                  }}
-                                  onBlur={() => {
-                                    if (!field.value) field.onChange(0);
-                                  }}
-                                  placeholder="0"
-                                />
-                              </FormControl>
-                              {disc > 0 && (
-                                <p className="text-[10px] text-muted-foreground">
-                                  Valor com desconto: {discountedVal.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
-                                </p>
-                              )}
-                              <FormMessage />
-                            </FormItem>
-                          );
-                        }}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="payment_date_avista"
-                        render={({ field }) => (
-                          <FormItem className="space-y-1">
-                            <FormLabel className="text-xs">Data do Pagamento</FormLabel>
-                            <FormControl>
-                              <Input 
-                                type="date" 
-                                className="h-9 text-sm"
-                                value={field.value || ""}
-                                onChange={(e) => field.onChange(e.target.value)}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </>
+                    <FormField
+                      control={form.control}
+                      name="payment_date_avista"
+                      render={({ field }) => (
+                        <FormItem className="space-y-1">
+                          <FormLabel className="text-xs">Data do Pagamento</FormLabel>
+                          <FormControl>
+                            <Input 
+                              type="date" 
+                              className="h-9 text-sm"
+                              value={field.value || ""}
+                              onChange={(e) => field.onChange(e.target.value)}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                   )}
                    {form.watch("payment_type") === "parcelado" && (
                     <>
