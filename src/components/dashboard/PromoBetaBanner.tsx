@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -12,7 +12,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Card, CardContent } from "@/components/ui/card";
-import { Gift, CalendarPlus, Percent, Loader2, CheckCircle, Clock, Sparkles } from "lucide-react";
+import { Gift, CalendarPlus, Percent, Loader2, CheckCircle, Clock, Sparkles, X } from "lucide-react";
 import { toast } from "sonner";
 import { format, differenceInDays, addDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -21,6 +21,7 @@ export function PromoBetaBanner() {
   const { organizationId } = useAuth();
   const queryClient = useQueryClient();
   const [choiceDialogOpen, setChoiceDialogOpen] = useState(false);
+  const [dismissed, setDismissed] = useState(false);
 
   const { data: promo } = useQuery({
     queryKey: ["my-org-promo", organizationId],
@@ -89,9 +90,8 @@ export function PromoBetaBanner() {
   });
 
   if (!promo) return null;
-
-  // Don't show for completed promos
   if (promo.status === "completed") return null;
+  if (dismissed) return null;
 
   const trialEndsAt = promo.trial_ends_at ? new Date(promo.trial_ends_at) : null;
   const now = new Date();
@@ -103,7 +103,7 @@ export function PromoBetaBanner() {
   if (promo.status === "trial_active" && !isTrialExpired) {
     return (
       <>
-        <Alert className="border-primary/30 bg-gradient-to-r from-primary/5 to-accent/5">
+        <Alert className="border-primary/30 bg-gradient-to-r from-primary/5 to-accent/5 relative">
           <Gift className="h-4 w-4 text-primary" />
           <AlertTitle className="text-primary text-sm font-semibold flex items-center gap-2">
             <Sparkles className="h-3.5 w-3.5" />
@@ -123,6 +123,14 @@ export function PromoBetaBanner() {
               </Button>
             )}
           </AlertDescription>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="absolute right-2 top-2 h-6 w-6 p-0"
+            onClick={() => setDismissed(true)}
+          >
+            <X className="h-3.5 w-3.5" />
+          </Button>
         </Alert>
         <BonusChoiceDialog
           open={choiceDialogOpen}

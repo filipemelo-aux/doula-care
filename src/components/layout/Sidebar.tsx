@@ -1,6 +1,8 @@
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import logo from "@/assets/logo.png";
 import { useOrgBranding } from "@/hooks/useOrgBranding";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import {
   LayoutDashboard,
   Users,
@@ -12,12 +14,16 @@ import {
   CalendarDays,
   Bell,
   MessageCircle,
+  Gift,
+  Sparkles,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { usePlanLimits } from "@/hooks/usePlanLimits";
 import { useAdminUnreadCounts } from "@/hooks/useAdminUnreadCounts";
+import { useAuth } from "@/contexts/AuthContext";
+import { differenceInDays } from "date-fns";
 
 interface SidebarProps {
   isOpen: boolean;
@@ -43,6 +49,29 @@ export function Sidebar({ isOpen, onToggle, onNavigate }: SidebarProps) {
   const { planLabel, plan, limits } = usePlanLimits();
   const { logoUrl: orgLogo, displayName } = useOrgBranding();
   const { unreadMessages, unreadNotifications } = useAdminUnreadCounts();
+  const { organizationId } = useAuth();
+
+  const { data: promo } = useQuery({
+    queryKey: ["my-org-promo", organizationId],
+    queryFn: async () => {
+      if (!organizationId) return null;
+      const { data, error } = await supabase
+        .from("org_promotions" as any)
+        .select("*")
+        .eq("organization_id", organizationId)
+        .eq("promotion_type", "beta_tester")
+        .maybeSingle();
+      if (error) throw error;
+      return data as any;
+    },
+    enabled: !!organizationId,
+  });
+
+  const promoActive = promo && (promo.status === "trial_active" || promo.status === "bonus_active");
+  const promoTrialEnds = promo?.trial_ends_at ? new Date(promo.trial_ends_at) : null;
+  const promoBonusEnds = promo?.bonus_ends_at ? new Date(promo.bonus_ends_at) : null;
+  const promoEndDate = promo?.status === "bonus_active" ? promoBonusEnds : promoTrialEnds;
+  const promoDaysLeft = promoEndDate ? Math.max(0, differenceInDays(promoEndDate, new Date())) : 0;
 
   const getBadgeCount = (key?: "notifications" | "messages") => {
     if (key === "notifications") return unreadNotifications;
@@ -143,6 +172,19 @@ export function Sidebar({ isOpen, onToggle, onNavigate }: SidebarProps) {
           <p className="text-xs text-sidebar-foreground/60">
             {plan === "free" ? "Limite de 5 gestantes" : plan === "pro" ? "Gestantes ilimitadas" : "Recursos avançados"}
           </p>
+          {promoActive && (
+            <div className="mt-2 pt-2 border-t border-sidebar-border/50">
+              <div className="flex items-center gap-1.5 text-primary">
+                <Gift className="h-3 w-3" />
+                <span className="text-[11px] font-medium">
+                  {promo.status === "trial_active" ? "Trial Beta" : promo.bonus_choice === "extra_30_days" ? "Bônus +30 dias" : "50% desconto anual"}
+                </span>
+              </div>
+              <p className="text-[10px] text-sidebar-foreground/60 mt-0.5">
+                {promoDaysLeft} dia{promoDaysLeft !== 1 ? "s" : ""} restante{promoDaysLeft !== 1 ? "s" : ""}
+              </p>
+            </div>
+          )}
         </div>
       </div>
     </aside>
