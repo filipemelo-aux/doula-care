@@ -414,13 +414,13 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
     if (watchedInstallments <= 1 || entryType !== "percentage") return;
     if (entryPercentage <= 0 || entryPercentage >= 100) return;
 
-    const entryValue = Math.round(watchedPlanValue * (entryPercentage / 100) * 100) / 100;
-    const remaining = watchedPlanValue - entryValue;
+    const entryValue = Math.round(effectivePlanValue * (entryPercentage / 100) * 100) / 100;
+    const remaining = effectivePlanValue - entryValue;
     const perInstallment = Math.round((remaining / (watchedInstallments - 1)) * 100) / 100;
     const amounts = Array(watchedInstallments).fill(perInstallment);
     amounts[0] = entryValue;
     const sumSoFar = amounts.reduce((a: number, b: number) => a + b, 0);
-    const roundingDiff = Math.round((watchedPlanValue - sumSoFar) * 100) / 100;
+    const roundingDiff = Math.round((effectivePlanValue - sumSoFar) * 100) / 100;
     if (Math.abs(roundingDiff) > 0.001) amounts[amounts.length - 1] += roundingDiff;
     setCustomInstallmentAmounts(amounts);
   }, [entryType, entryPercentage]);
