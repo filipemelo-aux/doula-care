@@ -12,6 +12,7 @@ import { PlanLimitsCard } from "@/components/superadmin/PlanLimitsCard";
 import { OrgBillingCard } from "@/components/superadmin/OrgBillingCard";
 import { UserManagementCard } from "@/components/superadmin/UserManagementCard";
 import { PromoTriggerButton } from "@/components/superadmin/PromoTriggerButton";
+import { useOnlineOrgs } from "@/hooks/useOnlineOrgs";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
@@ -37,6 +38,7 @@ const planBadgeStyles: Record<string, string> = {
 export default function SuperAdminDashboard() {
   const { signOut } = useAuth();
   const queryClient = useQueryClient();
+  const onlineOrgIds = useOnlineOrgs();
 
   const { data: organizations = [], isLoading } = useQuery({
     queryKey: ["super-admin-orgs"],
@@ -157,8 +159,11 @@ export default function SuperAdminDashboard() {
         <CardContent className="p-4">
           <div className="flex items-start gap-3">
             {/* Avatar */}
-            <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
+            <div className="relative flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
               <span className="text-sm font-bold text-primary">{initials}</span>
+              {onlineOrgIds.has(org.id) && (
+                <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-emerald-500 border-2 border-card" title="Online agora" />
+              )}
             </div>
 
             {/* Info */}
