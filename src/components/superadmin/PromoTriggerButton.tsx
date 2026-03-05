@@ -195,6 +195,26 @@ export function PromoTriggerButton({ orgId, orgName }: PromoTriggerButtonProps) 
             </TooltipTrigger>
             <TooltipContent side="top" className="text-xs">Remover promoção</TooltipContent>
           </Tooltip>
+          {promo.status === "trial_active" && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-5 w-5 p-0 text-amber-500/60 hover:text-amber-600 hover:bg-amber-500/10"
+                  onClick={() => forceExpireMutation.mutate()}
+                  disabled={forceExpireMutation.isPending}
+                >
+                  {forceExpireMutation.isPending ? (
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                  ) : (
+                    <Zap className="h-3 w-3" />
+                  )}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="top" className="text-xs">Expirar trial agora</TooltipContent>
+            </Tooltip>
+          )}
         </TooltipProvider>
       </div>
     );
