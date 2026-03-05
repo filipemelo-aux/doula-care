@@ -16,6 +16,7 @@ import {
   MessageCircle,
   Gift,
   Sparkles,
+  Crown,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -59,7 +60,7 @@ export function Sidebar({ isOpen, onToggle, onNavigate }: SidebarProps) {
         .from("org_promotions" as any)
         .select("*")
         .eq("organization_id", organizationId)
-        .eq("promotion_type", "beta_tester")
+        .in("promotion_type", ["beta_tester", "lifetime_premium"])
         .maybeSingle();
       if (error) throw error;
       return data as any;
@@ -67,7 +68,8 @@ export function Sidebar({ isOpen, onToggle, onNavigate }: SidebarProps) {
     enabled: !!organizationId,
   });
 
-  const promoActive = promo && (promo.status === "trial_active" || promo.status === "bonus_active");
+  const isLifetime = promo?.promotion_type === "lifetime_premium";
+  const promoActive = promo && (promo.status === "trial_active" || promo.status === "bonus_active" || promo.status === "lifetime_active");
   const promoTrialEnds = promo?.trial_ends_at ? new Date(promo.trial_ends_at) : null;
   const promoBonusEnds = promo?.bonus_ends_at ? new Date(promo.bonus_ends_at) : null;
   const promoEndDate = promo?.status === "bonus_active" ? promoBonusEnds : promoTrialEnds;
@@ -175,14 +177,28 @@ export function Sidebar({ isOpen, onToggle, onNavigate }: SidebarProps) {
           {promoActive && (
             <div className="mt-2 pt-2 border-t border-sidebar-border/50">
               <div className="flex items-center gap-1.5 text-primary">
-                <Gift className="h-3 w-3" />
-                <span className="text-[11px] font-medium">
-                  {promo.status === "trial_active" ? "Trial Beta" : promo.bonus_choice === "extra_30_days" ? "Bônus +30 dias" : "50% desconto anual"}
-                </span>
+                {isLifetime && promo.status === "lifetime_active" ? (
+                  <>
+                    <Crown className="h-3 w-3 text-amber-500" />
+                    <span className="text-[11px] font-medium text-amber-600">Premium Vitalício</span>
+                  </>
+                ) : (
+                  <>
+                    <Gift className="h-3 w-3" />
+                    <span className="text-[11px] font-medium">
+                      {promo.status === "trial_active" ? "Trial Beta" : promo.bonus_choice === "extra_30_days" ? "Bônus +30 dias" : "50% desconto anual"}
+                    </span>
+                  </>
+                )}
               </div>
-              <p className="text-[10px] text-sidebar-foreground/60 mt-0.5">
-                {promoDaysLeft} dia{promoDaysLeft !== 1 ? "s" : ""} restante{promoDaysLeft !== 1 ? "s" : ""}
-              </p>
+              {promo.status !== "lifetime_active" && (
+                <p className="text-[10px] text-sidebar-foreground/60 mt-0.5">
+                  {promoDaysLeft} dia{promoDaysLeft !== 1 ? "s" : ""} restante{promoDaysLeft !== 1 ? "s" : ""}
+                </p>
+              )}
+              {promo.status === "lifetime_active" && (
+                <p className="text-[10px] text-sidebar-foreground/60 mt-0.5">Acesso sem limite de tempo</p>
+              )}
             </div>
           )}
         </div>

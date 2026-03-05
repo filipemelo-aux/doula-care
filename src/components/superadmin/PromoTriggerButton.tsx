@@ -14,7 +14,9 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Gift, Loader2, CheckCircle, Clock } from "lucide-react";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
+import { Gift, Loader2, Crown } from "lucide-react";
 import { toast } from "sonner";
 import { addDays, format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -24,16 +26,20 @@ interface PromoTriggerButtonProps {
   orgName: string;
 }
 
+type PromoType = "beta_tester" | "lifetime_premium";
+
 const statusLabels: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
   pending: { label: "Pendente", variant: "outline" },
   trial_active: { label: "Trial 15d", variant: "default" },
   awaiting_choice: { label: "Aguardando escolha", variant: "secondary" },
   bonus_active: { label: "Bônus ativo", variant: "default" },
   completed: { label: "Concluído", variant: "outline" },
+  lifetime_active: { label: "Vitalício ∞", variant: "default" },
 };
 
 export function PromoTriggerButton({ orgId, orgName }: PromoTriggerButtonProps) {
   const queryClient = useQueryClient();
+  const [selectedPromo, setSelectedPromo] = useState<PromoType>("beta_tester");
 
   const { data: promo } = useQuery({
     queryKey: ["org-promo", orgId],
@@ -42,7 +48,7 @@ export function PromoTriggerButton({ orgId, orgName }: PromoTriggerButtonProps) 
         .from("org_promotions" as any)
         .select("*")
         .eq("organization_id", orgId)
-        .eq("promotion_type", "beta_tester")
+        .in("promotion_type", ["beta_tester", "lifetime_premium"])
         .maybeSingle();
       if (error) throw error;
       return data as any;
@@ -59,7 +65,7 @@ export function PromoTriggerButton({ orgId, orgName }: PromoTriggerButtonProps) 
         .from("org_promotions" as any)
         .insert({
           organization_id: orgId,
-          promotion_type: "beta_tester",
+          promotion_type: selectedPromo,
           trial_started_at: now.toISOString(),
           trial_ends_at: trialEnds.toISOString(),
           status: "trial_active",
@@ -73,13 +79,13 @@ export function PromoTriggerButton({ orgId, orgName }: PromoTriggerButtonProps) 
         .eq("id", orgId);
       if (orgError) throw orgError;
 
-      // Send notification to doula
+      // Send notification - same message for both (lifetime is a surprise)
       const { error: notifError } = await supabase
         .from("org_notifications")
         .insert({
           organization_id: orgId,
           title: "🎉 Promoção Beta Tester ativada!",
-          message: `Parabéns! Você ganhou 15 dias gratuitos do plano Premium completo como agradecimento por ser uma testadora beta. Ao final do período, você poderá escolher um bônus exclusivo!`,
+          message: `Parabéns! Você ganhou 15 dias gratuitos do plano Premium completo como agradecimento por ser uma testadora beta. Ao final do período, você receberá uma surpresa exclusiva!`,
           type: "promotion",
         });
       if (notifError) throw notifError;
@@ -94,15 +100,25 @@ export function PromoTriggerButton({ orgId, orgName }: PromoTriggerButtonProps) 
 
   if (promo) {
     const info = statusLabels[promo.status] || statusLabels.pending;
+    const isLifetime = promo.promotion_type === "lifetime_premium";
     return (
       <div className="flex items-center gap-1.5">
-        <Gift className="h-3.5 w-3.5 text-primary" />
+        {isLifetime ? (
+          <Crown className="h-3.5 w-3.5 text-amber-500" />
+        ) : (
+          <Gift className="h-3.5 w-3.5 text-primary" />
+        )}
         <Badge variant={info.variant} className="text-[10px] h-5">
           {info.label}
         </Badge>
-        {promo.bonus_choice && (
+        {promo.bonus_choice && !isLifetime && (
           <Badge variant="outline" className="text-[10px] h-5">
             {promo.bonus_choice === "extra_30_days" ? "+30 dias" : "50% anual"}
+          </Badge>
+        )}
+        {isLifetime && promo.status === "trial_active" && (
+          <Badge variant="outline" className="text-[10px] h-5 border-amber-500/30 text-amber-600">
+            surpresa ao final
           </Badge>
         )}
         {promo.trial_ends_at && promo.status === "trial_active" && (
@@ -129,23 +145,47 @@ export function PromoTriggerButton({ orgId, orgName }: PromoTriggerButtonProps) 
       </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Enviar Promoção Beta Tester</AlertDialogTitle>
-          <AlertDialogDescription className="space-y-2">
-            <p>
-              Ao confirmar, <strong>{orgName}</strong> receberá:
-            </p>
-            <ul className="list-disc pl-5 space-y-1 text-sm">
-              <li>15 dias gratuitos do plano <strong>Premium</strong></li>
-              <li>Após 15 dias, poderá escolher entre:
-                <ul className="list-disc pl-5 mt-1 space-y-0.5">
-                  <li><strong>+30 dias grátis</strong> de Premium</li>
-                  <li><strong>50% de desconto</strong> no plano Premium anual</li>
-                </ul>
-              </li>
-            </ul>
-            <p className="text-xs text-muted-foreground mt-2">
-              O plano será imediatamente atualizado para Premium.
-            </p>
+          <AlertDialogTitle>Enviar Promoção</AlertDialogTitle>
+          <AlertDialogDescription asChild>
+            <div className="space-y-4">
+              <p>Escolha o tipo de promoção para <strong>{orgName}</strong>:</p>
+
+              <RadioGroup
+                value={selectedPromo}
+                onValueChange={(v) => setSelectedPromo(v as PromoType)}
+                className="space-y-3"
+              >
+                <div className="flex items-start gap-3 p-3 rounded-lg border border-border hover:border-primary/40 transition-colors">
+                  <RadioGroupItem value="beta_tester" id="beta_tester" className="mt-0.5" />
+                  <Label htmlFor="beta_tester" className="cursor-pointer flex-1 space-y-1">
+                    <div className="flex items-center gap-2">
+                      <Gift className="h-4 w-4 text-primary" />
+                      <span className="font-semibold text-sm text-foreground">Beta Tester</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      15 dias grátis de Premium → depois escolhe: +30 dias ou 50% desconto anual.
+                    </p>
+                  </Label>
+                </div>
+
+                <div className="flex items-start gap-3 p-3 rounded-lg border border-border hover:border-amber-500/40 transition-colors">
+                  <RadioGroupItem value="lifetime_premium" id="lifetime_premium" className="mt-0.5" />
+                  <Label htmlFor="lifetime_premium" className="cursor-pointer flex-1 space-y-1">
+                    <div className="flex items-center gap-2">
+                      <Crown className="h-4 w-4 text-amber-500" />
+                      <span className="font-semibold text-sm text-foreground">Acesso Vitalício Premium</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      15 dias de trial → ao final, revela acesso Premium <strong>vitalício</strong>. A doula ficará em suspense!
+                    </p>
+                  </Label>
+                </div>
+              </RadioGroup>
+
+              <p className="text-xs text-muted-foreground">
+                O plano será imediatamente atualizado para Premium. Ambas as opções começam com 15 dias de trial.
+              </p>
+            </div>
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
@@ -153,6 +193,8 @@ export function PromoTriggerButton({ orgId, orgName }: PromoTriggerButtonProps) 
           <AlertDialogAction onClick={() => sendPromoMutation.mutate()}>
             {sendPromoMutation.isPending ? (
               <Loader2 className="h-4 w-4 animate-spin mr-1" />
+            ) : selectedPromo === "lifetime_premium" ? (
+              <Crown className="h-4 w-4 mr-1" />
             ) : (
               <Gift className="h-4 w-4 mr-1" />
             )}
