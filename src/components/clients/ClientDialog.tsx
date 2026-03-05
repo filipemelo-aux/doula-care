@@ -1491,9 +1491,9 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
                               placeholder="Ex: 30"
                             />
                             <span className="text-xs text-muted-foreground">%</span>
-                            {entryPercentage > 0 && watchedPlanValue > 0 && (
+                            {entryPercentage > 0 && effectivePlanValue > 0 && (
                               <span className="text-xs text-foreground font-medium">
-                                = {maskCurrency(String(Math.round(watchedPlanValue * (entryPercentage / 100) * 100)))}
+                                = {maskCurrency(String(Math.round(effectivePlanValue * (entryPercentage / 100) * 100)))}
                               </span>
                             )}
                           </div>
