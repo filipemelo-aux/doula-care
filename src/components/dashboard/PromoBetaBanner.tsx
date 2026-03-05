@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -12,7 +12,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Card, CardContent } from "@/components/ui/card";
-import { Gift, CalendarPlus, Percent, Loader2, CheckCircle, Clock, Sparkles } from "lucide-react";
+import { Gift, CalendarPlus, Percent, Loader2, CheckCircle, Clock, Sparkles, X } from "lucide-react";
 import { toast } from "sonner";
 import { format, differenceInDays, addDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
