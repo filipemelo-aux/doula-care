@@ -210,6 +210,10 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
   const watchedInstallments = form.watch("installments") || 1;
   const watchedInstallmentFrequency = form.watch("installment_frequency") || "mensal";
   const watchedPlanValue = form.watch("plan_value") || 0;
+  const watchedDiscountPercent = form.watch("discount_percent") || 0;
+  const effectivePlanValue = watchedDiscountPercent > 0
+    ? Math.round(watchedPlanValue * (1 - watchedDiscountPercent / 100) * 100) / 100
+    : watchedPlanValue;
 
   // Date-based auto-pay logic
   const today = format(new Date(), "yyyy-MM-dd");
@@ -380,17 +384,17 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
 
     if (customInstallmentAmounts.length !== watchedInstallments) {
       if (isPercentageEntry) {
-        const entryValue = Math.round(watchedPlanValue * (entryPercentage / 100) * 100) / 100;
-        const remaining = watchedPlanValue - entryValue;
+        const entryValue = Math.round(effectivePlanValue * (entryPercentage / 100) * 100) / 100;
+        const remaining = effectivePlanValue - entryValue;
         const perInstallment = Math.round((remaining / (watchedInstallments - 1)) * 100) / 100;
         const amounts = Array(watchedInstallments).fill(perInstallment);
         amounts[0] = entryValue;
         const sumSoFar = amounts.reduce((a: number, b: number) => a + b, 0);
-        const roundingDiff = Math.round((watchedPlanValue - sumSoFar) * 100) / 100;
+        const roundingDiff = Math.round((effectivePlanValue - sumSoFar) * 100) / 100;
         if (Math.abs(roundingDiff) > 0.001) amounts[amounts.length - 1] += roundingDiff;
         setCustomInstallmentAmounts(amounts);
       } else {
-        const equalValue = watchedInstallments > 0 ? watchedPlanValue / watchedInstallments : 0;
+        const equalValue = watchedInstallments > 0 ? effectivePlanValue / watchedInstallments : 0;
         setCustomInstallmentAmounts(Array(watchedInstallments).fill(equalValue));
       }
     }
@@ -398,7 +402,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
     watchedPaymentType,
     watchedInstallmentFrequency,
     watchedInstallments,
-    watchedPlanValue,
+    effectivePlanValue,
     customInstallmentAmounts.length,
     entryType,
     entryPercentage,
@@ -410,21 +414,21 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
     if (watchedInstallments <= 1 || entryType !== "percentage") return;
     if (entryPercentage <= 0 || entryPercentage >= 100) return;
 
-    const entryValue = Math.round(watchedPlanValue * (entryPercentage / 100) * 100) / 100;
-    const remaining = watchedPlanValue - entryValue;
+    const entryValue = Math.round(effectivePlanValue * (entryPercentage / 100) * 100) / 100;
+    const remaining = effectivePlanValue - entryValue;
     const perInstallment = Math.round((remaining / (watchedInstallments - 1)) * 100) / 100;
     const amounts = Array(watchedInstallments).fill(perInstallment);
     amounts[0] = entryValue;
     const sumSoFar = amounts.reduce((a: number, b: number) => a + b, 0);
-    const roundingDiff = Math.round((watchedPlanValue - sumSoFar) * 100) / 100;
+    const roundingDiff = Math.round((effectivePlanValue - sumSoFar) * 100) / 100;
     if (Math.abs(roundingDiff) > 0.001) amounts[amounts.length - 1] += roundingDiff;
     setCustomInstallmentAmounts(amounts);
-  }, [entryType, entryPercentage]);
+  }, [entryType, entryPercentage, effectivePlanValue, watchedInstallments]);
 
   const mutation = useMutation({
     mutationFn: async (data: ClientFormData) => {
-      // Apply discount for à vista payments
-      const discountPercent = data.payment_type === "a_vista" ? (data.discount_percent || 0) : 0;
+      // Apply discount for any payment type
+      const discountPercent = data.discount_percent || 0;
       const finalPlanValue = discountPercent > 0 
         ? Math.round((data.plan_value || 0) * (1 - discountPercent / 100) * 100) / 100
         : (data.plan_value || 0);
@@ -1200,69 +1204,67 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
                       </FormItem>
                     )}
                   />
+                  <FormField
+                    control={form.control}
+                    name="discount_percent"
+                    render={({ field }) => {
+                      const planVal = form.watch("plan_value") || 0;
+                      const disc = Number(field.value ?? 0);
+                      const discountedVal = planVal * (1 - disc / 100);
+                      return (
+                        <FormItem className="space-y-1">
+                          <FormLabel className="text-xs">Desconto (%)</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="text"
+                              inputMode="decimal"
+                              className="h-9 text-sm"
+                              value={field.value === 0 || field.value === undefined || field.value === null ? "" : String(field.value)}
+                              onChange={(e) => {
+                                const rawValue = e.target.value.replace(/[^0-9.,]/g, "");
+                                if (rawValue === "") {
+                                  field.onChange(0);
+                                  return;
+                                }
+                                const parsed = parseFloat(rawValue.replace(",", "."));
+                                if (Number.isNaN(parsed)) return;
+                                field.onChange(Math.min(100, Math.max(0, parsed)));
+                              }}
+                              onBlur={() => {
+                                if (!field.value) field.onChange(0);
+                              }}
+                              placeholder="0"
+                            />
+                          </FormControl>
+                          {disc > 0 && (
+                            <p className="text-[10px] text-muted-foreground">
+                              Valor com desconto: {discountedVal.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+                            </p>
+                          )}
+                          <FormMessage />
+                        </FormItem>
+                      );
+                    }}
+                  />
                   {form.watch("payment_type") === "a_vista" && (
-                    <>
-                      <FormField
-                        control={form.control}
-                        name="discount_percent"
-                        render={({ field }) => {
-                          const planVal = form.watch("plan_value") || 0;
-                          const disc = Number(field.value ?? 0);
-                          const discountedVal = planVal * (1 - disc / 100);
-                          return (
-                            <FormItem className="space-y-1">
-                              <FormLabel className="text-xs">Desconto à Vista (%)</FormLabel>
-                              <FormControl>
-                                <Input
-                                  type="text"
-                                  inputMode="decimal"
-                                  className="h-9 text-sm"
-                                  value={field.value === 0 || field.value === undefined || field.value === null ? "" : String(field.value)}
-                                  onChange={(e) => {
-                                    const rawValue = e.target.value.replace(/[^0-9.,]/g, "");
-                                    if (rawValue === "") {
-                                      field.onChange(0);
-                                      return;
-                                    }
-                                    const parsed = parseFloat(rawValue.replace(",", "."));
-                                    if (Number.isNaN(parsed)) return;
-                                    field.onChange(Math.min(100, Math.max(0, parsed)));
-                                  }}
-                                  onBlur={() => {
-                                    if (!field.value) field.onChange(0);
-                                  }}
-                                  placeholder="0"
-                                />
-                              </FormControl>
-                              {disc > 0 && (
-                                <p className="text-[10px] text-muted-foreground">
-                                  Valor com desconto: {discountedVal.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
-                                </p>
-                              )}
-                              <FormMessage />
-                            </FormItem>
-                          );
-                        }}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="payment_date_avista"
-                        render={({ field }) => (
-                          <FormItem className="space-y-1">
-                            <FormLabel className="text-xs">Data do Pagamento</FormLabel>
-                            <FormControl>
-                              <Input 
-                                type="date" 
-                                className="h-9 text-sm"
-                                value={field.value || ""}
-                                onChange={(e) => field.onChange(e.target.value)}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </>
+                    <FormField
+                      control={form.control}
+                      name="payment_date_avista"
+                      render={({ field }) => (
+                        <FormItem className="space-y-1">
+                          <FormLabel className="text-xs">Data do Pagamento</FormLabel>
+                          <FormControl>
+                            <Input 
+                              type="date" 
+                              className="h-9 text-sm"
+                              value={field.value || ""}
+                              onChange={(e) => field.onChange(e.target.value)}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                   )}
                    {form.watch("payment_type") === "parcelado" && (
                     <>
@@ -1489,9 +1491,9 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
                               placeholder="Ex: 30"
                             />
                             <span className="text-xs text-muted-foreground">%</span>
-                            {entryPercentage > 0 && watchedPlanValue > 0 && (
+                            {entryPercentage > 0 && effectivePlanValue > 0 && (
                               <span className="text-xs text-foreground font-medium">
-                                = {maskCurrency(String(Math.round(watchedPlanValue * (entryPercentage / 100) * 100)))}
+                                = {maskCurrency(String(Math.round(effectivePlanValue * (entryPercentage / 100) * 100)))}
                               </span>
                             )}
                           </div>
