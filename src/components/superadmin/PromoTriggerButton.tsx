@@ -153,6 +153,30 @@ export function PromoTriggerButton({ orgId, orgName }: PromoTriggerButtonProps) 
             até {format(new Date(promo.trial_ends_at), "dd/MM", { locale: ptBR })}
           </span>
         )}
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-5 w-5 p-0 text-destructive/60 hover:text-destructive hover:bg-destructive/10"
+                onClick={() => {
+                  if (confirm(`Remover promoção de ${orgName}? O plano voltará para Free.`)) {
+                    removePromoMutation.mutate();
+                  }
+                }}
+                disabled={removePromoMutation.isPending}
+              >
+                {removePromoMutation.isPending ? (
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                ) : (
+                  <Trash2 className="h-3 w-3" />
+                )}
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="top" className="text-xs">Remover promoção</TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
       </div>
     );
   }
