@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { Gift, Loader2, Crown, Trash2 } from "lucide-react";
+import { Gift, Loader2, Crown, Trash2, Zap } from "lucide-react";
 import { toast } from "sonner";
 import { addDays, format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -121,6 +121,25 @@ export function PromoTriggerButton({ orgId, orgName }: PromoTriggerButtonProps) 
       queryClient.invalidateQueries({ queryKey: ["org-promo", orgId] });
       queryClient.invalidateQueries({ queryKey: ["super-admin-orgs"] });
       toast.success(`Promoção removida de ${orgName}`);
+    },
+    onError: (err: Error) => toast.error(`Erro: ${err.message}`),
+  });
+
+  const forceExpireMutation = useMutation({
+    mutationFn: async () => {
+      if (!promo) throw new Error("Sem promoção");
+      // Set trial_ends_at to now so the doula sees the post-trial experience
+      const { error } = await supabase
+        .from("org_promotions" as any)
+        .update({
+          trial_ends_at: new Date().toISOString(),
+        } as any)
+        .eq("id", promo.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["org-promo", orgId] });
+      toast.success(`Trial expirado manualmente para ${orgName}`);
     },
     onError: (err: Error) => toast.error(`Erro: ${err.message}`),
   });
