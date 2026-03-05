@@ -12,6 +12,7 @@ import { PlanLimitsCard } from "@/components/superadmin/PlanLimitsCard";
 import { OrgBillingCard } from "@/components/superadmin/OrgBillingCard";
 import { UserManagementCard } from "@/components/superadmin/UserManagementCard";
 import { PromoTriggerButton } from "@/components/superadmin/PromoTriggerButton";
+import { useOnlineOrgs } from "@/hooks/useOnlineOrgs";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
@@ -37,6 +38,7 @@ const planBadgeStyles: Record<string, string> = {
 export default function SuperAdminDashboard() {
   const { signOut } = useAuth();
   const queryClient = useQueryClient();
+  const onlineOrgIds = useOnlineOrgs();
 
   const { data: organizations = [], isLoading } = useQuery({
     queryKey: ["super-admin-orgs"],
@@ -157,8 +159,11 @@ export default function SuperAdminDashboard() {
         <CardContent className="p-4">
           <div className="flex items-start gap-3">
             {/* Avatar */}
-            <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
+            <div className="relative flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
               <span className="text-sm font-bold text-primary">{initials}</span>
+              {onlineOrgIds.has(org.id) && (
+                <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-emerald-500 border-2 border-card" title="Online agora" />
+              )}
             </div>
 
             {/* Info */}
@@ -348,7 +353,18 @@ export default function SuperAdminDashboard() {
 
       <main className="p-4 sm:p-6 max-w-7xl mx-auto space-y-5">
         {/* Metrics */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+          <Card className={onlineOrgIds.size > 0 ? "bg-gradient-to-br from-emerald-50 to-emerald-100/50 dark:from-emerald-950/20 dark:to-emerald-900/10 border-emerald-300/30" : ""}>
+            <CardContent className="p-4 flex items-center gap-3">
+              <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${onlineOrgIds.size > 0 ? "bg-emerald-200/50 dark:bg-emerald-800/30" : "bg-muted"}`}>
+                <span className={`h-3 w-3 rounded-full ${onlineOrgIds.size > 0 ? "bg-emerald-500 animate-pulse" : "bg-muted-foreground/30"}`} />
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-foreground">{onlineOrgIds.size}</p>
+                <p className="text-[11px] text-muted-foreground leading-tight">Online agora</p>
+              </div>
+            </CardContent>
+          </Card>
           <Card className="bg-gradient-to-br from-primary/5 to-primary/10 border-primary/15">
             <CardContent className="p-4 flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-primary/15 flex items-center justify-center">
