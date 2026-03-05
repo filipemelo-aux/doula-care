@@ -59,7 +59,7 @@ export function Sidebar({ isOpen, onToggle, onNavigate }: SidebarProps) {
         .from("org_promotions" as any)
         .select("*")
         .eq("organization_id", organizationId)
-        .eq("promotion_type", "beta_tester")
+        .in("promotion_type", ["beta_tester", "lifetime_premium"])
         .maybeSingle();
       if (error) throw error;
       return data as any;
