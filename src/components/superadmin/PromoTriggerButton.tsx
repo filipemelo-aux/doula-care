@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { Gift, Loader2, Crown } from "lucide-react";
+import { Gift, Loader2, Crown, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { addDays, format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -95,6 +95,32 @@ export function PromoTriggerButton({ orgId, orgName }: PromoTriggerButtonProps) 
       queryClient.invalidateQueries({ queryKey: ["org-promo", orgId] });
       queryClient.invalidateQueries({ queryKey: ["super-admin-orgs"] });
       toast.success(`Promoção enviada para ${orgName}!`);
+    },
+    onError: (err: Error) => toast.error(`Erro: ${err.message}`),
+  });
+
+  const removePromoMutation = useMutation({
+    mutationFn: async () => {
+      if (!promo) throw new Error("Sem promoção");
+
+      // Remove promo record
+      const { error: delError } = await supabase
+        .from("org_promotions" as any)
+        .delete()
+        .eq("id", promo.id);
+      if (delError) throw delError;
+
+      // Revert org plan to free
+      const { error: orgError } = await supabase
+        .from("organizations")
+        .update({ plan: "free" as any })
+        .eq("id", orgId);
+      if (orgError) throw orgError;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["org-promo", orgId] });
+      queryClient.invalidateQueries({ queryKey: ["super-admin-orgs"] });
+      toast.success(`Promoção removida de ${orgName}`);
     },
     onError: (err: Error) => toast.error(`Erro: ${err.message}`),
   });
