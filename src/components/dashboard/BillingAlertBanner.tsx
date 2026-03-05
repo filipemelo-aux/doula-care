@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Receipt, X } from "lucide-react";
+import { Receipt, X, Gift } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -20,7 +20,7 @@ export function BillingAlertBanner() {
         .select("*")
         .eq("organization_id", organizationId)
         .eq("read", false)
-        .eq("type", "billing")
+        .in("type", ["billing", "promotion"])
         .order("created_at", { ascending: false })
         .limit(5);
       if (error) throw error;
@@ -46,13 +46,18 @@ export function BillingAlertBanner() {
 
   return (
     <div className="space-y-2">
-      {notifications.map((notif) => (
-        <Alert key={notif.id} variant="destructive" className="border-amber-500/50 bg-amber-50/80 dark:bg-amber-950/20 text-foreground">
-          <Receipt className="h-4 w-4 text-amber-600" />
-          <AlertTitle className="text-amber-700 dark:text-amber-400 text-sm font-semibold">
+      {notifications.map((notif) => {
+        const isPromo = notif.type === "promotion";
+        return (
+        <Alert key={notif.id} variant="destructive" className={isPromo
+          ? "border-primary/30 bg-gradient-to-r from-primary/5 to-accent/5 text-foreground"
+          : "border-amber-500/50 bg-amber-50/80 dark:bg-amber-950/20 text-foreground"
+        }>
+          {isPromo ? <Gift className="h-4 w-4 text-primary" /> : <Receipt className="h-4 w-4 text-amber-600" />}
+          <AlertTitle className={`${isPromo ? "text-primary" : "text-amber-700 dark:text-amber-400"} text-sm font-semibold`}>
             {notif.title}
           </AlertTitle>
-          <AlertDescription className="text-amber-600 dark:text-amber-300 text-xs">
+          <AlertDescription className={`${isPromo ? "text-muted-foreground" : "text-amber-600 dark:text-amber-300"} text-xs`}>
             {notif.message}
             <span className="block text-[10px] text-muted-foreground mt-1">
               {format(new Date(notif.created_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}
@@ -67,7 +72,8 @@ export function BillingAlertBanner() {
             <X className="h-3.5 w-3.5" />
           </Button>
         </Alert>
-      ))}
+        );
+      })}
     </div>
   );
 }
