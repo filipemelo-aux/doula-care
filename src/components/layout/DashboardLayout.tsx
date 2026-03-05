@@ -7,12 +7,14 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { PushNotificationToggle } from "@/components/pwa/PushNotificationToggle";
 import { useOrgBranding } from "@/hooks/useOrgBranding";
+import { usePresenceBroadcast } from "@/hooks/usePresence";
 import { cn } from "@/lib/utils";
 
 export function DashboardLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { signOut } = useAuth();
   const { logoUrl: orgLogo, displayName } = useOrgBranding();
+  usePresenceBroadcast();
   const headerLogo = orgLogo || logo;
   const headerName = displayName || "Doula Care";
 
