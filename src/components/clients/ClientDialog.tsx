@@ -423,7 +423,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
     const roundingDiff = Math.round((effectivePlanValue - sumSoFar) * 100) / 100;
     if (Math.abs(roundingDiff) > 0.001) amounts[amounts.length - 1] += roundingDiff;
     setCustomInstallmentAmounts(amounts);
-  }, [entryType, entryPercentage]);
+  }, [entryType, entryPercentage, effectivePlanValue, watchedInstallments]);
 
   const mutation = useMutation({
     mutationFn: async (data: ClientFormData) => {
