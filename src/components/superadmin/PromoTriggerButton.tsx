@@ -20,6 +20,7 @@ import { Label } from "@/components/ui/label";
 import { Gift, Loader2, Crown, Trash2, Zap } from "lucide-react";
 import { toast } from "sonner";
 import { addDays, format } from "date-fns";
+import { sendPushNotification } from "@/lib/pushNotifications";
 import { ptBR } from "date-fns/locale";
 
 interface PromoTriggerButtonProps {
@@ -80,7 +81,7 @@ export function PromoTriggerButton({ orgId, orgName }: PromoTriggerButtonProps) 
         .eq("id", orgId);
       if (orgError) throw orgError;
 
-      // Send notification - same message for both (lifetime is a surprise)
+      // Send in-app notification - same message for both (lifetime is a surprise)
       const { error: notifError } = await supabase
         .from("org_notifications")
         .insert({
@@ -90,6 +91,24 @@ export function PromoTriggerButton({ orgId, orgName }: PromoTriggerButtonProps) 
           type: "promotion",
         });
       if (notifError) throw notifError;
+
+      // Send push notification to org admins to create curiosity
+      const { data: orgProfiles } = await supabase
+        .from("profiles")
+        .select("user_id")
+        .eq("organization_id", orgId);
+
+      if (orgProfiles && orgProfiles.length > 0) {
+        const adminUserIds = orgProfiles.map(p => p.user_id);
+        await sendPushNotification({
+          user_ids: adminUserIds,
+          title: "🎁 Você recebeu um presente!",
+          message: "Abra o app para descobrir a surpresa que preparamos para você!",
+          url: "/admin",
+          type: "general",
+          tag: "promo-surprise",
+        });
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["org-promo", orgId] });
