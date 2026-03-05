@@ -11,6 +11,7 @@ import { PlanPricingCard } from "@/components/superadmin/PlanPricingCard";
 import { PlanLimitsCard } from "@/components/superadmin/PlanLimitsCard";
 import { OrgBillingCard } from "@/components/superadmin/OrgBillingCard";
 import { UserManagementCard } from "@/components/superadmin/UserManagementCard";
+import { PromoTriggerButton } from "@/components/superadmin/PromoTriggerButton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
@@ -191,6 +192,11 @@ export default function SuperAdminDashboard() {
                 </span>
               </div>
             </div>
+          </div>
+
+          {/* Promo */}
+          <div className="mt-2">
+            <PromoTriggerButton orgId={org.id} orgName={org.name} />
           </div>
 
           {/* Actions */}

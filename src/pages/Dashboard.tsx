@@ -14,6 +14,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Users, Baby, Heart, Wallet, TrendingUp, BarChart3, UserRound } from "lucide-react";
 import { AdminWelcomeDialog } from "@/components/dashboard/AdminWelcomeDialog";
 import { BillingAlertBanner } from "@/components/dashboard/BillingAlertBanner";
+import { PromoBetaBanner } from "@/components/dashboard/PromoBetaBanner";
 
 export default function Dashboard() {
   const [period, setPeriod] = useState<PeriodOption>("month");
@@ -59,6 +60,9 @@ export default function Dashboard() {
           </div>
         </div>
       )}
+
+      {/* Promo beta tester banner */}
+      <PromoBetaBanner />
 
       {/* Billing alerts for doula */}
       <BillingAlertBanner />

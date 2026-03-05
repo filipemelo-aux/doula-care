@@ -685,6 +685,59 @@ export type Database = {
           },
         ]
       }
+      org_promotions: {
+        Row: {
+          bonus_choice: string | null
+          bonus_chosen_at: string | null
+          bonus_ends_at: string | null
+          bonus_started_at: string | null
+          created_at: string
+          id: string
+          organization_id: string
+          promotion_type: string
+          status: string
+          trial_ends_at: string | null
+          trial_started_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          bonus_choice?: string | null
+          bonus_chosen_at?: string | null
+          bonus_ends_at?: string | null
+          bonus_started_at?: string | null
+          created_at?: string
+          id?: string
+          organization_id: string
+          promotion_type?: string
+          status?: string
+          trial_ends_at?: string | null
+          trial_started_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          bonus_choice?: string | null
+          bonus_chosen_at?: string | null
+          bonus_ends_at?: string | null
+          bonus_started_at?: string | null
+          created_at?: string
+          id?: string
+          organization_id?: string
+          promotion_type?: string
+          status?: string
+          trial_ends_at?: string | null
+          trial_started_at?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "org_promotions_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       organizations: {
         Row: {
           billing_cycle: string | null
