@@ -210,6 +210,10 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
   const watchedInstallments = form.watch("installments") || 1;
   const watchedInstallmentFrequency = form.watch("installment_frequency") || "mensal";
   const watchedPlanValue = form.watch("plan_value") || 0;
+  const watchedDiscountPercent = form.watch("discount_percent") || 0;
+  const effectivePlanValue = watchedDiscountPercent > 0
+    ? Math.round(watchedPlanValue * (1 - watchedDiscountPercent / 100) * 100) / 100
+    : watchedPlanValue;
 
   // Date-based auto-pay logic
   const today = format(new Date(), "yyyy-MM-dd");
