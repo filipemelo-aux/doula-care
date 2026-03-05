@@ -345,11 +345,43 @@ export default function SuperAdminDashboard() {
             <Building2 className="h-4.5 w-4.5 text-primary" />
           </div>
           <h1 className="text-lg font-bold text-foreground">Super Admin</h1>
+          <span className="text-[10px] text-muted-foreground font-mono hidden sm:inline">v{APP_VERSION}</span>
         </div>
-        <Button variant="ghost" size="sm" onClick={signOut} className="text-muted-foreground">
-          <LogOut className="h-4 w-4 mr-1.5" />
-          <span className="hidden sm:inline">Sair</span>
-        </Button>
+        <div className="flex items-center gap-1.5">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-muted-foreground gap-1.5"
+            onClick={async () => {
+              try {
+                toast.info("Limpando cache e atualizando...");
+                // Clear all caches
+                const keys = await caches.keys();
+                await Promise.all(keys.map(k => caches.delete(k)));
+                // Force SW update
+                const regs = await navigator.serviceWorker?.getRegistrations();
+                if (regs) {
+                  for (const reg of regs) {
+                    await reg.update();
+                    reg.waiting?.postMessage({ type: "SKIP_WAITING" });
+                  }
+                }
+                // Reload
+                setTimeout(() => window.location.reload(), 500);
+              } catch (err) {
+                console.error(err);
+                window.location.reload();
+              }
+            }}
+          >
+            <RefreshCw className="h-4 w-4" />
+            <span className="hidden sm:inline">Atualizar</span>
+          </Button>
+          <Button variant="ghost" size="sm" onClick={signOut} className="text-muted-foreground">
+            <LogOut className="h-4 w-4 mr-1.5" />
+            <span className="hidden sm:inline">Sair</span>
+          </Button>
+        </div>
       </header>
 
       <main className="p-4 sm:p-6 max-w-7xl mx-auto space-y-5">
