@@ -1,7 +1,7 @@
 /**
  * Global app version constant.
  * The version is injected at build time by Vite (vite.config.ts).
- * Format: MAJOR.MINOR.PATCH.MMDD (ex: 1.1.0.0224)
+ * Format: MAJOR.MINOR.PATCH.DDMM.N (ex: 1.1.0.0503.1)
  * 
  * To bump version for important changes:
  * - Patch (1.0.x): bug fixes, small tweaks
