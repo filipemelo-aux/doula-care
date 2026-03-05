@@ -353,7 +353,18 @@ export default function SuperAdminDashboard() {
 
       <main className="p-4 sm:p-6 max-w-7xl mx-auto space-y-5">
         {/* Metrics */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+          <Card className={onlineOrgIds.size > 0 ? "bg-gradient-to-br from-emerald-50 to-emerald-100/50 dark:from-emerald-950/20 dark:to-emerald-900/10 border-emerald-300/30" : ""}>
+            <CardContent className="p-4 flex items-center gap-3">
+              <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${onlineOrgIds.size > 0 ? "bg-emerald-200/50 dark:bg-emerald-800/30" : "bg-muted"}`}>
+                <span className={`h-3 w-3 rounded-full ${onlineOrgIds.size > 0 ? "bg-emerald-500 animate-pulse" : "bg-muted-foreground/30"}`} />
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-foreground">{onlineOrgIds.size}</p>
+                <p className="text-[11px] text-muted-foreground leading-tight">Online agora</p>
+              </div>
+            </CardContent>
+          </Card>
           <Card className="bg-gradient-to-br from-primary/5 to-primary/10 border-primary/15">
             <CardContent className="p-4 flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-primary/15 flex items-center justify-center">
