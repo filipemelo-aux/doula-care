@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -16,7 +17,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { Gift, Loader2, Crown } from "lucide-react";
+import { Gift, Loader2, Crown, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { addDays, format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -98,6 +99,32 @@ export function PromoTriggerButton({ orgId, orgName }: PromoTriggerButtonProps) 
     onError: (err: Error) => toast.error(`Erro: ${err.message}`),
   });
 
+  const removePromoMutation = useMutation({
+    mutationFn: async () => {
+      if (!promo) throw new Error("Sem promoção");
+
+      // Remove promo record
+      const { error: delError } = await supabase
+        .from("org_promotions" as any)
+        .delete()
+        .eq("id", promo.id);
+      if (delError) throw delError;
+
+      // Revert org plan to free
+      const { error: orgError } = await supabase
+        .from("organizations")
+        .update({ plan: "free" as any })
+        .eq("id", orgId);
+      if (orgError) throw orgError;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["org-promo", orgId] });
+      queryClient.invalidateQueries({ queryKey: ["super-admin-orgs"] });
+      toast.success(`Promoção removida de ${orgName}`);
+    },
+    onError: (err: Error) => toast.error(`Erro: ${err.message}`),
+  });
+
   if (promo) {
     const info = statusLabels[promo.status] || statusLabels.pending;
     const isLifetime = promo.promotion_type === "lifetime_premium";
@@ -126,6 +153,30 @@ export function PromoTriggerButton({ orgId, orgName }: PromoTriggerButtonProps) 
             até {format(new Date(promo.trial_ends_at), "dd/MM", { locale: ptBR })}
           </span>
         )}
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-5 w-5 p-0 text-destructive/60 hover:text-destructive hover:bg-destructive/10"
+                onClick={() => {
+                  if (confirm(`Remover promoção de ${orgName}? O plano voltará para Free.`)) {
+                    removePromoMutation.mutate();
+                  }
+                }}
+                disabled={removePromoMutation.isPending}
+              >
+                {removePromoMutation.isPending ? (
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                ) : (
+                  <Trash2 className="h-3 w-3" />
+                )}
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="top" className="text-xs">Remover promoção</TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
       </div>
     );
   }
