@@ -95,6 +95,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
   const [entryType, setEntryType] = useState<"equal" | "percentage">("equal");
   const [entryPercentage, setEntryPercentage] = useState<number>(0);
   const [customInstallmentAmounts, setCustomInstallmentAmounts] = useState<number[]>([]);
+  const lastEffectivePlanValueRef = useRef<number>(0);
   const [prenatalTeam, setPrenatalTeam] = useState<{name: string; role: string}[]>([]);
 
   const { data: planSettings } = useQuery({
@@ -382,7 +383,11 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
       return;
     }
 
-    if (customInstallmentAmounts.length !== watchedInstallments) {
+    const needsRecalc = customInstallmentAmounts.length !== watchedInstallments ||
+      Math.abs(lastEffectivePlanValueRef.current - effectivePlanValue) > 0.001;
+
+    if (needsRecalc) {
+      lastEffectivePlanValueRef.current = effectivePlanValue;
       if (isPercentageEntry) {
         const entryValue = Math.round(effectivePlanValue * (entryPercentage / 100) * 100) / 100;
         const remaining = effectivePlanValue - entryValue;
