@@ -1358,8 +1358,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
                               className="text-[10px] text-primary hover:underline"
                               onClick={() => {
                                 const count = form.watch("installments") || 1;
-                                const total = form.watch("plan_value") || 0;
-                                setCustomInstallmentAmounts(Array(count).fill(total / count));
+                                setCustomInstallmentAmounts(Array(count).fill(effectivePlanValue / count));
                               }}
                             >
                               Dividir igualmente
@@ -1367,13 +1366,12 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
                           </div>
                           {(() => {
                             const count = form.watch("installments") || 1;
-                            const total = form.watch("plan_value") || 0;
                             // Wait for useEffect to sync array length when installments change
                             if (customInstallmentAmounts.length !== count) {
                               return null;
                             }
                             const sumCustom = customInstallmentAmounts.reduce((a, b) => a + b, 0);
-                            const diff = Math.abs(sumCustom - total);
+                            const diff = Math.abs(sumCustom - effectivePlanValue);
                             return (
                               <div className="space-y-1.5">
                                 {customInstallmentAmounts.map((amt, i) => (
@@ -1398,7 +1396,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
                                           }
                                           // Fix rounding on last installment
                                           const sumSoFar = newAmounts.reduce((a, b) => a + b, 0);
-                                          const totalTarget = form.watch("plan_value") || 0;
+                                          const totalTarget = effectivePlanValue;
                                           const roundingDiff = Math.round((totalTarget - sumSoFar) * 100) / 100;
                                           if (Math.abs(roundingDiff) > 0.001) {
                                             newAmounts[newAmounts.length - 1] = Math.round((newAmounts[newAmounts.length - 1] + roundingDiff) * 100) / 100;
