@@ -17,10 +17,64 @@ Deno.serve(async (req) => {
   }
 
   try {
+    const vapidPublicKey = Deno.env.get("VAPID_PUBLIC_KEY");
+    const vapidPrivateKey = Deno.env.get("VAPID_PRIVATE_KEY");
+
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
+
+    const vapid: VapidKeys | null = vapidPublicKey && vapidPrivateKey ? {
+      subject: "mailto:contato@papodedoula.com",
+      publicKey: vapidPublicKey,
+      privateKey: vapidPrivateKey,
+    } : null;
+
+    const sendPushToOrg = async (orgId: string, title: string, body: string) => {
+      if (!vapid) return;
+      // Get admin users in this org
+      const { data: orgProfiles } = await supabase
+        .from("profiles")
+        .select("user_id")
+        .eq("organization_id", orgId);
+      if (!orgProfiles || orgProfiles.length === 0) return;
+
+      const orgUserIds = orgProfiles.map(p => p.user_id);
+      const { data: adminRoles } = await supabase
+        .from("user_roles")
+        .select("user_id")
+        .in("role", ["admin", "moderator"])
+        .in("user_id", orgUserIds);
+      if (!adminRoles || adminRoles.length === 0) return;
+
+      const adminUserIds = adminRoles.map(r => r.user_id);
+      const { data: subscriptions } = await supabase
+        .from("push_subscriptions")
+        .select("*")
+        .in("user_id", adminUserIds);
+      if (!subscriptions || subscriptions.length === 0) return;
+
+      for (const sub of subscriptions) {
+        try {
+          const pushSubscription: PushSubscription = {
+            endpoint: sub.endpoint,
+            keys: { p256dh: sub.p256dh, auth: sub.auth },
+          };
+          const pushMessage: PushMessage = {
+            data: JSON.stringify({
+              title, body, icon: "/pwa-icon-192.png", badge: "/pwa-icon-192.png",
+              url: "/admin", tag: "billing-overdue", type: "general", priority: "normal",
+            }),
+            options: { ttl: 3600, urgency: "normal" },
+          };
+          const payload = await buildPushPayload(pushMessage, pushSubscription, vapid);
+          await fetch(sub.endpoint, payload);
+        } catch (err) {
+          console.error("Push error:", err);
+        }
+      }
+    };
 
     const today = new Date();
     const todayStr = today.toISOString().split("T")[0];
