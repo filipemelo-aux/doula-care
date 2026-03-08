@@ -46,10 +46,14 @@ self.addEventListener("push", (event) => {
         type === "labor_started" ||
         type === "new_contraction";
 
+      // Resolve icon/badge to absolute URLs so Android/TWA can fetch them
+      const origin = self.location.origin;
+      const resolveUrl = (path) => path && path.startsWith("/") ? origin + path : (path || "");
+
       const options = {
         body: body || "",
-        icon: icon || "/badge-mono-v2.png",
-        badge: "/badge-status-v3.png?v=3",
+        icon: resolveUrl(icon || "/badge-mono-v2.png"),
+        badge: resolveUrl("/badge-status-v3.png?v=3"),
         tag: isCritica ? `critica-${tag || type || "urgent"}` : (tag || type || "default"),
         renotify: true,
         requireInteraction: require_interaction ?? isCritica,
