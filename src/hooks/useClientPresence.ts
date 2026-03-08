@@ -27,7 +27,7 @@ export function useClientPresenceBroadcast() {
             user_id: user.id,
             client_id: client.id,
             org_id: organizationId,
-            name: client.preferred_name || client.full_name,
+            name: client.full_name,
             online_at: new Date().toISOString(),
           });
         }
