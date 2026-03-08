@@ -293,6 +293,7 @@ export default function GestanteMessages() {
         message: messageText.substring(0, 100),
         url: "/admin",
         tag: "client-message",
+        type: "new_message",
       });
 
       setNewMessage("");
