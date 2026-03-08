@@ -42,17 +42,34 @@ async function loadTWAMode() {
 
 self.addEventListener("activate", (event) => {
   event.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(
-        keys
-          .filter((key) => key.startsWith(CACHE_PREFIX) && key !== CURRENT_CACHE)
-          .map((key) => {
-            console.log("[SW] Deleting old cache:", key);
-            return caches.delete(key);
-          })
-      )
-    )
+    Promise.all([
+      // Clean old caches
+      caches.keys().then((keys) =>
+        Promise.all(
+          keys
+            .filter((key) => key.startsWith(CACHE_PREFIX) && key !== CURRENT_CACHE)
+            .map((key) => {
+              console.log("[SW] Deleting old cache:", key);
+              return caches.delete(key);
+            })
+        )
+      ),
+      // Restore TWA mode flag
+      loadTWAMode(),
+    ])
   );
+});
+
+// Listen for messages from the client
+self.addEventListener("message", (event) => {
+  if (event.data?.type === "SKIP_WAITING") {
+    self.skipWaiting();
+  }
+  // TWA detection: the web app signals when running inside a TWA
+  if (event.data?.type === "SET_TWA_MODE") {
+    persistTWAMode(true);
+    console.log("[SW] TWA mode enabled — SW notifications suppressed (delegation active)");
+  }
 });
 
 // Listen for messages from the client
