@@ -115,6 +115,7 @@ Deno.serve(async (req) => {
             message: p.pushMsg,
             url: "/gestante/mensagens",
             tag: "payment-reminder",
+            type: "payment_received",
           },
         });
       } catch (e) {
