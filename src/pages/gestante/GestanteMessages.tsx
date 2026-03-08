@@ -168,6 +168,7 @@ export default function GestanteMessages() {
         message: `${client.full_name} aceitou o orçamento.`,
         url: "/admin",
         tag: "budget-accepted",
+        type: "budget_response",
       });
     },
     onSuccess: (_, request) => {
