@@ -114,6 +114,7 @@ export function NotificationsCenter({ fullPage = false }: NotificationsCenterPro
   } | null>(null);
   const [expandedNotifications, setExpandedNotifications] = useState<Set<string>>(new Set());
   const [readContractionClients, setReadContractionClients] = useState<Set<string>>(new Set());
+  const [readLaborClients, setReadLaborClients] = useState<Set<string>>(new Set());
   const queryClient = useQueryClient();
 
   // Fetch all clients for lookup (needed for diary/contraction notifications)
@@ -459,6 +460,16 @@ export function NotificationsCenter({ fullPage = false }: NotificationsCenterPro
       }
       return next;
     });
+
+    // Mark labor as read when expanding a birth notification
+    const match = id.match(/^birth-(.+)$/);
+    if (match) {
+      const clientId = match[1];
+      const client = clientsMap.get(clientId);
+      if (client?.labor_started_at) {
+        setReadLaborClients(prev => new Set([...prev, clientId]));
+      }
+    }
   };
 
   // Group contractions by client
@@ -506,13 +517,15 @@ export function NotificationsCenter({ fullPage = false }: NotificationsCenterPro
     
     // Child: Labor started
     if (client.labor_started_at) {
+      const laborRead = readLaborClients.has(client.id);
       children.push({
         id: `labor-${client.id}`,
         type: "labor_started",
         title: "Trabalho de Parto Iniciado",
         description: "Alerta de alta prioridade",
         timestamp: client.labor_started_at,
-        priority: "high"
+        priority: laborRead ? "low" : "high",
+        isRead: laborRead
       });
     }
 
@@ -590,6 +603,7 @@ export function NotificationsCenter({ fullPage = false }: NotificationsCenterPro
     const parentType = client.is_post_term ? "post_term" : "birth_approaching";
     const hasHighPriorityChild = children.some(c => c.priority === "high");
     const isInLabor = !!client.labor_started_at;
+    const isLaborRead = readLaborClients.has(client.id);
     
     parentNotifications.push({
       id: `birth-${client.id}`,
@@ -600,7 +614,7 @@ export function NotificationsCenter({ fullPage = false }: NotificationsCenterPro
       priority: hasHighPriorityChild || client.is_post_term || (client.current_weeks && client.current_weeks >= 39) ? "high" : "medium",
       icon: client.is_post_term ? AlertTriangle : Baby,
       children,
-      isInLabor
+      isInLabor: isInLabor && !isLaborRead
     });
   });
 
@@ -722,6 +736,7 @@ export function NotificationsCenter({ fullPage = false }: NotificationsCenterPro
       n.children = n.children.filter(c => {
         if (c.type === "new_diary_entry" && c.isRead) return false;
         if (c.type === "new_contraction" && c.isRead) return false;
+        if (c.type === "labor_started" && c.isRead) return false;
         return true;
       });
     });
@@ -1086,8 +1101,9 @@ export function NotificationsCenter({ fullPage = false }: NotificationsCenterPro
                               const isActiveLaborPattern = child.type === "new_contraction" && child.priority === "high" && !isLaborStarted;
                               const isContractionRead = child.isRead || (contractionClientId ? readContractionClients.has(contractionClientId) : false);
 
-                              // In dashboard mode, hide read contraction notifications
+                              // In dashboard mode, hide read notifications
                               if (!fullPage && child.type === "new_contraction" && isContractionRead) return null;
+                              if (!fullPage && child.type === "labor_started" && child.isRead) return null;
 
                               return (
                               <div
