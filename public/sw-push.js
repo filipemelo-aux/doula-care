@@ -70,19 +70,6 @@ self.addEventListener("message", (event) => {
     persistTWAMode(true);
     console.log("[SW] TWA mode enabled — SW notifications suppressed (delegation active)");
   }
-});
-
-// Listen for messages from the client
-self.addEventListener("message", (event) => {
-  if (event.data?.type === "SKIP_WAITING") {
-    self.skipWaiting();
-  }
-  // TWA detection: the web app signals when running inside a TWA
-  if (event.data?.type === "SET_TWA_MODE") {
-    isTWAEnvironment = true;
-    console.log("[SW] TWA mode enabled — SW notifications suppressed (delegation active)");
-  }
-});
 
 // --- Push notifications ---
 self.addEventListener("push", (event) => {
