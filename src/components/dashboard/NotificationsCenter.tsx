@@ -1101,8 +1101,9 @@ export function NotificationsCenter({ fullPage = false }: NotificationsCenterPro
                               const isActiveLaborPattern = child.type === "new_contraction" && child.priority === "high" && !isLaborStarted;
                               const isContractionRead = child.isRead || (contractionClientId ? readContractionClients.has(contractionClientId) : false);
 
-                              // In dashboard mode, hide read contraction notifications
+                              // In dashboard mode, hide read notifications
                               if (!fullPage && child.type === "new_contraction" && isContractionRead) return null;
+                              if (!fullPage && child.type === "labor_started" && child.isRead) return null;
 
                               return (
                               <div
