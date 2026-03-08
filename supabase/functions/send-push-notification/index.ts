@@ -316,15 +316,28 @@ Deno.serve(async (req) => {
 
         const isCritica = priority === "critica";
 
+        const notifType = type || "general";
+        const typeIconMap: Record<string, string> = {
+          new_message: "/notif-icon-messages.png",
+          new_contraction: "/notif-icon-contractions.png",
+          labor_started: "/notif-icon-labor.png",
+          appointment_reminder: "/notif-icon-appointments.png",
+          budget_response: "/notif-icon-services.png",
+          payment_received: "/notif-icon-payment.png",
+          new_diary: "/notif-icon-diary.png",
+          general: "/badge-mono-v2.png",
+        };
+        const notifIcon = typeIconMap[notifType] || "/badge-mono-v2.png";
+
         const pushMessage: PushMessage = {
           data: JSON.stringify({
             title,
             body: message,
-            icon: "/badge-mono-v2.png",
+            icon: notifIcon,
             badge: "/badge-status-v3.png?v=3",
             url: url || "/",
-            tag: tag || type || "default",
-            type: type || "general",
+            tag: tag || notifType || "default",
+            type: notifType,
             priority: isCritica ? "critica" : "normal",
             require_interaction: require_interaction ?? isCritica,
           }),

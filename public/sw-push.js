@@ -48,7 +48,7 @@ self.addEventListener("push", (event) => {
 
       const options = {
         body: body || "",
-        icon: "/badge-mono-v2.png",
+        icon: icon || "/badge-mono-v2.png",
         badge: "/badge-status-v3.png?v=3",
         tag: isCritica ? `critica-${tag || type || "urgent"}` : (tag || type || "default"),
         renotify: true,
