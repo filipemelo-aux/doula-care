@@ -97,11 +97,12 @@ export default function AdminMessages() {
     (c) => !messagesByClient.has(c.id)
   ) || [];
 
+  const allClientsSorted = [...clientsWithMessages, ...clientsWithoutMessages];
   const filteredClients = searchTerm
-    ? [...clientsWithMessages, ...clientsWithoutMessages].filter((c) =>
+    ? allClientsSorted.filter((c) =>
         c.full_name.toLowerCase().includes(searchTerm.toLowerCase())
       )
-    : clientsWithMessages;
+    : allClientsSorted;
 
   const selectedClient = clients?.find((c) => c.id === selectedClientId);
   const selectedMessages = selectedClientId
