@@ -736,7 +736,7 @@ export function NotificationsCenter({ fullPage = false }: NotificationsCenterPro
       n.children = n.children.filter(c => {
         if (c.type === "new_diary_entry" && c.isRead) return false;
         if (c.type === "new_contraction" && c.isRead) return false;
-        if (c.type === "labor_started" && c.isRead) return false;
+        // Labor started notifications stay visible even when read (just lose animation)
         return true;
       });
     });
