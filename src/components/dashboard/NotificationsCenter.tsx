@@ -773,9 +773,11 @@ export function NotificationsCenter({ fullPage = false }: NotificationsCenterPro
 
   const isLoading = loadingBirth || loadingDiary || loadingContractions || loadingServiceRequests || loadingAppointmentRequests;
   const hasNotifications = parentNotifications.length > 0;
-  const highPriorityCount = parentNotifications.filter(n => 
-    n.priority === "high" || n.children.some(c => c.priority === "high")
-  ).length;
+  const highPriorityCount = parentNotifications.filter(n => {
+    // Don't count labor notifications that have been read/acknowledged
+    if (n.isInLabor && n.isRead) return false;
+    return (n.priority === "high" || n.children.some(c => c.priority === "high" && !c.isRead));
+  }).length;
   
   // Unread count: unread diary entries + pending service requests + pending appointment requests
   const unreadDiaryCount = recentDiaryEntries?.filter(e => !e.read_by_admin).length || 0;
