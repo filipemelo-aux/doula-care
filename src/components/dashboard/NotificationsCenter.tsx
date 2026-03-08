@@ -608,13 +608,14 @@ export function NotificationsCenter({ fullPage = false }: NotificationsCenterPro
     parentNotifications.push({
       id: `birth-${client.id}`,
       type: parentType,
-      title: client.is_post_term ? "Gestação Pós-Data" : "Parto se Aproximando",
+      title: isInLabor ? "Em Trabalho de Parto" : (client.is_post_term ? "Gestação Pós-Data" : "Parto se Aproximando"),
       description: client.full_name,
       client,
       priority: hasHighPriorityChild || client.is_post_term || (client.current_weeks && client.current_weeks >= 39) ? "high" : "medium",
-      icon: client.is_post_term ? AlertTriangle : Baby,
+      icon: isInLabor ? Baby : (client.is_post_term ? AlertTriangle : Baby),
       children,
-      isInLabor
+      isInLabor,
+      isRead: isInLabor ? isLaborRead : undefined
     });
   });
 
