@@ -458,7 +458,11 @@ export function ClientFileDialog({ open, onOpenChange, client }: ClientFileDialo
                   value={client.status === "outro" && client.custom_status ? client.custom_status : statusLabels[client.status] || client.status}
                 />
                 {client.dpp && <Field label="DPP" value={formatDate(client.dpp)} />}
-                {client.pregnancy_weeks && <Field label="Semanas" value={`${client.pregnancy_weeks}`} />}
+                {(client.dpp || client.pregnancy_weeks) && (() => {
+                  const calcWeeks = calculateCurrentPregnancyWeeks(client.pregnancy_weeks, client.pregnancy_weeks_set_at, client.dpp);
+                  const calcDays = client.dpp ? calculateCurrentPregnancyDays(client.dpp) : 0;
+                  return calcWeeks !== null ? <Field label="Semanas" value={`${calcWeeks}s${calcDays > 0 ? `${calcDays}d` : ""}`} /> : null;
+                })()}
                 {address && <Field label="Endereço" value={address} fullWidth />}
                 <Field label="Cadastrada em" value={formatDateTime(client.created_at)} />
               </Section>
