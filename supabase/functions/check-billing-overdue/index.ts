@@ -147,12 +147,17 @@ Deno.serve(async (req) => {
       if (!error) {
         suspended++;
 
+        const suspendMsg = "Sua conta foi suspensa automaticamente após 7 dias de atraso no pagamento. Entre em contato com o suporte para regularizar.";
+
         await supabase.from("org_notifications").insert({
           organization_id: orgId,
           title: "⛔ Conta suspensa por inadimplência",
-          message: "Sua conta foi suspensa automaticamente após 7 dias de atraso no pagamento. Entre em contato com o suporte para regularizar.",
+          message: suspendMsg,
           type: "billing",
         });
+
+        // Push notification
+        await sendPushToOrg(orgId, "⛔ Conta suspensa", suspendMsg);
       }
     }
 
