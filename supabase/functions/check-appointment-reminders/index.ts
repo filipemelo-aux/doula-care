@@ -63,7 +63,7 @@ Deno.serve(async (req) => {
     let sent = 0;
     const expiredEndpoints: string[] = [];
 
-    const sendPush = async (userIds: string[], title: string, body: string, url: string, tag: string) => {
+  const sendPush = async (userIds: string[], title: string, body: string, url: string, tag: string) => {
       if (userIds.length === 0) return;
 
       const { data: subscriptions } = await supabase
@@ -84,8 +84,8 @@ Deno.serve(async (req) => {
             data: JSON.stringify({
               title,
               body,
-              icon: "/pwa-icon-192.png",
-              badge: "/pwa-icon-192.png",
+              icon: "/notif-icon-appointments.png",
+              badge: "/badge-status-v3.png?v=3",
               url,
               tag,
               type: "appointment_reminder",
