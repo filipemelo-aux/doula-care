@@ -2,7 +2,7 @@
 
 // --- Cache versioning & cleanup ---
 const CACHE_PREFIX = "doula-care-";
-const CACHE_VERSION = "v1.1.5";
+const CACHE_VERSION = "v1.1.6";
 const CURRENT_CACHE = CACHE_PREFIX + CACHE_VERSION;
 
 self.addEventListener("activate", (event) => {
@@ -49,7 +49,7 @@ self.addEventListener("push", (event) => {
       const options = {
         body: body || "",
         icon: "/badge-mono-v2.png",
-        badge: "/badge-mono-v2.png",
+        badge: "/badge-status-v3.png?v=3",
         tag: isCritica ? `critica-${tag || type || "urgent"}` : (tag || type || "default"),
         renotify: true,
         requireInteraction: require_interaction ?? isCritica,
