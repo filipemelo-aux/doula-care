@@ -14,6 +14,7 @@ interface InAppNotificationListenerProps {
   role: "client" | "admin";
   clientId?: string;
   organizationId?: string | null;
+  onNavigate?: (path: string) => void;
 }
 
 export function InAppNotificationListener({ userId, role, clientId, organizationId }: InAppNotificationListenerProps) {
