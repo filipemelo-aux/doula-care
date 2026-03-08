@@ -9,20 +9,31 @@ if (cached) {
   applyThemeToDOM(cached.primary, cached.secondary);
 }
 
-// Detect TWA environment and notify Service Worker to suppress duplicate notifications.
-// When running inside a TWA with notification delegation, the Android app shows
-// notifications natively — the SW should NOT also show them (avoids Chrome-branded duplicates).
+// Detect Android app context and keep Service Worker TWA mode in sync.
+// This suppresses Chrome-branded notifications when native delegation is active.
 if ("serviceWorker" in navigator) {
-  const isTWA =
-    document.referrer.includes("android-app://") ||
-    (window.matchMedia("(display-mode: standalone)").matches &&
-      /Android/i.test(navigator.userAgent));
+  const isAndroid = /Android/i.test(navigator.userAgent);
+  const isStandaloneLike =
+    window.matchMedia("(display-mode: standalone)").matches ||
+    window.matchMedia("(display-mode: fullscreen)").matches ||
+    window.matchMedia("(display-mode: minimal-ui)").matches;
+  const hasAndroidReferrer = document.referrer.startsWith("android-app://");
+  const isTWALikely = isAndroid && (hasAndroidReferrer || isStandaloneLike);
 
-  if (isTWA) {
-    navigator.serviceWorker.ready.then((reg) => {
-      reg.active?.postMessage({ type: "SET_TWA_MODE" });
+  const syncTWAMode = (enabled: boolean) => {
+    navigator.serviceWorker.getRegistration().then((reg) => {
+      if (!reg) return;
+      const payload = { type: "SET_TWA_MODE", enabled };
+      reg.active?.postMessage(payload);
+      reg.waiting?.postMessage(payload);
+      reg.installing?.postMessage(payload);
     });
-  }
+  };
+
+  // Send once immediately and reinforce after worker lifecycle changes.
+  syncTWAMode(isTWALikely);
+  navigator.serviceWorker.ready.then(() => syncTWAMode(isTWALikely));
+  navigator.serviceWorker.addEventListener("controllerchange", () => syncTWAMode(isTWALikely));
 }
 
 createRoot(document.getElementById("root")!).render(<App />);
