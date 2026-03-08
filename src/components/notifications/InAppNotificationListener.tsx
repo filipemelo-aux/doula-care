@@ -267,14 +267,21 @@ export function InAppNotificationListener({ userId, role, clientId, organization
             id: string;
           };
 
-          // Skip admin-only notifications (budget responses) from showing as client toasts
-          const isBudgetResponse =
-            notification.title?.includes("Orçamento Aceito") ||
-            notification.title?.includes("Orçamento Recusado") ||
-            notification.title?.includes("✅ Orçamento") ||
-            notification.title?.includes("❌ Orçamento");
+          // Skip notifications that are NOT meant for the client:
+          // 1. Budget responses (admin-only)
+          // 2. Messages FROM the client (they are the sender, no need to toast)
+          // 3. Labor/contraction alerts meant for admins
+          const title = notification.title || "";
+          const isAdminOnly =
+            title.includes("Orçamento Aceito") ||
+            title.includes("Orçamento Recusado") ||
+            title.includes("✅ Orçamento") ||
+            title.includes("❌ Orçamento") ||
+            title.startsWith("Mensagem de ") ||
+            title.includes("TRABALHO DE PARTO INICIADO") ||
+            title.includes("registrou uma contração");
 
-          if (isBudgetResponse) return;
+          if (isAdminOnly) return;
 
           const isUrgent =
             notification.title?.toLowerCase().includes("parto") ||
