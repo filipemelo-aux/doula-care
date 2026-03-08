@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Bell, AlertTriangle, Baby, History } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Bell, AlertTriangle, Baby } from "lucide-react";
+
 import { ClientContractionsDialog } from "@/components/dashboard/ClientContractionsDialog";
 import { Tables } from "@/integrations/supabase/types";
 import { sendPushNotification } from "@/lib/pushNotifications";
@@ -62,27 +62,10 @@ export function InAppNotificationListener({ userId, role, clientId, organization
             `⏱️ ${clientData.full_name} registrou uma contração`,
             {
               id: toastId,
-              description: (
-                <div className="flex flex-col gap-2 mt-1">
-                  <span>Deseja registrar que o trabalho de parto iniciou?</span>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="w-full gap-2"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      toast.dismiss(toastId);
-                      openContractionsHistory(clientData as Client);
-                    }}
-                  >
-                    <History className="h-4 w-4" />
-                    Ver Histórico de Contrações
-                  </Button>
-                </div>
-              ),
+              description: "Deseja registrar que o trabalho de parto iniciou?",
               duration: 60000,
               icon: <Baby className="h-5 w-5 text-primary" />,
-              className: "border-2 border-primary/40 shadow-lg",
+              className: "border-2 border-primary/40 shadow-lg [&_[data-content]]:!max-w-full",
               action: {
                 label: "Registrar Parto",
                 onClick: async () => {
@@ -124,7 +107,10 @@ export function InAppNotificationListener({ userId, role, clientId, organization
               },
               cancel: {
                 label: "Aguardar",
-                onClick: () => {},
+                onClick: () => {
+                  // Open contractions history on dismiss
+                  openContractionsHistory(clientData as Client);
+                },
               },
             }
           );
@@ -267,14 +253,21 @@ export function InAppNotificationListener({ userId, role, clientId, organization
             id: string;
           };
 
-          // Skip admin-only notifications (budget responses) from showing as client toasts
-          const isBudgetResponse =
-            notification.title?.includes("Orçamento Aceito") ||
-            notification.title?.includes("Orçamento Recusado") ||
-            notification.title?.includes("✅ Orçamento") ||
-            notification.title?.includes("❌ Orçamento");
+          // Skip notifications that are NOT meant for the client:
+          // 1. Budget responses (admin-only)
+          // 2. Messages FROM the client (they are the sender, no need to toast)
+          // 3. Labor/contraction alerts meant for admins
+          const title = notification.title || "";
+          const isAdminOnly =
+            title.includes("Orçamento Aceito") ||
+            title.includes("Orçamento Recusado") ||
+            title.includes("✅ Orçamento") ||
+            title.includes("❌ Orçamento") ||
+            title.startsWith("Mensagem de ") ||
+            title.includes("TRABALHO DE PARTO INICIADO") ||
+            title.includes("registrou uma contração");
 
-          if (isBudgetResponse) return;
+          if (isAdminOnly) return;
 
           const isUrgent =
             notification.title?.toLowerCase().includes("parto") ||
