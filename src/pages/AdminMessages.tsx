@@ -298,6 +298,7 @@ export default function AdminMessages() {
                   const unread = getUnreadCount(client.id);
                   const lastMsg = getLastMessage(client.id);
                   const isSelected = selectedClientId === client.id;
+                  const isOnline = onlineClientIds.has(client.id);
                   return (
                     <button
                       key={client.id}
@@ -308,15 +309,23 @@ export default function AdminMessages() {
                       )}
                     >
                       <div className="flex items-center gap-3">
-                        <Avatar className="h-9 w-9 flex-shrink-0">
-                          <AvatarFallback className="bg-primary/10 text-primary text-xs">
-                            {abbreviateName(client.full_name)
-                              .split(" ")
-                              .map((n) => n[0])
-                              .join("")
-                              .substring(0, 2)}
-                          </AvatarFallback>
-                        </Avatar>
+                        <div className="relative flex-shrink-0">
+                          <Avatar className="h-9 w-9">
+                            <AvatarFallback className="bg-primary/10 text-primary text-xs">
+                              {abbreviateName(client.full_name)
+                                .split(" ")
+                                .map((n) => n[0])
+                                .join("")
+                                .substring(0, 2)}
+                            </AvatarFallback>
+                          </Avatar>
+                          <span
+                            className={cn(
+                              "absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-background",
+                              isOnline ? "bg-green-500" : "bg-muted-foreground/30"
+                            )}
+                          />
+                        </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between">
                             <p className="text-sm font-medium truncate">
@@ -328,11 +337,15 @@ export default function AdminMessages() {
                               </Badge>
                             )}
                           </div>
-                          {lastMsg && (
+                          {lastMsg ? (
                             <p className="text-xs text-muted-foreground truncate mt-0.5">
                               {isClientMessage(lastMsg) ? "" : "Você: "}
                               {lastMsg.message.substring(0, 30)}
                               {lastMsg.message.length > 30 ? "…" : ""}
+                            </p>
+                          ) : (
+                            <p className="text-xs text-muted-foreground/50 truncate mt-0.5">
+                              Sem mensagens
                             </p>
                           )}
                         </div>
