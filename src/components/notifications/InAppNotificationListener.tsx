@@ -5,6 +5,7 @@ import { Bell, AlertTriangle, Baby, History } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ClientContractionsDialog } from "@/components/dashboard/ClientContractionsDialog";
 import { Tables } from "@/integrations/supabase/types";
+import { sendPushNotification } from "@/lib/pushNotifications";
 
 type Client = Tables<"clients">;
 
@@ -46,7 +47,7 @@ export function InAppNotificationListener({ userId, role, clientId, organization
           // Check if this client already has labor started
           const { data: clientData } = await supabase
             .from("clients")
-            .select("id, full_name, labor_started_at")
+            .select("id, full_name, labor_started_at, user_id")
             .eq("id", contraction.client_id)
             .maybeSingle();
 
@@ -100,6 +101,20 @@ export function InAppNotificationListener({ userId, role, clientId, organization
                     message: "Sua Doula registrou que o trabalho de parto começou. Respire fundo, confie no seu corpo. Estarei com você!",
                     organization_id: organizationId || null,
                   });
+
+                  // Send push to client
+                  if (clientData.user_id) {
+                    sendPushNotification({
+                      user_ids: [clientData.user_id],
+                      title: "💕 Seu bebê está a caminho!",
+                      message: "Sua Doula registrou que o trabalho de parto começou. Respire fundo!",
+                      url: "/gestante",
+                      tag: "labor-started-client",
+                      type: "labor_started",
+                      priority: "critica",
+                      require_interaction: true,
+                    });
+                  }
 
                   toast.success(`Trabalho de parto registrado para ${clientData.full_name}`, {
                     icon: <Baby className="h-5 w-5 text-primary" />,
@@ -160,6 +175,16 @@ export function InAppNotificationListener({ userId, role, clientId, organization
                   window.location.href = "/agenda";
                 },
               },
+            });
+
+            // Send push to admins
+            sendPushNotification({
+              send_to_admins: true,
+              title: `📅 Solicitação de Consulta`,
+              message: `${clientData.full_name} solicitou consulta para ${request.requested_date} às ${request.requested_time?.slice(0, 5)}`,
+              url: "/agenda",
+              tag: "appointment-request",
+              type: "appointment_reminder",
             });
           }
         }

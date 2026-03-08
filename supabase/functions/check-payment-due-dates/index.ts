@@ -99,21 +99,20 @@ Deno.serve(async (req) => {
       await supabase.from("client_notifications").insert(notifications);
     }
 
-    // Send push notifications for due today and overdue
-    const pushTargets = [...(dueToday || []), ...(overdue || [])].filter(
-      (p) => p.clients?.user_id
-    );
+    // Send push notifications for ALL payment notifications (due soon, due today, overdue)
+    const allPushTargets = [
+      ...(dueSoon || []).map(p => ({ ...p, pushTitle: "💰 Pagamento se aproximando", pushMsg: `Parcela ${p.installment_number}/${p.total_installments} de ${formatCurrency(Number(p.amount))} vence em 2 dias` })),
+      ...(dueToday || []).map(p => ({ ...p, pushTitle: "💰 Pagamento vence hoje", pushMsg: `Parcela ${p.installment_number}/${p.total_installments} de ${formatCurrency(Number(p.amount))}` })),
+      ...(overdue || []).map(p => ({ ...p, pushTitle: "🚨 Pagamento em atraso", pushMsg: `Parcela ${p.installment_number}/${p.total_installments} de ${formatCurrency(Number(p.amount))}` })),
+    ].filter(p => p.clients?.user_id);
 
-    for (const p of pushTargets) {
+    for (const p of allPushTargets) {
       try {
         await supabase.functions.invoke("send-push-notification", {
           body: {
             user_ids: [p.clients.user_id],
-            title:
-              p.due_date === todayStr
-                ? "💰 Pagamento vence hoje"
-                : "🚨 Pagamento em atraso",
-            message: `Parcela ${p.installment_number}/${p.total_installments} de ${formatCurrency(Number(p.amount))}`,
+            title: p.pushTitle,
+            message: p.pushMsg,
             url: "/gestante/mensagens",
             tag: "payment-reminder",
           },

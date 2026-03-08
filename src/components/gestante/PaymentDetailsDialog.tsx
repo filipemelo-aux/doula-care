@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useGestanteAuth } from "@/contexts/GestanteAuthContext";
 import { uploadMessageAttachment, compressImageIfNeeded } from "@/lib/uploadAttachment";
+import { sendPushNotification } from "@/lib/pushNotifications";
 import {
   Dialog,
   DialogContent,
@@ -64,6 +65,15 @@ export function PaymentDetailsDialog({ open, onOpenChange }: PaymentDetailsDialo
         organization_id: organizationId || null,
         attachment_url: result.url,
         attachment_type: result.type,
+      });
+
+      // Send push to admin
+      sendPushNotification({
+        send_to_admins: true,
+        title: `💰 Comprovante recebido: ${client.full_name}`,
+        message: "Comprovante de pagamento Pix enviado",
+        url: "/mensagens",
+        tag: "payment-receipt",
       });
 
       toast.success("Comprovante enviado!", {
