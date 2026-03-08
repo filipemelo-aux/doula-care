@@ -83,7 +83,10 @@ self.addEventListener("notificationclick", (event) => {
 
   if (event.action === "close") return;
 
-  const url = event.notification.data?.url || "/";
+  const rawUrl = event.notification.data?.url || "/";
+  // Add marker so the app knows this was opened from a notification
+  const separator = rawUrl.includes("?") ? "&" : "?";
+  const url = rawUrl + separator + "from_notification=1";
 
   event.waitUntil(
     clients.matchAll({ type: "window", includeUncontrolled: true }).then((clientList) => {
