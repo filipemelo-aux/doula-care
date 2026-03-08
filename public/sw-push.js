@@ -5,24 +5,58 @@ const CACHE_PREFIX = "doula-care-";
 const CACHE_VERSION = "v1.1.0";
 const CURRENT_CACHE = CACHE_PREFIX + CACHE_VERSION;
 
-// --- TWA detection flag ---
+// --- TWA detection flag (persisted via Cache API) ---
 // When the web app detects it's running inside a TWA, it sends a message
 // to set this flag. The SW then skips showNotification to avoid duplicates
 // (the TWA notification delegation already handles display natively).
+// Using Cache API to persist across SW restarts (localStorage unavailable in SW).
+const TWA_CACHE_KEY = "doula-care-twa-mode";
 let isTWAEnvironment = false;
+
+async function persistTWAMode(enabled) {
+  isTWAEnvironment = enabled;
+  try {
+    const cache = await caches.open(TWA_CACHE_KEY);
+    if (enabled) {
+      await cache.put("/_twa_flag", new Response("true"));
+    } else {
+      await cache.delete("/_twa_flag");
+    }
+  } catch (e) {
+    console.error("[SW] Failed to persist TWA flag:", e);
+  }
+}
+
+async function loadTWAMode() {
+  try {
+    const cache = await caches.open(TWA_CACHE_KEY);
+    const resp = await cache.match("/_twa_flag");
+    if (resp) {
+      isTWAEnvironment = true;
+      console.log("[SW] TWA mode restored from cache");
+    }
+  } catch (e) {
+    // ignore
+  }
+}
 
 self.addEventListener("activate", (event) => {
   event.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(
-        keys
-          .filter((key) => key.startsWith(CACHE_PREFIX) && key !== CURRENT_CACHE)
-          .map((key) => {
-            console.log("[SW] Deleting old cache:", key);
-            return caches.delete(key);
-          })
-      )
-    )
+    Promise.all([
+      // Clean old caches
+      caches.keys().then((keys) =>
+        Promise.all(
+          keys
+            .filter((key) => key.startsWith(CACHE_PREFIX) && key !== CURRENT_CACHE)
+            .map((key) => {
+              console.log("[SW] Deleting old cache:", key);
+              return caches.delete(key);
+            })
+        )
+      ),
+      // Restore TWA mode flag
+      loadTWAMode(),
+    ])
   );
 });
 
@@ -33,10 +67,9 @@ self.addEventListener("message", (event) => {
   }
   // TWA detection: the web app signals when running inside a TWA
   if (event.data?.type === "SET_TWA_MODE") {
-    isTWAEnvironment = true;
+    persistTWAMode(true);
     console.log("[SW] TWA mode enabled — SW notifications suppressed (delegation active)");
   }
-});
 
 // --- Push notifications ---
 self.addEventListener("push", (event) => {
@@ -44,6 +77,11 @@ self.addEventListener("push", (event) => {
 
   const handlePush = async () => {
     try {
+      // Ensure TWA flag is loaded (in case SW just started and activate hasn't run yet)
+      if (!isTWAEnvironment) {
+        await loadTWAMode();
+      }
+
       // If running inside a TWA with notification delegation enabled,
       // the Android app handles notification display natively.
       // Showing via SW would cause duplicate notifications referencing "Google Chrome".
