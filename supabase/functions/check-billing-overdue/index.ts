@@ -97,14 +97,19 @@ Deno.serve(async (req) => {
       if (!error) {
         markedOverdue++;
 
-        // Notify the doula
+        const billingMessage = `Sua cobrança de ${Number(bill.amount).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })} venceu em ${new Date(bill.due_date + "T12:00:00").toLocaleDateString("pt-BR")} e está em atraso.`;
+
+        // Notify the doula (in-app)
         await supabase.from("org_notifications").insert({
           organization_id: bill.organization_id,
           title: "🚨 Pagamento em atraso",
-          message: `Sua cobrança de ${Number(bill.amount).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })} venceu em ${new Date(bill.due_date + "T12:00:00").toLocaleDateString("pt-BR")} e está em atraso.`,
+          message: billingMessage,
           type: "billing",
           billing_id: bill.id,
         });
+
+        // Push notification to admin
+        await sendPushToOrg(bill.organization_id, "🚨 Pagamento em atraso", billingMessage);
       }
     }
 
