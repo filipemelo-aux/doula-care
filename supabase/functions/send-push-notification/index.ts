@@ -321,7 +321,7 @@ Deno.serve(async (req) => {
             title,
             body: message,
             icon: "/badge-mono-v2.png",
-            badge: "/badge-mono-v2.png",
+            badge: "/badge-status-v3.png?v=3",
             url: url || "/",
             tag: tag || type || "default",
             type: type || "general",
