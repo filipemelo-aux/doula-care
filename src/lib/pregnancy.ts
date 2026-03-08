@@ -1,4 +1,12 @@
-import { differenceInDays } from "date-fns";
+import { differenceInDays, startOfDay } from "date-fns";
+
+/**
+ * Parse a date string as local midnight to avoid timezone shifts.
+ */
+function toLocalMidnight(dateStr: string): Date {
+  const [year, month, day] = dateStr.split("-").map(Number);
+  return new Date(year, month - 1, day);
+}
 
 /**
  * Calculate current pregnancy weeks based on DPP or initial weeks
@@ -14,21 +22,20 @@ export function calculateCurrentPregnancyWeeks(
 ): number | null {
   // If DPP is provided, calculate based on it (40 weeks = 280 days)
   if (dpp) {
-    const dppDate = new Date(dpp);
-    const now = new Date();
+    const dppDate = toLocalMidnight(dpp);
+    const now = startOfDay(new Date());
     const daysUntilDpp = differenceInDays(dppDate, now);
     // 40 weeks = 280 days, current days = 280 - daysUntilDpp
     const currentDays = 280 - daysUntilDpp;
     const currentWeeks = Math.floor(currentDays / 7);
-    const currentDaysRemainder = currentDays % 7;
     return Math.max(0, currentWeeks); // No upper limit to track post-term
   }
 
   // Fallback to calculation based on initial weeks and set date
   if (initialWeeks === null || !setAt) return initialWeeks;
 
-  const setAtDate = new Date(setAt);
-  const now = new Date();
+  const setAtDate = toLocalMidnight(setAt);
+  const now = startOfDay(new Date());
   const daysElapsed = differenceInDays(now, setAtDate);
   const weeksElapsed = Math.floor(daysElapsed / 7);
 
@@ -43,8 +50,8 @@ export function calculateCurrentPregnancyWeeks(
 export function calculateCurrentPregnancyDays(dpp: string | null): number {
   if (!dpp) return 0;
   
-  const dppDate = new Date(dpp);
-  const now = new Date();
+  const dppDate = toLocalMidnight(dpp);
+  const now = startOfDay(new Date());
   const daysUntilDpp = differenceInDays(dppDate, now);
   const currentDays = 280 - daysUntilDpp;
   return Math.max(0, currentDays % 7);
