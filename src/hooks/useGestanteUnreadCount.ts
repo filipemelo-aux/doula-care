@@ -13,7 +13,8 @@ export function useGestanteUnreadCount(clientId: string | undefined) {
         .from("client_notifications")
         .select("*", { count: "exact", head: true })
         .eq("client_id", clientId)
-        .eq("read_by_client", false);
+        .eq("read_by_client", false)
+        .or("title.eq.Mensagem da Doula,title.like.Mensagem de %");
       if (error) throw error;
       return count || 0;
     },

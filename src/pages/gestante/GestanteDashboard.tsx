@@ -114,26 +114,7 @@ export default function GestanteDashboard() {
 
   // fetchUnreadCount is now handled by useQuery above
 
-  // Check for unread payment messages and redirect if found
-  const checkPaymentMessages = async () => {
-    if (!client?.id) return;
-
-    try {
-      const { count, error } = await supabase
-        .from("client_notifications")
-        .select("*", { count: "exact", head: true })
-        .eq("client_id", client.id)
-        .eq("read_by_client", false)
-        .or("title.like.💰%,title.like.🚨 Pagamento%");
-
-      if (error) throw error;
-      if ((count || 0) > 0) {
-        navigate("/gestante/mensagens", { replace: true });
-      }
-    } catch (error) {
-      console.error("Error checking payment messages:", error);
-    }
-  };
+  // Payment message check removed — no longer redirects away from dashboard
 
   const calculateGestationalAge = () => {
     if (!clientData?.dpp) return null;
