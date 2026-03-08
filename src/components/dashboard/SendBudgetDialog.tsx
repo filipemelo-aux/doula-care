@@ -107,6 +107,7 @@ export function SendBudgetDialog({ open, onOpenChange, serviceRequest }: SendBud
         message: `Sua Doula enviou um orçamento de R$ ${value.toFixed(2).replace(".", ",")}`,
         url: "/gestante/servicos",
         tag: "budget-sent",
+        type: "budget_response",
       });
     },
     onSuccess: () => {

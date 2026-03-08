@@ -201,6 +201,7 @@ export default function GestanteMessages() {
         message: `${client.full_name} recusou o orçamento.`,
         url: "/admin",
         tag: "budget-rejected",
+        type: "budget_response",
       });
     },
     onSuccess: (_, request) => {

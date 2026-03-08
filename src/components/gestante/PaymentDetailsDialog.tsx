@@ -74,6 +74,7 @@ export function PaymentDetailsDialog({ open, onOpenChange }: PaymentDetailsDialo
         message: "Comprovante de pagamento Pix enviado",
         url: "/mensagens",
         tag: "payment-receipt",
+        type: "payment_received",
       });
 
       toast.success("Comprovante enviado!", {

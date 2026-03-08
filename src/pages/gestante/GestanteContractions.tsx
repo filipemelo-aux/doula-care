@@ -161,6 +161,7 @@ export default function GestanteContractions() {
         message: `${client?.full_name}: duração de ${formatDuration(duration)}.`,
         url: "/admin",
         tag: `contraction-${client?.id}`,
+        type: "new_contraction",
       });
     } catch (error) {
       console.error("Error stopping contraction:", error);

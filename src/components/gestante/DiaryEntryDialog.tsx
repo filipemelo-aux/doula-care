@@ -124,6 +124,7 @@ export function DiaryEntryDialog({ open, onOpenChange, clientId, onSuccess, isPu
         message: `Nova entrada no diário de gestação.`,
         url: "/dashboard",
         tag: "diary-entry",
+        type: "new_diary",
       });
 
       toast.success("Registro salvo com sucesso!");
