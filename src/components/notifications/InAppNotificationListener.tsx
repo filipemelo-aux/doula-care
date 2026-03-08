@@ -5,6 +5,7 @@ import { Bell, AlertTriangle, Baby, History } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ClientContractionsDialog } from "@/components/dashboard/ClientContractionsDialog";
 import { Tables } from "@/integrations/supabase/types";
+import { sendPushNotification } from "@/lib/pushNotifications";
 
 type Client = Tables<"clients">;
 

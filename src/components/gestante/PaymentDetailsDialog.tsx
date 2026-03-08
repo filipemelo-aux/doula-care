@@ -66,6 +66,15 @@ export function PaymentDetailsDialog({ open, onOpenChange }: PaymentDetailsDialo
         attachment_type: result.type,
       });
 
+      // Send push to admin
+      sendPushNotification({
+        send_to_admins: true,
+        title: `💰 Comprovante recebido: ${client.full_name}`,
+        message: "Comprovante de pagamento Pix enviado",
+        url: "/mensagens",
+        tag: "payment-receipt",
+      });
+
       toast.success("Comprovante enviado!", {
         description: "Sua Doula receberá na área de mensagens.",
       });
