@@ -614,7 +614,7 @@ export function NotificationsCenter({ fullPage = false }: NotificationsCenterPro
       priority: hasHighPriorityChild || client.is_post_term || (client.current_weeks && client.current_weeks >= 39) ? "high" : "medium",
       icon: client.is_post_term ? AlertTriangle : Baby,
       children,
-      isInLabor: isInLabor && !isLaborRead
+      isInLabor
     });
   });
 
