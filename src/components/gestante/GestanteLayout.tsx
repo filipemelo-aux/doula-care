@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ReactNode } from "react";
 import logo from "@/assets/logo.png";
 import { useOrgBranding } from "@/hooks/useOrgBranding";
