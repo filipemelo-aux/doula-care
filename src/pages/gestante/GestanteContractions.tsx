@@ -160,7 +160,7 @@ export default function GestanteContractions() {
         title: "⏱️ Contração Finalizada",
         message: `${client?.full_name}: duração de ${formatDuration(duration)}.`,
         url: "/admin",
-        tag: `contraction-${client?.id}`,
+        tag: `contraction-end-${activeContraction.id}`,
         type: "new_contraction",
       });
     } catch (error) {
