@@ -116,6 +116,7 @@ export default function GestanteContractions() {
         message: `${client.full_name} iniciou uma contração.`,
         url: "/admin",
         tag: `contraction-${client.id}`,
+        type: "new_contraction",
       });
     } catch (error) {
       console.error("Error starting contraction:", error);
