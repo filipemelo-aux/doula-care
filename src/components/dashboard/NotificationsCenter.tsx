@@ -608,13 +608,14 @@ export function NotificationsCenter({ fullPage = false }: NotificationsCenterPro
     parentNotifications.push({
       id: `birth-${client.id}`,
       type: parentType,
-      title: client.is_post_term ? "Gestação Pós-Data" : "Parto se Aproximando",
+      title: isInLabor ? "Em Trabalho de Parto" : (client.is_post_term ? "Gestação Pós-Data" : "Parto se Aproximando"),
       description: client.full_name,
       client,
       priority: hasHighPriorityChild || client.is_post_term || (client.current_weeks && client.current_weeks >= 39) ? "high" : "medium",
-      icon: client.is_post_term ? AlertTriangle : Baby,
+      icon: isInLabor ? Baby : (client.is_post_term ? AlertTriangle : Baby),
       children,
-      isInLabor: isInLabor && !isLaborRead
+      isInLabor,
+      isRead: isInLabor ? isLaborRead : undefined
     });
   });
 
@@ -736,7 +737,7 @@ export function NotificationsCenter({ fullPage = false }: NotificationsCenterPro
       n.children = n.children.filter(c => {
         if (c.type === "new_diary_entry" && c.isRead) return false;
         if (c.type === "new_contraction" && c.isRead) return false;
-        if (c.type === "labor_started" && c.isRead) return false;
+        // Labor started notifications stay visible even when read (just lose animation)
         return true;
       });
     });
@@ -869,7 +870,7 @@ export function NotificationsCenter({ fullPage = false }: NotificationsCenterPro
                     >
                       <div
                         className={`rounded-lg border transition-colors overflow-hidden ${
-                          notification.isRead
+                          notification.isRead && !notification.isInLabor
                             ? "bg-muted/30 border-border/50 opacity-60"
                             : notification.isInLabor
                             ? "bg-destructive/10 border-destructive/30 ring-1 ring-destructive/20"
@@ -963,8 +964,10 @@ export function NotificationsCenter({ fullPage = false }: NotificationsCenterPro
                                 </p>
                                 {/* Labor badge - pulsing */}
                                 {notification.isInLabor && (
-                                  <Badge className="bg-destructive text-destructive-foreground text-[9px] lg:text-[10px] px-1.5 h-4 lg:h-5 mt-1 animate-pulse">
-                                    🚨 EM TRABALHO DE PARTO
+                                  <Badge className={`bg-destructive text-destructive-foreground text-[9px] lg:text-[10px] px-1.5 h-4 lg:h-5 mt-1 ${
+                                    notification.isRead ? "" : "animate-pulse"
+                                  }`}>
+                                    {notification.isRead ? "⚠️ EM TRABALHO DE PARTO" : "🚨 EM TRABALHO DE PARTO"}
                                   </Badge>
                                 )}
                                 {notification.client?.dpp && notification.type !== "new_diary_entry" && notification.type !== "service_request" && (
