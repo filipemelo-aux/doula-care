@@ -320,8 +320,8 @@ Deno.serve(async (req) => {
           data: JSON.stringify({
             title,
             body: message,
-            icon: "/pwa-icon-192.png",
-            badge: "/badge-mono.png",
+            icon: "/badge-mono-v2.png",
+            badge: "/badge-mono-v2.png",
             url: url || "/",
             tag: tag || type || "default",
             type: type || "general",
