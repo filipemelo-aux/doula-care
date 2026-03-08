@@ -33,6 +33,7 @@ import {
 } from "lucide-react";
 import type { Tables } from "@/integrations/supabase/types";
 import { parseISO } from "date-fns";
+import { calculateCurrentPregnancyWeeks, calculateCurrentPregnancyDays } from "@/lib/pregnancy";
 
 import { RevenueDetailDialog } from "@/components/financial/RevenueDetailDialog";
 import { supabase } from "@/integrations/supabase/client";
