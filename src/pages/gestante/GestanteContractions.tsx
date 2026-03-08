@@ -115,7 +115,7 @@ export default function GestanteContractions() {
         title: "⏱️ Nova Contração Registrada",
         message: `${client.full_name} iniciou uma contração.`,
         url: "/admin",
-        tag: `contraction-${client.id}`,
+        tag: `contraction-start-${data.id}`,
         type: "new_contraction",
       });
     } catch (error) {
