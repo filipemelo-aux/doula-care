@@ -517,13 +517,15 @@ export function NotificationsCenter({ fullPage = false }: NotificationsCenterPro
     
     // Child: Labor started
     if (client.labor_started_at) {
+      const laborRead = readLaborClients.has(client.id);
       children.push({
         id: `labor-${client.id}`,
         type: "labor_started",
         title: "Trabalho de Parto Iniciado",
         description: "Alerta de alta prioridade",
         timestamp: client.labor_started_at,
-        priority: "high"
+        priority: laborRead ? "low" : "high",
+        isRead: laborRead
       });
     }
 
