@@ -12,6 +12,81 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+type SubscriptionRow = {
+  user_id: string;
+  endpoint: string;
+  p256dh: string;
+  auth: string;
+  device_type: string | null;
+  created_at?: string;
+  updated_at?: string;
+};
+
+const getSubscriptionTimestamp = (sub: SubscriptionRow) =>
+  new Date(sub.updated_at ?? sub.created_at ?? 0).getTime();
+
+const isAndroidSubscription = (sub: SubscriptionRow) => {
+  const type = (sub.device_type ?? "").toLowerCase();
+  return type === "android" || type === "android_browser" || type === "android_twa";
+};
+
+function reduceSubscriptionsForDelivery(rawSubscriptions: SubscriptionRow[]) {
+  // 1) Keep only newest row per endpoint
+  const newestByEndpoint = new Map<string, SubscriptionRow>();
+  for (const sub of rawSubscriptions) {
+    const existing = newestByEndpoint.get(sub.endpoint);
+    if (!existing || getSubscriptionTimestamp(sub) > getSubscriptionTimestamp(existing)) {
+      newestByEndpoint.set(sub.endpoint, sub);
+    }
+  }
+
+  // 2) Group by user and collapse Android duplicates to avoid Chrome + native double alerts
+  const byUser = new Map<string, SubscriptionRow[]>();
+  for (const sub of newestByEndpoint.values()) {
+    const current = byUser.get(sub.user_id) ?? [];
+    current.push(sub);
+    byUser.set(sub.user_id, current);
+  }
+
+  const deliverable: SubscriptionRow[] = [];
+  const staleEndpoints = new Set<string>();
+
+  for (const userSubs of byUser.values()) {
+    const sorted = [...userSubs].sort(
+      (a, b) => getSubscriptionTimestamp(b) - getSubscriptionTimestamp(a)
+    );
+
+    const twaSubs = sorted.filter((sub) => sub.device_type === "android_twa");
+    if (twaSubs.length > 0) {
+      const [latestTwa, ...olderTwa] = twaSubs;
+      deliverable.push(latestTwa);
+      olderTwa.forEach((sub) => staleEndpoints.add(sub.endpoint));
+
+      sorted
+        .filter((sub) => sub.device_type === "android" || sub.device_type === "android_browser")
+        .forEach((sub) => staleEndpoints.add(sub.endpoint));
+
+      sorted
+        .filter((sub) => !isAndroidSubscription(sub))
+        .forEach((sub) => deliverable.push(sub));
+      continue;
+    }
+
+    const androidSubs = sorted.filter((sub) => isAndroidSubscription(sub));
+    if (androidSubs.length > 0) {
+      const [latestAndroid, ...olderAndroid] = androidSubs;
+      deliverable.push(latestAndroid);
+      olderAndroid.forEach((sub) => staleEndpoints.add(sub.endpoint));
+    }
+
+    sorted
+      .filter((sub) => !isAndroidSubscription(sub))
+      .forEach((sub) => deliverable.push(sub));
+  }
+
+  return { deliverable, staleEndpoints: [...staleEndpoints] };
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
