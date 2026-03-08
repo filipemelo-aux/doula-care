@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ReactNode } from "react";
 import logo from "@/assets/logo.png";
 import { useOrgBranding } from "@/hooks/useOrgBranding";
@@ -47,6 +47,31 @@ export function GestanteLayout({ children }: GestanteLayoutProps) {
   const unreadMessages = useGestanteUnreadCount(client?.id);
   const headerLogo = orgLogo || logo;
   const headerName = displayName || "Doula Care";
+
+  // On fresh app open (TWA restoring last URL), redirect gestante to dashboard
+  // unless it was opened from a notification click
+  useEffect(() => {
+    const isSubPage = location.pathname !== "/gestante" && location.pathname.startsWith("/gestante/");
+    const fromNotification = new URLSearchParams(location.search).get("from_notification");
+    const sessionKey = "gestante_session_started";
+    const alreadyStarted = sessionStorage.getItem(sessionKey);
+
+    if (isSubPage && !fromNotification && !alreadyStarted) {
+      // Fresh app open landing on a sub-page — redirect to dashboard
+      sessionStorage.setItem(sessionKey, "1");
+      navigate("/gestante", { replace: true });
+    } else {
+      sessionStorage.setItem(sessionKey, "1");
+    }
+    // Clean up from_notification param from URL
+    if (fromNotification) {
+      const params = new URLSearchParams(location.search);
+      params.delete("from_notification");
+      const cleanSearch = params.toString();
+      const cleanUrl = location.pathname + (cleanSearch ? `?${cleanSearch}` : "");
+      window.history.replaceState({}, "", cleanUrl);
+    }
+  }, []); // Only on mount
 
   const handleNavClick = (to: string) => {
     navigate(to);
