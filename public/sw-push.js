@@ -5,11 +5,40 @@ const CACHE_PREFIX = "doula-care-";
 const CACHE_VERSION = "v1.1.0";
 const CURRENT_CACHE = CACHE_PREFIX + CACHE_VERSION;
 
-// --- TWA detection flag ---
+// --- TWA detection flag (persisted via Cache API) ---
 // When the web app detects it's running inside a TWA, it sends a message
 // to set this flag. The SW then skips showNotification to avoid duplicates
 // (the TWA notification delegation already handles display natively).
+// Using Cache API to persist across SW restarts (localStorage unavailable in SW).
+const TWA_CACHE_KEY = "doula-care-twa-mode";
 let isTWAEnvironment = false;
+
+async function persistTWAMode(enabled) {
+  isTWAEnvironment = enabled;
+  try {
+    const cache = await caches.open(TWA_CACHE_KEY);
+    if (enabled) {
+      await cache.put("/_twa_flag", new Response("true"));
+    } else {
+      await cache.delete("/_twa_flag");
+    }
+  } catch (e) {
+    console.error("[SW] Failed to persist TWA flag:", e);
+  }
+}
+
+async function loadTWAMode() {
+  try {
+    const cache = await caches.open(TWA_CACHE_KEY);
+    const resp = await cache.match("/_twa_flag");
+    if (resp) {
+      isTWAEnvironment = true;
+      console.log("[SW] TWA mode restored from cache");
+    }
+  } catch (e) {
+    // ignore
+  }
+}
 
 self.addEventListener("activate", (event) => {
   event.waitUntil(
