@@ -225,8 +225,10 @@ Deno.serve(async (req) => {
 
     // De-duplicate
     targetUserIds = [...new Set(targetUserIds)];
+    console.log("[push] targetUserIds:", targetUserIds.length, targetUserIds);
 
     if (targetUserIds.length === 0) {
+      console.log("[push] No target users, returning early");
       return new Response(
         JSON.stringify({ sent: 0, message: "No target users" }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -248,7 +250,9 @@ Deno.serve(async (req) => {
         .eq("id", callerProfileForPlan.organization_id)
         .single();
 
+      console.log("[push] Org plan:", orgPlanData?.plan);
       if (orgPlanData?.plan === "free") {
+        console.log("[push] Blocked: free plan");
         return new Response(
           JSON.stringify({ error: "Push notifications not available on Free plan" }),
           {
@@ -269,7 +273,9 @@ Deno.serve(async (req) => {
       throw subError;
     }
 
+    console.log("[push] Subscriptions found:", subscriptions?.length ?? 0);
     if (!subscriptions || subscriptions.length === 0) {
+      console.log("[push] No subscriptions, returning early");
       return new Response(
         JSON.stringify({ sent: 0, message: "No push subscriptions found" }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -363,6 +369,7 @@ Deno.serve(async (req) => {
         .in("endpoint", endpointsToRemove);
     }
 
+    console.log(`[push] Result: sent=${sent}, failed=${failed}, expired=${expiredEndpoints.length}, stale=${staleEndpoints.length}`);
     return new Response(
       JSON.stringify({
         sent,
