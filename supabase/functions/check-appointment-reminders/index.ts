@@ -84,7 +84,7 @@ Deno.serve(async (req) => {
             data: JSON.stringify({
               title,
               body,
-              icon: "/notif-icon-appointments.png",
+              icon: "/logo.png",
               badge: "/notif-icon-appointments.png",
               url,
               tag,

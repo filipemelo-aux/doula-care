@@ -50,7 +50,7 @@ self.addEventListener("push", (event) => {
       const origin = self.location.origin;
       const resolveUrl = (path) => path && path.startsWith("/") ? origin + path : (path || "");
 
-      const resolvedIcon = resolveUrl(icon || "/logo.png");
+      const resolvedIcon = resolveUrl("/logo.png");
       const resolvedBadge = resolveUrl(badge || icon || "/logo.png");
 
       const options = {

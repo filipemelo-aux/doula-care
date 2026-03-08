@@ -333,7 +333,7 @@ Deno.serve(async (req) => {
           data: JSON.stringify({
             title,
             body: message,
-            icon: notifIcon,
+            icon: "/logo.png",
             badge: notifIcon,
             url: url || "/",
             tag: tag || notifType || "default",
