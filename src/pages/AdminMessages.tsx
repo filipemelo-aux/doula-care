@@ -46,6 +46,7 @@ export default function AdminMessages() {
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const { organizationId } = useAuth();
   const queryClient = useQueryClient();
+  const onlineClientIds = useOnlineClients();
 
   const { data: clients } = useQuery({
     queryKey: ["admin-message-clients"],
