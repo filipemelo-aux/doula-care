@@ -50,10 +50,13 @@ self.addEventListener("push", (event) => {
       const origin = self.location.origin;
       const resolveUrl = (path) => path && path.startsWith("/") ? origin + path : (path || "");
 
+      const resolvedIcon = resolveUrl(icon || "/logo.png");
+      const resolvedBadge = resolveUrl(badge || icon || "/logo.png");
+
       const options = {
         body: body || "",
-        icon: resolveUrl(icon || "/logo.png"),
-        badge: resolveUrl("/badge-status-v3.png?v=3"),
+        icon: resolvedIcon,
+        badge: resolvedBadge,
         tag: isCritica ? `critica-${tag || type || "urgent"}` : (tag || type || "default"),
         renotify: true,
         requireInteraction: require_interaction ?? isCritica,

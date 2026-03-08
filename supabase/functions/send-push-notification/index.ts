@@ -334,7 +334,7 @@ Deno.serve(async (req) => {
             title,
             body: message,
             icon: notifIcon,
-            badge: "/badge-status-v3.png?v=3",
+            badge: notifIcon,
             url: url || "/",
             tag: tag || notifType || "default",
             type: notifType,
