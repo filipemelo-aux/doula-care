@@ -53,16 +53,23 @@ export function GestanteLayout({ children }: GestanteLayoutProps) {
   useEffect(() => {
     const isSubPage = location.pathname !== "/gestante" && location.pathname.startsWith("/gestante/");
     const fromNotification = new URLSearchParams(location.search).get("from_notification");
-    const sessionKey = "gestante_session_started";
-    const alreadyStarted = sessionStorage.getItem(sessionKey);
 
-    if (isSubPage && !fromNotification && !alreadyStarted) {
+    // Detect cold start: if the page was loaded (not a SPA navigation)
+    // performance.getEntriesByType("navigation") returns "navigate" on cold start,
+    // "back_forward" on restore, but in TWA it may return "navigate" too.
+    // Use a short-lived timestamp flag: set on first render, expire after 5s.
+    const sessionKey = "gestante_nav_ts";
+    const lastNavTs = sessionStorage.getItem(sessionKey);
+    const now = Date.now();
+    const isColdStart = !lastNavTs || (now - Number(lastNavTs)) > 30000; // 30s = likely app was closed
+
+    sessionStorage.setItem(sessionKey, String(now));
+
+    if (isSubPage && !fromNotification && isColdStart) {
       // Fresh app open landing on a sub-page — redirect to dashboard
-      sessionStorage.setItem(sessionKey, "1");
       navigate("/gestante", { replace: true });
-    } else {
-      sessionStorage.setItem(sessionKey, "1");
     }
+
     // Clean up from_notification param from URL
     if (fromNotification) {
       const params = new URLSearchParams(location.search);
