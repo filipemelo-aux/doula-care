@@ -49,7 +49,7 @@ self.addEventListener("push", (event) => {
       const options = {
         body: body || "",
         icon: icon || "/pwa-icon-192.png",
-        badge: badge || "/pwa-icon-192.png",
+        badge: badge || "/badge-mono.png",
         tag: isCritica ? `critica-${tag || type || "urgent"}` : (tag || type || "default"),
         renotify: true,
         requireInteraction: require_interaction ?? isCritica,
