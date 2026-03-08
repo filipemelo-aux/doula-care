@@ -47,7 +47,7 @@ export function InAppNotificationListener({ userId, role, clientId, organization
           // Check if this client already has labor started
           const { data: clientData } = await supabase
             .from("clients")
-            .select("id, full_name, labor_started_at")
+            .select("id, full_name, labor_started_at, user_id")
             .eq("id", contraction.client_id)
             .maybeSingle();
 
