@@ -17,7 +17,7 @@ interface InAppNotificationListenerProps {
   onNavigate?: (path: string) => void;
 }
 
-export function InAppNotificationListener({ userId, role, clientId, organizationId }: InAppNotificationListenerProps) {
+export function InAppNotificationListener({ userId, role, clientId, organizationId, onNavigate }: InAppNotificationListenerProps) {
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
   const contractionChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
   const [contractionsClient, setContractionsClient] = useState<Client | null>(null);
