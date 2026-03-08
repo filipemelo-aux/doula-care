@@ -58,6 +58,7 @@ export function SendNotificationDialog({
         message,
         url: "/gestante/mensagens",
         tag: "doula-message",
+        type: "new_message",
       });
     },
     onSuccess: () => {
