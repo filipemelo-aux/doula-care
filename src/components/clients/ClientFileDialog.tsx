@@ -17,6 +17,7 @@ import { cn, formatBrazilDate } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import type { Tables } from "@/integrations/supabase/types";
+import { calculateCurrentPregnancyWeeks, calculateCurrentPregnancyDays } from "@/lib/pregnancy";
 
 type Client = Tables<"clients">;
 
@@ -271,7 +272,11 @@ export function ClientFileDialog({ open, onOpenChange, client }: ClientFileDialo
       if (client.cpf) addText(`CPF: ${client.cpf}`);
       addText(`Situação: ${client.status === "outro" && client.custom_status ? client.custom_status : statusLabels[client.status] || client.status}`);
       if (client.dpp) addText(`DPP: ${formatDate(client.dpp)}`);
-      if (client.pregnancy_weeks) addText(`Semanas de gestação: ${client.pregnancy_weeks}`);
+      if (client.dpp || client.pregnancy_weeks) {
+        const calcWeeks = calculateCurrentPregnancyWeeks(client.pregnancy_weeks, client.pregnancy_weeks_set_at, client.dpp);
+        const calcDays = client.dpp ? calculateCurrentPregnancyDays(client.dpp) : 0;
+        if (calcWeeks !== null) addText(`Semanas de gestação: ${calcWeeks}s${calcDays > 0 ? `${calcDays}d` : ""}`);
+      }
       if (address) addText(`Endereço: ${address}`);
       addText(`Cadastrada em: ${formatDateTime(client.created_at)}`);
 
@@ -453,7 +458,11 @@ export function ClientFileDialog({ open, onOpenChange, client }: ClientFileDialo
                   value={client.status === "outro" && client.custom_status ? client.custom_status : statusLabels[client.status] || client.status}
                 />
                 {client.dpp && <Field label="DPP" value={formatDate(client.dpp)} />}
-                {client.pregnancy_weeks && <Field label="Semanas" value={`${client.pregnancy_weeks}`} />}
+                {(client.dpp || client.pregnancy_weeks) && (() => {
+                  const calcWeeks = calculateCurrentPregnancyWeeks(client.pregnancy_weeks, client.pregnancy_weeks_set_at, client.dpp);
+                  const calcDays = client.dpp ? calculateCurrentPregnancyDays(client.dpp) : 0;
+                  return calcWeeks !== null ? <Field label="Semanas" value={`${calcWeeks}s${calcDays > 0 ? `${calcDays}d` : ""}`} /> : null;
+                })()}
                 {address && <Field label="Endereço" value={address} fullWidth />}
                 <Field label="Cadastrada em" value={formatDateTime(client.created_at)} />
               </Section>

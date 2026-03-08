@@ -33,6 +33,7 @@ import {
 } from "lucide-react";
 import type { Tables } from "@/integrations/supabase/types";
 import { parseISO } from "date-fns";
+import { calculateCurrentPregnancyWeeks, calculateCurrentPregnancyDays } from "@/lib/pregnancy";
 
 import { RevenueDetailDialog } from "@/components/financial/RevenueDetailDialog";
 import { supabase } from "@/integrations/supabase/client";
@@ -195,11 +196,15 @@ export function ClientDetailsDialog({
                   >
                     {statusLabels[client.status as keyof typeof statusLabels]}
                   </Badge>
-                  {client.status === "gestante" && client.pregnancy_weeks && (
-                    <span className="text-xs text-muted-foreground">
-                      {client.pregnancy_weeks} sem
-                    </span>
-                  )}
+                  {client.status === "gestante" && (client.dpp || client.pregnancy_weeks) && (() => {
+                    const weeks = calculateCurrentPregnancyWeeks(client.pregnancy_weeks, client.pregnancy_weeks_set_at, client.dpp);
+                    const days = client.dpp ? calculateCurrentPregnancyDays(client.dpp) : 0;
+                    return weeks !== null ? (
+                      <span className="text-xs text-muted-foreground">
+                        {weeks}s{days > 0 ? `${days}d` : ""}
+                      </span>
+                    ) : null;
+                  })()}
                 </div>
                 <h2 className="text-lg font-semibold text-foreground mt-1 break-words">
                   {client.full_name}
