@@ -354,12 +354,13 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Clean up expired subscriptions
-    if (expiredEndpoints.length > 0) {
+    // Clean up expired + stale subscriptions
+    const endpointsToRemove = [...new Set([...expiredEndpoints, ...staleEndpoints])];
+    if (endpointsToRemove.length > 0) {
       await supabase
         .from("push_subscriptions")
         .delete()
-        .in("endpoint", expiredEndpoints);
+        .in("endpoint", endpointsToRemove);
     }
 
     return new Response(
@@ -367,6 +368,7 @@ Deno.serve(async (req) => {
         sent,
         failed,
         expired_removed: expiredEndpoints.length,
+        stale_removed: staleEndpoints.length,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
