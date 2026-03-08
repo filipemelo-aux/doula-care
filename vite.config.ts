@@ -5,7 +5,7 @@ import { componentTagger } from "lovable-tagger";
 import { VitePWA } from "vite-plugin-pwa";
 import fs from "fs";
 
-const APP_VERSION = "1.1.4";
+const APP_VERSION = "1.1.5";
 
 // Short build suffix: DDMM using Brazil timezone to avoid UTC date shift
 const now = new Date();
