@@ -70,6 +70,7 @@ self.addEventListener("message", (event) => {
     persistTWAMode(true);
     console.log("[SW] TWA mode enabled — SW notifications suppressed (delegation active)");
   }
+});
 
 // --- Push notifications ---
 self.addEventListener("push", (event) => {
