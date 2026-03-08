@@ -964,8 +964,10 @@ export function NotificationsCenter({ fullPage = false }: NotificationsCenterPro
                                 </p>
                                 {/* Labor badge - pulsing */}
                                 {notification.isInLabor && (
-                                  <Badge className="bg-destructive text-destructive-foreground text-[9px] lg:text-[10px] px-1.5 h-4 lg:h-5 mt-1 animate-pulse">
-                                    🚨 EM TRABALHO DE PARTO
+                                  <Badge className={`bg-destructive text-destructive-foreground text-[9px] lg:text-[10px] px-1.5 h-4 lg:h-5 mt-1 ${
+                                    notification.isRead ? "" : "animate-pulse"
+                                  }`}>
+                                    {notification.isRead ? "⚠️ EM TRABALHO DE PARTO" : "🚨 EM TRABALHO DE PARTO"}
                                   </Badge>
                                 )}
                                 {notification.client?.dpp && notification.type !== "new_diary_entry" && notification.type !== "service_request" && (
