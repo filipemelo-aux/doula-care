@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useGestanteAuth } from "@/contexts/GestanteAuthContext";
 import { uploadMessageAttachment, compressImageIfNeeded } from "@/lib/uploadAttachment";
+import { sendPushNotification } from "@/lib/pushNotifications";
 import {
   Dialog,
   DialogContent,

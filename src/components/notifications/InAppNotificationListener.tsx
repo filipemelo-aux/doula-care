@@ -102,6 +102,20 @@ export function InAppNotificationListener({ userId, role, clientId, organization
                     organization_id: organizationId || null,
                   });
 
+                  // Send push to client
+                  if (clientData.user_id) {
+                    sendPushNotification({
+                      user_ids: [clientData.user_id],
+                      title: "💕 Seu bebê está a caminho!",
+                      message: "Sua Doula registrou que o trabalho de parto começou. Respire fundo!",
+                      url: "/gestante",
+                      tag: "labor-started-client",
+                      type: "labor_started",
+                      priority: "critica",
+                      require_interaction: true,
+                    });
+                  }
+
                   toast.success(`Trabalho de parto registrado para ${clientData.full_name}`, {
                     icon: <Baby className="h-5 w-5 text-primary" />,
                   });
