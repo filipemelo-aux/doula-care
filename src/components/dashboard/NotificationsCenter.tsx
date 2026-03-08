@@ -870,7 +870,7 @@ export function NotificationsCenter({ fullPage = false }: NotificationsCenterPro
                     >
                       <div
                         className={`rounded-lg border transition-colors overflow-hidden ${
-                          notification.isRead
+                          notification.isRead && !notification.isInLabor
                             ? "bg-muted/30 border-border/50 opacity-60"
                             : notification.isInLabor
                             ? "bg-destructive/10 border-destructive/30 ring-1 ring-destructive/20"
