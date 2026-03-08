@@ -53,7 +53,6 @@ export default function GestanteDashboard() {
   useEffect(() => {
     if (user) {
       fetchFullClientData();
-      checkPaymentMessages();
       // Fetch avatar
       supabase
         .from("profiles")
