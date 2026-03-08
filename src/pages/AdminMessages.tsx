@@ -28,6 +28,7 @@ import { Tables } from "@/integrations/supabase/types";
 import { sendPushNotification } from "@/lib/pushNotifications";
 import { cn } from "@/lib/utils";
 import { uploadMessageAttachment, compressImageIfNeeded } from "@/lib/uploadAttachment";
+import { useOnlineClients } from "@/hooks/useOnlineClients";
 
 type Client = Tables<"clients">;
 type Notification = Tables<"client_notifications">;
