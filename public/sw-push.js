@@ -2,7 +2,7 @@
 
 // --- Cache versioning & cleanup ---
 const CACHE_PREFIX = "doula-care-";
-const CACHE_VERSION = "v1.1.1";
+const CACHE_VERSION = "v1.1.2";
 const CURRENT_CACHE = CACHE_PREFIX + CACHE_VERSION;
 
 // --- TWA detection flag (persisted via Cache API) ---
