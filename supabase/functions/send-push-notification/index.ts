@@ -276,6 +276,18 @@ Deno.serve(async (req) => {
       );
     }
 
+    const {
+      deliverable: subscriptionsToSend,
+      staleEndpoints,
+    } = reduceSubscriptionsForDelivery(subscriptions as SubscriptionRow[]);
+
+    if (subscriptionsToSend.length === 0) {
+      return new Response(
+        JSON.stringify({ sent: 0, message: "No active push subscriptions found" }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     const vapid: VapidKeys = {
       subject: "mailto:contato@papodedoula.com",
       publicKey: vapidPublicKey,
@@ -286,7 +298,7 @@ Deno.serve(async (req) => {
     let failed = 0;
     const expiredEndpoints: string[] = [];
 
-    for (const sub of subscriptions) {
+    for (const sub of subscriptionsToSend) {
       try {
         const pushSubscription: PushSubscription = {
           endpoint: sub.endpoint,
