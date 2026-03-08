@@ -383,23 +383,35 @@ export default function AdminMessages() {
                   >
                     <ArrowLeft className="h-4 w-4" />
                   </Button>
-                  <Avatar className="h-8 w-8">
-                    <AvatarFallback className="bg-primary/10 text-primary text-xs">
-                      {selectedClient
-                        ? abbreviateName(selectedClient.full_name)
-                            .split(" ")
-                            .map((n) => n[0])
-                            .join("")
-                            .substring(0, 2)
-                        : "?"}
-                    </AvatarFallback>
-                  </Avatar>
+                  <div className="relative">
+                    <Avatar className="h-8 w-8">
+                      <AvatarFallback className="bg-primary/10 text-primary text-xs">
+                        {selectedClient
+                          ? abbreviateName(selectedClient.full_name)
+                              .split(" ")
+                              .map((n) => n[0])
+                              .join("")
+                              .substring(0, 2)
+                          : "?"}
+                      </AvatarFallback>
+                    </Avatar>
+                    {selectedClientId && (
+                      <span
+                        className={cn(
+                          "absolute bottom-0 right-0 h-2 w-2 rounded-full border-2 border-background",
+                          onlineClientIds.has(selectedClientId) ? "bg-green-500" : "bg-muted-foreground/30"
+                        )}
+                      />
+                    )}
+                  </div>
                   <div>
                     <p className="font-medium text-sm">
                       {selectedClient ? abbreviateName(selectedClient.full_name) : ""}
                     </p>
                     <p className="text-[10px] text-muted-foreground">
-                      {selectedClient?.status === "gestante"
+                      {selectedClientId && onlineClientIds.has(selectedClientId)
+                        ? "Online"
+                        : selectedClient?.status === "gestante"
                         ? "Gestante"
                         : selectedClient?.status === "lactante"
                         ? "Puérpera"
