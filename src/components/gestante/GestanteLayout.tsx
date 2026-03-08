@@ -22,6 +22,7 @@ import {
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { PushNotificationToggle } from "@/components/pwa/PushNotificationToggle";
+import { useClientPresenceBroadcast } from "@/hooks/useClientPresence";
 
 interface GestanteLayoutProps {
   children: ReactNode;
