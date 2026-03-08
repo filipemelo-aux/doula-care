@@ -90,6 +90,11 @@ self.addEventListener("push", (event) => {
 
   const handlePush = async () => {
     try {
+      // Ensure TWA flag is loaded (in case SW just started and activate hasn't run yet)
+      if (!isTWAEnvironment) {
+        await loadTWAMode();
+      }
+
       // If running inside a TWA with notification delegation enabled,
       // the Android app handles notification display natively.
       // Showing via SW would cause duplicate notifications referencing "Google Chrome".
