@@ -8,11 +8,16 @@ export default function UpdatePrompt() {
   const [waitingWorker, setWaitingWorker] = useState<ServiceWorker | null>(null);
 
   const handleUpdate = useCallback(() => {
+    setShowUpdate(false);
     if (waitingWorker) {
       waitingWorker.postMessage({ type: "SKIP_WAITING" });
     }
-    // Reload after a short delay to let SW activate
-    setTimeout(() => window.location.reload(), 300);
+    // Listen for the new SW to take control, then reload
+    navigator.serviceWorker.addEventListener("controllerchange", () => {
+      window.location.reload();
+    }, { once: true });
+    // Fallback reload if controllerchange doesn't fire
+    setTimeout(() => window.location.reload(), 2000);
   }, [waitingWorker]);
 
   useEffect(() => {
