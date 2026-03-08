@@ -176,6 +176,16 @@ export function InAppNotificationListener({ userId, role, clientId, organization
                 },
               },
             });
+
+            // Send push to admins
+            sendPushNotification({
+              send_to_admins: true,
+              title: `📅 Solicitação de Consulta`,
+              message: `${clientData.full_name} solicitou consulta para ${request.requested_date} às ${request.requested_time?.slice(0, 5)}`,
+              url: "/agenda",
+              tag: "appointment-request",
+              type: "appointment_reminder",
+            });
           }
         }
       )
