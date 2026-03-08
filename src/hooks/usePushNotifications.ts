@@ -27,10 +27,9 @@ export function usePushNotifications() {
     try {
       const registration = await navigator.serviceWorker.ready;
       const subscription = await registration.pushManager.getSubscription();
+      const currentVapidKey = await getVapidPublicKey();
 
       if (subscription) {
-        // Verify the subscription is still valid by checking against current VAPID key
-        const currentVapidKey = await getVapidPublicKey();
         const storedVapidKey = localStorage.getItem("vapid_public_key");
 
         if (currentVapidKey && storedVapidKey && currentVapidKey !== storedVapidKey) {
@@ -39,7 +38,6 @@ export function usePushNotifications() {
           await subscription.unsubscribe();
           localStorage.setItem("vapid_public_key", currentVapidKey);
           setIsSubscribed(false);
-          // Auto re-subscribe if permission was already granted
           if (Notification.permission === "granted") {
             await doSubscribe(currentVapidKey);
           }
@@ -48,9 +46,18 @@ export function usePushNotifications() {
             localStorage.setItem("vapid_public_key", currentVapidKey);
           }
           setIsSubscribed(true);
+          // Always refresh the subscription on load to keep FCM endpoint alive
+          if (currentVapidKey && Notification.permission === "granted") {
+            doSubscribe(currentVapidKey).catch(console.error);
+          }
         }
       } else {
         setIsSubscribed(false);
+        // Auto re-subscribe if permission was already granted but subscription was lost
+        if (Notification.permission === "granted" && currentVapidKey) {
+          console.log("Subscription lost, auto re-subscribing...");
+          await doSubscribe(currentVapidKey);
+        }
       }
     } catch (err) {
       console.error("Error checking push subscription:", err);
