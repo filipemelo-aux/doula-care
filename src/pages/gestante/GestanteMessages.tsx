@@ -168,6 +168,7 @@ export default function GestanteMessages() {
         message: `${client.full_name} aceitou o orçamento.`,
         url: "/admin",
         tag: "budget-accepted",
+        type: "budget_response",
       });
     },
     onSuccess: (_, request) => {
@@ -200,6 +201,7 @@ export default function GestanteMessages() {
         message: `${client.full_name} recusou o orçamento.`,
         url: "/admin",
         tag: "budget-rejected",
+        type: "budget_response",
       });
     },
     onSuccess: (_, request) => {
@@ -293,6 +295,7 @@ export default function GestanteMessages() {
         message: messageText.substring(0, 100),
         url: "/admin",
         tag: "client-message",
+        type: "new_message",
       });
 
       setNewMessage("");

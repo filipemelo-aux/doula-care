@@ -212,6 +212,7 @@ export default function AdminMessages() {
         message: messageText.substring(0, 100),
         url: "/gestante/mensagens",
         tag: "doula-message",
+        type: "new_message",
       });
 
       setNewMessage("");
