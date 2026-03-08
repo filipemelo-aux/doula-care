@@ -62,27 +62,10 @@ export function InAppNotificationListener({ userId, role, clientId, organization
             `⏱️ ${clientData.full_name} registrou uma contração`,
             {
               id: toastId,
-              description: (
-                <div className="flex flex-col gap-2 mt-1">
-                  <span>Deseja registrar que o trabalho de parto iniciou?</span>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="w-full gap-2"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      toast.dismiss(toastId);
-                      openContractionsHistory(clientData as Client);
-                    }}
-                  >
-                    <History className="h-4 w-4" />
-                    Ver Histórico de Contrações
-                  </Button>
-                </div>
-              ),
+              description: "Deseja registrar que o trabalho de parto iniciou?",
               duration: 60000,
               icon: <Baby className="h-5 w-5 text-primary" />,
-              className: "border-2 border-primary/40 shadow-lg",
+              className: "border-2 border-primary/40 shadow-lg [&_[data-content]]:!max-w-full",
               action: {
                 label: "Registrar Parto",
                 onClick: async () => {
