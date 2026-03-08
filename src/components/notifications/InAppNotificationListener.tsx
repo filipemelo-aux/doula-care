@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Bell, AlertTriangle, Baby } from "lucide-react";
-import { Button } from "@/components/ui/button";
+
 import { ClientContractionsDialog } from "@/components/dashboard/ClientContractionsDialog";
 import { Tables } from "@/integrations/supabase/types";
 import { sendPushNotification } from "@/lib/pushNotifications";
