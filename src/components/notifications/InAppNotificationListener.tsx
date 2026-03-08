@@ -173,7 +173,8 @@ export function InAppNotificationListener({ userId, role, clientId, organization
               action: {
                 label: "Ver Agenda",
                 onClick: () => {
-                  window.location.href = "/agenda";
+                  if (onNavigate) onNavigate("/agenda");
+                  else window.location.href = "/agenda";
                 },
               },
             });
@@ -231,7 +232,8 @@ export function InAppNotificationListener({ userId, role, clientId, organization
             action: {
               label: "Ver",
               onClick: () => {
-                window.location.href = `/mensagens?clientId=${notification.client_id}`;
+                if (onNavigate) onNavigate(`/mensagens?clientId=${notification.client_id}`);
+                else window.location.href = `/mensagens?clientId=${notification.client_id}`;
               },
             },
           });
@@ -293,7 +295,8 @@ export function InAppNotificationListener({ userId, role, clientId, organization
             action: {
               label: "Ver",
               onClick: () => {
-                window.location.href = "/gestante/mensagens";
+                if (onNavigate) onNavigate("/gestante/mensagens");
+                else window.location.href = "/gestante/mensagens";
               },
             },
           });
