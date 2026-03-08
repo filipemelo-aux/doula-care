@@ -85,7 +85,7 @@ Deno.serve(async (req) => {
               title,
               body,
               icon: "/notif-icon-appointments.png",
-              badge: "/badge-status-v3.png?v=3",
+              badge: "/notif-icon-appointments.png",
               url,
               tag,
               type: "appointment_reminder",
