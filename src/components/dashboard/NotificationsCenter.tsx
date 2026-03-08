@@ -460,6 +460,16 @@ export function NotificationsCenter({ fullPage = false }: NotificationsCenterPro
       }
       return next;
     });
+
+    // Mark labor as read when expanding a birth notification
+    const match = id.match(/^birth-(.+)$/);
+    if (match) {
+      const clientId = match[1];
+      const client = clientsMap.get(clientId);
+      if (client?.labor_started_at) {
+        setReadLaborClients(prev => new Set([...prev, clientId]));
+      }
+    }
   };
 
   // Group contractions by client
