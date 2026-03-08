@@ -114,6 +114,7 @@ export function NotificationsCenter({ fullPage = false }: NotificationsCenterPro
   } | null>(null);
   const [expandedNotifications, setExpandedNotifications] = useState<Set<string>>(new Set());
   const [readContractionClients, setReadContractionClients] = useState<Set<string>>(new Set());
+  const [readLaborClients, setReadLaborClients] = useState<Set<string>>(new Set());
   const queryClient = useQueryClient();
 
   // Fetch all clients for lookup (needed for diary/contraction notifications)
