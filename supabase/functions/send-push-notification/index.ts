@@ -325,9 +325,9 @@ Deno.serve(async (req) => {
           budget_response: "/notif-icon-services.png",
           payment_received: "/notif-icon-payment.png",
           new_diary: "/notif-icon-diary.png",
-          general: "/badge-mono-v2.png",
+          general: "/logo.png",
         };
-        const notifIcon = typeIconMap[notifType] || "/badge-mono-v2.png";
+        const notifIcon = typeIconMap[notifType] || "/logo.png";
 
         const pushMessage: PushMessage = {
           data: JSON.stringify({

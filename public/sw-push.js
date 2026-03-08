@@ -52,7 +52,7 @@ self.addEventListener("push", (event) => {
 
       const options = {
         body: body || "",
-        icon: resolveUrl(icon || "/badge-mono-v2.png"),
+        icon: resolveUrl(icon || "/logo.png"),
         badge: resolveUrl("/badge-status-v3.png?v=3"),
         tag: isCritica ? `critica-${tag || type || "urgent"}` : (tag || type || "default"),
         renotify: true,
