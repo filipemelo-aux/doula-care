@@ -603,6 +603,7 @@ export function NotificationsCenter({ fullPage = false }: NotificationsCenterPro
     const parentType = client.is_post_term ? "post_term" : "birth_approaching";
     const hasHighPriorityChild = children.some(c => c.priority === "high");
     const isInLabor = !!client.labor_started_at;
+    const isLaborRead = readLaborClients.has(client.id);
     
     parentNotifications.push({
       id: `birth-${client.id}`,
@@ -613,7 +614,7 @@ export function NotificationsCenter({ fullPage = false }: NotificationsCenterPro
       priority: hasHighPriorityChild || client.is_post_term || (client.current_weeks && client.current_weeks >= 39) ? "high" : "medium",
       icon: client.is_post_term ? AlertTriangle : Baby,
       children,
-      isInLabor
+      isInLabor: isInLabor && !isLaborRead
     });
   });
 
