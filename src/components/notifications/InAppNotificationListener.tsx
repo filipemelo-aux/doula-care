@@ -107,7 +107,10 @@ export function InAppNotificationListener({ userId, role, clientId, organization
               },
               cancel: {
                 label: "Aguardar",
-                onClick: () => {},
+                onClick: () => {
+                  // Open contractions history on dismiss
+                  openContractionsHistory(clientData as Client);
+                },
               },
             }
           );
