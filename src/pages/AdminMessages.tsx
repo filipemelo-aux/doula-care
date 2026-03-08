@@ -28,6 +28,7 @@ import { Tables } from "@/integrations/supabase/types";
 import { sendPushNotification } from "@/lib/pushNotifications";
 import { cn } from "@/lib/utils";
 import { uploadMessageAttachment, compressImageIfNeeded } from "@/lib/uploadAttachment";
+import { useOnlineClients } from "@/hooks/useOnlineClients";
 
 type Client = Tables<"clients">;
 type Notification = Tables<"client_notifications">;
@@ -45,6 +46,7 @@ export default function AdminMessages() {
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const { organizationId } = useAuth();
   const queryClient = useQueryClient();
+  const onlineClientIds = useOnlineClients();
 
   const { data: clients } = useQuery({
     queryKey: ["admin-message-clients"],
@@ -95,11 +97,12 @@ export default function AdminMessages() {
     (c) => !messagesByClient.has(c.id)
   ) || [];
 
+  const allClientsSorted = [...clientsWithMessages, ...clientsWithoutMessages];
   const filteredClients = searchTerm
-    ? [...clientsWithMessages, ...clientsWithoutMessages].filter((c) =>
+    ? allClientsSorted.filter((c) =>
         c.full_name.toLowerCase().includes(searchTerm.toLowerCase())
       )
-    : clientsWithMessages;
+    : allClientsSorted;
 
   const selectedClient = clients?.find((c) => c.id === selectedClientId);
   const selectedMessages = selectedClientId
@@ -295,6 +298,7 @@ export default function AdminMessages() {
                   const unread = getUnreadCount(client.id);
                   const lastMsg = getLastMessage(client.id);
                   const isSelected = selectedClientId === client.id;
+                  const isOnline = onlineClientIds.has(client.id);
                   return (
                     <button
                       key={client.id}
@@ -305,15 +309,23 @@ export default function AdminMessages() {
                       )}
                     >
                       <div className="flex items-center gap-3">
-                        <Avatar className="h-9 w-9 flex-shrink-0">
-                          <AvatarFallback className="bg-primary/10 text-primary text-xs">
-                            {abbreviateName(client.full_name)
-                              .split(" ")
-                              .map((n) => n[0])
-                              .join("")
-                              .substring(0, 2)}
-                          </AvatarFallback>
-                        </Avatar>
+                        <div className="relative flex-shrink-0">
+                          <Avatar className="h-9 w-9">
+                            <AvatarFallback className="bg-primary/10 text-primary text-xs">
+                              {abbreviateName(client.full_name)
+                                .split(" ")
+                                .map((n) => n[0])
+                                .join("")
+                                .substring(0, 2)}
+                            </AvatarFallback>
+                          </Avatar>
+                          <span
+                            className={cn(
+                              "absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-background",
+                              isOnline ? "bg-green-500" : "bg-muted-foreground/30"
+                            )}
+                          />
+                        </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between">
                             <p className="text-sm font-medium truncate">
@@ -325,11 +337,15 @@ export default function AdminMessages() {
                               </Badge>
                             )}
                           </div>
-                          {lastMsg && (
+                          {lastMsg ? (
                             <p className="text-xs text-muted-foreground truncate mt-0.5">
                               {isClientMessage(lastMsg) ? "" : "Você: "}
                               {lastMsg.message.substring(0, 30)}
                               {lastMsg.message.length > 30 ? "…" : ""}
+                            </p>
+                          ) : (
+                            <p className="text-xs text-muted-foreground/50 truncate mt-0.5">
+                              Sem mensagens
                             </p>
                           )}
                         </div>
@@ -367,23 +383,35 @@ export default function AdminMessages() {
                   >
                     <ArrowLeft className="h-4 w-4" />
                   </Button>
-                  <Avatar className="h-8 w-8">
-                    <AvatarFallback className="bg-primary/10 text-primary text-xs">
-                      {selectedClient
-                        ? abbreviateName(selectedClient.full_name)
-                            .split(" ")
-                            .map((n) => n[0])
-                            .join("")
-                            .substring(0, 2)
-                        : "?"}
-                    </AvatarFallback>
-                  </Avatar>
+                  <div className="relative">
+                    <Avatar className="h-8 w-8">
+                      <AvatarFallback className="bg-primary/10 text-primary text-xs">
+                        {selectedClient
+                          ? abbreviateName(selectedClient.full_name)
+                              .split(" ")
+                              .map((n) => n[0])
+                              .join("")
+                              .substring(0, 2)
+                          : "?"}
+                      </AvatarFallback>
+                    </Avatar>
+                    {selectedClientId && (
+                      <span
+                        className={cn(
+                          "absolute bottom-0 right-0 h-2 w-2 rounded-full border-2 border-background",
+                          onlineClientIds.has(selectedClientId) ? "bg-green-500" : "bg-muted-foreground/30"
+                        )}
+                      />
+                    )}
+                  </div>
                   <div>
                     <p className="font-medium text-sm">
                       {selectedClient ? abbreviateName(selectedClient.full_name) : ""}
                     </p>
                     <p className="text-[10px] text-muted-foreground">
-                      {selectedClient?.status === "gestante"
+                      {selectedClientId && onlineClientIds.has(selectedClientId)
+                        ? "Online"
+                        : selectedClient?.status === "gestante"
                         ? "Gestante"
                         : selectedClient?.status === "lactante"
                         ? "Puérpera"

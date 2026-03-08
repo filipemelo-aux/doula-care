@@ -22,6 +22,7 @@ import {
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { PushNotificationToggle } from "@/components/pwa/PushNotificationToggle";
+import { useClientPresenceBroadcast } from "@/hooks/useClientPresence";
 
 interface GestanteLayoutProps {
   children: ReactNode;
@@ -45,6 +46,7 @@ export function GestanteLayout({ children }: GestanteLayoutProps) {
   const { signOut, client } = useGestanteAuth();
   const { logoUrl: orgLogo, displayName } = useOrgBranding();
   const unreadMessages = useGestanteUnreadCount(client?.id);
+  useClientPresenceBroadcast();
   const headerLogo = orgLogo || logo;
   const headerName = displayName || "Doula Care";
 
