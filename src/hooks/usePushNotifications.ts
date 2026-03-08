@@ -86,12 +86,21 @@ export function usePushNotifications() {
         return false;
       }
 
-      // Detect device type
+      // Detect device type/context
       const ua = navigator.userAgent;
+      const isAndroid = /android/i.test(ua);
+      const isIOS = /iphone|ipad|ipod/i.test(ua);
+      const isMobile = /mobile/i.test(ua);
+      const isStandaloneLike =
+        window.matchMedia("(display-mode: standalone)").matches ||
+        window.matchMedia("(display-mode: fullscreen)").matches ||
+        window.matchMedia("(display-mode: minimal-ui)").matches;
+      const isTWALikely = isAndroid && (document.referrer.startsWith("android-app://") || isStandaloneLike);
+
       let deviceType = "desktop";
-      if (/android/i.test(ua)) deviceType = "android";
-      else if (/iphone|ipad|ipod/i.test(ua)) deviceType = "ios";
-      else if (/mobile/i.test(ua)) deviceType = "mobile";
+      if (isAndroid) deviceType = isTWALikely ? "android_twa" : "android_browser";
+      else if (isIOS) deviceType = "ios";
+      else if (isMobile) deviceType = "mobile";
 
       // Save subscription to database
       const { error } = await supabase.from("push_subscriptions").upsert(

@@ -2,7 +2,7 @@
 
 // --- Cache versioning & cleanup ---
 const CACHE_PREFIX = "doula-care-";
-const CACHE_VERSION = "v1.1.2";
+const CACHE_VERSION = "v1.1.3";
 const CURRENT_CACHE = CACHE_PREFIX + CACHE_VERSION;
 
 // --- TWA detection flag (persisted via Cache API) ---
@@ -67,8 +67,13 @@ self.addEventListener("message", (event) => {
   }
   // TWA detection: the web app signals when running inside a TWA
   if (event.data?.type === "SET_TWA_MODE") {
-    persistTWAMode(true);
-    console.log("[SW] TWA mode enabled — SW notifications suppressed (delegation active)");
+    const enabled = event.data?.enabled !== false;
+    persistTWAMode(enabled);
+    console.log(
+      enabled
+        ? "[SW] TWA mode enabled — SW notifications suppressed (delegation active)"
+        : "[SW] TWA mode disabled — SW notifications enabled"
+    );
   }
 });
 
