@@ -2,14 +2,16 @@ import { usePushNotifications } from "@/hooks/usePushNotifications";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Bell, BellOff, Loader2, CheckCircle2, XCircle, Smartphone } from "lucide-react";
+import { Bell, BellOff, Loader2, CheckCircle2, XCircle, Smartphone, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 import { useState } from "react";
 import { PushPermissionModal } from "@/components/notifications/PushPermissionModal";
+import { supabase } from "@/integrations/supabase/client";
 
 export function PushNotificationStatusCard() {
   const { isSupported, isSubscribed, isLoading, permission, subscribe, unsubscribe } = usePushNotifications();
   const [showModal, setShowModal] = useState(false);
+  const [isResetting, setIsResetting] = useState(false);
 
   if (!isSupported) {
     return (
@@ -37,6 +39,46 @@ export function PushNotificationStatusCard() {
       toast.error("Notificações bloqueadas. Habilite nas configurações do navegador.");
     } else {
       setShowModal(true);
+    }
+  };
+
+  const handleFullReset = async () => {
+    setIsResetting(true);
+    try {
+      // 1. Unsubscribe from push
+      const registration = await navigator.serviceWorker.ready;
+      const subscription = await registration.pushManager.getSubscription();
+      if (subscription) {
+        const endpoint = subscription.endpoint;
+        await subscription.unsubscribe();
+        // Remove from DB
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          await supabase.from("push_subscriptions").delete().eq("user_id", user.id);
+        }
+      }
+
+      // 2. Delete all caches
+      const cacheKeys = await caches.keys();
+      await Promise.all(cacheKeys.map((key) => caches.delete(key)));
+
+      // 3. Unregister all service workers
+      const registrations = await navigator.serviceWorker.getRegistrations();
+      await Promise.all(registrations.map((reg) => reg.unregister()));
+
+      // 4. Clear push-related localStorage
+      localStorage.removeItem("vapid_public_key");
+
+      toast.success("Reset completo! Recarregando o app...");
+
+      // 5. Reload to re-register SW in fresh context
+      setTimeout(() => {
+        window.location.reload();
+      }, 1500);
+    } catch (err) {
+      console.error("Error during full reset:", err);
+      toast.error("Erro ao resetar. Tente novamente.");
+      setIsResetting(false);
     }
   };
 
@@ -105,6 +147,21 @@ export function PushNotificationStatusCard() {
             ) : (
               <><Bell className="h-4 w-4" />Ativar notificações</>
             )}
+          </Button>
+
+          <Button
+            variant="ghost"
+            size="sm"
+            className="w-full gap-2 text-muted-foreground"
+            onClick={handleFullReset}
+            disabled={isResetting}
+          >
+            {isResetting ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <RotateCcw className="h-4 w-4" />
+            )}
+            Resetar notificações (limpar cache e reconectar)
           </Button>
         </CardContent>
       </Card>
