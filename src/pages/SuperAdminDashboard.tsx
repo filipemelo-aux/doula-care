@@ -12,6 +12,7 @@ import { PlanPricingCard } from "@/components/superadmin/PlanPricingCard";
 import { PlanLimitsCard } from "@/components/superadmin/PlanLimitsCard";
 import { OrgBillingCard } from "@/components/superadmin/OrgBillingCard";
 import { UserManagementCard } from "@/components/superadmin/UserManagementCard";
+import { BroadcastNotificationCard } from "@/components/superadmin/BroadcastNotificationCard";
 import { PromoTriggerButton } from "@/components/superadmin/PromoTriggerButton";
 import { useOnlineOrgs } from "@/hooks/useOnlineOrgs";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
