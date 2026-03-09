@@ -235,32 +235,45 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Check org plan allows push notifications (only for non-admin senders)
-    // Get caller's org plan
-    const { data: callerProfileForPlan } = await supabase
-      .from("profiles")
-      .select("organization_id")
+    // Check if caller is super_admin (bypass plan check)
+    const { data: superAdminRole } = await supabase
+      .from("user_roles")
+      .select("role")
       .eq("user_id", user.id)
+      .eq("role", "super_admin")
       .maybeSingle();
 
-    if (callerProfileForPlan?.organization_id) {
-      const { data: orgPlanData } = await supabase
-        .from("organizations")
-        .select("plan")
-        .eq("id", callerProfileForPlan.organization_id)
-        .single();
+    const isSuperAdmin = !!superAdminRole;
 
-      console.log("[push] Org plan:", orgPlanData?.plan);
-      if (orgPlanData?.plan === "free") {
-        console.log("[push] Blocked: free plan");
-        return new Response(
-          JSON.stringify({ error: "Push notifications not available on Free plan" }),
-          {
-            status: 403,
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-          }
-        );
+    // Check org plan allows push notifications (skip for super_admin)
+    if (!isSuperAdmin) {
+      const { data: callerProfileForPlan } = await supabase
+        .from("profiles")
+        .select("organization_id")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (callerProfileForPlan?.organization_id) {
+        const { data: orgPlanData } = await supabase
+          .from("organizations")
+          .select("plan")
+          .eq("id", callerProfileForPlan.organization_id)
+          .single();
+
+        console.log("[push] Org plan:", orgPlanData?.plan);
+        if (orgPlanData?.plan === "free") {
+          console.log("[push] Blocked: free plan");
+          return new Response(
+            JSON.stringify({ error: "Push notifications not available on Free plan" }),
+            {
+              status: 403,
+              headers: { ...corsHeaders, "Content-Type": "application/json" },
+            }
+          );
+        }
       }
+    } else {
+      console.log("[push] Super admin bypass: skipping plan check");
     }
 
     // Get push subscriptions for target users
