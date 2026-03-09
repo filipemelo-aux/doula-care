@@ -257,7 +257,7 @@ export default function Forum() {
   };
 
   return (
-    <div className="p-3 lg:p-8 max-w-2xl mx-auto space-y-4 overflow-x-hidden overflow-x-hidden">
+    <div className="p-3 lg:p-8 max-w-2xl mx-auto space-y-4 overflow-x-hidden overflow-x-hidden overflow-x-hidden">
       {/* Header */}
       <div className="page-header">
         <div>
@@ -291,7 +291,7 @@ export default function Forum() {
             className="pl-10"
           />
         </div>
-        <div className="flex gap-2 overflow-x-auto p -mx-3 px-3 lg:-mx-0 lg:px-0b-1 scrollbar-hide">
+        <div className="flex gap-2 -mx-3 px-3 lg:-mx-0 lg:px-0 overflow-x-auto p -mx-3 px-3 lg:-mx-0 lg:px-0b-1 scrollbar-hide">
           <Button
             variant={selectedCategory === null ? "default" : "outline"}
             size="sm"
@@ -331,7 +331,7 @@ export default function Forum() {
             const isExpanded = expandedPostId === post.id;
 
             return (
-              <div key={post.id} className="bg-card border border-border rounded-xl overflow-hidden">
+              <div key={post.id} className="bg-card b break-wordsorder border-border rounded-xl overflow-hidden">
                 {/* Post header */}
                 <div className="p-4 pb-0">
                   <div className="flex items-center gap-3 mb-3">
