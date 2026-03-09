@@ -39,20 +39,18 @@ self.addEventListener("push", (event) => {
   const handlePush = async () => {
     try {
       const data = event.data.json();
-      const { title, body, icon, badge, image, url, tag, priority, require_interaction, type } = data;
+      const { title, body, icon, badge, url, tag, priority, require_interaction, type } = data;
 
       const isCritica =
         priority === "critica" ||
         type === "labor_started" ||
         type === "new_contraction";
 
-      // Resolve relative URLs to absolute so Android/TWA can fetch them
       const origin = self.location.origin;
       const resolveUrl = (path) => path && path.startsWith("/") ? origin + path : (path || "");
 
       const resolvedIcon = resolveUrl(icon || "/logo.png");
       const resolvedBadge = resolveUrl(badge || "/badge-mono-v2.png");
-      const resolvedImage = image ? resolveUrl(image) : undefined;
 
       const options = {
         body: body || "",
@@ -76,11 +74,6 @@ self.addEventListener("push", (event) => {
               { action: "close", title: "Fechar" },
             ],
       };
-
-      // Add themed art image if available (shows on the right side)
-      if (resolvedImage) {
-        options.image = resolvedImage;
-      }
 
       await self.registration.showNotification(title || "Doula Care", options);
     } catch (err) {
