@@ -257,7 +257,7 @@ export default function Forum() {
   };
 
   return (
-    <div className="p-3 lg:p-8 max-w-2xl mx-auto space-y-4">
+    <div className="p-3 lg:p-8 max-w-2xl mx-auto space-y-4 overflow-x-hidden overflow-x-hidden overflow-x-hidden">
       {/* Header */}
       <div className="page-header">
         <div>
@@ -291,7 +291,7 @@ export default function Forum() {
             className="pl-10"
           />
         </div>
-        <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+        <div className="flex gap-2 -mx-3 px-3 lg:-mx-0 lg:px-0 overflow-x-auto p -mx-3 px-3 lg:-mx-0 lg:px-0b-1 scrollbar-hide">
           <Button
             variant={selectedCategory === null ? "default" : "outline"}
             size="sm"
@@ -331,7 +331,7 @@ export default function Forum() {
             const isExpanded = expandedPostId === post.id;
 
             return (
-              <div key={post.id} className="bg-card border border-border rounded-xl overflow-hidden">
+              <div key={post.id} className="bg-card b break-wordsorder border-border rounded-xl overflow-hidden">
                 {/* Post header */}
                 <div className="p-4 pb-0">
                   <div className="flex items-center gap-3 mb-3">
@@ -341,14 +341,14 @@ export default function Forum() {
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className="font-semibold text-sm text-foreground">{authorName}</span>
-                        {post.is_pinned && <Pin className="h-3 w-3 text-primary" />}
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span className="font-semibold text-sm text-foreground truncate">{authorName}</span>
+                        {post.is_pinned && <Pin className="h-3 w-3 text-primary shrink-0" />}
                       </div>
-                      <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                        <span>{formatDistanceToNow(new Date(post.created_at), { addSuffix: true, locale: ptBR })}</span>
+                      <div className="flex items-center gap-1.5 text-xs text-muted-foreground flex-wrap">
+                        <span className="truncate">{formatDistanceToNow(new Date(post.created_at), { addSuffix: true, locale: ptBR })}</span>
                         <span>·</span>
-                        <span>{post.forum_categories?.icon} {post.forum_categories?.name}</span>
+                        <span className="truncate">{post.forum_categories?.icon} {post.forum_categories?.name}</span>
                       </div>
                     </div>
                     {isAdmin && (
@@ -373,8 +373,8 @@ export default function Forum() {
                   </div>
 
                   {/* Post content */}
-                  <h3 className="font-semibold text-foreground mb-1">{post.title}</h3>
-                  <p className="text-sm text-foreground/80 whitespace-pre-wrap">{post.content}</p>
+                  <h3 className="font-semibold text-foreground mb-1 break-words">{post.title}</h3>
+                  <p className="text-sm text-foreground/80 whitespace-pre-wrap break-words">{post.content}</p>
                 </div>
 
                 {post.image_url && (
@@ -438,9 +438,9 @@ export default function Forum() {
                                 </AvatarFallback>
                               </Avatar>
                               <div className="flex-1 min-w-0">
-                                <div className="bg-muted rounded-xl px-3 py-2">
+                                <div className="bg-muted rounded-xl px-3 py-2 break-words">
                                   <span className="text-xs font-semibold text-foreground">{cName}</span>
-                                  <p className="text-xs text-foreground/80 whitespace-pre-wrap">{comment.content}</p>
+                                  <p className="text-xs text-foreground/80 whitespace-pre-wrap break-words">{comment.content}</p>
                                 </div>
                                 <span className="text-[10px] text-muted-foreground ml-3">
                                   {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true, locale: ptBR })}
@@ -470,12 +470,12 @@ export default function Forum() {
                         </AvatarFallback>
                       </Avatar>
                       <div className="flex-1 flex flex-col gap-1.5">
-                        <div className="flex items-center gap-2 bg-muted rounded-xl px-3 py-2">
+                        <div className="flex items-center gap-2 bg-muted rounded-xl px-3 py-2 min-w-0">
                           <input
                             value={commentTexts[post.id] || ""}
                             onChange={(e) => setCommentTexts(prev => ({ ...prev, [post.id]: e.target.value }))}
                             placeholder="Escreva um comentário..."
-                            className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+                            className="flex-1 min-w-0 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
                             onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleAddComment(post.id); } }}
                             maxLength={2000}
                           />
@@ -511,7 +511,7 @@ export default function Forum() {
 
       {/* New Post Dialog */}
       <Dialog open={showNewPost} onOpenChange={setShowNewPost}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-lg overflow-hidden">
           <DialogHeader>
             <DialogTitle>Criar publicação</DialogTitle>
           </DialogHeader>
