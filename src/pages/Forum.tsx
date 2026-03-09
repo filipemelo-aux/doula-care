@@ -257,7 +257,7 @@ export default function Forum() {
   };
 
   return (
-    <div className="p-3 lg:p-8 max-w-2xl mx-auto space-y-4">
+    <div className="p-3 lg:p-8 max-w-2xl mx-auto space-y-4 overflow-x-hidden">
       {/* Header */}
       <div className="page-header">
         <div>
