@@ -325,16 +325,23 @@ Deno.serve(async (req) => {
           budget_response: "/notif-icon-services.png",
           payment_received: "/notif-icon-payment.png",
           new_diary: "/notif-icon-diary.png",
+          community: "/logo.png",
           general: "/logo.png",
         };
         const notifIcon = typeIconMap[notifType] || "/logo.png";
+
+        // Badge: community type uses themed art; others use logo
+        const typeBadgeMap: Record<string, string> = {
+          community: "/notif-icon-community.png",
+        };
+        const notifBadge = typeBadgeMap[notifType] || "/logo.png";
 
         const pushMessage: PushMessage = {
           data: JSON.stringify({
             title,
             body: message,
             icon: notifIcon,
-            badge: "/logo.png",
+            badge: notifBadge,
             url: url || "/",
             tag: tag || notifType || "default",
             type: notifType,
