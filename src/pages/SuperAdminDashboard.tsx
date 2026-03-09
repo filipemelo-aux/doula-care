@@ -528,6 +528,10 @@ export default function SuperAdminDashboard() {
             <PlanPricingCard />
             <OrgBillingCard />
           </TabsContent>
+
+          <TabsContent value="notifications" className="space-y-4">
+            <BroadcastNotificationCard />
+          </TabsContent>
         </Tabs>
       </main>
     </div>

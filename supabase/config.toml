@@ -35,3 +35,6 @@ verify_jwt = false
 
 [functions.delete-organization]
 verify_jwt = false
+
+[functions.generate-notification-text]
+verify_jwt = false
