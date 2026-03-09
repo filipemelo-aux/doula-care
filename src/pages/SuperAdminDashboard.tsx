@@ -51,6 +51,9 @@ export default function SuperAdminDashboard() {
   const { signOut } = useAuth();
   const queryClient = useQueryClient();
   const onlineOrgIds = useOnlineOrgs();
+  const isMobile = useIsMobile();
+  const [activeSection, setActiveSection] = useState<Section>("orgs");
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const { data: organizations = [], isLoading } = useQuery({
     queryKey: ["super-admin-orgs"],
