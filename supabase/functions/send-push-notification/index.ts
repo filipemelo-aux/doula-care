@@ -330,7 +330,8 @@ Deno.serve(async (req) => {
         const isCritica = priority === "critica";
 
         const notifType = type || "general";
-        const typeIconMap: Record<string, string> = {
+        // Themed art for the secondary image (right side of notification)
+        const typeImageMap: Record<string, string> = {
           new_message: "/notif-icon-messages.png",
           new_contraction: "/notif-icon-contractions.png",
           labor_started: "/notif-icon-labor.png",
@@ -341,10 +342,12 @@ Deno.serve(async (req) => {
           community: "/notif-icon-community.png",
           general: "/notif-icon-announcement.png",
         };
-        const notifIcon = typeIconMap[notifType] || "/logo.png";
+        const notifImage = typeImageMap[notifType] || null;
 
-        // Badge (small monochrome status bar icon): always the official logo
-        const notifBadge = "/logo.png";
+        // Main icon (left): always the app logo
+        const notifIcon = "/logo.png";
+        // Badge (status bar monochrome): dedicated mono asset
+        const notifBadge = "/badge-mono-v2.png";
 
         const pushMessage: PushMessage = {
           data: JSON.stringify({
