@@ -511,7 +511,7 @@ export default function Forum() {
 
       {/* New Post Dialog */}
       <Dialog open={showNewPost} onOpenChange={setShowNewPost}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-lg overflow-hidden">
           <DialogHeader>
             <DialogTitle>Criar publicação</DialogTitle>
           </DialogHeader>
