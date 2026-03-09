@@ -399,7 +399,8 @@ export default function Forum() {
           </div>
         ) : (
           posts.map((post: any) => {
-            const authorName = getAuthorName(post.author_id, post.is_anonymous);
+            const authorInfo = getAuthorInfo(post.author_id, post.is_anonymous);
+            const authorName = authorInfo.name;
             const liked = userReactions.includes(post.id);
             const commentCount = post.forum_comments?.[0]?.count || 0;
             const reactionCount = post.forum_reactions?.[0]?.count || 0;
@@ -411,6 +412,9 @@ export default function Forum() {
                 <div className="p-4 pb-0">
                   <div className="flex items-center gap-3 mb-3">
                     <Avatar className="h-10 w-10">
+                      {authorInfo.avatarUrl && (
+                        <AvatarImage src={authorInfo.avatarUrl} alt={authorName} className="object-cover" />
+                      )}
                       <AvatarFallback className="bg-primary/10 text-primary text-sm font-semibold">
                         {getInitials(authorName)}
                       </AvatarFallback>
