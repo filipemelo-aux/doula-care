@@ -13,6 +13,7 @@ import {
   ChevronLeft,
   CalendarDays,
   Bell,
+  Users2,
   MessageCircle,
   Gift,
   Sparkles,
