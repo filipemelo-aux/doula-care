@@ -144,6 +144,7 @@ Deno.serve(async (req) => {
       type,
       priority,
       require_interaction,
+      image,
     }: {
       user_ids?: string[];
       client_ids?: string[];
@@ -154,6 +155,7 @@ Deno.serve(async (req) => {
       type?: string;
       priority?: string;
       require_interaction?: boolean;
+      image?: string;
     } = body;
 
     if (!title || !message) {
