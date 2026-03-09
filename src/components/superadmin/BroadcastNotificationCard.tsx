@@ -6,7 +6,6 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
 import { Loader2, Megaphone, Sparkles, Send, Eye } from "lucide-react";
 import { toast } from "sonner";
 import { sendPushNotification, type PushNotificationType } from "@/lib/pushNotifications";
@@ -29,6 +28,12 @@ const AUDIENCE_OPTIONS = [
   { value: "clients", label: "Apenas gestantes (clientes)" },
 ];
 
+interface Organization {
+  id: string;
+  name: string;
+  nome_exibicao: string | null;
+}
+
 export function BroadcastNotificationCard() {
   const [keywords, setKeywords] = useState("");
   const [tone, setTone] = useState("exciting");
@@ -36,8 +41,25 @@ export function BroadcastNotificationCard() {
   const [message, setMessage] = useState("");
   const [notifType, setNotifType] = useState<PushNotificationType>("community");
   const [audience, setAudience] = useState("all");
+  const [targetOrgId, setTargetOrgId] = useState("all");
+  const [orgs, setOrgs] = useState<Organization[]>([]);
+  const [orgsLoaded, setOrgsLoaded] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [sending, setSending] = useState(false);
+
+  // Lazy load orgs when dropdown opens
+  const loadOrgs = async () => {
+    if (orgsLoaded) return;
+    const { data } = await supabase
+      .from("organizations")
+      .select("id, name, nome_exibicao")
+      .eq("status", "ativo")
+      .order("name");
+    if (data) {
+      setOrgs(data);
+      setOrgsLoaded(true);
+    }
+  };
 
   const handleGenerate = async () => {
     if (!keywords.trim()) {
@@ -73,32 +95,63 @@ export function BroadcastNotificationCard() {
 
     setSending(true);
     try {
-      // Get target user IDs based on audience
       let userIds: string[] = [];
-      let sendToAdmins = false;
 
-      if (audience === "all" || audience === "admins") {
-        // We'll use send_to_admins for admin users
-        // But we need all org admins, not just caller's org
-        // For super admin, we get ALL admin users
-        const { data: adminRoles } = await supabase
-          .from("user_roles")
-          .select("user_id")
-          .in("role", ["admin", "moderator"]);
+      if (targetOrgId !== "all") {
+        // Target specific organization
+        if (audience === "all" || audience === "admins") {
+          const { data: orgProfiles } = await supabase
+            .from("profiles")
+            .select("user_id")
+            .eq("organization_id", targetOrgId);
 
-        if (adminRoles) {
-          userIds.push(...adminRoles.map(r => r.user_id));
+          if (orgProfiles) {
+            const orgUserIds = orgProfiles.map(p => p.user_id);
+            const { data: adminRoles } = await supabase
+              .from("user_roles")
+              .select("user_id")
+              .in("role", ["admin", "moderator"])
+              .in("user_id", orgUserIds);
+
+            if (adminRoles) {
+              userIds.push(...adminRoles.map(r => r.user_id));
+            }
+          }
         }
-      }
 
-      if (audience === "all" || audience === "clients") {
-        const { data: clients } = await supabase
-          .from("clients")
-          .select("user_id")
-          .not("user_id", "is", null);
+        if (audience === "all" || audience === "clients") {
+          const { data: clients } = await supabase
+            .from("clients")
+            .select("user_id")
+            .eq("organization_id", targetOrgId)
+            .not("user_id", "is", null);
 
-        if (clients) {
-          userIds.push(...clients.map(c => c.user_id).filter((id): id is string => !!id));
+          if (clients) {
+            userIds.push(...clients.map(c => c.user_id).filter((id): id is string => !!id));
+          }
+        }
+      } else {
+        // Target all organizations (existing logic)
+        if (audience === "all" || audience === "admins") {
+          const { data: adminRoles } = await supabase
+            .from("user_roles")
+            .select("user_id")
+            .in("role", ["admin", "moderator"]);
+
+          if (adminRoles) {
+            userIds.push(...adminRoles.map(r => r.user_id));
+          }
+        }
+
+        if (audience === "all" || audience === "clients") {
+          const { data: clients } = await supabase
+            .from("clients")
+            .select("user_id")
+            .not("user_id", "is", null);
+
+          if (clients) {
+            userIds.push(...clients.map(c => c.user_id).filter((id): id is string => !!id));
+          }
         }
       }
 
@@ -111,6 +164,11 @@ export function BroadcastNotificationCard() {
         return;
       }
 
+      // Determine the themed image for notification body
+      const notifImage = notifType === "community"
+        ? "/notif-icon-community.png"
+        : "/notif-icon-announcement.png";
+
       // Send push notification
       await sendPushNotification({
         user_ids: userIds,
@@ -118,9 +176,16 @@ export function BroadcastNotificationCard() {
         message,
         type: notifType,
         url: notifType === "community" ? "/comunidade" : "/",
+        image: notifImage,
       });
 
-      toast.success(`Notificação enviada para ${userIds.length} usuário(s)!`);
+      const orgLabel = targetOrgId !== "all"
+        ? orgs.find(o => o.id === targetOrgId)?.nome_exibicao || orgs.find(o => o.id === targetOrgId)?.name || ""
+        : "";
+
+      toast.success(
+        `Notificação enviada para ${userIds.length} usuário(s)${orgLabel ? ` de ${orgLabel}` : ""}!`
+      );
       // Reset form
       setKeywords("");
       setTitle("");
@@ -255,6 +320,24 @@ export function BroadcastNotificationCard() {
               </Select>
             </div>
           </div>
+
+          {/* Organization targeting */}
+          <div className="space-y-2">
+            <Label className="text-xs">Organização</Label>
+            <Select value={targetOrgId} onValueChange={setTargetOrgId} onOpenChange={(open) => { if (open) loadOrgs(); }}>
+              <SelectTrigger className="h-9 text-sm">
+                <SelectValue placeholder="Todas as organizações" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">🌍 Todas as organizações</SelectItem>
+                {orgs.map((org) => (
+                  <SelectItem key={org.id} value={org.id}>
+                    {org.nome_exibicao || org.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
         {/* Preview */}
@@ -272,13 +355,21 @@ export function BroadcastNotificationCard() {
                 <p className="text-sm font-semibold text-foreground truncate">{title || "Título"}</p>
                 <p className="text-xs text-muted-foreground break-words">{message || "Mensagem"}</p>
               </div>
-              <div className="w-6 h-6 rounded-md overflow-hidden flex-shrink-0">
+              <div className="w-6 h-6 rounded-md overflow-hidden flex-shrink-0 bg-foreground/10 p-0.5">
                 <img
-                  src={notifType === "community" ? "/notif-icon-community.png" : "/notif-icon-announcement.png"}
+                  src="/badge-mono-v2.png"
                   alt="badge"
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-contain"
                 />
               </div>
+            </div>
+            {/* Image preview in body */}
+            <div className="mt-2 rounded-md overflow-hidden border bg-card">
+              <img
+                src={notifType === "community" ? "/notif-icon-community.png" : "/notif-icon-announcement.png"}
+                alt="notification image"
+                className="w-full h-24 object-contain p-2"
+              />
             </div>
           </div>
         )}
