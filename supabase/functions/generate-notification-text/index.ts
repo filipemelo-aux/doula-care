@@ -87,21 +87,38 @@ Deno.serve(async (req) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
+        model: "google/gemini-3-flash-preview",
         messages: [
           {
             role: "system",
             content: `Você é uma assistente de comunicação para a plataforma Doula Care, voltada para doulas e gestantes. 
 Crie notificações push curtas e impactantes. 
-Tom: ${toneInstruction}.
-Retorne EXATAMENTE em formato JSON com os campos "title" (máximo 50 caracteres) e "message" (máximo 120 caracteres).
-Não inclua markdown, apenas o JSON puro.`,
+Tom: ${toneInstruction}.`,
           },
           {
             role: "user",
             content: `Crie uma notificação push sobre: ${keywords}`,
           },
         ],
+        tools: [
+          {
+            type: "function",
+            function: {
+              name: "create_notification",
+              description: "Create a push notification with title and message",
+              parameters: {
+                type: "object",
+                properties: {
+                  title: { type: "string", description: "Notification title, max 50 characters" },
+                  message: { type: "string", description: "Notification body, max 120 characters" },
+                },
+                required: ["title", "message"],
+                additionalProperties: false,
+              },
+            },
+          },
+        ],
+        tool_choice: { type: "function", function: { name: "create_notification" } },
       }),
     });
 
@@ -127,17 +144,26 @@ Não inclua markdown, apenas o JSON puro.`,
     }
 
     const aiData = await response.json();
-    const content = aiData.choices?.[0]?.message?.content || "";
+    console.log("AI response:", JSON.stringify(aiData));
 
-    // Parse JSON from AI response
+    // Extract from tool call
     let parsed: { title: string; message: string };
-    try {
-      // Remove possible markdown wrapping
-      const cleaned = content.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
-      parsed = JSON.parse(cleaned);
-    } catch {
-      // Fallback: use raw content
-      parsed = { title: "Novidade!", message: content.slice(0, 120) };
+    const toolCall = aiData.choices?.[0]?.message?.tool_calls?.[0];
+    if (toolCall?.function?.arguments) {
+      try {
+        parsed = JSON.parse(toolCall.function.arguments);
+      } catch {
+        parsed = { title: "Novidade!", message: "Confira as novidades na plataforma!" };
+      }
+    } else {
+      // Fallback: try content
+      const content = aiData.choices?.[0]?.message?.content || "";
+      try {
+        const cleaned = content.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
+        parsed = JSON.parse(cleaned);
+      } catch {
+        parsed = { title: "Novidade!", message: content.slice(0, 120) || "Confira as novidades!" };
+      }
     }
 
     return new Response(JSON.stringify(parsed), {
