@@ -30,10 +30,6 @@ const sidebarItems: { key: Section; label: string; icon: React.ElementType }[] =
   { key: "billing", label: "Planos & Cobranças", icon: CreditCard },
   { key: "notifications", label: "Notificações", icon: Bell },
 ];
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { toast } from "sonner";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
 
 interface OrgWithCounts {
   id: string;
