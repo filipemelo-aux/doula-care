@@ -37,6 +37,7 @@ const navItems = [
   { to: "/gestante/documentos", icon: FileText, label: "Documentos" },
   { to: "/gestante/mensagens", icon: MessageCircle, label: "Mensagens" },
   { to: "/gestante/diario", icon: BookHeart, label: "Diário" },
+  { to: "/gestante/comunidade", icon: Users2, label: "Comunidade" },
   { to: "/gestante/perfil", icon: User, label: "Perfil" },
 ];
 
