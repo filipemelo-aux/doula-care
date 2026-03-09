@@ -438,9 +438,9 @@ export default function Forum() {
                                 </AvatarFallback>
                               </Avatar>
                               <div className="flex-1 min-w-0">
-                                <div className="bg-muted rounded-xl px-3 py-2">
+                                <div className="bg-muted rounded-xl px-3 py-2 break-words">
                                   <span className="text-xs font-semibold text-foreground">{cName}</span>
-                                  <p className="text-xs text-foreground/80 whitespace-pre-wrap">{comment.content}</p>
+                                  <p className="text-xs text-foreground/80 whitespace-pre-wrap break-words">{comment.content}</p>
                                 </div>
                                 <span className="text-[10px] text-muted-foreground ml-3">
                                   {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true, locale: ptBR })}
