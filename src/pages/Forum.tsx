@@ -341,14 +341,14 @@ export default function Forum() {
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className="font-semibold text-sm text-foreground">{authorName}</span>
-                        {post.is_pinned && <Pin className="h-3 w-3 text-primary" />}
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span className="font-semibold text-sm text-foreground truncate">{authorName}</span>
+                        {post.is_pinned && <Pin className="h-3 w-3 text-primary shrink-0" />}
                       </div>
-                      <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                        <span>{formatDistanceToNow(new Date(post.created_at), { addSuffix: true, locale: ptBR })}</span>
+                      <div className="flex items-center gap-1.5 text-xs text-muted-foreground flex-wrap">
+                        <span className="truncate">{formatDistanceToNow(new Date(post.created_at), { addSuffix: true, locale: ptBR })}</span>
                         <span>·</span>
-                        <span>{post.forum_categories?.icon} {post.forum_categories?.name}</span>
+                        <span className="truncate">{post.forum_categories?.icon} {post.forum_categories?.name}</span>
                       </div>
                     </div>
                     {isAdmin && (
