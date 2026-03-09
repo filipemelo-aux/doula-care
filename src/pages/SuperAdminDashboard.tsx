@@ -12,6 +12,7 @@ import { PlanPricingCard } from "@/components/superadmin/PlanPricingCard";
 import { PlanLimitsCard } from "@/components/superadmin/PlanLimitsCard";
 import { OrgBillingCard } from "@/components/superadmin/OrgBillingCard";
 import { UserManagementCard } from "@/components/superadmin/UserManagementCard";
+import { BroadcastNotificationCard } from "@/components/superadmin/BroadcastNotificationCard";
 import { PromoTriggerButton } from "@/components/superadmin/PromoTriggerButton";
 import { useOnlineOrgs } from "@/hooks/useOnlineOrgs";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -475,6 +476,7 @@ export default function SuperAdminDashboard() {
             <TabsTrigger value="orgs" className="flex-1 sm:flex-initial">Organizações</TabsTrigger>
             <TabsTrigger value="users" className="flex-1 sm:flex-initial">Usuários</TabsTrigger>
             <TabsTrigger value="billing" className="flex-1 sm:flex-initial">Planos & Cobranças</TabsTrigger>
+            <TabsTrigger value="notifications" className="flex-1 sm:flex-initial">Notificações</TabsTrigger>
           </TabsList>
 
           <TabsContent value="orgs" className="space-y-4">
@@ -525,6 +527,10 @@ export default function SuperAdminDashboard() {
             <PlanLimitsCard />
             <PlanPricingCard />
             <OrgBillingCard />
+          </TabsContent>
+
+          <TabsContent value="notifications" className="space-y-4">
+            <BroadcastNotificationCard />
           </TabsContent>
         </Tabs>
       </main>

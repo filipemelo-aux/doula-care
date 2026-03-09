@@ -333,6 +333,7 @@ Deno.serve(async (req) => {
         // Badge: community type uses themed art; others use logo
         const typeBadgeMap: Record<string, string> = {
           community: "/notif-icon-community.png",
+          general: "/notif-icon-announcement.png",
         };
         const notifBadge = typeBadgeMap[notifType] || "/logo.png";
 
