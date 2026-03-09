@@ -36,6 +36,8 @@ import GestanteContractions from "./pages/gestante/GestanteContractions";
 import GestanteServices from "./pages/gestante/GestanteServices";
 import GestanteDocuments from "./pages/gestante/GestanteDocuments";
 import GestanteAppointments from "./pages/gestante/GestanteAppointments";
+import GestanteForum from "./pages/gestante/GestanteForum";
+import Forum from "./pages/Forum";
 
 const queryClient = new QueryClient();
 
