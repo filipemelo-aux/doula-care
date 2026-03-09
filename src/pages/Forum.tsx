@@ -234,9 +234,17 @@ export default function Forum() {
     enabled: commentAuthorIds.length > 0,
   });
 
-  const getAuthorName = (authorId: string, anonymous: boolean, map: Record<string, string> = profileMap as any) => {
+  type ProfileEntry = { name: string; avatarUrl: string | null; isDoula: boolean };
+  const getAuthorInfo = (authorId: string, anonymous: boolean, map: Record<string, ProfileEntry> = profileMap as any): ProfileEntry => {
+    if (anonymous) return { name: "Anônima", avatarUrl: null, isDoula: false };
+    return (map as Record<string, ProfileEntry>)[authorId] || { name: "Usuária", avatarUrl: null, isDoula: false };
+  };
+
+  const getAuthorName = (authorId: string, anonymous: boolean, map: Record<string, any> = profileMap as any) => {
     if (anonymous) return "Anônima";
-    return (map as Record<string, string>)[authorId] || "Usuária";
+    const entry = (map as Record<string, any>)[authorId];
+    if (!entry) return "Usuária";
+    return typeof entry === "string" ? entry : entry.name || "Usuária";
   };
 
   const getInitials = (name: string) => {
