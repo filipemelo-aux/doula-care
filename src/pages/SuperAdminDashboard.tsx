@@ -476,6 +476,7 @@ export default function SuperAdminDashboard() {
             <TabsTrigger value="orgs" className="flex-1 sm:flex-initial">Organizações</TabsTrigger>
             <TabsTrigger value="users" className="flex-1 sm:flex-initial">Usuários</TabsTrigger>
             <TabsTrigger value="billing" className="flex-1 sm:flex-initial">Planos & Cobranças</TabsTrigger>
+            <TabsTrigger value="notifications" className="flex-1 sm:flex-initial">Notificações</TabsTrigger>
           </TabsList>
 
           <TabsContent value="orgs" className="space-y-4">
