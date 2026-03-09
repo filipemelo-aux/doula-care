@@ -331,18 +331,12 @@ Deno.serve(async (req) => {
 
         const notifType = type || "general";
 
-        // Main icon (left): always the app logo
-        const notifIcon = "/logo.png";
-        // Badge (status bar monochrome): dedicated mono asset
-        const notifBadge = "/badge-mono-v2.png";
-
         const pushMessage: PushMessage = {
           data: JSON.stringify({
             title,
             body: message,
-            icon: notifIcon,
-            badge: notifBadge,
-            image: notifImage,
+            icon: "/logo.png",
+            badge: "/badge-mono-v2.png",
             url: url || "/",
             tag: tag || notifType || "default",
             type: notifType,
