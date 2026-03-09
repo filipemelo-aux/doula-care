@@ -13,6 +13,7 @@ import {
   ChevronLeft,
   CalendarDays,
   Bell,
+  Users2,
   MessageCircle,
   Gift,
   Sparkles,
@@ -41,6 +42,7 @@ const navItems = [
   { to: "/relatorios", icon: FileText, label: "Relatórios" },
   { to: "/mensagens", icon: MessageCircle, label: "Mensagens", badgeKey: "messages" as const },
   { to: "/notificacoes", icon: Bell, label: "Notificações", badgeKey: "notifications" as const },
+  { to: "/comunidade", icon: Users2, label: "Comunidade" },
   { to: "/configuracoes", icon: Settings, label: "Configurações" },
 ];
 

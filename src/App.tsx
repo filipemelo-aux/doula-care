@@ -36,6 +36,8 @@ import GestanteContractions from "./pages/gestante/GestanteContractions";
 import GestanteServices from "./pages/gestante/GestanteServices";
 import GestanteDocuments from "./pages/gestante/GestanteDocuments";
 import GestanteAppointments from "./pages/gestante/GestanteAppointments";
+import GestanteForum from "./pages/gestante/GestanteForum";
+import Forum from "./pages/Forum";
 
 const queryClient = new QueryClient();
 
@@ -137,6 +139,14 @@ const App = () => (
               }
             />
             <Route
+              path="/gestante/comunidade"
+              element={
+                <ProtectedRoute allowedRoles={["client"]}>
+                  <GestanteForum />
+                </ProtectedRoute>
+              }
+            />
+            <Route
               path="/gestante/perfil"
               element={
                 <ProtectedRoute allowedRoles={["client"]}>
@@ -161,6 +171,7 @@ const App = () => (
               <Route path="/financeiro" element={<Financial />} />
               <Route path="/despesas" element={<Expenses />} />
               <Route path="/relatorios" element={<Reports />} />
+              <Route path="/comunidade" element={<Forum />} />
               <Route path="/configuracoes" element={<Settings />} />
             </Route>
 
