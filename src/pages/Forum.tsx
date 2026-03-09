@@ -470,7 +470,7 @@ export default function Forum() {
                         </AvatarFallback>
                       </Avatar>
                       <div className="flex-1 flex flex-col gap-1.5">
-                        <div className="flex items-center gap-2 bg-muted rounded-xl px-3 py-2">
+                        <div className="flex items-center gap-2 bg-muted rounded-xl px-3 py-2 min-w-0">
                           <input
                             value={commentTexts[post.id] || ""}
                             onChange={(e) => setCommentTexts(prev => ({ ...prev, [post.id]: e.target.value }))}
