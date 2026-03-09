@@ -139,6 +139,14 @@ const App = () => (
               }
             />
             <Route
+              path="/gestante/comunidade"
+              element={
+                <ProtectedRoute allowedRoles={["client"]}>
+                  <GestanteForum />
+                </ProtectedRoute>
+              }
+            />
+            <Route
               path="/gestante/perfil"
               element={
                 <ProtectedRoute allowedRoles={["client"]}>
