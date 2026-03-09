@@ -39,7 +39,7 @@ self.addEventListener("push", (event) => {
   const handlePush = async () => {
     try {
       const data = event.data.json();
-      const { title, body, icon, badge, url, tag, priority, require_interaction, type } = data;
+      const { title, body, icon, badge, image, url, tag, priority, require_interaction, type } = data;
 
       const isCritica =
         priority === "critica" ||
@@ -51,11 +51,13 @@ self.addEventListener("push", (event) => {
 
       const resolvedIcon = resolveUrl(icon || "/logo.png");
       const resolvedBadge = resolveUrl(badge || "/badge-mono-v2.png");
+      const resolvedImage = image ? resolveUrl(image) : undefined;
 
       const options = {
         body: body || "",
         icon: resolvedIcon,
         badge: resolvedBadge,
+        ...(resolvedImage ? { image: resolvedImage } : {}),
         tag: isCritica ? `critica-${tag || type || "urgent"}` : (tag || type || "default"),
         renotify: true,
         requireInteraction: require_interaction ?? isCritica,
