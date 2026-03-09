@@ -291,7 +291,7 @@ export default function Forum() {
             className="pl-10"
           />
         </div>
-        <div className="flex gap-2 -mx-3 px-3 lg:-mx-0 lg:px-0 overflow-x-auto p -mx-3 px-3 lg:-mx-0 lg:px-0b-1 scrollbar-hide">
+        <div className="flex flex-wrap gap-2">
           <Button
             variant={selectedCategory === null ? "default" : "outline"}
             size="sm"
