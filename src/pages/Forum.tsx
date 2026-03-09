@@ -102,17 +102,51 @@ export default function Forum() {
     },
   });
 
-  // Fetch author profiles
+  // Fetch author profiles (with avatars and org logos for doulas)
   const allAuthorIds = posts.filter((p: any) => !p.is_anonymous).map((p: any) => p.author_id);
   const { data: profileMap = {} } = useQuery({
     queryKey: ["forum-profiles", allAuthorIds],
     queryFn: async () => {
       if (allAuthorIds.length === 0) return {};
-      const { data: profileData } = await supabase.from("profiles").select("user_id, full_name").in("user_id", allAuthorIds);
+      const { data: profileData } = await supabase.from("profiles").select("user_id, full_name, avatar_url, organization_id").in("user_id", allAuthorIds);
       const { data: clientData } = await supabase.from("clients").select("user_id, full_name, preferred_name").in("user_id", allAuthorIds);
-      const map: Record<string, string> = {};
-      profileData?.forEach(p => { if (p.full_name) map[p.user_id] = p.full_name; });
-      clientData?.forEach(c => { if (c.user_id) map[c.user_id] = c.preferred_name || c.full_name; });
+      const { data: roleData } = await supabase.from("user_roles").select("user_id, role").in("user_id", allAuthorIds);
+
+      // Fetch org logos for admin/moderator users
+      const adminOrgIds = profileData
+        ?.filter(p => {
+          const roles = roleData?.filter(r => r.user_id === p.user_id).map(r => r.role) || [];
+          return roles.some(r => ["admin", "moderator"].includes(r)) && p.organization_id;
+        })
+        .map(p => p.organization_id!)
+        .filter(Boolean) || [];
+      
+      let orgLogos: Record<string, string> = {};
+      if (adminOrgIds.length > 0) {
+        const { data: orgs } = await supabase.from("organizations").select("id, logo_url").in("id", adminOrgIds);
+        orgs?.forEach(o => { if (o.logo_url) orgLogos[o.id] = o.logo_url; });
+      }
+
+      const map: Record<string, { name: string; avatarUrl: string | null; isDoula: boolean }> = {};
+      profileData?.forEach(p => {
+        const roles = roleData?.filter(r => r.user_id === p.user_id).map(r => r.role) || [];
+        const isDoula = roles.some(r => ["admin", "moderator"].includes(r));
+        const orgLogo = isDoula && p.organization_id ? orgLogos[p.organization_id] : null;
+        map[p.user_id] = {
+          name: p.full_name || "Usuária",
+          avatarUrl: orgLogo || p.avatar_url || null,
+          isDoula,
+        };
+      });
+      clientData?.forEach(c => {
+        if (c.user_id && !map[c.user_id]?.isDoula) {
+          map[c.user_id] = {
+            name: c.preferred_name || c.full_name,
+            avatarUrl: map[c.user_id]?.avatarUrl || null,
+            isDoula: false,
+          };
+        }
+      });
       return map;
     },
     enabled: allAuthorIds.length > 0,
