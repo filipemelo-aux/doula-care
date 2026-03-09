@@ -21,6 +21,7 @@ const NOTIFICATION_ROUTES: Record<PushNotificationType, string> = {
   budget_response: "/gestante/mensagens",
   payment_received: "/financeiro",
   appointment_reminder: "/agenda",
+  community: "/comunidade",
   general: "/",
 };
 
