@@ -351,10 +351,71 @@ export default function SuperAdminDashboard() {
     </Card>
   );
 
+  const renderContent = () => {
+    switch (activeSection) {
+      case "orgs":
+        return (
+          <div className="space-y-4">
+            {activeOrgs.length > 0 && (
+              <div className="space-y-3">
+                <h2 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                  <CheckCircle className="h-4 w-4 text-success" />
+                  Ativas ({activeOrgs.length})
+                </h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {activeOrgs.map((org) => (
+                    <OrgCard key={org.id} org={org} />
+                  ))}
+                </div>
+              </div>
+            )}
+            {suspendedOrgs.length > 0 && (
+              <div className="space-y-3">
+                <h2 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                  <Ban className="h-4 w-4 text-destructive" />
+                  Suspensas ({suspendedOrgs.length})
+                </h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {suspendedOrgs.map((org) => (
+                    <OrgCard key={org.id} org={org} />
+                  ))}
+                </div>
+              </div>
+            )}
+            {organizations.filter((o) => o.status !== "pendente").length === 0 && (
+              <Card>
+                <CardContent className="py-12 text-center text-muted-foreground">
+                  Nenhuma organização ativa ou suspensa
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        );
+      case "users":
+        return <UserManagementCard />;
+      case "billing":
+        return (
+          <div className="space-y-6">
+            <PlanLimitsCard />
+            <PlanPricingCard />
+            <OrgBillingCard />
+          </div>
+        );
+      case "notifications":
+        return <BroadcastNotificationCard />;
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-10 border-b bg-card/95 backdrop-blur-sm px-4 sm:px-6 py-3 flex items-center justify-between">
+    <div className="min-h-screen bg-background flex flex-col">
+      {/* Header */}
+      <header className="sticky top-0 z-20 border-b bg-card/95 backdrop-blur-sm px-4 sm:px-6 py-3 flex items-center justify-between">
         <div className="flex items-center gap-2.5">
+          {isMobile && (
+            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setSidebarOpen(!sidebarOpen)}>
+              <Menu className="h-5 w-5" />
+            </Button>
+          )}
           <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
             <Building2 className="h-4.5 w-4.5 text-primary" />
           </div>
@@ -369,10 +430,8 @@ export default function SuperAdminDashboard() {
             onClick={async () => {
               try {
                 toast.info("Limpando cache e atualizando...");
-                // Clear all caches
                 const keys = await caches.keys();
                 await Promise.all(keys.map(k => caches.delete(k)));
-                // Force SW update
                 const regs = await navigator.serviceWorker?.getRegistrations();
                 if (regs) {
                   for (const reg of regs) {
@@ -380,7 +439,6 @@ export default function SuperAdminDashboard() {
                     reg.waiting?.postMessage({ type: "SKIP_WAITING" });
                   }
                 }
-                // Reload
                 setTimeout(() => window.location.reload(), 500);
               } catch (err) {
                 console.error(err);
@@ -398,155 +456,129 @@ export default function SuperAdminDashboard() {
         </div>
       </header>
 
-      <main className="p-4 sm:p-6 max-w-7xl mx-auto space-y-5">
-        {/* Metrics */}
-        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-          <Card className={onlineOrgIds.size > 0 ? "bg-gradient-to-br from-emerald-50 to-emerald-100/50 dark:from-emerald-950/20 dark:to-emerald-900/10 border-emerald-300/30" : ""}>
-            <CardContent className="p-4 flex items-center gap-3">
-              <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${onlineOrgIds.size > 0 ? "bg-emerald-200/50 dark:bg-emerald-800/30" : "bg-muted"}`}>
-                <span className={`h-3 w-3 rounded-full ${onlineOrgIds.size > 0 ? "bg-emerald-500 animate-pulse" : "bg-muted-foreground/30"}`} />
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-foreground">{onlineOrgIds.size}</p>
-                <p className="text-[11px] text-muted-foreground leading-tight">Online agora</p>
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="bg-gradient-to-br from-primary/5 to-primary/10 border-primary/15">
-            <CardContent className="p-4 flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-primary/15 flex items-center justify-center">
-                <Building2 className="h-5 w-5 text-primary" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-foreground">{organizations.length}</p>
-                <p className="text-[11px] text-muted-foreground leading-tight">Organizações</p>
-              </div>
-            </CardContent>
-          </Card>
+      <div className="flex flex-1 overflow-hidden">
+        {/* Sidebar - desktop always visible, mobile overlay */}
+        {isMobile && sidebarOpen && (
+          <div className="fixed inset-0 z-30 bg-black/40" onClick={() => setSidebarOpen(false)} />
+        )}
+        <aside
+          className={cn(
+            "bg-card border-r border-border flex flex-col shrink-0 transition-transform duration-200 z-40",
+            isMobile
+              ? "fixed top-[57px] left-0 bottom-0 w-64 shadow-xl"
+              : "w-56 relative",
+            isMobile && !sidebarOpen && "-translate-x-full"
+          )}
+        >
+          <nav className="flex-1 p-3 space-y-1">
+            {sidebarItems.map((item) => (
+              <button
+                key={item.key}
+                onClick={() => {
+                  setActiveSection(item.key);
+                  if (isMobile) setSidebarOpen(false);
+                }}
+                className={cn(
+                  "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors text-left",
+                  activeSection === item.key
+                    ? "bg-primary text-primary-foreground font-medium"
+                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                )}
+              >
+                <item.icon className="h-4 w-4 shrink-0" />
+                {item.label}
+              </button>
+            ))}
+          </nav>
+        </aside>
 
-          <Card className={pendingOrgs.length > 0 ? "bg-gradient-to-br from-amber-50 to-amber-100/50 dark:from-amber-950/20 dark:to-amber-900/10 border-amber-300/30" : ""}>
-            <CardContent className="p-4 flex items-center gap-3">
-              <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${pendingOrgs.length > 0 ? "bg-amber-200/50 dark:bg-amber-800/30" : "bg-muted"}`}>
-                <Clock className={`h-5 w-5 ${pendingOrgs.length > 0 ? "text-amber-600 animate-pulse" : "text-muted-foreground"}`} />
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-foreground">{pendingOrgs.length}</p>
-                <p className="text-[11px] text-muted-foreground leading-tight">Pendentes</p>
-              </div>
-            </CardContent>
-          </Card>
+        {/* Main content */}
+        <main className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-5">
+          {/* Metrics */}
+          <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
+            <Card className={onlineOrgIds.size > 0 ? "border-success/30 bg-success/5" : ""}>
+              <CardContent className="p-4 flex items-center gap-3">
+                <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center", onlineOrgIds.size > 0 ? "bg-success/15" : "bg-muted")}>
+                  <span className={cn("h-3 w-3 rounded-full", onlineOrgIds.size > 0 ? "bg-success animate-pulse" : "bg-muted-foreground/30")} />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-foreground">{onlineOrgIds.size}</p>
+                  <p className="text-[11px] text-muted-foreground leading-tight">Online agora</p>
+                </div>
+              </CardContent>
+            </Card>
+            <Card className="bg-primary/5 border-primary/15">
+              <CardContent className="p-4 flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-primary/15 flex items-center justify-center">
+                  <Building2 className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-foreground">{organizations.length}</p>
+                  <p className="text-[11px] text-muted-foreground leading-tight">Organizações</p>
+                </div>
+              </CardContent>
+            </Card>
+            <Card className={pendingOrgs.length > 0 ? "bg-warning/5 border-warning/30" : ""}>
+              <CardContent className="p-4 flex items-center gap-3">
+                <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center", pendingOrgs.length > 0 ? "bg-warning/15" : "bg-muted")}>
+                  <Clock className={cn("h-5 w-5", pendingOrgs.length > 0 ? "text-warning animate-pulse" : "text-muted-foreground")} />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-foreground">{pendingOrgs.length}</p>
+                  <p className="text-[11px] text-muted-foreground leading-tight">Pendentes</p>
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-4 flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-success/15 flex items-center justify-center">
+                  <Users className="h-5 w-5 text-success" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-foreground">{totalClients}</p>
+                  <p className="text-[11px] text-muted-foreground leading-tight">Gestantes total</p>
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <BarChart3 className="h-4 w-4 text-primary" />
+                  <p className="text-[11px] font-medium text-muted-foreground">Distribuição</p>
+                </div>
+                <div className="space-y-1">
+                  {([["Free", planCounts.free], ["Pro", planCounts.pro], ["Premium", planCounts.premium]] as const).map(([label, count]) => (
+                    <div key={label} className="flex items-center justify-between text-xs">
+                      <span className="text-muted-foreground">{label}</span>
+                      <span className="font-semibold text-foreground">{count}</span>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
 
-          <Card>
-            <CardContent className="p-4 flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-900/20 flex items-center justify-center">
-                <Users className="h-5 w-5 text-emerald-600" />
+          {/* Pending approvals */}
+          {pendingOrgs.length > 0 && (
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <Clock className="h-4 w-4 text-warning" />
+                <h2 className="text-sm font-semibold text-foreground">
+                  Pendentes de Aprovação ({pendingOrgs.length})
+                </h2>
               </div>
-              <div>
-                <p className="text-2xl font-bold text-foreground">{totalClients}</p>
-                <p className="text-[11px] text-muted-foreground leading-tight">Gestantes total</p>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-2 mb-2">
-                <BarChart3 className="h-4 w-4 text-primary" />
-                <p className="text-[11px] font-medium text-muted-foreground">Distribuição</p>
-              </div>
-              <div className="space-y-1">
-                {([["Free", planCounts.free], ["Pro", planCounts.pro], ["Premium", planCounts.premium]] as const).map(([label, count]) => (
-                  <div key={label} className="flex items-center justify-between text-xs">
-                    <span className="text-muted-foreground">{label}</span>
-                    <span className="font-semibold text-foreground">{count}</span>
-                  </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                {pendingOrgs.map((org) => (
+                  <PendingOrgCard key={org.id} org={org} />
                 ))}
               </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Pending approvals */}
-        {pendingOrgs.length > 0 && (
-          <div className="space-y-3">
-            <div className="flex items-center gap-2">
-              <Clock className="h-4 w-4 text-amber-600" />
-              <h2 className="text-sm font-semibold text-foreground">
-                Pendentes de Aprovação ({pendingOrgs.length})
-              </h2>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-              {pendingOrgs.map((org) => (
-                <PendingOrgCard key={org.id} org={org} />
-              ))}
-            </div>
-          </div>
-        )}
+          )}
 
-        {/* Tabs */}
-        <Tabs defaultValue="orgs" className="space-y-4">
-          <TabsList className="w-full sm:w-auto">
-            <TabsTrigger value="orgs" className="flex-1 sm:flex-initial">Organizações</TabsTrigger>
-            <TabsTrigger value="users" className="flex-1 sm:flex-initial">Usuários</TabsTrigger>
-            <TabsTrigger value="billing" className="flex-1 sm:flex-initial">Planos & Cobranças</TabsTrigger>
-            <TabsTrigger value="notifications" className="flex-1 sm:flex-initial">Notificações</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="orgs" className="space-y-4">
-            {/* Active */}
-            {activeOrgs.length > 0 && (
-              <div className="space-y-3">
-                <h2 className="text-sm font-semibold text-foreground flex items-center gap-2">
-                  <CheckCircle className="h-4 w-4 text-emerald-500" />
-                  Ativas ({activeOrgs.length})
-                </h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                  {activeOrgs.map((org) => (
-                    <OrgCard key={org.id} org={org} />
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Suspended */}
-            {suspendedOrgs.length > 0 && (
-              <div className="space-y-3">
-                <h2 className="text-sm font-semibold text-foreground flex items-center gap-2">
-                  <Ban className="h-4 w-4 text-destructive" />
-                  Suspensas ({suspendedOrgs.length})
-                </h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                  {suspendedOrgs.map((org) => (
-                    <OrgCard key={org.id} org={org} />
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {organizations.filter((o) => o.status !== "pendente").length === 0 && (
-              <Card>
-                <CardContent className="py-12 text-center text-muted-foreground">
-                  Nenhuma organização ativa ou suspensa
-                </CardContent>
-              </Card>
-            )}
-          </TabsContent>
-
-          <TabsContent value="users" className="space-y-4">
-            <UserManagementCard />
-          </TabsContent>
-
-          <TabsContent value="billing" className="space-y-6">
-            <PlanLimitsCard />
-            <PlanPricingCard />
-            <OrgBillingCard />
-          </TabsContent>
-
-          <TabsContent value="notifications" className="space-y-4">
-            <BroadcastNotificationCard />
-          </TabsContent>
-        </Tabs>
-      </main>
+          {/* Section content */}
+          {renderContent()}
+        </main>
+      </div>
     </div>
   );
 }
