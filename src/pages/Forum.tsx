@@ -475,7 +475,7 @@ export default function Forum() {
                             value={commentTexts[post.id] || ""}
                             onChange={(e) => setCommentTexts(prev => ({ ...prev, [post.id]: e.target.value }))}
                             placeholder="Escreva um comentário..."
-                            className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+                            className="flex-1 min-w-0 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
                             onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleAddComment(post.id); } }}
                             maxLength={2000}
                           />
