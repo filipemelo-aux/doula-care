@@ -8,6 +8,7 @@ export type PushNotificationType =
   | "budget_response"
   | "payment_received"
   | "appointment_reminder"
+  | "community"
   | "general";
 
 export type PushPriority = "normal" | "critica";
