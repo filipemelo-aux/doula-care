@@ -508,10 +508,14 @@ export default function Forum() {
                         <p className="text-xs text-muted-foreground text-center py-4">Nenhum comentário ainda</p>
                       ) : (
                         expandedComments.map((comment: any) => {
-                          const cName = getAuthorName(comment.author_id, comment.is_anonymous, commentProfileMap as any);
+                          const cInfo = getAuthorInfo(comment.author_id, comment.is_anonymous, commentProfileMap as any);
+                          const cName = cInfo.name;
                           return (
                             <div key={comment.id} className="px-4 py-2.5 flex gap-2.5 group">
                               <Avatar className="h-7 w-7 shrink-0 mt-0.5">
+                                {cInfo.avatarUrl && (
+                                  <AvatarImage src={cInfo.avatarUrl} alt={cName} className="object-cover" />
+                                )}
                                 <AvatarFallback className="bg-muted text-muted-foreground text-[10px] font-semibold">
                                   {getInitials(cName)}
                                 </AvatarFallback>
