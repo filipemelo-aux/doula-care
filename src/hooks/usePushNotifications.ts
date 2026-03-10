@@ -178,6 +178,19 @@ export function usePushNotifications() {
     setIsLoading(true);
 
     try {
+      // Capacitor native mode
+      if (isCapacitorNative()) {
+        const token = await registerNativePush();
+        setIsLoading(false);
+        if (token) {
+          setIsSubscribed(true);
+          setPermission("granted");
+          return true;
+        }
+        return "denied";
+      }
+
+      // Web mode
       const perm = await Notification.requestPermission();
       setPermission(perm);
 
@@ -206,20 +219,24 @@ export function usePushNotifications() {
   const unsubscribe = useCallback(async () => {
     setIsLoading(true);
     try {
-      const registration = await navigator.serviceWorker.ready;
-      const subscription = await registration.pushManager.getSubscription();
+      if (isCapacitorNative()) {
+        await unregisterNativePush();
+      } else {
+        const registration = await navigator.serviceWorker.ready;
+        const subscription = await registration.pushManager.getSubscription();
 
-      if (subscription) {
-        const endpoint = subscription.endpoint;
-        await subscription.unsubscribe();
+        if (subscription) {
+          const endpoint = subscription.endpoint;
+          await subscription.unsubscribe();
 
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-          await supabase
-            .from("push_subscriptions")
-            .delete()
-            .eq("user_id", user.id)
-            .eq("endpoint", endpoint);
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user) {
+            await supabase
+              .from("push_subscriptions")
+              .delete()
+              .eq("user_id", user.id)
+              .eq("endpoint", endpoint);
+          }
         }
       }
 
