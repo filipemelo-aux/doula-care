@@ -1,5 +1,11 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import {
+  isCapacitorNative,
+  registerNativePush,
+  unregisterNativePush,
+  setupNativePushListeners,
+} from "@/lib/capacitorPush";
 
 // Extend ServiceWorkerRegistration to include pushManager
 declare global {
