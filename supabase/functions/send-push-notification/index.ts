@@ -18,6 +18,7 @@ type SubscriptionRow = {
   p256dh: string;
   auth: string;
   device_type: string | null;
+  token_type: string;
   created_at?: string;
   updated_at?: string;
 };
@@ -27,7 +28,7 @@ const getSubscriptionTimestamp = (sub: SubscriptionRow) =>
 
 const isAndroidSubscription = (sub: SubscriptionRow) => {
   const type = (sub.device_type ?? "").toLowerCase();
-  return type === "android" || type === "android_browser" || type === "android_twa";
+  return type === "android" || type === "android_browser" || type === "android_twa" || type === "android_capacitor";
 };
 
 function reduceSubscriptionsForDelivery(rawSubscriptions: SubscriptionRow[]) {
@@ -40,7 +41,7 @@ function reduceSubscriptionsForDelivery(rawSubscriptions: SubscriptionRow[]) {
     }
   }
 
-  // 2) Group by user and collapse Android duplicates to avoid Chrome + native double alerts
+  // 2) Group by user and collapse Android duplicates to avoid double alerts
   const byUser = new Map<string, SubscriptionRow[]>();
   for (const sub of newestByEndpoint.values()) {
     const current = byUser.get(sub.user_id) ?? [];
@@ -56,16 +57,33 @@ function reduceSubscriptionsForDelivery(rawSubscriptions: SubscriptionRow[]) {
       (a, b) => getSubscriptionTimestamp(b) - getSubscriptionTimestamp(a)
     );
 
+    // Priority: Capacitor FCM > TWA > Android browser
+    const capacitorSubs = sorted.filter((sub) => sub.device_type === "android_capacitor");
     const twaSubs = sorted.filter((sub) => sub.device_type === "android_twa");
+
+    if (capacitorSubs.length > 0) {
+      // Use newest Capacitor subscription, mark all others Android as stale
+      const [latestCap, ...olderCap] = capacitorSubs;
+      deliverable.push(latestCap);
+      olderCap.forEach((sub) => staleEndpoints.add(sub.endpoint));
+      // Mark TWA and browser Android as stale (Capacitor handles it natively)
+      sorted
+        .filter((sub) => isAndroidSubscription(sub) && sub.device_type !== "android_capacitor")
+        .forEach((sub) => staleEndpoints.add(sub.endpoint));
+
+      sorted
+        .filter((sub) => !isAndroidSubscription(sub))
+        .forEach((sub) => deliverable.push(sub));
+      continue;
+    }
+
     if (twaSubs.length > 0) {
       const [latestTwa, ...olderTwa] = twaSubs;
       deliverable.push(latestTwa);
       olderTwa.forEach((sub) => staleEndpoints.add(sub.endpoint));
-
       sorted
         .filter((sub) => sub.device_type === "android" || sub.device_type === "android_browser")
         .forEach((sub) => staleEndpoints.add(sub.endpoint));
-
       sorted
         .filter((sub) => !isAndroidSubscription(sub))
         .forEach((sub) => deliverable.push(sub));
@@ -87,6 +105,46 @@ function reduceSubscriptionsForDelivery(rawSubscriptions: SubscriptionRow[]) {
   return { deliverable, staleEndpoints: [...staleEndpoints] };
 }
 
+/** Send a push notification via FCM HTTP v1 API */
+async function sendFcmPush(
+  fcmToken: string,
+  payload: { title: string; body: string; icon?: string; image?: string; url?: string; tag?: string; type?: string; priority?: string; require_interaction?: boolean },
+  fcmServerKey: string
+): Promise<{ ok: boolean; status: number }> {
+  const isCritica = payload.priority === "critica";
+
+  const fcmPayload = {
+    to: fcmToken,
+    priority: isCritica ? "high" : "normal",
+    notification: {
+      title: payload.title,
+      body: payload.body,
+      icon: payload.icon || "/logo.png",
+      tag: payload.tag || payload.type || "default",
+      click_action: payload.url || "/",
+    },
+    data: {
+      url: payload.url || "/",
+      type: payload.type || "general",
+      priority: isCritica ? "critica" : "normal",
+      tag: payload.tag || payload.type || "default",
+      require_interaction: String(payload.require_interaction ?? isCritica),
+      ...(payload.image ? { image: payload.image } : {}),
+    },
+  };
+
+  const response = await fetch("https://fcm.googleapis.com/fcm/send", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `key=${fcmServerKey}`,
+    },
+    body: JSON.stringify(fcmPayload),
+  });
+
+  return { ok: response.ok, status: response.status };
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -97,6 +155,7 @@ Deno.serve(async (req) => {
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const vapidPublicKey = Deno.env.get("VAPID_PUBLIC_KEY");
     const vapidPrivateKey = Deno.env.get("VAPID_PRIVATE_KEY");
+    const fcmServerKey = Deno.env.get("FCM_SERVER_KEY");
 
     if (!vapidPublicKey || !vapidPrivateKey) {
       return new Response(
@@ -190,7 +249,6 @@ Deno.serve(async (req) => {
 
     // If we want to send to admin users - SCOPED TO CALLER'S ORG
     if (body.send_to_admins) {
-      // Get caller's org
       const { data: callerProfile } = await supabase
         .from("profiles")
         .select("organization_id")
@@ -200,7 +258,6 @@ Deno.serve(async (req) => {
       const callerOrgId = callerProfile?.organization_id;
 
       if (callerOrgId) {
-        // Get admin/moderator users in the SAME org
         const { data: orgProfiles } = await supabase
           .from("profiles")
           .select("user_id")
@@ -315,12 +372,42 @@ Deno.serve(async (req) => {
       privateKey: vapidPrivateKey,
     };
 
+    const isCritica = priority === "critica";
+    const notifType = type || "general";
+
     let sent = 0;
     let failed = 0;
     const expiredEndpoints: string[] = [];
 
     for (const sub of subscriptionsToSend) {
       try {
+        // FCM native token (Capacitor)
+        if (sub.token_type === "fcm") {
+          if (!fcmServerKey) {
+            console.error("[push] FCM_SERVER_KEY not configured, skipping FCM token");
+            failed++;
+            continue;
+          }
+
+          const result = await sendFcmPush(
+            sub.endpoint,
+            { title, body: message, icon: "/logo.png", image: image || undefined, url: url || "/", tag: tag || notifType, type: notifType, priority: isCritica ? "critica" : "normal", require_interaction: require_interaction ?? isCritica },
+            fcmServerKey
+          );
+
+          if (result.ok) {
+            sent++;
+          } else if (result.status === 401 || result.status === 403) {
+            console.error(`[push] FCM auth error: ${result.status}`);
+            failed++;
+          } else {
+            expiredEndpoints.push(sub.endpoint);
+            failed++;
+          }
+          continue;
+        }
+
+        // Web Push (VAPID)
         const pushSubscription: PushSubscription = {
           endpoint: sub.endpoint,
           keys: {
@@ -328,10 +415,6 @@ Deno.serve(async (req) => {
             auth: sub.auth,
           },
         };
-
-        const isCritica = priority === "critica";
-
-        const notifType = type || "general";
 
         const pushMessage: PushMessage = {
           data: JSON.stringify({
@@ -347,7 +430,7 @@ Deno.serve(async (req) => {
             require_interaction: require_interaction ?? isCritica,
           }),
           options: {
-            ttl: isCritica ? 86400 : 3600, // 24h for critical, 1h for normal
+            ttl: isCritica ? 86400 : 3600,
             urgency: isCritica ? "high" : "normal",
           },
         };
@@ -363,7 +446,6 @@ Deno.serve(async (req) => {
         if (response.ok) {
           sent++;
         } else if (response.status === 410 || response.status === 404) {
-          // Subscription expired, mark for removal
           expiredEndpoints.push(sub.endpoint);
           failed++;
         } else {
