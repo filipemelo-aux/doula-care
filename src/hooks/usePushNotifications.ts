@@ -20,14 +20,45 @@ export function usePushNotifications() {
   const [permission, setPermission] = useState<NotificationPermission>("default");
 
   useEffect(() => {
-    const supported = "serviceWorker" in navigator && "PushManager" in window && "Notification" in window;
-    setIsSupported(supported);
+    if (isCapacitorNative()) {
+      // Native Capacitor mode — always supported
+      setIsSupported(true);
+      setPermission("default");
+      setupNativePushListeners();
+      // Check if already registered
+      checkNativeSubscription();
+    } else {
+      // Web mode — check browser support
+      const supported = "serviceWorker" in navigator && "PushManager" in window && "Notification" in window;
+      setIsSupported(supported);
 
-    if (supported) {
-      setPermission(Notification.permission);
-      checkAndFixSubscription();
+      if (supported) {
+        setPermission(Notification.permission);
+        checkAndFixSubscription();
+      }
     }
   }, []);
+
+  const checkNativeSubscription = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data } = await supabase
+        .from("push_subscriptions")
+        .select("id")
+        .eq("user_id", user.id)
+        .eq("token_type", "fcm")
+        .limit(1);
+      if (data && data.length > 0) {
+        setIsSubscribed(true);
+        setPermission("granted");
+        // Re-register to refresh FCM token
+        registerNativePush().catch(console.error);
+      }
+    } catch (err) {
+      console.error("Error checking native subscription:", err);
+    }
+  };
 
   const checkAndFixSubscription = async () => {
     try {
