@@ -21,6 +21,26 @@ const getPushPlugin = async () => {
   return mod.PushNotifications;
 };
 
+const mapNativePermission = (receive?: string): NotificationPermission => {
+  if (receive === "granted") return "granted";
+  if (receive === "denied") return "denied";
+  return "default";
+};
+
+/** Read native push permission state */
+export async function getNativePushPermission(): Promise<NotificationPermission> {
+  if (!isCapacitorNative()) return "default";
+
+  try {
+    const PushNotifications = await getPushPlugin();
+    const permission = await PushNotifications.checkPermissions?.();
+    return mapNativePermission(permission?.receive);
+  } catch (err) {
+    console.error("[NativePush] checkPermissions error:", err);
+    return "default";
+  }
+}
+
 /**
  * Request permission and register for native push notifications.
  * Saves the FCM token to push_subscriptions with token_type = 'fcm'.
