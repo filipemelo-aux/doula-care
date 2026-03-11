@@ -2,9 +2,9 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import {
   isCapacitorNative,
+  getNativePushPermission,
   registerNativePush,
   unregisterNativePush,
-  setupNativePushListeners,
 } from "@/lib/capacitorPush";
 
 // Extend ServiceWorkerRegistration to include pushManager
@@ -23,37 +23,64 @@ export function usePushNotifications() {
     if (isCapacitorNative()) {
       // Native Capacitor mode — always supported
       setIsSupported(true);
-      setPermission("default");
-      setupNativePushListeners().catch(console.error);
-      // Check if already registered
-      checkNativeSubscription();
-    } else {
-      // Web mode — check browser support
-      const supported = "serviceWorker" in navigator && "PushManager" in window && "Notification" in window;
-      setIsSupported(supported);
+      setIsSubscribed(false);
 
-      if (supported) {
-        setPermission(Notification.permission);
-        checkAndFixSubscription();
-      }
+      getNativePushPermission()
+        .then((nativePermission) => {
+          setPermission(nativePermission);
+          checkNativeSubscription(nativePermission).catch(console.error);
+        })
+        .catch((err) => {
+          console.error("Error checking native permission:", err);
+          setPermission("default");
+        });
+
+      return;
+    }
+
+    // Web mode — check browser support
+    const supported = "serviceWorker" in navigator && "PushManager" in window && "Notification" in window;
+    setIsSupported(supported);
+
+    if (supported) {
+      setPermission(Notification.permission);
+      checkAndFixSubscription();
     }
   }, []);
 
-  const checkNativeSubscription = async () => {
+  const checkNativeSubscription = async (nativePermission: NotificationPermission) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      if (!user) {
+        setIsSubscribed(false);
+        return;
+      }
+
       const { data } = await supabase
         .from("push_subscriptions")
         .select("id")
         .eq("user_id", user.id)
         .eq("token_type", "fcm")
         .limit(1);
-      if (data && data.length > 0) {
+
+      const hasSubscription = !!(data && data.length > 0);
+      setIsSubscribed(hasSubscription);
+
+      if (hasSubscription) {
+        if (nativePermission === "granted") {
+          // Refresh token silently on app start
+          registerNativePush().catch(console.error);
+        }
+        return;
+      }
+
+      if (nativePermission !== "granted") return;
+
+      // Permission granted but no FCM token in DB: recover automatically
+      const token = await registerNativePush();
+      if (token) {
         setIsSubscribed(true);
         setPermission("granted");
-        // Re-register to refresh FCM token
-        registerNativePush().catch(console.error);
       }
     } catch (err) {
       console.error("Error checking native subscription:", err);
@@ -181,13 +208,17 @@ export function usePushNotifications() {
       // Capacitor native mode
       if (isCapacitorNative()) {
         const token = await registerNativePush();
+        const nativePermission = await getNativePushPermission();
+        setPermission(nativePermission);
         setIsLoading(false);
+
         if (token) {
           setIsSubscribed(true);
           setPermission("granted");
           return true;
         }
-        return "denied";
+
+        return nativePermission === "denied" ? "denied" : false;
       }
 
       // Web mode
