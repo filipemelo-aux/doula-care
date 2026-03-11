@@ -63,7 +63,7 @@ export function Sidebar({ isOpen, onToggle, onNavigate }: SidebarProps) {
   const { unreadMessages, unreadNotifications } = useAdminUnreadCounts();
   const { organizationId } = useAuth();
 
-  const isFinancialRoute = location.pathname === "/financeiro" || location.pathname === "/despesas";
+  const isFinancialRoute = ["/financeiro", "/despesas", "/relatorios"].includes(location.pathname);
   const [financialOpen, setFinancialOpen] = useState(isFinancialRoute);
 
   const { data: promo } = useQuery({
