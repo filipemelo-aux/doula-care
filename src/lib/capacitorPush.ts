@@ -14,9 +14,10 @@ export const isCapacitorNative = (): boolean => {
   }
 };
 
-/** Lazy-load PushNotifications plugin */
+/** Lazy-load PushNotifications plugin — hidden from Rollup static analysis */
 const getPushPlugin = async () => {
-  const mod = await import("@capacitor/push-notifications");
+  const modName = "@capacitor/" + "push-notifications";
+  const mod = await (Function("m", "return import(m)")(modName) as Promise<any>);
   return mod.PushNotifications;
 };
 
