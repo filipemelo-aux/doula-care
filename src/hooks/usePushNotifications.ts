@@ -24,7 +24,7 @@ export function usePushNotifications() {
       // Native Capacitor mode — always supported
       setIsSupported(true);
       setPermission("default");
-      setupNativePushListeners();
+      setupNativePushListeners().catch(console.error);
       // Check if already registered
       checkNativeSubscription();
     } else {
