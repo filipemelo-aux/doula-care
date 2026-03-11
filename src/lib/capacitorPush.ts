@@ -1,10 +1,26 @@
 /**
  * Capacitor native push notification utilities.
  * Uses @capacitor/push-notifications for FCM-based native push.
+ * Dynamic imports to avoid build errors in web-only environments.
  */
-import { Capacitor } from "@capacitor/core";
-import { PushNotifications } from "@capacitor/push-notifications";
 import { supabase } from "@/integrations/supabase/client";
+
+/** Returns true when running inside a Capacitor native shell */
+export const isCapacitorNative = (): boolean => {
+  try {
+    // Use dynamic check to avoid hard dependency
+    const cap = (window as any).Capacitor;
+    return cap?.isNativePlatform?.() ?? false;
+  } catch {
+    return false;
+  }
+};
+
+/** Lazy-load PushNotifications plugin */
+const getPushPlugin = async () => {
+  const mod = await import("@capacitor/push-notifications");
+  return mod.PushNotifications;
+};
 
 /** Returns true when running inside a Capacitor native shell */
 export const isCapacitorNative = () => Capacitor.isNativePlatform();
