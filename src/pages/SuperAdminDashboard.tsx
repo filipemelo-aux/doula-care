@@ -56,6 +56,12 @@ export default function SuperAdminDashboard() {
   const [activeSection, setActiveSection] = useState<Section>("orgs");
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
+  useEffect(() => {
+    if (!isMobile) {
+      setSidebarOpen(false);
+    }
+  }, [isMobile]);
+
   const { data: organizations = [], isLoading } = useQuery({
     queryKey: ["super-admin-orgs"],
     queryFn: async () => {
