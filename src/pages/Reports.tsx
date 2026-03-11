@@ -66,31 +66,6 @@ export default function Reports() {
   const { plan, limits } = usePlanLimits();
   const { data: metrics } = useFinancialMetrics(period);
 
-  if (!limits.reports) {
-    return (
-      <div className="space-y-6">
-        <div className="page-header">
-          <h1 className="page-title">Relatórios</h1>
-          <p className="page-description">Visualize o desempenho do seu negócio em detalhes</p>
-        </div>
-        <UpgradeBanner feature="Relatórios avançados" currentPlan={plan} requiredPlan="pro" />
-      </div>
-    );
-  }
-
-  const handleExport = async (fmt: ExportFormat) => {
-    try {
-      setExporting(true);
-      await exportReport(activeTab, period, fmt);
-      toast.success("Relatório exportado com sucesso!");
-    } catch (err) {
-      console.error(err);
-      toast.error("Erro ao exportar relatório");
-    } finally {
-      setExporting(false);
-    }
-  };
-
   // Monthly chart data
   const { data: monthlyData } = useQuery({
     queryKey: ["monthly-report", period],
