@@ -109,6 +109,11 @@ export default defineConfig(({ mode }) => ({
       },
     }),
   ].filter(Boolean),
+  build: {
+    rollupOptions: {
+      external: ["@capacitor/push-notifications"],
+    },
+  },
   define: {
     __APP_VERSION__: JSON.stringify(FULL_VERSION),
   },
