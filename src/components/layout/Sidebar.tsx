@@ -38,6 +38,7 @@ interface SidebarProps {
 
 const navItems = [
   { to: "/admin", icon: LayoutDashboard, label: "Visão Geral" },
+  { to: "/notificacoes", icon: Bell, label: "Notificações", badgeKey: "notifications" as const },
   { to: "/clientes", icon: Users, label: "Clientes" },
   { to: "/agenda", icon: CalendarDays, label: "Agenda" },
   {
@@ -46,11 +47,10 @@ const navItems = [
     subItems: [
       { to: "/financeiro", icon: TrendingUp, label: "Receitas" },
       { to: "/despesas", icon: TrendingDown, label: "Despesas" },
+      { to: "/relatorios", icon: FileText, label: "Relatórios" },
     ],
   },
-  { to: "/relatorios", icon: FileText, label: "Relatórios" },
   { to: "/mensagens", icon: MessageCircle, label: "Mensagens", badgeKey: "messages" as const },
-  { to: "/notificacoes", icon: Bell, label: "Notificações", badgeKey: "notifications" as const },
   { to: "/comunidade", icon: Users2, label: "Comunidade" },
   { to: "/configuracoes", icon: Settings, label: "Configurações" },
 ];
@@ -63,7 +63,7 @@ export function Sidebar({ isOpen, onToggle, onNavigate }: SidebarProps) {
   const { unreadMessages, unreadNotifications } = useAdminUnreadCounts();
   const { organizationId } = useAuth();
 
-  const isFinancialRoute = location.pathname === "/financeiro" || location.pathname === "/despesas";
+  const isFinancialRoute = ["/financeiro", "/despesas", "/relatorios"].includes(location.pathname);
   const [financialOpen, setFinancialOpen] = useState(isFinancialRoute);
 
   const { data: promo } = useQuery({
@@ -134,6 +134,7 @@ export function Sidebar({ isOpen, onToggle, onNavigate }: SidebarProps) {
             const subLimitKeys: Record<string, keyof typeof limits> = {
               "/financeiro": "financial",
               "/despesas": "expenses",
+              "/relatorios": "reports",
             };
             const allDisabled = item.subItems.every((s) => {
               const lk = subLimitKeys[s.to];
