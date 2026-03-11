@@ -437,12 +437,12 @@ export default function SuperAdminDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-[100dvh] bg-background flex flex-col">
       {/* Header */}
       <header className="sticky top-0 z-20 border-b bg-card/95 backdrop-blur-sm px-4 sm:px-6 py-3 flex items-center justify-between">
         <div className="flex items-center gap-2.5">
           {isMobile && (
-            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setSidebarOpen(!sidebarOpen)}>
+            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setSidebarOpen(true)}>
               <Menu className="h-5 w-5" />
             </Button>
           )}
@@ -487,43 +487,22 @@ export default function SuperAdminDashboard() {
       </header>
 
       <div className="flex flex-1 overflow-hidden">
-        {/* Sidebar - desktop always visible, mobile overlay */}
-        {isMobile && sidebarOpen && (
-          <div className="fixed inset-0 z-30 bg-black/40" onClick={() => setSidebarOpen(false)} />
+        {!isMobile && (
+          <aside className="bg-card border-r border-border flex flex-col shrink-0 w-56 relative">
+            {renderSidebarNav()}
+          </aside>
         )}
-        <aside
-          className={cn(
-            "bg-card border-r border-border flex flex-col shrink-0 transition-transform duration-200 z-40",
-            isMobile
-              ? "fixed top-[57px] left-0 bottom-0 w-64 shadow-xl"
-              : "w-56 relative",
-            isMobile && !sidebarOpen && "-translate-x-full"
-          )}
-        >
-          <nav className="flex-1 p-3 space-y-1">
-            {sidebarItems.map((item) => (
-              <button
-                key={item.key}
-                onClick={() => {
-                  setActiveSection(item.key);
-                  if (isMobile) setSidebarOpen(false);
-                }}
-                className={cn(
-                  "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors text-left",
-                  activeSection === item.key
-                    ? "bg-primary text-primary-foreground font-medium"
-                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                )}
-              >
-                <item.icon className="h-4 w-4 shrink-0" />
-                {item.label}
-              </button>
-            ))}
-          </nav>
-        </aside>
+
+        {isMobile && (
+          <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
+            <SheetContent side="left" className="w-[86vw] max-w-[320px] p-0">
+              {renderSidebarNav(() => setSidebarOpen(false))}
+            </SheetContent>
+          </Sheet>
+        )}
 
         {/* Main content */}
-        <main className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-5">
+        <main className="flex-1 overflow-y-auto p-4 sm:p-6 pb-[calc(1rem+env(safe-area-inset-bottom))] sm:pb-[calc(1.5rem+env(safe-area-inset-bottom))] space-y-5">
           {/* Metrics */}
           <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
             <Card className={onlineOrgIds.size > 0 ? "border-success/30 bg-success/5" : ""}>
