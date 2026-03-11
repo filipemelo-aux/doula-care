@@ -70,7 +70,7 @@ export default function Login() {
 
   if (loading && !submitting) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="fixed inset-0 flex items-center justify-center bg-background overflow-hidden">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
@@ -78,7 +78,7 @@ export default function Login() {
 
   if (submitting && user && !roleChecked) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="fixed inset-0 flex items-center justify-center bg-background overflow-hidden">
         <div className="flex flex-col items-center gap-4">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
           <p className="text-muted-foreground">Verificando permissões...</p>
@@ -89,14 +89,14 @@ export default function Login() {
 
   if (user && roleChecked && role) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="fixed inset-0 flex items-center justify-center bg-background overflow-hidden">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-gradient-to-br from-background via-background to-primary/5 p-4 overflow-auto">
+    <div className="fixed inset-0 flex items-center justify-center bg-gradient-to-br from-background via-background to-primary/5 p-4 overflow-hidden">
       <Card className="w-full max-w-md card-glass">
         <CardHeader className="text-center space-y-2">
           <div className="flex flex-col items-center gap-1.5">
