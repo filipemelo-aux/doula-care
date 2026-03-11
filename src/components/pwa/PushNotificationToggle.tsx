@@ -33,7 +33,7 @@ export function PushNotificationToggle({ compact = false }: PushNotificationTogg
       if (result === true) {
         toast.success("Notificações ativadas! Você receberá alertas no celular.");
       } else if (result === "denied") {
-        toast.error("Notificações bloqueadas. Habilite nas configurações do navegador.");
+        toast.error("Notificações bloqueadas. Habilite nas configurações do app/dispositivo.");
       } else {
         toast.error("Erro ao ativar notificações. Tente novamente.");
       }

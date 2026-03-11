@@ -50,32 +50,63 @@ export async function registerNativePush(): Promise<string | null> {
   try {
     const PushNotifications = await getPushPlugin();
 
-    const permResult = await PushNotifications.requestPermissions();
-    if (permResult.receive !== "granted") {
+    let permission = await PushNotifications.checkPermissions?.();
+    if (permission?.receive === "prompt") {
+      permission = await PushNotifications.requestPermissions();
+    }
+
+    if (permission?.receive !== "granted") {
       console.log("[NativePush] Permission denied");
       return null;
     }
 
-    await PushNotifications.register();
+    type ListenerHandle = { remove?: () => Promise<void> | void };
 
-    return new Promise<string | null>((resolve) => {
+    return await new Promise<string | null>((resolve) => {
+      let settled = false;
+      const listeners: ListenerHandle[] = [];
+
+      const finish = async (value: string | null) => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timeout);
+        await Promise.all(
+          listeners.map(async (listener) => {
+            try {
+              await listener?.remove?.();
+            } catch {
+              // noop
+            }
+          })
+        );
+        resolve(value);
+      };
+
       const timeout = setTimeout(() => {
         console.error("[NativePush] Registration timeout");
-        resolve(null);
-      }, 10000);
+        finish(null).catch(console.error);
+      }, 12000);
 
-      PushNotifications.addListener("registration", async (token) => {
-        clearTimeout(timeout);
+      Promise.resolve(PushNotifications.addListener("registration", async (token: { value: string }) => {
         console.log("[NativePush] FCM token received:", token.value.substring(0, 20) + "...");
         const saved = await saveFcmToken(token.value);
-        resolve(saved ? token.value : null);
-      });
-
-      PushNotifications.addListener("registrationError", (error) => {
-        clearTimeout(timeout);
-        console.error("[NativePush] Registration error:", error);
-        resolve(null);
-      });
+        finish(saved ? token.value : null).catch(console.error);
+      }))
+        .then((handle: ListenerHandle) => {
+          listeners.push(handle);
+          return PushNotifications.addListener("registrationError", (error: unknown) => {
+            console.error("[NativePush] Registration error:", error);
+            finish(null).catch(console.error);
+          });
+        })
+        .then((errorHandle: ListenerHandle) => {
+          listeners.push(errorHandle);
+          return PushNotifications.register();
+        })
+        .catch((err: unknown) => {
+          console.error("[NativePush] Error during registration setup:", err);
+          finish(null).catch(console.error);
+        });
     });
   } catch (err) {
     console.error("[NativePush] Error:", err);

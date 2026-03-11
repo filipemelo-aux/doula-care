@@ -148,8 +148,8 @@ export function PushPermissionModal({ open, onOpenChange }: PushPermissionModalP
                 Notificações bloqueadas
               </DialogTitle>
               <DialogDescription className="text-sm leading-relaxed">
-                As notificações foram bloqueadas pelo navegador. Para ativá-las, acesse as
-                configurações do navegador e permita notificações para este site.
+                As notificações foram bloqueadas no seu dispositivo. Para ativá-las, abra as
+                configurações do app no celular e permita notificações.
               </DialogDescription>
             </DialogHeader>
 

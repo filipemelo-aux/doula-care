@@ -208,13 +208,17 @@ export function usePushNotifications() {
       // Capacitor native mode
       if (isCapacitorNative()) {
         const token = await registerNativePush();
+        const nativePermission = await getNativePushPermission();
+        setPermission(nativePermission);
         setIsLoading(false);
+
         if (token) {
           setIsSubscribed(true);
           setPermission("granted");
           return true;
         }
-        return "denied";
+
+        return nativePermission === "denied" ? "denied" : false;
       }
 
       // Web mode
