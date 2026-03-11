@@ -7,7 +7,20 @@ const config: CapacitorConfig = {
   server: {
     url: 'https://doulacare.app.br',
     cleartext: false
-  }
+  },
+  android: {
+    adjustMarginsForEdgeToEdge: 'auto',
+  },
+  plugins: {
+    StatusBar: {
+      style: 'LIGHT',
+      backgroundColor: '#c34a1c',
+      overlaysWebView: false,
+    },
+    PushNotifications: {
+      presentationOptions: ['badge', 'sound', 'alert'],
+    },
+  },
 };
 
 export default config;
