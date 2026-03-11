@@ -1,4 +1,5 @@
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
+import { useState } from "react";
 import logo from "@/assets/logo.png";
 import { useOrgBranding } from "@/hooks/useOrgBranding";
 import { useQuery } from "@tanstack/react-query";
@@ -11,6 +12,7 @@ import {
   FileText,
   Settings,
   ChevronLeft,
+  ChevronDown,
   CalendarDays,
   Bell,
   Users2,
@@ -18,6 +20,7 @@ import {
   Gift,
   Sparkles,
   Crown,
+  Wallet,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
