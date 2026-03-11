@@ -5,8 +5,8 @@ const config: CapacitorConfig = {
   appName: 'Doula Care',
   webDir: 'dist',
   server: {
-    url: 'https://2c48c3f3-dcdf-4fc1-a578-416d5bffa96a.lovableproject.com?forceHideBadge=true',
-    cleartext: true
+    url: 'https://doulacare.app.br',
+    cleartext: false
   },
   android: {
     adjustMarginsForEdgeToEdge: 'auto',
