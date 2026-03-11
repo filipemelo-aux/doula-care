@@ -10,7 +10,14 @@ const config: CapacitorConfig = {
   },
   android: {
     adjustMarginsForEdgeToEdge: 'auto',
+    backgroundColor: '#FFFFFF',
   },
+  plugins: {
+    SplashScreen: {
+      backgroundColor: '#FFFFFF',
+      launchAutoHide: true,
+      androidScaleType: 'CENTER_CROP',
+    },
   plugins: {
     StatusBar: {
       style: 'LIGHT',
