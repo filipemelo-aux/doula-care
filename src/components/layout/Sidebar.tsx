@@ -40,8 +40,14 @@ const navItems = [
   { to: "/admin", icon: LayoutDashboard, label: "Visão Geral" },
   { to: "/clientes", icon: Users, label: "Clientes" },
   { to: "/agenda", icon: CalendarDays, label: "Agenda" },
-  { to: "/financeiro", icon: TrendingUp, label: "Receitas" },
-  { to: "/despesas", icon: TrendingDown, label: "Despesas" },
+  {
+    icon: Wallet,
+    label: "Financeiro",
+    subItems: [
+      { to: "/financeiro", icon: TrendingUp, label: "Receitas" },
+      { to: "/despesas", icon: TrendingDown, label: "Despesas" },
+    ],
+  },
   { to: "/relatorios", icon: FileText, label: "Relatórios" },
   { to: "/mensagens", icon: MessageCircle, label: "Mensagens", badgeKey: "messages" as const },
   { to: "/notificacoes", icon: Bell, label: "Notificações", badgeKey: "notifications" as const },
