@@ -18,7 +18,6 @@ const config: CapacitorConfig = {
       launchAutoHide: true,
       androidScaleType: 'CENTER_CROP',
     },
-  plugins: {
     StatusBar: {
       style: 'LIGHT',
       backgroundColor: '#c34a1c',
