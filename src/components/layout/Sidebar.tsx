@@ -1,4 +1,5 @@
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
+import { useState } from "react";
 import logo from "@/assets/logo.png";
 import { useOrgBranding } from "@/hooks/useOrgBranding";
 import { useQuery } from "@tanstack/react-query";
@@ -11,6 +12,7 @@ import {
   FileText,
   Settings,
   ChevronLeft,
+  ChevronDown,
   CalendarDays,
   Bell,
   Users2,
@@ -18,6 +20,7 @@ import {
   Gift,
   Sparkles,
   Crown,
+  Wallet,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -37,8 +40,14 @@ const navItems = [
   { to: "/admin", icon: LayoutDashboard, label: "Visão Geral" },
   { to: "/clientes", icon: Users, label: "Clientes" },
   { to: "/agenda", icon: CalendarDays, label: "Agenda" },
-  { to: "/financeiro", icon: TrendingUp, label: "Receitas" },
-  { to: "/despesas", icon: TrendingDown, label: "Despesas" },
+  {
+    icon: Wallet,
+    label: "Financeiro",
+    subItems: [
+      { to: "/financeiro", icon: TrendingUp, label: "Receitas" },
+      { to: "/despesas", icon: TrendingDown, label: "Despesas" },
+    ],
+  },
   { to: "/relatorios", icon: FileText, label: "Relatórios" },
   { to: "/mensagens", icon: MessageCircle, label: "Mensagens", badgeKey: "messages" as const },
   { to: "/notificacoes", icon: Bell, label: "Notificações", badgeKey: "notifications" as const },
@@ -53,6 +62,9 @@ export function Sidebar({ isOpen, onToggle, onNavigate }: SidebarProps) {
   const { logoUrl: orgLogo, displayName } = useOrgBranding();
   const { unreadMessages, unreadNotifications } = useAdminUnreadCounts();
   const { organizationId } = useAuth();
+
+  const isFinancialRoute = location.pathname === "/financeiro" || location.pathname === "/despesas";
+  const [financialOpen, setFinancialOpen] = useState(isFinancialRoute);
 
   const { data: promo } = useQuery({
     queryKey: ["my-org-promo", organizationId],
@@ -117,23 +129,112 @@ export function Sidebar({ isOpen, onToggle, onNavigate }: SidebarProps) {
       {/* Navigation */}
       <nav className="flex-1 py-6 px-3 space-y-1 overflow-y-auto">
         {navItems.map((item) => {
+          // Submenu item (Financeiro)
+          if ("subItems" in item && item.subItems) {
+            const subLimitKeys: Record<string, keyof typeof limits> = {
+              "/financeiro": "financial",
+              "/despesas": "expenses",
+            };
+            const allDisabled = item.subItems.every((s) => {
+              const lk = subLimitKeys[s.to];
+              return lk ? !limits[lk] : false;
+            });
+            const isSubActive = item.subItems.some((s) => location.pathname === s.to);
+
+            return (
+              <div key={item.label}>
+                <button
+                  onClick={() => setFinancialOpen((v) => !v)}
+                  disabled={allDisabled}
+                  className={cn(
+                    "nav-link w-full text-left relative",
+                    isSubActive && "active",
+                    !isOpen && "lg:justify-center lg:px-0",
+                    allDisabled && "opacity-40 cursor-not-allowed hover:bg-transparent"
+                  )}
+                  title={!isOpen ? item.label : allDisabled ? "Recurso indisponível no seu plano" : undefined}
+                >
+                  <item.icon className={cn("w-5 h-5 shrink-0", isSubActive && "text-current")} />
+                  <span className={cn("transition-opacity flex-1", !isOpen && "lg:hidden")}>
+                    {item.label}
+                  </span>
+                  <ChevronDown
+                    className={cn(
+                      "w-4 h-4 shrink-0 transition-transform duration-200",
+                      financialOpen && "rotate-180",
+                      !isOpen && "lg:hidden"
+                    )}
+                  />
+                </button>
+                {financialOpen && isOpen && (
+                  <div className="ml-4 mt-1 space-y-0.5 border-l-2 border-sidebar-border pl-2">
+                    {item.subItems.map((sub) => {
+                      const lk = subLimitKeys[sub.to];
+                      const subDisabled = lk ? !limits[lk] : false;
+                      const subActive = !subDisabled && location.pathname === sub.to;
+                      return (
+                        <button
+                          key={sub.to}
+                          onClick={() => !subDisabled && handleNavClick(sub.to)}
+                          disabled={subDisabled}
+                          className={cn(
+                            "nav-link w-full text-left text-sm py-2",
+                            subActive && "active",
+                            subDisabled && "opacity-40 cursor-not-allowed hover:bg-transparent"
+                          )}
+                        >
+                          <sub.icon className={cn("w-4 h-4 shrink-0", subActive && "text-current")} />
+                          <span className="flex-1">{sub.label}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+                {/* Collapsed: show sub-items as individual icons */}
+                {!isOpen && (
+                  <div className="hidden lg:flex flex-col items-center mt-1 space-y-1">
+                    {item.subItems.map((sub) => {
+                      const lk = subLimitKeys[sub.to];
+                      const subDisabled = lk ? !limits[lk] : false;
+                      const subActive = !subDisabled && location.pathname === sub.to;
+                      return (
+                        <button
+                          key={sub.to}
+                          onClick={() => !subDisabled && handleNavClick(sub.to)}
+                          disabled={subDisabled}
+                          className={cn(
+                            "nav-link justify-center px-0 w-full",
+                            subActive && "active",
+                            subDisabled && "opacity-40 cursor-not-allowed hover:bg-transparent"
+                          )}
+                          title={sub.label}
+                        >
+                          <sub.icon className={cn("w-4 h-4 shrink-0", subActive && "text-current")} />
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            );
+          }
+
+          // Regular item
           const routeToLimit: Record<string, keyof typeof limits> = {
             "/relatorios": "reports",
             "/agenda": "agenda",
             "/clientes": "clients",
-            "/financeiro": "financial",
-            "/despesas": "expenses",
             "/notificacoes": "notifications",
             "/mensagens": "messages",
           };
-          const limitKey = routeToLimit[item.to];
+          const limitKey = routeToLimit[item.to!];
           const isDisabled = limitKey ? !limits[limitKey] : false;
           const isActive = !isDisabled && location.pathname === item.to;
           const badgeCount = isDisabled ? 0 : getBadgeCount((item as any).badgeKey);
           return (
             <button
               key={item.to}
-              onClick={() => !isDisabled && handleNavClick(item.to)}
+              onClick={() => !isDisabled && handleNavClick(item.to!)}
               disabled={isDisabled}
               className={cn(
                 "nav-link w-full text-left relative",
