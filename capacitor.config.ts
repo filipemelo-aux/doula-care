@@ -9,7 +9,7 @@ const config: CapacitorConfig = {
     cleartext: false
   },
   android: {
-    adjustMarginsForEdgeToEdge: 'auto',
+    adjustMarginsForEdgeToEdge: 'force',
     backgroundColor: '#FFFFFF',
   },
   plugins: {
