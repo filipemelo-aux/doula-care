@@ -1,14 +1,12 @@
 /**
  * Capacitor native push notification utilities.
- * Uses @capacitor/push-notifications for FCM-based native push.
- * Dynamic imports to avoid build errors in web-only environments.
+ * Uses dynamic imports to avoid build errors in web-only environments.
  */
 import { supabase } from "@/integrations/supabase/client";
 
 /** Returns true when running inside a Capacitor native shell */
 export const isCapacitorNative = (): boolean => {
   try {
-    // Use dynamic check to avoid hard dependency
     const cap = (window as any).Capacitor;
     return cap?.isNativePlatform?.() ?? false;
   } catch {
@@ -22,9 +20,6 @@ const getPushPlugin = async () => {
   return mod.PushNotifications;
 };
 
-/** Returns true when running inside a Capacitor native shell */
-export const isCapacitorNative = () => Capacitor.isNativePlatform();
-
 /**
  * Request permission and register for native push notifications.
  * Saves the FCM token to push_subscriptions with token_type = 'fcm'.
@@ -32,17 +27,16 @@ export const isCapacitorNative = () => Capacitor.isNativePlatform();
  */
 export async function registerNativePush(): Promise<string | null> {
   try {
-    // Request permission
+    const PushNotifications = await getPushPlugin();
+
     const permResult = await PushNotifications.requestPermissions();
     if (permResult.receive !== "granted") {
       console.log("[NativePush] Permission denied");
       return null;
     }
 
-    // Register with FCM
     await PushNotifications.register();
 
-    // Wait for registration token
     return new Promise<string | null>((resolve) => {
       const timeout = setTimeout(() => {
         console.error("[NativePush] Registration timeout");
@@ -52,8 +46,6 @@ export async function registerNativePush(): Promise<string | null> {
       PushNotifications.addListener("registration", async (token) => {
         clearTimeout(timeout);
         console.log("[NativePush] FCM token received:", token.value.substring(0, 20) + "...");
-
-        // Save to database
         const saved = await saveFcmToken(token.value);
         resolve(saved ? token.value : null);
       });
@@ -85,7 +77,6 @@ async function saveFcmToken(token: string): Promise<boolean> {
       {
         user_id: user.id,
         endpoint: token,
-        // FCM tokens don't use VAPID keys, store placeholders
         p256dh: "fcm_native",
         auth: "fcm_native",
         device_type: "android_capacitor",
@@ -120,8 +111,6 @@ export async function unregisterNativePush(): Promise<void> {
         .eq("user_id", user.id)
         .eq("token_type", "fcm");
     }
-    // Note: Capacitor doesn't provide an unregister method,
-    // but removing from DB prevents delivery
   } catch (err) {
     console.error("[NativePush] unregister error:", err);
   }
@@ -130,22 +119,24 @@ export async function unregisterNativePush(): Promise<void> {
 /**
  * Set up notification click handler for deep linking.
  */
-export function setupNativePushListeners() {
+export async function setupNativePushListeners() {
   if (!isCapacitorNative()) return;
 
-  // Handle notification received while app is in foreground
-  PushNotifications.addListener("pushNotificationReceived", (notification) => {
-    console.log("[NativePush] Foreground notification:", notification.title);
-    // Let the OS handle it — we could show an in-app toast here if desired
-  });
+  try {
+    const PushNotifications = await getPushPlugin();
 
-  // Handle notification tap (app opened from notification)
-  PushNotifications.addListener("pushNotificationActionPerformed", (action) => {
-    const data = action.notification.data;
-    if (data?.url) {
-      // Navigate to the deep link URL
-      const url = data.url.startsWith("/") ? data.url : `/${data.url}`;
-      window.location.href = url + (url.includes("?") ? "&" : "?") + "from_notification=1";
-    }
-  });
+    PushNotifications.addListener("pushNotificationReceived", (notification) => {
+      console.log("[NativePush] Foreground notification:", notification.title);
+    });
+
+    PushNotifications.addListener("pushNotificationActionPerformed", (action) => {
+      const data = action.notification.data;
+      if (data?.url) {
+        const url = data.url.startsWith("/") ? data.url : `/${data.url}`;
+        window.location.href = url + (url.includes("?") ? "&" : "?") + "from_notification=1";
+      }
+    });
+  } catch (err) {
+    console.error("[NativePush] setupListeners error:", err);
+  }
 }
