@@ -25,12 +25,28 @@ const getNavigationBarPlugin = () => {
   }
 };
 
+/** Wait for the Capacitor bridge to be available (max ~3s) */
+async function waitForBridge(maxAttempts = 15): Promise<boolean> {
+  for (let i = 0; i < maxAttempts; i++) {
+    if ((window as any).Capacitor?.Plugins) return true;
+    await new Promise((r) => setTimeout(r, 200));
+  }
+  return false;
+}
+
 /**
  * Configure native status bar and navigation bar appearance.
  * Uses the app's theme color (#c34a1c) for a branded look.
+ * Retries if the bridge isn't ready immediately (remote URL loading).
  */
 export async function configureNativeBars() {
   if (!isCapacitorNative()) return;
+
+  const bridgeReady = await waitForBridge();
+  if (!bridgeReady) {
+    console.warn("[NativeUI] Capacitor bridge not available after waiting");
+    return;
+  }
 
   // Configure Status Bar
   try {
