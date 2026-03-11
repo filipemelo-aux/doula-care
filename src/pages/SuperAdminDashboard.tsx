@@ -358,6 +358,29 @@ export default function SuperAdminDashboard() {
     </Card>
   );
 
+  const renderSidebarNav = (onNavigate?: () => void) => (
+    <nav className="flex-1 p-3 space-y-1">
+      {sidebarItems.map((item) => (
+        <button
+          key={item.key}
+          onClick={() => {
+            setActiveSection(item.key);
+            onNavigate?.();
+          }}
+          className={cn(
+            "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors text-left",
+            activeSection === item.key
+              ? "bg-primary text-primary-foreground font-medium"
+              : "text-muted-foreground hover:bg-muted hover:text-foreground"
+          )}
+        >
+          <item.icon className="h-4 w-4 shrink-0" />
+          {item.label}
+        </button>
+      ))}
+    </nav>
+  );
+
   const renderContent = () => {
     switch (activeSection) {
       case "orgs":
