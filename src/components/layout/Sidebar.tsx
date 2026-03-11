@@ -134,6 +134,7 @@ export function Sidebar({ isOpen, onToggle, onNavigate }: SidebarProps) {
             const subLimitKeys: Record<string, keyof typeof limits> = {
               "/financeiro": "financial",
               "/despesas": "expenses",
+              "/relatorios": "reports",
             };
             const allDisabled = item.subItems.every((s) => {
               const lk = subLimitKeys[s.to];
