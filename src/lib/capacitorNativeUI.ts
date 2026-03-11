@@ -1,21 +1,28 @@
 /**
  * Capacitor native UI utilities for StatusBar and NavigationBar.
- * Uses dynamic imports to avoid build errors in web-only environments.
+ * Accesses plugins via the Capacitor bridge (window.Capacitor.Plugins)
+ * since the app loads a remote URL and npm dynamic imports won't work.
  */
 import { isCapacitorNative } from "@/lib/capacitorPush";
 
-/** Lazy-load StatusBar plugin */
-const getStatusBarPlugin = async () => {
-  const modName = "@capacitor/" + "status-bar";
-  const mod = await (Function("m", "return import(m)")(modName) as Promise<any>);
-  return mod.StatusBar;
+/** Get StatusBar plugin from the Capacitor bridge */
+const getStatusBarPlugin = () => {
+  try {
+    const cap = (window as any).Capacitor;
+    return cap?.Plugins?.StatusBar ?? null;
+  } catch {
+    return null;
+  }
 };
 
-/** Lazy-load NavigationBar plugin */
-const getNavigationBarPlugin = async () => {
-  const modName = "@capgo/capacitor-" + "navigation-bar";
-  const mod = await (Function("m", "return import(m)")(modName) as Promise<any>);
-  return mod.NavigationBar;
+/** Get NavigationBar plugin from the Capacitor bridge */
+const getNavigationBarPlugin = () => {
+  try {
+    const cap = (window as any).Capacitor;
+    return cap?.Plugins?.NavigationBar ?? null;
+  } catch {
+    return null;
+  }
 };
 
 /**
@@ -27,32 +34,31 @@ export async function configureNativeBars() {
 
   // Configure Status Bar
   try {
-    const StatusBar = await getStatusBarPlugin();
-
-    // Do NOT overlay — content should NOT render behind the status bar
-    await StatusBar.setOverlaysWebView({ overlay: false });
-
-    // Use light content (white icons) on the dark terracotta background
-    await StatusBar.setStyle({ style: "LIGHT" });
-
-    // Set the background color
-    await StatusBar.setBackgroundColor({ color: "#c34a1c" });
-
-    console.log("[NativeUI] Status bar configured");
+    const StatusBar = getStatusBarPlugin();
+    if (StatusBar) {
+      await StatusBar.setOverlaysWebView({ overlay: false });
+      await StatusBar.setStyle({ style: "LIGHT" });
+      await StatusBar.setBackgroundColor({ color: "#c34a1c" });
+      console.log("[NativeUI] Status bar configured");
+    } else {
+      console.warn("[NativeUI] StatusBar plugin not found on bridge");
+    }
   } catch (err) {
     console.error("[NativeUI] StatusBar config error:", err);
   }
 
   // Configure Navigation Bar (bottom bar)
   try {
-    const NavigationBar = await getNavigationBarPlugin();
-
-    await NavigationBar.setNavigationBarColor({
-      color: "#c34a1c",
-      darkButtons: false,
-    });
-
-    console.log("[NativeUI] Navigation bar configured");
+    const NavigationBar = getNavigationBarPlugin();
+    if (NavigationBar) {
+      await NavigationBar.setNavigationBarColor({
+        color: "#c34a1c",
+        darkButtons: false,
+      });
+      console.log("[NativeUI] Navigation bar configured");
+    } else {
+      console.warn("[NativeUI] NavigationBar plugin not found on bridge");
+    }
   } catch (err) {
     console.error("[NativeUI] NavigationBar config error:", err);
   }

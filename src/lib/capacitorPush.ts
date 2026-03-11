@@ -1,6 +1,7 @@
 /**
  * Capacitor native push notification utilities.
- * Uses dynamic imports to avoid build errors in web-only environments.
+ * Accesses plugins via the Capacitor bridge (window.Capacitor.Plugins)
+ * since the app loads a remote URL and npm dynamic imports won't work.
  */
 import { supabase } from "@/integrations/supabase/client";
 
@@ -14,11 +15,20 @@ export const isCapacitorNative = (): boolean => {
   }
 };
 
-/** Lazy-load PushNotifications plugin — hidden from Rollup static analysis */
-const getPushPlugin = async () => {
-  const modName = "@capacitor/" + "push-notifications";
-  const mod = await (Function("m", "return import(m)")(modName) as Promise<any>);
-  return mod.PushNotifications;
+/** Get PushNotifications plugin from the Capacitor bridge */
+const getPushPlugin = () => {
+  try {
+    const cap = (window as any).Capacitor;
+    const plugin = cap?.Plugins?.PushNotifications;
+    if (!plugin) {
+      console.error("[NativePush] PushNotifications plugin not available on bridge");
+      return null;
+    }
+    return plugin;
+  } catch (err) {
+    console.error("[NativePush] Error accessing plugin:", err);
+    return null;
+  }
 };
 
 const mapNativePermission = (receive?: string): NotificationPermission => {
@@ -32,8 +42,9 @@ export async function getNativePushPermission(): Promise<NotificationPermission>
   if (!isCapacitorNative()) return "default";
 
   try {
-    const PushNotifications = await getPushPlugin();
-    const permission = await PushNotifications.checkPermissions?.();
+    const PushNotifications = getPushPlugin();
+    if (!PushNotifications) return "default";
+    const permission = await PushNotifications.checkPermissions();
     return mapNativePermission(permission?.receive);
   } catch (err) {
     console.error("[NativePush] checkPermissions error:", err);
@@ -48,15 +59,19 @@ export async function getNativePushPermission(): Promise<NotificationPermission>
  */
 export async function registerNativePush(): Promise<string | null> {
   try {
-    const PushNotifications = await getPushPlugin();
+    const PushNotifications = getPushPlugin();
+    if (!PushNotifications) {
+      console.error("[NativePush] Plugin not available");
+      return null;
+    }
 
-    let permission = await PushNotifications.checkPermissions?.();
-    if (permission?.receive === "prompt") {
+    let permission = await PushNotifications.checkPermissions();
+    if (permission?.receive === "prompt" || permission?.receive === "prompt-with-rationale") {
       permission = await PushNotifications.requestPermissions();
     }
 
     if (permission?.receive !== "granted") {
-      console.log("[NativePush] Permission denied");
+      console.log("[NativePush] Permission denied:", permission?.receive);
       return null;
     }
 
@@ -175,19 +190,22 @@ export async function setupNativePushListeners() {
   if (!isCapacitorNative()) return;
 
   try {
-    const PushNotifications = await getPushPlugin();
+    const PushNotifications = getPushPlugin();
+    if (!PushNotifications) return;
 
-    PushNotifications.addListener("pushNotificationReceived", (notification) => {
+    PushNotifications.addListener("pushNotificationReceived", (notification: any) => {
       console.log("[NativePush] Foreground notification:", notification.title);
     });
 
-    PushNotifications.addListener("pushNotificationActionPerformed", (action) => {
+    PushNotifications.addListener("pushNotificationActionPerformed", (action: any) => {
       const data = action.notification.data;
       if (data?.url) {
         const url = data.url.startsWith("/") ? data.url : `/${data.url}`;
         window.location.href = url + (url.includes("?") ? "&" : "?") + "from_notification=1";
       }
     });
+
+    console.log("[NativePush] Listeners registered");
   } catch (err) {
     console.error("[NativePush] setupListeners error:", err);
   }
