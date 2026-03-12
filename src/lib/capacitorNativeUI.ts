@@ -112,7 +112,9 @@ async function configureNavigationBar() {
  * Retries if the bridge isn't ready immediately (remote URL loading).
  */
 export async function configureNativeBars() {
-  if (!isCapacitorNative()) return;
+  const platform = getNativePlatform();
+  if (platform === "web") return;
+  if (!platform && !isCapacitorNative()) return;
 
   const bridgeReady = await waitForBridge();
   if (!bridgeReady) {

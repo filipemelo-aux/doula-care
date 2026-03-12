@@ -70,7 +70,7 @@ export default function Login() {
 
   if (loading && !submitting) {
     return (
-      <div className="fixed inset-0 flex items-center justify-center bg-background overflow-hidden">
+      <div className="fixed inset-0 safe-area-top safe-area-bottom flex items-center justify-center bg-background overflow-hidden">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
@@ -78,7 +78,7 @@ export default function Login() {
 
   if (submitting && user && !roleChecked) {
     return (
-      <div className="fixed inset-0 flex items-center justify-center bg-background overflow-hidden">
+      <div className="fixed inset-0 safe-area-top safe-area-bottom flex items-center justify-center bg-background overflow-hidden">
         <div className="flex flex-col items-center gap-4">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
           <p className="text-muted-foreground">Verificando permissões...</p>
@@ -89,15 +89,15 @@ export default function Login() {
 
   if (user && roleChecked && role) {
     return (
-      <div className="fixed inset-0 flex items-center justify-center bg-background overflow-hidden">
+      <div className="fixed inset-0 safe-area-top safe-area-bottom flex items-center justify-center bg-background overflow-hidden">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-gradient-to-br from-background via-background to-primary/5 p-4 overflow-hidden">
-      <Card className="w-full max-w-md max-h-[calc(100dvh-2rem)] overflow-y-auto card-glass">
+    <div className="fixed inset-0 safe-area-top safe-area-bottom flex items-center justify-center bg-gradient-to-br from-background via-background to-primary/5 p-4 overflow-hidden">
+      <Card className="w-full max-w-md max-h-[calc(100dvh-2rem-var(--app-safe-top)-var(--app-safe-bottom))] overflow-y-auto card-glass">
         <CardHeader className="text-center space-y-2">
           <div className="flex flex-col items-center gap-1.5">
             <div className="w-[4.5rem] h-[4.5rem] rounded-[40%] bg-[#FFF5EE] overflow-hidden">
