@@ -192,7 +192,7 @@ export function PromoTriggerButton({ orgId, orgName }: PromoTriggerButtonProps) 
                 size="sm"
                 className="h-5 w-5 p-0 text-destructive/60 hover:text-destructive hover:bg-destructive/10"
                 onClick={() => {
-                  if (confirm(`Remover promoção de ${orgName}? O plano voltará para Free.`)) {
+                  if (confirm(`Remover promoção de ${orgName}? O plano atual será mantido.`)) {
                     removePromoMutation.mutate();
                   }
                 }}
