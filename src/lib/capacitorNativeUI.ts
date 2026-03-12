@@ -7,7 +7,7 @@ import { isCapacitorNative } from "@/lib/capacitorPush";
 
 const PRIMARY_BAR_COLOR = "#c34a1c";
 const ANDROID_TOP_INSET_FALLBACK = 28;
-const ANDROID_BOTTOM_INSET_FALLBACK = 32;
+const ANDROID_BOTTOM_INSET_FALLBACK = 48;
 
 /** Get StatusBar plugin from the Capacitor bridge */
 const getStatusBarPlugin = () => {
