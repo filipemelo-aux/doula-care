@@ -495,7 +495,7 @@ export default function SuperAdminDashboard() {
 
         {isMobile && (
           <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
-            <SheetContent side="left" className="w-[86vw] max-w-[320px] p-0">
+            <SheetContent side="left" className="w-[86vw] max-w-[320px] p-0 pt-[var(--app-safe-top)]">
               {renderSidebarNav(() => setSidebarOpen(false))}
             </SheetContent>
           </Sheet>
