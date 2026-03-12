@@ -6,7 +6,8 @@
 import { isCapacitorNative } from "@/lib/capacitorPush";
 
 const PRIMARY_BAR_COLOR = "#c34a1c";
-const ANDROID_BOTTOM_INSET_FALLBACK = 16;
+const ANDROID_TOP_INSET_FALLBACK = 28;
+const ANDROID_BOTTOM_INSET_FALLBACK = 32;
 
 /** Get StatusBar plugin from the Capacitor bridge */
 const getStatusBarPlugin = () => {
@@ -39,11 +40,21 @@ async function waitForBridge(maxAttempts = 15): Promise<boolean> {
 
 function applyAndroidSafeAreaFallbacks() {
   const root = document.documentElement;
-  const currentBottom = Number.parseFloat(getComputedStyle(root).getPropertyValue("--safe-area-inset-bottom")) || 0;
+  const styles = getComputedStyle(root);
+  const currentTop = Number.parseFloat(styles.getPropertyValue("--safe-area-inset-top")) || 0;
+  const currentBottom = Number.parseFloat(styles.getPropertyValue("--safe-area-inset-bottom")) || 0;
+
+  if (currentTop < ANDROID_TOP_INSET_FALLBACK) {
+    root.style.setProperty("--safe-area-inset-top", `${ANDROID_TOP_INSET_FALLBACK}px`);
+  }
 
   if (currentBottom < ANDROID_BOTTOM_INSET_FALLBACK) {
     root.style.setProperty("--safe-area-inset-bottom", `${ANDROID_BOTTOM_INSET_FALLBACK}px`);
   }
+}
+
+function applyNativeBarColorFallback() {
+  document.documentElement.classList.add("native-system-bars");
 }
 
 async function configureStatusBar() {
