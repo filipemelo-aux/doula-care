@@ -9,8 +9,8 @@ const config: CapacitorConfig = {
     cleartext: false
   },
   android: {
-    adjustMarginsForEdgeToEdge: 'never',
-    backgroundColor: '#FFFFFF',
+    adjustMarginsForEdgeToEdge: 'auto',
+    backgroundColor: '#c34a1c',
   },
   plugins: {
     SplashScreen: {
