@@ -38,7 +38,18 @@ async function waitForBridge(maxAttempts = 15): Promise<boolean> {
   return false;
 }
 
+const getNativePlatform = (): string | null => {
+  try {
+    const cap = (window as any).Capacitor;
+    return cap?.getPlatform?.() ?? null;
+  } catch {
+    return null;
+  }
+};
+
 function applyAndroidSafeAreaFallbacks() {
+  if (getNativePlatform() !== "android") return;
+
   const root = document.documentElement;
   const styles = getComputedStyle(root);
   const currentTop = Number.parseFloat(styles.getPropertyValue("--safe-area-inset-top")) || 0;
@@ -65,7 +76,7 @@ async function configureStatusBar() {
   }
 
   await StatusBar.setOverlaysWebView({ overlay: false });
-  await StatusBar.setStyle({ style: "DARK" });
+  await StatusBar.setStyle({ style: "LIGHT" });
   await StatusBar.setBackgroundColor({ color: PRIMARY_BAR_COLOR });
 }
 
