@@ -32,7 +32,6 @@ const isAndroidSubscription = (sub: SubscriptionRow) => {
 };
 
 function reduceSubscriptionsForDelivery(rawSubscriptions: SubscriptionRow[]) {
-  // 1) Keep only newest row per endpoint
   const newestByEndpoint = new Map<string, SubscriptionRow>();
   for (const sub of rawSubscriptions) {
     const existing = newestByEndpoint.get(sub.endpoint);
@@ -41,7 +40,6 @@ function reduceSubscriptionsForDelivery(rawSubscriptions: SubscriptionRow[]) {
     }
   }
 
-  // 2) Group by user and collapse Android duplicates to avoid double alerts
   const byUser = new Map<string, SubscriptionRow[]>();
   for (const sub of newestByEndpoint.values()) {
     const current = byUser.get(sub.user_id) ?? [];
@@ -57,20 +55,16 @@ function reduceSubscriptionsForDelivery(rawSubscriptions: SubscriptionRow[]) {
       (a, b) => getSubscriptionTimestamp(b) - getSubscriptionTimestamp(a)
     );
 
-    // Priority: Capacitor FCM > TWA > Android browser
-    const capacitorSubs = sorted.filter((sub) => sub.device_type === "android_capacitor");
+    const capacitorSubs = sorted.filter((sub) => sub.token_type === "fcm");
     const twaSubs = sorted.filter((sub) => sub.device_type === "android_twa");
 
     if (capacitorSubs.length > 0) {
-      // Use newest Capacitor subscription, mark all others Android as stale
       const [latestCap, ...olderCap] = capacitorSubs;
       deliverable.push(latestCap);
       olderCap.forEach((sub) => staleEndpoints.add(sub.endpoint));
-      // Mark TWA and browser Android as stale (Capacitor handles it natively)
       sorted
-        .filter((sub) => isAndroidSubscription(sub) && sub.device_type !== "android_capacitor")
+        .filter((sub) => isAndroidSubscription(sub) && sub.token_type !== "fcm")
         .forEach((sub) => staleEndpoints.add(sub.endpoint));
-
       sorted
         .filter((sub) => !isAndroidSubscription(sub))
         .forEach((sub) => deliverable.push(sub));
@@ -105,45 +99,144 @@ function reduceSubscriptionsForDelivery(rawSubscriptions: SubscriptionRow[]) {
   return { deliverable, staleEndpoints: [...staleEndpoints] };
 }
 
+// ─── FCM HTTP v1 API ─────────────────────────────────────────────────────────
+
+interface ServiceAccount {
+  project_id: string;
+  client_email: string;
+  private_key: string;
+}
+
+let cachedAccessToken: { token: string; expiresAt: number } | null = null;
+
+/** Import a PEM private key for signing JWTs */
+async function importPrivateKey(pem: string): Promise<CryptoKey> {
+  const pemContent = pem
+    .replace(/-----BEGIN PRIVATE KEY-----/, "")
+    .replace(/-----END PRIVATE KEY-----/, "")
+    .replace(/\s/g, "");
+  const binaryDer = Uint8Array.from(atob(pemContent), (c) => c.charCodeAt(0));
+  return crypto.subtle.importKey(
+    "pkcs8",
+    binaryDer,
+    { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" },
+    false,
+    ["sign"]
+  );
+}
+
+/** Base64url encode */
+function base64url(data: Uint8Array | string): string {
+  const str = typeof data === "string" ? data : String.fromCharCode(...data);
+  return btoa(str).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+
+/** Get an OAuth2 access token for FCM v1 API using a service account */
+async function getFcmAccessToken(sa: ServiceAccount): Promise<string> {
+  const now = Math.floor(Date.now() / 1000);
+  if (cachedAccessToken && cachedAccessToken.expiresAt > now + 60) {
+    return cachedAccessToken.token;
+  }
+
+  const header = base64url(JSON.stringify({ alg: "RS256", typ: "JWT" }));
+  const payload = base64url(
+    JSON.stringify({
+      iss: sa.client_email,
+      sub: sa.client_email,
+      aud: "https://oauth2.googleapis.com/token",
+      iat: now,
+      exp: now + 3600,
+      scope: "https://www.googleapis.com/auth/firebase.messaging",
+    })
+  );
+
+  const signingInput = new TextEncoder().encode(`${header}.${payload}`);
+  const key = await importPrivateKey(sa.private_key);
+  const signature = new Uint8Array(
+    await crypto.subtle.sign("RSASSA-PKCS1-v1_5", key, signingInput)
+  );
+
+  const jwt = `${header}.${payload}.${base64url(signature)}`;
+
+  const tokenResponse = await fetch("https://oauth2.googleapis.com/token", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: `grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Ajwt-bearer&assertion=${jwt}`,
+  });
+
+  const tokenBody = await tokenResponse.json();
+  if (!tokenResponse.ok || !tokenBody.access_token) {
+    console.error("[push] OAuth token error:", tokenBody);
+    throw new Error("Failed to get FCM access token");
+  }
+
+  cachedAccessToken = {
+    token: tokenBody.access_token,
+    expiresAt: now + (tokenBody.expires_in || 3600),
+  };
+
+  return tokenBody.access_token;
+}
+
 /** Send a push notification via FCM HTTP v1 API */
-async function sendFcmPush(
+async function sendFcmV1Push(
   fcmToken: string,
   payload: { title: string; body: string; icon?: string; image?: string; url?: string; tag?: string; type?: string; priority?: string; require_interaction?: boolean },
-  fcmServerKey: string
-): Promise<{ ok: boolean; status: number }> {
+  sa: ServiceAccount
+): Promise<{ ok: boolean; status: number; errorMessage?: string }> {
+  const accessToken = await getFcmAccessToken(sa);
   const isCritica = payload.priority === "critica";
 
   const fcmPayload = {
-    to: fcmToken,
-    priority: isCritica ? "high" : "normal",
-    notification: {
-      title: payload.title,
-      body: payload.body,
-      icon: payload.icon || "/logo.png",
-      tag: payload.tag || payload.type || "default",
-      click_action: payload.url || "/",
-    },
-    data: {
-      url: payload.url || "/",
-      type: payload.type || "general",
-      priority: isCritica ? "critica" : "normal",
-      tag: payload.tag || payload.type || "default",
-      require_interaction: String(payload.require_interaction ?? isCritica),
-      ...(payload.image ? { image: payload.image } : {}),
+    message: {
+      token: fcmToken,
+      notification: {
+        title: payload.title,
+        body: payload.body,
+      },
+      android: {
+        priority: isCritica ? "HIGH" : "NORMAL",
+        notification: {
+          icon: "ic_stat_notify",
+          color: "#c34a1c",
+          tag: payload.tag || payload.type || "default",
+          click_action: "FCM_PLUGIN_ACTIVITY",
+          channel_id: isCritica ? "high_priority" : "default",
+          ...(payload.image ? { image: payload.image } : {}),
+        },
+      },
+      data: {
+        url: payload.url || "/",
+        type: payload.type || "general",
+        priority: isCritica ? "critica" : "normal",
+        tag: payload.tag || payload.type || "default",
+        require_interaction: String(payload.require_interaction ?? isCritica),
+        ...(payload.image ? { image: payload.image } : {}),
+      },
     },
   };
 
-  const response = await fetch("https://fcm.googleapis.com/fcm/send", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `key=${fcmServerKey}`,
-    },
-    body: JSON.stringify(fcmPayload),
-  });
+  const response = await fetch(
+    `https://fcm.googleapis.com/v1/projects/${sa.project_id}/messages:send`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify(fcmPayload),
+    }
+  );
 
-  return { ok: response.ok, status: response.status };
+  const responseText = await response.text();
+  if (!response.ok) {
+    console.error(`[push] FCM v1 error (${response.status}):`, responseText);
+  }
+
+  return { ok: response.ok, status: response.status, errorMessage: response.ok ? undefined : responseText };
 }
+
+// ─── Main handler ────────────────────────────────────────────────────────────
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -155,23 +248,28 @@ Deno.serve(async (req) => {
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const vapidPublicKey = Deno.env.get("VAPID_PUBLIC_KEY");
     const vapidPrivateKey = Deno.env.get("VAPID_PRIVATE_KEY");
-    const fcmServerKey = Deno.env.get("FCM_SERVER_KEY");
+    const firebaseServiceAccountJson = Deno.env.get("FIREBASE_SERVICE_ACCOUNT");
 
     if (!vapidPublicKey || !vapidPrivateKey) {
       return new Response(
         JSON.stringify({ error: "VAPID keys not configured" }),
-        {
-          status: 500,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
+    }
+
+    let firebaseServiceAccount: ServiceAccount | null = null;
+    if (firebaseServiceAccountJson) {
+      try {
+        firebaseServiceAccount = JSON.parse(firebaseServiceAccountJson);
+      } catch (e) {
+        console.error("[push] Failed to parse FIREBASE_SERVICE_ACCOUNT:", e);
+      }
     }
 
     const supabase = createClient(supabaseUrl, serviceRoleKey, {
       auth: { autoRefreshToken: false, persistSession: false },
     });
 
-    // Verify caller is authenticated (admin or system)
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
       return new Response(JSON.stringify({ error: "Missing authorization" }), {
@@ -180,10 +278,9 @@ Deno.serve(async (req) => {
       });
     }
 
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser(authHeader.replace("Bearer ", ""));
+    const { data: { user }, error: authError } = await supabase.auth.getUser(
+      authHeader.replace("Bearer ", "")
+    );
 
     if (authError || !user) {
       return new Response(JSON.stringify({ error: "Invalid token" }), {
@@ -220,14 +317,10 @@ Deno.serve(async (req) => {
     if (!title || !message) {
       return new Response(
         JSON.stringify({ error: "title and message are required" }),
-        {
-          status: 400,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // Resolve user_ids from client_ids if provided
     let targetUserIds: string[] = user_ids || [];
 
     if (client_ids && client_ids.length > 0) {
@@ -240,14 +333,11 @@ Deno.serve(async (req) => {
       if (clients) {
         targetUserIds = [
           ...targetUserIds,
-          ...clients
-            .map((c) => c.user_id)
-            .filter((id): id is string => !!id),
+          ...clients.map((c) => c.user_id).filter((id): id is string => !!id),
         ];
       }
     }
 
-    // If we want to send to admin users - SCOPED TO CALLER'S ORG
     if (body.send_to_admins) {
       const { data: callerProfile } = await supabase
         .from("profiles")
@@ -264,8 +354,7 @@ Deno.serve(async (req) => {
           .eq("organization_id", callerOrgId);
 
         if (orgProfiles) {
-          const orgUserIds = orgProfiles.map(p => p.user_id);
-          
+          const orgUserIds = orgProfiles.map((p) => p.user_id);
           const { data: adminRoles } = await supabase
             .from("user_roles")
             .select("user_id")
@@ -273,28 +362,23 @@ Deno.serve(async (req) => {
             .in("user_id", orgUserIds);
 
           if (adminRoles) {
-            targetUserIds = [
-              ...targetUserIds,
-              ...adminRoles.map((r) => r.user_id),
-            ];
+            targetUserIds = [...targetUserIds, ...adminRoles.map((r) => r.user_id)];
           }
         }
       }
     }
 
-    // De-duplicate
     targetUserIds = [...new Set(targetUserIds)];
     console.log("[push] targetUserIds:", targetUserIds.length, targetUserIds);
 
     if (targetUserIds.length === 0) {
-      console.log("[push] No target users, returning early");
       return new Response(
         JSON.stringify({ sent: 0, message: "No target users" }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // Check if caller is super_admin (bypass plan check)
+    // Check if caller is super_admin
     const { data: superAdminRole } = await supabase
       .from("user_roles")
       .select("role")
@@ -304,7 +388,6 @@ Deno.serve(async (req) => {
 
     const isSuperAdmin = !!superAdminRole;
 
-    // Check org plan allows push notifications (skip for super_admin)
     if (!isSuperAdmin) {
       const { data: callerProfileForPlan } = await supabase
         .from("profiles")
@@ -319,15 +402,10 @@ Deno.serve(async (req) => {
           .eq("id", callerProfileForPlan.organization_id)
           .single();
 
-        console.log("[push] Org plan:", orgPlanData?.plan);
         if (orgPlanData?.plan === "free") {
-          console.log("[push] Blocked: free plan");
           return new Response(
             JSON.stringify({ error: "Push notifications not available on Free plan" }),
-            {
-              status: 403,
-              headers: { ...corsHeaders, "Content-Type": "application/json" },
-            }
+            { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
           );
         }
       }
@@ -335,29 +413,28 @@ Deno.serve(async (req) => {
       console.log("[push] Super admin bypass: skipping plan check");
     }
 
-    // Get push subscriptions for target users
     const { data: subscriptions, error: subError } = await supabase
       .from("push_subscriptions")
       .select("*")
       .in("user_id", targetUserIds);
 
-    if (subError) {
-      throw subError;
-    }
+    if (subError) throw subError;
 
     console.log("[push] Subscriptions found:", subscriptions?.length ?? 0);
     if (!subscriptions || subscriptions.length === 0) {
-      console.log("[push] No subscriptions, returning early");
       return new Response(
         JSON.stringify({ sent: 0, message: "No push subscriptions found" }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    const {
-      deliverable: subscriptionsToSend,
-      staleEndpoints,
-    } = reduceSubscriptionsForDelivery(subscriptions as SubscriptionRow[]);
+    const { deliverable: subscriptionsToSend, staleEndpoints } =
+      reduceSubscriptionsForDelivery(subscriptions as SubscriptionRow[]);
+
+    console.log("[push] Deliverable:", subscriptionsToSend.length, "Stale:", staleEndpoints.length);
+    for (const sub of subscriptionsToSend) {
+      console.log(`[push]   → ${sub.token_type}/${sub.device_type}: ${sub.endpoint.substring(0, 30)}...`);
+    }
 
     if (subscriptionsToSend.length === 0) {
       return new Response(
@@ -381,39 +458,49 @@ Deno.serve(async (req) => {
 
     for (const sub of subscriptionsToSend) {
       try {
-        // FCM native token (Capacitor)
+        // ── FCM native token (Capacitor) ──
         if (sub.token_type === "fcm") {
-          if (!fcmServerKey) {
-            console.error("[push] FCM_SERVER_KEY not configured, skipping FCM token");
+          if (!firebaseServiceAccount) {
+            console.error("[push] FIREBASE_SERVICE_ACCOUNT not configured, skipping FCM token");
             failed++;
             continue;
           }
 
-          const result = await sendFcmPush(
+          console.log(`[push] Sending via FCM v1 to ${sub.endpoint.substring(0, 20)}...`);
+          const result = await sendFcmV1Push(
             sub.endpoint,
-            { title, body: message, icon: "/logo.png", image: image || undefined, url: url || "/", tag: tag || notifType, type: notifType, priority: isCritica ? "critica" : "normal", require_interaction: require_interaction ?? isCritica },
-            fcmServerKey
+            {
+              title,
+              body: message,
+              icon: "/logo.png",
+              image: image || undefined,
+              url: url || "/",
+              tag: tag || notifType,
+              type: notifType,
+              priority: isCritica ? "critica" : "normal",
+              require_interaction: require_interaction ?? isCritica,
+            },
+            firebaseServiceAccount
           );
 
           if (result.ok) {
             sent++;
-          } else if (result.status === 401 || result.status === 403) {
-            console.error(`[push] FCM auth error: ${result.status}`);
+            console.log("[push] FCM v1 sent successfully");
+          } else if (result.status === 404 || result.status === 410) {
+            // Token expired/invalid
+            expiredEndpoints.push(sub.endpoint);
             failed++;
           } else {
-            expiredEndpoints.push(sub.endpoint);
+            console.error(`[push] FCM v1 failed: ${result.status}`);
             failed++;
           }
           continue;
         }
 
-        // Web Push (VAPID)
+        // ── Web Push (VAPID) ──
         const pushSubscription: PushSubscription = {
           endpoint: sub.endpoint,
-          keys: {
-            p256dh: sub.p256dh,
-            auth: sub.auth,
-          },
+          keys: { p256dh: sub.p256dh, auth: sub.auth },
         };
 
         const pushMessage: PushMessage = {
@@ -435,12 +522,7 @@ Deno.serve(async (req) => {
           },
         };
 
-        const payload = await buildPushPayload(
-          pushMessage,
-          pushSubscription,
-          vapid
-        );
-
+        const payload = await buildPushPayload(pushMessage, pushSubscription, vapid);
         const response = await fetch(sub.endpoint, payload);
 
         if (response.ok) {
@@ -449,9 +531,8 @@ Deno.serve(async (req) => {
           expiredEndpoints.push(sub.endpoint);
           failed++;
         } else {
-          console.error(
-            `Push failed for ${sub.endpoint}: ${response.status} ${await response.text()}`
-          );
+          const text = await response.text();
+          console.error(`Push failed for ${sub.endpoint}: ${response.status} ${text}`);
           failed++;
         }
       } catch (err) {
@@ -460,7 +541,7 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Clean up expired + stale subscriptions
+    // Clean up expired + stale
     const endpointsToRemove = [...new Set([...expiredEndpoints, ...staleEndpoints])];
     if (endpointsToRemove.length > 0) {
       await supabase
@@ -482,13 +563,8 @@ Deno.serve(async (req) => {
   } catch (error) {
     console.error("Error:", error);
     return new Response(
-      JSON.stringify({
-        error: error instanceof Error ? error.message : "Unknown error",
-      }),
-      {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
+      JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }),
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
 });
