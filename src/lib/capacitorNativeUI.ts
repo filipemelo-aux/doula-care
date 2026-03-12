@@ -5,6 +5,9 @@
  */
 import { isCapacitorNative } from "@/lib/capacitorPush";
 
+const PRIMARY_BAR_COLOR = "#c34a1c";
+const ANDROID_BOTTOM_INSET_FALLBACK = 16;
+
 /** Get StatusBar plugin from the Capacitor bridge */
 const getStatusBarPlugin = () => {
   try {
@@ -34,6 +37,53 @@ async function waitForBridge(maxAttempts = 15): Promise<boolean> {
   return false;
 }
 
+function applyAndroidSafeAreaFallbacks() {
+  const root = document.documentElement;
+  const currentBottom = Number.parseFloat(getComputedStyle(root).getPropertyValue("--safe-area-inset-bottom")) || 0;
+
+  if (currentBottom < ANDROID_BOTTOM_INSET_FALLBACK) {
+    root.style.setProperty("--safe-area-inset-bottom", `${ANDROID_BOTTOM_INSET_FALLBACK}px`);
+  }
+}
+
+async function configureStatusBar() {
+  const StatusBar = getStatusBarPlugin();
+  if (!StatusBar) {
+    console.warn("[NativeUI] StatusBar plugin not found on bridge");
+    return;
+  }
+
+  await StatusBar.setOverlaysWebView({ overlay: false });
+  await StatusBar.setStyle({ style: "LIGHT" });
+  await StatusBar.setBackgroundColor({ color: PRIMARY_BAR_COLOR });
+}
+
+async function configureNavigationBar() {
+  const NavigationBar = getNavigationBarPlugin();
+  if (!NavigationBar) {
+    console.warn("[NativeUI] NavigationBar plugin not found on bridge");
+    return;
+  }
+
+  if (typeof NavigationBar.setNavigationBarColor === "function") {
+    await NavigationBar.setNavigationBarColor({
+      color: PRIMARY_BAR_COLOR,
+      darkButtons: false,
+    });
+    return;
+  }
+
+  if (typeof NavigationBar.setColor === "function") {
+    await NavigationBar.setColor({
+      color: PRIMARY_BAR_COLOR,
+      darkButtons: false,
+    });
+    return;
+  }
+
+  console.warn("[NativeUI] NavigationBar plugin found but no color method available");
+}
+
 /**
  * Configure native status bar and navigation bar appearance.
  * Uses the app's theme color (#c34a1c) for a branded look.
@@ -48,43 +98,27 @@ export async function configureNativeBars() {
     return;
   }
 
-  // Configure Status Bar
+  applyAndroidSafeAreaFallbacks();
+
   try {
-    const StatusBar = getStatusBarPlugin();
-    if (StatusBar) {
-      await StatusBar.setOverlaysWebView({ overlay: false });
-      await StatusBar.setStyle({ style: "LIGHT" });
-      await StatusBar.setBackgroundColor({ color: "#c34a1c" });
-      console.log("[NativeUI] Status bar configured");
-    } else {
-      console.warn("[NativeUI] StatusBar plugin not found on bridge");
-    }
+    await configureStatusBar();
+    console.log("[NativeUI] Status bar configured");
   } catch (err) {
     console.error("[NativeUI] StatusBar config error:", err);
   }
 
-  // Configure Navigation Bar (bottom bar)
   try {
-    const NavigationBar = getNavigationBarPlugin();
-    if (NavigationBar) {
-      if (typeof NavigationBar.setNavigationBarColor === "function") {
-        await NavigationBar.setNavigationBarColor({
-          color: "#c34a1c",
-          darkButtons: false,
-        });
-      } else if (typeof NavigationBar.setColor === "function") {
-        await NavigationBar.setColor({
-          color: "#c34a1c",
-          darkButtons: false,
-        });
-      } else {
-        console.warn("[NativeUI] NavigationBar plugin found but no color method available");
-      }
-      console.log("[NativeUI] Navigation bar configured");
-    } else {
-      console.warn("[NativeUI] NavigationBar plugin not found on bridge");
-    }
+    await configureNavigationBar();
+    console.log("[NativeUI] Navigation bar configured");
   } catch (err) {
     console.error("[NativeUI] NavigationBar config error:", err);
   }
+
+  // Second pass helps devices/webviews that apply bar styles only after first paint.
+  setTimeout(() => {
+    void configureStatusBar();
+    void configureNavigationBar();
+    applyAndroidSafeAreaFallbacks();
+  }, 500);
 }
+
