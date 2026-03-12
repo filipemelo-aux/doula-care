@@ -94,7 +94,7 @@ export function GestanteLayout({ children }: GestanteLayoutProps) {
       {/* Sidebar */}
       <aside
         className={cn(
-          "fixed lg:relative top-0 bottom-0 left-0 lg:top-0 lg:bottom-0 z-50 flex flex-col bg-sidebar border-r border-sidebar-border transition-all duration-300 ease-in-out pt-[var(--app-safe-top)] pb-[var(--app-safe-bottom)] lg:pt-0 lg:pb-0",
+          "fixed lg:relative top-0 bottom-0 left-0 lg:top-0 lg:bottom-0 z-50 flex flex-col bg-sidebar border-r border-sidebar-border transition-all duration-300 ease-in-out lg:pt-0 lg:pb-0",
           sidebarOpen ? "w-64" : "w-0 lg:w-20",
           !sidebarOpen && "overflow-hidden lg:overflow-visible"
         )}
@@ -188,7 +188,7 @@ export function GestanteLayout({ children }: GestanteLayoutProps) {
 
       <div className="flex-1 flex flex-col min-h-screen">
         {/* Mobile Header */}
-        <header className="lg:hidden safe-area-header border-b border-border flex items-center justify-between px-4 bg-card/50 backdrop-blur-sm sticky top-0 z-40">
+        <header className="lg:hidden h-16 border-b border-border flex items-center justify-between px-4 bg-card/50 backdrop-blur-sm sticky top-0 z-40">
           <div className="flex items-center">
             <Button
               variant="ghost"
@@ -231,7 +231,7 @@ export function GestanteLayout({ children }: GestanteLayoutProps) {
         </header>
 
         {/* Main Content */}
-        <main className="flex-1 overflow-y-auto w-full box-border pb-[var(--app-safe-bottom)]">
+        <main className="flex-1 overflow-y-auto w-full box-border">
           {children}
         </main>
       </div>
