@@ -19,7 +19,7 @@ const getStatusBarPlugin = () => {
 const getNavigationBarPlugin = () => {
   try {
     const cap = (window as any).Capacitor;
-    return cap?.Plugins?.NavigationBar ?? null;
+    return cap?.Plugins?.NavigationBar ?? cap?.Plugins?.CapacitorNavigationBar ?? null;
   } catch {
     return null;
   }

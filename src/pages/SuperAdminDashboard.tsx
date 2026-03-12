@@ -439,7 +439,7 @@ export default function SuperAdminDashboard() {
   return (
     <div className="min-h-[100dvh] bg-background flex flex-col">
       {/* Header */}
-      <header className="sticky top-0 z-20 border-b bg-card/95 backdrop-blur-sm px-4 sm:px-6 py-3 flex items-center justify-between">
+      <header className="safe-area-header sticky top-0 z-20 border-b bg-card/95 backdrop-blur-sm px-4 sm:px-6 py-3 flex items-center justify-between">
         <div className="flex items-center gap-2.5">
           {isMobile && (
             <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setSidebarOpen(true)}>
