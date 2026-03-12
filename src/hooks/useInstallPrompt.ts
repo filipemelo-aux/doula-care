@@ -8,21 +8,24 @@ interface BeforeInstallPromptEvent extends Event {
 export function useInstallPrompt() {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [isInstallable, setIsInstallable] = useState(false);
-  const [isIOS, setIsIOS] = useState(false);
   const [isStandalone, setIsStandalone] = useState(false);
+  const [isDesktop, setIsDesktop] = useState(false);
 
   useEffect(() => {
     const standalone = window.matchMedia("(display-mode: standalone)").matches
       || (navigator as any).standalone === true;
     setIsStandalone(standalone);
 
-    const ios = /iphone|ipad|ipod/i.test(navigator.userAgent);
-    setIsIOS(ios);
+    const mobile = /android|iphone|ipad|ipod|mobile/i.test(navigator.userAgent);
+    setIsDesktop(!mobile);
 
     const handler = (e: Event) => {
       e.preventDefault();
       setDeferredPrompt(e as BeforeInstallPromptEvent);
-      setIsInstallable(true);
+      // Only mark installable on desktop
+      if (!mobile) {
+        setIsInstallable(true);
+      }
     };
 
     window.addEventListener("beforeinstallprompt", handler);
@@ -40,5 +43,5 @@ export function useInstallPrompt() {
     }
   };
 
-  return { isInstallable, isIOS, isStandalone, promptInstall };
+  return { isInstallable, isStandalone, isDesktop, promptInstall };
 }
