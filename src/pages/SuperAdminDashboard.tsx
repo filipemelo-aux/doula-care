@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import logo from "@/assets/logo.png";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -359,26 +360,37 @@ export default function SuperAdminDashboard() {
   );
 
   const renderSidebarNav = (onNavigate?: () => void) => (
-    <nav className="flex-1 p-3 pt-6 space-y-1">
-      {sidebarItems.map((item) => (
-        <button
-          key={item.key}
-          onClick={() => {
-            setActiveSection(item.key);
-            onNavigate?.();
-          }}
-          className={cn(
-            "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors text-left",
-            activeSection === item.key
-              ? "bg-primary text-primary-foreground font-medium"
-              : "text-muted-foreground hover:bg-muted hover:text-foreground"
-          )}
-        >
-          <item.icon className="h-4 w-4 shrink-0" />
-          {item.label}
-        </button>
-      ))}
-    </nav>
+    <div className="flex flex-col flex-1">
+      <div className="h-20 flex items-center gap-3 px-6 border-b border-sidebar-border shrink-0">
+        <div className="w-9 h-9 rounded-[40%] bg-[#FFF5EE] overflow-hidden">
+          <img src={logo} alt="Doula Care" className="w-full h-full object-cover mix-blend-multiply scale-[1.15]" />
+        </div>
+        <div>
+          <h1 className="font-display text-lg text-sidebar-foreground">Doula Care</h1>
+          <p className="text-xs text-sidebar-foreground/60">Super Admin</p>
+        </div>
+      </div>
+      <nav className="flex-1 p-3 pt-4 space-y-1">
+        {sidebarItems.map((item) => (
+          <button
+            key={item.key}
+            onClick={() => {
+              setActiveSection(item.key);
+              onNavigate?.();
+            }}
+            className={cn(
+              "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors text-left",
+              activeSection === item.key
+                ? "bg-primary text-primary-foreground font-medium"
+                : "text-muted-foreground hover:bg-muted hover:text-foreground"
+            )}
+          >
+            <item.icon className="h-4 w-4 shrink-0" />
+            {item.label}
+          </button>
+        ))}
+      </nav>
+    </div>
   );
 
   const renderContent = () => {
