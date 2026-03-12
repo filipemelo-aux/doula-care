@@ -11,6 +11,14 @@ if (cached) {
   applyThemeToDOM(cached.primary, cached.secondary);
 }
 
+// Suppress Chrome's PWA install mini-infobar on mobile devices
+const isMobileUA = /android|iphone|ipad|ipod|mobile/i.test(navigator.userAgent);
+if (isMobileUA) {
+  window.addEventListener("beforeinstallprompt", (e) => {
+    e.preventDefault();
+  });
+}
+
 // Initialize native plugins early
 if (isCapacitorNative()) {
   setupNativePushListeners();
@@ -30,3 +38,4 @@ if (isCapacitorNative()) {
 }
 
 createRoot(document.getElementById("root")!).render(<App />);
+
