@@ -16,16 +16,17 @@ if (isCapacitorNative()) {
   setupNativePushListeners();
   void configureNativeBars();
 
-  const reapplyNativeBars = () => {
-    void configureNativeBars();
-  };
-
+  // Re-apply on focus/visibility changes (app resume)
+  const reapplyNativeBars = () => void configureNativeBars();
   window.addEventListener("focus", reapplyNativeBars);
+  document.addEventListener("resume", reapplyNativeBars);
   document.addEventListener("visibilitychange", () => {
-    if (!document.hidden) {
-      reapplyNativeBars();
-    }
+    if (!document.hidden) reapplyNativeBars();
   });
+
+  // Retry after a delay for slow bridge init
+  setTimeout(reapplyNativeBars, 1500);
+  setTimeout(reapplyNativeBars, 4000);
 }
 
 createRoot(document.getElementById("root")!).render(<App />);

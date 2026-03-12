@@ -108,7 +108,7 @@ export function Sidebar({ isOpen, onToggle, onNavigate }: SidebarProps) {
   return (
     <aside
       className={cn(
-        "fixed top-[var(--app-safe-top)] bottom-[var(--app-safe-bottom)] left-0 z-50 flex flex-col bg-sidebar border-r border-sidebar-border transition-all duration-300 ease-in-out",
+        "fixed top-0 bottom-0 left-0 z-50 flex flex-col bg-sidebar border-r border-sidebar-border transition-all duration-300 ease-in-out pt-[var(--app-safe-top)] pb-[var(--app-safe-bottom)]",
         isOpen ? "w-64" : "w-0 lg:w-20",
         !isOpen && "overflow-hidden lg:overflow-visible"
       )}
