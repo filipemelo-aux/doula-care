@@ -7,7 +7,7 @@ import { isCapacitorNative } from "@/lib/capacitorPush";
 
 const PRIMARY_BAR_COLOR = "#c34a1c";
 const ANDROID_TOP_INSET_FALLBACK = 28;
-const ANDROID_BOTTOM_INSET_FALLBACK = 32;
+const ANDROID_BOTTOM_INSET_FALLBACK = 48;
 
 /** Get StatusBar plugin from the Capacitor bridge */
 const getStatusBarPlugin = () => {
@@ -38,7 +38,18 @@ async function waitForBridge(maxAttempts = 15): Promise<boolean> {
   return false;
 }
 
+const getNativePlatform = (): string | null => {
+  try {
+    const cap = (window as any).Capacitor;
+    return cap?.getPlatform?.() ?? null;
+  } catch {
+    return null;
+  }
+};
+
 function applyAndroidSafeAreaFallbacks() {
+  if (getNativePlatform() !== "android") return;
+
   const root = document.documentElement;
   const styles = getComputedStyle(root);
   const currentTop = Number.parseFloat(styles.getPropertyValue("--safe-area-inset-top")) || 0;
@@ -65,7 +76,7 @@ async function configureStatusBar() {
   }
 
   await StatusBar.setOverlaysWebView({ overlay: false });
-  await StatusBar.setStyle({ style: "DARK" });
+  await StatusBar.setStyle({ style: "LIGHT" });
   await StatusBar.setBackgroundColor({ color: PRIMARY_BAR_COLOR });
 }
 
@@ -101,7 +112,9 @@ async function configureNavigationBar() {
  * Retries if the bridge isn't ready immediately (remote URL loading).
  */
 export async function configureNativeBars() {
-  if (!isCapacitorNative()) return;
+  const platform = getNativePlatform();
+  if (platform === "web") return;
+  if (!platform && !isCapacitorNative()) return;
 
   const bridgeReady = await waitForBridge();
   if (!bridgeReady) {

@@ -19,23 +19,35 @@ if (isMobileUA) {
   });
 }
 
-// Initialize native plugins early
-if (isCapacitorNative()) {
-  setupNativePushListeners();
-  void configureNativeBars();
+let nativeBootstrapped = false;
 
-  // Re-apply on focus/visibility changes (app resume)
-  const reapplyNativeBars = () => void configureNativeBars();
+const reapplyNativeBars = () => {
+  if (!isCapacitorNative()) return;
+  void configureNativeBars();
+};
+
+const bootstrapNativeFeatures = () => {
+  if (nativeBootstrapped || !isCapacitorNative()) return;
+  nativeBootstrapped = true;
+
+  setupNativePushListeners();
+  reapplyNativeBars();
+
   window.addEventListener("focus", reapplyNativeBars);
   document.addEventListener("resume", reapplyNativeBars);
   document.addEventListener("visibilitychange", () => {
     if (!document.hidden) reapplyNativeBars();
   });
+};
 
-  // Retry after a delay for slow bridge init
-  setTimeout(reapplyNativeBars, 1500);
-  setTimeout(reapplyNativeBars, 4000);
-}
+// Try immediately and retry for delayed native bridge initialization.
+bootstrapNativeFeatures();
+[300, 1500, 4000].forEach((delay) => {
+  setTimeout(() => {
+    bootstrapNativeFeatures();
+    reapplyNativeBars();
+  }, delay);
+});
 
 createRoot(document.getElementById("root")!).render(<App />);
 
