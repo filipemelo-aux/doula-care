@@ -294,26 +294,15 @@
     padding-bottom: var(--app-safe-bottom);
   }
 
-  /* Android 15+ fallback: paint system bar areas using app primary color */
-  html.native-system-bars::before,
-  html.native-system-bars::after {
-    content: "";
-    position: fixed;
-    left: 0;
-    right: 0;
+  /* Android 15+ fallback: paint system bar areas using app primary color.
+     Use padding instead of fixed overlays so content is never hidden behind bars. */
+  html.native-system-bars {
     background: hsl(var(--primary));
-    pointer-events: none;
-    z-index: 30;
   }
 
-  html.native-system-bars::before {
-    top: 0;
-    height: var(--app-safe-top);
-  }
-
-  html.native-system-bars::after {
-    bottom: 0;
-    height: var(--app-safe-bottom);
+  html.native-system-bars body {
+    padding-top: var(--app-safe-top);
+    padding-bottom: var(--app-safe-bottom);
   }
 
   /* Dialog content containment — prevent elements from cutting on edges */
