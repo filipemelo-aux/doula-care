@@ -379,7 +379,8 @@ export default function SuperAdminDashboard() {
           {item.label}
         </button>
       ))}
-    </nav>
+      </nav>
+    </div>
   );
 
   const renderContent = () => {
