@@ -122,19 +122,12 @@ export function PromoTriggerButton({ orgId, orgName }: PromoTriggerButtonProps) 
     mutationFn: async () => {
       if (!promo) throw new Error("Sem promoção");
 
-      // Remove promo record
+      // Remove promo record (plan is NOT reverted — super admin can set it manually via the plan dropdown)
       const { error: delError } = await supabase
         .from("org_promotions" as any)
         .delete()
         .eq("id", promo.id);
       if (delError) throw delError;
-
-      // Revert org plan to free
-      const { error: orgError } = await supabase
-        .from("organizations")
-        .update({ plan: "free" as any })
-        .eq("id", orgId);
-      if (orgError) throw orgError;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["org-promo", orgId] });
@@ -199,7 +192,7 @@ export function PromoTriggerButton({ orgId, orgName }: PromoTriggerButtonProps) 
                 size="sm"
                 className="h-5 w-5 p-0 text-destructive/60 hover:text-destructive hover:bg-destructive/10"
                 onClick={() => {
-                  if (confirm(`Remover promoção de ${orgName}? O plano voltará para Free.`)) {
+                  if (confirm(`Remover promoção de ${orgName}? O plano atual será mantido.`)) {
                     removePromoMutation.mutate();
                   }
                 }}
