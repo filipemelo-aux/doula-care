@@ -19,7 +19,7 @@ const getStatusBarPlugin = () => {
 const getNavigationBarPlugin = () => {
   try {
     const cap = (window as any).Capacitor;
-    return cap?.Plugins?.NavigationBar ?? null;
+    return cap?.Plugins?.NavigationBar ?? cap?.Plugins?.CapacitorNavigationBar ?? null;
   } catch {
     return null;
   }
@@ -67,10 +67,19 @@ export async function configureNativeBars() {
   try {
     const NavigationBar = getNavigationBarPlugin();
     if (NavigationBar) {
-      await NavigationBar.setNavigationBarColor({
-        color: "#c34a1c",
-        darkButtons: false,
-      });
+      if (typeof NavigationBar.setNavigationBarColor === "function") {
+        await NavigationBar.setNavigationBarColor({
+          color: "#c34a1c",
+          darkButtons: false,
+        });
+      } else if (typeof NavigationBar.setColor === "function") {
+        await NavigationBar.setColor({
+          color: "#c34a1c",
+          darkButtons: false,
+        });
+      } else {
+        console.warn("[NativeUI] NavigationBar plugin found but no color method available");
+      }
       console.log("[NativeUI] Navigation bar configured");
     } else {
       console.warn("[NativeUI] NavigationBar plugin not found on bridge");

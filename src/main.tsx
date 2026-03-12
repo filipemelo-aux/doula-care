@@ -14,7 +14,18 @@ if (cached) {
 // Initialize native plugins early
 if (isCapacitorNative()) {
   setupNativePushListeners();
-  configureNativeBars();
+  void configureNativeBars();
+
+  const reapplyNativeBars = () => {
+    void configureNativeBars();
+  };
+
+  window.addEventListener("focus", reapplyNativeBars);
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden) {
+      reapplyNativeBars();
+    }
+  });
 }
 
 createRoot(document.getElementById("root")!).render(<App />);

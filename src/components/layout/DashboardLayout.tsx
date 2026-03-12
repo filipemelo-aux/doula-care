@@ -32,7 +32,7 @@ export function DashboardLayout() {
 
       <div className={cn("flex-1 flex flex-col min-h-[100dvh] transition-all duration-300", sidebarOpen ? "lg:ml-64" : "lg:ml-20")}>
         {/* Mobile Header */}
-        <header className="lg:hidden h-16 border-b border-border flex items-center justify-between px-4 bg-card/50 backdrop-blur-sm sticky top-0 z-40">
+        <header className="lg:hidden safe-area-header border-b border-border flex items-center justify-between px-4 bg-card/50 backdrop-blur-sm sticky top-0 z-40">
           <div className="flex items-center">
             <Button
               variant="ghost"
@@ -79,7 +79,7 @@ export function DashboardLayout() {
           </Button>
         </header>
 
-        <main className="flex-1 p-3 lg:p-8 pb-[calc(0.75rem+env(safe-area-inset-bottom))] lg:pb-8 overflow-y-auto w-full box-border">
+        <main className="flex-1 p-3 lg:p-8 pb-[calc(0.75rem+var(--app-safe-bottom))] lg:pb-8 overflow-y-auto w-full box-border">
           <div className="max-w-7xl mx-auto animate-fade-in">
             <Outlet />
           </div>
