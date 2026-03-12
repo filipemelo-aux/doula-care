@@ -359,7 +359,7 @@ export default function SuperAdminDashboard() {
   );
 
   const renderSidebarNav = (onNavigate?: () => void) => (
-    <nav className="flex-1 p-3 space-y-1">
+    <nav className="flex-1 p-3 pt-6 space-y-1">
       {sidebarItems.map((item) => (
         <button
           key={item.key}
