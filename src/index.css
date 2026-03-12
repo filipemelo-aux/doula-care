@@ -278,9 +278,18 @@
     }
   }
 
-  /* Safe area for mobile bottom navigation */
+  /* Safe area helpers for native mobile bars */
+  .safe-area-top {
+    padding-top: var(--app-safe-top);
+  }
+
+  .safe-area-header {
+    min-height: calc(4rem + var(--app-safe-top));
+    padding-top: var(--app-safe-top);
+  }
+
   .safe-area-bottom {
-    padding-bottom: env(safe-area-inset-bottom, 0);
+    padding-bottom: var(--app-safe-bottom);
   }
 
   /* Dialog content containment — prevent elements from cutting on edges */

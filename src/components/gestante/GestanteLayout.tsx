@@ -231,7 +231,7 @@ export function GestanteLayout({ children }: GestanteLayoutProps) {
         </header>
 
         {/* Main Content */}
-        <main className="flex-1 overflow-y-auto w-full box-border">
+        <main className="flex-1 overflow-y-auto w-full box-border pb-[var(--app-safe-bottom)]">
           {children}
         </main>
       </div>
