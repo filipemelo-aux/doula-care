@@ -110,6 +110,7 @@ export async function configureNativeBars() {
   }
 
   applyAndroidSafeAreaFallbacks();
+  applyNativeBarColorFallback();
 
   try {
     await configureStatusBar();
@@ -130,6 +131,7 @@ export async function configureNativeBars() {
     void configureStatusBar();
     void configureNavigationBar();
     applyAndroidSafeAreaFallbacks();
+    applyNativeBarColorFallback();
   }, 500);
 }
 
