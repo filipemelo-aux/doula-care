@@ -96,7 +96,7 @@ export default function Login() {
   }
 
   return (
-    <div className="fixed inset-0 safe-area-top safe-area-bottom flex items-center justify-center bg-gradient-to-br from-background via-background to-primary/5 p-4 overflow-hidden">
+    <div className="fixed inset-0 safe-area-top safe-area-bottom flex items-center justify-center bg-background p-4 overflow-hidden">
       <Card className="w-full max-w-md max-h-[calc(100dvh-2rem-var(--app-safe-top)-var(--app-safe-bottom))] overflow-y-auto card-glass">
         <CardHeader className="text-center space-y-2">
           <div className="flex flex-col items-center gap-1.5">
