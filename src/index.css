@@ -146,6 +146,7 @@
   body {
     @apply bg-background text-foreground antialiased;
     font-family: "DM Sans", "Inter", system-ui, sans-serif;
+    overscroll-behavior: none;
   }
 
   h1,
@@ -297,12 +298,13 @@
   /* Android 15+ fallback: paint system bar areas using app primary color.
      Use padding instead of fixed overlays so content is never hidden behind bars. */
   html.native-system-bars {
-    background: hsl(var(--primary));
+    background: #c34a1c;
   }
 
   html.native-system-bars body {
     padding-top: var(--app-safe-top);
     padding-bottom: var(--app-safe-bottom);
+    background: hsl(var(--background));
   }
 
   /* Dialog content containment — prevent elements from cutting on edges */
