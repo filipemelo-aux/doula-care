@@ -295,16 +295,11 @@
     padding-bottom: var(--app-safe-bottom);
   }
 
-  /* Android 15+ fallback: paint system bar areas using app primary color.
-     Use padding instead of fixed overlays so content is never hidden behind bars. */
-  html.native-system-bars {
-    background: #c34a1c;
-  }
-
+  /* Android 15+ fallback: use padding so content is never hidden behind bars.
+     Do NOT set a colored background on html — it bleeds on horizontal overscroll. */
   html.native-system-bars body {
     padding-top: var(--app-safe-top);
     padding-bottom: var(--app-safe-bottom);
-    background: hsl(var(--background));
   }
 
   /* Dialog content containment — prevent elements from cutting on edges */
