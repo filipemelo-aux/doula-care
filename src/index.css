@@ -298,8 +298,13 @@
     padding-bottom: var(--app-safe-bottom);
   }
 
-  /* Android 15+ fallback: use padding so content is never hidden behind bars.
-     Do NOT set a colored background on html — it bleeds on horizontal overscroll. */
+  /* Native shell: bars are opaque & overlay the webview; body gets padding so
+     content stays between bars. Overscroll is killed to prevent pull-to-refresh. */
+  html.native-system-bars,
+  html.native-system-bars body {
+    overscroll-behavior: none;
+  }
+
   html.native-system-bars body {
     padding-top: var(--app-safe-top);
     padding-bottom: var(--app-safe-bottom);
