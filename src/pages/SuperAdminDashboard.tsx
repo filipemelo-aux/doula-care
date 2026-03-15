@@ -449,72 +449,14 @@ export default function SuperAdminDashboard() {
   };
 
   return (
-    <div className="min-h-[100dvh] bg-background flex flex-col">
+    <div className="h-[100dvh] min-h-0 bg-background flex flex-col">
       {/* Header */}
       <header className="safe-area-header sticky top-0 z-20 border-b bg-card/95 backdrop-blur-sm px-4 sm:px-6 flex items-center justify-between">
-        <div className="flex items-center gap-2.5">
-          {isMobile && (
-            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setSidebarOpen(true)}>
-              <Menu className="h-5 w-5" />
-            </Button>
-          )}
-          <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-            <Building2 className="h-4.5 w-4.5 text-primary" />
-          </div>
-          <h1 className="text-lg font-bold text-foreground">Super Admin</h1>
-          <span className="text-[10px] text-muted-foreground font-mono hidden sm:inline">v{APP_VERSION}</span>
-        </div>
-        <div className="flex items-center gap-1.5">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-muted-foreground gap-1.5"
-            onClick={async () => {
-              try {
-                toast.info("Limpando cache e atualizando...");
-                const keys = await caches.keys();
-                await Promise.all(keys.map(k => caches.delete(k)));
-                const regs = await navigator.serviceWorker?.getRegistrations();
-                if (regs) {
-                  for (const reg of regs) {
-                    await reg.update();
-                    reg.waiting?.postMessage({ type: "SKIP_WAITING" });
-                  }
-                }
-                setTimeout(() => window.location.reload(), 500);
-              } catch (err) {
-                console.error(err);
-                window.location.reload();
-              }
-            }}
-          >
-            <RefreshCw className="h-4 w-4" />
-            <span className="hidden sm:inline">Atualizar</span>
-          </Button>
-          <Button variant="ghost" size="sm" onClick={signOut} className="text-muted-foreground">
-            <LogOut className="h-4 w-4 mr-1.5" />
-            <span className="hidden sm:inline">Sair</span>
-          </Button>
-        </div>
-      </header>
-
-      <div className="flex flex-1 overflow-hidden">
-        {!isMobile && (
-          <aside className="bg-card border-r border-border flex flex-col shrink-0 w-56 relative">
-            {renderSidebarNav()}
-          </aside>
-        )}
-
-        {isMobile && (
-          <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
-            <SheetContent side="left" className="w-[86vw] max-w-[320px] p-0 pt-[var(--app-safe-top)] pb-[var(--app-safe-bottom)] [&>button.absolute]:hidden">
-              {renderSidebarNav(() => setSidebarOpen(false))}
-            </SheetContent>
-          </Sheet>
-        )}
-
+...
+      <div className="flex flex-1 min-h-0 overflow-hidden">
+...
         {/* Main content */}
-        <main className="flex-1 overflow-y-auto p-4 sm:p-6 pb-[calc(1rem+var(--app-safe-bottom))] sm:pb-[calc(1.5rem+var(--app-safe-bottom))] space-y-5">
+        <main className="flex-1 min-h-0 overflow-y-auto touch-pan-y p-4 sm:p-6 pb-[calc(1rem+var(--app-safe-bottom))] sm:pb-[calc(1.5rem+var(--app-safe-bottom))] space-y-5">
           {/* Metrics */}
           <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
             <Card className={onlineOrgIds.size > 0 ? "border-success/30 bg-success/5" : ""}>
