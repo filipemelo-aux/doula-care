@@ -142,17 +142,14 @@
     @apply border-border;
   }
 
-  html {
+  html,
+  body {
     overflow-x: hidden;
-    overscroll-behavior-x: none;
   }
 
   body {
     @apply bg-background text-foreground antialiased;
     font-family: "DM Sans", "Inter", system-ui, sans-serif;
-    overscroll-behavior: none;
-    overflow-x: hidden;
-    overflow-y: auto;
   }
 
   h1,
