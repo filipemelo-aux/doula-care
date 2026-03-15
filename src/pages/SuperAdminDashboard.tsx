@@ -449,7 +449,7 @@ export default function SuperAdminDashboard() {
   };
 
   return (
-    <div className="min-h-[100dvh] bg-background flex flex-col">
+    <div className="h-[100dvh] min-h-0 bg-background flex flex-col">
       {/* Header */}
       <header className="safe-area-header sticky top-0 z-20 border-b bg-card/95 backdrop-blur-sm px-4 sm:px-6 flex items-center justify-between">
         <div className="flex items-center gap-2.5">
@@ -498,7 +498,7 @@ export default function SuperAdminDashboard() {
         </div>
       </header>
 
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-1 min-h-0 overflow-hidden">
         {!isMobile && (
           <aside className="bg-card border-r border-border flex flex-col shrink-0 w-56 relative">
             {renderSidebarNav()}
@@ -514,7 +514,7 @@ export default function SuperAdminDashboard() {
         )}
 
         {/* Main content */}
-        <main className="flex-1 overflow-y-auto p-4 sm:p-6 pb-[calc(1rem+var(--app-safe-bottom))] sm:pb-[calc(1.5rem+var(--app-safe-bottom))] space-y-5">
+        <main className="flex-1 min-h-0 overflow-y-auto touch-pan-y p-4 sm:p-6 pb-[calc(1rem+var(--app-safe-bottom))] sm:pb-[calc(1.5rem+var(--app-safe-bottom))] space-y-5">
           {/* Metrics */}
           <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
             <Card className={onlineOrgIds.size > 0 ? "border-success/30 bg-success/5" : ""}>

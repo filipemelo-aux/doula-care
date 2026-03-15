@@ -30,7 +30,7 @@ export function DashboardLayout() {
         onNavigate={handleNavigate}
       />
 
-      <div className={cn("flex-1 flex flex-col min-h-[100dvh] transition-all duration-300", sidebarOpen ? "lg:ml-64" : "lg:ml-20")}>
+      <div className={cn("flex-1 min-w-0 flex flex-col min-h-[100dvh] transition-all duration-300", sidebarOpen ? "lg:ml-64" : "lg:ml-20")}>
         {/* Mobile Header */}
         <header className="lg:hidden safe-area-header border-b border-border flex items-center justify-between px-4 bg-card/95 backdrop-blur-sm sticky top-0 z-40">
           <div className="flex items-center">
@@ -79,7 +79,7 @@ export function DashboardLayout() {
           </Button>
         </header>
 
-        <main className="flex-1 p-3 lg:p-8 pb-[calc(0.75rem+var(--app-safe-bottom))] lg:pb-8 overflow-y-auto w-full box-border">
+        <main className="flex-1 min-h-0 touch-pan-y p-3 lg:p-8 pb-[calc(0.75rem+var(--app-safe-bottom))] lg:pb-8 overflow-y-auto w-full box-border">
           <div className="max-w-7xl mx-auto animate-fade-in">
             <Outlet />
           </div>
