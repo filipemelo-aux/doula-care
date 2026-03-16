@@ -150,7 +150,7 @@ export function PromoBetaBanner() {
         <Button
           variant="ghost"
           size="sm"
-          className="absolute right-1 top-1 h-6 w-6 p-0"
+          className="absolute right-2 top-2 h-6 w-6 p-0 text-amber-600 hover:text-amber-800 hover:bg-amber-200/50"
           onClick={handleDismiss}
         >
           <X className="h-3.5 w-3.5" />
