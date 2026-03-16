@@ -139,7 +139,7 @@ export function PromoBetaBanner() {
   // Lifetime active — permanent banner
   if (promo.status === "lifetime_active") {
     return (
-      <Alert className="border-amber-500/30 bg-gradient-to-r from-amber-50/80 to-amber-100/50 dark:from-amber-950/20 dark:to-amber-900/10 relative">
+      <Alert className="border-amber-500/30 bg-gradient-to-r from-amber-50/80 to-amber-100/50 dark:from-amber-950/20 dark:to-amber-900/10 relative pr-8">
         <Crown className="h-4 w-4 text-amber-500" />
         <AlertTitle className="text-amber-700 dark:text-amber-400 text-sm font-semibold flex items-center gap-2">
           Premium Vitalício
