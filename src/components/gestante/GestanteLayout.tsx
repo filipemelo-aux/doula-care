@@ -90,7 +90,7 @@ export function GestanteLayout({ children }: GestanteLayoutProps) {
   };
 
   return (
-    <div className="min-h-screen flex w-full bg-background">
+    <div className="h-[100dvh] flex w-full bg-background overflow-hidden">
       {/* Sidebar */}
       <aside
         className={cn(
@@ -186,7 +186,7 @@ export function GestanteLayout({ children }: GestanteLayoutProps) {
         </div>
       </aside>
 
-      <div className="flex-1 flex flex-col min-h-screen">
+      <div className="flex-1 min-w-0 min-h-0 flex flex-col">
         {/* Mobile Header */}
         <header className="lg:hidden h-16 border-b border-border flex items-center justify-between px-4 bg-card/50 backdrop-blur-sm sticky top-0 z-40">
           <div className="flex items-center">
@@ -231,7 +231,7 @@ export function GestanteLayout({ children }: GestanteLayoutProps) {
         </header>
 
         {/* Main Content */}
-        <main className="flex-1 overflow-y-auto w-full box-border">
+        <main className="flex-1 min-h-0 overflow-y-auto touch-pan-y w-full box-border">
           {children}
         </main>
       </div>
