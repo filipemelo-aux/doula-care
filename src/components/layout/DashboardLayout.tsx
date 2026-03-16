@@ -23,7 +23,7 @@ export function DashboardLayout() {
   };
 
   return (
-    <div className="h-[100dvh] native-system-bars:h-full flex w-full bg-background overflow-hidden">
+    <div className="app-shell h-[100dvh] flex w-full bg-background overflow-hidden">
       <Sidebar 
         isOpen={sidebarOpen} 
         onToggle={() => setSidebarOpen(!sidebarOpen)} 

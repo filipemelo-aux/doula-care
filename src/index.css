@@ -316,6 +316,10 @@
     box-sizing: border-box;
   }
 
+  html.native-system-bars .app-shell {
+    height: 100% !important;
+  }
+
   /* Dialog content containment — prevent elements from cutting on edges */
   [data-radix-dialog-content],
   [data-radix-alert-dialog-content] {

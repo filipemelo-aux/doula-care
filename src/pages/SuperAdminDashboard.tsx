@@ -449,7 +449,7 @@ export default function SuperAdminDashboard() {
   };
 
   return (
-    <div className="h-[100dvh] native-system-bars:h-full min-h-0 bg-background flex flex-col">
+    <div className="app-shell h-[100dvh] min-h-0 bg-background flex flex-col">
       {/* Header */}
       <header className="h-14 sticky top-0 z-20 border-b bg-card/95 backdrop-blur-sm px-4 sm:px-6 flex items-center justify-between">
         <div className="flex items-center gap-2.5">
