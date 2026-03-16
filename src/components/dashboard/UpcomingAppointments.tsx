@@ -108,7 +108,7 @@ export function UpcomingAppointments() {
           <div className="flex items-center justify-between">
             <CardTitle className="text-base font-display flex items-center gap-2">
               <Calendar className="h-5 w-5 text-primary" />
-              Consultas Agendadas
+              Compromissos Agendados
             </CardTitle>
             <Button size="sm" variant="outline" onClick={() => setPickClientOpen(true)}>
               <Plus className="h-4 w-4 mr-1" />
