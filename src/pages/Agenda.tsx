@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { sendPushNotification } from "@/lib/pushNotifications";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -95,6 +96,7 @@ interface ServiceRequestFull {
 interface ClientOption {
   id: string;
   full_name: string;
+  user_id?: string;
 }
 
 type ServiceStatusFilter = "all" | "pending" | "budget_sent" | "date_proposed" | "accepted" | "completed" | "rejected";
@@ -242,6 +244,31 @@ export default function Agenda() {
       queryClient.invalidateQueries({ queryKey: ["all-appointments"] });
       closePersonalDialog();
       toast.success("Compromisso pessoal agendado!");
+
+      // Create org_notification for the personal appointment
+      if (organizationId) {
+        supabase.from("org_notifications").insert({
+          organization_id: organizationId,
+          title: "📋 Compromisso Pessoal",
+          message: `Novo compromisso agendado: ${personalTitle}`,
+          type: "agenda",
+        }).then(() => {
+          queryClient.invalidateQueries({ queryKey: ["org-notifications"] });
+          queryClient.invalidateQueries({ queryKey: ["top-notification-banner"] });
+        });
+      }
+
+      // Push notification to self (admin)
+      if (user?.id) {
+        sendPushNotification({
+          user_ids: [user.id],
+          title: "📋 Compromisso Pessoal Agendado",
+          message: personalTitle,
+          url: "/agenda",
+          tag: "personal-appointment",
+          type: "personal_appointment",
+        });
+      }
     },
     onError: () => toast.error("Erro ao salvar compromisso"),
   });
@@ -285,6 +312,22 @@ export default function Agenda() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["agenda-appointments"] });
       queryClient.invalidateQueries({ queryKey: ["all-appointments"] });
+
+      // Send push to client when new appointment is created (not editing)
+      if (!editingAppointment && aptClientId) {
+        const selectedClient = clients?.find(c => c.id === aptClientId);
+        if (selectedClient?.user_id) {
+          sendPushNotification({
+            user_ids: [selectedClient.user_id],
+            title: "📅 Nova Consulta Agendada",
+            message: `Sua doula agendou: ${aptTitle}`,
+            url: "/gestante/consultas",
+            tag: "new-appointment",
+            type: "new_appointment",
+          });
+        }
+      }
+
       closeAppointmentDialog();
       toast.success(editingAppointment ? "Consulta atualizada!" : "Consulta agendada!");
     },

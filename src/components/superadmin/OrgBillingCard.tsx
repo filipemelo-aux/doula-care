@@ -19,6 +19,23 @@ import {
   CalendarDays, Pencil, Trash2,
 } from "lucide-react";
 import { maskCurrency, parseCurrency } from "@/lib/masks";
+import { sendPushNotification } from "@/lib/pushNotifications";
+
+// Helper to get admin user_ids for an org
+async function getOrgAdminUserIds(orgId: string): Promise<string[]> {
+  const { data: orgProfiles } = await supabase
+    .from("profiles")
+    .select("user_id")
+    .eq("organization_id", orgId);
+  if (!orgProfiles || orgProfiles.length === 0) return [];
+  const orgUserIds = orgProfiles.map(p => p.user_id);
+  const { data: adminRoles } = await supabase
+    .from("user_roles")
+    .select("user_id")
+    .in("role", ["admin", "moderator"])
+    .in("user_id", orgUserIds);
+  return adminRoles?.map(r => r.user_id) || [];
+}
 
 interface BillingRow {
   id: string;
@@ -143,14 +160,28 @@ export function OrgBillingCard() {
           ? ` Vencimento: ${format(new Date(newDueDate + "T12:00:00"), "dd/MM/yyyy", { locale: ptBR })}.`
           : "";
         const refText = format(new Date(`${newRefMonth}-01T12:00:00`), "MMMM/yyyy", { locale: ptBR });
+        const billingMsg = `Cobrança de ${amount.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })} referente a ${refText}.${dueDateText}`;
 
         await supabase.from("org_notifications").insert({
           organization_id: selectedOrg,
           title: "Nova cobrança",
-          message: `Cobrança de ${amount.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })} referente a ${refText}.${dueDateText}`,
+          message: billingMsg,
           type: "billing",
           billing_id: billing?.id || null,
         });
+
+        // Push notification to org admins
+        const adminIds = await getOrgAdminUserIds(selectedOrg);
+        if (adminIds.length > 0) {
+          sendPushNotification({
+            user_ids: adminIds,
+            title: "💰 Nova Cobrança",
+            message: billingMsg,
+            url: "/notificacoes",
+            tag: "billing-new",
+            type: "billing",
+          });
+        }
       }
     },
     onSuccess: () => {
@@ -178,13 +209,26 @@ export function OrgBillingCard() {
       if (error) throw error;
 
       if (notifyDoula) {
+        const updateMsg = `Sua cobrança foi atualizada para ${amount.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}.${newDueDate ? ` Vencimento: ${format(new Date(newDueDate + "T12:00:00"), "dd/MM/yyyy", { locale: ptBR })}.` : ""}`;
         await supabase.from("org_notifications").insert({
           organization_id: editingBill.organization_id,
           title: "Cobrança atualizada",
-          message: `Sua cobrança foi atualizada para ${amount.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}.${newDueDate ? ` Vencimento: ${format(new Date(newDueDate + "T12:00:00"), "dd/MM/yyyy", { locale: ptBR })}.` : ""}`,
+          message: updateMsg,
           type: "billing",
           billing_id: editingBill.id,
         });
+
+        const adminIds = await getOrgAdminUserIds(editingBill.organization_id);
+        if (adminIds.length > 0) {
+          sendPushNotification({
+            user_ids: adminIds,
+            title: "💰 Cobrança Atualizada",
+            message: updateMsg,
+            url: "/notificacoes",
+            tag: "billing-update",
+            type: "billing",
+          });
+        }
       }
     },
     onSuccess: () => {
@@ -201,13 +245,26 @@ export function OrgBillingCard() {
       const { error } = await supabase.from("org_billing").delete().eq("id", bill.id);
       if (error) throw error;
 
+      const deleteMsg = `A cobrança de ${Number(bill.amount).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })} foi cancelada/removida.`;
       await supabase.from("org_notifications").insert({
         organization_id: bill.organization_id,
         title: "Cobrança removida",
-        message: `A cobrança de ${Number(bill.amount).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })} foi cancelada/removida.`,
+        message: deleteMsg,
         type: "billing",
         billing_id: null,
       });
+
+      const adminIds = await getOrgAdminUserIds(bill.organization_id);
+      if (adminIds.length > 0) {
+        sendPushNotification({
+          user_ids: adminIds,
+          title: "💰 Cobrança Removida",
+          message: deleteMsg,
+          url: "/notificacoes",
+          tag: "billing-delete",
+          type: "billing",
+        });
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["org-billing"] });
@@ -233,13 +290,26 @@ export function OrgBillingCard() {
         pendente: "Cobrança pendente",
       };
 
+      const statusMsg = `O status da sua cobrança foi atualizado para: ${statusLabels[status] || status}.`;
       await supabase.from("org_notifications").insert({
         organization_id: orgId,
         title: statusLabels[status] || "Atualização de cobrança",
-        message: `O status da sua cobrança foi atualizado para: ${statusLabels[status] || status}.`,
+        message: statusMsg,
         type: "billing",
         billing_id: id,
       });
+
+      const adminIds = await getOrgAdminUserIds(orgId);
+      if (adminIds.length > 0) {
+        sendPushNotification({
+          user_ids: adminIds,
+          title: `💰 ${statusLabels[status] || "Atualização de cobrança"}`,
+          message: statusMsg,
+          url: "/notificacoes",
+          tag: "billing-status",
+          type: "billing",
+        });
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["org-billing"] });

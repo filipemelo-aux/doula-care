@@ -35,14 +35,13 @@ Deno.serve(async (req) => {
     });
 
     const now = new Date();
-    const in1h = new Date(now.getTime() + 60 * 60 * 1000);
-    const in24h = new Date(now.getTime() + 24 * 60 * 60 * 1000);
 
     // Find appointments needing 24h reminder (between 23h and 25h from now, not yet sent)
     const { data: remind24h } = await supabase
       .from("appointments")
       .select("id, title, scheduled_at, client_id, organization_id, clients(full_name, user_id)")
       .eq("reminder_24h_sent", false)
+      .is("completed_at", null)
       .gte("scheduled_at", new Date(now.getTime() + 23 * 60 * 60 * 1000).toISOString())
       .lte("scheduled_at", new Date(now.getTime() + 25 * 60 * 60 * 1000).toISOString());
 
@@ -51,6 +50,7 @@ Deno.serve(async (req) => {
       .from("appointments")
       .select("id, title, scheduled_at, client_id, organization_id, clients(full_name, user_id)")
       .eq("reminder_1h_sent", false)
+      .is("completed_at", null)
       .gte("scheduled_at", new Date(now.getTime() + 30 * 60 * 1000).toISOString())
       .lte("scheduled_at", new Date(now.getTime() + 90 * 60 * 1000).toISOString());
 
@@ -63,7 +63,7 @@ Deno.serve(async (req) => {
     let sent = 0;
     const expiredEndpoints: string[] = [];
 
-  const sendPush = async (userIds: string[], title: string, body: string, url: string, tag: string) => {
+    const sendPush = async (userIds: string[], title: string, body: string, url: string, tag: string) => {
       if (userIds.length === 0) return;
 
       const { data: subscriptions } = await supabase
@@ -109,15 +109,34 @@ Deno.serve(async (req) => {
       }
     };
 
+    const getAdminUserIds = async (orgId: string): Promise<string[]> => {
+      const { data: orgProfiles } = await supabase
+        .from("profiles")
+        .select("user_id")
+        .eq("organization_id", orgId);
+
+      if (!orgProfiles || orgProfiles.length === 0) return [];
+
+      const orgUserIds = orgProfiles.map(p => p.user_id);
+      const { data: adminRoles } = await supabase
+        .from("user_roles")
+        .select("user_id")
+        .in("role", ["admin", "moderator"])
+        .in("user_id", orgUserIds);
+
+      return adminRoles?.map(r => r.user_id) || [];
+    };
+
     // Process 24h reminders
     if (remind24h && remind24h.length > 0) {
       for (const apt of remind24h) {
         const client = apt.clients as any;
+        const isPersonal = !apt.client_id;
         const scheduledDate = new Date(apt.scheduled_at);
         const timeStr = scheduledDate.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", timeZone: "America/Sao_Paulo" });
 
-        // Notify the client
-        if (client?.user_id) {
+        // Notify the client (only for client appointments)
+        if (!isPersonal && client?.user_id) {
           await sendPush(
             [client.user_id],
             "📅 Lembrete de Consulta",
@@ -129,28 +148,19 @@ Deno.serve(async (req) => {
 
         // Notify admins IN THE SAME ORGANIZATION as the appointment
         if (apt.organization_id) {
-          const { data: orgProfiles } = await supabase
-            .from("profiles")
-            .select("user_id")
-            .eq("organization_id", apt.organization_id);
+          const adminUserIds = await getAdminUserIds(apt.organization_id);
+          if (adminUserIds.length > 0) {
+            const bodyText = isPersonal
+              ? `Compromisso pessoal "${apt.title}" é amanhã às ${timeStr}`
+              : `"${apt.title}" com ${client?.full_name || "cliente"} às ${timeStr}`;
 
-          if (orgProfiles && orgProfiles.length > 0) {
-            const orgUserIds = orgProfiles.map(p => p.user_id);
-            const { data: adminRoles } = await supabase
-              .from("user_roles")
-              .select("user_id")
-              .in("role", ["admin", "moderator"])
-              .in("user_id", orgUserIds);
-
-            if (adminRoles && adminRoles.length > 0) {
-              await sendPush(
-                adminRoles.map((r) => r.user_id),
-                "📅 Consulta Amanhã",
-                `"${apt.title}" com ${client?.full_name || "cliente"} às ${timeStr}`,
-                "/agenda",
-                `apt-admin-24h-${apt.id}`
-              );
-            }
+            await sendPush(
+              adminUserIds,
+              isPersonal ? "📋 Compromisso Amanhã" : "📅 Consulta Amanhã",
+              bodyText,
+              "/agenda",
+              `apt-admin-24h-${apt.id}`
+            );
           }
         }
 
@@ -163,10 +173,12 @@ Deno.serve(async (req) => {
     if (remind1h && remind1h.length > 0) {
       for (const apt of remind1h) {
         const client = apt.clients as any;
+        const isPersonal = !apt.client_id;
         const scheduledDate = new Date(apt.scheduled_at);
         const timeStr = scheduledDate.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", timeZone: "America/Sao_Paulo" });
 
-        if (client?.user_id) {
+        // Notify the client (only for client appointments)
+        if (!isPersonal && client?.user_id) {
           await sendPush(
             [client.user_id],
             "⏰ Consulta em 1 hora!",
@@ -178,28 +190,19 @@ Deno.serve(async (req) => {
 
         // Notify admins IN THE SAME ORGANIZATION as the appointment
         if (apt.organization_id) {
-          const { data: orgProfiles } = await supabase
-            .from("profiles")
-            .select("user_id")
-            .eq("organization_id", apt.organization_id);
+          const adminUserIds = await getAdminUserIds(apt.organization_id);
+          if (adminUserIds.length > 0) {
+            const bodyText = isPersonal
+              ? `Compromisso pessoal "${apt.title}" às ${timeStr}`
+              : `"${apt.title}" com ${client?.full_name || "cliente"} às ${timeStr}`;
 
-          if (orgProfiles && orgProfiles.length > 0) {
-            const orgUserIds = orgProfiles.map(p => p.user_id);
-            const { data: adminRoles } = await supabase
-              .from("user_roles")
-              .select("user_id")
-              .in("role", ["admin", "moderator"])
-              .in("user_id", orgUserIds);
-
-            if (adminRoles && adminRoles.length > 0) {
-              await sendPush(
-                adminRoles.map((r) => r.user_id),
-                "⏰ Consulta em 1 hora!",
-                `"${apt.title}" com ${client?.full_name || "cliente"} às ${timeStr}`,
-                "/agenda",
-                `apt-admin-1h-${apt.id}`
-              );
-            }
+            await sendPush(
+              adminUserIds,
+              isPersonal ? "⏰ Compromisso em 1 hora!" : "⏰ Consulta em 1 hora!",
+              bodyText,
+              "/agenda",
+              `apt-admin-1h-${apt.id}`
+            );
           }
         }
 

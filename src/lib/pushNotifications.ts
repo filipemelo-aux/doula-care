@@ -8,6 +8,10 @@ export type PushNotificationType =
   | "budget_response"
   | "payment_received"
   | "appointment_reminder"
+  | "new_appointment"
+  | "personal_appointment"
+  | "billing"
+  | "promo"
   | "community"
   | "general";
 
@@ -21,6 +25,10 @@ const NOTIFICATION_ROUTES: Record<PushNotificationType, string> = {
   budget_response: "/gestante/mensagens",
   payment_received: "/financeiro",
   appointment_reminder: "/agenda",
+  new_appointment: "/gestante/consultas",
+  personal_appointment: "/agenda",
+  billing: "/notificacoes",
+  promo: "/notificacoes",
   community: "/comunidade",
   general: "/",
 };
