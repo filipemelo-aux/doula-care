@@ -166,7 +166,10 @@ export default function Agenda() {
         .select("*, clients(full_name)")
         .order("scheduled_at", { ascending: true });
       if (error) throw error;
-      return data as unknown as AppointmentWithClient[];
+      return (data as unknown as AppointmentWithClient[]).map(apt => ({
+        ...apt,
+        clients: apt.clients || { full_name: "" },
+      }));
     },
   });
 
