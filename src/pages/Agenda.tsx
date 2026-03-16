@@ -200,6 +200,52 @@ export default function Agenda() {
   });
 
   // ─── Mutations ───────────────────────────────────────────
+  // Personal appointment dialog
+  const [personalAptDialog, setPersonalAptDialog] = useState(false);
+  const [personalTitle, setPersonalTitle] = useState("");
+  const [personalDate, setPersonalDate] = useState("");
+  const [personalNotes, setPersonalNotes] = useState("");
+  const personalDateRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (!personalAptDialog) return;
+    const interval = setInterval(() => {
+      const val = personalDateRef.current?.value;
+      if (val && val !== personalDate) {
+        setPersonalDate(val);
+      }
+    }, 250);
+    return () => clearInterval(interval);
+  }, [personalAptDialog, personalDate]);
+
+  const closePersonalDialog = () => {
+    setPersonalAptDialog(false);
+    setPersonalTitle("");
+    setPersonalDate("");
+    setPersonalNotes("");
+  };
+
+  const savePersonalMutation = useMutation({
+    mutationFn: async () => {
+      const scheduledUtc = fromZonedTime(personalDate, "America/Sao_Paulo").toISOString();
+      const { error } = await supabase.from("appointments").insert({
+        title: personalTitle,
+        scheduled_at: scheduledUtc,
+        notes: personalNotes || null,
+        owner_id: user?.id || null,
+        organization_id: organizationId || null,
+      } as any);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["agenda-appointments"] });
+      queryClient.invalidateQueries({ queryKey: ["all-appointments"] });
+      closePersonalDialog();
+      toast.success("Compromisso pessoal agendado!");
+    },
+    onError: () => toast.error("Erro ao salvar compromisso"),
+  });
+
   const saveAppointmentMutation = useMutation({
     mutationFn: async () => {
       // datetime-local gives "YYYY-MM-DDTHH:mm" in local time
