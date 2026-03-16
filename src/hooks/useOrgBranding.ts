@@ -170,6 +170,8 @@ function clearCustomTheme() {
   ];
   keys.forEach((key) => root.style.removeProperty(key));
   updateThemeColorMeta(DEFAULT_PRIMARY);
+  // Restore default native bar color
+  void updateNativeBarColor(DEFAULT_PRIMARY);
 }
 
 export function useOrgBranding() {
