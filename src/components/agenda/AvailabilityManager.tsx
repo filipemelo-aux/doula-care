@@ -59,6 +59,34 @@ export function AvailabilityManager() {
     enabled: !!organizationId,
   });
 
+  // Fetch appointments to find occupied hours
+  const { data: appointments } = useQuery({
+    queryKey: ["appointments-for-availability", organizationId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("appointments")
+        .select("scheduled_at, title")
+        .eq("organization_id", organizationId!)
+        .is("completed_at", null);
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!organizationId,
+  });
+
+  // Get occupied hours for a given date from appointments
+  function getOccupiedHours(dateStr: string): Set<number> {
+    const occupied = new Set<number>();
+    (appointments || []).forEach((apt) => {
+      const aptDate = format(new Date(apt.scheduled_at), "yyyy-MM-dd");
+      if (aptDate === dateStr) {
+        const hour = new Date(apt.scheduled_at).getHours();
+        occupied.add(hour);
+      }
+    });
+    return occupied;
+  }
+
   const availableDates = new Set(
     (availability || []).map((a) => a.available_date)
   );
