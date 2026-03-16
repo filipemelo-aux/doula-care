@@ -96,6 +96,7 @@ interface ServiceRequestFull {
 interface ClientOption {
   id: string;
   full_name: string;
+  user_id?: string;
 }
 
 type ServiceStatusFilter = "all" | "pending" | "budget_sent" | "date_proposed" | "accepted" | "completed" | "rejected";
