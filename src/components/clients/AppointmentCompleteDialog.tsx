@@ -88,7 +88,7 @@ export function AppointmentCompleteDialog({
             ) : (
               <CheckCircle className="h-4 w-4 mr-1" />
             )}
-            Concluir Consulta
+            Concluir Compromisso
           </Button>
         </div>
       </DialogContent>

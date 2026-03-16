@@ -36,7 +36,7 @@ export function AppointmentDetailDialog({
         <DialogHeader>
           <DialogTitle className="font-display flex items-center gap-2">
             <Calendar className="h-5 w-5 text-primary" />
-            Detalhes da Consulta
+            Detalhes do Compromisso
           </DialogTitle>
         </DialogHeader>
 
