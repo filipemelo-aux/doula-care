@@ -204,7 +204,13 @@ export function useOrgBranding() {
   // Apply theme whenever branding changes + cache it
   useEffect(() => {
     if (!organizationId) {
-      clearCustomTheme();
+      // On logout, re-apply cached branding so login screen keeps org colors
+      const cached = getCachedBranding();
+      if (cached) {
+        applyThemeToDOM(cached.primary, cached.secondary);
+      } else {
+        clearCustomTheme();
+      }
       return;
     }
 
