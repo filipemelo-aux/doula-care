@@ -112,7 +112,7 @@ export function UpcomingAppointments() {
             </CardTitle>
             <Button size="sm" variant="outline" onClick={() => setPickClientOpen(true)}>
               <Plus className="h-4 w-4 mr-1" />
-              {isMobile ? "Consulta" : "Nova Consulta"}
+              {isMobile ? "Novo" : "Novo Compromisso"}
             </Button>
           </div>
         </CardHeader>
