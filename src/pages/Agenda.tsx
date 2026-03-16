@@ -312,6 +312,22 @@ export default function Agenda() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["agenda-appointments"] });
       queryClient.invalidateQueries({ queryKey: ["all-appointments"] });
+
+      // Send push to client when new appointment is created (not editing)
+      if (!editingAppointment && aptClientId) {
+        const selectedClient = clients?.find(c => c.id === aptClientId);
+        if (selectedClient?.user_id) {
+          sendPushNotification({
+            user_ids: [selectedClient.user_id],
+            title: "📅 Nova Consulta Agendada",
+            message: `Sua doula agendou: ${aptTitle}`,
+            url: "/gestante/consultas",
+            tag: "new-appointment",
+            type: "new_appointment",
+          });
+        }
+      }
+
       closeAppointmentDialog();
       toast.success(editingAppointment ? "Consulta atualizada!" : "Consulta agendada!");
     },
