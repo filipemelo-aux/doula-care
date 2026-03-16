@@ -514,7 +514,7 @@ export default function SuperAdminDashboard() {
         )}
 
         {/* Main content */}
-        <main className="flex-1 min-h-0 overflow-y-auto touch-pan-y p-3 lg:p-8 pb-[calc(0.75rem+var(--app-safe-bottom))] lg:pb-8 space-y-5">
+        <main className="flex-1 min-h-0 overflow-y-auto touch-pan-y p-3 lg:p-8 space-y-5">
           {/* Metrics */}
           <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
             <Card className={onlineOrgIds.size > 0 ? "border-success/30 bg-success/5" : ""}>

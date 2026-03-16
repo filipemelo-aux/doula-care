@@ -310,9 +310,8 @@
     overscroll-behavior: none;
   }
 
-  html.native-system-bars body {
-    padding-top: var(--app-safe-top);
-    padding-bottom: var(--app-safe-bottom);
+  html.native-system-bars {
+    --app-viewport-height: calc(100dvh - var(--app-safe-top) - var(--app-safe-bottom));
   }
 
   /* Dialog content containment — prevent elements from cutting on edges */
