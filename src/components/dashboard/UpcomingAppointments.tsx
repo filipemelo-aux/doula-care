@@ -201,7 +201,7 @@ export function UpcomingAppointments() {
             </ScrollArea>
           ) : (
             <p className="text-sm text-muted-foreground text-center py-6">
-              Nenhuma consulta agendada
+              Nenhum compromisso agendado
             </p>
           )}
         </CardContent>
