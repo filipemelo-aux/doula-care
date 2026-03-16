@@ -188,7 +188,7 @@ export function GestanteLayout({ children }: GestanteLayoutProps) {
 
       <div className="flex-1 min-w-0 min-h-0 flex flex-col">
         {/* Mobile Header */}
-        <header className="lg:hidden h-16 border-b border-border flex items-center justify-between px-4 bg-card/50 backdrop-blur-sm sticky top-0 z-40">
+        <header className="lg:hidden h-14 border-b border-border flex items-center justify-between px-4 bg-card/50 backdrop-blur-sm sticky top-0 z-40">
           <div className="flex items-center">
             <Button
               variant="ghost"
@@ -231,7 +231,7 @@ export function GestanteLayout({ children }: GestanteLayoutProps) {
         </header>
 
         {/* Main Content */}
-        <main className="flex-1 min-h-0 overflow-y-auto touch-pan-y w-full box-border">
+        <main className="flex-1 min-h-0 overflow-y-auto touch-pan-y w-full box-border p-3 lg:p-8 pb-[calc(0.75rem+var(--app-safe-bottom))] lg:pb-8">
           {children}
         </main>
       </div>
