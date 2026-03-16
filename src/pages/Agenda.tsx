@@ -404,12 +404,16 @@ export default function Agenda() {
           <h1 className="page-title">Agenda</h1>
           <p className="page-description">Consultas e serviços em um só lugar</p>
         </div>
-        <div className="flex gap-2">
-          <Button onClick={() => setAppointmentDialog(true)} variant="outline">
+        <div className="flex gap-2 flex-wrap">
+          <Button onClick={() => setPersonalAptDialog(true)} variant="outline" size="sm">
+            <Plus className="h-4 w-4 mr-1" />
+            Compromisso Pessoal
+          </Button>
+          <Button onClick={() => setAppointmentDialog(true)} variant="outline" size="sm">
             <Calendar className="h-4 w-4 mr-1" />
             Nova consulta
           </Button>
-          <Button onClick={() => setServiceDialog(true)}>
+          <Button onClick={() => setServiceDialog(true)} size="sm">
             <Briefcase className="h-4 w-4 mr-1" />
             Novo serviço
           </Button>
