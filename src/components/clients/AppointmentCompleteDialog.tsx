@@ -63,7 +63,7 @@ export function AppointmentCompleteDialog({
 
         <div className="space-y-4">
           <div>
-            <p className="text-sm text-muted-foreground mb-1">Consulta</p>
+            <p className="text-sm text-muted-foreground mb-1">Compromisso</p>
             <p className="text-sm font-medium break-words">{appointmentTitle}</p>
           </div>
 
