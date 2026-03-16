@@ -8,6 +8,10 @@ export type PushNotificationType =
   | "budget_response"
   | "payment_received"
   | "appointment_reminder"
+  | "new_appointment"
+  | "personal_appointment"
+  | "billing"
+  | "promo"
   | "community"
   | "general";
 
