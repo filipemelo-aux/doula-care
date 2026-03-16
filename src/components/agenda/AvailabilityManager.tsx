@@ -405,6 +405,7 @@ export function AvailabilityManager() {
           <HourGrid
             hours={selectedStartHours}
             onToggle={(h) => toggleHour(h, selectedStartHours, setSelectedStartHours, selectionStart, setSelectionStart)}
+            disabledHours={getOccupiedHours(format(selectedDate, "yyyy-MM-dd"))}
           />
 
           {periods.length > 0 && (
