@@ -314,6 +314,29 @@
     padding-bottom: var(--app-safe-bottom);
     height: 100dvh;
     box-sizing: border-box;
+    position: relative;
+  }
+
+  /* Solid color strips behind translucent system bars so content never bleeds through */
+  html.native-system-bars body::before,
+  html.native-system-bars body::after {
+    content: "";
+    position: fixed;
+    left: 0;
+    right: 0;
+    z-index: 9999;
+    background-color: #c34a1c;
+    pointer-events: none;
+  }
+
+  html.native-system-bars body::before {
+    top: 0;
+    height: var(--app-safe-top);
+  }
+
+  html.native-system-bars body::after {
+    bottom: 0;
+    height: var(--app-safe-bottom);
   }
 
   html.native-system-bars .app-shell {
