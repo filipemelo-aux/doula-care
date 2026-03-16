@@ -290,13 +290,26 @@ export function OrgBillingCard() {
         pendente: "Cobrança pendente",
       };
 
+      const statusMsg = `O status da sua cobrança foi atualizado para: ${statusLabels[status] || status}.`;
       await supabase.from("org_notifications").insert({
         organization_id: orgId,
         title: statusLabels[status] || "Atualização de cobrança",
-        message: `O status da sua cobrança foi atualizado para: ${statusLabels[status] || status}.`,
+        message: statusMsg,
         type: "billing",
         billing_id: id,
       });
+
+      const adminIds = await getOrgAdminUserIds(orgId);
+      if (adminIds.length > 0) {
+        sendPushNotification({
+          user_ids: adminIds,
+          title: `💰 ${statusLabels[status] || "Atualização de cobrança"}`,
+          message: statusMsg,
+          url: "/notificacoes",
+          tag: "billing-status",
+          type: "billing",
+        });
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["org-billing"] });
