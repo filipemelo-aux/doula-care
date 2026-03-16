@@ -528,7 +528,7 @@ export default function Agenda() {
             )}
           </TabsTrigger>
           <TabsTrigger value="appointments">
-            Consultas
+             Compromissos
             {futureApts.length > 0 && (
               <Badge variant="secondary" className="ml-1.5 text-[10px] px-1.5 py-0">{futureApts.length}</Badge>
             )}
