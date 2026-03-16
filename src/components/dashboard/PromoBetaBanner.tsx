@@ -163,7 +163,7 @@ export function PromoBetaBanner() {
   if (promo.status === "trial_active" && !isTrialExpired) {
     return (
       <>
-        <Alert className="border-primary/30 bg-gradient-to-r from-primary/5 to-accent/5 relative">
+        <Alert className="border-primary/30 bg-gradient-to-r from-primary/5 to-accent/5 relative pr-8">
           <Gift className="h-4 w-4 text-primary" />
           <AlertTitle className="text-primary text-sm font-semibold flex items-center gap-2">
             <Sparkles className="h-3.5 w-3.5" />
