@@ -23,7 +23,7 @@ export function DashboardLayout() {
   };
 
   return (
-    <div className="h-[100dvh] flex w-full bg-background overflow-hidden">
+    <div className="h-[var(--app-viewport-height)] flex w-full bg-background overflow-hidden">
       <Sidebar 
         isOpen={sidebarOpen} 
         onToggle={() => setSidebarOpen(!sidebarOpen)} 
@@ -79,7 +79,7 @@ export function DashboardLayout() {
           </Button>
         </header>
 
-        <main className="flex-1 min-h-0 touch-pan-y p-3 lg:p-8 pb-[calc(0.75rem+var(--app-safe-bottom))] lg:pb-8 overflow-y-auto w-full box-border">
+        <main className="flex-1 min-h-0 touch-pan-y p-3 lg:p-8 overflow-y-auto w-full box-border">
           <div className="max-w-7xl mx-auto animate-fade-in">
             <Outlet />
           </div>
