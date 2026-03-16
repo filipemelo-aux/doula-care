@@ -138,8 +138,6 @@ export default function Dashboard() {
         />
       </div>
 
-      {/* Notifications Center */}
-      <NotificationsCenter />
 
       {/* Upcoming Appointments */}
       <UpcomingAppointments />
