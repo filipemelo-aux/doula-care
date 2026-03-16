@@ -21,7 +21,16 @@ export function PromoBetaBanner() {
   const { organizationId } = useAuth();
   const queryClient = useQueryClient();
   const [choiceDialogOpen, setChoiceDialogOpen] = useState(false);
-  const [dismissed, setDismissed] = useState(false);
+
+  const dismissKey = `promo_banner_dismissed_${organizationId}`;
+  const [dismissed, setDismissed] = useState(() => {
+    try { return localStorage.getItem(dismissKey) === "true"; } catch { return false; }
+  });
+
+  const handleDismiss = () => {
+    setDismissed(true);
+    try { localStorage.setItem(dismissKey, "true"); } catch {}
+  };
 
   const { data: promo } = useQuery({
     queryKey: ["my-org-promo", organizationId],
