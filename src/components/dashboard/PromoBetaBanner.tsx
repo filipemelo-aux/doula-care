@@ -21,7 +21,16 @@ export function PromoBetaBanner() {
   const { organizationId } = useAuth();
   const queryClient = useQueryClient();
   const [choiceDialogOpen, setChoiceDialogOpen] = useState(false);
-  const [dismissed, setDismissed] = useState(false);
+
+  const dismissKey = `promo_banner_dismissed_${organizationId}`;
+  const [dismissed, setDismissed] = useState(() => {
+    try { return localStorage.getItem(dismissKey) === "true"; } catch { return false; }
+  });
+
+  const handleDismiss = () => {
+    setDismissed(true);
+    try { localStorage.setItem(dismissKey, "true"); } catch {}
+  };
 
   const { data: promo } = useQuery({
     queryKey: ["my-org-promo", organizationId],
@@ -130,7 +139,7 @@ export function PromoBetaBanner() {
   // Lifetime active — permanent banner
   if (promo.status === "lifetime_active") {
     return (
-      <Alert className="border-amber-500/30 bg-gradient-to-r from-amber-50/80 to-amber-100/50 dark:from-amber-950/20 dark:to-amber-900/10 relative">
+      <Alert className="border-amber-500/30 bg-gradient-to-r from-amber-50/80 to-amber-100/50 dark:from-amber-950/20 dark:to-amber-900/10 relative pr-8">
         <Crown className="h-4 w-4 text-amber-500" />
         <AlertTitle className="text-amber-700 dark:text-amber-400 text-sm font-semibold flex items-center gap-2">
           Premium Vitalício
@@ -141,8 +150,8 @@ export function PromoBetaBanner() {
         <Button
           variant="ghost"
           size="sm"
-          className="absolute right-2 top-2 h-6 w-6 p-0"
-          onClick={() => setDismissed(true)}
+          className="absolute right-1 top-1 h-6 w-6 p-0"
+          onClick={handleDismiss}
         >
           <X className="h-3.5 w-3.5" />
         </Button>
@@ -154,7 +163,7 @@ export function PromoBetaBanner() {
   if (promo.status === "trial_active" && !isTrialExpired) {
     return (
       <>
-        <Alert className="border-primary/30 bg-gradient-to-r from-primary/5 to-accent/5 relative">
+        <Alert className="border-primary/30 bg-gradient-to-r from-primary/5 to-accent/5 relative pr-8">
           <Gift className="h-4 w-4 text-primary" />
           <AlertTitle className="text-primary text-sm font-semibold flex items-center gap-2">
             <Sparkles className="h-3.5 w-3.5" />
@@ -177,8 +186,8 @@ export function PromoBetaBanner() {
           <Button
             variant="ghost"
             size="sm"
-            className="absolute right-2 top-2 h-6 w-6 p-0"
-            onClick={() => setDismissed(true)}
+            className="absolute right-1 top-1 h-6 w-6 p-0"
+            onClick={handleDismiss}
           >
             <X className="h-3.5 w-3.5" />
           </Button>

@@ -49,10 +49,10 @@ export function BillingAlertBanner() {
       {notifications.map((notif) => {
         const isPromo = notif.type === "promotion";
         return (
-        <Alert key={notif.id} variant="destructive" className={isPromo
+        <Alert key={notif.id} variant="destructive" className={`pr-8 ${isPromo
           ? "border-primary/30 bg-gradient-to-r from-primary/5 to-accent/5 text-foreground"
           : "border-amber-500/50 bg-amber-50/80 dark:bg-amber-950/20 text-foreground"
-        }>
+        }`}>
           {isPromo ? <Gift className="h-4 w-4 text-primary" /> : <Receipt className="h-4 w-4 text-amber-600" />}
           <AlertTitle className={`${isPromo ? "text-primary" : "text-amber-700 dark:text-amber-400"} text-sm font-semibold`}>
             {notif.title}
