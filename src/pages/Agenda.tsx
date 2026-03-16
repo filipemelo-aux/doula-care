@@ -715,6 +715,54 @@ export default function Agenda() {
         </AlertDialogContent>
       </AlertDialog>
 
+      {/* Personal Appointment Dialog */}
+      <Dialog open={personalAptDialog} onOpenChange={(o) => !o && closePersonalDialog()}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="font-display flex items-center gap-2">
+              <Plus className="h-5 w-5" />
+              Compromisso Pessoal
+            </DialogTitle>
+            <DialogDescription>
+              Agende compromissos internos que não envolvem clientes (lives, reuniões, etc.)
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label className="text-xs">Título</Label>
+              <Input placeholder="Ex: Gravação de live, Reunião..." value={personalTitle} onChange={(e) => setPersonalTitle(e.target.value)} className="mt-1" />
+            </div>
+            <div>
+              <Label className="text-xs">Data e hora</Label>
+              <input
+                ref={personalDateRef}
+                type="datetime-local"
+                defaultValue={personalDate}
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 mt-1"
+              />
+              {personalDate && (
+                <p className="text-xs text-muted-foreground mt-1">
+                  ✓ {format(new Date(personalDate), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+                </p>
+              )}
+            </div>
+            <div>
+              <Label className="text-xs">Observações (opcional)</Label>
+              <Textarea placeholder="Detalhes do compromisso..." value={personalNotes} onChange={(e) => setPersonalNotes(e.target.value)} rows={2} className="mt-1" />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              disabled={!personalTitle || !personalDate || savePersonalMutation.isPending}
+              onClick={() => savePersonalMutation.mutate()}
+            >
+              {savePersonalMutation.isPending && <Loader2 className="h-4 w-4 animate-spin mr-1" />}
+              Agendar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* New Service Dialog */}
       <NewServiceDialog
         open={serviceDialog}
