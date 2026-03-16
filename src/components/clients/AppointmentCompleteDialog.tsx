@@ -42,9 +42,9 @@ export function AppointmentCompleteDialog({
 
     setLoading(false);
     if (error) {
-      toast.error("Erro ao concluir consulta");
+      toast.error("Erro ao concluir compromisso");
     } else {
-      toast.success("Consulta concluída!");
+      toast.success("Compromisso concluído!");
       setNotes("");
       onOpenChange(false);
       onCompleted();
