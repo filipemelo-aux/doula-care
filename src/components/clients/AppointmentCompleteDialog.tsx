@@ -57,7 +57,7 @@ export function AppointmentCompleteDialog({
         <DialogHeader>
           <DialogTitle className="font-display flex items-center gap-2">
             <CheckCircle className="h-5 w-5 text-green-600" />
-            Concluir Consulta
+            Concluir Compromisso
           </DialogTitle>
         </DialogHeader>
 
