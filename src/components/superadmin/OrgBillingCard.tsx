@@ -209,13 +209,26 @@ export function OrgBillingCard() {
       if (error) throw error;
 
       if (notifyDoula) {
+        const updateMsg = `Sua cobrança foi atualizada para ${amount.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}.${newDueDate ? ` Vencimento: ${format(new Date(newDueDate + "T12:00:00"), "dd/MM/yyyy", { locale: ptBR })}.` : ""}`;
         await supabase.from("org_notifications").insert({
           organization_id: editingBill.organization_id,
           title: "Cobrança atualizada",
-          message: `Sua cobrança foi atualizada para ${amount.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}.${newDueDate ? ` Vencimento: ${format(new Date(newDueDate + "T12:00:00"), "dd/MM/yyyy", { locale: ptBR })}.` : ""}`,
+          message: updateMsg,
           type: "billing",
           billing_id: editingBill.id,
         });
+
+        const adminIds = await getOrgAdminUserIds(editingBill.organization_id);
+        if (adminIds.length > 0) {
+          sendPushNotification({
+            user_ids: adminIds,
+            title: "💰 Cobrança Atualizada",
+            message: updateMsg,
+            url: "/notificacoes",
+            tag: "billing-update",
+            type: "billing",
+          });
+        }
       }
     },
     onSuccess: () => {
