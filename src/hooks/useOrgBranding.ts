@@ -146,6 +146,8 @@ function applyThemeToDOM(primary: string, secondary: string) {
     root.style.setProperty(key, value);
   });
   updateThemeColorMeta(primary);
+  // Sync native bar colors (CSS variable + Capacitor plugins)
+  void updateNativeBarColor(primary);
 }
 
 function clearCustomTheme() {
