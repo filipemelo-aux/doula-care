@@ -68,6 +68,9 @@ export default function Dashboard() {
       {/* Billing alerts for doula */}
       <BillingAlertBanner />
 
+      {/* Top notification banner */}
+      <NotificationTopBanner />
+
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
         <div className="page-header mb-0 min-w-0">

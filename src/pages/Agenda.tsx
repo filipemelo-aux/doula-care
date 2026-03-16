@@ -846,7 +846,11 @@ function AppointmentRow({
               </Badge>
             )}
           </div>
-          <p className="text-xs text-muted-foreground truncate">{displayName(apt.clients?.full_name || "")}</p>
+          {apt.clients?.full_name ? (
+            <p className="text-xs text-muted-foreground truncate">{displayName(apt.clients.full_name)}</p>
+          ) : (
+            <p className="text-xs text-muted-foreground truncate italic">Compromisso pessoal</p>
+          )}
           <p className="text-xs text-muted-foreground flex items-center gap-1 min-w-0">
             <Clock className="h-3 w-3 flex-shrink-0" />
             <span className="truncate min-w-0">{format(date, "EEEE, HH:mm", { locale: ptBR })}</span>

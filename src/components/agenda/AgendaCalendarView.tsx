@@ -103,7 +103,11 @@ export function AgendaCalendarView({ appointments, onDateSelect }: AgendaCalenda
                           </Badge>
                         )}
                       </div>
-                      <p className="text-xs text-muted-foreground truncate">{apt.clients?.full_name}</p>
+                      {apt.clients?.full_name ? (
+                        <p className="text-xs text-muted-foreground truncate">{apt.clients.full_name}</p>
+                      ) : (
+                        <p className="text-xs text-muted-foreground truncate italic">Compromisso pessoal</p>
+                      )}
                       <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
                         <Clock className="h-3 w-3" />
                         {format(date, "HH:mm")}
