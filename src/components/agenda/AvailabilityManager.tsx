@@ -59,6 +59,34 @@ export function AvailabilityManager() {
     enabled: !!organizationId,
   });
 
+  // Fetch appointments to find occupied hours
+  const { data: appointments } = useQuery({
+    queryKey: ["appointments-for-availability", organizationId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("appointments")
+        .select("scheduled_at, title")
+        .eq("organization_id", organizationId!)
+        .is("completed_at", null);
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!organizationId,
+  });
+
+  // Get occupied hours for a given date from appointments
+  function getOccupiedHours(dateStr: string): Set<number> {
+    const occupied = new Set<number>();
+    (appointments || []).forEach((apt) => {
+      const aptDate = format(new Date(apt.scheduled_at), "yyyy-MM-dd");
+      if (aptDate === dateStr) {
+        const hour = new Date(apt.scheduled_at).getHours();
+        occupied.add(hour);
+      }
+    });
+    return occupied;
+  }
+
   const availableDates = new Set(
     (availability || []).map((a) => a.available_date)
   );
@@ -377,6 +405,7 @@ export function AvailabilityManager() {
           <HourGrid
             hours={selectedStartHours}
             onToggle={(h) => toggleHour(h, selectedStartHours, setSelectedStartHours, selectionStart, setSelectionStart)}
+            disabledHours={getOccupiedHours(format(selectedDate, "yyyy-MM-dd"))}
           />
 
           {periods.length > 0 && (
@@ -528,21 +557,26 @@ export function AvailabilityManager() {
 }
 
 // Reusable hour grid component
-function HourGrid({ hours, onToggle }: { hours: number[]; onToggle: (h: number) => void }) {
+function HourGrid({ hours, onToggle, disabledHours }: { hours: number[]; onToggle: (h: number) => void; disabledHours?: Set<number> }) {
   return (
     <div className="grid grid-cols-5 gap-1.5">
       {HOURS.map((h) => {
         const isSelected = hours.includes(h);
+        const isDisabled = disabledHours?.has(h) ?? false;
         return (
           <button
             key={h}
             type="button"
-            onClick={() => onToggle(h)}
+            onClick={() => !isDisabled && onToggle(h)}
+            disabled={isDisabled}
+            title={isDisabled ? "Horário ocupado por compromisso" : undefined}
             className={cn(
               "rounded-md py-2 text-xs font-medium transition-colors border",
-              isSelected
-                ? "bg-primary text-primary-foreground border-primary"
-                : "bg-background text-foreground border-border hover:bg-accent hover:text-accent-foreground"
+              isDisabled
+                ? "bg-muted text-muted-foreground border-border opacity-50 cursor-not-allowed line-through"
+                : isSelected
+                  ? "bg-primary text-primary-foreground border-primary"
+                  : "bg-background text-foreground border-border hover:bg-accent hover:text-accent-foreground"
             )}
           >
             {formatHour(h)}
