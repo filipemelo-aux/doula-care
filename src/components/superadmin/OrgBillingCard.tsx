@@ -245,13 +245,26 @@ export function OrgBillingCard() {
       const { error } = await supabase.from("org_billing").delete().eq("id", bill.id);
       if (error) throw error;
 
+      const deleteMsg = `A cobrança de ${Number(bill.amount).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })} foi cancelada/removida.`;
       await supabase.from("org_notifications").insert({
         organization_id: bill.organization_id,
         title: "Cobrança removida",
-        message: `A cobrança de ${Number(bill.amount).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })} foi cancelada/removida.`,
+        message: deleteMsg,
         type: "billing",
         billing_id: null,
       });
+
+      const adminIds = await getOrgAdminUserIds(bill.organization_id);
+      if (adminIds.length > 0) {
+        sendPushNotification({
+          user_ids: adminIds,
+          title: "💰 Cobrança Removida",
+          message: deleteMsg,
+          url: "/notificacoes",
+          tag: "billing-delete",
+          type: "billing",
+        });
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["org-billing"] });
