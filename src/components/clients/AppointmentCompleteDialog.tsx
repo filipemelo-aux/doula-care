@@ -68,9 +68,9 @@ export function AppointmentCompleteDialog({
           </div>
 
           <div>
-            <Label className="text-xs">Observações da consulta (opcional)</Label>
+            <Label className="text-xs">Observações do compromisso (opcional)</Label>
             <Textarea
-              placeholder="Anotações sobre a consulta, evolução da gestante, orientações dadas..."
+              placeholder="Anotações sobre o compromisso, evolução da gestante, orientações dadas..."
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               rows={4}
