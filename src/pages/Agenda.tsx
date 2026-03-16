@@ -366,7 +366,7 @@ export default function Agenda() {
   const filteredAppointments = onlyConsultas.filter((apt) => {
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
-      return apt.title.toLowerCase().includes(term) || apt.clients?.full_name.toLowerCase().includes(term);
+      return apt.title.toLowerCase().includes(term) || (apt.clients?.full_name || "").toLowerCase().includes(term);
     }
     return true;
   });
