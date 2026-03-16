@@ -160,14 +160,28 @@ export function OrgBillingCard() {
           ? ` Vencimento: ${format(new Date(newDueDate + "T12:00:00"), "dd/MM/yyyy", { locale: ptBR })}.`
           : "";
         const refText = format(new Date(`${newRefMonth}-01T12:00:00`), "MMMM/yyyy", { locale: ptBR });
+        const billingMsg = `Cobrança de ${amount.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })} referente a ${refText}.${dueDateText}`;
 
         await supabase.from("org_notifications").insert({
           organization_id: selectedOrg,
           title: "Nova cobrança",
-          message: `Cobrança de ${amount.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })} referente a ${refText}.${dueDateText}`,
+          message: billingMsg,
           type: "billing",
           billing_id: billing?.id || null,
         });
+
+        // Push notification to org admins
+        const adminIds = await getOrgAdminUserIds(selectedOrg);
+        if (adminIds.length > 0) {
+          sendPushNotification({
+            user_ids: adminIds,
+            title: "💰 Nova Cobrança",
+            message: billingMsg,
+            url: "/notificacoes",
+            tag: "billing-new",
+            type: "billing",
+          });
+        }
       }
     },
     onSuccess: () => {
