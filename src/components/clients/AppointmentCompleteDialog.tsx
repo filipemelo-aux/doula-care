@@ -42,9 +42,9 @@ export function AppointmentCompleteDialog({
 
     setLoading(false);
     if (error) {
-      toast.error("Erro ao concluir consulta");
+      toast.error("Erro ao concluir compromisso");
     } else {
-      toast.success("Consulta concluída!");
+      toast.success("Compromisso concluído!");
       setNotes("");
       onOpenChange(false);
       onCompleted();
@@ -57,20 +57,20 @@ export function AppointmentCompleteDialog({
         <DialogHeader>
           <DialogTitle className="font-display flex items-center gap-2">
             <CheckCircle className="h-5 w-5 text-green-600" />
-            Concluir Consulta
+            Concluir Compromisso
           </DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4">
           <div>
-            <p className="text-sm text-muted-foreground mb-1">Consulta</p>
+            <p className="text-sm text-muted-foreground mb-1">Compromisso</p>
             <p className="text-sm font-medium break-words">{appointmentTitle}</p>
           </div>
 
           <div>
-            <Label className="text-xs">Observações da consulta (opcional)</Label>
+            <Label className="text-xs">Observações do compromisso (opcional)</Label>
             <Textarea
-              placeholder="Anotações sobre a consulta, evolução da gestante, orientações dadas..."
+              placeholder="Anotações sobre o compromisso, evolução da gestante, orientações dadas..."
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               rows={4}
@@ -88,7 +88,7 @@ export function AppointmentCompleteDialog({
             ) : (
               <CheckCircle className="h-4 w-4 mr-1" />
             )}
-            Concluir Consulta
+            Concluir Compromisso
           </Button>
         </div>
       </DialogContent>
