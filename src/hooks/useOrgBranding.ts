@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { updateNativeBarColor } from "@/lib/capacitorNativeUI";
 
 export interface OrgBranding {
   primary_color: string | null;
