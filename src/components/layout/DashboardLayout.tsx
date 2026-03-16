@@ -30,7 +30,7 @@ export function DashboardLayout() {
         onNavigate={handleNavigate}
       />
 
-      <div className={cn("flex-1 min-w-0 flex flex-col min-h-[100dvh] transition-all duration-300", sidebarOpen ? "lg:ml-64" : "lg:ml-20")}>
+      <div className={cn("flex-1 min-w-0 min-h-0 flex flex-col transition-all duration-300", sidebarOpen ? "lg:ml-64" : "lg:ml-20")}>
         {/* Mobile Header */}
         <header className="lg:hidden safe-area-header border-b border-border flex items-center justify-between px-4 bg-card/95 backdrop-blur-sm sticky top-0 z-40">
           <div className="flex items-center">
