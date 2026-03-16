@@ -166,7 +166,10 @@ export default function Agenda() {
         .select("*, clients(full_name)")
         .order("scheduled_at", { ascending: true });
       if (error) throw error;
-      return data as unknown as AppointmentWithClient[];
+      return (data as unknown as AppointmentWithClient[]).map(apt => ({
+        ...apt,
+        clients: apt.clients || { full_name: "" },
+      }));
     },
   });
 
@@ -197,6 +200,52 @@ export default function Agenda() {
   });
 
   // ─── Mutations ───────────────────────────────────────────
+  // Personal appointment dialog
+  const [personalAptDialog, setPersonalAptDialog] = useState(false);
+  const [personalTitle, setPersonalTitle] = useState("");
+  const [personalDate, setPersonalDate] = useState("");
+  const [personalNotes, setPersonalNotes] = useState("");
+  const personalDateRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (!personalAptDialog) return;
+    const interval = setInterval(() => {
+      const val = personalDateRef.current?.value;
+      if (val && val !== personalDate) {
+        setPersonalDate(val);
+      }
+    }, 250);
+    return () => clearInterval(interval);
+  }, [personalAptDialog, personalDate]);
+
+  const closePersonalDialog = () => {
+    setPersonalAptDialog(false);
+    setPersonalTitle("");
+    setPersonalDate("");
+    setPersonalNotes("");
+  };
+
+  const savePersonalMutation = useMutation({
+    mutationFn: async () => {
+      const scheduledUtc = fromZonedTime(personalDate, "America/Sao_Paulo").toISOString();
+      const { error } = await supabase.from("appointments").insert({
+        title: personalTitle,
+        scheduled_at: scheduledUtc,
+        notes: personalNotes || null,
+        owner_id: user?.id || null,
+        organization_id: organizationId || null,
+      } as any);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["agenda-appointments"] });
+      queryClient.invalidateQueries({ queryKey: ["all-appointments"] });
+      closePersonalDialog();
+      toast.success("Compromisso pessoal agendado!");
+    },
+    onError: () => toast.error("Erro ao salvar compromisso"),
+  });
+
   const saveAppointmentMutation = useMutation({
     mutationFn: async () => {
       // datetime-local gives "YYYY-MM-DDTHH:mm" in local time
@@ -317,7 +366,7 @@ export default function Agenda() {
   const filteredAppointments = onlyConsultas.filter((apt) => {
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
-      return apt.title.toLowerCase().includes(term) || apt.clients?.full_name.toLowerCase().includes(term);
+      return apt.title.toLowerCase().includes(term) || (apt.clients?.full_name || "").toLowerCase().includes(term);
     }
     return true;
   });
@@ -355,12 +404,16 @@ export default function Agenda() {
           <h1 className="page-title">Agenda</h1>
           <p className="page-description">Consultas e serviços em um só lugar</p>
         </div>
-        <div className="flex gap-2">
-          <Button onClick={() => setAppointmentDialog(true)} variant="outline">
+        <div className="flex gap-2 flex-wrap">
+          <Button onClick={() => setPersonalAptDialog(true)} variant="outline" size="sm">
+            <Plus className="h-4 w-4 mr-1" />
+            Compromisso Pessoal
+          </Button>
+          <Button onClick={() => setAppointmentDialog(true)} variant="outline" size="sm">
             <Calendar className="h-4 w-4 mr-1" />
             Nova consulta
           </Button>
-          <Button onClick={() => setServiceDialog(true)}>
+          <Button onClick={() => setServiceDialog(true)} size="sm">
             <Briefcase className="h-4 w-4 mr-1" />
             Novo serviço
           </Button>
@@ -662,6 +715,54 @@ export default function Agenda() {
         </AlertDialogContent>
       </AlertDialog>
 
+      {/* Personal Appointment Dialog */}
+      <Dialog open={personalAptDialog} onOpenChange={(o) => !o && closePersonalDialog()}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="font-display flex items-center gap-2">
+              <Plus className="h-5 w-5" />
+              Compromisso Pessoal
+            </DialogTitle>
+            <DialogDescription>
+              Agende compromissos internos que não envolvem clientes (lives, reuniões, etc.)
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label className="text-xs">Título</Label>
+              <Input placeholder="Ex: Gravação de live, Reunião..." value={personalTitle} onChange={(e) => setPersonalTitle(e.target.value)} className="mt-1" />
+            </div>
+            <div>
+              <Label className="text-xs">Data e hora</Label>
+              <input
+                ref={personalDateRef}
+                type="datetime-local"
+                defaultValue={personalDate}
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 mt-1"
+              />
+              {personalDate && (
+                <p className="text-xs text-muted-foreground mt-1">
+                  ✓ {format(new Date(personalDate), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+                </p>
+              )}
+            </div>
+            <div>
+              <Label className="text-xs">Observações (opcional)</Label>
+              <Textarea placeholder="Detalhes do compromisso..." value={personalNotes} onChange={(e) => setPersonalNotes(e.target.value)} rows={2} className="mt-1" />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              disabled={!personalTitle || !personalDate || savePersonalMutation.isPending}
+              onClick={() => savePersonalMutation.mutate()}
+            >
+              {savePersonalMutation.isPending && <Loader2 className="h-4 w-4 animate-spin mr-1" />}
+              Agendar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* New Service Dialog */}
       <NewServiceDialog
         open={serviceDialog}
@@ -745,7 +846,11 @@ function AppointmentRow({
               </Badge>
             )}
           </div>
-          <p className="text-xs text-muted-foreground truncate">{displayName(apt.clients?.full_name || "")}</p>
+          {apt.clients?.full_name ? (
+            <p className="text-xs text-muted-foreground truncate">{displayName(apt.clients.full_name)}</p>
+          ) : (
+            <p className="text-xs text-muted-foreground truncate italic">Compromisso pessoal</p>
+          )}
           <p className="text-xs text-muted-foreground flex items-center gap-1 min-w-0">
             <Clock className="h-3 w-3 flex-shrink-0" />
             <span className="truncate min-w-0">{format(date, "EEEE, HH:mm", { locale: ptBR })}</span>

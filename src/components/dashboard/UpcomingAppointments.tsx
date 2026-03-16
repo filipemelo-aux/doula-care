@@ -141,9 +141,13 @@ export function UpcomingAppointments() {
                       </div>
                       <div className="w-0 flex-1 overflow-hidden">
                         <p className="block w-full font-medium text-sm line-clamp-2 break-words" title={apt.title}>{apt.title}</p>
-                        <p className="text-xs text-muted-foreground truncate" title={apt.clients?.full_name}>
-                          {displayName(apt.clients?.full_name || "")}
-                        </p>
+                        {apt.clients?.full_name ? (
+                          <p className="text-xs text-muted-foreground truncate" title={apt.clients.full_name}>
+                            {displayName(apt.clients.full_name)}
+                          </p>
+                        ) : (
+                          <p className="text-xs text-muted-foreground truncate italic">Compromisso pessoal</p>
+                        )}
                         <p className="text-xs text-muted-foreground flex items-center gap-1 min-w-0">
                           <Clock className="h-3 w-3 flex-shrink-0" />
                           <span className="truncate min-w-0">{format(date, "EEEE, HH:mm", { locale: ptBR })}</span>
