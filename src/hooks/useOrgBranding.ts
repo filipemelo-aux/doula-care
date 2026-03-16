@@ -222,10 +222,6 @@ export function useOrgBranding() {
     } else {
       clearCustomTheme();
     }
-
-    return () => {
-      clearCustomTheme();
-    };
   }, [branding, organizationId]);
 
   return {
