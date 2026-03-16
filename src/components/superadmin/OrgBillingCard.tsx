@@ -37,6 +37,7 @@ async function getOrgAdminUserIds(orgId: string): Promise<string[]> {
   return adminRoles?.map(r => r.user_id) || [];
 }
 
+interface BillingRow {
   id: string;
   organization_id: string;
   amount: number;
