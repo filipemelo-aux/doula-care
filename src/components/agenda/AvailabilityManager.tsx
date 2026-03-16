@@ -557,21 +557,26 @@ export function AvailabilityManager() {
 }
 
 // Reusable hour grid component
-function HourGrid({ hours, onToggle }: { hours: number[]; onToggle: (h: number) => void }) {
+function HourGrid({ hours, onToggle, disabledHours }: { hours: number[]; onToggle: (h: number) => void; disabledHours?: Set<number> }) {
   return (
     <div className="grid grid-cols-5 gap-1.5">
       {HOURS.map((h) => {
         const isSelected = hours.includes(h);
+        const isDisabled = disabledHours?.has(h) ?? false;
         return (
           <button
             key={h}
             type="button"
-            onClick={() => onToggle(h)}
+            onClick={() => !isDisabled && onToggle(h)}
+            disabled={isDisabled}
+            title={isDisabled ? "Horário ocupado por compromisso" : undefined}
             className={cn(
               "rounded-md py-2 text-xs font-medium transition-colors border",
-              isSelected
-                ? "bg-primary text-primary-foreground border-primary"
-                : "bg-background text-foreground border-border hover:bg-accent hover:text-accent-foreground"
+              isDisabled
+                ? "bg-muted text-muted-foreground border-border opacity-50 cursor-not-allowed line-through"
+                : isSelected
+                  ? "bg-primary text-primary-foreground border-primary"
+                  : "bg-background text-foreground border-border hover:bg-accent hover:text-accent-foreground"
             )}
           >
             {formatHour(h)}
