@@ -23,7 +23,7 @@ export function DashboardLayout() {
   };
 
   return (
-    <div className="min-h-[100dvh] flex w-full bg-background">
+    <div className="h-[100dvh] flex w-full bg-background overflow-hidden">
       <Sidebar 
         isOpen={sidebarOpen} 
         onToggle={() => setSidebarOpen(!sidebarOpen)} 
