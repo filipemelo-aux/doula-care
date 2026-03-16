@@ -19,8 +19,24 @@ import {
   CalendarDays, Pencil, Trash2,
 } from "lucide-react";
 import { maskCurrency, parseCurrency } from "@/lib/masks";
+import { sendPushNotification } from "@/lib/pushNotifications";
 
-interface BillingRow {
+// Helper to get admin user_ids for an org
+async function getOrgAdminUserIds(orgId: string): Promise<string[]> {
+  const { data: orgProfiles } = await supabase
+    .from("profiles")
+    .select("user_id")
+    .eq("organization_id", orgId);
+  if (!orgProfiles || orgProfiles.length === 0) return [];
+  const orgUserIds = orgProfiles.map(p => p.user_id);
+  const { data: adminRoles } = await supabase
+    .from("user_roles")
+    .select("user_id")
+    .in("role", ["admin", "moderator"])
+    .in("user_id", orgUserIds);
+  return adminRoles?.map(r => r.user_id) || [];
+}
+
   id: string;
   organization_id: string;
   amount: number;
