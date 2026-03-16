@@ -5,9 +5,12 @@
  */
 import { isCapacitorNative } from "@/lib/capacitorPush";
 
-const PRIMARY_BAR_COLOR = "#c34a1c";
+const DEFAULT_BAR_COLOR = "#c34a1c";
 const ANDROID_TOP_INSET_FALLBACK = 28;
 const ANDROID_BOTTOM_INSET_FALLBACK = 48;
+
+/** Currently active bar color — updated by branding system */
+let currentBarColor = DEFAULT_BAR_COLOR;
 
 /** Get StatusBar plugin from the Capacitor bridge */
 const getStatusBarPlugin = () => {
@@ -66,6 +69,8 @@ function applyAndroidSafeAreaFallbacks() {
 
 function applyNativeBarColorFallback() {
   document.documentElement.classList.add("native-system-bars");
+  // Sync CSS variable for the pseudo-element masks
+  document.documentElement.style.setProperty("--native-bar-color", currentBarColor);
 }
 
 async function configureStatusBar() {
@@ -77,7 +82,7 @@ async function configureStatusBar() {
 
   await StatusBar.setOverlaysWebView({ overlay: false });
   await StatusBar.setStyle({ style: "DARK" });
-  await StatusBar.setBackgroundColor({ color: PRIMARY_BAR_COLOR });
+  await StatusBar.setBackgroundColor({ color: currentBarColor });
 }
 
 async function configureNavigationBar() {
@@ -89,7 +94,7 @@ async function configureNavigationBar() {
 
   if (typeof NavigationBar.setNavigationBarColor === "function") {
     await NavigationBar.setNavigationBarColor({
-      color: PRIMARY_BAR_COLOR,
+      color: currentBarColor,
       darkButtons: false,
     });
     return;
@@ -97,7 +102,7 @@ async function configureNavigationBar() {
 
   if (typeof NavigationBar.setColor === "function") {
     await NavigationBar.setColor({
-      color: PRIMARY_BAR_COLOR,
+      color: currentBarColor,
       darkButtons: false,
     });
     return;
@@ -108,12 +113,20 @@ async function configureNavigationBar() {
 
 /**
  * Configure native status bar and navigation bar appearance.
- * Uses the app's theme color (#c34a1c) for a branded look.
+ * Uses the org's primary color for a branded look.
  * Retries if the bridge isn't ready immediately (remote URL loading).
  */
-export async function configureNativeBars() {
+export async function configureNativeBars(color?: string) {
+  if (color) {
+    currentBarColor = color;
+  }
+
   const platform = getNativePlatform();
-  if (platform === "web") return;
+  if (platform === "web") {
+    // Still update CSS variable for PWA meta-theme consistency
+    document.documentElement.style.setProperty("--native-bar-color", currentBarColor);
+    return;
+  }
   if (!platform && !isCapacitorNative()) return;
 
   const bridgeReady = await waitForBridge();
@@ -127,14 +140,14 @@ export async function configureNativeBars() {
 
   try {
     await configureStatusBar();
-    console.log("[NativeUI] Status bar configured");
+    console.log("[NativeUI] Status bar configured with color:", currentBarColor);
   } catch (err) {
     console.error("[NativeUI] StatusBar config error:", err);
   }
 
   try {
     await configureNavigationBar();
-    console.log("[NativeUI] Navigation bar configured");
+    console.log("[NativeUI] Navigation bar configured with color:", currentBarColor);
   } catch (err) {
     console.error("[NativeUI] NavigationBar config error:", err);
   }
@@ -148,3 +161,17 @@ export async function configureNativeBars() {
   }, 500);
 }
 
+/**
+ * Update native bar colors dynamically (e.g. when org branding changes).
+ * Safe to call from React components — no-ops gracefully on web.
+ */
+export async function updateNativeBarColor(color: string) {
+  currentBarColor = color;
+  document.documentElement.style.setProperty("--native-bar-color", color);
+
+  const platform = getNativePlatform();
+  if (platform === "web" || (!platform && !isCapacitorNative())) return;
+
+  try { await configureStatusBar(); } catch {}
+  try { await configureNavigationBar(); } catch {}
+}
