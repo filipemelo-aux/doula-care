@@ -90,7 +90,7 @@ export function GestanteLayout({ children }: GestanteLayoutProps) {
   };
 
   return (
-    <div className="h-[var(--app-viewport-height)] flex w-full bg-background overflow-hidden">
+    <div className="h-[100dvh] native-system-bars:h-full flex w-full bg-background overflow-hidden">
       {/* Sidebar */}
       <aside
         className={cn(
