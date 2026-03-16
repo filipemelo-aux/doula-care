@@ -76,7 +76,7 @@ async function configureStatusBar() {
   }
 
   await StatusBar.setOverlaysWebView({ overlay: false });
-  await StatusBar.setStyle({ style: "LIGHT" });
+  await StatusBar.setStyle({ style: "DARK" });
   await StatusBar.setBackgroundColor({ color: PRIMARY_BAR_COLOR });
 }
 
