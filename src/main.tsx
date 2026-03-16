@@ -23,7 +23,8 @@ let nativeBootstrapped = false;
 
 const reapplyNativeBars = () => {
   if (!isCapacitorNative()) return;
-  void configureNativeBars();
+  const cachedColor = getCachedBranding()?.primary;
+  void configureNativeBars(cachedColor || undefined);
 };
 
 const bootstrapNativeFeatures = () => {

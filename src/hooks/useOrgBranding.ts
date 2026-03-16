@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { updateNativeBarColor } from "@/lib/capacitorNativeUI";
 
 export interface OrgBranding {
   primary_color: string | null;
@@ -145,6 +146,8 @@ function applyThemeToDOM(primary: string, secondary: string) {
     root.style.setProperty(key, value);
   });
   updateThemeColorMeta(primary);
+  // Sync native bar colors (CSS variable + Capacitor plugins)
+  void updateNativeBarColor(primary);
 }
 
 function clearCustomTheme() {
@@ -167,6 +170,8 @@ function clearCustomTheme() {
   ];
   keys.forEach((key) => root.style.removeProperty(key));
   updateThemeColorMeta(DEFAULT_PRIMARY);
+  // Restore default native bar color
+  void updateNativeBarColor(DEFAULT_PRIMARY);
 }
 
 export function useOrgBranding() {

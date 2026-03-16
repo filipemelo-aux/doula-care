@@ -325,7 +325,7 @@
     left: 0;
     right: 0;
     z-index: 9999;
-    background-color: #c34a1c;
+    background-color: var(--native-bar-color, #c34a1c);
     pointer-events: none;
   }
 
