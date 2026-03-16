@@ -74,7 +74,6 @@
     --app-safe-bottom: max(env(safe-area-inset-bottom, 0px), var(--safe-area-inset-bottom, 0px));
     --safe-area-inset-top: 0px;
     --safe-area-inset-bottom: 0px;
-    --app-viewport-height: 100dvh;
   }
 
   .dark {
@@ -310,8 +309,15 @@
     overscroll-behavior: none;
   }
 
-  html.native-system-bars {
-    --app-viewport-height: calc(100dvh - var(--app-safe-top) - var(--app-safe-bottom));
+  html.native-system-bars body {
+    padding-top: var(--app-safe-top);
+    padding-bottom: var(--app-safe-bottom);
+    height: 100dvh;
+    box-sizing: border-box;
+  }
+
+  html.native-system-bars .app-shell {
+    height: 100% !important;
   }
 
   /* Dialog content containment — prevent elements from cutting on edges */
