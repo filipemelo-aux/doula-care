@@ -15,6 +15,7 @@ import { Users, Baby, Heart, Wallet, TrendingUp, BarChart3, UserRound } from "lu
 import { AdminWelcomeDialog } from "@/components/dashboard/AdminWelcomeDialog";
 import { BillingAlertBanner } from "@/components/dashboard/BillingAlertBanner";
 import { PromoBetaBanner } from "@/components/dashboard/PromoBetaBanner";
+import { NotificationTopBanner } from "@/components/dashboard/NotificationTopBanner";
 
 export default function Dashboard() {
   const [period, setPeriod] = useState<PeriodOption>("month");
