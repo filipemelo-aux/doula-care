@@ -244,6 +244,31 @@ export default function Agenda() {
       queryClient.invalidateQueries({ queryKey: ["all-appointments"] });
       closePersonalDialog();
       toast.success("Compromisso pessoal agendado!");
+
+      // Create org_notification for the personal appointment
+      if (organizationId) {
+        supabase.from("org_notifications").insert({
+          organization_id: organizationId,
+          title: "📋 Compromisso Pessoal",
+          message: `Novo compromisso agendado: ${personalTitle}`,
+          type: "agenda",
+        }).then(() => {
+          queryClient.invalidateQueries({ queryKey: ["org-notifications"] });
+          queryClient.invalidateQueries({ queryKey: ["top-notification-banner"] });
+        });
+      }
+
+      // Push notification to self (admin)
+      if (user?.id) {
+        sendPushNotification({
+          user_ids: [user.id],
+          title: "📋 Compromisso Pessoal Agendado",
+          message: personalTitle,
+          url: "/agenda",
+          tag: "personal-appointment",
+          type: "personal_appointment",
+        });
+      }
     },
     onError: () => toast.error("Erro ao salvar compromisso"),
   });
