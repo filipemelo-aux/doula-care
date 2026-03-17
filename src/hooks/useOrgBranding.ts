@@ -170,9 +170,9 @@ function clearCustomTheme() {
     "--shadow-soft", "--shadow-medium", "--shadow-card",
   ];
   keys.forEach((key) => root.style.removeProperty(key));
-  updateThemeColorMeta(DEFAULT_PRIMARY);
-  // Restore default native bar color
-  void updateNativeBarColor(DEFAULT_PRIMARY);
+  updateThemeColorMeta(INITIAL_THEME_COLOR);
+  // Restore neutral native bar color during app boot/auth transitions
+  void updateNativeBarColor(INITIAL_THEME_COLOR);
 }
 
 export function useOrgBranding() {
