@@ -13,7 +13,7 @@ import { cn } from "@/lib/utils";
 export function DashboardLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { signOut } = useAuth();
-  const { logoUrl: orgLogo, displayName } = useOrgBranding();
+  const { logoUrl: orgLogo, displayName, brandingReady } = useOrgBranding();
   usePresenceBroadcast();
   const headerLogo = orgLogo || logo;
   const headerName = displayName || "Doula Care";
