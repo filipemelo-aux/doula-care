@@ -15,6 +15,7 @@ export interface OrgBranding {
 // Default brand colors (terracotta palette)
 const DEFAULT_PRIMARY = "#c34a1c";
 const DEFAULT_SECONDARY = "#ebe2dc";
+const INITIAL_THEME_COLOR = "#ffffff";
 
 function hexToHSL(hex: string): { h: number; s: number; l: number } {
   hex = hex.replace("#", "");
