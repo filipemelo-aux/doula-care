@@ -22,6 +22,18 @@ export function DashboardLayout() {
     setSidebarOpen(false);
   };
 
+  if (!brandingReady) {
+    return (
+      <div className="fixed inset-0 flex items-center justify-center bg-background">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-16 h-16 rounded-[40%] overflow-hidden">
+            <img src={headerLogo} alt={headerName} className="w-full h-full object-cover" />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="app-shell h-[100dvh] flex w-full bg-background overflow-hidden">
       <Sidebar 

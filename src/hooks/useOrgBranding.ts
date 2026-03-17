@@ -176,7 +176,7 @@ function clearCustomTheme() {
 }
 
 export function useOrgBranding() {
-  const { organizationId } = useAuth();
+  const { organizationId, loading: authLoading } = useAuth();
 
   const { data: branding, isLoading } = useQuery({
     queryKey: ["org-branding", organizationId],
@@ -199,19 +199,26 @@ export function useOrgBranding() {
       };
     },
     enabled: !!organizationId,
-    staleTime: 5 * 60 * 1000, // 5 min cache
+    staleTime: 5 * 60 * 1000,
   });
 
-  // Apply theme whenever branding changes + cache it
+  const brandingReady = !organizationId || !!branding || !isLoading;
+
   useEffect(() => {
+    if (authLoading) return;
+
     if (!organizationId) {
-      // On logout, re-apply cached branding so login screen keeps org colors
       const cached = getCachedBranding();
       if (cached) {
         applyThemeToDOM(cached.primary, cached.secondary);
       } else {
         clearCustomTheme();
       }
+      return;
+    }
+
+    if (isLoading) {
+      clearCustomTheme();
       return;
     }
 
@@ -223,11 +230,12 @@ export function useOrgBranding() {
     } else {
       clearCustomTheme();
     }
-  }, [branding, organizationId]);
+  }, [authLoading, branding, isLoading, organizationId]);
 
   return {
     branding,
     isLoading,
+    brandingReady,
     logoUrl: branding?.logo_url || null,
     displayName: branding?.nome_exibicao || branding?.name || null,
     primaryColor: branding?.primary_color || DEFAULT_PRIMARY,
