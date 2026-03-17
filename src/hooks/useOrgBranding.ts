@@ -218,7 +218,7 @@ export function useOrgBranding() {
     }
 
     if (isLoading) {
-      clearCustomTheme();
+      // Don't clear theme during loading — keep current theme (default or cached) to avoid flash
       return;
     }
 
