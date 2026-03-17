@@ -52,3 +52,9 @@ bootstrapNativeFeatures();
 
 createRoot(document.getElementById("root")!).render(<App />);
 
+// Remove splash screen once React has mounted
+requestAnimationFrame(() => {
+  const splash = document.getElementById("app-splash");
+  if (splash) splash.remove();
+});
+
