@@ -50,11 +50,16 @@ bootstrapNativeFeatures();
   }, delay);
 });
 
-createRoot(document.getElementById("root")!).render(<App />);
+// Delay React mount to show splash a bit longer
+setTimeout(() => {
+  createRoot(document.getElementById("root")!).render(<App />);
 
-// Remove splash screen once React has mounted
-requestAnimationFrame(() => {
+  // Fade out splash after React mounts
   const splash = document.getElementById("app-splash");
-  if (splash) splash.remove();
-});
+  if (splash) {
+    splash.style.transition = "opacity 0.4s ease";
+    splash.style.opacity = "0";
+    setTimeout(() => splash.remove(), 400);
+  }
+}, 1200);
 
