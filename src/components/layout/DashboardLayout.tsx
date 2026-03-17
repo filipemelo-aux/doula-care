@@ -13,7 +13,7 @@ import { cn } from "@/lib/utils";
 export function DashboardLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { signOut } = useAuth();
-  const { logoUrl: orgLogo, displayName } = useOrgBranding();
+  const { logoUrl: orgLogo, displayName, brandingReady } = useOrgBranding();
   usePresenceBroadcast();
   const headerLogo = orgLogo || logo;
   const headerName = displayName || "Doula Care";
@@ -21,6 +21,18 @@ export function DashboardLayout() {
   const handleNavigate = () => {
     setSidebarOpen(false);
   };
+
+  if (!brandingReady) {
+    return (
+      <div className="fixed inset-0 flex items-center justify-center bg-background">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-16 h-16 rounded-[40%] overflow-hidden">
+            <img src={headerLogo} alt={headerName} className="w-full h-full object-cover" />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="app-shell h-[100dvh] flex w-full bg-background overflow-hidden">

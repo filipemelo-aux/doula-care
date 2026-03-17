@@ -10,7 +10,7 @@ const config: CapacitorConfig = {
   },
   android: {
     adjustMarginsForEdgeToEdge: 'never',
-    backgroundColor: '#c34a1c',
+    backgroundColor: '#ffffff',
   },
   plugins: {
     SplashScreen: {
@@ -19,13 +19,13 @@ const config: CapacitorConfig = {
       androidScaleType: 'CENTER_CROP',
     },
     StatusBar: {
-      style: 'LIGHT',
-      backgroundColor: '#c34a1c',
+      style: 'DARK',
+      backgroundColor: '#ffffff',
       overlaysWebView: false,
     },
     NavigationBar: {
-      color: '#c34a1c',
-      darkButtons: false,
+      color: '#ffffff',
+      darkButtons: true,
     },
     PushNotifications: {
       presentationOptions: ['badge', 'sound', 'alert'],

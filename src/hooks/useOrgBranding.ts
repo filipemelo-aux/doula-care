@@ -15,6 +15,7 @@ export interface OrgBranding {
 // Default brand colors (terracotta palette)
 const DEFAULT_PRIMARY = "#c34a1c";
 const DEFAULT_SECONDARY = "#ebe2dc";
+const INITIAL_THEME_COLOR = "#ffffff";
 
 function hexToHSL(hex: string): { h: number; s: number; l: number } {
   hex = hex.replace("#", "");
@@ -169,13 +170,13 @@ function clearCustomTheme() {
     "--shadow-soft", "--shadow-medium", "--shadow-card",
   ];
   keys.forEach((key) => root.style.removeProperty(key));
-  updateThemeColorMeta(DEFAULT_PRIMARY);
-  // Restore default native bar color
-  void updateNativeBarColor(DEFAULT_PRIMARY);
+  updateThemeColorMeta(INITIAL_THEME_COLOR);
+  // Restore neutral native bar color during app boot/auth transitions
+  void updateNativeBarColor(INITIAL_THEME_COLOR);
 }
 
 export function useOrgBranding() {
-  const { organizationId } = useAuth();
+  const { organizationId, loading: authLoading } = useAuth();
 
   const { data: branding, isLoading } = useQuery({
     queryKey: ["org-branding", organizationId],
@@ -198,19 +199,26 @@ export function useOrgBranding() {
       };
     },
     enabled: !!organizationId,
-    staleTime: 5 * 60 * 1000, // 5 min cache
+    staleTime: 5 * 60 * 1000,
   });
 
-  // Apply theme whenever branding changes + cache it
+  const brandingReady = !organizationId || !!branding || !isLoading;
+
   useEffect(() => {
+    if (authLoading) return;
+
     if (!organizationId) {
-      // On logout, re-apply cached branding so login screen keeps org colors
       const cached = getCachedBranding();
       if (cached) {
         applyThemeToDOM(cached.primary, cached.secondary);
       } else {
         clearCustomTheme();
       }
+      return;
+    }
+
+    if (isLoading) {
+      clearCustomTheme();
       return;
     }
 
@@ -222,11 +230,12 @@ export function useOrgBranding() {
     } else {
       clearCustomTheme();
     }
-  }, [branding, organizationId]);
+  }, [authLoading, branding, isLoading, organizationId]);
 
   return {
     branding,
     isLoading,
+    brandingReady,
     logoUrl: branding?.logo_url || null,
     displayName: branding?.nome_exibicao || branding?.name || null,
     primaryColor: branding?.primary_color || DEFAULT_PRIMARY,

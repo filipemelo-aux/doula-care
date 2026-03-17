@@ -5,7 +5,7 @@
  */
 import { isCapacitorNative } from "@/lib/capacitorPush";
 
-const DEFAULT_BAR_COLOR = "#c34a1c";
+const DEFAULT_BAR_COLOR = "#ffffff";
 const ANDROID_TOP_INSET_FALLBACK = 28;
 const ANDROID_BOTTOM_INSET_FALLBACK = 48;
 
