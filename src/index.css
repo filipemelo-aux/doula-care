@@ -13,7 +13,7 @@
 @layer base {
   :root {
     /* Paleta: #c34a1c (16 75% 44%) + #ebe2dc (23 27% 89%) */
-    --background: 23 27% 95%;
+    --background: 0 0% 100%;
     --foreground: 16 65% 25%;
 
     --card: 23 25% 98%;
