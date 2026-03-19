@@ -52,6 +52,7 @@ export function BroadcastNotificationCard() {
   const [message, setMessage] = useState("");
   const [notifType, setNotifType] = useState<PushNotificationType>("community");
   const [communityTheme, setCommunityTheme] = useState("livre");
+  const [instagramLink, setInstagramLink] = useState("");
   const [audience, setAudience] = useState("all");
   const [targetOrgId, setTargetOrgId] = useState("all");
   const [orgs, setOrgs] = useState<Organization[]>([]);
@@ -158,7 +159,9 @@ export function BroadcastNotificationCard() {
           .from("forum_posts")
           .insert({
             title: title.trim(),
-            content: message.trim(),
+            content: instagramLink.trim()
+              ? `${message.trim()}\n\n📸 [Ver postagem no Instagram](${instagramLink.trim()})`
+              : message.trim(),
             category_id: categoryId,
             author_id: user.id,
             is_anonymous: false,
@@ -269,6 +272,7 @@ export function BroadcastNotificationCard() {
       setKeywords("");
       setTitle("");
       setMessage("");
+      setInstagramLink("");
     } catch (err: any) {
       console.error(err);
       toast.error(err.message || "Erro ao enviar notificação");
@@ -337,6 +341,23 @@ export function BroadcastNotificationCard() {
               Gerar
             </Button>
           </div>
+
+          {/* Instagram link for informative tone */}
+          {tone === "informative" && (
+            <div className="space-y-2">
+              <Label className="text-xs">Link do Instagram (opcional)</Label>
+              <Input
+                placeholder="https://www.instagram.com/p/..."
+                value={instagramLink}
+                onChange={(e) => setInstagramLink(e.target.value)}
+                className="text-sm"
+                type="url"
+              />
+              <p className="text-[10px] text-muted-foreground">
+                Cole o link de uma postagem informativa do Instagram para incluir no post
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Notification Fields */}
