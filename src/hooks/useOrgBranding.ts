@@ -222,14 +222,11 @@ export function useOrgBranding() {
       return;
     }
 
-    if (branding?.primary_color || branding?.secondary_color) {
-      const pc = branding.primary_color || DEFAULT_PRIMARY;
-      const sc = branding.secondary_color || DEFAULT_SECONDARY;
-      applyThemeToDOM(pc, sc);
-      cacheBranding(pc, sc, branding.logo_url, branding.nome_exibicao || branding.name);
-    } else {
-      clearCustomTheme();
-    }
+    // Apply custom colors if set, otherwise apply default terracotta theme
+    const pc = branding?.primary_color || DEFAULT_PRIMARY;
+    const sc = branding?.secondary_color || DEFAULT_SECONDARY;
+    applyThemeToDOM(pc, sc);
+    cacheBranding(pc, sc, branding?.logo_url, branding?.nome_exibicao || branding?.name);
   }, [authLoading, branding, isLoading, organizationId]);
 
   return {
