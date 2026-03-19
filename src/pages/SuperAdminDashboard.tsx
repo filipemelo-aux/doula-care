@@ -8,7 +8,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
-import { Loader2, Building2, Users, Ban, CheckCircle, LogOut, BarChart3, Clock, ShieldCheck, Mail, CalendarDays, Baby, Trash2, RefreshCw, Bell, CreditCard, Menu } from "lucide-react";
+import { Loader2, Building2, Users, Ban, CheckCircle, LogOut, BarChart3, Clock, ShieldCheck, Mail, CalendarDays, Baby, Trash2, RefreshCw, Bell, CreditCard, Menu, Users2 } from "lucide-react";
+import Forum from "@/pages/Forum";
 import { APP_VERSION } from "@/lib/appVersion";
 import { PlanPricingCard } from "@/components/superadmin/PlanPricingCard";
 import { PlanLimitsCard } from "@/components/superadmin/PlanLimitsCard";
@@ -24,13 +25,14 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
-type Section = "orgs" | "users" | "billing" | "notifications";
+type Section = "orgs" | "users" | "billing" | "notifications" | "community";
 
 const sidebarItems: { key: Section; label: string; icon: React.ElementType }[] = [
   { key: "orgs", label: "Organizações", icon: Building2 },
   { key: "users", label: "Usuários", icon: Users },
   { key: "billing", label: "Planos & Cobranças", icon: CreditCard },
   { key: "notifications", label: "Notificações", icon: Bell },
+  { key: "community", label: "Comunidade", icon: Users2 },
 ];
 
 interface OrgWithCounts {
@@ -445,6 +447,8 @@ export default function SuperAdminDashboard() {
         );
       case "notifications":
         return <BroadcastNotificationCard />;
+      case "community":
+        return <Forum />;
     }
   };
 
