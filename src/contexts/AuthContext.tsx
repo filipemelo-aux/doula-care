@@ -116,12 +116,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const userRoles = await fetchRoles(currentSession.user.id);
       setRoles(userRoles);
 
-      // Determine primary role for routing: if user has both admin and super_admin, primary = admin
       let primaryRole: AppRole | null = null;
-      if (userRoles.includes("super_admin") && (userRoles.includes("admin") || userRoles.includes("moderator"))) {
-        primaryRole = userRoles.includes("admin") ? "admin" : "moderator";
-      } else if (userRoles.length > 0) {
-        // Priority: super_admin > admin > moderator > client > user
+      if (userRoles.length > 0) {
         const priority: AppRole[] = ["super_admin", "admin", "moderator", "client", "user"];
         primaryRole = priority.find(r => userRoles.includes(r)) || userRoles[0];
       }

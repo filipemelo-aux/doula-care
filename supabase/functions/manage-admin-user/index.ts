@@ -150,6 +150,12 @@ Deno.serve(async (req) => {
     }
 
     if (action === "update") {
+      if (role === "super_admin") {
+        return new Response(JSON.stringify({ error: "A atribuição de Super Admin está desativada" }), {
+          status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
       if (fullName !== undefined) {
         const { error: profileError } = await supabase
           .from("profiles")

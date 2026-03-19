@@ -2,7 +2,6 @@ import { useState } from "react";
 import { format, parseISO } from "date-fns";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -39,11 +38,8 @@ export function RecentClients() {
   const [diaryClient, setDiaryClient] = useState<Tables<"clients"> | null>(null);
   const [notifDialogOpen, setNotifDialogOpen] = useState(false);
   const [notifClient, setNotifClient] = useState<Tables<"clients"> | null>(null);
-  const { organizationId } = useAuth();
-
   const { data: clients, isLoading } = useQuery({
-    queryKey: ["recent-clients", organizationId],
-    enabled: !!organizationId,
+    queryKey: ["recent-clients"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("clients")

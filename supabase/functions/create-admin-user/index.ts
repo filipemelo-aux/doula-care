@@ -79,6 +79,13 @@ Deno.serve(async (req) => {
 
     const { email, password, fullName, role, organizationId } = await req.json();
 
+    if (role === "super_admin") {
+      return new Response(
+        JSON.stringify({ error: "A atribuição de Super Admin está desativada" }),
+        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     // Create user with service role (bypasses email confirmation)
     const { data: userData, error: createError } = await supabase.auth.admin.createUser({
       email,

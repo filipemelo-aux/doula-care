@@ -21,7 +21,6 @@ import {
   Sparkles,
   Crown,
   Wallet,
-  ShieldCheck,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -62,7 +61,7 @@ export function Sidebar({ isOpen, onToggle, onNavigate }: SidebarProps) {
   const { planLabel, plan, limits } = usePlanLimits();
   const { logoUrl: orgLogo, displayName } = useOrgBranding();
   const { unreadMessages, unreadNotifications } = useAdminUnreadCounts();
-  const { organizationId, isSuperAdmin } = useAuth();
+  const { organizationId } = useAuth();
 
   const isFinancialRoute = ["/financeiro", "/despesas", "/relatorios"].includes(location.pathname);
   const [financialOpen, setFinancialOpen] = useState(isFinancialRoute);
@@ -264,23 +263,6 @@ export function Sidebar({ isOpen, onToggle, onNavigate }: SidebarProps) {
           );
         })}
 
-        {/* Super Admin link for dual-role users */}
-        {isSuperAdmin && (
-          <button
-            onClick={() => handleNavClick("/super-admin")}
-            className={cn(
-              "nav-link w-full text-left relative mt-2 border-t border-sidebar-border pt-2",
-              location.pathname === "/super-admin" && "active",
-              !isOpen && "lg:justify-center lg:px-0"
-            )}
-            title={!isOpen ? "Super Admin" : undefined}
-          >
-            <ShieldCheck className="w-5 h-5 shrink-0 text-destructive" />
-            <span className={cn("transition-opacity flex-1 text-destructive", !isOpen && "lg:hidden")}>
-              Super Admin
-            </span>
-          </button>
-        )}
       </nav>
 
       {/* Footer */}
