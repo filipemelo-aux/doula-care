@@ -23,7 +23,14 @@ export function NotificationTopBanner() {
   const { organizationId } = useAuth();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
-  const [dismissedIds, setDismissedIds] = useState<Set<string>>(new Set());
+  const [dismissedIds, setDismissedIds] = useState<Set<string>>(() => {
+    try {
+      const stored = localStorage.getItem("dismissed-top-notifications");
+      return stored ? new Set(JSON.parse(stored)) : new Set();
+    } catch {
+      return new Set();
+    }
+  });
 
   // Fetch the most recent unread notification sources
   const { data: topNotification } = useQuery({
@@ -170,7 +177,13 @@ export function NotificationTopBanner() {
   if (!topNotification || dismissedIds.has(topNotification.id)) return null;
 
   const handleDismiss = () => {
-    setDismissedIds((prev) => new Set([...prev, topNotification.id]));
+    setDismissedIds((prev) => {
+      const next = new Set([...prev, topNotification.id]);
+      try {
+        localStorage.setItem("dismissed-top-notifications", JSON.stringify([...next]));
+      } catch {}
+      return next;
+    });
   };
 
   const handleReadAndNavigate = () => {
@@ -235,7 +248,7 @@ export function NotificationTopBanner() {
         size="icon"
         className="absolute right-2 top-2 h-6 w-6 min-w-0 !pl-0 !pr-0 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/50"
         onClick={handleDismiss}
-        title="Fechar (reaparece ao recarregar)"
+        title="Fechar definitivamente"
       >
         <X className="h-3.5 w-3.5" />
       </Button>
