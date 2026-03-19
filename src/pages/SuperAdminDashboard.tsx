@@ -34,12 +34,12 @@ type Section = "dashboard" | "moderation" | "users" | "billing" | "notifications
 
 const sidebarItems: { key: Section; label: string; icon: React.ElementType }[] = [
   { key: "dashboard", label: "Painel", icon: Home },
-  { key: "moderation", label: "Moderação", icon: Shield },
   { key: "users", label: "Usuários", icon: Users },
   { key: "billing", label: "Planos & Cobranças", icon: CreditCard },
   { key: "notifications", label: "Notificações", icon: Bell },
   { key: "community", label: "Comunidade", icon: Users2 },
   { key: "profile", label: "Meu Perfil", icon: UserCog },
+  { key: "moderation", label: "Moderação", icon: Shield },
 ];
 
 interface OrgWithCounts {

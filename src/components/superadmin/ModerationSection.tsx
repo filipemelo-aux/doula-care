@@ -140,31 +140,31 @@ export function ModerationSection() {
         <Card>
           <CardContent className="p-0">
             <Tabs defaultValue="messages" className="w-full">
-              <TabsList className="w-full rounded-none border-b bg-transparent h-auto p-0 flex">
-                <TabsTrigger value="messages" className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent gap-1.5 py-3 text-xs">
-                  <MessageCircle className="h-3.5 w-3.5" />
-                  Mensagens
-                  {messages.length > 0 && <Badge variant="secondary" className="text-[10px] h-4 px-1.5">{messages.length}</Badge>}
+              <TabsList className="w-full rounded-none border-b bg-transparent h-auto p-0 grid grid-cols-5">
+                <TabsTrigger value="messages" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent gap-1 py-2.5 text-[11px] px-1">
+                  <MessageCircle className="h-3.5 w-3.5 shrink-0" />
+                  <span className="truncate">Msgs</span>
+                  {messages.length > 0 && <Badge variant="secondary" className="text-[10px] h-4 px-1">{messages.length}</Badge>}
                 </TabsTrigger>
-                <TabsTrigger value="contracts" className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent gap-1.5 py-3 text-xs">
-                  <FileText className="h-3.5 w-3.5" />
-                  Contratos
-                  {contracts.length > 0 && <Badge variant="secondary" className="text-[10px] h-4 px-1.5">{contracts.length}</Badge>}
+                <TabsTrigger value="contracts" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent gap-1 py-2.5 text-[11px] px-1">
+                  <FileText className="h-3.5 w-3.5 shrink-0" />
+                  <span className="truncate">Contratos</span>
+                  {contracts.length > 0 && <Badge variant="secondary" className="text-[10px] h-4 px-1">{contracts.length}</Badge>}
                 </TabsTrigger>
-                <TabsTrigger value="financial" className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent gap-1.5 py-3 text-xs">
-                  <Wallet className="h-3.5 w-3.5" />
-                  Financeiro
-                  {transactions.length > 0 && <Badge variant="secondary" className="text-[10px] h-4 px-1.5">{transactions.length}</Badge>}
+                <TabsTrigger value="financial" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent gap-1 py-2.5 text-[11px] px-1">
+                  <Wallet className="h-3.5 w-3.5 shrink-0" />
+                  <span className="truncate">Financeiro</span>
+                  {transactions.length > 0 && <Badge variant="secondary" className="text-[10px] h-4 px-1">{transactions.length}</Badge>}
                 </TabsTrigger>
-                <TabsTrigger value="diary" className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent gap-1.5 py-3 text-xs">
-                  <BookOpen className="h-3.5 w-3.5" />
-                  Diários
-                  {diary.length > 0 && <Badge variant="secondary" className="text-[10px] h-4 px-1.5">{diary.length}</Badge>}
+                <TabsTrigger value="diary" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent gap-1 py-2.5 text-[11px] px-1">
+                  <BookOpen className="h-3.5 w-3.5 shrink-0" />
+                  <span className="truncate">Diários</span>
+                  {diary.length > 0 && <Badge variant="secondary" className="text-[10px] h-4 px-1">{diary.length}</Badge>}
                 </TabsTrigger>
-                <TabsTrigger value="notifications" className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent gap-1.5 py-3 text-xs">
-                  <Bell className="h-3.5 w-3.5" />
-                  Notificações
-                  {notifications.length > 0 && <Badge variant="secondary" className="text-[10px] h-4 px-1.5">{notifications.length}</Badge>}
+                <TabsTrigger value="notifications" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent gap-1 py-2.5 text-[11px] px-1">
+                  <Bell className="h-3.5 w-3.5 shrink-0" />
+                  <span className="truncate">Notific.</span>
+                  {notifications.length > 0 && <Badge variant="secondary" className="text-[10px] h-4 px-1">{notifications.length}</Badge>}
                 </TabsTrigger>
               </TabsList>
 
