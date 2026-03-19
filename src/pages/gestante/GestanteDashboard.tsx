@@ -215,6 +215,7 @@ export default function GestanteDashboard() {
         </div>
 
         <div className="container mx-auto px-4 py-6 space-y-6">
+          <GestanteNotificationBanner />
           {/* Overdue Payment Alert */}
           <OverduePaymentAlert />
           <PendingContractCard />
