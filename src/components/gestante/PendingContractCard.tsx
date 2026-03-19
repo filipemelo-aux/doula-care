@@ -37,7 +37,7 @@ export function PendingContractCard() {
 
   return (
     <>
-      <Card className="overflow-hidden border bg-gradient-to-br from-amber-50/80 to-orange-50/50 animate-pulse-subtle">
+      <Card className="overflow-hidden bg-gradient-to-br from-amber-50/80 to-orange-50/50 animate-pulse-subtle">
         <CardContent className="p-4">
           <div className="flex items-start gap-3">
             <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 bg-gradient-to-br from-amber-100 to-orange-200">

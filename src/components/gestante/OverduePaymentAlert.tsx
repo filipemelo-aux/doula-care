@@ -35,7 +35,7 @@ export function OverduePaymentAlert() {
   );
 
   return (
-    <Card className="border-destructive/50 bg-destructive/5 shadow-md">
+    <Card className="bg-destructive/5 shadow-md">
       <CardContent className="p-4">
         <div className="flex items-start gap-3">
           <div className="w-10 h-10 rounded-full bg-destructive/10 flex items-center justify-center flex-shrink-0">

@@ -409,7 +409,7 @@ export default function GestanteContractions() {
 
         {/* Prodromal Labor Reassurance */}
         {laborStatus === "prodromal" && completedContractions.length >= 2 && (
-          <Card className="bg-gradient-to-br from-amber-50 to-orange-50 border">
+          <Card className="bg-gradient-to-br from-amber-50 to-orange-50">
             <CardContent className="p-4 flex items-start gap-3">
               <Sparkles className="h-5 w-5 text-amber-500 shrink-0 mt-0.5" />
               <div>

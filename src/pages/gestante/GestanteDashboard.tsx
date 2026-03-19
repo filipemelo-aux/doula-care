@@ -584,7 +584,7 @@ export default function GestanteDashboard() {
 
         {/* Welcome Message for new users */}
         {clientData && !clientData.dpp && (
-          <Card className="bg-gradient-to-br from-yellow-50 to-orange-50 border-yellow-200">
+          <Card className="bg-gradient-to-br from-yellow-50 to-orange-50">
             <CardContent className="p-4">
               <p className="text-sm text-yellow-800">
                 <strong>Bem-vinda!</strong> Sua Doula em breve atualizará seu perfil com a data prevista do parto e outras informações importantes.

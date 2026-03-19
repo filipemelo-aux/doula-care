@@ -116,7 +116,7 @@ export function PlanPricingCard() {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
         {/* Free card */}
-        <Card className="border-border/60">
+        <Card className="">
           <CardContent className="p-4">
             <div className="flex items-start gap-3">
               <div className="flex-shrink-0 w-10 h-10 rounded-full bg-muted flex items-center justify-center">

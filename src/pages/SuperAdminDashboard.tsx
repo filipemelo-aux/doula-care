@@ -310,7 +310,7 @@ export default function SuperAdminDashboard() {
   };
 
   const PendingOrgCard = ({ org }: { org: OrgWithCounts }) => (
-    <Card className="border-amber-500/40 bg-amber-50/30 dark:bg-amber-950/10">
+    <Card className="bg-amber-50/30 dark:bg-amber-950/10">
       <CardContent className="p-4">
         <div className="flex items-start gap-3">
           <div className="flex-shrink-0 w-10 h-10 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">

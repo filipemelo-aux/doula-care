@@ -164,7 +164,7 @@ export function ScheduledServicesCard({ clientId, organizationId }: ScheduledSer
 
   return (
     <>
-      <Card className="overflow-hidden border-emerald-200 bg-gradient-to-br from-emerald-50/50 to-teal-50/50">
+      <Card className="overflow-hidden bg-gradient-to-br from-emerald-50/50 to-teal-50/50">
         <CardContent className="p-4">
           <div className="flex items-center gap-2 mb-3">
             <Briefcase className="h-5 w-5 text-emerald-600" />

@@ -61,7 +61,7 @@ interface OrgBasic {
 const statusConfig: Record<string, { icon: React.ReactNode; badgeClass: string; label: string }> = {
   pago: {
     icon: <CheckCircle className="h-3 w-3" />,
-    badgeClass: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 border-emerald-300/30",
+    badgeClass: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400",
     label: "Pago",
   },
   atrasado: {
@@ -472,7 +472,7 @@ export function OrgBillingCard() {
 
         {/* Summary cards */}
         <div className="grid grid-cols-2 gap-3">
-          <Card className="bg-gradient-to-br from-emerald-50 to-emerald-100/50 dark:from-emerald-950/20 dark:to-emerald-900/10 border-emerald-300/30">
+          <Card className="bg-gradient-to-br from-emerald-50 to-emerald-100/50 dark:from-emerald-950/20 dark:to-emerald-900/10">
             <CardContent className="p-4 flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-emerald-200/50 dark:bg-emerald-800/30 flex items-center justify-center">
                 <CheckCircle className="h-5 w-5 text-emerald-600" />
