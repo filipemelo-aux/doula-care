@@ -180,6 +180,7 @@ export function NotificationTopBanner() {
     service_request: Sparkles,
     appointment_request: CalendarCheck,
     diary: BookHeart,
+    community: MessageSquare,
   };
 
   const colorMap: Record<string, string> = {
@@ -187,6 +188,7 @@ export function NotificationTopBanner() {
     service_request: "border-none border-30 bg-gradient-to-r from-primary/5 to-accent/5",
     appointment_request: "border-blue-500/30 bg-gradient-to-r from-blue-50/80 to-blue-100/50 dark:from-blue-950/20 dark:to-blue-900/10",
     diary: "border-purple-500/30 bg-gradient-to-r from-purple-50/80 to-purple-100/50 dark:from-purple-950/20 dark:to-purple-900/10",
+    community: "border-emerald-500/30 bg-gradient-to-r from-emerald-50/80 to-emerald-100/50 dark:from-emerald-950/20 dark:to-emerald-900/10",
   };
 
   const textColorMap: Record<string, string> = {
@@ -194,6 +196,7 @@ export function NotificationTopBanner() {
     service_request: "text-primary",
     appointment_request: "text-blue-700 dark:text-blue-400",
     diary: "text-purple-700 dark:text-purple-400",
+    community: "text-emerald-700 dark:text-emerald-400",
   };
 
   const Icon = iconMap[topNotification.type] || Bell;
