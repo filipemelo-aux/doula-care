@@ -163,7 +163,7 @@ export function NotificationTopBanner() {
 
   const colorMap: Record<string, string> = {
     labor: "border-red-500/30 bg-gradient-to-r from-red-50/80 to-red-100/50 dark:from-red-950/20 dark:to-red-900/10",
-    service_request: "border-primary/30 bg-gradient-to-r from-primary/5 to-accent/5",
+    service_request: "border-none border-30 bg-gradient-to-r from-primary/5 to-accent/5",
     appointment_request: "border-blue-500/30 bg-gradient-to-r from-blue-50/80 to-blue-100/50 dark:from-blue-950/20 dark:to-blue-900/10",
     diary: "border-purple-500/30 bg-gradient-to-r from-purple-50/80 to-purple-100/50 dark:from-purple-950/20 dark:to-purple-900/10",
   };

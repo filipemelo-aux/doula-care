@@ -78,7 +78,7 @@ export function LaborStartButton({ laborStarted, onLaborStarted }: LaborStartBut
 
   if (laborStarted) {
     return (
-      <div className="bg-gradient-to-br from-primary/10 to-accent/10 border-2 border-primary/30 rounded-2xl p-6 text-center">
+      <div className="bg-gradient-to-br from-primary/10 to-accent/10rounded-2xl p-6 text-center">
         <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center animate-pulse">
           <Heart className="h-8 w-8 text-white" />
         </div>

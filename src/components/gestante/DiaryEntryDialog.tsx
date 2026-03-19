@@ -34,10 +34,10 @@ interface DiaryEntryDialogProps {
 }
 
 const emotions = [
-  { value: "feliz", icon: Smile, label: "Feliz", color: "text-green-500 bg-green-50 border-green-200 hover:bg-green-100" },
-  { value: "triste", icon: Frown, label: "Triste", color: "text-blue-500 bg-blue-50 border-blue-200 hover:bg-blue-100" },
+  { value: "feliz", icon: Smile, label: "Feliz", color: "text-green-500 bg-green-50 hover:bg-green-100" },
+  { value: "triste", icon: Frown, label: "Triste", color: "text-blue-500 bg-blue-50 hover:bg-blue-100" },
   { value: "ansiosa", icon: AlertCircle, label: "Ansiosa", color: "text-yellow-600 bg-yellow-50 border-yellow-200 hover:bg-yellow-100" },
-  { value: "calma", icon: Heart, label: "Calma", color: "text-primary bg-primary/5 border-primary/20 hover:bg-primary/10" },
+  { value: "calma", icon: Heart, label: "Calma", color: "text-primary bg-primary/5 hover:bg-primary/10" },
   { value: "animada", icon: Sparkles, label: "Animada", color: "text-purple-500 bg-purple-50 border-purple-200 hover:bg-purple-100" },
   { value: "cansada", icon: Meh, label: "Cansada", color: "text-gray-500 bg-gray-50 border-gray-200 hover:bg-gray-100" },
 ];
@@ -178,7 +178,7 @@ export function DiaryEntryDialog({ open, onOpenChange, clientId, onSuccess, isPu
                     type="button"
                     onClick={() => setEmotion(isSelected ? null : em.value)}
                     className={cn(
-                      "flex flex-col items-center gap-1 p-3 rounded-lg border-2 transition-all",
+                      "flex flex-col items-center gap-1 p-3 rounded-lgtransition-all",
                       isSelected 
                         ? em.color + " border-current" 
                         : "border-border hover:border-muted-foreground/30"

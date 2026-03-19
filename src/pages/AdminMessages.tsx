@@ -273,7 +273,7 @@ export default function AdminMessages() {
               selectedClientId && "hidden lg:flex"
             )}
           >
-            <div className="p-3 border-b border-border">
+            <div className="p-3 border-b ">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -304,7 +304,7 @@ export default function AdminMessages() {
                       key={client.id}
                       onClick={() => setSelectedClientId(client.id)}
                       className={cn(
-                        "w-full text-left p-3 border-b border-border/50 hover:bg-muted/50 transition-colors",
+                        "w-full text-left p-3 border-b hover:bg-muted/50 transition-colors",
                         isSelected && "bg-primary/5 border-l-2 border-l-primary"
                       )}
                     >
@@ -321,7 +321,7 @@ export default function AdminMessages() {
                           </Avatar>
                           <span
                             className={cn(
-                              "absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-background",
+                              "absolute bottom-0 right-0 h-2.5 w-2.5 rounded-fullborder-background",
                               isOnline ? "bg-green-500" : "bg-muted-foreground/30"
                             )}
                           />
@@ -398,7 +398,7 @@ export default function AdminMessages() {
                     {selectedClientId && (
                       <span
                         className={cn(
-                          "absolute bottom-0 right-0 h-2 w-2 rounded-full border-2 border-background",
+                          "absolute bottom-0 right-0 h-2 w-2 rounded-fullborder-background",
                           onlineClientIds.has(selectedClientId) ? "bg-green-500" : "bg-muted-foreground/30"
                         )}
                       />

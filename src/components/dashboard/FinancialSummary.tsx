@@ -85,7 +85,7 @@ export function FinancialSummary() {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="flex items-center gap-4 p-4 rounded-lg bg-success/5 border border-success/10">
+        <div className="flex items-center gap-4 p-4 rounded-lg bg-success/5 border">
           <div className="w-10 h-10 rounded-lg bg-success/15 flex items-center justify-center">
             <TrendingUp className="w-5 h-5 text-success" />
           </div>
@@ -95,7 +95,7 @@ export function FinancialSummary() {
           </div>
         </div>
 
-        <div className="flex items-center gap-4 p-4 rounded-lg bg-destructive/5 border border-destructive/10">
+        <div className="flex items-center gap-4 p-4 rounded-lg bg-destructive/5 border">
           <div className="w-10 h-10 rounded-lg bg-destructive/15 flex items-center justify-center">
             <TrendingDown className="w-5 h-5 text-destructive" />
           </div>
@@ -105,7 +105,7 @@ export function FinancialSummary() {
           </div>
         </div>
 
-        <div className="flex items-center gap-4 p-4 rounded-lg bg-primary/5 border border-primary/10">
+        <div className="flex items-center gap-4 p-4 rounded-lg bg-primary/5 border">
           <div className="w-10 h-10 rounded-lg bg-primary/15 flex items-center justify-center">
             <Wallet className="w-5 h-5 text-primary" />
           </div>

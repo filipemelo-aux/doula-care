@@ -53,7 +53,7 @@ export function AppointmentsCard({ clientId }: AppointmentsCardProps) {
   if (appointments.length === 0) return null;
 
   return (
-    <Card className="overflow-hidden border-blue-200 bg-gradient-to-br from-blue-50/50 to-indigo-50/50">
+    <Card className="overflow-hidden bg-gradient-to-br from-blue-50/50 to-indigo-50/50">
       <CardContent className="p-4">
         <div className="flex items-center gap-2 mb-3">
           <Calendar className="h-5 w-5 text-blue-600" />
@@ -70,7 +70,7 @@ export function AppointmentsCard({ clientId }: AppointmentsCardProps) {
                 key={apt.id}
                 className={`flex items-start gap-3 rounded-lg p-3 ${
                   today
-                    ? "bg-blue-100/80 border border-blue-300"
+                    ? "bg-blue-100/80 border"
                     : "bg-background/60"
                 }`}
               >

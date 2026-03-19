@@ -178,7 +178,7 @@ export function ScheduledServicesCard({ clientId, organizationId }: ScheduledSer
                 <div key={svc.id} className="bg-background/60 rounded-lg p-3 space-y-2">
                   <div className="flex items-center justify-between">
                     <p className="font-medium text-sm">{svc.service_type}</p>
-                    <Badge variant="outline" className="text-[10px] border-amber-300 text-amber-700">Agendado</Badge>
+                    <Badge variant="outline" className="text-[10px] text-amber-700">Agendado</Badge>
                   </div>
 
                   <div className="flex items-center justify-between">
@@ -248,7 +248,7 @@ export function ScheduledServicesCard({ clientId, organizationId }: ScheduledSer
                       <Button
                         size="sm"
                         variant="outline"
-                        className="text-xs h-6 border-amber-300 text-amber-700 hover:bg-amber-50 hover:text-amber-700"
+                        className="text-xs h-6 text-amber-700 hover:bg-amber-50 hover:text-amber-700"
                         onClick={() => {
                           setRatingDialog(svc);
                           setSelectedRating(0);

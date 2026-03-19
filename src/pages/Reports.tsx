@@ -457,7 +457,7 @@ export default function Reports() {
               {/* Mobile Cards */}
               <div className="block lg:hidden space-y-2 max-h-[400px] overflow-y-auto">
                 {monthlyTableData?.map((row) => (
-                  <div key={row.month} className="rounded-lg border border-border/50 p-3 space-y-2 bg-card/50">
+                  <div key={row.month} className="rounded-lg border p-3 space-y-2 bg-card/50">
                     <div className="flex items-center justify-between">
                       <p className="font-medium text-xs capitalize text-foreground">{row.monthShort}</p>
                       <span className="text-[10px] text-muted-foreground">{row.count} mov.</span>
@@ -476,7 +476,7 @@ export default function Reports() {
               <div className="hidden lg:block">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="border-b border-border">
+                    <tr className="border-b ">
                       <th className="text-left py-2 font-medium text-muted-foreground">Mês</th>
                       <th className="text-right py-2 font-medium text-muted-foreground">Contratado</th>
                       <th className="text-right py-2 font-medium text-muted-foreground">Recebido</th>
@@ -487,7 +487,7 @@ export default function Reports() {
                   </thead>
                   <tbody>
                     {monthlyTableData?.map((row) => (
-                      <tr key={row.month} className="border-b border-border/30 hover:bg-muted/30 transition-colors">
+                      <tr key={row.month} className="border-b hover:bg-muted/30 transition-colors">
                         <td className="py-2.5 font-medium capitalize">{row.month}</td>
                         <td className="text-right py-2.5">{formatCurrency(row.contracted)}</td>
                         <td className="text-right py-2.5 text-success font-medium">{formatCurrency(row.received)}</td>
@@ -656,7 +656,7 @@ export default function Reports() {
                   </ResponsiveContainer>
                   <div className="space-y-2 px-2 lg:px-0">
                     {incomeByMethod.map((method, i) => (
-                      <div key={method.name} className="flex items-center justify-between p-2.5 rounded-lg bg-muted/30 border border-border/30">
+                      <div key={method.name} className="flex items-center justify-between p-2.5 rounded-lg bg-muted/30 border">
                         <div className="flex items-center gap-2 min-w-0">
                           <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: COLORS[i % COLORS.length] }} />
                           <span className="text-xs lg:text-sm font-medium truncate">{method.name}</span>
@@ -783,7 +783,7 @@ export default function Reports() {
               <CardContent className="px-3 lg:px-6 pb-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {expensesByCategory.byType.map((type) => (
-                    <div key={type.name} className="flex items-center justify-between p-3 rounded-xl bg-destructive/5 border border-destructive/10">
+                    <div key={type.name} className="flex items-center justify-between p-3 rounded-xl bg-destructive/5 border">
                       <span className="text-xs lg:text-sm font-medium text-foreground truncate">{type.name}</span>
                       <span className="text-sm lg:text-base font-semibold text-destructive flex-shrink-0 ml-2">
                         {formatCurrency(type.value)}

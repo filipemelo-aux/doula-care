@@ -43,7 +43,7 @@ export function WelcomeNameDialog({ fullName, userId, onComplete }: WelcomeNameD
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm p-4">
-      <div className="w-full max-w-md rounded-2xl bg-gradient-to-br from-secondary via-primary/5 to-accent/10 border border-primary/20 shadow-2xl p-8 space-y-6 animate-in fade-in zoom-in-95 duration-500">
+      <div className="w-full max-w-md rounded-2xl bg-gradient-to-br from-secondary via-primary/5 to-accent/10 border shadow-2xl p-8 space-y-6 animate-in fade-in zoom-in-95 duration-500">
         {/* Decorative header */}
         <div className="flex justify-center">
           <div className="relative">
@@ -73,7 +73,7 @@ export function WelcomeNameDialog({ fullName, userId, onComplete }: WelcomeNameD
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="Seu nome ou apelido"
-            className="text-center text-lg font-medium border-primary/30 focus:border-primary bg-background/80"
+            className="text-center text-lg font-medium focus:border-primary bg-background/80"
             autoFocus
             mask="name"
           />

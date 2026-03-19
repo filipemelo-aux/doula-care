@@ -37,7 +37,7 @@ export function PendingContractCard() {
 
   return (
     <>
-      <Card className="overflow-hidden border border-amber-300 bg-gradient-to-br from-amber-50/80 to-orange-50/50 animate-pulse-subtle">
+      <Card className="overflow-hidden border bg-gradient-to-br from-amber-50/80 to-orange-50/50 animate-pulse-subtle">
         <CardContent className="p-4">
           <div className="flex items-start gap-3">
             <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 bg-gradient-to-br from-amber-100 to-orange-200">
@@ -49,7 +49,7 @@ export function PendingContractCard() {
                 <p className="font-semibold text-sm break-words whitespace-normal">{contract.title}</p>
                 <Badge
                   variant="outline"
-                  className="w-fit shrink-0 text-[10px] border-amber-300 bg-amber-100 text-amber-800"
+                  className="w-fit shrink-0 text-[10px] bg-amber-100 text-amber-800"
                 >
                   Pendente
                 </Badge>

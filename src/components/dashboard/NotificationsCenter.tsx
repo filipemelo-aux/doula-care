@@ -873,18 +873,18 @@ export function NotificationsCenter({ fullPage = false }: NotificationsCenterPro
                       <div
                         className={`rounded-lg border transition-colors overflow-hidden ${
                           notification.isRead && !notification.isInLabor
-                            ? "bg-muted/30 border-border/50 opacity-60"
+                            ? "bg-muted/30 opacity-60"
                             : notification.isInLabor
-                            ? "bg-destructive/10 border-destructive/30 ring-1 ring-destructive/20"
+                            ? "bg-destructive/10 ring-1 ring-destructive/20"
                             : isPostTerm
-                            ? "bg-destructive/5 border-destructive/20"
+                            ? "bg-destructive/5"
                             : notification.type === "new_diary_entry"
-                            ? "bg-primary/5 border-primary/20"
+                            ? "bg-primary/5"
                             : notification.type === "service_request"
                             ? "bg-purple-500/5 border-purple-500/20"
                             : notification.type === "appointment_request"
-                            ? "bg-primary/5 border-primary/20"
-                            : "bg-warning/5 border-warning/20"
+                            ? "bg-primary/5"
+                            : "bg-warning/5"
                         }`}
                       >
                         {/* Parent notification */}
@@ -1017,7 +1017,7 @@ export function NotificationsCenter({ fullPage = false }: NotificationsCenterPro
                                   <Button
                                     size="sm"
                                     variant="outline"
-                                    className="h-6 px-2 text-[10px] lg:text-xs border-dashed border-primary/50 hover:bg-primary/10 mt-1.5 w-full lg:hidden"
+                                    className="h-6 px-2 text-[10px] lg:text-xs border-dashed hover:bg-primary/10 mt-1.5 w-full lg:hidden"
                                     onClick={(e) => {
                                       e.stopPropagation();
                                       window.location.href = "/agenda";
@@ -1033,7 +1033,7 @@ export function NotificationsCenter({ fullPage = false }: NotificationsCenterPro
                                   <Button
                                     size="sm"
                                     variant="outline"
-                                    className="h-6 px-2 text-[10px] lg:text-xs border-dashed border-destructive/50 hover:bg-destructive/10 mt-1.5 w-full lg:hidden"
+                                    className="h-6 px-2 text-[10px] lg:text-xs border-dashed hover:bg-destructive/10 mt-1.5 w-full lg:hidden"
                                     onClick={(e) => {
                                       e.stopPropagation();
                                       handleRegisterBirth(notification.client as Client);
@@ -1050,7 +1050,7 @@ export function NotificationsCenter({ fullPage = false }: NotificationsCenterPro
                                 <Button
                                   size="sm"
                                   variant="outline"
-                                  className="h-7 px-2 text-xs border-dashed border-destructive/50 hover:bg-destructive/10 hidden lg:flex flex-shrink-0"
+                                  className="h-7 px-2 text-xs border-dashed hover:bg-destructive/10 hidden lg:flex flex-shrink-0"
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     handleRegisterBirth(notification.client as Client);
@@ -1081,7 +1081,7 @@ export function NotificationsCenter({ fullPage = false }: NotificationsCenterPro
                                 <Button
                                   size="sm"
                                   variant="outline"
-                                  className="h-7 px-2 text-xs border-dashed border-primary/50 hover:bg-primary/10 hidden lg:flex flex-shrink-0"
+                                  className="h-7 px-2 text-xs border-dashed hover:bg-primary/10 hidden lg:flex flex-shrink-0"
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     window.location.href = "/agenda";
@@ -1097,7 +1097,7 @@ export function NotificationsCenter({ fullPage = false }: NotificationsCenterPro
 
                         {/* Child notifications */}
                         <CollapsibleContent>
-                          <div className="border-t border-border/50 mx-1 lg:mx-3 mb-1.5 lg:mb-3 pt-1.5 lg:pt-2 space-y-1 lg:space-y-2 overflow-x-hidden">
+                          <div className="border-t mx-1 lg:mx-3 mb-1.5 lg:mb-3 pt-1.5 lg:pt-2 space-y-1 lg:space-y-2 overflow-x-hidden">
                             {notification.children.map((child) => {
                               const contractionClientId = child.clientId || notification.clientId;
                               const contractionClient = contractionClientId ? clientsMap.get(contractionClientId) : notification.client;
@@ -1253,7 +1253,7 @@ export function NotificationsCenter({ fullPage = false }: NotificationsCenterPro
                                       <Button
                                         size="sm"
                                         variant="outline"
-                                        className="h-5 px-2 text-[9px] lg:text-[10px] border-dashed border-destructive/50 hover:bg-destructive/10"
+                                        className="h-5 px-2 text-[9px] lg:text-[10px] border-dashed hover:bg-destructive/10"
                                         onClick={(e) => {
                                           e.stopPropagation();
                                           handleStartLabor(contractionClientId);
@@ -1268,7 +1268,7 @@ export function NotificationsCenter({ fullPage = false }: NotificationsCenterPro
                                       <Button
                                         size="sm"
                                         variant="outline"
-                                        className="h-5 px-2 text-[9px] lg:text-[10px] border-dashed border-destructive/50 hover:bg-destructive/10"
+                                        className="h-5 px-2 text-[9px] lg:text-[10px] border-dashed hover:bg-destructive/10"
                                         onClick={(e) => {
                                           e.stopPropagation();
                                           handleRegisterBirth(contractionClient as Client);
@@ -1302,7 +1302,7 @@ export function NotificationsCenter({ fullPage = false }: NotificationsCenterPro
                                   <Button
                                     size="sm"
                                     variant="outline"
-                                    className="h-5 px-2 text-[9px] lg:text-[10px] border-dashed border-primary/50 hover:bg-primary/10 mt-1"
+                                    className="h-5 px-2 text-[9px] lg:text-[10px] border-dashed hover:bg-primary/10 mt-1"
                                     onClick={(e) => {
                                       e.stopPropagation();
                                       window.location.href = "/agenda";

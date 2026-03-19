@@ -218,7 +218,7 @@ export function BrandingSettingsCard() {
                     key={palette.name}
                     onClick={() => handleSelectPalette(palette)}
                     className={cn(
-                      "relative flex flex-col items-center gap-1.5 rounded-xl p-3 border-2 transition-all hover:scale-[1.03] active:scale-[0.97]",
+                      "relative flex flex-col items-center gap-1.5 rounded-xl p-3transition-all hover:scale-[1.03] active:scale-[0.97]",
                       selected
                         ? "border-foreground shadow-md"
                         : "border-transparent bg-muted/40 hover:bg-muted/70"
@@ -273,7 +273,7 @@ export function BrandingSettingsCard() {
           <div className="space-y-2">
             <Label>Logo da Organização</Label>
             <div className="flex items-center gap-4">
-              <Avatar className="w-16 h-16 rounded-[40%] border-2 border-border">
+              <Avatar className="w-16 h-16 rounded-[40%]">
                 {logoUrl ? (
                   <AvatarImage src={logoUrl} alt="Logo" className="object-cover" />
                 ) : (

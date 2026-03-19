@@ -174,7 +174,7 @@ export function ColorPickerGradient({ value, onChange, label }: ColorPickerGradi
         className="flex items-center gap-2.5 group"
       >
         <div
-          className="w-10 h-10 rounded-xl border-2 border-border shadow-sm transition-transform group-hover:scale-105 group-active:scale-95"
+          className="w-10 h-10 rounded-xlborder-border shadow-sm transition-transform group-hover:scale-105 group-active:scale-95"
           style={{ backgroundColor: value }}
         />
         <div className="text-left">

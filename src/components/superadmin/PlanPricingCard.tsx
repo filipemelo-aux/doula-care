@@ -22,13 +22,13 @@ const planConfig: Record<string, { label: string; icon: React.ReactNode; badgeCl
   pro: {
     label: "Pro",
     icon: <Sparkles className="h-5 w-5 text-primary" />,
-    badgeClass: "bg-primary/10 text-primary border-primary/20",
+    badgeClass: "bg-primary/10 text-primary",
     gradientClass: "from-primary/20 to-accent/20",
   },
   premium: {
     label: "Premium",
     icon: <Crown className="h-5 w-5 text-amber-600" />,
-    badgeClass: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 border-amber-300/30",
+    badgeClass: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
     gradientClass: "from-amber-200/50 to-amber-100/30 dark:from-amber-900/20 dark:to-amber-800/10",
   },
 };
@@ -140,7 +140,7 @@ export function PlanPricingCard() {
         {(["pro", "premium"] as const).map((plan) => {
           const config = planConfig[plan];
           return (
-            <Card key={plan} className="group hover:shadow-md transition-all duration-200 border-border/60">
+            <Card key={plan} className="group hover:shadow-md transition-all duration-200">
               <CardContent className="p-4">
                 <div className="flex items-start gap-3">
                   <div className={`flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br ${config.gradientClass} flex items-center justify-center`}>
@@ -156,7 +156,7 @@ export function PlanPricingCard() {
                   </div>
                 </div>
 
-                <div className="mt-3 pt-3 border-t border-border/40 space-y-2">
+                <div className="mt-3 pt-3 border-t space-y-2">
                   {grouped[plan].map((row) => {
                     const key = `${row.plan}-${row.billing_cycle}`;
                     return (

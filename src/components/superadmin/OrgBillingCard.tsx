@@ -66,7 +66,7 @@ const statusConfig: Record<string, { icon: React.ReactNode; badgeClass: string; 
   },
   atrasado: {
     icon: <AlertTriangle className="h-3 w-3" />,
-    badgeClass: "bg-destructive/10 text-destructive border-destructive/20",
+    badgeClass: "bg-destructive/10 text-destructive",
     label: "Atrasado",
   },
   cancelado: {
@@ -76,7 +76,7 @@ const statusConfig: Record<string, { icon: React.ReactNode; badgeClass: string; 
   },
   pendente: {
     icon: <Clock className="h-3 w-3" />,
-    badgeClass: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 border-amber-300/30",
+    badgeClass: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
     label: "Pendente",
   },
 };
@@ -483,7 +483,7 @@ export function OrgBillingCard() {
               </div>
             </CardContent>
           </Card>
-          <Card className={totalPending > 0 ? "bg-gradient-to-br from-amber-50 to-amber-100/50 dark:from-amber-950/20 dark:to-amber-900/10 border-amber-300/30" : ""}>
+          <Card className={totalPending > 0 ? "bg-gradient-to-br from-amber-50 to-amber-100/50 dark:from-amber-950/20 dark:to-amber-900/10" : ""}>
             <CardContent className="p-4 flex items-center gap-3">
               <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${totalPending > 0 ? "bg-amber-200/50 dark:bg-amber-800/30" : "bg-muted"}`}>
                 <Clock className={`h-5 w-5 ${totalPending > 0 ? "text-amber-600" : "text-muted-foreground"}`} />
@@ -536,7 +536,7 @@ export function OrgBillingCard() {
               return (
                 <Card
                   key={bill.id}
-                  className={`group hover:shadow-md transition-all duration-200 border-border/60 ${isOverdue ? "border-destructive/40" : ""}`}
+                  className={`group hover:shadow-md transition-all duration-200 ${isOverdue ? "border-destructive/40" : ""}`}
                 >
                   <CardContent className="p-4">
                     <div className="flex items-start gap-3">
@@ -570,7 +570,7 @@ export function OrgBillingCard() {
                       </div>
                     </div>
 
-                    <div className="mt-3 pt-3 border-t border-border/40 flex items-center gap-2">
+                    <div className="mt-3 pt-3 border-t flex items-center gap-2">
                       <Select
                         value={bill.status}
                         onValueChange={(status) =>

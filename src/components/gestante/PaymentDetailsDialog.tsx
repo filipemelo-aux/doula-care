@@ -248,7 +248,7 @@ export function PaymentDetailsDialog({ open, onOpenChange }: PaymentDetailsDialo
         ) : (
           <div className="space-y-4">
             {/* Summary */}
-            <Card className="bg-gradient-to-br from-primary/5 to-accent/5 border-primary/20">
+            <Card className="bg-gradient-to-br from-primary/5 to-accent/5">
               <CardContent className="p-4 space-y-3">
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-muted-foreground">Progresso do pagamento</span>
@@ -298,7 +298,7 @@ export function PaymentDetailsDialog({ open, onOpenChange }: PaymentDetailsDialo
               };
 
               return (
-                <Card className="border-primary/30">
+                <Card className="border-none border-30">
                   <CardContent className="p-4 space-y-4">
                     <div className="flex items-center gap-2">
                       <QrCode className="h-5 w-5 text-primary" />

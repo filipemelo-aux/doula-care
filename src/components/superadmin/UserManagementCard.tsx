@@ -168,7 +168,7 @@ export function UserManagementCard() {
           ) : (
             <div className="space-y-2 max-h-[60vh] overflow-y-auto">
               {filteredUsers.map(u => (
-                <div key={u.user_id} className="flex items-center gap-3 p-3 rounded-lg border border-border/60 hover:bg-muted/30 transition-colors">
+                <div key={u.user_id} className="flex items-center gap-3 p-3 rounded-lg border hover:bg-muted/30 transition-colors">
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium truncate">{u.full_name || "Sem nome"}</p>
                     <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">

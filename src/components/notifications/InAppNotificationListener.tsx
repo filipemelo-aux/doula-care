@@ -65,7 +65,7 @@ export function InAppNotificationListener({ userId, role, clientId, organization
               description: "Deseja registrar que o trabalho de parto iniciou?",
               duration: 60000,
               icon: <Baby className="h-5 w-5 text-primary" />,
-              className: "border-2 border-primary/40 shadow-lg [&_[data-content]]:!max-w-full",
+              className: "border-2 shadow-lg [&_[data-content]]:!max-w-full",
               action: {
                 label: "Registrar Parto",
                 onClick: async () => {
@@ -155,7 +155,7 @@ export function InAppNotificationListener({ userId, role, clientId, organization
               description: `${request.requested_date} às ${request.requested_time?.slice(0, 5)}`,
               duration: 15000,
               icon: <Bell className="h-5 w-5 text-primary" />,
-              className: "border-2 border-primary/30 shadow-lg",
+              className: "border-2 shadow-lg",
               action: {
                 label: "Ver Agenda",
                 onClick: () => {
@@ -214,7 +214,7 @@ export function InAppNotificationListener({ userId, role, clientId, organization
             description: notification.message?.substring(0, 100),
             duration: 10000,
             icon: <Bell className="h-5 w-5 text-primary" />,
-            className: "border-2 border-primary/30 shadow-lg",
+            className: "border-2 shadow-lg",
             action: {
               label: "Ver",
               onClick: () => {
@@ -284,7 +284,7 @@ export function InAppNotificationListener({ userId, role, clientId, organization
             ),
             className: isUrgent
               ? "border-2 border-destructive bg-destructive/10 shadow-lg shadow-destructive/20"
-              : "border-2 border-primary/30 shadow-lg",
+              : "border-2 shadow-lg",
             action: {
               label: "Ver",
               onClick: () => {

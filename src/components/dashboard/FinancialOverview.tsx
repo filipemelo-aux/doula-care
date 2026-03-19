@@ -59,7 +59,7 @@ export function FinancialOverview({ period }: FinancialOverviewProps) {
       <CardContent className="space-y-6">
         {/* Main Financial Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="flex items-center gap-4 p-4 rounded-xl bg-success/5 border border-success/10">
+          <div className="flex items-center gap-4 p-4 rounded-xl bg-success/5 border">
             <div className="w-12 h-12 rounded-xl bg-success/15 flex items-center justify-center">
               <TrendingUp className="w-6 h-6 text-success" />
             </div>
@@ -74,7 +74,7 @@ export function FinancialOverview({ period }: FinancialOverviewProps) {
             </div>
           </div>
 
-          <div className="flex items-center gap-4 p-4 rounded-xl bg-warning/5 border border-warning/10">
+          <div className="flex items-center gap-4 p-4 rounded-xl bg-warning/5 border">
             <div className="w-12 h-12 rounded-xl bg-warning/15 flex items-center justify-center">
               <Wallet className="w-6 h-6 text-warning" />
             </div>
@@ -86,7 +86,7 @@ export function FinancialOverview({ period }: FinancialOverviewProps) {
             </div>
           </div>
 
-          <div className="flex items-center gap-4 p-4 rounded-xl bg-destructive/5 border border-destructive/10">
+          <div className="flex items-center gap-4 p-4 rounded-xl bg-destructive/5 border">
             <div className="w-12 h-12 rounded-xl bg-destructive/15 flex items-center justify-center">
               <TrendingDown className="w-6 h-6 text-destructive" />
             </div>
@@ -98,7 +98,7 @@ export function FinancialOverview({ period }: FinancialOverviewProps) {
             </div>
           </div>
 
-          <div className="flex items-center gap-4 p-4 rounded-xl bg-primary/5 border border-primary/10">
+          <div className="flex items-center gap-4 p-4 rounded-xl bg-primary/5 border">
             <div className="w-12 h-12 rounded-xl bg-primary/15 flex items-center justify-center">
               <Wallet className="w-6 h-6 text-primary" />
             </div>
@@ -120,7 +120,7 @@ export function FinancialOverview({ period }: FinancialOverviewProps) {
             </div>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               {Object.entries(metrics.incomeByMethod).map(([method, value]) => (
-                <div key={method} className="p-3 rounded-lg bg-muted/30 border border-border/50">
+                <div key={method} className="p-3 rounded-lg bg-muted/30 border">
                   <p className="text-xs text-muted-foreground">
                     {paymentMethodLabels[method] || method}
                   </p>
@@ -145,7 +145,7 @@ export function FinancialOverview({ period }: FinancialOverviewProps) {
                 .sort(([, a], [, b]) => b - a)
                 .slice(0, 4)
                 .map(([category, value]) => (
-                  <div key={category} className="px-3 py-2 rounded-lg bg-destructive/5 border border-destructive/10">
+                  <div key={category} className="px-3 py-2 rounded-lg bg-destructive/5 border">
                     <span className="text-xs text-muted-foreground">
                       {categoryLabels[category] || category}
                     </span>

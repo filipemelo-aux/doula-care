@@ -219,7 +219,7 @@ export function ContractSignDialog({ open, onOpenChange, contractId }: ContractS
                 {contract?.title || "Contrato"}
               </DialogTitle>
               {isSigned && (
-                <Badge className="w-fit border-green-300 bg-green-50 text-green-700" variant="outline">
+                <Badge className="w-fit bg-green-50 text-green-700" variant="outline">
                   <CheckCircle className="h-3 w-3 mr-1" />
                   Assinado em {contract?.signed_at && format(new Date(contract.signed_at), "dd/MM/yyyy", { locale: ptBR })}
                 </Badge>
@@ -287,7 +287,7 @@ export function ContractSignDialog({ open, onOpenChange, contractId }: ContractS
 
                     <TabsContent value="draw" className="space-y-2 mt-3">
                       <Label className="text-xs">Desenhe sua assinatura abaixo:</Label>
-                      <div className="relative rounded-lg border-2 border-dashed border-primary/30 bg-background">
+                      <div className="relative rounded-lgborder-dashed bg-background">
                         <canvas
                           ref={canvasRef}
                           className="w-full h-32 touch-none cursor-crosshair"

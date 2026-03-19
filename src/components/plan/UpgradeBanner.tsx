@@ -11,7 +11,7 @@ interface UpgradeBannerProps {
 
 export function UpgradeBanner({ feature, currentPlan, requiredPlan = "pro" }: UpgradeBannerProps) {
   return (
-    <Card className="border-primary/30 bg-primary/5">
+    <Card className="border-none border-30 bg-primary/5">
       <CardContent className="flex items-center gap-4 p-4">
         <div className="w-10 h-10 rounded-xl bg-primary/15 flex items-center justify-center flex-shrink-0">
           <Crown className="w-5 h-5 text-primary" />

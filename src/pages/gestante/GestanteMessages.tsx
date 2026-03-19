@@ -418,7 +418,7 @@ export default function GestanteMessages() {
                           ? "bg-primary text-primary-foreground border-primary"
                           : (notification as any).read_by_client
                             ? "bg-background"
-                            : "bg-primary/5 border-primary/20 shadow-sm"
+                            : "bg-primary/5 shadow-sm"
                       }`}
                     >
                       <CardContent className="p-3">
@@ -447,7 +447,7 @@ export default function GestanteMessages() {
 
               {pendingBudgets?.map((budget) => (
                 <div key={`budget-${budget.id}`} className="flex justify-start">
-                  <Card className="max-w-[85%] bg-secondary border-primary/20 shadow-sm">
+                  <Card className="max-w-[85%] bg-secondary shadow-sm">
                     <CardContent className="p-3">
                       <div className="flex items-center gap-2 mb-2">
                         <Sparkles className="h-4 w-4 text-primary" />
@@ -495,7 +495,7 @@ export default function GestanteMessages() {
                         <Button
                           size="sm"
                           variant="outline"
-                          className="flex-1 border-red-300 text-red-600 hover:bg-red-50 hover:text-red-600"
+                          className="flex-1 text-red-600 hover:bg-red-50 hover:text-red-600"
                           onClick={() => rejectBudgetMutation.mutate(budget)}
                           disabled={acceptBudgetMutation.isPending || rejectBudgetMutation.isPending}
                         >

@@ -568,7 +568,7 @@ ${client?.city || "[Cidade]"}, ${todayFormatted}.`;
                       />
                       {!selectedFile ? (
                         <div
-                          className="rounded-lg border-2 border-dashed border-primary/30 bg-muted/20 p-8 text-center cursor-pointer hover:bg-muted/40 transition-colors"
+                          className="rounded-lgborder-dashed bg-muted/20 p-8 text-center cursor-pointer hover:bg-muted/40 transition-colors"
                           onClick={() => fileInputRef.current?.click()}
                         >
                           <Upload className="h-8 w-8 mx-auto text-muted-foreground mb-2" />

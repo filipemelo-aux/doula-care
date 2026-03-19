@@ -849,7 +849,7 @@ export default function Financial() {
                       </div>
 
                       {/* Values: flex layout */}
-                      <div className="flex items-start pt-1.5 border-t border-border/50 w-full">
+                      <div className="flex items-start pt-1.5 border-t w-full">
                         <div className="text-center min-w-0 flex-1 flex-shrink px-1">
                           <span className="text-[10px] text-muted-foreground block">Total</span>
                           <span className="font-semibold text-sm truncate block">{formatCompact(totalAmount)}</span>
@@ -903,7 +903,7 @@ export default function Financial() {
                       </div>
 
                       {/* Payment method icons + details button */}
-                      <div className="flex items-center justify-between pt-1 border-t border-border/50">
+                      <div className="flex items-center justify-between pt-1 border-t">
                         <div className="flex items-center gap-0">
                           <Button
                             variant={currentMethod === "pix" ? "secondary" : "ghost"}
@@ -994,7 +994,7 @@ export default function Financial() {
               <div className="hidden lg:block p-4 pt-0">
                 <Table>
                   <TableHeader>
-                    <TableRow className="hover:bg-transparent border-b border-border/50">
+                    <TableRow className="hover:bg-transparent border-b">
                       <TableHead className="w-[75px] text-xs font-medium text-muted-foreground py-2">Data</TableHead>
                       <TableHead className="text-xs font-medium text-muted-foreground py-2">Cliente / Descrição</TableHead>
                       <TableHead className="w-[75px] text-xs font-medium text-muted-foreground py-2">DPP</TableHead>
@@ -1019,7 +1019,7 @@ export default function Financial() {
                       return (
                         <TableRow 
                           key={transaction.id} 
-                          className="group hover:bg-muted/30 border-b border-border/30 transition-colors"
+                          className="group hover:bg-muted/30 border-b transition-colors"
                         >
                           <TableCell className="py-2.5 text-xs text-muted-foreground">
                             {formatBrazilDate(transaction.date, "dd/MM/yy")}
@@ -1349,7 +1349,7 @@ export default function Financial() {
                         Cadastrar cliente avulsa
                       </Button>
                     ) : (
-                      <div className="rounded-lg border border-dashed border-primary/40 bg-primary/5 p-3 space-y-2">
+                      <div className="rounded-lg border border-dashed bg-primary/5 p-3 space-y-2">
                         <p className="text-xs font-medium text-primary flex items-center gap-1">
                           <UserPlus className="h-3 w-3" />
                           Cadastro de Cliente Avulsa
@@ -1712,7 +1712,7 @@ export default function Financial() {
                       type="checkbox"
                       checked={entryAlreadyPaid}
                       onChange={(e) => setEntryAlreadyPaid(e.target.checked)}
-                      className="rounded border-border"
+                      className="rounded "
                     />
                     <span className="text-xs font-medium">Entrada já foi recebida?</span>
                   </label>

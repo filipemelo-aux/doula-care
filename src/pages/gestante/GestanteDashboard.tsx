@@ -219,7 +219,7 @@ export default function GestanteDashboard() {
           <PendingContractCard />
 
           {/* Congratulations Card */}
-          <Card className="overflow-hidden bg-gradient-to-br from-primary/10 via-primary/20 to-accent/20 border-primary/30 shadow-lg">
+          <Card className="overflow-hidden bg-gradient-to-br from-primary/10 via-primary/20 to-accent/20 shadow-lg">
             <CardContent className="p-6 text-center">
               <div className="flex justify-center mb-4">
                 <div className="relative">
@@ -275,7 +275,7 @@ export default function GestanteDashboard() {
 
           {/* Baby Age Card */}
           {babyAge && (
-            <Card className="overflow-hidden bg-gradient-to-br from-secondary to-primary/5 border-primary/20">
+            <Card className="overflow-hidden bg-gradient-to-br from-secondary to-primary/5">
               <CardContent className="p-4">
                 <div className="flex items-center gap-2 mb-3">
                   <Baby className="h-5 w-5 text-primary" />
@@ -373,7 +373,7 @@ export default function GestanteDashboard() {
 
 
           {/* Welcome to Motherhood Message */}
-          <Card className="bg-gradient-to-br from-secondary to-primary/5 border-primary/20">
+          <Card className="bg-gradient-to-br from-secondary to-primary/5">
             <CardContent className="p-4">
               <div className="flex items-start gap-3">
                 <Heart className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
@@ -421,7 +421,7 @@ export default function GestanteDashboard() {
         {gestationalAge && (
           <div className={`grid gap-4 ${gestationalAge.weeks >= 37 ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-1'}`}>
             {/* Pregnancy Progress Card */}
-            <Card className="overflow-hidden bg-gradient-to-br from-primary/10 to-accent/10 border-primary/20">
+            <Card className="overflow-hidden bg-gradient-to-br from-primary/10 to-accent/10">
               <CardContent className="p-4">
                 <div className="flex items-center gap-2 mb-3">
                   <Baby className="h-5 w-5 text-primary" />
@@ -553,7 +553,7 @@ export default function GestanteDashboard() {
 
         {/* Labor Started - Welcoming Message */}
         {clientData?.labor_started_at && (
-          <Card className="overflow-hidden bg-gradient-to-br from-primary/10 via-primary/15 to-accent/15 border-primary/30 shadow-lg ring-2 ring-primary/20">
+          <Card className="overflow-hidden bg-gradient-to-br from-primary/10 via-primary/15 to-accent/15 shadow-lg ring-2 ring-primary/20">
             <CardContent className="p-5 text-center space-y-3">
               <div className="flex justify-center">
                 <div className="relative">
