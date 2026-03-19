@@ -27,6 +27,9 @@ export function UserManagementCard() {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [deleteUserId, setDeleteUserId] = useState<string | null>(null);
+  const [resetUserId, setResetUserId] = useState<string | null>(null);
+  const [toggleUserId, setToggleUserId] = useState<string | null>(null);
+  const [toggleHasRole, setToggleHasRole] = useState(false);
   const [resetResult, setResetResult] = useState<{ userId: string; password: string } | null>(null);
   const [copiedPassword, setCopiedPassword] = useState(false);
   const [masterUserId, setMasterUserId] = useState<string | null>(null);
