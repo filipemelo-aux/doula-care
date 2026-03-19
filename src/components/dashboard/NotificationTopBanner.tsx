@@ -5,7 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Bell, Baby, AlertTriangle, BookHeart, Sparkles, CalendarCheck, X, CheckCircle } from "lucide-react";
+import { Bell, Baby, AlertTriangle, BookHeart, Sparkles, CalendarCheck, X, CheckCircle, MessageSquare } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useNavigate } from "react-router-dom";
