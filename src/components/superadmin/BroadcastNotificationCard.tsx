@@ -159,7 +159,9 @@ export function BroadcastNotificationCard() {
           .from("forum_posts")
           .insert({
             title: title.trim(),
-            content: message.trim(),
+            content: instagramLink.trim()
+              ? `${message.trim()}\n\n📸 [Ver postagem no Instagram](${instagramLink.trim()})`
+              : message.trim(),
             category_id: categoryId,
             author_id: user.id,
             is_anonymous: false,
