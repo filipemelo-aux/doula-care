@@ -274,6 +274,8 @@ export function InAppNotificationListener({ userId, role, clientId, organization
             notification.title?.toLowerCase().includes("urgente") ||
             notification.title?.includes("🚨");
 
+          const isCommunityNotif = notification.title?.includes("Comunidade");
+
           toast(notification.title, {
             description: notification.message,
             duration: isUrgent ? 30000 : 10000,
@@ -288,8 +290,9 @@ export function InAppNotificationListener({ userId, role, clientId, organization
             action: {
               label: "Ver",
               onClick: () => {
-                if (onNavigate) onNavigate("/gestante/mensagens");
-                else window.location.href = "/gestante/mensagens";
+                const dest = isCommunityNotif ? "/gestante/comunidade" : "/gestante/mensagens";
+                if (onNavigate) onNavigate(dest);
+                else window.location.href = dest;
               },
             },
           });
