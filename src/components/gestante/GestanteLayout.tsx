@@ -186,7 +186,7 @@ export function GestanteLayout({ children }: GestanteLayoutProps) {
         </div>
       </aside>
 
-      <div className="flex-1 min-w-0 min-h-0 flex flex-col">
+      <div className="flex-1 min-w-0 min-h-0 flex flex-col overflow-hidden">
         {/* Mobile Header */}
         <header className="lg:hidden h-14 flex items-center justify-between px-4 bg-card/50 backdrop-blur-sm sticky top-0 z-40">
           <div className="flex items-center">
