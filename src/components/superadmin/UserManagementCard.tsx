@@ -21,12 +21,15 @@ interface UserWithRole {
   roles: string[];
 }
 
+const MASTER_SUPER_ADMIN_EMAIL = "filipe.silvamelo@live.com";
+
 export function UserManagementCard() {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [deleteUserId, setDeleteUserId] = useState<string | null>(null);
   const [resetResult, setResetResult] = useState<{ userId: string; password: string } | null>(null);
   const [copiedPassword, setCopiedPassword] = useState(false);
+  const [masterUserId, setMasterUserId] = useState<string | null>(null);
 
   const { data: users = [], isLoading } = useQuery({
     queryKey: ["super-admin-all-users"],
