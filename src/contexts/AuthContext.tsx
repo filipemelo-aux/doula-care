@@ -99,6 +99,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSession(null);
       setUser(null);
       setRole(null);
+      setRoles([]);
       setClient(null);
       setProfileName(null);
       setOrganizationId(null);
@@ -112,10 +113,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(currentSession.user);
 
     try {
-      const userRole = await fetchRole(currentSession.user.id);
-      setRole(userRole);
+      const userRoles = await fetchRoles(currentSession.user.id);
+      setRoles(userRoles);
 
-      if (userRole === "client") {
+      // Determine primary role for routing: if user has both admin and super_admin, primary = admin
+      let primaryRole: AppRole | null = null;
+      if (userRoles.includes("super_admin") && (userRoles.includes("admin") || userRoles.includes("moderator"))) {
+        primaryRole = userRoles.includes("admin") ? "admin" : "moderator";
+      } else if (userRoles.length > 0) {
+        // Priority: super_admin > admin > moderator > client > user
+        const priority: AppRole[] = ["super_admin", "admin", "moderator", "client", "user"];
+        primaryRole = priority.find(r => userRoles.includes(r)) || userRoles[0];
+      }
+      setRole(primaryRole);
+
+      if (primaryRole === "client") {
         const clientData = await fetchClientData(currentSession.user.id);
         setClient(clientData);
         setProfileName(clientData?.full_name || null);
@@ -169,7 +181,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     setRoleChecked(true);
     setLoading(false);
-  }, [fetchRole, fetchClientData]);
+  }, [fetchRoles, fetchClientData]);
 
   useEffect(() => {
     let isMounted = true;
