@@ -287,7 +287,48 @@ export function UserManagementCard() {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Reset password result */}
+      {/* Reset password confirmation */}
+      <AlertDialog open={!!resetUserId} onOpenChange={() => setResetUserId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Resetar senha</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja resetar a senha de <strong>{resetConfirmTarget?.full_name || "este usuário"}</strong>? Uma nova senha será gerada automaticamente.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={() => { if (resetUserId) { resetMutation.mutate(resetUserId); setResetUserId(null); } }}>
+              {resetMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <KeyRound className="h-4 w-4 mr-1" />}
+              Resetar Senha
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Toggle Super Admin confirmation */}
+      <AlertDialog open={!!toggleUserId} onOpenChange={() => setToggleUserId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{toggleHasRole ? "Remover Super Admin" : "Conceder Super Admin"}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {toggleHasRole
+                ? <>Tem certeza que deseja <strong>remover</strong> o papel de Super Admin de <strong>{toggleTarget?.full_name || "este usuário"}</strong>?</>
+                : <>Tem certeza que deseja <strong>conceder</strong> o papel de Super Admin para <strong>{toggleTarget?.full_name || "este usuário"}</strong>? Ele terá acesso ao painel de controle global.</>
+              }
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmToggleSuperAdmin}>
+              <ShieldCheck className="h-4 w-4 mr-1" />
+              Confirmar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+
       <AlertDialog open={!!resetResult} onOpenChange={() => { setResetResult(null); setCopiedPassword(false); }}>
         <AlertDialogContent>
           <AlertDialogHeader>
