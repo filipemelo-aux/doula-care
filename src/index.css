@@ -302,8 +302,15 @@
     padding-bottom: var(--app-safe-bottom);
   }
 
+  /* Disable pull-to-refresh globally */
+  html,
+  html body {
+    overscroll-behavior-y: none;
+  }
+
+
   /* Native shell: bars are opaque & overlay the webview; body gets padding so
-     content stays between bars. Overscroll is killed to prevent pull-to-refresh. */
+     content stays between bars. */
   html.native-system-bars,
   html.native-system-bars body {
     overscroll-behavior: none;

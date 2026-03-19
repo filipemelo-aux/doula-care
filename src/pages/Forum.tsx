@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { InstagramLinkPreview, extractInstagramUrls, removeInstagramMarkdownLinks } from "@/components/forum/InstagramLinkPreview";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -30,6 +30,16 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 export default function Forum() {
+  // Allow pull-to-refresh only while this page is mounted
+  useEffect(() => {
+    document.documentElement.style.overscrollBehaviorY = "auto";
+    document.body.style.overscrollBehaviorY = "auto";
+    return () => {
+      document.documentElement.style.overscrollBehaviorY = "";
+      document.body.style.overscrollBehaviorY = "";
+    };
+  }, []);
+
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [showNewPost, setShowNewPost] = useState(false);
