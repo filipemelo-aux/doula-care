@@ -5,7 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Loader2, Users, Crown, Shield, User, Trash2, KeyRound, Search, Copy, Check } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Loader2, Users, Crown, Shield, User, Trash2, KeyRound, Search, Copy, Check, ShieldCheck } from "lucide-react";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
