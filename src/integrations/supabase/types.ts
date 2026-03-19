@@ -1507,6 +1507,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_forum_author_name: {
+        Args: { p_author_id: string; p_is_anonymous: boolean }
+        Returns: string
+      }
       get_user_organization_id: { Args: never; Returns: string }
       has_role: {
         Args: {
