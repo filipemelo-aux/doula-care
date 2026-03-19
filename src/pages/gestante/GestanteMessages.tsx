@@ -415,7 +415,7 @@ export default function GestanteMessages() {
                     <Card
                       className={`max-w-[85%] transition-all ${
                         isMine
-                          ? "bg-primary text-primary-foreground border-primary"
+                          ? "bg-primary text-primary-foreground"
                           : (notification as any).read_by_client
                             ? "bg-background"
                             : "bg-primary/5 shadow-sm"

@@ -48,7 +48,7 @@ export function ClientLimitBanner({ remaining, max, current }: ClientLimitBanner
   if (!isAtLimit && !isNearLimit) return null;
 
   return (
-    <Card className={isAtLimit ? "border-destructive/30 bg-destructive/5" : "border-warning/30 bg-warning/5"}>
+    <Card className={isAtLimit ? "bg-destructive/5" : "bg-warning/5"}>
       <CardContent className="flex items-center gap-4 p-4">
         <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${isAtLimit ? "bg-destructive/15" : "bg-warning/15"}`}>
           <AlertTriangle className={`w-5 h-5 ${isAtLimit ? "text-destructive" : "text-warning"}`} />

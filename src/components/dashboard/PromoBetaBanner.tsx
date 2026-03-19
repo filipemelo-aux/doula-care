@@ -139,7 +139,7 @@ export function PromoBetaBanner() {
   // Lifetime active — permanent banner
   if (promo.status === "lifetime_active") {
     return (
-      <Alert className="border-amber-500/30 bg-gradient-to-r from-amber-50/80 to-amber-100/50 dark:from-amber-950/20 dark:to-amber-900/10 relative pr-8">
+      <Alert className="bg-gradient-to-r from-amber-50/80 to-amber-100/50 dark:from-amber-950/20 dark:to-amber-900/10 relative pr-8">
         <Crown className="h-4 w-4 text-amber-500" />
         <AlertTitle className="text-amber-700 dark:text-amber-400 text-sm font-semibold flex items-center gap-2">
           Premium Vitalício
@@ -210,7 +210,7 @@ export function PromoBetaBanner() {
       // Lifetime reveal!
       return (
         <>
-          <Alert className="border-amber-500/50 bg-gradient-to-r from-amber-50/80 to-amber-100/50 dark:from-amber-950/20 dark:to-amber-900/10">
+          <Alert className="bg-gradient-to-r from-amber-50/80 to-amber-100/50 dark:from-amber-950/20 dark:to-amber-900/10">
             <Crown className="h-4 w-4 text-amber-500" />
             <AlertTitle className="text-amber-700 dark:text-amber-400 text-sm font-semibold flex items-center gap-2">
               <Sparkles className="h-3.5 w-3.5" />
@@ -242,7 +242,7 @@ export function PromoBetaBanner() {
     // Beta tester — choose bonus
     return (
       <>
-        <Alert className="border-amber-500/50 bg-gradient-to-r from-amber-50/80 to-amber-100/50 dark:from-amber-950/20 dark:to-amber-900/10">
+        <Alert className="bg-gradient-to-r from-amber-50/80 to-amber-100/50 dark:from-amber-950/20 dark:to-amber-900/10">
           <Clock className="h-4 w-4 text-amber-600" />
           <AlertTitle className="text-amber-700 dark:text-amber-400 text-sm font-semibold">
             Seu teste Premium expirou!

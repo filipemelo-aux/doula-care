@@ -93,11 +93,11 @@ export function BirthAlert() {
     <>
       <Card className={`card-glass overflow-hidden max-w-full ${
         hasLaborStarted
-          ? "border-destructive/50 ring-2 ring-destructive/20"
+          ? "ring-2 ring-destructive/20"
           : hasPostTerm 
-          ? "border-destructive/30" 
+          ? ""
           : hasNotifications 
-          ? "border-warning/30" 
+          ? ""
           : ""
       }`}>
         <CardHeader className="py-3 px-3 border-b">

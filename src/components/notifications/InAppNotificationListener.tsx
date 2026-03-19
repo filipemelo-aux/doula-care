@@ -283,7 +283,7 @@ export function InAppNotificationListener({ userId, role, clientId, organization
               <Bell className="h-5 w-5 text-primary" />
             ),
             className: isUrgent
-              ? "border-2 border-destructive bg-destructive/10 shadow-lg shadow-destructive/20"
+              ? "bg-destructive/10 shadow-lg shadow-destructive/20"
               : "border-2 shadow-lg",
             action: {
               label: "Ver",
