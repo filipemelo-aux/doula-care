@@ -710,20 +710,63 @@ export default function SuperAdminDashboard() {
             size="sm"
             className="text-muted-foreground gap-1.5"
             onClick={async () => {
-              try {
-                toast.info("Limpando cache e atualizando...");
-                const keys = await caches.keys();
-                await Promise.all(keys.map(k => caches.delete(k)));
-                const regs = await navigator.serviceWorker?.getRegistrations();
-                if (regs) {
-                  for (const reg of regs) {
+               try {
+                toast.loading("Limpando cache e atualizando...", { id: "sa-update" });
+
+                // Clear all caches
+                if ("caches" in window) {
+                  const keys = await caches.keys();
+                  await Promise.all(keys.map(k => caches.delete(k)));
+                }
+
+                if ("serviceWorker" in navigator) {
+                  const reg = await navigator.serviceWorker.getRegistration();
+                  if (reg) {
                     await reg.update();
-                    reg.waiting?.postMessage({ type: "SKIP_WAITING" });
+
+                    const waitForSW = (sw: ServiceWorker): Promise<void> =>
+                      new Promise((resolve) => {
+                        if (sw.state === "installed") { resolve(); return; }
+                        sw.addEventListener("statechange", () => {
+                          if (sw.state === "installed") resolve();
+                        });
+                        setTimeout(resolve, 5000);
+                      });
+
+                    if (reg.waiting) {
+                      reg.waiting.postMessage({ type: "SKIP_WAITING" });
+                    } else if (reg.installing) {
+                      await waitForSW(reg.installing);
+                      reg.waiting?.postMessage({ type: "SKIP_WAITING" });
+                    } else {
+                      await new Promise<void>((resolve) => {
+                        const onUpdate = () => {
+                          reg.removeEventListener("updatefound", onUpdate);
+                          const newSW = reg.installing;
+                          if (newSW) {
+                            waitForSW(newSW).then(() => {
+                              reg.waiting?.postMessage({ type: "SKIP_WAITING" });
+                              resolve();
+                            });
+                          } else {
+                            resolve();
+                          }
+                        };
+                        reg.addEventListener("updatefound", onUpdate);
+                        setTimeout(() => {
+                          reg.removeEventListener("updatefound", onUpdate);
+                          resolve();
+                        }, 3000);
+                      });
+                    }
                   }
                 }
-                setTimeout(() => window.location.reload(), 500);
+
+                toast.success("Atualizado! Recarregando...", { id: "sa-update" });
+                setTimeout(() => window.location.reload(), 600);
               } catch (err) {
                 console.error(err);
+                toast.error("Erro ao atualizar", { id: "sa-update" });
                 window.location.reload();
               }
             }}
