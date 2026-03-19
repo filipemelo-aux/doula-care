@@ -405,8 +405,24 @@ export default function Forum() {
   };
 
   return (
-    <div className="p-3 lg:p-8 max-w-2xl mx-auto space-y-4 overflow-x-hidden overflow-x-hidden overflow-x-hidden">
-      {/* Header */}
+    <div
+      className="p-3 lg:p-8 max-w-2xl mx-auto space-y-4 overflow-x-hidden"
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+    >
+      <div
+        className="overflow-hidden transition-all duration-200"
+        style={{ height: pullDistance > 0 || refreshingCommunity ? 56 : 0 }}
+      >
+        <div className="flex h-14 items-center justify-center text-sm text-muted-foreground">
+          {refreshingCommunity || isFetchingPosts
+            ? "Atualizando comunidade..."
+            : pullDistance >= 60
+              ? "Solte para atualizar"
+              : "Puxe para atualizar"}
+        </div>
+      </div>
       <div className="page-header">
         <div>
           <h1 className="page-title">Comunidade</h1>
