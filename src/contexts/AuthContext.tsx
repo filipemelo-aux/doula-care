@@ -236,13 +236,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setRoleChecked(false);
       setLoading(true);
 
-      // Safety timeout: if role check doesn't complete in 15s, reset loading state
-      const safetyTimeout = setTimeout(() => {
-        console.warn("Login safety timeout triggered - resetting loading state");
-        setLoading(false);
-        setRoleChecked(true);
-      }, 15000);
-
       // Support username-based login for clients (nome.sobrenome → email)
       let loginEmail = email;
       if (!email.includes("@")) {
@@ -294,23 +287,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       if (error) {
-        clearTimeout(safetyTimeout);
         setLoading(false);
         setRoleChecked(true);
         return { error: error as Error };
       }
 
-      // If onAuthStateChange doesn't trigger, manually initialize
+      // Directly initialize user data instead of relying on onAuthStateChange
+      // This avoids race conditions and stale closures
       if (data?.session) {
-        // Give onAuthStateChange a moment to fire first
-        setTimeout(async () => {
-          // If still not role-checked after 3s, do it manually
-          if (!roleChecked) {
-            console.warn("onAuthStateChange did not trigger, initializing manually");
-            await initializeUser(data.session);
-          }
-          clearTimeout(safetyTimeout);
-        }, 3000);
+        await initializeUser(data.session);
       }
 
       return { error: null };
