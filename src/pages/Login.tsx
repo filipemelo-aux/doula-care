@@ -116,12 +116,13 @@ export default function Login() {
               <Label htmlFor="email">Usuário</Label>
               <Input
                 id="email"
+                name="username"
                 type="text"
                 placeholder="Digite seu usuário"
                 value={email}
                 onChange={(e) => setEmail(e.target.value.toLowerCase())}
                 required
-                autoComplete="email"
+                autoComplete="username"
                 autoCapitalize="off"
                 className="input-field lowercase"
                 style={{ textTransform: "lowercase" }}
