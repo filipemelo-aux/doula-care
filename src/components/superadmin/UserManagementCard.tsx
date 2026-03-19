@@ -111,6 +111,21 @@ export function UserManagementCard() {
     }
   };
 
+  const toggleSuperAdmin = async (userId: string, hasRole: boolean) => {
+    try {
+      if (hasRole) {
+        await supabase.from("user_roles").delete().eq("user_id", userId).eq("role", "super_admin");
+        toast.success("Papel de Super Admin removido");
+      } else {
+        await supabase.from("user_roles").insert({ user_id: userId, role: "super_admin" } as any);
+        toast.success("Super Admin concedido!");
+      }
+      queryClient.invalidateQueries({ queryKey: ["super-admin-all-users"] });
+    } catch (err: any) {
+      toast.error(err.message || "Erro ao alterar papel");
+    }
+  };
+
   const filteredUsers = users.filter(u => {
     if (!search) return true;
     const q = search.toLowerCase();
