@@ -34,6 +34,7 @@ import { AppointmentsCard } from "@/components/gestante/AppointmentsCard";
 import { ScheduledServicesCard } from "@/components/gestante/ScheduledServicesCard";
 import { OverduePaymentAlert } from "@/components/gestante/OverduePaymentAlert";
 import { PendingContractCard } from "@/components/gestante/PendingContractCard";
+import { GestanteNotificationBanner } from "@/components/gestante/GestanteNotificationBanner";
 
 
 type Client = Tables<"clients">;
