@@ -57,6 +57,12 @@ export default function Forum() {
   const [commentAnon, setCommentAnon] = useState<Record<string, boolean>>({});
   const [commentLoading, setCommentLoading] = useState<string | null>(null);
 
+  // Community pull-to-refresh
+  const [pullDistance, setPullDistance] = useState(0);
+  const [refreshingCommunity, setRefreshingCommunity] = useState(false);
+  const pullStartYRef = useRef<number | null>(null);
+  const canPullRef = useRef(false);
+
   const { data: currentUser } = useQuery({
     queryKey: ["current-user-forum"],
     queryFn: async () => {
