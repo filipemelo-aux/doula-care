@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
-import { Loader2, Building2, Users, Ban, CheckCircle, LogOut, BarChart3, Clock, ShieldCheck, Mail, CalendarDays, Baby, Trash2, RefreshCw, Bell, CreditCard, Menu, Users2, Zap, Home, UserCog, Eye, EyeOff, ArrowLeft } from "lucide-react";
+import { Loader2, Building2, Users, Ban, CheckCircle, LogOut, BarChart3, Clock, ShieldCheck, Mail, CalendarDays, Baby, Trash2, RefreshCw, Bell, CreditCard, Menu, Users2, Zap, Home, UserCog, Eye, EyeOff, ArrowLeft, Shield } from "lucide-react";
 import Forum from "@/pages/Forum";
 import { APP_VERSION } from "@/lib/appVersion";
 import { PlanPricingCard } from "@/components/superadmin/PlanPricingCard";
@@ -20,6 +20,7 @@ import { OrgBillingCard } from "@/components/superadmin/OrgBillingCard";
 import { UserManagementCard } from "@/components/superadmin/UserManagementCard";
 import { BroadcastNotificationCard } from "@/components/superadmin/BroadcastNotificationCard";
 import { PromoTriggerButton } from "@/components/superadmin/PromoTriggerButton";
+import { ModerationSection } from "@/components/superadmin/ModerationSection";
 import { useOnlineOrgs } from "@/hooks/useOnlineOrgs";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
@@ -28,10 +29,11 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
-type Section = "dashboard" | "users" | "billing" | "notifications" | "community" | "profile";
+type Section = "dashboard" | "moderation" | "users" | "billing" | "notifications" | "community" | "profile";
 
 const sidebarItems: { key: Section; label: string; icon: React.ElementType }[] = [
   { key: "dashboard", label: "Painel", icon: Home },
+  { key: "moderation", label: "Moderação", icon: Shield },
   { key: "users", label: "Usuários", icon: Users },
   { key: "billing", label: "Planos & Cobranças", icon: CreditCard },
   { key: "notifications", label: "Notificações", icon: Bell },
@@ -625,6 +627,8 @@ export default function SuperAdminDashboard() {
             )}
           </div>
         );
+      case "moderation":
+        return <ModerationSection />;
       case "users":
         return <UserManagementCard />;
       case "billing":

@@ -1542,6 +1542,72 @@ export type Database = {
         }[]
       }
       get_master_super_admin_id: { Args: never; Returns: string }
+      get_moderation_contracts: {
+        Args: { p_org_id: string }
+        Returns: {
+          client_id: string
+          client_name: string
+          created_at: string
+          id: string
+          signed_at: string
+          status: string
+          title: string
+        }[]
+      }
+      get_moderation_diary: {
+        Args: { p_org_id: string }
+        Returns: {
+          client_id: string
+          client_name: string
+          content: string
+          created_at: string
+          emotion: string
+          id: string
+          symptoms: string[]
+        }[]
+      }
+      get_moderation_messages: {
+        Args: { p_org_id: string }
+        Returns: {
+          attachment_type: string
+          attachment_url: string
+          client_id: string
+          client_name: string
+          created_at: string
+          id: string
+          message: string
+          read: boolean
+          read_by_client: boolean
+          title: string
+        }[]
+      }
+      get_moderation_notifications: {
+        Args: { p_org_id: string }
+        Returns: {
+          client_id: string
+          client_name: string
+          created_at: string
+          id: string
+          message: string
+          read: boolean
+          read_by_client: boolean
+          title: string
+        }[]
+      }
+      get_moderation_transactions: {
+        Args: { p_org_id: string }
+        Returns: {
+          amount: number
+          amount_received: number
+          client_name: string
+          created_at: string
+          date: string
+          description: string
+          id: string
+          payment_method: string
+          type: string
+        }[]
+      }
       get_org_client_counts: {
         Args: never
         Returns: {
