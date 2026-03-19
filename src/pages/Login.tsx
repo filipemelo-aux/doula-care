@@ -18,7 +18,7 @@ export default function Login() {
   const [cachedLogo, setCachedLogo] = useState<string | null>(null);
   const [cachedName, setCachedName] = useState<string | null>(null);
   const navigate = useNavigate();
-  const { signIn, user, role, roles, roleChecked, loading, isAdmin, isClient, isSuperAdmin, isFirstLogin } = useAuth();
+  const { signIn, user, role, roleChecked, loading, isFirstLogin } = useAuth();
 
   // Read cached branding for logo/name (theme already applied in main.tsx)
   useEffect(() => {
