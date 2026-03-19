@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import logo from "@/assets/logo.png";
 import { useAuth } from "@/contexts/AuthContext";
@@ -10,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
-import { Loader2, Building2, Users, Ban, CheckCircle, LogOut, BarChart3, Clock, ShieldCheck, Mail, CalendarDays, Baby, Trash2, RefreshCw, Bell, CreditCard, Menu, Users2, Zap, Home, UserCog, Eye, EyeOff } from "lucide-react";
+import { Loader2, Building2, Users, Ban, CheckCircle, LogOut, BarChart3, Clock, ShieldCheck, Mail, CalendarDays, Baby, Trash2, RefreshCw, Bell, CreditCard, Menu, Users2, Zap, Home, UserCog, Eye, EyeOff, ArrowLeft } from "lucide-react";
 import Forum from "@/pages/Forum";
 import { APP_VERSION } from "@/lib/appVersion";
 import { PlanPricingCard } from "@/components/superadmin/PlanPricingCard";
@@ -200,7 +201,8 @@ function ProfileSection() {
 }
 
 export default function SuperAdminDashboard() {
-  const { signOut } = useAuth();
+  const { signOut, roles } = useAuth();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const onlineOrgIds = useOnlineOrgs();
   const isMobile = useIsMobile();
@@ -562,6 +564,20 @@ export default function SuperAdminDashboard() {
           </button>
         ))}
       </nav>
+      {(roles.includes("admin") || roles.includes("moderator")) && (
+        <div className="p-3 border-t border-border">
+          <button
+            onClick={() => {
+              navigate("/admin");
+              onNavigate?.();
+            }}
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors text-left text-muted-foreground hover:bg-muted hover:text-foreground"
+          >
+            <ArrowLeft className="h-4 w-4 shrink-0" />
+            Voltar ao Dashboard Doula
+          </button>
+        </div>
+      )}
     </div>
   );
 
