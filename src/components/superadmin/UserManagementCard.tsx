@@ -5,8 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Switch } from "@/components/ui/switch";
-import { Loader2, Users, Crown, Shield, User, Trash2, KeyRound, Search, Copy, Check, ShieldCheck } from "lucide-react";
+import { Loader2, Users, Crown, Shield, User, Trash2, KeyRound, Search, Copy, Check } from "lucide-react";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -21,15 +20,11 @@ interface UserWithRole {
   roles: string[];
 }
 
-const MASTER_SUPER_ADMIN_EMAIL = "filipe.silvamelo@live.com";
-
 export function UserManagementCard() {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [deleteUserId, setDeleteUserId] = useState<string | null>(null);
   const [resetUserId, setResetUserId] = useState<string | null>(null);
-  const [toggleUserId, setToggleUserId] = useState<string | null>(null);
-  const [toggleHasRole, setToggleHasRole] = useState(false);
   const [resetResult, setResetResult] = useState<{ userId: string; password: string } | null>(null);
   const [copiedPassword, setCopiedPassword] = useState(false);
   const [masterUserId, setMasterUserId] = useState<string | null>(null);
@@ -54,14 +49,12 @@ export function UserManagementCard() {
 
       const orgMap = new Map((orgs || []).map(o => [o.id, o.name]));
 
-      // Only show super_admins and admins (doulas)
       const adminUserIds = new Set(
         (roles || [])
           .filter(r => r.role === "super_admin" || r.role === "admin")
           .map(r => r.user_id)
       );
 
-      // Identify master super admin via DB function
       const { data: masterId } = await supabase.rpc("get_master_super_admin_id" as any);
       if (masterId) {
         setMasterUserId(masterId);
@@ -123,33 +116,6 @@ export function UserManagementCard() {
     }
   };
 
-  const confirmToggleSuperAdmin = async () => {
-    if (!toggleUserId) return;
-    try {
-      if (toggleHasRole) {
-        await supabase.from("user_roles").delete().eq("user_id", toggleUserId).eq("role", "super_admin");
-        toast.success("Papel de Super Admin removido");
-      } else {
-        await supabase.from("user_roles").insert({ user_id: toggleUserId, role: "super_admin" } as any);
-        toast.success("Super Admin concedido!");
-      }
-      queryClient.invalidateQueries({ queryKey: ["super-admin-all-users"] });
-    } catch (err: any) {
-      toast.error(err.message || "Erro ao alterar papel");
-    } finally {
-      setToggleUserId(null);
-    }
-  };
-
-  const handleToggleSuperAdmin = (userId: string, hasRole: boolean) => {
-    if (userId === masterUserId) {
-      toast.error("Não é permitido alterar o Super Admin master");
-      return;
-    }
-    setToggleUserId(userId);
-    setToggleHasRole(hasRole);
-  };
-
   const filteredUsers = users.filter(u => {
     if (!search) return true;
     const q = search.toLowerCase();
@@ -177,7 +143,6 @@ export function UserManagementCard() {
 
   const deleteTarget = users.find(u => u.user_id === deleteUserId);
   const resetConfirmTarget = users.find(u => u.user_id === resetUserId);
-  const toggleTarget = users.find(u => u.user_id === toggleUserId);
   const resetTarget = resetResult ? users.find(u => u.user_id === resetResult.userId) : null;
 
   return (
@@ -212,49 +177,41 @@ export function UserManagementCard() {
               {filteredUsers.map(u => {
                 const isMaster = u.user_id === masterUserId;
                 return (
-                <div key={u.user_id} className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted/30 transition-colors">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-1.5">
-                      <p className="text-sm font-medium truncate">{u.full_name || "Sem nome"}</p>
-                      {isMaster && <Badge className="bg-red-500/15 text-red-600 border-0 text-[9px] px-1 py-0">Master</Badge>}
+                  <div key={u.user_id} className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted/30 transition-colors">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        <p className="text-sm font-medium truncate">{u.full_name || "Sem nome"}</p>
+                        {isMaster && <Badge className="bg-red-500/15 text-red-600 border-0 text-[9px] px-1 py-0">Master</Badge>}
+                      </div>
+                      <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                        {u.roles.map(r => getRoleBadge(r))}
+                        <span className="text-[10px] text-muted-foreground">• {u.org_name}</span>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
-                      {u.roles.map(r => getRoleBadge(r))}
-                      <span className="text-[10px] text-muted-foreground">• {u.org_name}</span>
-                    </div>
+                    {!isMaster && (
+                      <div className="flex items-center gap-1 shrink-0">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-muted-foreground hover:text-amber-600"
+                          onClick={() => setResetUserId(u.user_id)}
+                          disabled={resetMutation.isPending}
+                          title="Resetar senha"
+                        >
+                          <KeyRound className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                          onClick={() => setDeleteUserId(u.user_id)}
+                          title="Excluir usuário"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    )}
                   </div>
-                  {!isMaster && (
-                  <div className="flex items-center gap-1 shrink-0">
-                    <div className="flex items-center gap-1.5 mr-2" title={u.roles.includes("super_admin") ? "Remover Super Admin" : "Conceder Super Admin"}>
-                      <ShieldCheck className={`h-3.5 w-3.5 ${u.roles.includes("super_admin") ? "text-red-500" : "text-muted-foreground/40"}`} />
-                      <Switch
-                        checked={u.roles.includes("super_admin")}
-                        onCheckedChange={() => handleToggleSuperAdmin(u.user_id, u.roles.includes("super_admin"))}
-                        className="scale-75"
-                      />
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 text-muted-foreground hover:text-amber-600"
-                      onClick={() => setResetUserId(u.user_id)}
-                      disabled={resetMutation.isPending}
-                      title="Resetar senha"
-                    >
-                      <KeyRound className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                      onClick={() => setDeleteUserId(u.user_id)}
-                      title="Excluir usuário"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                  )}
-                </div>
                 );
               })}
               {filteredUsers.length === 0 && (
@@ -265,7 +222,6 @@ export function UserManagementCard() {
         </CardContent>
       </Card>
 
-      {/* Delete confirmation */}
       <AlertDialog open={!!deleteUserId} onOpenChange={() => setDeleteUserId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -287,7 +243,6 @@ export function UserManagementCard() {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Reset password confirmation */}
       <AlertDialog open={!!resetUserId} onOpenChange={() => setResetUserId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -305,29 +260,6 @@ export function UserManagementCard() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-
-      {/* Toggle Super Admin confirmation */}
-      <AlertDialog open={!!toggleUserId} onOpenChange={() => setToggleUserId(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{toggleHasRole ? "Remover Super Admin" : "Conceder Super Admin"}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {toggleHasRole
-                ? <>Tem certeza que deseja <strong>remover</strong> o papel de Super Admin de <strong>{toggleTarget?.full_name || "este usuário"}</strong>?</>
-                : <>Tem certeza que deseja <strong>conceder</strong> o papel de Super Admin para <strong>{toggleTarget?.full_name || "este usuário"}</strong>? Ele terá acesso ao painel de controle global.</>
-              }
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmToggleSuperAdmin}>
-              <ShieldCheck className="h-4 w-4 mr-1" />
-              Confirmar
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
 
       <AlertDialog open={!!resetResult} onOpenChange={() => { setResetResult(null); setCopiedPassword(false); }}>
         <AlertDialogContent>
