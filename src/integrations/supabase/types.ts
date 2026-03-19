@@ -1511,6 +1511,15 @@ export type Database = {
         Args: { p_author_id: string; p_is_anonymous: boolean }
         Returns: string
       }
+      get_forum_author_profiles: {
+        Args: { p_user_ids: string[] }
+        Returns: {
+          avatar_url: string
+          display_name: string
+          is_doula: boolean
+          user_id: string
+        }[]
+      }
       get_user_organization_id: { Args: never; Returns: string }
       has_role: {
         Args: {
