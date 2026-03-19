@@ -472,6 +472,29 @@ export default function SuperAdminDashboard() {
           <Button
             variant="ghost"
             size="sm"
+            className="text-destructive gap-1.5"
+            title="Forçar atualização em TODOS os dispositivos"
+            onClick={async () => {
+              try {
+                const now = new Date().toISOString();
+                const { error } = await supabase
+                  .from("system_config" as any)
+                  .update({ value: now, updated_at: now } as any)
+                  .eq("key", "force_update_at");
+                if (error) throw error;
+                toast.success("Atualização forçada enviada para todos os usuários!");
+              } catch (err) {
+                console.error(err);
+                toast.error("Erro ao forçar atualização");
+              }
+            }}
+          >
+            <Zap className="h-4 w-4" />
+            <span className="hidden sm:inline">Forçar Update Global</span>
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
             className="text-muted-foreground gap-1.5"
             onClick={async () => {
               try {
