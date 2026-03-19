@@ -28,7 +28,7 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
-type Section = "dashboard" | "orgs" | "users" | "billing" | "notifications" | "community" | "profile";
+type Section = "dashboard" | "users" | "billing" | "notifications" | "community" | "profile";
 
 const sidebarItems: { key: Section; label: string; icon: React.ElementType }[] = [
   { key: "dashboard", label: "Painel", icon: Home },
