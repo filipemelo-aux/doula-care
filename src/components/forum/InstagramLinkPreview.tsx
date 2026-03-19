@@ -13,7 +13,10 @@ export function extractInstagramUrls(content: string): string[] {
 
 export function removeInstagramMarkdownLinks(content: string): string {
   // Remove markdown links like [text](instagram-url) 
-  return content.replace(/📸\s*\[.*?\]\(https?:\/\/(?:www\.)?instagram\.com\/(?:p|reel|tv)\/[A-Za-z0-9_-]+\/?\)/g, "").trim();
+  let cleaned = content.replace(/📸\s*\[.*?\]\(https?:\/\/(?:www\.)?instagram\.com\/(?:p|reel|tv)\/[A-Za-z0-9_-]+\/?\)/g, "");
+  // Remove bare Instagram URLs
+  cleaned = cleaned.replace(/https?:\/\/(?:www\.)?instagram\.com\/(?:p|reel|tv)\/[A-Za-z0-9_-]+\/?/g, "");
+  return cleaned.trim();
 }
 
 export function InstagramLinkPreview({ content }: InstagramLinkPreviewProps) {
