@@ -38,3 +38,6 @@ verify_jwt = false
 
 [functions.generate-notification-text]
 verify_jwt = false
+
+[functions.notify-forum-post]
+verify_jwt = false
