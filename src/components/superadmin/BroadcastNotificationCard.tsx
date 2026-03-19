@@ -166,7 +166,8 @@ export function BroadcastNotificationCard() {
             author_id: user.id,
             is_anonymous: false,
             organization_id: null, // Global post
-          })
+            is_system_post: true, // Show as "Doula Care"
+          } as any)
           .select("id")
           .single();
 
