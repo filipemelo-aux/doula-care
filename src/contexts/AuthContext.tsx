@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 
 type AppRole = "admin" | "moderator" | "client" | "user" | "super_admin";
+type AppRoles = AppRole[];
 
 interface ClientData {
   id: string;
