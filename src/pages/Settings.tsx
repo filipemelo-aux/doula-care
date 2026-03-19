@@ -834,7 +834,7 @@ export default function Settings() {
                 <FormItem><FormLabel>Serviços Inclusos</FormLabel><FormControl><Textarea {...field} className="min-h-[120px] resize-none" placeholder={"Um serviço por linha:\nConsultas mensais\nSuporte via WhatsApp"} /></FormControl><p className="text-xs text-muted-foreground">Um serviço por linha</p><FormMessage /></FormItem>
               )} />
               <FormField control={planForm.control} name="is_active" render={({ field }) => (
-                <FormItem className="flex items-center justify-between rounded-lg border p-4">
+                <FormItem className="flex items-center justify-between rounded-lg p-4">
                   <div><FormLabel className="text-base">Plano Ativo</FormLabel><p className="text-sm text-muted-foreground">Planos inativos não aparecem para novas contratações</p></div>
                   <FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl>
                 </FormItem>

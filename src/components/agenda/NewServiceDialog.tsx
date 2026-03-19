@@ -266,7 +266,7 @@ export function NewServiceDialog({ open, onOpenChange }: NewServiceDialogProps) 
                       <button
                         type="button"
                         onClick={() => handleSelectService(service.name)}
-                        className={`flex flex-col items-center justify-center gap-1 p-2.5 rounded-lg border text-center transition-all w-full h-[4.5rem] ${
+                        className={`flex flex-col items-center justify-center gap-1 p-2.5 rounded-lg text-center transition-all w-full h-[4.5rem] ${
                           selectedServices.includes(service.name)
                             ? "border-primary bg-primary/10 ring-2 ring-primary"
                             : "border-border hover:border-primary/50 hover:bg-muted/50"
@@ -372,7 +372,7 @@ export function NewServiceDialog({ open, onOpenChange }: NewServiceDialogProps) 
                 Cadastrar cliente avulsa
               </Button>
             ) : (
-              <div className="rounded-lg border border-dashed bg-primary/5 p-3 space-y-2">
+              <div className="rounded-lg border-dashed bg-primary/5 p-3 space-y-2">
                 <p className="text-xs font-medium text-primary flex items-center gap-1">
                   <UserPlus className="h-3 w-3" />
                   Cadastro de Cliente Avulsa

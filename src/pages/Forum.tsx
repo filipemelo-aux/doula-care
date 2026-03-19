@@ -344,7 +344,7 @@ export default function Forum() {
       {/* Create post button (compact) */}
       <button
         onClick={() => setShowNewPost(true)}
-        className="w-full bg-card border border-border rounded-xl p-4 flex items-center gap-3 hover:bg-accent/50 transition-colors text-left"
+        className="w-full bg-card border-border rounded-xl p-4 flex items-center gap-3 hover:bg-accent/50 transition-colors text-left"
       >
         <Avatar className="h-10 w-10 bg-primary/10">
           <AvatarFallback className="bg-primary/10 text-primary text-sm font-semibold">

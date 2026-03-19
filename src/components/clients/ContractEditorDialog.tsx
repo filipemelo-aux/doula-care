@@ -404,12 +404,12 @@ ${client?.city || "[Cidade]"}, ${todayFormatted}.`;
 
                 {/* Signature Preview */}
                 {isSigned && contract?.signature_data && (
-                  <div className="rounded-lg border bg-muted/30 p-3 space-y-2">
+                  <div className="rounded-lg bg-muted/30 p-3 space-y-2">
                     <p className="text-xs font-medium text-muted-foreground">
                       Assinatura da cliente:
                     </p>
                     {contract.signature_type === "drawn" ? (
-                      <div className="bg-background rounded border p-2 flex justify-center">
+                      <div className="bg-background rounded p-2 flex justify-center">
                         <img src={contract.signature_data} alt="Assinatura" className="max-h-20" />
                       </div>
                     ) : (
@@ -498,7 +498,7 @@ ${client?.city || "[Cidade]"}, ${todayFormatted}.`;
                       </div>
 
                       {/* Summary of auto-filled data */}
-                      <div className="rounded-lg border bg-muted/20 p-3 space-y-1 text-xs">
+                      <div className="rounded-lg bg-muted/20 p-3 space-y-1 text-xs">
                         <p className="font-medium text-muted-foreground mb-2">
                           Dados preenchidos automaticamente:
                         </p>
@@ -580,7 +580,7 @@ ${client?.city || "[Cidade]"}, ${todayFormatted}.`;
                           </p>
                         </div>
                       ) : (
-                        <div className="rounded-lg border bg-muted/20 p-3 flex items-center gap-3">
+                        <div className="rounded-lg bg-muted/20 p-3 flex items-center gap-3">
                           <FileText className="h-8 w-8 text-primary shrink-0" />
                           <div className="min-w-0 flex-1">
                             <p className="text-sm font-medium truncate">
@@ -649,7 +649,7 @@ ${client?.city || "[Cidade]"}, ${todayFormatted}.`;
                   <div className="space-y-3">
                     {/* File attachment indicator */}
                     {(contract as any).file_url && (
-                      <div className="rounded-lg border bg-muted/20 p-3 flex items-center gap-3">
+                      <div className="rounded-lg bg-muted/20 p-3 flex items-center gap-3">
                         <FileText className="h-8 w-8 text-primary shrink-0" />
                         <div className="min-w-0 flex-1">
                           <p className="text-sm font-medium">Contrato anexado</p>

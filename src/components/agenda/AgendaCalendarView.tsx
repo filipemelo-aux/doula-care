@@ -91,7 +91,7 @@ export function AgendaCalendarView({ appointments, onDateSelect }: AgendaCalenda
                     <div
                       key={apt.id}
                       className={cn(
-                        "rounded-lg p-3 border bg-background",
+                        "rounded-lg p-3 bg-background",
                         apt.completed_at && "opacity-60"
                       )}
                     >

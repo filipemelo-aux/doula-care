@@ -696,7 +696,7 @@ export default function Agenda() {
                 ref={dateInputRef}
                 type="datetime-local"
                 defaultValue={aptDate}
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 mt-1"
+                className="flex h-10 w-full rounded-md border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 mt-1"
               />
               {aptDate && (
                 <p className="text-xs text-muted-foreground mt-1">
@@ -781,7 +781,7 @@ export default function Agenda() {
                 ref={personalDateRef}
                 type="datetime-local"
                 defaultValue={personalDate}
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 mt-1"
+                className="flex h-10 w-full rounded-md border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 mt-1"
               />
               {personalDate && (
                 <p className="text-xs text-muted-foreground mt-1">
@@ -875,7 +875,7 @@ function AppointmentRow({
 
   return (
     <>
-      <div className={`flex w-full max-w-full min-w-0 items-center gap-3 rounded-lg p-3 border bg-background hover:bg-muted/30 transition-colors overflow-hidden ${apt.completed_at ? "opacity-60" : past ? "opacity-50" : ""}`}>
+      <div className={`flex w-full max-w-full min-w-0 items-center gap-3 rounded-lg p-3 bg-background hover:bg-muted/30 transition-colors overflow-hidden ${apt.completed_at ? "opacity-60" : past ? "opacity-50" : ""}`}>
         <div className="text-center min-w-[44px]">
           <p className="text-[10px] text-muted-foreground uppercase">{format(date, "MMM", { locale: ptBR })}</p>
           <p className="text-lg font-bold leading-tight">{format(date, "dd")}</p>
@@ -967,7 +967,7 @@ function ServiceRow({
   const scheduledDate = hasScheduledDate ? toZonedTime(new Date(svc.scheduled_date!), "America/Sao_Paulo") : null;
 
   return (
-    <div className="flex items-center gap-3 rounded-lg p-3 border bg-background hover:bg-muted/30 transition-colors">
+    <div className="flex items-center gap-3 rounded-lg p-3 bg-background hover:bg-muted/30 transition-colors">
       {/* Date column - like appointments */}
       {hasScheduledDate && scheduledDate ? (
         <div className="text-center min-w-[44px]">

@@ -226,11 +226,11 @@ export function BrandingSettingsCard() {
                   >
                     <div className="flex gap-1">
                       <div
-                        className="w-8 h-8 rounded-full border border-black/10 shadow-sm"
+                        className="w-8 h-8 rounded-full border-black/10 shadow-sm"
                         style={{ background: palette.primary }}
                       />
                       <div
-                        className="w-8 h-8 rounded-full border border-black/10 shadow-sm"
+                        className="w-8 h-8 rounded-full border-black/10 shadow-sm"
                         style={{ background: palette.secondary }}
                       />
                     </div>
@@ -346,7 +346,7 @@ export function BrandingSettingsCard() {
         </CardHeader>
         <CardContent>
           <div
-            className="rounded-xl overflow-hidden border"
+            className="rounded-xl overflow-hidden"
             style={{
               background: `hsl(${hexToHSL(secondaryColor).h} ${Math.max(hexToHSL(secondaryColor).s - 2, 0)}% 95%)`,
             }}
@@ -389,7 +389,7 @@ export function BrandingSettingsCard() {
                 </div>
               </div>
               <div className="flex gap-2">
-                <div className="flex-1 rounded-lg p-3 border" style={{ background: `hsl(${hexToHSL(secondaryColor).h} ${Math.max(hexToHSL(secondaryColor).s - 2, 0)}% 98%)` }}>
+                <div className="flex-1 rounded-lg p-3" style={{ background: `hsl(${hexToHSL(secondaryColor).h} ${Math.max(hexToHSL(secondaryColor).s - 2, 0)}% 98%)` }}>
                   <div className="flex items-center gap-2">
                     <Baby className="w-4 h-4" style={{ color: primaryColor }} />
                     <span className="text-xs font-medium" style={{ color: `hsl(${pHsl.h} ${Math.min(pHsl.s, 65)}% 25%)` }}>

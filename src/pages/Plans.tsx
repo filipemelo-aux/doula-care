@@ -521,7 +521,7 @@ export default function Plans() {
                 control={form.control}
                 name="is_active"
                 render={({ field }) => (
-                  <FormItem className="flex items-center justify-between rounded-lg border p-4">
+                  <FormItem className="flex items-center justify-between rounded-lg p-4">
                     <div className="space-y-0.5">
                       <FormLabel className="text-base">Plano Ativo</FormLabel>
                       <p className="text-sm text-muted-foreground">

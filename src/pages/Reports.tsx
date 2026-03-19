@@ -457,7 +457,7 @@ export default function Reports() {
               {/* Mobile Cards */}
               <div className="block lg:hidden space-y-2 max-h-[400px] overflow-y-auto">
                 {monthlyTableData?.map((row) => (
-                  <div key={row.month} className="rounded-lg border p-3 space-y-2 bg-card/50">
+                  <div key={row.month} className="rounded-lg p-3 space-y-2 bg-card/50">
                     <div className="flex items-center justify-between">
                       <p className="font-medium text-xs capitalize text-foreground">{row.monthShort}</p>
                       <span className="text-[10px] text-muted-foreground">{row.count} mov.</span>
@@ -656,7 +656,7 @@ export default function Reports() {
                   </ResponsiveContainer>
                   <div className="space-y-2 px-2 lg:px-0">
                     {incomeByMethod.map((method, i) => (
-                      <div key={method.name} className="flex items-center justify-between p-2.5 rounded-lg bg-muted/30 border">
+                      <div key={method.name} className="flex items-center justify-between p-2.5 rounded-lg bg-muted/30">
                         <div className="flex items-center gap-2 min-w-0">
                           <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: COLORS[i % COLORS.length] }} />
                           <span className="text-xs lg:text-sm font-medium truncate">{method.name}</span>
@@ -783,7 +783,7 @@ export default function Reports() {
               <CardContent className="px-3 lg:px-6 pb-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {expensesByCategory.byType.map((type) => (
-                    <div key={type.name} className="flex items-center justify-between p-3 rounded-xl bg-destructive/5 border">
+                    <div key={type.name} className="flex items-center justify-between p-3 rounded-xl bg-destructive/5">
                       <span className="text-xs lg:text-sm font-medium text-foreground truncate">{type.name}</span>
                       <span className="text-sm lg:text-base font-semibold text-destructive flex-shrink-0 ml-2">
                         {formatCurrency(type.value)}

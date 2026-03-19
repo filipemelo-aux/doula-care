@@ -358,7 +358,7 @@ export function AvailabilityManager() {
               <ScrollArea className="max-h-[250px]">
                 <div className="space-y-2">
                   {selectedDaySlots.map((slot) => (
-                    <div key={slot.id} className="flex items-center justify-between rounded-lg p-3 border bg-background">
+                    <div key={slot.id} className="flex items-center justify-between rounded-lg p-3 bg-background">
                       <div className="flex items-center gap-2">
                         <Clock className="h-4 w-4 text-primary" />
                         <span className="text-sm font-medium">
@@ -571,7 +571,7 @@ function HourGrid({ hours, onToggle, disabledHours }: { hours: number[]; onToggl
             disabled={isDisabled}
             title={isDisabled ? "Horário ocupado por compromisso" : undefined}
             className={cn(
-              "rounded-md py-2 text-xs font-medium transition-colors border",
+              "rounded-md py-2 text-xs font-medium transition-colors",
               isDisabled
                 ? "bg-muted text-muted-foreground border-border opacity-50 cursor-not-allowed line-through"
                 : isSelected

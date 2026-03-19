@@ -379,7 +379,7 @@ export default function GestanteAppointments() {
                   }}
                 />
               ) : (
-                <div className="text-center py-4 text-sm text-muted-foreground border rounded-lg">
+                <div className="text-center py-4 text-sm text-muted-foreground rounded-lg">
                   <AlertCircle className="h-5 w-5 mx-auto mb-2 text-amber-500" />
                   Sua doula ainda não definiu horários disponíveis
                 </div>

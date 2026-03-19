@@ -146,7 +146,7 @@ export function ClientsListDialog({
                 return (
                   <div
                     key={client.id}
-                    className={`p-4 rounded-lg border ${
+                    className={`p-4 rounded-lg ${
                       postTerm 
                         ? "bg-red-50 dark:bg-red-950/30 dark:border-red-800" 
                         : "bg-card "

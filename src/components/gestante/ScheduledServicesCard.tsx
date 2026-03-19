@@ -340,7 +340,7 @@ export function ScheduledServicesCard({ clientId, organizationId }: ScheduledSer
               {photoPreviewUrls.length > 0 && (
                 <div className="flex flex-wrap gap-2 mb-2">
                   {photoPreviewUrls.map((url, idx) => (
-                    <div key={idx} className="relative w-16 h-16 rounded-md overflow-hidden border">
+                    <div key={idx} className="relative w-16 h-16 rounded-md overflow-hidden">
                       <img src={url} alt="" className="w-full h-full object-cover" />
                       <button
                         onClick={() => removePhoto(idx)}

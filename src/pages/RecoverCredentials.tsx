@@ -153,7 +153,7 @@ export default function RecoverCredentials() {
             <div className="space-y-4">
               {result.alreadyChanged ? (
                 <>
-                  <div className="rounded-lg border bg-muted/50 p-4 space-y-3">
+                  <div className="rounded-lg bg-muted/50 p-4 space-y-3">
                     <div className="space-y-1">
                       <p className="text-xs text-muted-foreground font-medium">Seu usuário</p>
                       <div className="flex items-center gap-2">
@@ -175,7 +175,7 @@ export default function RecoverCredentials() {
                   </p>
                 </>
               ) : (
-                <div className="rounded-lg border bg-muted/50 p-4 space-y-3">
+                <div className="rounded-lg bg-muted/50 p-4 space-y-3">
                   <div className="space-y-1">
                     <p className="text-xs text-muted-foreground font-medium">Seu usuário</p>
                     <div className="flex items-center gap-2">

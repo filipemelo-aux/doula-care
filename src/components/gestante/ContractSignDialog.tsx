@@ -229,7 +229,7 @@ export function ContractSignDialog({ open, onOpenChange, contractId }: ContractS
             <ScrollArea className="max-h-[calc(95vh-200px)] px-6">
               {/* Contract Content */}
               {(contract as any)?.file_url ? (
-                <div className="rounded-lg border bg-muted/20 p-4 mb-4 flex items-center gap-3">
+                <div className="rounded-lg bg-muted/20 p-4 mb-4 flex items-center gap-3">
                   <FileText className="h-8 w-8 text-primary shrink-0" />
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-medium">Contrato anexado</p>
@@ -249,17 +249,17 @@ export function ContractSignDialog({ open, onOpenChange, contractId }: ContractS
                   </Button>
                 </div>
               ) : (
-                <div className="rounded-lg border bg-muted/20 p-4 mb-4">
+                <div className="rounded-lg bg-muted/20 p-4 mb-4">
                   <p className="text-sm leading-relaxed whitespace-pre-wrap">{contract?.content}</p>
                 </div>
               )}
 
               {/* Already signed view */}
               {isSigned && contract?.signature_data && (
-                <div className="rounded-lg border bg-green-50/50 p-4 space-y-2 mb-4">
+                <div className="rounded-lg bg-green-50/50 p-4 space-y-2 mb-4">
                   <p className="text-xs font-medium text-muted-foreground">Sua assinatura:</p>
                   {contract.signature_type === "drawn" ? (
-                    <div className="bg-background rounded border p-2 flex justify-center">
+                    <div className="bg-background rounded p-2 flex justify-center">
                       <img src={contract.signature_data} alt="Assinatura" className="max-h-24" />
                     </div>
                   ) : (
@@ -323,7 +323,7 @@ export function ContractSignDialog({ open, onOpenChange, contractId }: ContractS
                         mask="name"
                       />
                       {typedName.trim().length >= 3 && (
-                        <div className="rounded-lg border bg-muted/20 p-4">
+                        <div className="rounded-lg bg-muted/20 p-4">
                           <p className="text-xs text-muted-foreground mb-1">Prévia:</p>
                           <p className="font-serif text-3xl text-center italic">{typedName}</p>
                         </div>

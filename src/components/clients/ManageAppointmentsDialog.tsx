@@ -196,7 +196,7 @@ export function ManageAppointmentsDialog({
                   return (
                     <div
                       key={apt.id}
-                      className={`flex w-full max-w-full min-w-0 items-center gap-3 rounded-lg p-3 border overflow-hidden ${
+                      className={`flex w-full max-w-full min-w-0 items-center gap-3 rounded-lg p-3 overflow-hidden ${
                         apt.completed_at ? "opacity-60 bg-muted/20" : past ? "opacity-50 bg-muted/20" : "bg-background"
                       }`}
                     >

@@ -446,7 +446,7 @@ export function OrgBillingCard() {
         />
       </div>
 
-      <div className="flex items-center justify-between rounded-lg border border-border p-3">
+      <div className="flex items-center justify-between rounded-lg border-border p-3">
         <div className="flex items-center gap-2">
           <Bell className="h-4 w-4 text-primary" />
           <Label className="text-sm font-normal">Notificar doula</Label>

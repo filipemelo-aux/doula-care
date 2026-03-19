@@ -871,7 +871,7 @@ export function NotificationsCenter({ fullPage = false }: NotificationsCenterPro
                       onOpenChange={() => hasChildren && toggleExpanded(notification.id)}
                     >
                       <div
-                        className={`rounded-lg border transition-colors overflow-hidden ${
+                        className={`rounded-lg transition-colors overflow-hidden ${
                           notification.isRead && !notification.isInLabor
                             ? "bg-muted/30 opacity-60"
                             : notification.isInLabor

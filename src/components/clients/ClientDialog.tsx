@@ -1447,7 +1447,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
 
                 {/* Entrada no parcelado */}
                 {watchedPaymentType === "parcelado" && (
-                  <div className="rounded-lg border p-3 space-y-3">
+                  <div className="rounded-lg p-3 space-y-3">
                     {/* Entry percentage option */}
                     {watchedInstallments > 1 && (
                       <div className="space-y-2">
@@ -1459,7 +1459,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
                               setEntryType("equal");
                               setEntryPercentage(0);
                             }}
-                            className={`flex-1 text-xs py-1.5 px-2 rounded-md border transition-colors ${
+                            className={`flex-1 text-xs py-1.5 px-2 rounded-md transition-colors ${
                               entryType === "equal"
                                 ? "bg-primary text-primary-foreground border-primary"
                                 : "bg-muted/30 text-muted-foreground border-border hover:bg-muted/50"
@@ -1470,7 +1470,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
                           <button
                             type="button"
                             onClick={() => setEntryType("percentage")}
-                            className={`flex-1 text-xs py-1.5 px-2 rounded-md border transition-colors ${
+                            className={`flex-1 text-xs py-1.5 px-2 rounded-md transition-colors ${
                               entryType === "percentage"
                                 ? "bg-primary text-primary-foreground border-primary"
                                 : "bg-muted/30 text-muted-foreground border-border hover:bg-muted/50"
@@ -1524,7 +1524,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
                 )}
               </div>
               {/* Pré-natal */}
-              <div className="space-y-3 rounded-lg border p-3">
+              <div className="space-y-3 rounded-lg p-3">
                 <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Pré-natal</h4>
                 <div className="grid grid-cols-2 gap-3">
                   <FormField
@@ -1631,7 +1631,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
               </div>
 
               {/* Saúde e Restrições */}
-              <div className="space-y-3 rounded-lg border p-3">
+              <div className="space-y-3 rounded-lg p-3">
                 <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Saúde e Restrições</h4>
                 <FormField
                   control={form.control}
@@ -1675,7 +1675,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
               </div>
 
               {/* Fotógrafa */}
-              <div className="space-y-3 rounded-lg border p-3">
+              <div className="space-y-3 rounded-lg p-3">
                 <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Fotógrafa</h4>
                 <FormField
                   control={form.control}
@@ -1739,7 +1739,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
               </div>
 
               {/* Redes Sociais */}
-              <div className="space-y-3 rounded-lg border p-3">
+              <div className="space-y-3 rounded-lg p-3">
                 <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Redes Sociais</h4>
                 <div className="grid grid-cols-2 gap-3">
                   <FormField
