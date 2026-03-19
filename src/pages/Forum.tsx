@@ -118,7 +118,7 @@ export default function Forum() {
     },
   });
 
-  const { data: posts = [], refetch: refetchPosts } = useQuery({
+  const { data: posts = [], refetch: refetchPosts, isFetching: isFetchingPosts } = useQuery({
     queryKey: ["forum-posts", selectedCategory, searchTerm],
     queryFn: async () => {
       let query = supabase
