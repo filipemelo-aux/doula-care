@@ -214,7 +214,7 @@ export function GestanteLayout({ children }: GestanteLayoutProps) {
         </header>
 
         {/* Desktop Header */}
-        <header className="hidden lg:flex h-16 items-center justify-between px-8 bg-card/50 backdrop-blur-sm sticky top-0 z-40">
+        <header className="hidden lg:flex h-16 shrink-0 items-center justify-between px-8 bg-card/50 backdrop-blur-sm z-40 border-b border-border/30">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-[40%] bg-[#FFF5EE] overflow-hidden">
               <img src={headerLogo} alt={headerName} className="w-full h-full object-cover mix-blend-multiply scale-[1.15]" />
