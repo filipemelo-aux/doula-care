@@ -54,22 +54,32 @@ export default function Forum() {
         .from("user_roles")
         .select("role")
         .eq("user_id", user.id);
-      // Fetch profile avatar
       const { data: profile } = await supabase
         .from("profiles")
-        .select("full_name, avatar_url")
+        .select("full_name, avatar_url, organization_id")
         .eq("user_id", user.id)
         .maybeSingle();
-      // Also try client data for preferred_name
       const { data: clientData } = await supabase
         .from("clients")
         .select("preferred_name, full_name")
         .eq("user_id", user.id)
         .maybeSingle();
+      const userRoles = roles?.map(r => r.role) || [];
+      const isDoulaUser = userRoles.some(r => ["admin", "moderator"].includes(r));
+      // For doula users, fetch org logo to use as avatar in forum
+      let avatarUrl = profile?.avatar_url || null;
+      if (isDoulaUser && profile?.organization_id) {
+        const { data: org } = await supabase
+          .from("organizations")
+          .select("logo_url")
+          .eq("id", profile.organization_id)
+          .maybeSingle();
+        if (org?.logo_url) avatarUrl = org.logo_url;
+      }
       return {
         ...user,
-        roles: roles?.map(r => r.role) || [],
-        avatarUrl: profile?.avatar_url || null,
+        roles: userRoles,
+        avatarUrl,
         displayName: clientData?.preferred_name || clientData?.full_name || profile?.full_name || "Usuária",
       };
     },
