@@ -93,8 +93,8 @@ export function TopPlansCard() {
               key={plan.type}
               className={`flex items-center gap-4 p-4 rounded-lg transition-all ${
                 index === 0
-                  ? "bg-warning/5 border"
-                  : "bg-muted/30 border"
+                  ? "bg-warning/5"
+                  : "bg-muted/30"
               }`}
             >
               <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-background">
