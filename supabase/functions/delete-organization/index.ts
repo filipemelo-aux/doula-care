@@ -108,7 +108,14 @@ Deno.serve(async (req) => {
     await supabaseAdmin.from("admin_settings").delete().eq("organization_id", organizationId);
     await supabaseAdmin.from("forum_posts").delete().eq("organization_id", organizationId);
     
-    // Delete remaining transactions for the org
+    // Delete remaining org-level records (catches records not linked to specific clients)
+    await supabaseAdmin.from("appointments").delete().eq("organization_id", organizationId);
+    await supabaseAdmin.from("client_contracts").delete().eq("organization_id", organizationId);
+    await supabaseAdmin.from("client_notifications").delete().eq("organization_id", organizationId);
+    await supabaseAdmin.from("contractions").delete().eq("organization_id", organizationId);
+    await supabaseAdmin.from("pregnancy_diary").delete().eq("organization_id", organizationId);
+    await supabaseAdmin.from("payments").delete().eq("organization_id", organizationId);
+    await supabaseAdmin.from("service_requests").delete().eq("organization_id", organizationId);
     await supabaseAdmin.from("transactions").delete().eq("organization_id", organizationId);
 
     // Delete clients
