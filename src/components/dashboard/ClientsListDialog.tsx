@@ -148,8 +148,8 @@ export function ClientsListDialog({
                     key={client.id}
                     className={`p-4 rounded-lg border ${
                       postTerm 
-                        ? "bg-red-50 border-red-200 dark:bg-red-950/30 dark:border-red-800" 
-                        : "bg-card border-border"
+                        ? "bg-red-50 dark:bg-red-950/30 dark:border-red-800" 
+                        : "bg-card "
                     }`}
                   >
                     <div className="flex items-start justify-between gap-3">
@@ -169,10 +169,10 @@ export function ClientsListDialog({
                               variant="outline" 
                               className={`text-[10px] h-5 ${
                                 postTerm
-                                  ? "bg-red-200 text-red-800 border-red-300 dark:bg-red-800/50 dark:text-red-300"
+                                  ? "bg-red-200 text-red-800 dark:bg-red-800/50 dark:text-red-300"
                                   : currentWeeks >= 40
                                     ? "bg-orange-100 text-orange-700 border-orange-200"
-                                    : "bg-primary/10 text-primary border-primary/20"
+                                    : "bg-primary/10 text-primary"
                               }`}
                             >
                               {currentWeeks}s{currentDays > 0 ? `${currentDays}d` : ""}
@@ -228,7 +228,7 @@ export function ClientsListDialog({
 
                     {/* Gestante Info */}
                     {status === "gestante" && client.dpp && (
-                      <div className="mt-3 pt-3 border-t border-border/50">
+                      <div className="mt-3 pt-3 border-t">
                         <div className="flex items-center justify-between text-xs text-muted-foreground">
                           <span className="flex items-center gap-1">
                             <Calendar className="h-3 w-3" />
@@ -273,7 +273,7 @@ export function ClientsListDialog({
 
                     {/* Puérpera/Birth Info */}
                     {status === "lactante" && client.birth_occurred && (
-                      <div className="mt-3 pt-3 border-t border-border/50">
+                      <div className="mt-3 pt-3 border-t">
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
                           {client.birth_date && (
                             <div className="flex items-center gap-1.5 text-muted-foreground">

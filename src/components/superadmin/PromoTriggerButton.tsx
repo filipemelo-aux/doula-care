@@ -175,7 +175,7 @@ export function PromoTriggerButton({ orgId, orgName }: PromoTriggerButtonProps) 
           </Badge>
         )}
         {isLifetime && promo.status === "trial_active" && (
-          <Badge variant="outline" className="text-[10px] h-5 border-amber-500/30 text-amber-600">
+          <Badge variant="outline" className="text-[10px] h-5 text-amber-600">
             surpresa ao final
           </Badge>
         )}
@@ -238,7 +238,7 @@ export function PromoTriggerButton({ orgId, orgName }: PromoTriggerButtonProps) 
         <Button
           variant="outline"
           size="sm"
-          className="h-7 text-[11px] gap-1 border-primary/30 text-primary hover:bg-primary/5"
+          className="h-7 text-[11px] gap-1 text-primary hover:bg-primary/5"
           disabled={sendPromoMutation.isPending}
         >
           <Gift className="h-3 w-3" />

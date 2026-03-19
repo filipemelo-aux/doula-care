@@ -408,7 +408,7 @@ export default function Settings() {
       </div>
 
       {/* Current User Info */}
-      <Card className="card-glass border-primary/20">
+      <Card className="card-glass">
         <CardContent className="pt-6">
           <div className="flex flex-col gap-4">
             <div className="flex items-center gap-4">
@@ -735,7 +735,7 @@ export default function Settings() {
             </CardContent>
           </Card>
 
-          <Card className="card-glass border-primary/20">
+          <Card className="card-glass">
             <CardContent className="pt-6">
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center">

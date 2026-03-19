@@ -102,9 +102,9 @@ export function PushNotificationStatusCard() {
               variant="outline"
               className={
                 isSubscribed
-                  ? "bg-success/10 text-success border-success/20"
+                  ? "bg-success/10 text-success"
                   : permission === "denied"
-                  ? "bg-destructive/10 text-destructive border-destructive/20"
+                  ? "bg-destructive/10 text-destructive"
                   : "bg-muted text-muted-foreground"
               }
             >

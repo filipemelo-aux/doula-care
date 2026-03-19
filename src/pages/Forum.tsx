@@ -546,7 +546,7 @@ export default function Forum() {
                     </div>
 
                     {/* Add comment */}
-                    <div className="px-4 py-3 flex items-start gap-2.5 border-t border-border/50">
+                    <div className="px-4 py-3 flex items-start gap-2.5 border-t">
                       <Avatar className="h-7 w-7 shrink-0 mt-0.5">
                         <AvatarFallback className="bg-primary/10 text-primary text-[10px] font-semibold">
                           {currentUser ? getInitials(getAuthorName(currentUser.id, false)) : "?"}

@@ -372,7 +372,7 @@ export function NewServiceDialog({ open, onOpenChange }: NewServiceDialogProps) 
                 Cadastrar cliente avulsa
               </Button>
             ) : (
-              <div className="rounded-lg border border-dashed border-primary/40 bg-primary/5 p-3 space-y-2">
+              <div className="rounded-lg border border-dashed bg-primary/5 p-3 space-y-2">
                 <p className="text-xs font-medium text-primary flex items-center gap-1">
                   <UserPlus className="h-3 w-3" />
                   Cadastro de Cliente Avulsa

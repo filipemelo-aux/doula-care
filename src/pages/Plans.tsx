@@ -302,7 +302,7 @@ export default function Plans() {
       </div>
 
       {/* Summary Card */}
-      <Card className="card-glass border-primary/20">
+      <Card className="card-glass">
         <CardContent className="pt-6">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
@@ -347,7 +347,7 @@ export default function Plans() {
               <div className="absolute top-3 right-3 flex items-center gap-2">
                 <Badge
                   variant="outline"
-                  className={isActive ? "bg-success/10 text-success border-success/20" : "bg-muted text-muted-foreground"}
+                  className={isActive ? "bg-success/10 text-success" : "bg-muted text-muted-foreground"}
                 >
                   {isActive ? "Ativo" : "Inativo"}
                 </Badge>

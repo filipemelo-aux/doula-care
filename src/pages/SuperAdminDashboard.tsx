@@ -45,8 +45,8 @@ interface OrgWithCounts {
 
 const planBadgeStyles: Record<string, string> = {
   free: "bg-muted text-muted-foreground",
-  pro: "bg-primary/10 text-primary border-primary/20",
-  premium: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 border-amber-300/30",
+  pro: "bg-primary/10 text-primary",
+  premium: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
 };
 
 export default function SuperAdminDashboard() {
@@ -178,14 +178,14 @@ export default function SuperAdminDashboard() {
       .toUpperCase();
 
     return (
-      <Card className="group hover:shadow-md transition-all duration-200 border-border/60">
+      <Card className="group hover:shadow-md transition-all duration-200">
         <CardContent className="p-4">
           <div className="flex items-start gap-3">
             {/* Avatar */}
             <div className="relative flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
               <span className="text-sm font-bold text-primary">{initials}</span>
               {onlineOrgIds.has(org.id) && (
-                <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-emerald-500 border-2 border-card" title="Online agora" />
+                <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-emerald-500border-card" title="Online agora" />
               )}
             </div>
 
@@ -228,7 +228,7 @@ export default function SuperAdminDashboard() {
           </div>
 
           {/* Actions */}
-          <div className="flex items-center gap-2 mt-3 pt-3 border-t border-border/40">
+          <div className="flex items-center gap-2 mt-3 pt-3 border-t">
             <Select
               value={org.plan}
               onValueChange={(value) =>
@@ -274,7 +274,7 @@ export default function SuperAdminDashboard() {
                 <Button
                   variant="outline"
                   size="sm"
-                  className="h-8 text-xs text-destructive hover:bg-destructive/10 border-destructive/30"
+                  className="h-8 text-xs text-destructive hover:bg-destructive/10"
                   disabled={deleteMutation.isPending}
                 >
                   <Trash2 className="h-3.5 w-3.5" />
@@ -310,7 +310,7 @@ export default function SuperAdminDashboard() {
   };
 
   const PendingOrgCard = ({ org }: { org: OrgWithCounts }) => (
-    <Card className="border-amber-500/40 bg-amber-50/30 dark:bg-amber-950/10">
+    <Card className="bg-amber-50/30 dark:bg-amber-950/10">
       <CardContent className="p-4">
         <div className="flex items-start gap-3">
           <div className="flex-shrink-0 w-10 h-10 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
@@ -324,7 +324,7 @@ export default function SuperAdminDashboard() {
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-2 mt-3 pt-3 border-t border-amber-200/50 dark:border-amber-800/30">
+        <div className="flex items-center gap-2 mt-3 pt-3 border-t dark:border-amber-800/30">
           <Select
             value={approvalPlans[org.id] || "free"}
             onValueChange={(value) =>
@@ -528,7 +528,7 @@ export default function SuperAdminDashboard() {
                 </div>
               </CardContent>
             </Card>
-            <Card className="bg-primary/5 border-primary/15">
+            <Card className="bg-primary/5">
               <CardContent className="p-4 flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-primary/15 flex items-center justify-center">
                   <Building2 className="h-5 w-5 text-primary" />
@@ -539,7 +539,7 @@ export default function SuperAdminDashboard() {
                 </div>
               </CardContent>
             </Card>
-            <Card className={pendingOrgs.length > 0 ? "bg-warning/5 border-warning/30" : ""}>
+            <Card className={pendingOrgs.length > 0 ? "bg-warning/5" : ""}>
               <CardContent className="p-4 flex items-center gap-3">
                 <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center", pendingOrgs.length > 0 ? "bg-warning/15" : "bg-muted")}>
                   <Clock className={cn("h-5 w-5", pendingOrgs.length > 0 ? "text-warning animate-pulse" : "text-muted-foreground")} />

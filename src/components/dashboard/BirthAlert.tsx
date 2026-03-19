@@ -93,14 +93,14 @@ export function BirthAlert() {
     <>
       <Card className={`card-glass overflow-hidden max-w-full ${
         hasLaborStarted
-          ? "border-destructive/50 ring-2 ring-destructive/20"
+          ? "ring-2 ring-destructive/20"
           : hasPostTerm 
-          ? "border-destructive/30" 
+          ? ""
           : hasNotifications 
-          ? "border-warning/30" 
+          ? ""
           : ""
       }`}>
-        <CardHeader className="py-3 px-3 border-b border-border/50">
+        <CardHeader className="py-3 px-3 border-b">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <div className="relative">
@@ -213,7 +213,7 @@ export function BirthAlert() {
                         <Button
                           size="sm"
                           variant="outline"
-                          className="h-5 px-2 text-[10px] border-dashed border-primary/50 text-primary hover:bg-primary hover:text-primary-foreground hover:border-solid flex-shrink-0 transition-all"
+                          className="h-5 px-2 text-[10px] border-dashed text-primary hover:bg-primary hover:text-primary-foreground hover:border-solid flex-shrink-0 transition-all"
                           onClick={() => handleRegisterBirth(client as Client)}
                         >
                           <CheckCircle className="h-2.5 w-2.5 mr-0.5" />
@@ -237,7 +237,7 @@ export function BirthAlert() {
                         <Button
                           size="sm"
                           variant="outline"
-                          className="h-5 px-2 text-[10px] border-dashed border-primary/50 text-primary hover:bg-primary hover:text-primary-foreground hover:border-solid transition-all w-full"
+                          className="h-5 px-2 text-[10px] border-dashed text-primary hover:bg-primary hover:text-primary-foreground hover:border-solid transition-all w-full"
                           onClick={() => handleRegisterBirth(client as Client)}
                         >
                           <CheckCircle className="h-2.5 w-2.5 mr-0.5" />

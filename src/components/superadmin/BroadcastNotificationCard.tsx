@@ -211,7 +211,7 @@ export function BroadcastNotificationCard() {
       </CardHeader>
       <CardContent className="space-y-4">
         {/* AI Generation Section */}
-        <div className="p-4 rounded-lg border border-primary/20 bg-primary/5 space-y-3">
+        <div className="p-4 rounded-lg border bg-primary/5 space-y-3">
           <div className="flex items-center gap-2 text-sm font-medium text-primary">
             <Sparkles className="h-4 w-4" />
             Gerador de Texto com IA

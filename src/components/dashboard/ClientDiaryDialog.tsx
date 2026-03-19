@@ -171,7 +171,7 @@ export function ClientDiaryDialog({
                                 {formatBrazilTime(entry.created_at)}
                               </span>
                               {!entry.read_by_admin && (
-                                <Badge variant="outline" className="text-[10px] h-4 px-1.5 bg-primary/10 text-primary border-primary/30">
+                                <Badge variant="outline" className="text-[10px] h-4 px-1.5 bg-primary/10 text-primary">
                                   <Eye className="h-2.5 w-2.5 mr-0.5" />
                                   Novo
                                 </Badge>

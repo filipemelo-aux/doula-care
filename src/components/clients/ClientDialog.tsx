@@ -1515,7 +1515,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
                           type="checkbox"
                           checked={entryAlreadyPaid}
                           onChange={(e) => setEntryAlreadyPaid(e.target.checked)}
-                          className="rounded border-border"
+                          className="rounded "
                         />
                         <span className="text-xs font-medium">Entrada já foi recebida?</span>
                       </label>

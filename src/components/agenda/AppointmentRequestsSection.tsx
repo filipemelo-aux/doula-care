@@ -197,7 +197,7 @@ export function AppointmentRequestsSection() {
               return (
                 <Card
                   key={req.id}
-                  className="border-primary/30 bg-primary/5"
+                  className="border-none border-30 bg-primary/5"
                 >
                   <CardContent className="p-3">
                     <div className="flex items-start gap-3">
@@ -312,7 +312,7 @@ export function AppointmentRequestsSection() {
                       </div>
                       <Badge
                         variant="outline"
-                        className={`text-[10px] ${isApproved ? "bg-emerald-100 text-emerald-800 border-emerald-300" : "bg-red-100 text-red-800 border-red-300"}`}
+                        className={`text-[10px] ${isApproved ? "bg-emerald-100 text-emerald-800 border-emerald-300" : "bg-red-100 text-red-800"}`}
                       >
                         {isApproved ? (
                           <CheckCircle className="h-3 w-3 mr-1" />

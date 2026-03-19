@@ -74,7 +74,7 @@ export function AppointmentDetailDialog({
           )}
 
           {appointment.completed_at && (
-            <div className="p-3 rounded-lg bg-green-50 border border-green-200">
+            <div className="p-3 rounded-lg bg-green-50 border">
               <p className="text-xs text-green-700 mb-1 flex items-center gap-1 font-medium">
                 <CheckCircle className="h-3 w-3" /> Consulta Concluída
               </p>

@@ -311,8 +311,8 @@ export default function GestanteContractions() {
         <Card className={cn(
           "overflow-hidden transition-all",
           activeContraction 
-            ? "bg-gradient-to-br from-destructive/10 to-destructive/5 border-destructive/30" 
-            : "bg-gradient-to-br from-primary/10 to-accent/10 border-primary/20"
+            ? "bg-gradient-to-br from-destructive/10 to-destructive/5" 
+            : "bg-gradient-to-br from-primary/10 to-accent/10"
         )}>
           <CardContent className="p-6">
             {/* Timer Display */}
@@ -386,7 +386,7 @@ export default function GestanteContractions() {
 
         {/* Active Labor Detected */}
         {laborStatus === "active" && (
-          <Card className="bg-gradient-to-br from-primary/5 to-accent/5 border-2 border-primary/30 shadow-lg shadow-primary/10">
+          <Card className="bg-gradient-to-br from-primary/5 to-accent/5shadow-lg shadow-primary/10">
             <CardContent className="p-5 text-center space-y-3">
               <div className="w-14 h-14 mx-auto rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center animate-pulse">
                 <Baby className="h-7 w-7 text-white" />
@@ -409,7 +409,7 @@ export default function GestanteContractions() {
 
         {/* Prodromal Labor Reassurance */}
         {laborStatus === "prodromal" && completedContractions.length >= 2 && (
-          <Card className="bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200">
+          <Card className="bg-gradient-to-br from-amber-50 to-orange-50">
             <CardContent className="p-4 flex items-start gap-3">
               <Sparkles className="h-5 w-5 text-amber-500 shrink-0 mt-0.5" />
               <div>

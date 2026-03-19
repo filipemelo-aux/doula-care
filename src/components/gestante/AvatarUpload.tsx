@@ -135,7 +135,7 @@ export function AvatarUpload({ currentUrl, onUploaded, userId, name, size = "lg"
             type="button"
             size="icon"
             variant="secondary"
-            className="absolute -bottom-1 -right-1 h-7 w-7 rounded-full shadow-md border-2 border-background"
+            className="absolute -bottom-1 -right-1 h-7 w-7 rounded-full shadow-mdborder-background"
             disabled={uploading}
           >
             {uploading ? (

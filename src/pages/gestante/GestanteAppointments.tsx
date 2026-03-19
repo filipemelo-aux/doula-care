@@ -46,9 +46,9 @@ interface Appointment {
 }
 
 const statusConfig: Record<string, { label: string; icon: React.ElementType; className: string }> = {
-  pending: { label: "Pendente", icon: Clock, className: "bg-amber-100 text-amber-800 border-amber-300" },
+  pending: { label: "Pendente", icon: Clock, className: "bg-amber-100 text-amber-800" },
   approved: { label: "Aprovada", icon: CheckCircle, className: "bg-emerald-100 text-emerald-800 border-emerald-300" },
-  rejected: { label: "Recusada", icon: XCircle, className: "bg-red-100 text-red-800 border-red-300" },
+  rejected: { label: "Recusada", icon: XCircle, className: "bg-red-100 text-red-800" },
 };
 
 export default function GestanteAppointments() {

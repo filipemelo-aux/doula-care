@@ -107,8 +107,8 @@ const statusConfig: Record<string, { label: string; color: string }> = {
   budget_sent: { label: "Orçamento Enviado", color: "bg-purple-100 text-purple-800 border-purple-300" },
   date_proposed: { label: "Data Proposta", color: "bg-orange-100 text-orange-800 border-orange-300" },
   accepted: { label: "Aceito", color: "bg-emerald-100 text-emerald-800 border-emerald-300" },
-  rejected: { label: "Recusado", color: "bg-red-100 text-red-800 border-red-300" },
-  completed: { label: "Concluído", color: "bg-blue-100 text-blue-800 border-blue-300" },
+  rejected: { label: "Recusado", color: "bg-red-100 text-red-800" },
+  completed: { label: "Concluído", color: "bg-blue-100 text-blue-800" },
 };
 
 const getServiceStatus = (svc: ServiceRequestFull) => {
@@ -465,19 +465,19 @@ export default function Agenda() {
 
       {/* Quick Stats */}
       <div className="grid grid-cols-3 gap-3">
-        <Card className="bg-warning/10 border-warning/30">
+        <Card className="bg-warning/10">
           <CardContent className="p-3 text-center">
             <p className="text-2xl font-bold text-amber-700">{pendingServices}</p>
             <p className="text-xs text-amber-700/80">Solicitações Pendentes</p>
           </CardContent>
         </Card>
-        <Card className="bg-primary/10 border-primary/30">
+        <Card className="bg-primary/10">
           <CardContent className="p-3 text-center">
             <p className="text-2xl font-bold text-primary">{budgetSentServices}</p>
             <p className="text-xs text-primary/80">Aguardando Resposta</p>
           </CardContent>
         </Card>
-        <Card className="bg-success/10 border-success/30">
+        <Card className="bg-success/10">
           <CardContent className="p-3 text-center">
             <p className="text-2xl font-bold text-emerald-700">{acceptedServices}</p>
             <p className="text-xs text-emerald-700/80">Em Andamento</p>

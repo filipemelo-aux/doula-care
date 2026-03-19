@@ -333,11 +333,11 @@ export function ClientAccessCard({ clientsWithAccounts, loadingClients }: Client
                       </TableCell>
                       <TableCell className="px-2 py-1.5">
                         {client.first_login ? (
-                          <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-warning/10 text-warning border-warning/30">
+                          <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-warning/10 text-warning">
                             Aguard.
                           </Badge>
                         ) : (
-                          <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-success/10 text-success border-success/30">
+                          <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-success/10 text-success">
                             Ativo
                           </Badge>
                         )}
