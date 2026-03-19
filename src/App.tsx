@@ -25,6 +25,7 @@ import AdminMessages from "./pages/AdminMessages";
 
 import UpdatePrompt from "./components/pwa/UpdatePrompt";
 import { NotificationListenerProvider } from "./components/notifications/NotificationListenerProvider";
+import { ForceUpdateListener } from "./components/ForceUpdateListener";
 
 // Gestante pages
 import GestanteChangePassword from "./pages/gestante/GestanteChangePassword";
