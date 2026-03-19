@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Search, Plus, MessageSquare, Heart, EyeOff, Loader2, Send, Pin, MoreVertical, EyeOffIcon, Trash2, X } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -167,6 +168,43 @@ export default function Forum() {
       return data?.map(r => r.post_id) || [];
     },
     enabled: !!currentUser && postIds.length > 0,
+  });
+
+  // Fetch all reactions with user_ids for tooltip display
+  const { data: allReactions = [] } = useQuery({
+    queryKey: ["forum-all-reactions", postIds],
+    queryFn: async () => {
+      if (postIds.length === 0) return [];
+      const { data } = await supabase
+        .from("forum_reactions")
+        .select("post_id, user_id")
+        .in("post_id", postIds);
+      return data || [];
+    },
+    enabled: postIds.length > 0,
+  });
+
+  const reactionsByPost = useMemo(() => {
+    const map: Record<string, string[]> = {};
+    allReactions.forEach((r: any) => {
+      if (!map[r.post_id]) map[r.post_id] = [];
+      if (!map[r.post_id].includes(r.user_id)) map[r.post_id].push(r.user_id);
+    });
+    return map;
+  }, [allReactions]);
+
+  const allLikerIds = useMemo(() => [...new Set(allReactions.map((r: any) => r.user_id))], [allReactions]);
+  const { data: likerProfileMap = {} } = useQuery({
+    queryKey: ["forum-liker-profiles", allLikerIds],
+    queryFn: async () => {
+      if (allLikerIds.length === 0) return {};
+      const { data, error } = await supabase.rpc("get_forum_author_profiles", { p_user_ids: allLikerIds });
+      if (error) throw error;
+      const map: Record<string, string> = {};
+      data?.forEach((row: any) => { map[row.user_id] = row.display_name || "Usuária"; });
+      return map;
+    },
+    enabled: allLikerIds.length > 0,
   });
 
   // Expanded post comments
@@ -444,10 +482,26 @@ export default function Forum() {
                 {/* Reactions bar */}
                 <div className="px-4 py-2 flex items-center gap-1 text-xs text-muted-foreground">
                   {reactionCount > 0 && (
-                    <span className="flex items-center gap-1">
-                      <span className="bg-red-500 text-white rounded-full h-4 w-4 flex items-center justify-center text-[10px]">❤</span>
-                      {reactionCount}
-                    </span>
+                    <TooltipProvider delayDuration={300}>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <span className="flex items-center gap-1 cursor-pointer hover:underline">
+                            <span className="bg-red-500 text-white rounded-full h-4 w-4 flex items-center justify-center text-[10px]">❤</span>
+                            {reactionCount}
+                          </span>
+                        </TooltipTrigger>
+                        <TooltipContent side="bottom" className="max-w-[200px]">
+                          <div className="flex flex-col gap-0.5 text-xs">
+                            {(reactionsByPost[post.id] || []).slice(0, 10).map((uid: string) => (
+                              <span key={uid}>{(likerProfileMap as Record<string, string>)[uid] || "Usuária"}</span>
+                            ))}
+                            {(reactionsByPost[post.id]?.length || 0) > 10 && (
+                              <span className="text-muted-foreground">e mais {(reactionsByPost[post.id]?.length || 0) - 10}...</span>
+                            )}
+                          </div>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
                   )}
                   {reactionCount > 0 && commentCount > 0 && <span className="mx-1">·</span>}
                   {commentCount > 0 && (
