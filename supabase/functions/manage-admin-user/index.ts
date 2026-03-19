@@ -205,6 +205,36 @@ Deno.serve(async (req) => {
     }
 
     if (action === "delete") {
+      const { error: deleteReactionsError } = await adminClient
+        .from("forum_reactions")
+        .delete()
+        .eq("user_id", userId);
+      if (deleteReactionsError) throw deleteReactionsError;
+
+      const { error: clearAppointmentsOwnerError } = await adminClient
+        .from("appointments")
+        .update({ owner_id: null })
+        .eq("owner_id", userId);
+      if (clearAppointmentsOwnerError) throw clearAppointmentsOwnerError;
+
+      const { error: clearPaymentsOwnerError } = await adminClient
+        .from("payments")
+        .update({ owner_id: null })
+        .eq("owner_id", userId);
+      if (clearPaymentsOwnerError) throw clearPaymentsOwnerError;
+
+      const { error: clearTransactionsOwnerError } = await adminClient
+        .from("transactions")
+        .update({ owner_id: null })
+        .eq("owner_id", userId);
+      if (clearTransactionsOwnerError) throw clearTransactionsOwnerError;
+
+      const { error: clearPlanSettingsOwnerError } = await adminClient
+        .from("plan_settings")
+        .update({ owner_id: null })
+        .eq("owner_id", userId);
+      if (clearPlanSettingsOwnerError) throw clearPlanSettingsOwnerError;
+
       const { error: deleteRolesError } = await adminClient.from("user_roles").delete().eq("user_id", userId);
       if (deleteRolesError) throw deleteRolesError;
 
@@ -212,7 +242,9 @@ Deno.serve(async (req) => {
       if (deleteProfileError) throw deleteProfileError;
 
       const { error: deleteAuthError } = await adminClient.auth.admin.deleteUser(userId);
-      if (deleteAuthError) throw deleteAuthError;
+      if (deleteAuthError) {
+        throw new Error(`Falha ao excluir usuário da autenticação: ${deleteAuthError.message}`);
+      }
 
       return new Response(JSON.stringify({ success: true, message: "Usuário excluído" }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
