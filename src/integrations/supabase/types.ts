@@ -1542,6 +1542,13 @@ export type Database = {
         }[]
       }
       get_master_super_admin_id: { Args: never; Returns: string }
+      get_org_client_counts: {
+        Args: never
+        Returns: {
+          client_count: number
+          organization_id: string
+        }[]
+      }
       get_user_organization_id: { Args: never; Returns: string }
       has_role: {
         Args: {
