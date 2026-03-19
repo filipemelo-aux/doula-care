@@ -49,6 +49,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profileName, setProfileName] = useState<string | null>(null);
   const [organizationId, setOrganizationId] = useState<string | null>(null);
   const [orgStatus, setOrgStatus] = useState<OrgStatus | null>(null);
+  // Flag to prevent onAuthStateChange from re-running initializeUser when signIn already handled it
+  const signInHandledRef = { current: false };
 
   const fetchRole = useCallback(async (userId: string): Promise<AppRole | null> => {
     try {
@@ -197,6 +199,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setSession(currentSession);
           setUser(currentSession?.user ?? null);
 
+          // If signIn() already handled initialization, skip duplicate call
+          if (event === "SIGNED_IN" && signInHandledRef.current) {
+            signInHandledRef.current = false;
+            return;
+          }
+
           // Dispatch async work AFTER callback to avoid deadlock
           setTimeout(() => {
             if (isMounted && initialLoadDone) {
@@ -295,6 +303,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Directly initialize user data instead of relying on onAuthStateChange
       // This avoids race conditions and stale closures
       if (data?.session) {
+        signInHandledRef.current = true;
         await initializeUser(data.session);
       }
 
