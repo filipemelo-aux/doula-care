@@ -52,6 +52,7 @@ export function BroadcastNotificationCard() {
   const [message, setMessage] = useState("");
   const [notifType, setNotifType] = useState<PushNotificationType>("community");
   const [communityTheme, setCommunityTheme] = useState("livre");
+  const [instagramLink, setInstagramLink] = useState("");
   const [audience, setAudience] = useState("all");
   const [targetOrgId, setTargetOrgId] = useState("all");
   const [orgs, setOrgs] = useState<Organization[]>([]);
