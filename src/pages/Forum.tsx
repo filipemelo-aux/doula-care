@@ -491,7 +491,10 @@ export default function Forum() {
           </div>
         ) : (
           posts.map((post: any) => {
-            const authorInfo = getAuthorInfo(post.author_id, post.is_anonymous);
+            const isSystemPost = post.is_system_post === true;
+            const authorInfo = isSystemPost
+              ? { name: "Doula Care", avatarUrl: "/logo.png", isDoula: true }
+              : getAuthorInfo(post.author_id, post.is_anonymous);
             const authorName = authorInfo.name;
             const liked = userReactions.includes(post.id);
             const commentCount = post.forum_comments?.[0]?.count || 0;
