@@ -34,7 +34,6 @@ interface AppointmentWithClient {
 export function UpcomingAppointments() {
   const queryClient = useQueryClient();
   const isMobile = useIsMobile();
-  const { organizationId } = useAuth();
   const [selectedClient, setSelectedClient] = useState<{ id: string; name: string } | null>(null);
   const [pickClientOpen, setPickClientOpen] = useState(false);
   const [pickedClientId, setPickedClientId] = useState("");
@@ -42,8 +41,7 @@ export function UpcomingAppointments() {
   const [completeApt, setCompleteApt] = useState<AppointmentWithClient | null>(null);
 
   const { data: appointments, isLoading } = useQuery({
-    queryKey: ["all-appointments", organizationId],
-    enabled: !!organizationId,
+    queryKey: ["all-appointments"],
     queryFn: async () => {
       const todayStart = new Date();
       todayStart.setHours(0, 0, 0, 0);
