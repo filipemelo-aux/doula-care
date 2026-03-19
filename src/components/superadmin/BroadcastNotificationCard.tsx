@@ -272,6 +272,7 @@ export function BroadcastNotificationCard() {
       setKeywords("");
       setTitle("");
       setMessage("");
+      setInstagramLink("");
     } catch (err: any) {
       console.error(err);
       toast.error(err.message || "Erro ao enviar notificação");
