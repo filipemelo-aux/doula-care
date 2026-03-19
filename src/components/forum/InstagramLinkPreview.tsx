@@ -27,26 +27,23 @@ export function InstagramLinkPreview({ content }: InstagramLinkPreviewProps) {
         const embedUrl = `https://www.instagram.com/p/${postId}/embed/`;
         
         return (
-          <div key={url} className="rounded-xl overflow-hidden border border-border bg-card">
+          <a
+            key={url}
+            href={url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="block rounded-xl overflow-hidden border border-border bg-card"
+          >
             <iframe
               src={embedUrl}
-              className="w-full border-0"
+              className="w-full border-0 pointer-events-none"
               style={{ minHeight: "480px", maxHeight: "600px" }}
               loading="lazy"
               allowTransparency
               scrolling="no"
               title="Instagram Post"
             />
-            <a
-              href={url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-2 px-4 py-2.5 text-xs font-medium text-primary hover:bg-primary/5 transition-colors border-t border-border"
-            >
-              <ExternalLink className="h-3.5 w-3.5" />
-              Ver no Instagram
-            </a>
-          </div>
+          </a>
         );
       })}
     </div>
