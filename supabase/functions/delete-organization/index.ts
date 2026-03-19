@@ -98,11 +98,15 @@ Deno.serve(async (req) => {
     }
 
     // Delete org-level records
+    await supabaseAdmin.from("doula_availability").delete().eq("organization_id", organizationId);
+    await supabaseAdmin.from("appointment_requests").delete().eq("organization_id", organizationId);
+    await supabaseAdmin.from("org_promotions").delete().eq("organization_id", organizationId);
     await supabaseAdmin.from("org_billing").delete().eq("organization_id", organizationId);
     await supabaseAdmin.from("org_notifications").delete().eq("organization_id", organizationId);
     await supabaseAdmin.from("custom_services").delete().eq("organization_id", organizationId);
     await supabaseAdmin.from("plan_settings").delete().eq("organization_id", organizationId);
     await supabaseAdmin.from("admin_settings").delete().eq("organization_id", organizationId);
+    await supabaseAdmin.from("forum_posts").delete().eq("organization_id", organizationId);
     
     // Delete remaining transactions for the org
     await supabaseAdmin.from("transactions").delete().eq("organization_id", organizationId);
