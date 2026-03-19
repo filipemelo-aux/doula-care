@@ -303,6 +303,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Directly initialize user data instead of relying on onAuthStateChange
       // This avoids race conditions and stale closures
       if (data?.session) {
+        signInHandledRef.current = true;
         await initializeUser(data.session);
       }
 
