@@ -193,6 +193,14 @@ export function UserManagementCard() {
                     </div>
                   </div>
                   <div className="flex items-center gap-1 shrink-0">
+                    <div className="flex items-center gap-1.5 mr-2" title={u.roles.includes("super_admin") ? "Remover Super Admin" : "Conceder Super Admin"}>
+                      <ShieldCheck className={`h-3.5 w-3.5 ${u.roles.includes("super_admin") ? "text-red-500" : "text-muted-foreground/40"}`} />
+                      <Switch
+                        checked={u.roles.includes("super_admin")}
+                        onCheckedChange={() => toggleSuperAdmin(u.user_id, u.roles.includes("super_admin"))}
+                        className="scale-75"
+                      />
+                    </div>
                     <Button
                       variant="ghost"
                       size="icon"
