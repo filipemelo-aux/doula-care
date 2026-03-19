@@ -22,6 +22,7 @@ interface AuthContextType {
   session: Session | null;
   loading: boolean;
   role: AppRole | null;
+  roles: AppRoles;
   roleChecked: boolean;
   isAdmin: boolean;
   isClient: boolean;
