@@ -55,23 +55,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Flag to prevent onAuthStateChange from re-running initializeUser when signIn already handled it
   const signInHandledRef = useRef(false);
 
-  const fetchRole = useCallback(async (userId: string): Promise<AppRole | null> => {
+  const fetchRoles = useCallback(async (userId: string): Promise<AppRoles> => {
     try {
       const { data, error } = await supabase
         .from("user_roles")
         .select("role")
-        .eq("user_id", userId)
-        .maybeSingle();
+        .eq("user_id", userId);
 
       if (error) {
-        console.error("Error fetching role:", error);
-        return null;
+        console.error("Error fetching roles:", error);
+        return [];
       }
 
-      return (data?.role as AppRole) ?? null;
+      return (data?.map(r => r.role as AppRole) ?? []);
     } catch (error) {
-      console.error("Error fetching role:", error);
-      return null;
+      console.error("Error fetching roles:", error);
+      return [];
     }
   }, []);
 
