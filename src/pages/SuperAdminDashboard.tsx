@@ -447,6 +447,8 @@ export default function SuperAdminDashboard() {
         );
       case "notifications":
         return <BroadcastNotificationCard />;
+      case "community":
+        return <Forum />;
     }
   };
 
