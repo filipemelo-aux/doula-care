@@ -31,7 +31,10 @@ export default function Login() {
 
   useEffect(() => {
     if (!loading && user && roleChecked && role) {
-      if (role === "super_admin") {
+      // Dual-role: super_admin + admin → go to admin area
+      if (isSuperAdmin && (roles.includes("admin") || roles.includes("moderator"))) {
+        navigate("/admin", { replace: true });
+      } else if (role === "super_admin") {
         navigate("/super-admin", { replace: true });
       } else if (role === "admin" || role === "moderator") {
         navigate("/admin", { replace: true });
@@ -43,7 +46,7 @@ export default function Login() {
         }
       }
     }
-  }, [loading, user, role, roleChecked, isFirstLogin, navigate]);
+  }, [loading, user, role, roles, roleChecked, isSuperAdmin, isFirstLogin, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
