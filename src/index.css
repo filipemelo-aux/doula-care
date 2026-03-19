@@ -308,10 +308,6 @@
     overscroll-behavior-y: none;
   }
 
-  /* Allow pull-to-refresh only on community page */
-  .allow-overscroll {
-    overscroll-behavior-y: auto;
-  }
 
   /* Native shell: bars are opaque & overlay the webview; body gets padding so
      content stays between bars. */
