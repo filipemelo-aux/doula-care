@@ -467,17 +467,34 @@ export default function SuperAdminDashboard() {
 
   const MetricsCards = () => (
     <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
-      <Card className={onlineOrgIds.size > 0 ? "bg-success/5" : ""}>
-        <CardContent className="p-4 flex items-center gap-3">
-          <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center", onlineOrgIds.size > 0 ? "bg-success/15" : "bg-muted")}>
-            <span className={cn("h-3 w-3 rounded-full", onlineOrgIds.size > 0 ? "bg-success animate-pulse" : "bg-muted-foreground/30")} />
-          </div>
-          <div>
-            <p className="text-2xl font-bold text-foreground">{onlineOrgIds.size}</p>
-            <p className="text-[11px] text-muted-foreground leading-tight">Online agora</p>
-          </div>
-        </CardContent>
-      </Card>
+      <Popover>
+        <PopoverTrigger asChild>
+          <Card className={cn(onlineOrgIds.size > 0 ? "bg-success/5 cursor-pointer hover:shadow-md transition-shadow" : "")}>
+            <CardContent className="p-4 flex items-center gap-3">
+              <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center", onlineOrgIds.size > 0 ? "bg-success/15" : "bg-muted")}>
+                <span className={cn("h-3 w-3 rounded-full", onlineOrgIds.size > 0 ? "bg-success animate-pulse" : "bg-muted-foreground/30")} />
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-foreground">{onlineOrgIds.size}</p>
+                <p className="text-[11px] text-muted-foreground leading-tight">Online agora</p>
+              </div>
+            </CardContent>
+          </Card>
+        </PopoverTrigger>
+        {onlineOrgNames.length > 0 && (
+          <PopoverContent className="w-56 p-2" align="start">
+            <p className="text-xs font-semibold text-muted-foreground px-2 py-1">Doulas online</p>
+            <div className="space-y-0.5">
+              {onlineOrgNames.map((o) => (
+                <div key={o.orgId} className="flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-muted/50 text-sm">
+                  <span className="h-2 w-2 rounded-full bg-success shrink-0" />
+                  <span className="truncate">{o.name}</span>
+                </div>
+              ))}
+            </div>
+          </PopoverContent>
+        )}
+      </Popover>
       <Card className="bg-primary/5">
         <CardContent className="p-4 flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-primary/15 flex items-center justify-center">
