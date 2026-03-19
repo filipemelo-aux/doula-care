@@ -482,10 +482,26 @@ export default function Forum() {
                 {/* Reactions bar */}
                 <div className="px-4 py-2 flex items-center gap-1 text-xs text-muted-foreground">
                   {reactionCount > 0 && (
-                    <span className="flex items-center gap-1">
-                      <span className="bg-red-500 text-white rounded-full h-4 w-4 flex items-center justify-center text-[10px]">❤</span>
-                      {reactionCount}
-                    </span>
+                    <TooltipProvider delayDuration={300}>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <span className="flex items-center gap-1 cursor-pointer hover:underline">
+                            <span className="bg-red-500 text-white rounded-full h-4 w-4 flex items-center justify-center text-[10px]">❤</span>
+                            {reactionCount}
+                          </span>
+                        </TooltipTrigger>
+                        <TooltipContent side="bottom" className="max-w-[200px]">
+                          <div className="flex flex-col gap-0.5 text-xs">
+                            {(reactionsByPost[post.id] || []).slice(0, 10).map((uid: string) => (
+                              <span key={uid}>{(likerProfileMap as Record<string, string>)[uid] || "Usuária"}</span>
+                            ))}
+                            {(reactionsByPost[post.id]?.length || 0) > 10 && (
+                              <span className="text-muted-foreground">e mais {(reactionsByPost[post.id]?.length || 0) - 10}...</span>
+                            )}
+                          </div>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
                   )}
                   {reactionCount > 0 && commentCount > 0 && <span className="mx-1">·</span>}
                   {commentCount > 0 && (
