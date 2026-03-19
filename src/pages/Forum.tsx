@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { InstagramLinkPreview, extractInstagramUrls, removeInstagramMarkdownLinks } from "@/components/forum/InstagramLinkPreview";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -57,6 +57,12 @@ export default function Forum() {
   const [commentAnon, setCommentAnon] = useState<Record<string, boolean>>({});
   const [commentLoading, setCommentLoading] = useState<string | null>(null);
 
+  // Community pull-to-refresh
+  const [pullDistance, setPullDistance] = useState(0);
+  const [refreshingCommunity, setRefreshingCommunity] = useState(false);
+  const pullStartYRef = useRef<number | null>(null);
+  const canPullRef = useRef(false);
+
   const { data: currentUser } = useQuery({
     queryKey: ["current-user-forum"],
     queryFn: async () => {
@@ -112,7 +118,7 @@ export default function Forum() {
     },
   });
 
-  const { data: posts = [], refetch: refetchPosts } = useQuery({
+  const { data: posts = [], refetch: refetchPosts, isFetching: isFetchingPosts } = useQuery({
     queryKey: ["forum-posts", selectedCategory, searchTerm],
     queryFn: async () => {
       let query = supabase
@@ -265,6 +271,37 @@ export default function Forum() {
     return (map as Record<string, ProfileEntry>)[authorId] || { name: "Usuária", avatarUrl: null, isDoula: false };
   };
 
+  const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
+    canPullRef.current = window.scrollY <= 0;
+    pullStartYRef.current = canPullRef.current ? e.touches[0].clientY : null;
+  };
+
+  const handleTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (pullStartYRef.current === null || !canPullRef.current || refreshingCommunity) return;
+    const delta = e.touches[0].clientY - pullStartYRef.current;
+    if (delta > 0) {
+      setPullDistance(Math.min(delta * 0.5, 84));
+    }
+  };
+
+  const handleTouchEnd = async () => {
+    if (refreshingCommunity) return;
+    const shouldRefresh = pullDistance >= 60;
+    setPullDistance(0);
+    pullStartYRef.current = null;
+    canPullRef.current = false;
+
+    if (!shouldRefresh) return;
+
+    setRefreshingCommunity(true);
+    try {
+      await refetchPosts();
+      toast.success("Comunidade atualizada");
+    } finally {
+      setRefreshingCommunity(false);
+    }
+  };
+
   const getAuthorName = (authorId: string, anonymous: boolean, map: Record<string, any> = profileMap as any) => {
     if (anonymous) return "Anônima";
     const entry = (map as Record<string, any>)[authorId];
@@ -368,8 +405,24 @@ export default function Forum() {
   };
 
   return (
-    <div className="p-3 lg:p-8 max-w-2xl mx-auto space-y-4 overflow-x-hidden overflow-x-hidden overflow-x-hidden">
-      {/* Header */}
+    <div
+      className="p-3 lg:p-8 max-w-2xl mx-auto space-y-4 overflow-x-hidden"
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+    >
+      <div
+        className="overflow-hidden transition-all duration-200"
+        style={{ height: pullDistance > 0 || refreshingCommunity ? 56 : 0 }}
+      >
+        <div className="flex h-14 items-center justify-center text-sm text-muted-foreground">
+          {refreshingCommunity || isFetchingPosts
+            ? "Atualizando comunidade..."
+            : pullDistance >= 60
+              ? "Solte para atualizar"
+              : "Puxe para atualizar"}
+        </div>
+      </div>
       <div className="page-header">
         <div>
           <h1 className="page-title">Comunidade</h1>
