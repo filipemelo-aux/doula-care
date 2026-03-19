@@ -1541,6 +1541,7 @@ export type Database = {
           user_id: string
         }[]
       }
+      get_master_super_admin_id: { Args: never; Returns: string }
       get_user_organization_id: { Args: never; Returns: string }
       has_role: {
         Args: {
@@ -1549,6 +1550,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_org_member: { Args: never; Returns: boolean }
       is_super_admin: { Args: never; Returns: boolean }
     }
     Enums: {

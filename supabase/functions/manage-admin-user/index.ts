@@ -93,6 +93,19 @@ Deno.serve(async (req) => {
       });
     }
 
+    // PROTECT MASTER SUPER ADMIN
+    const MASTER_EMAIL = "filipe.silvamelo@live.com";
+    const { data: targetAuth } = await supabase.auth.admin.getUserById(userId);
+    const targetEmail = targetAuth?.user?.email;
+    const targetIsMaster = targetEmail === MASTER_EMAIL;
+    const callerIsMaster = callingUser.email === MASTER_EMAIL;
+
+    if (targetIsMaster && !callerIsMaster) {
+      return new Response(JSON.stringify({ error: "Não é permitido gerenciar o Super Admin master" }), {
+        status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     // ORG ISOLATION: super_admin skips org check
     if (!callerIsSuperAdmin) {
       const { data: targetProfile } = await supabase

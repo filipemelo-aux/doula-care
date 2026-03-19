@@ -21,12 +21,15 @@ interface UserWithRole {
   roles: string[];
 }
 
+const MASTER_SUPER_ADMIN_EMAIL = "filipe.silvamelo@live.com";
+
 export function UserManagementCard() {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [deleteUserId, setDeleteUserId] = useState<string | null>(null);
   const [resetResult, setResetResult] = useState<{ userId: string; password: string } | null>(null);
   const [copiedPassword, setCopiedPassword] = useState(false);
+  const [masterUserId, setMasterUserId] = useState<string | null>(null);
 
   const { data: users = [], isLoading } = useQuery({
     queryKey: ["super-admin-all-users"],
@@ -54,6 +57,12 @@ export function UserManagementCard() {
           .filter(r => r.role === "super_admin" || r.role === "admin")
           .map(r => r.user_id)
       );
+
+      // Identify master super admin via DB function
+      const { data: masterId } = await supabase.rpc("get_master_super_admin_id" as any);
+      if (masterId) {
+        setMasterUserId(masterId);
+      }
 
       return (profiles || [])
         .filter(p => adminUserIds.has(p.user_id))
@@ -112,6 +121,10 @@ export function UserManagementCard() {
   };
 
   const toggleSuperAdmin = async (userId: string, hasRole: boolean) => {
+    if (userId === masterUserId) {
+      toast.error("Não é permitido alterar o Super Admin master");
+      return;
+    }
     try {
       if (hasRole) {
         await supabase.from("user_roles").delete().eq("user_id", userId).eq("role", "super_admin");
@@ -183,15 +196,21 @@ export function UserManagementCard() {
             <div className="flex justify-center py-8"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
           ) : (
             <div className="space-y-2 max-h-[60vh] overflow-y-auto">
-              {filteredUsers.map(u => (
+              {filteredUsers.map(u => {
+                const isMaster = u.user_id === masterUserId;
+                return (
                 <div key={u.user_id} className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted/30 transition-colors">
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">{u.full_name || "Sem nome"}</p>
+                    <div className="flex items-center gap-1.5">
+                      <p className="text-sm font-medium truncate">{u.full_name || "Sem nome"}</p>
+                      {isMaster && <Badge className="bg-red-500/15 text-red-600 border-0 text-[9px] px-1 py-0">Master</Badge>}
+                    </div>
                     <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
                       {u.roles.map(r => getRoleBadge(r))}
                       <span className="text-[10px] text-muted-foreground">• {u.org_name}</span>
                     </div>
                   </div>
+                  {!isMaster && (
                   <div className="flex items-center gap-1 shrink-0">
                     <div className="flex items-center gap-1.5 mr-2" title={u.roles.includes("super_admin") ? "Remover Super Admin" : "Conceder Super Admin"}>
                       <ShieldCheck className={`h-3.5 w-3.5 ${u.roles.includes("super_admin") ? "text-red-500" : "text-muted-foreground/40"}`} />
@@ -221,8 +240,10 @@ export function UserManagementCard() {
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
+                  )}
                 </div>
-              ))}
+                );
+              })}
               {filteredUsers.length === 0 && (
                 <p className="text-center text-sm text-muted-foreground py-6">Nenhum usuário encontrado</p>
               )}
