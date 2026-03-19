@@ -123,23 +123,31 @@ export function UserManagementCard() {
     }
   };
 
-  const toggleSuperAdmin = async (userId: string, hasRole: boolean) => {
-    if (userId === masterUserId) {
-      toast.error("Não é permitido alterar o Super Admin master");
-      return;
-    }
+  const confirmToggleSuperAdmin = async () => {
+    if (!toggleUserId) return;
     try {
-      if (hasRole) {
-        await supabase.from("user_roles").delete().eq("user_id", userId).eq("role", "super_admin");
+      if (toggleHasRole) {
+        await supabase.from("user_roles").delete().eq("user_id", toggleUserId).eq("role", "super_admin");
         toast.success("Papel de Super Admin removido");
       } else {
-        await supabase.from("user_roles").insert({ user_id: userId, role: "super_admin" } as any);
+        await supabase.from("user_roles").insert({ user_id: toggleUserId, role: "super_admin" } as any);
         toast.success("Super Admin concedido!");
       }
       queryClient.invalidateQueries({ queryKey: ["super-admin-all-users"] });
     } catch (err: any) {
       toast.error(err.message || "Erro ao alterar papel");
+    } finally {
+      setToggleUserId(null);
     }
+  };
+
+  const handleToggleSuperAdmin = (userId: string, hasRole: boolean) => {
+    if (userId === masterUserId) {
+      toast.error("Não é permitido alterar o Super Admin master");
+      return;
+    }
+    setToggleUserId(userId);
+    setToggleHasRole(hasRole);
   };
 
   const filteredUsers = users.filter(u => {
