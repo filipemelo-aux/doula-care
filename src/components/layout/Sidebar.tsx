@@ -263,23 +263,6 @@ export function Sidebar({ isOpen, onToggle, onNavigate }: SidebarProps) {
           );
         })}
 
-        {/* Super Admin link for dual-role users */}
-        {isSuperAdmin && (
-          <button
-            onClick={() => handleNavClick("/super-admin")}
-            className={cn(
-              "nav-link w-full text-left relative mt-2 border-t border-sidebar-border pt-2",
-              location.pathname === "/super-admin" && "active",
-              !isOpen && "lg:justify-center lg:px-0"
-            )}
-            title={!isOpen ? "Super Admin" : undefined}
-          >
-            <ShieldCheck className="w-5 h-5 shrink-0 text-destructive" />
-            <span className={cn("transition-opacity flex-1 text-destructive", !isOpen && "lg:hidden")}>
-              Super Admin
-            </span>
-          </button>
-        )}
       </nav>
 
       {/* Footer */}
