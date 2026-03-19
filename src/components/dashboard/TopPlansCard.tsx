@@ -18,6 +18,9 @@ export function TopPlansCard() {
 
       const planData: Record<string, { count: number; revenue: number; name: string }> = {};
 
+      // Always include "avulso"
+      planData["avulso"] = { count: 0, revenue: 0, name: "Avulso" };
+
       plans.forEach((plan) => {
         planData[plan.plan_type] = {
           count: 0,
@@ -30,6 +33,13 @@ export function TopPlansCard() {
         if (planData[client.plan]) {
           planData[client.plan].count++;
           planData[client.plan].revenue += Number(client.plan_value) || 0;
+        } else {
+          // Plan type exists on client but not in plan_settings
+          planData[client.plan] = {
+            count: 1,
+            revenue: Number(client.plan_value) || 0,
+            name: client.plan.charAt(0).toUpperCase() + client.plan.slice(1),
+          };
         }
       });
 
@@ -38,6 +48,7 @@ export function TopPlansCard() {
           type,
           ...data,
         }))
+        .filter((p) => p.count > 0 || p.type === "avulso")
         .sort((a, b) => b.count - a.count);
     },
   });
