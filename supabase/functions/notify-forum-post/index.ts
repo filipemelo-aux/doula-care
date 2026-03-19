@@ -109,20 +109,30 @@ Deno.serve(async (req) => {
       await supabase.from("client_notifications").insert(clientNotifications);
     }
 
-    // 5. Send push notification to all users (admins + clients)
-    const allUserIds = [
-      ...adminUserIds,
-      ...clientUserIds.filter((id: string) => clientOrgMap.has(id)),
-    ];
-
-    if (allUserIds.length > 0) {
-      // Call the existing send-push-notification function
+    // 5. Send push notification to admins (url: /comunidade)
+    if (adminUserIds.length > 0) {
       await supabase.functions.invoke("send-push-notification", {
         body: {
-          user_ids: allUserIds,
+          user_ids: adminUserIds,
           title: notifTitle,
           message: notifMessage,
           url: "/comunidade",
+          tag: `forum-post-${postId}`,
+          type: "community",
+          priority: "normal",
+        },
+      });
+    }
+
+    // 6. Send push notification to clients (url: /gestante/comunidade)
+    const clientPushIds = clientUserIds.filter((id: string) => clientOrgMap.has(id));
+    if (clientPushIds.length > 0) {
+      await supabase.functions.invoke("send-push-notification", {
+        body: {
+          user_ids: clientPushIds,
+          title: notifTitle,
+          message: notifMessage,
+          url: "/gestante/comunidade",
           tag: `forum-post-${postId}`,
           type: "community",
           priority: "normal",
