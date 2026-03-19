@@ -601,24 +601,6 @@ export default function SuperAdminDashboard() {
                 </div>
               </div>
             )}
-          </div>
-        );
-      case "orgs":
-        return (
-          <div className="space-y-4">
-            {pendingOrgs.length > 0 && (
-              <div className="space-y-3">
-                <h2 className="text-sm font-semibold text-foreground flex items-center gap-2">
-                  <Clock className="h-4 w-4 text-warning" />
-                  Pendentes ({pendingOrgs.length})
-                </h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                  {pendingOrgs.map((org) => (
-                    <PendingOrgCard key={org.id} org={org} />
-                  ))}
-                </div>
-              </div>
-            )}
             {activeOrgs.length > 0 && (
               <div className="space-y-3">
                 <h2 className="text-sm font-semibold text-foreground flex items-center gap-2">
@@ -644,13 +626,6 @@ export default function SuperAdminDashboard() {
                   ))}
                 </div>
               </div>
-            )}
-            {organizations.length === 0 && (
-              <Card>
-                <CardContent className="py-12 text-center text-muted-foreground">
-                  Nenhuma organização cadastrada
-                </CardContent>
-              </Card>
             )}
           </div>
         );
