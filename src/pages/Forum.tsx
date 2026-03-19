@@ -54,7 +54,34 @@ export default function Forum() {
         .from("user_roles")
         .select("role")
         .eq("user_id", user.id);
-      return { ...user, roles: roles?.map(r => r.role) || [] };
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("full_name, avatar_url, organization_id")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      const { data: clientData } = await supabase
+        .from("clients")
+        .select("preferred_name, full_name")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      const userRoles = roles?.map(r => r.role) || [];
+      const isDoulaUser = userRoles.some(r => ["admin", "moderator"].includes(r));
+      // For doula users, fetch org logo to use as avatar in forum
+      let avatarUrl = profile?.avatar_url || null;
+      if (isDoulaUser && profile?.organization_id) {
+        const { data: org } = await supabase
+          .from("organizations")
+          .select("logo_url")
+          .eq("id", profile.organization_id)
+          .maybeSingle();
+        if (org?.logo_url) avatarUrl = org.logo_url;
+      }
+      return {
+        ...user,
+        roles: userRoles,
+        avatarUrl,
+        displayName: clientData?.preferred_name || clientData?.full_name || profile?.full_name || "Usuária",
+      };
     },
   });
 
@@ -347,8 +374,11 @@ export default function Forum() {
         className="w-full bg-card rounded-xl p-4 flex items-center gap-3 hover:bg-accent/50 transition-colors text-left"
       >
         <Avatar className="h-10 w-10 bg-primary/10">
+          {currentUser?.avatarUrl && (
+            <AvatarImage src={currentUser.avatarUrl} alt={currentUser.displayName} className="object-cover" />
+          )}
           <AvatarFallback className="bg-primary/10 text-primary text-sm font-semibold">
-            {currentUser ? getInitials(getAuthorName(currentUser.id, false)) : "?"}
+            {currentUser ? getInitials(currentUser.displayName) : "?"}
           </AvatarFallback>
         </Avatar>
         <span className="text-muted-foreground text-sm flex-1">No que você está pensando?</span>
@@ -548,8 +578,11 @@ export default function Forum() {
                     {/* Add comment */}
                     <div className="px-4 py-3 flex items-start gap-2.5 border-t">
                       <Avatar className="h-7 w-7 shrink-0 mt-0.5">
+                        {currentUser?.avatarUrl && (
+                          <AvatarImage src={currentUser.avatarUrl} alt={currentUser.displayName} className="object-cover" />
+                        )}
                         <AvatarFallback className="bg-primary/10 text-primary text-[10px] font-semibold">
-                          {currentUser ? getInitials(getAuthorName(currentUser.id, false)) : "?"}
+                          {currentUser ? getInitials(currentUser.displayName) : "?"}
                         </AvatarFallback>
                       </Avatar>
                       <div className="flex-1 flex flex-col gap-1.5">
