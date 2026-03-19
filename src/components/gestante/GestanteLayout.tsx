@@ -94,13 +94,13 @@ export function GestanteLayout({ children }: GestanteLayoutProps) {
       {/* Sidebar */}
       <aside
         className={cn(
-          "fixed lg:relative top-0 bottom-0 left-0 lg:top-0 lg:bottom-0 z-50 flex flex-col bg-sidebar border-r border-sidebar-border transition-all duration-300 ease-in-out pt-[var(--app-safe-top)] pb-[var(--app-safe-bottom)] lg:pt-0 lg:pb-0",
+          "fixed lg:relative top-0 bottom-0 left-0 lg:top-0 lg:bottom-0 z-50 flex flex-col bg-sidebar transition-all duration-300 ease-in-out pt-[var(--app-safe-top)] pb-[var(--app-safe-bottom)] lg:pt-0 lg:pb-0",
           sidebarOpen ? "w-64" : "w-0 lg:w-20",
           !sidebarOpen && "overflow-hidden lg:overflow-visible"
         )}
       >
         {/* Logo */}
-        <div className="h-20 flex items-center justify-between px-6 border-b border-sidebar-border">
+        <div className="h-20 flex items-center justify-between px-6">
           <div className={cn("flex items-center gap-3 transition-opacity", !sidebarOpen && "lg:opacity-0")}>
             <div className="w-9 h-9 rounded-[40%] bg-[#FFF5EE] overflow-hidden">
               <img src={headerLogo} alt={headerName} className="w-full h-full object-cover mix-blend-multiply scale-[1.15]" />
@@ -175,7 +175,7 @@ export function GestanteLayout({ children }: GestanteLayoutProps) {
         </nav>
 
         {/* Logout in sidebar */}
-        <div className={cn("p-4 border-t border-sidebar-border", !sidebarOpen && "lg:hidden")}>
+        <div className={cn("p-4", !sidebarOpen && "lg:hidden")}>
           <button
             onClick={signOut}
             className="nav-link w-full text-left text-destructive hover:bg-destructive/10"
@@ -188,7 +188,7 @@ export function GestanteLayout({ children }: GestanteLayoutProps) {
 
       <div className="flex-1 min-w-0 min-h-0 flex flex-col">
         {/* Mobile Header */}
-        <header className="lg:hidden h-14 border-b border-border flex items-center justify-between px-4 bg-card/50 backdrop-blur-sm sticky top-0 z-40">
+        <header className="lg:hidden h-14 flex items-center justify-between px-4 bg-card/50 backdrop-blur-sm sticky top-0 z-40">
           <div className="flex items-center">
             <Button
               variant="ghost"
@@ -214,7 +214,7 @@ export function GestanteLayout({ children }: GestanteLayoutProps) {
         </header>
 
         {/* Desktop Header */}
-        <header className="hidden lg:flex h-16 border-b border-border items-center justify-between px-8 bg-card/50 backdrop-blur-sm sticky top-0 z-40">
+        <header className="hidden lg:flex h-16 items-center justify-between px-8 bg-card/50 backdrop-blur-sm sticky top-0 z-40">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-[40%] bg-[#FFF5EE] overflow-hidden">
               <img src={headerLogo} alt={headerName} className="w-full h-full object-cover mix-blend-multiply scale-[1.15]" />
