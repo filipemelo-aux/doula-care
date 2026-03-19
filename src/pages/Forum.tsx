@@ -344,7 +344,7 @@ export default function Forum() {
       {/* Create post button (compact) */}
       <button
         onClick={() => setShowNewPost(true)}
-        className="w-full bg-card border-border rounded-xl p-4 flex items-center gap-3 hover:bg-accent/50 transition-colors text-left"
+        className="w-full bg-card rounded-xl p-4 flex items-center gap-3 hover:bg-accent/50 transition-colors text-left"
       >
         <Avatar className="h-10 w-10 bg-primary/10">
           <AvatarFallback className="bg-primary/10 text-primary text-sm font-semibold">
@@ -407,7 +407,7 @@ export default function Forum() {
             const isExpanded = expandedPostId === post.id;
 
             return (
-              <div key={post.id} className="bg-card b break-wordsorder border-border rounded-xl overflow-hidden">
+              <div key={post.id} className="bg-card break-words rounded-xl overflow-hidden">
                 {/* Post header */}
                 <div className="p-4 pb-0">
                   <div className="flex items-center gap-3 mb-3">
@@ -477,7 +477,7 @@ export default function Forum() {
                 </div>
 
                 {/* Action buttons */}
-                <div className="border-t border-border mx-4" />
+                <div className="mx-4" />
                 <div className="px-2 py-1 flex">
                   <Button
                     variant="ghost"
@@ -501,7 +501,7 @@ export default function Forum() {
 
                 {/* Comments section (expanded) */}
                 {isExpanded && (
-                  <div className="border-t border-border bg-muted/30">
+                  <div className="bg-muted/30">
                     {/* Comments list */}
                     <div className="max-h-72 overflow-y-auto">
                       {expandedComments.length === 0 ? (
