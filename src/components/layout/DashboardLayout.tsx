@@ -44,7 +44,7 @@ export function DashboardLayout() {
 
       <div className={cn("flex-1 min-w-0 min-h-0 flex flex-col overflow-hidden transition-all duration-300", sidebarOpen ? "lg:ml-64" : "lg:ml-20")}>
         {/* Mobile Header */}
-        <header className="lg:hidden h-14 flex items-center justify-between px-4 bg-card/95 backdrop-blur-sm sticky top-0 z-40">
+        <header className="lg:hidden h-14 shrink-0 flex items-center justify-between px-4 bg-card/95 backdrop-blur-sm z-40 border-b border-border/30">
           <div className="flex items-center">
             <Button
               variant="ghost"
@@ -70,7 +70,7 @@ export function DashboardLayout() {
         </header>
 
         {/* Desktop Header */}
-        <header className="hidden lg:flex h-16 items-center justify-between px-8 bg-card/50 backdrop-blur-sm sticky top-0 z-40">
+        <header className="hidden lg:flex h-16 shrink-0 items-center justify-between px-8 bg-card/50 backdrop-blur-sm z-40 border-b border-border/30">
           <div className="flex items-center gap-3">
             <Button
               variant="ghost"
