@@ -365,7 +365,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const isAdmin = role === "admin" || role === "moderator";
   const isClient = role === "client";
-  const isSuperAdmin = role === "super_admin";
+  const isSuperAdmin = roles.includes("super_admin");
 
   return (
     <AuthContext.Provider
@@ -374,6 +374,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         session,
         loading,
         role,
+        roles,
         roleChecked,
         isAdmin,
         isClient,
