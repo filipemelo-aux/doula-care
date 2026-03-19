@@ -568,8 +568,11 @@ export default function Forum() {
                     {/* Add comment */}
                     <div className="px-4 py-3 flex items-start gap-2.5 border-t">
                       <Avatar className="h-7 w-7 shrink-0 mt-0.5">
+                        {currentUser?.avatarUrl && (
+                          <AvatarImage src={currentUser.avatarUrl} alt={currentUser.displayName} className="object-cover" />
+                        )}
                         <AvatarFallback className="bg-primary/10 text-primary text-[10px] font-semibold">
-                          {currentUser ? getInitials(getAuthorName(currentUser.id, false)) : "?"}
+                          {currentUser ? getInitials(currentUser.displayName) : "?"}
                         </AvatarFallback>
                       </Avatar>
                       <div className="flex-1 flex flex-col gap-1.5">
