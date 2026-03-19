@@ -32,7 +32,6 @@ type Section = "dashboard" | "users" | "billing" | "notifications" | "community"
 
 const sidebarItems: { key: Section; label: string; icon: React.ElementType }[] = [
   { key: "dashboard", label: "Painel", icon: Home },
-  { key: "orgs", label: "Organizações", icon: Building2 },
   { key: "users", label: "Usuários", icon: Users },
   { key: "billing", label: "Planos & Cobranças", icon: CreditCard },
   { key: "notifications", label: "Notificações", icon: Bell },
