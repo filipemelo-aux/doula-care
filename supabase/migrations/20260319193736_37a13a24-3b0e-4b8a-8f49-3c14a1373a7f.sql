@@ -1,0 +1,1 @@
+UPDATE public.forum_posts SET is_system_post = true WHERE id = '461c18c6-cac3-40a9-b66d-aabb4904eec7';
