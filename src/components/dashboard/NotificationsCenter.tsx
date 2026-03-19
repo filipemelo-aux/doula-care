@@ -881,7 +881,7 @@ export function NotificationsCenter({ fullPage = false }: NotificationsCenterPro
                             : notification.type === "new_diary_entry"
                             ? "bg-primary/5"
                             : notification.type === "service_request"
-                            ? "bg-purple-500/5 border-purple-500/20"
+                            ? "bg-purple-500/5"
                             : notification.type === "appointment_request"
                             ? "bg-primary/5"
                             : "bg-warning/5"
