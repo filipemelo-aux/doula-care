@@ -193,7 +193,7 @@ async function deleteAdminUser(adminClient: AdminClient, userId: string) {
     },
     {
       label: "admin_settings.owner_id",
-      run: () => adminClient.from("admin_settings").update({ owner_id: userId }).eq("owner_id", userId),
+      run: () => adminClient.from("admin_settings").update({ owner_id: null }).eq("owner_id", userId),
     },
     {
       label: "forum_comments",
