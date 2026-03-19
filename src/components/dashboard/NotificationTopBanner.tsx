@@ -175,7 +175,8 @@ export function NotificationTopBanner() {
 
   const handleReadAndNavigate = () => {
     handleDismiss();
-    navigate("/notificacoes");
+    const destination = topNotification.type === "community" ? "/comunidade" : "/notificacoes";
+    navigate(destination);
   };
 
   const iconMap: Record<string, typeof Bell> = {
