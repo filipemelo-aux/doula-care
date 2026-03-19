@@ -5,11 +5,229 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+const MASTER_EMAIL = "filipe.silvamelo@live.com";
+const PRIVILEGED_ROLES = ["admin", "moderator", "super_admin"] as const;
+
+type AdminClient = ReturnType<typeof createClient>;
+type DeleteCleanupStep = {
+  label: string;
+  run: () => Promise<{ error: { message: string } | null }>;
+};
+
+function jsonResponse(body: Record<string, unknown>, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+}
+
 function generateDefaultPassword(fullName: string): string {
   const firstName = (fullName || "User").trim().split(/\s+/)[0];
   const firstLetter = firstName.charAt(0).toUpperCase();
   const digits = Array.from({ length: 5 }, () => Math.floor(Math.random() * 10)).join("");
   return `${firstLetter}${digits}`;
+}
+
+async function getCallingUser(userClient: AdminClient, authHeader: string | null) {
+  if (!authHeader?.startsWith("Bearer ")) {
+    return { user: null, error: "Missing authorization" };
+  }
+
+  const token = authHeader.replace("Bearer ", "");
+  const { data: claimsData, error: claimsError } = await userClient.auth.getClaims(token);
+
+  if (claimsError || !claimsData?.claims?.sub) {
+    return { user: null, error: "Invalid token" };
+  }
+
+  const {
+    data: { user },
+    error: userError,
+  } = await userClient.auth.getUser(token);
+
+  if (userError || !user) {
+    return { user: null, error: "Invalid token" };
+  }
+
+  return { user, error: null };
+}
+
+async function getCallerAccess(adminClient: AdminClient, callingUserId: string) {
+  const { data: callerRoles, error: rolesError } = await adminClient
+    .from("user_roles")
+    .select("role")
+    .eq("user_id", callingUserId)
+    .in("role", [...PRIVILEGED_ROLES]);
+
+  if (rolesError) throw rolesError;
+  if (!callerRoles || callerRoles.length === 0) {
+    return { allowed: false, reason: "Admin, moderator or super_admin role required" };
+  }
+
+  const callerIsSuperAdmin = callerRoles.some((r) => r.role === "super_admin");
+  const callerIsAdmin = callerRoles.some((r) => r.role === "admin");
+  const callerIsModerator = callerRoles.some((r) => r.role === "moderator");
+
+  let callerOrgId: string | null = null;
+
+  if (!callerIsSuperAdmin) {
+    const { data: callerProfile, error: profileError } = await adminClient
+      .from("profiles")
+      .select("organization_id")
+      .eq("user_id", callingUserId)
+      .single();
+
+    if (profileError) throw profileError;
+
+    callerOrgId = callerProfile?.organization_id ?? null;
+
+    if (callerOrgId) {
+      const { data: org, error: orgError } = await adminClient
+        .from("organizations")
+        .select("status")
+        .eq("id", callerOrgId)
+        .single();
+
+      if (orgError) throw orgError;
+
+      if (org?.status === "suspenso") {
+        return { allowed: false, reason: "Sua organização está suspensa" };
+      }
+    }
+  }
+
+  return {
+    allowed: true,
+    callerIsSuperAdmin,
+    callerIsAdmin,
+    callerIsModerator,
+    callerOrgId,
+  };
+}
+
+async function assertTargetManageable(
+  adminClient: AdminClient,
+  params: {
+    callerUserId: string;
+    callerEmail?: string;
+    callerIsSuperAdmin: boolean;
+    callerIsAdmin: boolean;
+    callerIsModerator: boolean;
+    callerOrgId: string | null;
+    userId: string;
+    requestedRole?: string;
+    action: string;
+  },
+) {
+  const { data: targetAuth, error: targetAuthError } = await adminClient.auth.admin.getUserById(params.userId);
+  if (targetAuthError) throw targetAuthError;
+
+  const targetEmail = targetAuth.user?.email;
+  const targetIsMaster = targetEmail === MASTER_EMAIL;
+  const callerIsMaster = params.callerEmail === MASTER_EMAIL;
+
+  if (targetIsMaster && !callerIsMaster) {
+    return { allowed: false, reason: "Não é permitido gerenciar o Super Admin master" };
+  }
+
+  if (!params.callerIsSuperAdmin) {
+    const { data: targetProfile, error: targetProfileError } = await adminClient
+      .from("profiles")
+      .select("organization_id")
+      .eq("user_id", params.userId)
+      .maybeSingle();
+
+    if (targetProfileError) throw targetProfileError;
+
+    if (params.callerOrgId && targetProfile?.organization_id !== params.callerOrgId) {
+      return { allowed: false, reason: "Usuário não pertence à sua organização" };
+    }
+  }
+
+  if (params.action === "delete" && params.userId === params.callerUserId) {
+    return { allowed: false, reason: "Não é possível excluir seu próprio usuário" };
+  }
+
+  if (params.callerIsModerator && !params.callerIsAdmin && !params.callerIsSuperAdmin) {
+    const { data: targetRoles, error: targetRolesError } = await adminClient
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", params.userId);
+
+    if (targetRolesError) throw targetRolesError;
+
+    const targetIsAdmin = targetRoles?.some((r) => r.role === "admin");
+    if (targetIsAdmin) {
+      return { allowed: false, reason: "Moderadores não podem gerenciar administradores" };
+    }
+
+    if (params.requestedRole === "admin") {
+      return { allowed: false, reason: "Moderadores não podem atribuir o papel de administrador" };
+    }
+  }
+
+  return { allowed: true };
+}
+
+async function deleteAdminUser(adminClient: AdminClient, userId: string) {
+  const cleanupSteps: DeleteCleanupStep[] = [
+    {
+      label: "forum_reactions",
+      run: () => adminClient.from("forum_reactions").delete().eq("user_id", userId),
+    },
+    {
+      label: "appointments.owner_id",
+      run: () => adminClient.from("appointments").update({ owner_id: null }).eq("owner_id", userId),
+    },
+    {
+      label: "payments.owner_id",
+      run: () => adminClient.from("payments").update({ owner_id: null }).eq("owner_id", userId),
+    },
+    {
+      label: "transactions.owner_id",
+      run: () => adminClient.from("transactions").update({ owner_id: null }).eq("owner_id", userId),
+    },
+    {
+      label: "plan_settings.owner_id",
+      run: () => adminClient.from("plan_settings").update({ owner_id: null }).eq("owner_id", userId),
+    },
+    {
+      label: "admin_settings.owner_id",
+      run: () => adminClient.from("admin_settings").update({ owner_id: userId }).eq("owner_id", userId),
+    },
+    {
+      label: "forum_comments",
+      run: () => adminClient.from("forum_comments").delete().eq("author_id", userId),
+    },
+    {
+      label: "forum_posts",
+      run: () => adminClient.from("forum_posts").delete().eq("author_id", userId),
+    },
+    {
+      label: "user_roles",
+      run: () => adminClient.from("user_roles").delete().eq("user_id", userId),
+    },
+    {
+      label: "profiles",
+      run: () => adminClient.from("profiles").delete().eq("user_id", userId),
+    },
+    {
+      label: "clients.user_id",
+      run: () => adminClient.from("clients").update({ user_id: null }).eq("user_id", userId),
+    },
+  ];
+
+  for (const step of cleanupSteps) {
+    const { error } = await step.run();
+    if (error) {
+      throw new Error(`Falha ao limpar ${step.label}: ${error.message}`);
+    }
+  }
+
+  const { error: deleteAuthError } = await adminClient.auth.admin.deleteUser(userId);
+  if (deleteAuthError) {
+    throw new Error(`Falha ao excluir usuário da autenticação: ${deleteAuthError.message}`);
+  }
 }
 
 Deno.serve(async (req) => {
@@ -23,15 +241,8 @@ Deno.serve(async (req) => {
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const authHeader = req.headers.get("Authorization");
 
-    if (!authHeader) {
-      return new Response(JSON.stringify({ error: "Missing authorization" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
     const userClient = createClient(supabaseUrl, anonKey, {
-      global: { headers: { Authorization: authHeader } },
+      global: { headers: authHeader ? { Authorization: authHeader } : {} },
       auth: { autoRefreshToken: false, persistSession: false },
     });
 
@@ -39,135 +250,41 @@ Deno.serve(async (req) => {
       auth: { autoRefreshToken: false, persistSession: false },
     });
 
-    const {
-      data: { user: callingUser },
-      error: authError,
-    } = await userClient.auth.getUser();
-
+    const { user: callingUser, error: authError } = await getCallingUser(userClient, authHeader);
     if (authError || !callingUser) {
-      return new Response(JSON.stringify({ error: "Invalid token" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return jsonResponse({ error: authError ?? "Invalid token" }, 401);
     }
 
-    const { data: callerRoles } = await adminClient
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", callingUser.id)
-      .in("role", ["admin", "moderator", "super_admin"]);
-
-    if (!callerRoles || callerRoles.length === 0) {
-      return new Response(JSON.stringify({ error: "Admin, moderator or super_admin role required" }), {
-        status: 403,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    const callerIsSuperAdmin = callerRoles.some((r) => r.role === "super_admin");
-    const callerIsAdmin = callerRoles.some((r) => r.role === "admin");
-    const callerIsModerator = callerRoles.some((r) => r.role === "moderator");
-
-    let callerOrgId: string | null = null;
-    if (!callerIsSuperAdmin) {
-      const { data: callerProfile } = await adminClient
-        .from("profiles")
-        .select("organization_id")
-        .eq("user_id", callingUser.id)
-        .single();
-
-      callerOrgId = callerProfile?.organization_id ?? null;
-
-      if (callerOrgId) {
-        const { data: org } = await adminClient
-          .from("organizations")
-          .select("status")
-          .eq("id", callerOrgId)
-          .single();
-
-        if (org?.status === "suspenso") {
-          return new Response(JSON.stringify({ error: "Sua organização está suspensa" }), {
-            status: 403,
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-          });
-        }
-      }
+    const callerAccess = await getCallerAccess(adminClient, callingUser.id);
+    if (!callerAccess.allowed) {
+      return jsonResponse({ error: callerAccess.reason }, 403);
     }
 
     const { action, userId, fullName, role, email } = await req.json();
 
     if (!userId) {
-      return new Response(JSON.stringify({ error: "userId is required" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return jsonResponse({ error: "userId is required" }, 400);
     }
 
-    const MASTER_EMAIL = "filipe.silvamelo@live.com";
-    const { data: targetAuth, error: targetAuthError } = await adminClient.auth.admin.getUserById(userId);
-    if (targetAuthError) throw targetAuthError;
+    const manageable = await assertTargetManageable(adminClient, {
+      callerUserId: callingUser.id,
+      callerEmail: callingUser.email,
+      callerIsSuperAdmin: callerAccess.callerIsSuperAdmin,
+      callerIsAdmin: callerAccess.callerIsAdmin,
+      callerIsModerator: callerAccess.callerIsModerator,
+      callerOrgId: callerAccess.callerOrgId,
+      userId,
+      requestedRole: role,
+      action,
+    });
 
-    const targetEmail = targetAuth.user?.email;
-    const targetIsMaster = targetEmail === MASTER_EMAIL;
-    const callerIsMaster = callingUser.email === MASTER_EMAIL;
-
-    if (targetIsMaster && !callerIsMaster) {
-      return new Response(JSON.stringify({ error: "Não é permitido gerenciar o Super Admin master" }), {
-        status: 403,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    if (!callerIsSuperAdmin) {
-      const { data: targetProfile } = await adminClient
-        .from("profiles")
-        .select("organization_id")
-        .eq("user_id", userId)
-        .maybeSingle();
-
-      if (callerOrgId && targetProfile?.organization_id !== callerOrgId) {
-        return new Response(JSON.stringify({ error: "Usuário não pertence à sua organização" }), {
-          status: 403,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-    }
-
-    if (action === "delete" && userId === callingUser.id) {
-      return new Response(JSON.stringify({ error: "Não é possível excluir seu próprio usuário" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    if (callerIsModerator && !callerIsAdmin && !callerIsSuperAdmin) {
-      const { data: targetRoles } = await adminClient
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", userId);
-
-      const targetIsAdmin = targetRoles?.some((r) => r.role === "admin");
-      if (targetIsAdmin) {
-        return new Response(JSON.stringify({ error: "Moderadores não podem gerenciar administradores" }), {
-          status: 403,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-
-      if (role === "admin") {
-        return new Response(JSON.stringify({ error: "Moderadores não podem atribuir o papel de administrador" }), {
-          status: 403,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
+    if (!manageable.allowed) {
+      return jsonResponse({ error: manageable.reason }, 403);
     }
 
     if (action === "update") {
       if (role === "super_admin") {
-        return new Response(JSON.stringify({ error: "A atribuição de Super Admin está desativada" }), {
-          status: 403,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
+        return jsonResponse({ error: "A atribuição de Super Admin está desativada" }, 403);
       }
 
       if (fullName !== undefined) {
@@ -199,84 +316,38 @@ Deno.serve(async (req) => {
         }
       }
 
-      return new Response(JSON.stringify({ success: true, message: "Usuário atualizado" }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return jsonResponse({ success: true, message: "Usuário atualizado" });
     }
 
     if (action === "delete") {
-      const { error: deleteReactionsError } = await adminClient
-        .from("forum_reactions")
-        .delete()
-        .eq("user_id", userId);
-      if (deleteReactionsError) throw deleteReactionsError;
-
-      const { error: clearAppointmentsOwnerError } = await adminClient
-        .from("appointments")
-        .update({ owner_id: null })
-        .eq("owner_id", userId);
-      if (clearAppointmentsOwnerError) throw clearAppointmentsOwnerError;
-
-      const { error: clearPaymentsOwnerError } = await adminClient
-        .from("payments")
-        .update({ owner_id: null })
-        .eq("owner_id", userId);
-      if (clearPaymentsOwnerError) throw clearPaymentsOwnerError;
-
-      const { error: clearTransactionsOwnerError } = await adminClient
-        .from("transactions")
-        .update({ owner_id: null })
-        .eq("owner_id", userId);
-      if (clearTransactionsOwnerError) throw clearTransactionsOwnerError;
-
-      const { error: clearPlanSettingsOwnerError } = await adminClient
-        .from("plan_settings")
-        .update({ owner_id: null })
-        .eq("owner_id", userId);
-      if (clearPlanSettingsOwnerError) throw clearPlanSettingsOwnerError;
-
-      const { error: deleteRolesError } = await adminClient.from("user_roles").delete().eq("user_id", userId);
-      if (deleteRolesError) throw deleteRolesError;
-
-      const { error: deleteProfileError } = await adminClient.from("profiles").delete().eq("user_id", userId);
-      if (deleteProfileError) throw deleteProfileError;
-
-      const { error: deleteAuthError } = await adminClient.auth.admin.deleteUser(userId);
-      if (deleteAuthError) {
-        throw new Error(`Falha ao excluir usuário da autenticação: ${deleteAuthError.message}`);
-      }
-
-      return new Response(JSON.stringify({ success: true, message: "Usuário excluído" }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      await deleteAdminUser(adminClient, userId);
+      return jsonResponse({ success: true, message: "Usuário excluído" });
     }
 
     if (action === "reset-password") {
-      if (!callerIsSuperAdmin) {
-        return new Response(JSON.stringify({ error: "Apenas super admin pode resetar senhas" }), {
-          status: 403,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
+      if (!callerAccess.callerIsSuperAdmin) {
+        return jsonResponse({ error: "Apenas super admin pode resetar senhas" }, 403);
       }
 
-      const { data: targetRoles } = await adminClient
+      const { data: targetRoles, error: targetRolesError } = await adminClient
         .from("user_roles")
         .select("role")
         .eq("user_id", userId);
 
+      if (targetRolesError) throw targetRolesError;
+
       const targetIsAdminOrSuper = targetRoles?.some((r) => r.role === "admin" || r.role === "super_admin");
       if (!targetIsAdminOrSuper) {
-        return new Response(JSON.stringify({ error: "Só é possível resetar senhas de administradores" }), {
-          status: 403,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
+        return jsonResponse({ error: "Só é possível resetar senhas de administradores" }, 403);
       }
 
-      const { data: targetProfile } = await adminClient
+      const { data: targetProfile, error: targetProfileError } = await adminClient
         .from("profiles")
         .select("full_name")
         .eq("user_id", userId)
         .maybeSingle();
+
+      if (targetProfileError) throw targetProfileError;
 
       const userName = targetProfile?.full_name || "User";
       const newPassword = generateDefaultPassword(userName);
@@ -284,21 +355,13 @@ Deno.serve(async (req) => {
       const { error: updateError } = await adminClient.auth.admin.updateUserById(userId, { password: newPassword });
       if (updateError) throw updateError;
 
-      return new Response(JSON.stringify({ success: true, message: "Senha resetada", newPassword }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return jsonResponse({ success: true, message: "Senha resetada", newPassword });
     }
 
-    return new Response(JSON.stringify({ error: "Invalid action" }), {
-      status: 400,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return jsonResponse({ error: "Invalid action" }, 400);
   } catch (error) {
     console.error("Error:", error);
     const message = error instanceof Error ? error.message : "Unknown error";
-    return new Response(JSON.stringify({ error: message }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return jsonResponse({ error: message }, 500);
   }
 });
