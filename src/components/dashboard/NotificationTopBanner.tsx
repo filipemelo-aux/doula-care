@@ -5,7 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Bell, Baby, AlertTriangle, BookHeart, Sparkles, CalendarCheck, X, CheckCircle } from "lucide-react";
+import { Bell, Baby, AlertTriangle, BookHeart, Sparkles, CalendarCheck, X, CheckCircle, MessageSquare } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useNavigate } from "react-router-dom";
@@ -114,6 +114,27 @@ export function NotificationTopBanner() {
         };
       }
 
+      // Unread community notifications
+      const { data: unreadCommunity } = await supabase
+        .from("org_notifications")
+        .select("id, title, message, created_at")
+        .eq("type", "community")
+        .eq("read", false)
+        .order("created_at", { ascending: false })
+        .limit(1);
+
+      if (unreadCommunity && unreadCommunity.length > 0) {
+        const c = unreadCommunity[0];
+        return {
+          id: `community-${c.id}`,
+          type: "community",
+          title: c.title,
+          message: c.message,
+          timestamp: c.created_at,
+          priority: "low",
+        };
+      }
+
       return null;
     },
     enabled: !!organizationId,
@@ -136,6 +157,9 @@ export function NotificationTopBanner() {
       .on("postgres_changes", { event: "*", schema: "public", table: "pregnancy_diary" }, () => {
         queryClient.invalidateQueries({ queryKey: ["top-notification-banner"] });
       })
+      .on("postgres_changes", { event: "*", schema: "public", table: "org_notifications" }, () => {
+        queryClient.invalidateQueries({ queryKey: ["top-notification-banner"] });
+      })
       .subscribe();
 
     return () => {
@@ -151,7 +175,8 @@ export function NotificationTopBanner() {
 
   const handleReadAndNavigate = () => {
     handleDismiss();
-    navigate("/notificacoes");
+    const destination = topNotification.type === "community" ? "/comunidade" : "/notificacoes";
+    navigate(destination);
   };
 
   const iconMap: Record<string, typeof Bell> = {
@@ -159,6 +184,7 @@ export function NotificationTopBanner() {
     service_request: Sparkles,
     appointment_request: CalendarCheck,
     diary: BookHeart,
+    community: MessageSquare,
   };
 
   const colorMap: Record<string, string> = {
@@ -166,6 +192,7 @@ export function NotificationTopBanner() {
     service_request: "border-none border-30 bg-gradient-to-r from-primary/5 to-accent/5",
     appointment_request: "border-blue-500/30 bg-gradient-to-r from-blue-50/80 to-blue-100/50 dark:from-blue-950/20 dark:to-blue-900/10",
     diary: "border-purple-500/30 bg-gradient-to-r from-purple-50/80 to-purple-100/50 dark:from-purple-950/20 dark:to-purple-900/10",
+    community: "border-emerald-500/30 bg-gradient-to-r from-emerald-50/80 to-emerald-100/50 dark:from-emerald-950/20 dark:to-emerald-900/10",
   };
 
   const textColorMap: Record<string, string> = {
@@ -173,6 +200,7 @@ export function NotificationTopBanner() {
     service_request: "text-primary",
     appointment_request: "text-blue-700 dark:text-blue-400",
     diary: "text-purple-700 dark:text-purple-400",
+    community: "text-emerald-700 dark:text-emerald-400",
   };
 
   const Icon = iconMap[topNotification.type] || Bell;
