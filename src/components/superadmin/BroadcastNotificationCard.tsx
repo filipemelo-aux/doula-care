@@ -338,6 +338,23 @@ export function BroadcastNotificationCard() {
               Gerar
             </Button>
           </div>
+
+          {/* Instagram link for informative tone */}
+          {tone === "informative" && (
+            <div className="space-y-2">
+              <Label className="text-xs">Link do Instagram (opcional)</Label>
+              <Input
+                placeholder="https://www.instagram.com/p/..."
+                value={instagramLink}
+                onChange={(e) => setInstagramLink(e.target.value)}
+                className="text-sm"
+                type="url"
+              />
+              <p className="text-[10px] text-muted-foreground">
+                Cole o link de uma postagem informativa do Instagram para incluir no post
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Notification Fields */}
