@@ -517,7 +517,7 @@ export default function SuperAdminDashboard() {
         <main className="flex-1 min-h-0 overflow-y-auto touch-pan-y p-3 lg:p-8 space-y-5">
           {/* Metrics */}
           <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
-            <Card className={onlineOrgIds.size > 0 ? "border-success/30 bg-success/5" : ""}>
+            <Card className={onlineOrgIds.size > 0 ? "bg-success/5" : ""}>
               <CardContent className="p-4 flex items-center gap-3">
                 <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center", onlineOrgIds.size > 0 ? "bg-success/15" : "bg-muted")}>
                   <span className={cn("h-3 w-3 rounded-full", onlineOrgIds.size > 0 ? "bg-success animate-pulse" : "bg-muted-foreground/30")} />

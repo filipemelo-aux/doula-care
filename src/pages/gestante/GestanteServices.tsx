@@ -26,9 +26,9 @@ interface ServiceRequest {
 
 const statusConfig: Record<string, { label: string; icon: React.ElementType; className: string }> = {
   pending: { label: "Pendente", icon: Clock, className: "bg-amber-100 text-amber-800" },
-  budget_sent: { label: "Orçamento Enviado", icon: Send, className: "bg-purple-100 text-purple-800 border-purple-300" },
-  date_proposed: { label: "Confirmar Data", icon: Calendar, className: "bg-orange-100 text-orange-800 border-orange-300" },
-  accepted: { label: "Aceito", icon: CheckCircle, className: "bg-emerald-100 text-emerald-800 border-emerald-300" },
+  budget_sent: { label: "Orçamento Enviado", icon: Send, className: "bg-purple-100 text-purple-800" },
+  date_proposed: { label: "Confirmar Data", icon: Calendar, className: "bg-orange-100 text-orange-800" },
+  accepted: { label: "Aceito", icon: CheckCircle, className: "bg-emerald-100 text-emerald-800" },
   completed: { label: "Concluído", icon: CheckCircle, className: "bg-blue-100 text-blue-800" },
   rejected: { label: "Recusado", icon: XCircle, className: "bg-red-100 text-red-800" },
 };

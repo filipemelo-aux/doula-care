@@ -202,7 +202,7 @@ export function ScheduledServicesCard({ clientId, organizationId }: ScheduledSer
                     <Button
                       size="sm"
                       variant="outline"
-                      className="text-xs border-emerald-300 text-emerald-700 hover:bg-emerald-50 hover:text-emerald-700"
+                      className="text-xs text-emerald-700 hover:bg-emerald-50 hover:text-emerald-700"
                       onClick={() => completeMutation.mutate(svc.id)}
                       disabled={completeMutation.isPending}
                     >
