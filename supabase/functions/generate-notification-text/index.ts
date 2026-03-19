@@ -76,9 +76,26 @@ Deno.serve(async (req) => {
       formal: "profissional e informativo",
       friendly: "amigável e caloroso, como uma conversa entre amigas",
       mystery: "misterioso e intrigante, criando curiosidade",
+      informative: "informativo e educativo, baseado em evidências científicas e artigos confiáveis sobre gestação, parto, amamentação e maternidade",
     };
 
     const toneInstruction = toneMap[tone] || toneMap.exciting;
+    const isInformative = tone === "informative";
+
+    const systemPrompt = isInformative
+      ? `Você é uma especialista em saúde materno-infantil e comunicação para a plataforma Doula Care.
+Seu papel é criar conteúdo informativo e educativo sobre gestação, parto, amamentação, pós-parto e bem-estar da mulher.
+Baseie-se em conhecimento científico atualizado e boas práticas de saúde.
+Crie um texto informativo e útil que traga valor real para gestantes e doulas.
+Use linguagem acessível mas precisa, com dados ou dicas práticas quando possível.
+Tom: ${toneInstruction}.`
+      : `Você é uma assistente de comunicação para a plataforma Doula Care, voltada para doulas e gestantes. 
+Crie notificações push curtas e impactantes. 
+Tom: ${toneInstruction}.`;
+
+    const userPrompt = isInformative
+      ? `Pesquise e crie um conteúdo informativo sobre: ${keywords}. Inclua informações baseadas em evidências, dicas práticas e dados relevantes. O título deve ser chamativo e o conteúdo deve ser educativo e útil.`
+      : `Crie uma notificação push sobre: ${keywords}`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -87,18 +104,10 @@ Deno.serve(async (req) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
+        model: isInformative ? "google/gemini-2.5-flash" : "google/gemini-3-flash-preview",
         messages: [
-          {
-            role: "system",
-            content: `Você é uma assistente de comunicação para a plataforma Doula Care, voltada para doulas e gestantes. 
-Crie notificações push curtas e impactantes. 
-Tom: ${toneInstruction}.`,
-          },
-          {
-            role: "user",
-            content: `Crie uma notificação push sobre: ${keywords}`,
-          },
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userPrompt },
         ],
         tools: [
           {

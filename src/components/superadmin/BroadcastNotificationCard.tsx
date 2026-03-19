@@ -15,6 +15,7 @@ const TONE_OPTIONS = [
   { value: "friendly", label: "💛 Amigável" },
   { value: "formal", label: "📋 Formal" },
   { value: "mystery", label: "🔮 Misterioso" },
+  { value: "informative", label: "📚 Informativo" },
 ];
 
 const TYPE_OPTIONS: { value: PushNotificationType; label: string }[] = [
