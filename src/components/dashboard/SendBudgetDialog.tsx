@@ -175,7 +175,7 @@ export function SendBudgetDialog({ open, onOpenChange, serviceRequest }: SendBud
 
             {/* Date negotiation */}
             {serviceRequest?.preferred_date && (
-              <div className="space-y-3 rounded-lg border p-3 bg-muted/30">
+              <div className="space-y-3 rounded-lg p-3 bg-muted/30">
                 <div className="text-sm">
                   <p className="text-muted-foreground text-xs mb-1">Data solicitada pela cliente:</p>
                   <p className="font-medium flex items-center gap-1.5">
@@ -214,7 +214,7 @@ export function SendBudgetDialog({ open, onOpenChange, serviceRequest }: SendBud
                       type="datetime-local"
                       value={proposedDate}
                       onChange={(e) => setProposedDate(e.target.value)}
-                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                      className="flex h-10 w-full rounded-md border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                     />
                   </div>
                 )}

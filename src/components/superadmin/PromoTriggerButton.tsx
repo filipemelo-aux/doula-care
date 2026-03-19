@@ -257,7 +257,7 @@ export function PromoTriggerButton({ orgId, orgName }: PromoTriggerButtonProps) 
                 onValueChange={(v) => setSelectedPromo(v as PromoType)}
                 className="space-y-3"
               >
-                <div className="flex items-start gap-3 p-3 rounded-lg border border-border hover:border-primary/40 transition-colors">
+                <div className="flex items-start gap-3 p-3 rounded-lg border-border hover:border-primary/40 transition-colors">
                   <RadioGroupItem value="beta_tester" id="beta_tester" className="mt-0.5" />
                   <Label htmlFor="beta_tester" className="cursor-pointer flex-1 space-y-1">
                     <div className="flex items-center gap-2">
@@ -270,7 +270,7 @@ export function PromoTriggerButton({ orgId, orgName }: PromoTriggerButtonProps) 
                   </Label>
                 </div>
 
-                <div className="flex items-start gap-3 p-3 rounded-lg border border-border hover:border-amber-500/40 transition-colors">
+                <div className="flex items-start gap-3 p-3 rounded-lg border-border hover:border-amber-500/40 transition-colors">
                   <RadioGroupItem value="lifetime_premium" id="lifetime_premium" className="mt-0.5" />
                   <Label htmlFor="lifetime_premium" className="cursor-pointer flex-1 space-y-1">
                     <div className="flex items-center gap-2">

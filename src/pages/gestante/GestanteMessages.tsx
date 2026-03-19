@@ -330,7 +330,7 @@ export default function GestanteMessages() {
           <img
             src={notification.attachment_url}
             alt="Anexo"
-            className="rounded-lg max-w-[200px] max-h-[200px] object-cover border"
+            className="rounded-lg max-w-[200px] max-h-[200px] object-cover"
             loading="lazy"
           />
         </a>

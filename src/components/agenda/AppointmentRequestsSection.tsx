@@ -312,7 +312,7 @@ export function AppointmentRequestsSection() {
                       </div>
                       <Badge
                         variant="outline"
-                        className={`text-[10px] ${isApproved ? "bg-emerald-100 text-emerald-800 border-emerald-300" : "bg-red-100 text-red-800"}`}
+                        className={`text-[10px] ${isApproved ? "bg-emerald-100 text-emerald-800" : "bg-red-100 text-red-800"}`}
                       >
                         {isApproved ? (
                           <CheckCircle className="h-3 w-3 mr-1" />

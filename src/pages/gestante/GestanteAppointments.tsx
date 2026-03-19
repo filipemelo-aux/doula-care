@@ -47,7 +47,7 @@ interface Appointment {
 
 const statusConfig: Record<string, { label: string; icon: React.ElementType; className: string }> = {
   pending: { label: "Pendente", icon: Clock, className: "bg-amber-100 text-amber-800" },
-  approved: { label: "Aprovada", icon: CheckCircle, className: "bg-emerald-100 text-emerald-800 border-emerald-300" },
+  approved: { label: "Aprovada", icon: CheckCircle, className: "bg-emerald-100 text-emerald-800" },
   rejected: { label: "Recusada", icon: XCircle, className: "bg-red-100 text-red-800" },
 };
 
@@ -379,7 +379,7 @@ export default function GestanteAppointments() {
                   }}
                 />
               ) : (
-                <div className="text-center py-4 text-sm text-muted-foreground border rounded-lg">
+                <div className="text-center py-4 text-sm text-muted-foreground rounded-lg">
                   <AlertCircle className="h-5 w-5 mx-auto mb-2 text-amber-500" />
                   Sua doula ainda não definiu horários disponíveis
                 </div>

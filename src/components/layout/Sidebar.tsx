@@ -108,13 +108,13 @@ export function Sidebar({ isOpen, onToggle, onNavigate }: SidebarProps) {
   return (
     <aside
       className={cn(
-        "fixed top-0 bottom-0 left-0 z-50 flex flex-col bg-sidebar border-r border-sidebar-border transition-all duration-300 ease-in-out pt-[var(--app-safe-top)] pb-[var(--app-safe-bottom)]",
+        "fixed top-0 bottom-0 left-0 z-50 flex flex-col bg-sidebar transition-all duration-300 ease-in-out pt-[var(--app-safe-top)] pb-[var(--app-safe-bottom)]",
         isOpen ? "w-64" : "w-0 lg:w-20",
         !isOpen && "overflow-hidden lg:overflow-visible"
       )}
     >
       {/* Logo - mobile only */}
-      <div className="lg:hidden h-20 flex items-center justify-between px-6 border-b border-sidebar-border">
+      <div className="lg:hidden h-20 flex items-center justify-between px-6">
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-[40%] bg-[#FFF5EE] overflow-hidden">
             <img src={sidebarLogo} alt={sidebarName} className="w-full h-full object-cover mix-blend-multiply scale-[1.15]" />
@@ -168,7 +168,7 @@ export function Sidebar({ isOpen, onToggle, onNavigate }: SidebarProps) {
                   />
                 </button>
                 {financialOpen && isOpen && (
-                  <div className="ml-4 mt-1 space-y-0.5 border-l-2 border-sidebar-border pl-2">
+                  <div className="ml-4 mt-1 space-y-0.5 pl-2">
                     {item.subItems.map((sub) => {
                       const lk = subLimitKeys[sub.to];
                       const subDisabled = lk ? !limits[lk] : false;
@@ -265,7 +265,7 @@ export function Sidebar({ isOpen, onToggle, onNavigate }: SidebarProps) {
       </nav>
 
       {/* Footer */}
-      <div className={cn("p-4 border-t border-sidebar-border", !isOpen && "lg:hidden")}>
+      <div className={cn("p-4", !isOpen && "lg:hidden")}>
         <div className="bg-sidebar-accent rounded-lg p-4">
           <div className="flex items-center justify-between mb-1">
             <p className="text-sm text-sidebar-accent-foreground font-medium">
@@ -279,7 +279,7 @@ export function Sidebar({ isOpen, onToggle, onNavigate }: SidebarProps) {
             {plan === "free" ? "Limite de 5 gestantes" : plan === "pro" ? "Gestantes ilimitadas" : "Recursos avançados"}
           </p>
           {promoActive && (
-            <div className="mt-2 pt-2 border-t border-sidebar-border/50">
+            <div className="mt-2 pt-2/50">
               <div className="flex items-center gap-1.5 text-primary">
                 {isLifetime && promo.status === "lifetime_active" ? (
                   <>

@@ -399,7 +399,7 @@ function LifetimeRevealDialog({
             <p className="text-base">
               Como reconhecimento especial pela sua incrível contribuição na divulgação, queremos te presentear com algo único:
             </p>
-            <div className="bg-gradient-to-r from-amber-50 to-amber-100 dark:from-amber-950/30 dark:to-amber-900/20 rounded-xl p-6 border dark:border-amber-800">
+            <div className="bg-gradient-to-r from-amber-50 to-amber-100 dark:from-amber-950/30 dark:to-amber-900/20 rounded-xl p-6">
               <Crown className="h-10 w-10 text-amber-500 mx-auto mb-3" />
               <h3 className="text-lg font-bold text-amber-700 dark:text-amber-400">
                 Acesso Vitalício Premium

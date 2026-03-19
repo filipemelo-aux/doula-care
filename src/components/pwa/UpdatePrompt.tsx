@@ -67,7 +67,7 @@ export default function UpdatePrompt() {
 
   return (
     <div className="fixed bottom-4 left-4 right-4 z-[60] mx-auto max-w-md animate-in slide-in-from-bottom-4 duration-300">
-      <div className="bg-card border border-border rounded-xl shadow-lg p-4 flex items-center gap-3">
+      <div className="bg-card border-border rounded-xl shadow-lg p-4 flex items-center gap-3">
         <div className="bg-primary/10 rounded-full p-2 flex-shrink-0">
           <RefreshCw className="h-5 w-5 text-primary" />
         </div>

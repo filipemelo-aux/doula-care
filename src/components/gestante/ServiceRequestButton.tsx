@@ -269,7 +269,7 @@ export function ServiceRequestButtons() {
                   }}
                 />
               ) : (
-                <div className="text-center py-4 text-sm text-muted-foreground border rounded-lg">
+                <div className="text-center py-4 text-sm text-muted-foreground rounded-lg">
                   <AlertCircle className="h-5 w-5 mx-auto mb-2 text-amber-500" />
                   Sua doula ainda não definiu horários disponíveis
                 </div>
@@ -303,7 +303,7 @@ export function ServiceRequestButtons() {
             )}
 
             {selectedDate && timeOptions.length === 0 && (
-              <div className="text-center py-3 text-xs text-muted-foreground border rounded-lg">
+              <div className="text-center py-3 text-xs text-muted-foreground rounded-lg">
                 <AlertCircle className="h-4 w-4 mx-auto mb-1 text-amber-500" />
                 Todos os horários deste dia já estão ocupados
               </div>

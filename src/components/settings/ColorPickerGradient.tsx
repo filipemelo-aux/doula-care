@@ -81,7 +81,7 @@ function HexInput({ value, onChange }: { value: string; onChange: (color: string
       value={localValue}
       onChange={handleChange}
       maxLength={7}
-      className="w-[5.5rem] text-xs font-mono uppercase bg-muted/50 border border-border rounded-lg px-2 py-1.5 text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+      className="w-[5.5rem] text-xs font-mono uppercase bg-muted/50 border-border rounded-lg px-2 py-1.5 text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
       placeholder="#000000"
     />
   );
@@ -185,7 +185,7 @@ export function ColorPickerGradient({ value, onChange, label }: ColorPickerGradi
 
       {/* Picker Panel */}
       {isOpen && (
-        <div className="absolute z-50 mt-2 left-0 right-0 sm:left-auto sm:right-auto sm:w-[260px] bg-card border border-border rounded-2xl shadow-xl p-4 space-y-3 animate-in fade-in-0 zoom-in-95 duration-200">
+        <div className="absolute z-50 mt-2 left-0 right-0 sm:left-auto sm:right-auto sm:w-[260px] bg-card border-border rounded-2xl shadow-xl p-4 space-y-3 animate-in fade-in-0 zoom-in-95 duration-200">
           {/* Saturation/Lightness area */}
           <div
             ref={satLightRef}
@@ -246,7 +246,7 @@ export function ColorPickerGradient({ value, onChange, label }: ColorPickerGradi
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2 flex-1 min-w-0">
               <div
-                className="w-8 h-8 rounded-lg border border-border shrink-0"
+                className="w-8 h-8 rounded-lg border-border shrink-0"
                 style={{ backgroundColor: value }}
               />
           <HexInput value={value} onChange={onChange} />

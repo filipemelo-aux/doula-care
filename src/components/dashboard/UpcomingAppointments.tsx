@@ -127,7 +127,7 @@ export function UpcomingAppointments() {
                   return (
                     <div
                       key={apt.id}
-                      className="flex w-full max-w-full min-w-0 items-center gap-3 rounded-lg p-3 border bg-background hover:bg-muted/30 transition-colors overflow-hidden"
+                      className="flex w-full max-w-full min-w-0 items-center gap-3 rounded-lg p-3 bg-background hover:bg-muted/30 transition-colors overflow-hidden"
                     >
                       <div className="text-center min-w-[44px]">
                         <p className="text-[10px] text-muted-foreground uppercase">

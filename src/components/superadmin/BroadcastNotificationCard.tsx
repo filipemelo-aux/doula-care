@@ -211,7 +211,7 @@ export function BroadcastNotificationCard() {
       </CardHeader>
       <CardContent className="space-y-4">
         {/* AI Generation Section */}
-        <div className="p-4 rounded-lg border bg-primary/5 space-y-3">
+        <div className="p-4 rounded-lg bg-primary/5 space-y-3">
           <div className="flex items-center gap-2 text-sm font-medium text-primary">
             <Sparkles className="h-4 w-4" />
             Gerador de Texto com IA
@@ -342,13 +342,13 @@ export function BroadcastNotificationCard() {
 
         {/* Preview */}
         {(title || message) && (
-          <div className="p-3 rounded-lg border bg-muted/30 space-y-1">
+          <div className="p-3 rounded-lg bg-muted/30 space-y-1">
             <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
               <Eye className="h-3 w-3" />
               Preview
             </div>
             <div className="flex items-start gap-3">
-              <div className="w-10 h-10 rounded-lg bg-card border overflow-hidden flex-shrink-0">
+              <div className="w-10 h-10 rounded-lg bg-card overflow-hidden flex-shrink-0">
                 <img src="/logo.png" alt="icon" className="w-full h-full object-cover" />
               </div>
               <div className="flex-1 min-w-0">
@@ -364,7 +364,7 @@ export function BroadcastNotificationCard() {
               </div>
             </div>
             {/* Image preview in body */}
-            <div className="mt-2 rounded-md overflow-hidden border bg-card">
+            <div className="mt-2 rounded-md overflow-hidden bg-card">
               <img
                 src={notifType === "community" ? "/notif-icon-community.png" : "/notif-icon-announcement.png"}
                 alt="notification image"

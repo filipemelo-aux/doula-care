@@ -526,7 +526,7 @@ export default function GestanteDashboard() {
         {/* Contractions Card - only show if birth NOT registered */}
         {!isPuerpera && (
           <Card 
-            className="cursor-pointer hover:shadow-md transition-shadow active:scale-[0.98] bg-gradient-to-br from-orange-50 to-amber-50 border-orange-200 dark:from-orange-950/30 dark:to-amber-950/30 dark:border-orange-800"
+            className="cursor-pointer hover:shadow-md transition-shadow active:scale-[0.98] bg-gradient-to-br from-orange-50 to-amber-50 dark:from-orange-950/30 dark:to-amber-950/30"
             onClick={() => navigate("/gestante/contracoes")}
           >
             <CardContent className="p-4 flex items-center gap-3">

@@ -70,7 +70,7 @@ export function AppointmentsCard({ clientId }: AppointmentsCardProps) {
                 key={apt.id}
                 className={`flex items-start gap-3 rounded-lg p-3 ${
                   today
-                    ? "bg-blue-100/80 border"
+                    ? "bg-blue-100/80"
                     : "bg-background/60"
                 }`}
               >

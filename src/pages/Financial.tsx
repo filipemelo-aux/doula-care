@@ -1069,7 +1069,7 @@ export default function Financial() {
                               </Select>
                             ) : (
                               <span 
-                                className="text-xs text-muted-foreground cursor-pointer px-1.5 py-0.5 rounded border border-dashed border-muted-foreground/40 hover:border-primary hover:bg-primary/5 transition-colors"
+                                className="text-xs text-muted-foreground cursor-pointer px-1.5 py-0.5 rounded border-dashed border-muted-foreground/40 hover:border-primary hover:bg-primary/5 transition-colors"
                                 onClick={() => handleStartEditInstallments(transaction)}
                               >
                                 {installments}x
@@ -1214,7 +1214,7 @@ export default function Financial() {
                               <button
                                 type="button"
                                 onClick={() => handleSelectService(service.name)}
-                                className={`flex flex-col items-center justify-center gap-1 p-2.5 rounded-lg border text-center transition-all w-full h-[4.5rem] ${
+                                className={`flex flex-col items-center justify-center gap-1 p-2.5 rounded-lg text-center transition-all w-full h-[4.5rem] ${
                                   selectedServices.includes(service.name)
                                     ? "border-primary bg-primary/10 ring-2 ring-primary"
                                     : "border-border hover:border-primary/50 hover:bg-muted/50"
@@ -1349,7 +1349,7 @@ export default function Financial() {
                         Cadastrar cliente avulsa
                       </Button>
                     ) : (
-                      <div className="rounded-lg border border-dashed bg-primary/5 p-3 space-y-2">
+                      <div className="rounded-lg border-dashed bg-primary/5 p-3 space-y-2">
                         <p className="text-xs font-medium text-primary flex items-center gap-1">
                           <UserPlus className="h-3 w-3" />
                           Cadastro de Cliente Avulsa
@@ -1676,7 +1676,7 @@ export default function Financial() {
               )}
 
               {!selectedTransaction && watchedPaymentType === "a_vista" && (
-                <div className="rounded-lg border p-3 space-y-2">
+                <div className="rounded-lg p-3 space-y-2">
                   <FormLabel className="text-xs font-medium">Status do Pagamento</FormLabel>
                   <Select
                     value={avistaPaymentStatus}
@@ -1706,7 +1706,7 @@ export default function Financial() {
               )}
 
               {!selectedTransaction && watchedPaymentType === "parcelado" && (
-                <div className="rounded-lg border p-3 space-y-1">
+                <div className="rounded-lg p-3 space-y-1">
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input
                       type="checkbox"
