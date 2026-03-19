@@ -176,6 +176,8 @@ export function UserManagementCard() {
   };
 
   const deleteTarget = users.find(u => u.user_id === deleteUserId);
+  const resetConfirmTarget = users.find(u => u.user_id === resetUserId);
+  const toggleTarget = users.find(u => u.user_id === toggleUserId);
   const resetTarget = resetResult ? users.find(u => u.user_id === resetResult.userId) : null;
 
   return (
