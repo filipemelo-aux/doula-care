@@ -207,13 +207,7 @@ Deno.serve(async (req) => {
       organization_id: org.id,
     });
 
-    // 6. Create default plan_settings
-    const defaultPlans = [
-      { plan_type: "basico", name: "Básico", default_value: 0, owner_id: userId, organization_id: org.id },
-      { plan_type: "intermediario", name: "Intermediário", default_value: 0, owner_id: userId, organization_id: org.id },
-      { plan_type: "completo", name: "Completo", default_value: 0, owner_id: userId, organization_id: org.id },
-    ];
-    await supabase.from("plan_settings").insert(defaultPlans);
+    // 6. No default plans created - organization starts empty, only "avulso" is available at client registration
 
     // 7. Notify super admins via push notification
     await notifySuperAdmins(supabase, fullName, email);
