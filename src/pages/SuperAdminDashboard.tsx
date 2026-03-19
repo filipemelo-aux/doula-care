@@ -519,85 +519,89 @@ export default function SuperAdminDashboard() {
 
         {/* Main content */}
         <main className="flex-1 min-h-0 overflow-y-auto touch-pan-y p-3 lg:p-8 space-y-5">
-          {/* Metrics */}
-          <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
-            <Card className={onlineOrgIds.size > 0 ? "bg-success/5" : ""}>
-              <CardContent className="p-4 flex items-center gap-3">
-                <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center", onlineOrgIds.size > 0 ? "bg-success/15" : "bg-muted")}>
-                  <span className={cn("h-3 w-3 rounded-full", onlineOrgIds.size > 0 ? "bg-success animate-pulse" : "bg-muted-foreground/30")} />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-foreground">{onlineOrgIds.size}</p>
-                  <p className="text-[11px] text-muted-foreground leading-tight">Online agora</p>
-                </div>
-              </CardContent>
-            </Card>
-            <Card className="bg-primary/5">
-              <CardContent className="p-4 flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-primary/15 flex items-center justify-center">
-                  <Building2 className="h-5 w-5 text-primary" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-foreground">{organizations.length}</p>
-                  <p className="text-[11px] text-muted-foreground leading-tight">Organizações</p>
-                </div>
-              </CardContent>
-            </Card>
-            <Card className={pendingOrgs.length > 0 ? "bg-warning/5" : ""}>
-              <CardContent className="p-4 flex items-center gap-3">
-                <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center", pendingOrgs.length > 0 ? "bg-warning/15" : "bg-muted")}>
-                  <Clock className={cn("h-5 w-5", pendingOrgs.length > 0 ? "text-warning animate-pulse" : "text-muted-foreground")} />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-foreground">{pendingOrgs.length}</p>
-                  <p className="text-[11px] text-muted-foreground leading-tight">Pendentes</p>
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-4 flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-success/15 flex items-center justify-center">
-                  <Users className="h-5 w-5 text-success" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-foreground">{totalClients}</p>
-                  <p className="text-[11px] text-muted-foreground leading-tight">Gestantes total</p>
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center gap-2 mb-2">
-                  <BarChart3 className="h-4 w-4 text-primary" />
-                  <p className="text-[11px] font-medium text-muted-foreground">Distribuição</p>
-                </div>
-                <div className="space-y-1">
-                  {([["Free", planCounts.free], ["Pro", planCounts.pro], ["Premium", planCounts.premium]] as const).map(([label, count]) => (
-                    <div key={label} className="flex items-center justify-between text-xs">
-                      <span className="text-muted-foreground">{label}</span>
-                      <span className="font-semibold text-foreground">{count}</span>
+          {activeSection !== "community" && (
+            <>
+              {/* Metrics */}
+              <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
+                <Card className={onlineOrgIds.size > 0 ? "bg-success/5" : ""}>
+                  <CardContent className="p-4 flex items-center gap-3">
+                    <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center", onlineOrgIds.size > 0 ? "bg-success/15" : "bg-muted")}>
+                      <span className={cn("h-3 w-3 rounded-full", onlineOrgIds.size > 0 ? "bg-success animate-pulse" : "bg-muted-foreground/30")} />
                     </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+                    <div>
+                      <p className="text-2xl font-bold text-foreground">{onlineOrgIds.size}</p>
+                      <p className="text-[11px] text-muted-foreground leading-tight">Online agora</p>
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card className="bg-primary/5">
+                  <CardContent className="p-4 flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-primary/15 flex items-center justify-center">
+                      <Building2 className="h-5 w-5 text-primary" />
+                    </div>
+                    <div>
+                      <p className="text-2xl font-bold text-foreground">{organizations.length}</p>
+                      <p className="text-[11px] text-muted-foreground leading-tight">Organizações</p>
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card className={pendingOrgs.length > 0 ? "bg-warning/5" : ""}>
+                  <CardContent className="p-4 flex items-center gap-3">
+                    <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center", pendingOrgs.length > 0 ? "bg-warning/15" : "bg-muted")}>
+                      <Clock className={cn("h-5 w-5", pendingOrgs.length > 0 ? "text-warning animate-pulse" : "text-muted-foreground")} />
+                    </div>
+                    <div>
+                      <p className="text-2xl font-bold text-foreground">{pendingOrgs.length}</p>
+                      <p className="text-[11px] text-muted-foreground leading-tight">Pendentes</p>
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="p-4 flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-success/15 flex items-center justify-center">
+                      <Users className="h-5 w-5 text-success" />
+                    </div>
+                    <div>
+                      <p className="text-2xl font-bold text-foreground">{totalClients}</p>
+                      <p className="text-[11px] text-muted-foreground leading-tight">Gestantes total</p>
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <BarChart3 className="h-4 w-4 text-primary" />
+                      <p className="text-[11px] font-medium text-muted-foreground">Distribuição</p>
+                    </div>
+                    <div className="space-y-1">
+                      {([["Free", planCounts.free], ["Pro", planCounts.pro], ["Premium", planCounts.premium]] as const).map(([label, count]) => (
+                        <div key={label} className="flex items-center justify-between text-xs">
+                          <span className="text-muted-foreground">{label}</span>
+                          <span className="font-semibold text-foreground">{count}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
 
-          {/* Pending approvals */}
-          {pendingOrgs.length > 0 && (
-            <div className="space-y-3">
-              <div className="flex items-center gap-2">
-                <Clock className="h-4 w-4 text-warning" />
-                <h2 className="text-sm font-semibold text-foreground">
-                  Pendentes de Aprovação ({pendingOrgs.length})
-                </h2>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                {pendingOrgs.map((org) => (
-                  <PendingOrgCard key={org.id} org={org} />
-                ))}
-              </div>
-            </div>
+              {/* Pending approvals */}
+              {pendingOrgs.length > 0 && (
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Clock className="h-4 w-4 text-warning" />
+                    <h2 className="text-sm font-semibold text-foreground">
+                      Pendentes de Aprovação ({pendingOrgs.length})
+                    </h2>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {pendingOrgs.map((org) => (
+                      <PendingOrgCard key={org.id} org={org} />
+                    ))}
+                  </div>
+                </div>
+              )}
+            </>
           )}
 
           {/* Section content */}
