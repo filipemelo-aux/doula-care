@@ -114,12 +114,14 @@ Tom: ${toneInstruction}.`;
             type: "function",
             function: {
               name: "create_notification",
-              description: "Create a push notification with title and message",
+              description: isInformative
+                ? "Create an informative post with title and detailed educational message"
+                : "Create a push notification with title and message",
               parameters: {
                 type: "object",
                 properties: {
-                  title: { type: "string", description: "Notification title, max 50 characters" },
-                  message: { type: "string", description: "Notification body, max 120 characters" },
+                  title: { type: "string", description: isInformative ? "Engaging informative title, max 100 characters" : "Notification title, max 50 characters" },
+                  message: { type: "string", description: isInformative ? "Detailed informative content with practical tips and evidence-based information, 200-500 characters" : "Notification body, max 120 characters" },
                 },
                 required: ["title", "message"],
                 additionalProperties: false,
