@@ -54,7 +54,24 @@ export default function Forum() {
         .from("user_roles")
         .select("role")
         .eq("user_id", user.id);
-      return { ...user, roles: roles?.map(r => r.role) || [] };
+      // Fetch profile avatar
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("full_name, avatar_url")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      // Also try client data for preferred_name
+      const { data: clientData } = await supabase
+        .from("clients")
+        .select("preferred_name, full_name")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      return {
+        ...user,
+        roles: roles?.map(r => r.role) || [],
+        avatarUrl: profile?.avatar_url || null,
+        displayName: clientData?.preferred_name || clientData?.full_name || profile?.full_name || "Usuária",
+      };
     },
   });
 
