@@ -5,7 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Loader2, Users, Crown, Shield, User, Trash2, KeyRound, Search, Copy, Check } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Loader2, Users, Crown, Shield, User, Trash2, KeyRound, Search, Copy, Check, ShieldCheck } from "lucide-react";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -110,6 +111,21 @@ export function UserManagementCard() {
     }
   };
 
+  const toggleSuperAdmin = async (userId: string, hasRole: boolean) => {
+    try {
+      if (hasRole) {
+        await supabase.from("user_roles").delete().eq("user_id", userId).eq("role", "super_admin");
+        toast.success("Papel de Super Admin removido");
+      } else {
+        await supabase.from("user_roles").insert({ user_id: userId, role: "super_admin" } as any);
+        toast.success("Super Admin concedido!");
+      }
+      queryClient.invalidateQueries({ queryKey: ["super-admin-all-users"] });
+    } catch (err: any) {
+      toast.error(err.message || "Erro ao alterar papel");
+    }
+  };
+
   const filteredUsers = users.filter(u => {
     if (!search) return true;
     const q = search.toLowerCase();
@@ -177,6 +193,14 @@ export function UserManagementCard() {
                     </div>
                   </div>
                   <div className="flex items-center gap-1 shrink-0">
+                    <div className="flex items-center gap-1.5 mr-2" title={u.roles.includes("super_admin") ? "Remover Super Admin" : "Conceder Super Admin"}>
+                      <ShieldCheck className={`h-3.5 w-3.5 ${u.roles.includes("super_admin") ? "text-red-500" : "text-muted-foreground/40"}`} />
+                      <Switch
+                        checked={u.roles.includes("super_admin")}
+                        onCheckedChange={() => toggleSuperAdmin(u.user_id, u.roles.includes("super_admin"))}
+                        className="scale-75"
+                      />
+                    </div>
                     <Button
                       variant="ghost"
                       size="icon"

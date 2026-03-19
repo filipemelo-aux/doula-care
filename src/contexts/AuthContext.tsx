@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 
 type AppRole = "admin" | "moderator" | "client" | "user" | "super_admin";
+type AppRoles = AppRole[];
 
 interface ClientData {
   id: string;
@@ -21,6 +22,7 @@ interface AuthContextType {
   session: Session | null;
   loading: boolean;
   role: AppRole | null;
+  roles: AppRoles;
   roleChecked: boolean;
   isAdmin: boolean;
   isClient: boolean;
@@ -44,6 +46,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [role, setRole] = useState<AppRole | null>(null);
+  const [roles, setRoles] = useState<AppRoles>([]);
   const [roleChecked, setRoleChecked] = useState(false);
   const [client, setClient] = useState<ClientData | null>(null);
   const [profileName, setProfileName] = useState<string | null>(null);
@@ -52,23 +55,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Flag to prevent onAuthStateChange from re-running initializeUser when signIn already handled it
   const signInHandledRef = useRef(false);
 
-  const fetchRole = useCallback(async (userId: string): Promise<AppRole | null> => {
+  const fetchRoles = useCallback(async (userId: string): Promise<AppRoles> => {
     try {
       const { data, error } = await supabase
         .from("user_roles")
         .select("role")
-        .eq("user_id", userId)
-        .maybeSingle();
+        .eq("user_id", userId);
 
       if (error) {
-        console.error("Error fetching role:", error);
-        return null;
+        console.error("Error fetching roles:", error);
+        return [];
       }
 
-      return (data?.role as AppRole) ?? null;
+      return (data?.map(r => r.role as AppRole) ?? []);
     } catch (error) {
-      console.error("Error fetching role:", error);
-      return null;
+      console.error("Error fetching roles:", error);
+      return [];
     }
   }, []);
 
@@ -97,6 +99,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSession(null);
       setUser(null);
       setRole(null);
+      setRoles([]);
       setClient(null);
       setProfileName(null);
       setOrganizationId(null);
@@ -110,10 +113,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(currentSession.user);
 
     try {
-      const userRole = await fetchRole(currentSession.user.id);
-      setRole(userRole);
+      const userRoles = await fetchRoles(currentSession.user.id);
+      setRoles(userRoles);
 
-      if (userRole === "client") {
+      // Determine primary role for routing: if user has both admin and super_admin, primary = admin
+      let primaryRole: AppRole | null = null;
+      if (userRoles.includes("super_admin") && (userRoles.includes("admin") || userRoles.includes("moderator"))) {
+        primaryRole = userRoles.includes("admin") ? "admin" : "moderator";
+      } else if (userRoles.length > 0) {
+        // Priority: super_admin > admin > moderator > client > user
+        const priority: AppRole[] = ["super_admin", "admin", "moderator", "client", "user"];
+        primaryRole = priority.find(r => userRoles.includes(r)) || userRoles[0];
+      }
+      setRole(primaryRole);
+
+      if (primaryRole === "client") {
         const clientData = await fetchClientData(currentSession.user.id);
         setClient(clientData);
         setProfileName(clientData?.full_name || null);
@@ -167,7 +181,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     setRoleChecked(true);
     setLoading(false);
-  }, [fetchRole, fetchClientData]);
+  }, [fetchRoles, fetchClientData]);
 
   useEffect(() => {
     let isMounted = true;
@@ -182,6 +196,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setSession(null);
           setUser(null);
           setRole(null);
+          setRoles([]);
            setClient(null);
            setProfileName(null);
            setOrganizationId(null);
@@ -317,6 +332,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = async () => {
     setRole(null);
+    setRoles([]);
     setUser(null);
     setSession(null);
     setClient(null);
@@ -351,7 +367,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const isAdmin = role === "admin" || role === "moderator";
   const isClient = role === "client";
-  const isSuperAdmin = role === "super_admin";
+  const isSuperAdmin = roles.includes("super_admin");
 
   return (
     <AuthContext.Provider
@@ -360,6 +376,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         session,
         loading,
         role,
+        roles,
         roleChecked,
         isAdmin,
         isClient,

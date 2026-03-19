@@ -10,7 +10,7 @@ interface ProtectedRouteProps {
 }
 
 export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) {
-  const { user, loading, role, roleChecked, isFirstLogin, orgStatus, signOut } = useAuth();
+  const { user, loading, role, roles, roleChecked, isFirstLogin, orgStatus, signOut } = useAuth();
   const location = useLocation();
 
   // Show loading during initial auth check or while role check is pending
@@ -30,9 +30,14 @@ export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) 
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  // Role not in allowed list
-  if (roleChecked && role && !allowedRoles.includes(role)) {
-    if (role === "super_admin") return <Navigate to="/super-admin" replace />;
+  // Check if any of the user's roles match allowed roles
+  const hasAccess = roleChecked && roles.some(r => allowedRoles.includes(r));
+  // Also allow dual-role super_admin+admin to access admin routes
+  const isDualRoleSuperAdmin = roles.includes("super_admin") && (roles.includes("admin") || roles.includes("moderator"));
+  const canAccess = hasAccess || (isDualRoleSuperAdmin && allowedRoles.some(r => ["admin", "moderator", "super_admin"].includes(r)));
+
+  if (roleChecked && role && !canAccess) {
+    if (roles.includes("super_admin")) return <Navigate to="/super-admin" replace />;
     if (role === "admin" || role === "moderator") return <Navigate to="/admin" replace />;
     if (role === "client") return <Navigate to="/gestante" replace />;
     return <Navigate to="/login" replace />;
