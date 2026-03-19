@@ -39,11 +39,8 @@ export function RecentClients() {
   const [diaryClient, setDiaryClient] = useState<Tables<"clients"> | null>(null);
   const [notifDialogOpen, setNotifDialogOpen] = useState(false);
   const [notifClient, setNotifClient] = useState<Tables<"clients"> | null>(null);
-  const { organizationId } = useAuth();
-
   const { data: clients, isLoading } = useQuery({
-    queryKey: ["recent-clients", organizationId],
-    enabled: !!organizationId,
+    queryKey: ["recent-clients"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("clients")

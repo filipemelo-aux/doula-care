@@ -36,11 +36,9 @@ const formatCurrency = (value: number) =>
 export { formatCurrency };
 
 export function useFinancialMetrics(period?: PeriodOption) {
-  const { organizationId } = useAuth();
 
   return useQuery({
-    queryKey: ["financial-metrics", organizationId, period || "all"],
-    enabled: !!organizationId,
+    queryKey: ["financial-metrics", period || "all"],
     queryFn: async (): Promise<FinancialMetrics> => {
       // Build period payments query
       const periodPaymentsQuery = (() => {

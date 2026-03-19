@@ -58,7 +58,7 @@ export function UpcomingAppointments() {
   });
 
   const { data: clients } = useQuery({
-    queryKey: ["clients-for-appointments", organizationId],
+    queryKey: ["clients-for-appointments"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("clients")
@@ -68,7 +68,7 @@ export function UpcomingAppointments() {
       if (error) throw error;
       return data;
     },
-    enabled: pickClientOpen && !!organizationId,
+    enabled: pickClientOpen,
   });
 
   const handleDelete = async (id: string) => {
