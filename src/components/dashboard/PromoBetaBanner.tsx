@@ -163,7 +163,7 @@ export function PromoBetaBanner() {
   if (promo.status === "trial_active" && !isTrialExpired) {
     return (
       <>
-        <Alert className="border-none border-30 bg-gradient-to-r from-primary/5 to-accent/5 relative pr-8">
+        <Alert className="border-none bg-gradient-to-r from-primary/5 to-accent/5 relative pr-8">
           <Gift className="h-4 w-4 text-primary" />
           <AlertTitle className="text-primary text-sm font-semibold flex items-center gap-2">
             <Sparkles className="h-3.5 w-3.5" />
@@ -277,7 +277,7 @@ export function PromoBetaBanner() {
 
     if (promo.bonus_choice === "extra_30_days") {
       return (
-        <Alert className="border-none border-30 bg-gradient-to-r from-primary/5 to-accent/5">
+        <Alert className="border-none bg-gradient-to-r from-primary/5 to-accent/5">
           <CheckCircle className="h-4 w-4 text-primary" />
           <AlertTitle className="text-primary text-sm font-semibold">
             Bônus Premium +30 dias ativo
@@ -295,7 +295,7 @@ export function PromoBetaBanner() {
     }
 
     return (
-      <Alert className="border-none border-30 bg-gradient-to-r from-primary/5 to-accent/5">
+      <Alert className="border-none bg-gradient-to-r from-primary/5 to-accent/5">
         <Percent className="h-4 w-4 text-primary" />
         <AlertTitle className="text-primary text-sm font-semibold">
           Desconto de 50% ativado!
