@@ -201,7 +201,8 @@ function ProfileSection() {
 }
 
 export default function SuperAdminDashboard() {
-  const { signOut } = useAuth();
+  const { signOut, roles } = useAuth();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const onlineOrgIds = useOnlineOrgs();
   const isMobile = useIsMobile();
