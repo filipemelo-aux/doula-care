@@ -273,18 +273,29 @@ export default function Forum() {
     }
     setPostLoading(true);
     try {
-      const { error } = await supabase.from("forum_posts").insert({
+      const { data: insertedPost, error } = await supabase.from("forum_posts").insert({
         title: newTitle.trim(),
         content: newContent.trim(),
         category_id: newCategoryId,
         author_id: currentUser!.id,
         is_anonymous: newAnonymous,
-      });
+      }).select("id").single();
       if (error) throw error;
       toast.success("Publicado!");
       setNewTitle(""); setNewContent(""); setNewCategoryId(""); setNewAnonymous(false);
       setShowNewPost(false);
       refetchPosts();
+
+      // Notify all users about the new post (fire and forget)
+      supabase.functions.invoke("notify-forum-post", {
+        body: {
+          postId: insertedPost.id,
+          authorId: currentUser!.id,
+          authorName: currentUser!.displayName,
+          postTitle: newTitle.trim(),
+          isAnonymous: newAnonymous,
+        },
+      }).catch((err) => console.error("Error notifying forum post:", err));
     } catch (err: any) {
       toast.error(err.message);
     } finally {
