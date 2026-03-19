@@ -50,7 +50,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [organizationId, setOrganizationId] = useState<string | null>(null);
   const [orgStatus, setOrgStatus] = useState<OrgStatus | null>(null);
   // Flag to prevent onAuthStateChange from re-running initializeUser when signIn already handled it
-  const signInHandledRef = { current: false };
+  const signInHandledRef = useRef(false);
 
   const fetchRole = useCallback(async (userId: string): Promise<AppRole | null> => {
     try {
