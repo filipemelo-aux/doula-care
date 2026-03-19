@@ -254,5 +254,4 @@ export function NotificationTopBanner() {
       </Button>
     </Alert>
   );
-
-
+}
