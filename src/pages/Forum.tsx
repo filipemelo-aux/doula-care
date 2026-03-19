@@ -482,7 +482,12 @@ export default function Forum() {
 
                   {/* Post content */}
                   <h3 className="font-semibold text-foreground mb-1 break-words">{post.title}</h3>
-                  <p className="text-sm text-foreground/80 whitespace-pre-wrap break-words">{post.content}</p>
+                  <p className="text-sm text-foreground/80 whitespace-pre-wrap break-words">
+                    {extractInstagramUrls(post.content).length > 0
+                      ? removeInstagramMarkdownLinks(post.content)
+                      : post.content}
+                  </p>
+                  <InstagramLinkPreview content={post.content} />
                 </div>
 
                 {post.image_url && (
