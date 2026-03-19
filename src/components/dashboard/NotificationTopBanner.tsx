@@ -23,7 +23,14 @@ export function NotificationTopBanner() {
   const { organizationId } = useAuth();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
-  const [dismissedIds, setDismissedIds] = useState<Set<string>>(new Set());
+  const [dismissedIds, setDismissedIds] = useState<Set<string>>(() => {
+    try {
+      const stored = localStorage.getItem("dismissed-top-notifications");
+      return stored ? new Set(JSON.parse(stored)) : new Set();
+    } catch {
+      return new Set();
+    }
+  });
 
   // Fetch the most recent unread notification sources
   const { data: topNotification } = useQuery({
