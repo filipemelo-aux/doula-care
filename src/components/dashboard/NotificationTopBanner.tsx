@@ -177,7 +177,13 @@ export function NotificationTopBanner() {
   if (!topNotification || dismissedIds.has(topNotification.id)) return null;
 
   const handleDismiss = () => {
-    setDismissedIds((prev) => new Set([...prev, topNotification.id]));
+    setDismissedIds((prev) => {
+      const next = new Set([...prev, topNotification.id]);
+      try {
+        localStorage.setItem("dismissed-top-notifications", JSON.stringify([...next]));
+      } catch {}
+      return next;
+    });
   };
 
   const handleReadAndNavigate = () => {
