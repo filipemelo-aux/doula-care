@@ -467,17 +467,20 @@ export default function Forum() {
           >
             Todos
           </Button>
-          {categories.map((cat: any) => (
-            <Button
-              key={cat.id}
-              variant={selectedCategory === cat.id ? "default" : "outline"}
-              size="sm"
-              onClick={() => setSelectedCategory(cat.id)}
-              className="shrink-0 rounded-full text-xs h-8"
-            >
-              {cat.icon} {cat.name}
-            </Button>
-          ))}
+          {categories.map((cat: any) => {
+            const isSelected = selectedCategory === cat.id;
+            return (
+              <Button
+                key={cat.id}
+                variant={isSelected ? "default" : "outline"}
+                size="sm"
+                onClick={() => setSelectedCategory(cat.id)}
+                className="shrink-0 rounded-full text-xs h-8"
+              >
+                {cat.icon}{isSelected ? ` ${cat.name}` : ""}
+              </Button>
+            );
+          })}
         </div>
       </div>
 
