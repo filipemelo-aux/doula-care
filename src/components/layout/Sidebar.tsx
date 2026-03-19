@@ -168,7 +168,7 @@ export function Sidebar({ isOpen, onToggle, onNavigate }: SidebarProps) {
                   />
                 </button>
                 {financialOpen && isOpen && (
-                  <div className="ml-4 mt-1 space-y-0.5 border-l-2 border-sidebar-border pl-2">
+                  <div className="ml-4 mt-1 space-y-0.5 pl-2">
                     {item.subItems.map((sub) => {
                       const lk = subLimitKeys[sub.to];
                       const subDisabled = lk ? !limits[lk] : false;
