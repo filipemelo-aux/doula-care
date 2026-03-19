@@ -58,6 +58,11 @@ export function UserManagementCard() {
           .map(r => r.user_id)
       );
 
+      // Find the master super admin by email
+      const { data: masterData } = await supabase.rpc("get_master_super_admin_id");
+      // Fallback: identify master by checking all super_admin user IDs
+      // We'll use a different approach - fetch from edge function or mark in state
+      
       return (profiles || [])
         .filter(p => adminUserIds.has(p.user_id))
         .map(p => ({
