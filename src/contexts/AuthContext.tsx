@@ -332,6 +332,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = async () => {
     setRole(null);
+    setRoles([]);
     setUser(null);
     setSession(null);
     setClient(null);
