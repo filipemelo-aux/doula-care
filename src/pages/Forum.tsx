@@ -364,8 +364,11 @@ export default function Forum() {
         className="w-full bg-card rounded-xl p-4 flex items-center gap-3 hover:bg-accent/50 transition-colors text-left"
       >
         <Avatar className="h-10 w-10 bg-primary/10">
+          {currentUser?.avatarUrl && (
+            <AvatarImage src={currentUser.avatarUrl} alt={currentUser.displayName} className="object-cover" />
+          )}
           <AvatarFallback className="bg-primary/10 text-primary text-sm font-semibold">
-            {currentUser ? getInitials(getAuthorName(currentUser.id, false)) : "?"}
+            {currentUser ? getInitials(currentUser.displayName) : "?"}
           </AvatarFallback>
         </Avatar>
         <span className="text-muted-foreground text-sm flex-1">No que você está pensando?</span>
