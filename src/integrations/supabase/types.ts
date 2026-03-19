@@ -663,6 +663,7 @@ export type Database = {
           is_anonymous: boolean
           is_hidden: boolean
           is_pinned: boolean
+          is_system_post: boolean
           organization_id: string | null
           title: string
           updated_at: string
@@ -677,6 +678,7 @@ export type Database = {
           is_anonymous?: boolean
           is_hidden?: boolean
           is_pinned?: boolean
+          is_system_post?: boolean
           organization_id?: string | null
           title: string
           updated_at?: string
@@ -691,6 +693,7 @@ export type Database = {
           is_anonymous?: boolean
           is_hidden?: boolean
           is_pinned?: boolean
+          is_system_post?: boolean
           organization_id?: string | null
           title?: string
           updated_at?: string
