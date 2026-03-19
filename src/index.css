@@ -142,13 +142,10 @@
     @apply border-border;
   }
 
-  html {
-    overflow-x: clip;
-  }
-
+  html,
   body {
-    overflow-x: clip;
-    overflow-y: auto;
+    overflow: hidden;
+    height: 100%;
   }
 
   body {
