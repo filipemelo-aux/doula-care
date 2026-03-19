@@ -25,13 +25,14 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
-type Section = "orgs" | "users" | "billing" | "notifications";
+type Section = "orgs" | "users" | "billing" | "notifications" | "community";
 
 const sidebarItems: { key: Section; label: string; icon: React.ElementType }[] = [
   { key: "orgs", label: "Organizações", icon: Building2 },
   { key: "users", label: "Usuários", icon: Users },
   { key: "billing", label: "Planos & Cobranças", icon: CreditCard },
   { key: "notifications", label: "Notificações", icon: Bell },
+  { key: "community", label: "Comunidade", icon: Users2 },
 ];
 
 interface OrgWithCounts {
