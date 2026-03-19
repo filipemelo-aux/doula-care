@@ -157,6 +157,9 @@ export function NotificationTopBanner() {
       .on("postgres_changes", { event: "*", schema: "public", table: "pregnancy_diary" }, () => {
         queryClient.invalidateQueries({ queryKey: ["top-notification-banner"] });
       })
+      .on("postgres_changes", { event: "*", schema: "public", table: "org_notifications" }, () => {
+        queryClient.invalidateQueries({ queryKey: ["top-notification-banner"] });
+      })
       .subscribe();
 
     return () => {
