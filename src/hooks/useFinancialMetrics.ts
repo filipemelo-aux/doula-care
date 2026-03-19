@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { format } from "date-fns";
 import { PeriodOption, getPeriodDates } from "@/components/dashboard/PeriodFilter";
 
@@ -35,8 +36,11 @@ const formatCurrency = (value: number) =>
 export { formatCurrency };
 
 export function useFinancialMetrics(period?: PeriodOption) {
+  const { organizationId } = useAuth();
+
   return useQuery({
-    queryKey: ["financial-metrics", period || "all"],
+    queryKey: ["financial-metrics", organizationId, period || "all"],
+    enabled: !!organizationId,
     queryFn: async (): Promise<FinancialMetrics> => {
       // Build period payments query
       const periodPaymentsQuery = (() => {

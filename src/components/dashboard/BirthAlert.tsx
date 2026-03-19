@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -18,9 +19,11 @@ export function BirthAlert() {
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [birthDialogOpen, setBirthDialogOpen] = useState(false);
   const isMobile = useIsMobile();
+  const { organizationId } = useAuth();
 
   const { data: clients, isLoading } = useQuery({
-    queryKey: ["birth-alert-clients"],
+    queryKey: ["birth-alert-clients", organizationId],
+    enabled: !!organizationId,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("clients")

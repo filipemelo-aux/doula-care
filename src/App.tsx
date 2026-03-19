@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+import { DualRoleAdminCacheGuard } from "@/components/auth/DualRoleAdminCacheGuard";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
@@ -49,7 +50,7 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
-          
+          <DualRoleAdminCacheGuard />
           <UpdatePrompt />
           <ForceUpdateListener />
           <NotificationListenerProvider />
