@@ -22,6 +22,16 @@ const TYPE_OPTIONS: { value: PushNotificationType; label: string }[] = [
   { value: "general", label: "📢 Geral" },
 ];
 
+const COMMUNITY_THEME_OPTIONS = [
+  { value: "gestacao", label: "🤰 Gestação" },
+  { value: "parto", label: "👶 Parto" },
+  { value: "amamentacao", label: "🤱 Amamentação" },
+  { value: "pos-parto", label: "💜 Pós-parto" },
+  { value: "bebe", label: "🍼 Bebê" },
+  { value: "bem-estar", label: "🧘 Bem-estar" },
+  { value: "livre", label: "💬 Livre" },
+];
+
 const AUDIENCE_OPTIONS = [
   { value: "all", label: "Todos os usuários" },
   { value: "admins", label: "Apenas doulas (admins)" },
@@ -40,6 +50,7 @@ export function BroadcastNotificationCard() {
   const [title, setTitle] = useState("");
   const [message, setMessage] = useState("");
   const [notifType, setNotifType] = useState<PushNotificationType>("community");
+  const [communityTheme, setCommunityTheme] = useState("livre");
   const [audience, setAudience] = useState("all");
   const [targetOrgId, setTargetOrgId] = useState("all");
   const [orgs, setOrgs] = useState<Organization[]>([]);
@@ -47,7 +58,6 @@ export function BroadcastNotificationCard() {
   const [generating, setGenerating] = useState(false);
   const [sending, setSending] = useState(false);
 
-  // Lazy load orgs when dropdown opens
   const loadOrgs = async () => {
     if (orgsLoaded) return;
     const { data } = await supabase
@@ -95,97 +105,165 @@ export function BroadcastNotificationCard() {
 
     setSending(true);
     try {
-      let userIds: string[] = [];
+      // If community type, create a forum post as "Doula Care"
+      if (notifType === "community") {
+        // Find the matching category for the theme
+        const themeLabel = COMMUNITY_THEME_OPTIONS.find(t => t.value === communityTheme)?.label || "💬 Livre";
+        
+        // Get or find a matching forum category
+        const { data: categories } = await supabase
+          .from("forum_categories")
+          .select("id, name")
+          .eq("is_active", true);
 
-      if (targetOrgId !== "all") {
-        // Target specific organization
-        if (audience === "all" || audience === "admins") {
-          const { data: orgProfiles } = await supabase
-            .from("profiles")
-            .select("user_id")
-            .eq("organization_id", targetOrgId);
+        // Try to match by name similarity, fallback to first category
+        let categoryId = categories?.[0]?.id;
+        if (categories) {
+          const themeMap: Record<string, string[]> = {
+            gestacao: ["gestação", "gravidez"],
+            parto: ["parto", "nascimento"],
+            amamentacao: ["amamentação", "aleitamento"],
+            "pos-parto": ["pós-parto", "puerpério"],
+            bebe: ["bebê", "recém-nascido"],
+            "bem-estar": ["bem-estar", "saúde"],
+            livre: ["livre", "geral", "outros"],
+          };
+          const searchTerms = themeMap[communityTheme] || ["livre"];
+          for (const cat of categories) {
+            const catName = cat.name.toLowerCase();
+            if (searchTerms.some(t => catName.includes(t))) {
+              categoryId = cat.id;
+              break;
+            }
+          }
+        }
 
-          if (orgProfiles) {
-            const orgUserIds = orgProfiles.map(p => p.user_id);
+        if (!categoryId) {
+          toast.error("Nenhuma categoria encontrada na comunidade");
+          setSending(false);
+          return;
+        }
+
+        // Get current user id (super admin) to use as author
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+          toast.error("Erro de autenticação");
+          setSending(false);
+          return;
+        }
+
+        // Create the forum post
+        const { data: insertedPost, error: postError } = await supabase
+          .from("forum_posts")
+          .insert({
+            title: title.trim(),
+            content: message.trim(),
+            category_id: categoryId,
+            author_id: user.id,
+            is_anonymous: false,
+            organization_id: null, // Global post
+          })
+          .select("id")
+          .single();
+
+        if (postError) {
+          console.error("Error creating forum post:", postError);
+          toast.error("Erro ao criar post na comunidade");
+          setSending(false);
+          return;
+        }
+
+        // Trigger notifications via notify-forum-post
+        await supabase.functions.invoke("notify-forum-post", {
+          body: {
+            postId: insertedPost.id,
+            authorId: user.id,
+            authorName: "Doula Care",
+            postTitle: title.trim(),
+            isAnonymous: false,
+          },
+        });
+
+        toast.success("Post publicado na comunidade e notificações enviadas!");
+      } else {
+        // General type — send push notification directing to home
+        let userIds: string[] = [];
+
+        if (targetOrgId !== "all") {
+          if (audience === "all" || audience === "admins") {
+            const { data: orgProfiles } = await supabase
+              .from("profiles")
+              .select("user_id")
+              .eq("organization_id", targetOrgId);
+
+            if (orgProfiles) {
+              const orgUserIds = orgProfiles.map(p => p.user_id);
+              const { data: adminRoles } = await supabase
+                .from("user_roles")
+                .select("user_id")
+                .in("role", ["admin", "moderator"])
+                .in("user_id", orgUserIds);
+
+              if (adminRoles) {
+                userIds.push(...adminRoles.map(r => r.user_id));
+              }
+            }
+          }
+
+          if (audience === "all" || audience === "clients") {
+            const { data: clients } = await supabase
+              .from("clients")
+              .select("user_id")
+              .eq("organization_id", targetOrgId)
+              .not("user_id", "is", null);
+
+            if (clients) {
+              userIds.push(...clients.map(c => c.user_id).filter((id): id is string => !!id));
+            }
+          }
+        } else {
+          if (audience === "all" || audience === "admins") {
             const { data: adminRoles } = await supabase
               .from("user_roles")
               .select("user_id")
-              .in("role", ["admin", "moderator"])
-              .in("user_id", orgUserIds);
+              .in("role", ["admin", "moderator"]);
 
             if (adminRoles) {
               userIds.push(...adminRoles.map(r => r.user_id));
             }
           }
-        }
 
-        if (audience === "all" || audience === "clients") {
-          const { data: clients } = await supabase
-            .from("clients")
-            .select("user_id")
-            .eq("organization_id", targetOrgId)
-            .not("user_id", "is", null);
+          if (audience === "all" || audience === "clients") {
+            const { data: clients } = await supabase
+              .from("clients")
+              .select("user_id")
+              .not("user_id", "is", null);
 
-          if (clients) {
-            userIds.push(...clients.map(c => c.user_id).filter((id): id is string => !!id));
-          }
-        }
-      } else {
-        // Target all organizations (existing logic)
-        if (audience === "all" || audience === "admins") {
-          const { data: adminRoles } = await supabase
-            .from("user_roles")
-            .select("user_id")
-            .in("role", ["admin", "moderator"]);
-
-          if (adminRoles) {
-            userIds.push(...adminRoles.map(r => r.user_id));
+            if (clients) {
+              userIds.push(...clients.map(c => c.user_id).filter((id): id is string => !!id));
+            }
           }
         }
 
-        if (audience === "all" || audience === "clients") {
-          const { data: clients } = await supabase
-            .from("clients")
-            .select("user_id")
-            .not("user_id", "is", null);
+        userIds = [...new Set(userIds)];
 
-          if (clients) {
-            userIds.push(...clients.map(c => c.user_id).filter((id): id is string => !!id));
-          }
+        if (userIds.length === 0) {
+          toast.error("Nenhum usuário encontrado para o público selecionado");
+          setSending(false);
+          return;
         }
+
+        await sendPushNotification({
+          user_ids: userIds,
+          title,
+          message,
+          type: "general",
+          url: "/",
+        });
+
+        toast.success(`Notificação enviada para ${userIds.length} usuário(s)!`);
       }
 
-      // Deduplicate
-      userIds = [...new Set(userIds)];
-
-      if (userIds.length === 0) {
-        toast.error("Nenhum usuário encontrado para o público selecionado");
-        setSending(false);
-        return;
-      }
-
-      // Determine the themed image for notification body
-      const notifImage = notifType === "community"
-        ? "/notif-icon-community.png"
-        : "/notif-icon-announcement.png";
-
-      // Send push notification
-      await sendPushNotification({
-        user_ids: userIds,
-        title,
-        message,
-        type: notifType,
-        url: notifType === "community" ? "/comunidade" : "/",
-        image: notifImage,
-      });
-
-      const orgLabel = targetOrgId !== "all"
-        ? orgs.find(o => o.id === targetOrgId)?.nome_exibicao || orgs.find(o => o.id === targetOrgId)?.name || ""
-        : "";
-
-      toast.success(
-        `Notificação enviada para ${userIds.length} usuário(s)${orgLabel ? ` de ${orgLabel}` : ""}!`
-      );
       // Reset form
       setKeywords("");
       setTitle("");
@@ -263,28 +341,30 @@ export function BroadcastNotificationCard() {
         {/* Notification Fields */}
         <div className="space-y-3">
           <div className="space-y-2">
-            <Label className="text-xs">Título da notificação</Label>
+            <Label className="text-xs">Título {notifType === "community" ? "do post" : "da notificação"}</Label>
             <Input
-              placeholder="Título da push notification"
+              placeholder={notifType === "community" ? "Título do post na comunidade" : "Título da push notification"}
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              maxLength={50}
+              maxLength={100}
               className="text-sm"
             />
-            <p className="text-[10px] text-muted-foreground text-right">{title.length}/50</p>
+            <p className="text-[10px] text-muted-foreground text-right">{title.length}/100</p>
           </div>
 
           <div className="space-y-2">
-            <Label className="text-xs">Mensagem</Label>
+            <Label className="text-xs">{notifType === "community" ? "Conteúdo do post" : "Mensagem"}</Label>
             <Textarea
-              placeholder="Corpo da notificação"
+              placeholder={notifType === "community" ? "Conteúdo do post na comunidade" : "Corpo da notificação"}
               value={message}
               onChange={(e) => setMessage(e.target.value)}
-              maxLength={120}
-              rows={2}
+              maxLength={notifType === "community" ? 2000 : 120}
+              rows={notifType === "community" ? 4 : 2}
               className="text-sm resize-none"
             />
-            <p className="text-[10px] text-muted-foreground text-right">{message.length}/120</p>
+            <p className="text-[10px] text-muted-foreground text-right">
+              {message.length}/{notifType === "community" ? 2000 : 120}
+            </p>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
@@ -304,40 +384,60 @@ export function BroadcastNotificationCard() {
               </Select>
             </div>
 
+            {notifType === "community" ? (
+              <div className="space-y-2">
+                <Label className="text-xs">Tema</Label>
+                <Select value={communityTheme} onValueChange={setCommunityTheme}>
+                  <SelectTrigger className="h-9 text-sm">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {COMMUNITY_THEME_OPTIONS.map((t) => (
+                      <SelectItem key={t.value} value={t.value}>
+                        {t.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <Label className="text-xs">Público</Label>
+                <Select value={audience} onValueChange={setAudience}>
+                  <SelectTrigger className="h-9 text-sm">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {AUDIENCE_OPTIONS.map((a) => (
+                      <SelectItem key={a.value} value={a.value}>
+                        {a.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+          </div>
+
+          {/* Organization targeting — only for general type */}
+          {notifType === "general" && (
             <div className="space-y-2">
-              <Label className="text-xs">Público</Label>
-              <Select value={audience} onValueChange={setAudience}>
+              <Label className="text-xs">Organização</Label>
+              <Select value={targetOrgId} onValueChange={setTargetOrgId} onOpenChange={(open) => { if (open) loadOrgs(); }}>
                 <SelectTrigger className="h-9 text-sm">
-                  <SelectValue />
+                  <SelectValue placeholder="Todas as organizações" />
                 </SelectTrigger>
                 <SelectContent>
-                  {AUDIENCE_OPTIONS.map((a) => (
-                    <SelectItem key={a.value} value={a.value}>
-                      {a.label}
+                  <SelectItem value="all">🌍 Todas as organizações</SelectItem>
+                  {orgs.map((org) => (
+                    <SelectItem key={org.id} value={org.id}>
+                      {org.nome_exibicao || org.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
-          </div>
-
-          {/* Organization targeting */}
-          <div className="space-y-2">
-            <Label className="text-xs">Organização</Label>
-            <Select value={targetOrgId} onValueChange={setTargetOrgId} onOpenChange={(open) => { if (open) loadOrgs(); }}>
-              <SelectTrigger className="h-9 text-sm">
-                <SelectValue placeholder="Todas as organizações" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">🌍 Todas as organizações</SelectItem>
-                {orgs.map((org) => (
-                  <SelectItem key={org.id} value={org.id}>
-                    {org.nome_exibicao || org.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          )}
         </div>
 
         {/* Preview */}
@@ -353,7 +453,11 @@ export function BroadcastNotificationCard() {
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-semibold text-foreground truncate">{title || "Título"}</p>
-                <p className="text-xs text-muted-foreground break-words">{message || "Mensagem"}</p>
+                <p className="text-xs text-muted-foreground break-words">
+                  {notifType === "community"
+                    ? `Doula Care publicou: "${(message || "Mensagem").substring(0, 80)}..."`
+                    : (message || "Mensagem")}
+                </p>
               </div>
               <div className="w-6 h-6 rounded-md overflow-hidden flex-shrink-0 bg-foreground/10 p-0.5">
                 <img
@@ -363,14 +467,16 @@ export function BroadcastNotificationCard() {
                 />
               </div>
             </div>
-            {/* Image preview in body */}
-            <div className="mt-2 rounded-md overflow-hidden bg-card">
-              <img
-                src={notifType === "community" ? "/notif-icon-community.png" : "/notif-icon-announcement.png"}
-                alt="notification image"
-                className="w-full h-24 object-contain p-2"
-              />
-            </div>
+            {notifType === "community" && (
+              <p className="text-[10px] text-muted-foreground mt-1">
+                Será criado um post na comunidade como "Doula Care" • Clique direciona para /comunidade
+              </p>
+            )}
+            {notifType === "general" && (
+              <p className="text-[10px] text-muted-foreground mt-1">
+                Clique direciona para a página inicial do aplicativo
+              </p>
+            )}
           </div>
         )}
 
@@ -385,7 +491,7 @@ export function BroadcastNotificationCard() {
           ) : (
             <Send className="h-4 w-4 mr-2" />
           )}
-          Enviar Notificação
+          {notifType === "community" ? "Publicar na Comunidade" : "Enviar Notificação"}
         </Button>
       </CardContent>
     </Card>
