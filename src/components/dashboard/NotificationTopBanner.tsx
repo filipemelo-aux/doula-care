@@ -114,6 +114,27 @@ export function NotificationTopBanner() {
         };
       }
 
+      // Unread community notifications
+      const { data: unreadCommunity } = await supabase
+        .from("org_notifications")
+        .select("id, title, message, created_at")
+        .eq("type", "community")
+        .eq("read", false)
+        .order("created_at", { ascending: false })
+        .limit(1);
+
+      if (unreadCommunity && unreadCommunity.length > 0) {
+        const c = unreadCommunity[0];
+        return {
+          id: `community-${c.id}`,
+          type: "community",
+          title: c.title,
+          message: c.message,
+          timestamp: c.created_at,
+          priority: "low",
+        };
+      }
+
       return null;
     },
     enabled: !!organizationId,
