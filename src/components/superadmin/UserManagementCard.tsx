@@ -227,7 +227,7 @@ export function UserManagementCard() {
                       <ShieldCheck className={`h-3.5 w-3.5 ${u.roles.includes("super_admin") ? "text-red-500" : "text-muted-foreground/40"}`} />
                       <Switch
                         checked={u.roles.includes("super_admin")}
-                        onCheckedChange={() => toggleSuperAdmin(u.user_id, u.roles.includes("super_admin"))}
+                        onCheckedChange={() => handleToggleSuperAdmin(u.user_id, u.roles.includes("super_admin"))}
                         className="scale-75"
                       />
                     </div>
@@ -235,7 +235,7 @@ export function UserManagementCard() {
                       variant="ghost"
                       size="icon"
                       className="h-8 w-8 text-muted-foreground hover:text-amber-600"
-                      onClick={() => resetMutation.mutate(u.user_id)}
+                      onClick={() => setResetUserId(u.user_id)}
                       disabled={resetMutation.isPending}
                       title="Resetar senha"
                     >
