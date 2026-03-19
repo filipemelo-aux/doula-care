@@ -27,6 +27,9 @@ export function UserManagementCard() {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [deleteUserId, setDeleteUserId] = useState<string | null>(null);
+  const [resetUserId, setResetUserId] = useState<string | null>(null);
+  const [toggleUserId, setToggleUserId] = useState<string | null>(null);
+  const [toggleHasRole, setToggleHasRole] = useState(false);
   const [resetResult, setResetResult] = useState<{ userId: string; password: string } | null>(null);
   const [copiedPassword, setCopiedPassword] = useState(false);
   const [masterUserId, setMasterUserId] = useState<string | null>(null);
@@ -120,23 +123,31 @@ export function UserManagementCard() {
     }
   };
 
-  const toggleSuperAdmin = async (userId: string, hasRole: boolean) => {
-    if (userId === masterUserId) {
-      toast.error("Não é permitido alterar o Super Admin master");
-      return;
-    }
+  const confirmToggleSuperAdmin = async () => {
+    if (!toggleUserId) return;
     try {
-      if (hasRole) {
-        await supabase.from("user_roles").delete().eq("user_id", userId).eq("role", "super_admin");
+      if (toggleHasRole) {
+        await supabase.from("user_roles").delete().eq("user_id", toggleUserId).eq("role", "super_admin");
         toast.success("Papel de Super Admin removido");
       } else {
-        await supabase.from("user_roles").insert({ user_id: userId, role: "super_admin" } as any);
+        await supabase.from("user_roles").insert({ user_id: toggleUserId, role: "super_admin" } as any);
         toast.success("Super Admin concedido!");
       }
       queryClient.invalidateQueries({ queryKey: ["super-admin-all-users"] });
     } catch (err: any) {
       toast.error(err.message || "Erro ao alterar papel");
+    } finally {
+      setToggleUserId(null);
     }
+  };
+
+  const handleToggleSuperAdmin = (userId: string, hasRole: boolean) => {
+    if (userId === masterUserId) {
+      toast.error("Não é permitido alterar o Super Admin master");
+      return;
+    }
+    setToggleUserId(userId);
+    setToggleHasRole(hasRole);
   };
 
   const filteredUsers = users.filter(u => {
@@ -165,6 +176,8 @@ export function UserManagementCard() {
   };
 
   const deleteTarget = users.find(u => u.user_id === deleteUserId);
+  const resetConfirmTarget = users.find(u => u.user_id === resetUserId);
+  const toggleTarget = users.find(u => u.user_id === toggleUserId);
   const resetTarget = resetResult ? users.find(u => u.user_id === resetResult.userId) : null;
 
   return (
@@ -216,7 +229,7 @@ export function UserManagementCard() {
                       <ShieldCheck className={`h-3.5 w-3.5 ${u.roles.includes("super_admin") ? "text-red-500" : "text-muted-foreground/40"}`} />
                       <Switch
                         checked={u.roles.includes("super_admin")}
-                        onCheckedChange={() => toggleSuperAdmin(u.user_id, u.roles.includes("super_admin"))}
+                        onCheckedChange={() => handleToggleSuperAdmin(u.user_id, u.roles.includes("super_admin"))}
                         className="scale-75"
                       />
                     </div>
@@ -224,7 +237,7 @@ export function UserManagementCard() {
                       variant="ghost"
                       size="icon"
                       className="h-8 w-8 text-muted-foreground hover:text-amber-600"
-                      onClick={() => resetMutation.mutate(u.user_id)}
+                      onClick={() => setResetUserId(u.user_id)}
                       disabled={resetMutation.isPending}
                       title="Resetar senha"
                     >
@@ -274,7 +287,48 @@ export function UserManagementCard() {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Reset password result */}
+      {/* Reset password confirmation */}
+      <AlertDialog open={!!resetUserId} onOpenChange={() => setResetUserId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Resetar senha</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja resetar a senha de <strong>{resetConfirmTarget?.full_name || "este usuário"}</strong>? Uma nova senha será gerada automaticamente.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={() => { if (resetUserId) { resetMutation.mutate(resetUserId); setResetUserId(null); } }}>
+              {resetMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <KeyRound className="h-4 w-4 mr-1" />}
+              Resetar Senha
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Toggle Super Admin confirmation */}
+      <AlertDialog open={!!toggleUserId} onOpenChange={() => setToggleUserId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{toggleHasRole ? "Remover Super Admin" : "Conceder Super Admin"}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {toggleHasRole
+                ? <>Tem certeza que deseja <strong>remover</strong> o papel de Super Admin de <strong>{toggleTarget?.full_name || "este usuário"}</strong>?</>
+                : <>Tem certeza que deseja <strong>conceder</strong> o papel de Super Admin para <strong>{toggleTarget?.full_name || "este usuário"}</strong>? Ele terá acesso ao painel de controle global.</>
+              }
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmToggleSuperAdmin}>
+              <ShieldCheck className="h-4 w-4 mr-1" />
+              Confirmar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+
       <AlertDialog open={!!resetResult} onOpenChange={() => { setResetResult(null); setCopiedPassword(false); }}>
         <AlertDialogContent>
           <AlertDialogHeader>
