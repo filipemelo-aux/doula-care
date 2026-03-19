@@ -14,36 +14,44 @@ function generateDefaultPassword(fullName: string): string {
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
+    return new Response("ok", { headers: corsHeaders });
   }
 
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const authHeader = req.headers.get("Authorization");
 
-    const supabase = createClient(supabaseUrl, serviceRoleKey, {
+    if (!authHeader) {
+      return new Response(JSON.stringify({ error: "Missing authorization" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const userClient = createClient(supabaseUrl, anonKey, {
+      global: { headers: { Authorization: authHeader } },
       auth: { autoRefreshToken: false, persistSession: false },
     });
 
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader) {
-      return new Response(JSON.stringify({ error: "Missing authorization" }), {
-        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+    const adminClient = createClient(supabaseUrl, serviceRoleKey, {
+      auth: { autoRefreshToken: false, persistSession: false },
+    });
 
-    const { data: { user: callingUser }, error: authError } = await supabase.auth.getUser(
-      authHeader.replace("Bearer ", "")
-    );
+    const {
+      data: { user: callingUser },
+      error: authError,
+    } = await userClient.auth.getUser();
 
     if (authError || !callingUser) {
       return new Response(JSON.stringify({ error: "Invalid token" }), {
-        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // Check caller roles
-    const { data: callerRoles } = await supabase
+    const { data: callerRoles } = await adminClient
       .from("user_roles")
       .select("role")
       .eq("user_id", callingUser.id)
@@ -51,7 +59,8 @@ Deno.serve(async (req) => {
 
     if (!callerRoles || callerRoles.length === 0) {
       return new Response(JSON.stringify({ error: "Admin, moderator or super_admin role required" }), {
-        status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 403,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
@@ -59,19 +68,18 @@ Deno.serve(async (req) => {
     const callerIsAdmin = callerRoles.some((r) => r.role === "admin");
     const callerIsModerator = callerRoles.some((r) => r.role === "moderator");
 
-    // Get caller's organization (not needed for super_admin)
     let callerOrgId: string | null = null;
     if (!callerIsSuperAdmin) {
-      const { data: callerProfile } = await supabase
+      const { data: callerProfile } = await adminClient
         .from("profiles")
         .select("organization_id")
         .eq("user_id", callingUser.id)
         .single();
 
-      callerOrgId = callerProfile?.organization_id;
+      callerOrgId = callerProfile?.organization_id ?? null;
 
       if (callerOrgId) {
-        const { data: org } = await supabase
+        const { data: org } = await adminClient
           .from("organizations")
           .select("status")
           .eq("id", callerOrgId)
@@ -79,7 +87,8 @@ Deno.serve(async (req) => {
 
         if (org?.status === "suspenso") {
           return new Response(JSON.stringify({ error: "Sua organização está suspensa" }), {
-            status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+            status: 403,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
           });
         }
       }
@@ -89,26 +98,28 @@ Deno.serve(async (req) => {
 
     if (!userId) {
       return new Response(JSON.stringify({ error: "userId is required" }), {
-        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // PROTECT MASTER SUPER ADMIN
     const MASTER_EMAIL = "filipe.silvamelo@live.com";
-    const { data: targetAuth } = await supabase.auth.admin.getUserById(userId);
-    const targetEmail = targetAuth?.user?.email;
+    const { data: targetAuth, error: targetAuthError } = await adminClient.auth.admin.getUserById(userId);
+    if (targetAuthError) throw targetAuthError;
+
+    const targetEmail = targetAuth.user?.email;
     const targetIsMaster = targetEmail === MASTER_EMAIL;
     const callerIsMaster = callingUser.email === MASTER_EMAIL;
 
     if (targetIsMaster && !callerIsMaster) {
       return new Response(JSON.stringify({ error: "Não é permitido gerenciar o Super Admin master" }), {
-        status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 403,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // ORG ISOLATION: super_admin skips org check
     if (!callerIsSuperAdmin) {
-      const { data: targetProfile } = await supabase
+      const { data: targetProfile } = await adminClient
         .from("profiles")
         .select("organization_id")
         .eq("user_id", userId)
@@ -116,21 +127,21 @@ Deno.serve(async (req) => {
 
       if (callerOrgId && targetProfile?.organization_id !== callerOrgId) {
         return new Response(JSON.stringify({ error: "Usuário não pertence à sua organização" }), {
-          status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
     }
 
-    // Prevent self-deletion
     if (action === "delete" && userId === callingUser.id) {
       return new Response(JSON.stringify({ error: "Não é possível excluir seu próprio usuário" }), {
-        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // If caller is moderator (not super_admin), check that target is NOT an admin
     if (callerIsModerator && !callerIsAdmin && !callerIsSuperAdmin) {
-      const { data: targetRoles } = await supabase
+      const { data: targetRoles } = await adminClient
         .from("user_roles")
         .select("role")
         .eq("user_id", userId);
@@ -138,13 +149,15 @@ Deno.serve(async (req) => {
       const targetIsAdmin = targetRoles?.some((r) => r.role === "admin");
       if (targetIsAdmin) {
         return new Response(JSON.stringify({ error: "Moderadores não podem gerenciar administradores" }), {
-          status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
 
       if (role === "admin") {
         return new Response(JSON.stringify({ error: "Moderadores não podem atribuir o papel de administrador" }), {
-          status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
     }
@@ -152,12 +165,13 @@ Deno.serve(async (req) => {
     if (action === "update") {
       if (role === "super_admin") {
         return new Response(JSON.stringify({ error: "A atribuição de Super Admin está desativada" }), {
-          status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
 
       if (fullName !== undefined) {
-        const { error: profileError } = await supabase
+        const { error: profileError } = await adminClient
           .from("profiles")
           .update({ full_name: fullName })
           .eq("user_id", userId);
@@ -165,19 +179,20 @@ Deno.serve(async (req) => {
       }
 
       if (email !== undefined && email !== "") {
-        const { error: emailError } = await supabase.auth.admin.updateUserById(userId, { email });
+        const { error: emailError } = await adminClient.auth.admin.updateUserById(userId, { email });
         if (emailError) throw emailError;
       }
 
       if (role !== undefined) {
-        await supabase
+        const { error: deleteRolesError } = await adminClient
           .from("user_roles")
           .delete()
           .eq("user_id", userId)
           .neq("role", "client");
+        if (deleteRolesError) throw deleteRolesError;
 
         if (role) {
-          const { error: roleError } = await supabase
+          const { error: roleError } = await adminClient
             .from("user_roles")
             .insert({ user_id: userId, role });
           if (roleError) throw roleError;
@@ -190,10 +205,14 @@ Deno.serve(async (req) => {
     }
 
     if (action === "delete") {
-      await supabase.from("user_roles").delete().eq("user_id", userId);
-      await supabase.from("profiles").delete().eq("user_id", userId);
-      const { error: deleteError } = await supabase.auth.admin.deleteUser(userId);
-      if (deleteError) throw deleteError;
+      const { error: deleteRolesError } = await adminClient.from("user_roles").delete().eq("user_id", userId);
+      if (deleteRolesError) throw deleteRolesError;
+
+      const { error: deleteProfileError } = await adminClient.from("profiles").delete().eq("user_id", userId);
+      if (deleteProfileError) throw deleteProfileError;
+
+      const { error: deleteAuthError } = await adminClient.auth.admin.deleteUser(userId);
+      if (deleteAuthError) throw deleteAuthError;
 
       return new Response(JSON.stringify({ success: true, message: "Usuário excluído" }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -201,15 +220,14 @@ Deno.serve(async (req) => {
     }
 
     if (action === "reset-password") {
-      // Only super_admin can reset passwords, and only for admins/super_admins
       if (!callerIsSuperAdmin) {
         return new Response(JSON.stringify({ error: "Apenas super admin pode resetar senhas" }), {
-          status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
 
-      // Only allow resetting passwords for admin or super_admin users
-      const { data: targetRoles } = await supabase
+      const { data: targetRoles } = await adminClient
         .from("user_roles")
         .select("role")
         .eq("user_id", userId);
@@ -217,12 +235,12 @@ Deno.serve(async (req) => {
       const targetIsAdminOrSuper = targetRoles?.some((r) => r.role === "admin" || r.role === "super_admin");
       if (!targetIsAdminOrSuper) {
         return new Response(JSON.stringify({ error: "Só é possível resetar senhas de administradores" }), {
-          status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
 
-      // Get user's name for password generation
-      const { data: targetProfile } = await supabase
+      const { data: targetProfile } = await adminClient
         .from("profiles")
         .select("full_name")
         .eq("user_id", userId)
@@ -231,7 +249,7 @@ Deno.serve(async (req) => {
       const userName = targetProfile?.full_name || "User";
       const newPassword = generateDefaultPassword(userName);
 
-      const { error: updateError } = await supabase.auth.admin.updateUserById(userId, { password: newPassword });
+      const { error: updateError } = await adminClient.auth.admin.updateUserById(userId, { password: newPassword });
       if (updateError) throw updateError;
 
       return new Response(JSON.stringify({ success: true, message: "Senha resetada", newPassword }), {
@@ -240,13 +258,15 @@ Deno.serve(async (req) => {
     }
 
     return new Response(JSON.stringify({ error: "Invalid action" }), {
-      status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status: 400,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {
     console.error("Error:", error);
     const message = error instanceof Error ? error.message : "Unknown error";
     return new Response(JSON.stringify({ error: message }), {
-      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
 });

@@ -41,3 +41,6 @@ verify_jwt = false
 
 [functions.notify-forum-post]
 verify_jwt = false
+
+[functions.manage-admin-user]
+verify_jwt = false
