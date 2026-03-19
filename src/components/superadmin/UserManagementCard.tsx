@@ -121,6 +121,10 @@ export function UserManagementCard() {
   };
 
   const toggleSuperAdmin = async (userId: string, hasRole: boolean) => {
+    if (userId === masterUserId) {
+      toast.error("Não é permitido alterar o Super Admin master");
+      return;
+    }
     try {
       if (hasRole) {
         await supabase.from("user_roles").delete().eq("user_id", userId).eq("role", "super_admin");
