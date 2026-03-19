@@ -114,6 +114,36 @@ Deno.serve(async (req) => {
       );
     }
 
+    // Block disposable, test, and fake email domains
+    const emailLower = email.toLowerCase().trim();
+    const blockedDomains = [
+      "example.com", "example.org", "example.net",
+      "test.com", "test.org", "teste.com",
+      "mailinator.com", "guerrillamail.com", "tempmail.com",
+      "throwaway.email", "yopmail.com", "sharklasers.com",
+      "guerrillamailblock.com", "grr.la", "dispostable.com",
+      "trashmail.com", "fakeinbox.com", "maildrop.cc",
+      "10minutemail.com", "temp-mail.org", "tempail.com",
+      "mohmal.com", "getnada.com",
+    ];
+    const emailDomain = emailLower.split("@")[1];
+    if (!emailDomain || blockedDomains.includes(emailDomain)) {
+      return new Response(
+        JSON.stringify({ error: "Por favor, utilize um email profissional válido" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Block obviously fake local parts
+    const localPart = emailLower.split("@")[0];
+    const blockedLocalParts = ["test", "teste", "admin", "root", "user", "example", "fake", "aaa", "abc", "asdf"];
+    if (blockedLocalParts.includes(localPart)) {
+      return new Response(
+        JSON.stringify({ error: "Por favor, utilize um email profissional válido" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     // 1. Create auth user
     const { data: userData, error: createError } = await supabase.auth.admin.createUser({
       email,
