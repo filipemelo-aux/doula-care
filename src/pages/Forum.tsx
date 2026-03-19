@@ -271,6 +271,37 @@ export default function Forum() {
     return (map as Record<string, ProfileEntry>)[authorId] || { name: "Usuária", avatarUrl: null, isDoula: false };
   };
 
+  const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
+    canPullRef.current = window.scrollY <= 0;
+    pullStartYRef.current = canPullRef.current ? e.touches[0].clientY : null;
+  };
+
+  const handleTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (pullStartYRef.current === null || !canPullRef.current || refreshingCommunity) return;
+    const delta = e.touches[0].clientY - pullStartYRef.current;
+    if (delta > 0) {
+      setPullDistance(Math.min(delta * 0.5, 84));
+    }
+  };
+
+  const handleTouchEnd = async () => {
+    if (refreshingCommunity) return;
+    const shouldRefresh = pullDistance >= 60;
+    setPullDistance(0);
+    pullStartYRef.current = null;
+    canPullRef.current = false;
+
+    if (!shouldRefresh) return;
+
+    setRefreshingCommunity(true);
+    try {
+      await refetchPosts();
+      toast.success("Comunidade atualizada");
+    } finally {
+      setRefreshingCommunity(false);
+    }
+  };
+
   const getAuthorName = (authorId: string, anonymous: boolean, map: Record<string, any> = profileMap as any) => {
     if (anonymous) return "Anônima";
     const entry = (map as Record<string, any>)[authorId];
