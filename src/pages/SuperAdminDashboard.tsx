@@ -205,7 +205,7 @@ export default function SuperAdminDashboard() {
   const { signOut, roles } = useAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const onlineOrgIds = useOnlineOrgs();
+  const { onlineOrgIds, onlineOrgNames } = useOnlineOrgs();
   const isMobile = useIsMobile();
   const [activeSection, setActiveSection] = useState<Section>("dashboard");
   const [sidebarOpen, setSidebarOpen] = useState(false);
