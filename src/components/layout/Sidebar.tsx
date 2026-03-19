@@ -62,7 +62,7 @@ export function Sidebar({ isOpen, onToggle, onNavigate }: SidebarProps) {
   const { planLabel, plan, limits } = usePlanLimits();
   const { logoUrl: orgLogo, displayName } = useOrgBranding();
   const { unreadMessages, unreadNotifications } = useAdminUnreadCounts();
-  const { organizationId } = useAuth();
+  const { organizationId, isSuperAdmin } = useAuth();
 
   const isFinancialRoute = ["/financeiro", "/despesas", "/relatorios"].includes(location.pathname);
   const [financialOpen, setFinancialOpen] = useState(isFinancialRoute);
