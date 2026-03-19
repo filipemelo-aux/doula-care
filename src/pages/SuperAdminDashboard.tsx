@@ -627,6 +627,8 @@ export default function SuperAdminDashboard() {
             )}
           </div>
         );
+      case "moderation":
+        return <ModerationSection />;
       case "users":
         return <UserManagementCard />;
       case "billing":
