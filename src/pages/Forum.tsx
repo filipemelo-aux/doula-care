@@ -170,6 +170,43 @@ export default function Forum() {
     enabled: !!currentUser && postIds.length > 0,
   });
 
+  // Fetch all reactions with user_ids for tooltip display
+  const { data: allReactions = [] } = useQuery({
+    queryKey: ["forum-all-reactions", postIds],
+    queryFn: async () => {
+      if (postIds.length === 0) return [];
+      const { data } = await supabase
+        .from("forum_reactions")
+        .select("post_id, user_id")
+        .in("post_id", postIds);
+      return data || [];
+    },
+    enabled: postIds.length > 0,
+  });
+
+  const reactionsByPost = useMemo(() => {
+    const map: Record<string, string[]> = {};
+    allReactions.forEach((r: any) => {
+      if (!map[r.post_id]) map[r.post_id] = [];
+      if (!map[r.post_id].includes(r.user_id)) map[r.post_id].push(r.user_id);
+    });
+    return map;
+  }, [allReactions]);
+
+  const allLikerIds = useMemo(() => [...new Set(allReactions.map((r: any) => r.user_id))], [allReactions]);
+  const { data: likerProfileMap = {} } = useQuery({
+    queryKey: ["forum-liker-profiles", allLikerIds],
+    queryFn: async () => {
+      if (allLikerIds.length === 0) return {};
+      const { data, error } = await supabase.rpc("get_forum_author_profiles", { p_user_ids: allLikerIds });
+      if (error) throw error;
+      const map: Record<string, string> = {};
+      data?.forEach((row: any) => { map[row.user_id] = row.display_name || "Usuária"; });
+      return map;
+    },
+    enabled: allLikerIds.length > 0,
+  });
+
   // Expanded post comments
   const { data: expandedComments = [], refetch: refetchComments } = useQuery({
     queryKey: ["forum-comments", expandedPostId],
