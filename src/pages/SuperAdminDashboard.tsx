@@ -28,11 +28,10 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
-type Section = "dashboard" | "orgs" | "users" | "billing" | "notifications" | "community" | "profile";
+type Section = "dashboard" | "users" | "billing" | "notifications" | "community" | "profile";
 
 const sidebarItems: { key: Section; label: string; icon: React.ElementType }[] = [
   { key: "dashboard", label: "Painel", icon: Home },
-  { key: "orgs", label: "Organizações", icon: Building2 },
   { key: "users", label: "Usuários", icon: Users },
   { key: "billing", label: "Planos & Cobranças", icon: CreditCard },
   { key: "notifications", label: "Notificações", icon: Bell },
@@ -602,24 +601,6 @@ export default function SuperAdminDashboard() {
                 </div>
               </div>
             )}
-          </div>
-        );
-      case "orgs":
-        return (
-          <div className="space-y-4">
-            {pendingOrgs.length > 0 && (
-              <div className="space-y-3">
-                <h2 className="text-sm font-semibold text-foreground flex items-center gap-2">
-                  <Clock className="h-4 w-4 text-warning" />
-                  Pendentes ({pendingOrgs.length})
-                </h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                  {pendingOrgs.map((org) => (
-                    <PendingOrgCard key={org.id} org={org} />
-                  ))}
-                </div>
-              </div>
-            )}
             {activeOrgs.length > 0 && (
               <div className="space-y-3">
                 <h2 className="text-sm font-semibold text-foreground flex items-center gap-2">
@@ -645,13 +626,6 @@ export default function SuperAdminDashboard() {
                   ))}
                 </div>
               </div>
-            )}
-            {organizations.length === 0 && (
-              <Card>
-                <CardContent className="py-12 text-center text-muted-foreground">
-                  Nenhuma organização cadastrada
-                </CardContent>
-              </Card>
             )}
           </div>
         );
