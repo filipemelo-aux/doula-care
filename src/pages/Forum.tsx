@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { InstagramLinkPreview, extractInstagramUrls, removeInstagramMarkdownLinks } from "@/components/forum/InstagramLinkPreview";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
