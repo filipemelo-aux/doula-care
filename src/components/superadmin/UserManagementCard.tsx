@@ -58,41 +58,10 @@ export function UserManagementCard() {
           .map(r => r.user_id)
       );
 
-      // Identify master super admin
-      const { data: currentUser } = await supabase.auth.getUser();
-      const isMeTheMaster = currentUser?.user?.email === MASTER_SUPER_ADMIN_EMAIL;
-      
-      // Get master user id via edge function
-      let foundMasterId: string | null = null;
-      if (!isMeTheMaster) {
-        // If I'm not the master, I can't see the master's email directly
-        // The edge function will block actions anyway - use profile name as hint
-        // For now, we rely on backend protection
-      } else {
-        foundMasterId = currentUser?.user?.id || null;
-      }
-
-      // Try to find master among admin profiles by checking who has super_admin role
-      // and matching via a dedicated check
-      const superAdminUserIds = (roles || [])
-        .filter(r => r.role === "super_admin")
-        .map(r => r.user_id);
-      
-      // Use get-client-email to identify master
-      if (superAdminUserIds.length > 0) {
-        for (const uid of superAdminUserIds) {
-          const { data: emailData } = await supabase.functions.invoke("get-client-email", {
-            body: { userId: uid },
-          });
-          if (emailData?.email === MASTER_SUPER_ADMIN_EMAIL) {
-            foundMasterId = uid;
-            break;
-          }
-        }
-      }
-
-      if (foundMasterId) {
-        setMasterUserId(foundMasterId);
+      // Identify master super admin via DB function
+      const { data: masterId } = await supabase.rpc("get_master_super_admin_id" as any);
+      if (masterId) {
+        setMasterUserId(masterId);
       }
 
       return (profiles || [])
