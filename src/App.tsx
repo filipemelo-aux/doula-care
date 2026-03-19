@@ -51,6 +51,7 @@ const App = () => (
         <AuthProvider>
           
           <UpdatePrompt />
+          <ForceUpdateListener />
           <NotificationListenerProvider />
           <Routes>
             {/* Single login page */}
