@@ -6,9 +6,11 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
-import { Loader2, Building2, Users, Ban, CheckCircle, LogOut, BarChart3, Clock, ShieldCheck, Mail, CalendarDays, Baby, Trash2, RefreshCw, Bell, CreditCard, Menu, Users2, Zap } from "lucide-react";
+import { Loader2, Building2, Users, Ban, CheckCircle, LogOut, BarChart3, Clock, ShieldCheck, Mail, CalendarDays, Baby, Trash2, RefreshCw, Bell, CreditCard, Menu, Users2, Zap, Home, UserCog, Eye, EyeOff } from "lucide-react";
 import Forum from "@/pages/Forum";
 import { APP_VERSION } from "@/lib/appVersion";
 import { PlanPricingCard } from "@/components/superadmin/PlanPricingCard";
@@ -25,14 +27,16 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
-type Section = "orgs" | "users" | "billing" | "notifications" | "community";
+type Section = "dashboard" | "orgs" | "users" | "billing" | "notifications" | "community" | "profile";
 
 const sidebarItems: { key: Section; label: string; icon: React.ElementType }[] = [
+  { key: "dashboard", label: "Painel", icon: Home },
   { key: "orgs", label: "Organizações", icon: Building2 },
   { key: "users", label: "Usuários", icon: Users },
   { key: "billing", label: "Planos & Cobranças", icon: CreditCard },
   { key: "notifications", label: "Notificações", icon: Bell },
   { key: "community", label: "Comunidade", icon: Users2 },
+  { key: "profile", label: "Meu Perfil", icon: UserCog },
 ];
 
 interface OrgWithCounts {
@@ -51,12 +55,156 @@ const planBadgeStyles: Record<string, string> = {
   premium: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
 };
 
+function ProfileSection() {
+  const { user } = useAuth();
+  const [fullName, setFullName] = useState("");
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showCurrent, setShowCurrent] = useState(false);
+  const [showNew, setShowNew] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [savingPassword, setSavingPassword] = useState(false);
+
+  const { data: profile } = useQuery({
+    queryKey: ["super-admin-profile", user?.id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("full_name, avatar_url")
+        .eq("user_id", user!.id)
+        .single();
+      return data;
+    },
+    enabled: !!user?.id,
+  });
+
+  useEffect(() => {
+    if (profile?.full_name) setFullName(profile.full_name);
+  }, [profile]);
+
+  const handleSaveProfile = async () => {
+    if (!fullName.trim()) {
+      toast.error("Nome é obrigatório");
+      return;
+    }
+    setSaving(true);
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update({ full_name: fullName.trim(), updated_at: new Date().toISOString() })
+        .eq("user_id", user!.id);
+      if (error) throw error;
+      toast.success("Perfil atualizado com sucesso!");
+    } catch {
+      toast.error("Erro ao atualizar perfil");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleChangePassword = async () => {
+    if (!newPassword || !confirmPassword) {
+      toast.error("Preencha todos os campos de senha");
+      return;
+    }
+    if (newPassword.length < 6) {
+      toast.error("A nova senha deve ter pelo menos 6 caracteres");
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      toast.error("As senhas não coincidem");
+      return;
+    }
+    setSavingPassword(true);
+    try {
+      const { error } = await supabase.auth.updateUser({ password: newPassword });
+      if (error) throw error;
+      toast.success("Senha alterada com sucesso!");
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+    } catch (err: any) {
+      toast.error(err.message || "Erro ao alterar senha");
+    } finally {
+      setSavingPassword(false);
+    }
+  };
+
+  return (
+    <div className="space-y-6 max-w-lg">
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Dados do Perfil</CardTitle>
+          <CardDescription>Atualize suas informações pessoais</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label>E-mail</Label>
+            <Input value={user?.email || ""} disabled className="bg-muted" />
+          </div>
+          <div className="space-y-2">
+            <Label>Nome completo</Label>
+            <Input value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Seu nome" />
+          </div>
+          <Button onClick={handleSaveProfile} disabled={saving} className="w-full">
+            {saving && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+            Salvar Perfil
+          </Button>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Alterar Senha</CardTitle>
+          <CardDescription>Defina uma nova senha para sua conta</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label>Nova senha</Label>
+            <div className="relative">
+              <Input
+                type={showNew ? "text" : "password"}
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="Mínimo 6 caracteres"
+                autoComplete="new-password"
+              />
+              <button
+                type="button"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                onClick={() => setShowNew(!showNew)}
+              >
+                {showNew ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
+          </div>
+          <div className="space-y-2">
+            <Label>Confirmar nova senha</Label>
+            <Input
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              placeholder="Repita a nova senha"
+              autoComplete="new-password"
+            />
+          </div>
+          <Button onClick={handleChangePassword} disabled={savingPassword} variant="outline" className="w-full">
+            {savingPassword && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+            Alterar Senha
+          </Button>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
 export default function SuperAdminDashboard() {
   const { signOut } = useAuth();
   const queryClient = useQueryClient();
   const onlineOrgIds = useOnlineOrgs();
   const isMobile = useIsMobile();
-  const [activeSection, setActiveSection] = useState<Section>("orgs");
+  const [activeSection, setActiveSection] = useState<Section>("dashboard");
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
@@ -183,34 +331,26 @@ export default function SuperAdminDashboard() {
       <Card className="group hover:shadow-md transition-all duration-200">
         <CardContent className="p-4">
           <div className="flex items-start gap-3">
-            {/* Avatar */}
             <div className="relative flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
               <span className="text-sm font-bold text-primary">{initials}</span>
               {onlineOrgIds.has(org.id) && (
-                <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-emerald-500border-card" title="Online agora" />
+                <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-emerald-500 border-2 border-card" title="Online agora" />
               )}
             </div>
-
-            {/* Info */}
             <div className="flex-1 min-w-0 space-y-1.5">
               <div className="flex items-center gap-2 flex-wrap">
                 <h3 className="font-semibold text-sm text-foreground truncate">{org.name}</h3>
                 <Badge variant="outline" className={`text-[10px] h-5 ${planBadgeStyles[org.plan]}`}>
                   {org.plan.charAt(0).toUpperCase() + org.plan.slice(1)}
                 </Badge>
-                <Badge
-                  variant={org.status === "ativo" ? "default" : "destructive"}
-                  className="text-[10px] h-5"
-                >
+                <Badge variant={org.status === "ativo" ? "default" : "destructive"} className="text-[10px] h-5">
                   {org.status === "ativo" ? "Ativo" : "Suspenso"}
                 </Badge>
               </div>
-
               <div className="flex items-center gap-1 text-xs text-muted-foreground">
                 <Mail className="h-3 w-3 flex-shrink-0" />
                 <span className="truncate">{org.responsible_email}</span>
               </div>
-
               <div className="flex items-center gap-4 text-xs text-muted-foreground">
                 <span className="flex items-center gap-1">
                   <Baby className="h-3 w-3" />
@@ -223,13 +363,9 @@ export default function SuperAdminDashboard() {
               </div>
             </div>
           </div>
-
-          {/* Promo */}
           <div className="mt-2">
             <PromoTriggerButton orgId={org.id} orgName={org.name} />
           </div>
-
-          {/* Actions */}
           <div className="flex items-center gap-2 mt-3 pt-3 border-t">
             <Select
               value={org.plan}
@@ -246,39 +382,20 @@ export default function SuperAdminDashboard() {
                 <SelectItem value="premium">Premium</SelectItem>
               </SelectContent>
             </Select>
-
             {org.status === "ativo" ? (
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-8 text-xs"
-                onClick={() => statusMutation.mutate({ orgId: org.id, status: "suspenso" })}
-                disabled={statusMutation.isPending}
-              >
+              <Button variant="outline" size="sm" className="h-8 text-xs" onClick={() => statusMutation.mutate({ orgId: org.id, status: "suspenso" })} disabled={statusMutation.isPending}>
                 <Ban className="h-3.5 w-3.5 mr-1" />
                 Suspender
               </Button>
             ) : (
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-8 text-xs"
-                onClick={() => statusMutation.mutate({ orgId: org.id, status: "ativo" })}
-                disabled={statusMutation.isPending}
-              >
+              <Button variant="outline" size="sm" className="h-8 text-xs" onClick={() => statusMutation.mutate({ orgId: org.id, status: "ativo" })} disabled={statusMutation.isPending}>
                 <CheckCircle className="h-3.5 w-3.5 mr-1" />
                 Ativar
               </Button>
             )}
-
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-8 text-xs text-destructive hover:bg-destructive/10"
-                  disabled={deleteMutation.isPending}
-                >
+                <Button variant="outline" size="sm" className="h-8 text-xs text-destructive hover:bg-destructive/10" disabled={deleteMutation.isPending}>
                   <Trash2 className="h-3.5 w-3.5" />
                 </Button>
               </AlertDialogTrigger>
@@ -286,20 +403,13 @@ export default function SuperAdminDashboard() {
                 <AlertDialogHeader>
                   <AlertDialogTitle>Excluir organização</AlertDialogTitle>
                   <AlertDialogDescription>
-                    Tem certeza que deseja excluir <strong>{org.name}</strong>? Esta ação é irreversível e apagará todos os dados: gestantes, contrações, diários, pagamentos, consultas e contas de usuário associadas.
+                    Tem certeza que deseja excluir <strong>{org.name}</strong>? Esta ação é irreversível e apagará todos os dados.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                   <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                  <AlertDialogAction
-                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                    onClick={() => deleteMutation.mutate(org.id)}
-                  >
-                    {deleteMutation.isPending ? (
-                      <Loader2 className="h-4 w-4 animate-spin mr-1" />
-                    ) : (
-                      <Trash2 className="h-4 w-4 mr-1" />
-                    )}
+                  <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90" onClick={() => deleteMutation.mutate(org.id)}>
+                    {deleteMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Trash2 className="h-4 w-4 mr-1" />}
                     Excluir permanentemente
                   </AlertDialogAction>
                 </AlertDialogFooter>
@@ -345,12 +455,7 @@ export default function SuperAdminDashboard() {
           <Button
             size="sm"
             className="h-8 text-xs"
-            onClick={() =>
-              approveMutation.mutate({
-                orgId: org.id,
-                plan: approvalPlans[org.id] || "free",
-              })
-            }
+            onClick={() => approveMutation.mutate({ orgId: org.id, plan: approvalPlans[org.id] || "free" })}
             disabled={approveMutation.isPending}
           >
             <ShieldCheck className="h-3.5 w-3.5 mr-1" />
@@ -359,6 +464,71 @@ export default function SuperAdminDashboard() {
         </div>
       </CardContent>
     </Card>
+  );
+
+  const MetricsCards = () => (
+    <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
+      <Card className={onlineOrgIds.size > 0 ? "bg-success/5" : ""}>
+        <CardContent className="p-4 flex items-center gap-3">
+          <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center", onlineOrgIds.size > 0 ? "bg-success/15" : "bg-muted")}>
+            <span className={cn("h-3 w-3 rounded-full", onlineOrgIds.size > 0 ? "bg-success animate-pulse" : "bg-muted-foreground/30")} />
+          </div>
+          <div>
+            <p className="text-2xl font-bold text-foreground">{onlineOrgIds.size}</p>
+            <p className="text-[11px] text-muted-foreground leading-tight">Online agora</p>
+          </div>
+        </CardContent>
+      </Card>
+      <Card className="bg-primary/5">
+        <CardContent className="p-4 flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-primary/15 flex items-center justify-center">
+            <Building2 className="h-5 w-5 text-primary" />
+          </div>
+          <div>
+            <p className="text-2xl font-bold text-foreground">{organizations.length}</p>
+            <p className="text-[11px] text-muted-foreground leading-tight">Organizações</p>
+          </div>
+        </CardContent>
+      </Card>
+      <Card className={pendingOrgs.length > 0 ? "bg-warning/5" : ""}>
+        <CardContent className="p-4 flex items-center gap-3">
+          <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center", pendingOrgs.length > 0 ? "bg-warning/15" : "bg-muted")}>
+            <Clock className={cn("h-5 w-5", pendingOrgs.length > 0 ? "text-warning animate-pulse" : "text-muted-foreground")} />
+          </div>
+          <div>
+            <p className="text-2xl font-bold text-foreground">{pendingOrgs.length}</p>
+            <p className="text-[11px] text-muted-foreground leading-tight">Pendentes</p>
+          </div>
+        </CardContent>
+      </Card>
+      <Card>
+        <CardContent className="p-4 flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-success/15 flex items-center justify-center">
+            <Users className="h-5 w-5 text-success" />
+          </div>
+          <div>
+            <p className="text-2xl font-bold text-foreground">{totalClients}</p>
+            <p className="text-[11px] text-muted-foreground leading-tight">Gestantes total</p>
+          </div>
+        </CardContent>
+      </Card>
+      <Card>
+        <CardContent className="p-4">
+          <div className="flex items-center gap-2 mb-2">
+            <BarChart3 className="h-4 w-4 text-primary" />
+            <p className="text-[11px] font-medium text-muted-foreground">Distribuição</p>
+          </div>
+          <div className="space-y-1">
+            {([["Free", planCounts.free], ["Pro", planCounts.pro], ["Premium", planCounts.premium]] as const).map(([label, count]) => (
+              <div key={label} className="flex items-center justify-between text-xs">
+                <span className="text-muted-foreground">{label}</span>
+                <span className="font-semibold text-foreground">{count}</span>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   );
 
   const renderSidebarNav = (onNavigate?: () => void) => (
@@ -397,9 +567,43 @@ export default function SuperAdminDashboard() {
 
   const renderContent = () => {
     switch (activeSection) {
+      case "dashboard":
+        return (
+          <div className="space-y-5">
+            <MetricsCards />
+            {pendingOrgs.length > 0 && (
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <Clock className="h-4 w-4 text-warning" />
+                  <h2 className="text-sm font-semibold text-foreground">
+                    Pendentes de Aprovação ({pendingOrgs.length})
+                  </h2>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {pendingOrgs.map((org) => (
+                    <PendingOrgCard key={org.id} org={org} />
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        );
       case "orgs":
         return (
           <div className="space-y-4">
+            {pendingOrgs.length > 0 && (
+              <div className="space-y-3">
+                <h2 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                  <Clock className="h-4 w-4 text-warning" />
+                  Pendentes ({pendingOrgs.length})
+                </h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {pendingOrgs.map((org) => (
+                    <PendingOrgCard key={org.id} org={org} />
+                  ))}
+                </div>
+              </div>
+            )}
             {activeOrgs.length > 0 && (
               <div className="space-y-3">
                 <h2 className="text-sm font-semibold text-foreground flex items-center gap-2">
@@ -426,10 +630,10 @@ export default function SuperAdminDashboard() {
                 </div>
               </div>
             )}
-            {organizations.filter((o) => o.status !== "pendente").length === 0 && (
+            {organizations.length === 0 && (
               <Card>
                 <CardContent className="py-12 text-center text-muted-foreground">
-                  Nenhuma organização ativa ou suspensa
+                  Nenhuma organização cadastrada
                 </CardContent>
               </Card>
             )}
@@ -449,12 +653,13 @@ export default function SuperAdminDashboard() {
         return <BroadcastNotificationCard />;
       case "community":
         return <Forum />;
+      case "profile":
+        return <ProfileSection />;
     }
   };
 
   return (
     <div className="app-shell h-[100dvh] min-h-0 bg-background flex flex-col">
-      {/* Header */}
       <header className="h-14 sticky top-0 z-20 border-b bg-card/95 backdrop-blur-sm px-4 sm:px-6 flex items-center justify-between">
         <div className="flex items-center gap-2.5">
           {isMobile && (
@@ -540,94 +745,7 @@ export default function SuperAdminDashboard() {
           </Sheet>
         )}
 
-        {/* Main content */}
         <main className="flex-1 min-h-0 overflow-y-auto touch-pan-y p-3 lg:p-8 space-y-5">
-          {activeSection !== "community" && (
-            <>
-              {/* Metrics */}
-              <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
-                <Card className={onlineOrgIds.size > 0 ? "bg-success/5" : ""}>
-                  <CardContent className="p-4 flex items-center gap-3">
-                    <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center", onlineOrgIds.size > 0 ? "bg-success/15" : "bg-muted")}>
-                      <span className={cn("h-3 w-3 rounded-full", onlineOrgIds.size > 0 ? "bg-success animate-pulse" : "bg-muted-foreground/30")} />
-                    </div>
-                    <div>
-                      <p className="text-2xl font-bold text-foreground">{onlineOrgIds.size}</p>
-                      <p className="text-[11px] text-muted-foreground leading-tight">Online agora</p>
-                    </div>
-                  </CardContent>
-                </Card>
-                <Card className="bg-primary/5">
-                  <CardContent className="p-4 flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-primary/15 flex items-center justify-center">
-                      <Building2 className="h-5 w-5 text-primary" />
-                    </div>
-                    <div>
-                      <p className="text-2xl font-bold text-foreground">{organizations.length}</p>
-                      <p className="text-[11px] text-muted-foreground leading-tight">Organizações</p>
-                    </div>
-                  </CardContent>
-                </Card>
-                <Card className={pendingOrgs.length > 0 ? "bg-warning/5" : ""}>
-                  <CardContent className="p-4 flex items-center gap-3">
-                    <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center", pendingOrgs.length > 0 ? "bg-warning/15" : "bg-muted")}>
-                      <Clock className={cn("h-5 w-5", pendingOrgs.length > 0 ? "text-warning animate-pulse" : "text-muted-foreground")} />
-                    </div>
-                    <div>
-                      <p className="text-2xl font-bold text-foreground">{pendingOrgs.length}</p>
-                      <p className="text-[11px] text-muted-foreground leading-tight">Pendentes</p>
-                    </div>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardContent className="p-4 flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-success/15 flex items-center justify-center">
-                      <Users className="h-5 w-5 text-success" />
-                    </div>
-                    <div>
-                      <p className="text-2xl font-bold text-foreground">{totalClients}</p>
-                      <p className="text-[11px] text-muted-foreground leading-tight">Gestantes total</p>
-                    </div>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardContent className="p-4">
-                    <div className="flex items-center gap-2 mb-2">
-                      <BarChart3 className="h-4 w-4 text-primary" />
-                      <p className="text-[11px] font-medium text-muted-foreground">Distribuição</p>
-                    </div>
-                    <div className="space-y-1">
-                      {([["Free", planCounts.free], ["Pro", planCounts.pro], ["Premium", planCounts.premium]] as const).map(([label, count]) => (
-                        <div key={label} className="flex items-center justify-between text-xs">
-                          <span className="text-muted-foreground">{label}</span>
-                          <span className="font-semibold text-foreground">{count}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-
-              {/* Pending approvals */}
-              {pendingOrgs.length > 0 && (
-                <div className="space-y-3">
-                  <div className="flex items-center gap-2">
-                    <Clock className="h-4 w-4 text-warning" />
-                    <h2 className="text-sm font-semibold text-foreground">
-                      Pendentes de Aprovação ({pendingOrgs.length})
-                    </h2>
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                    {pendingOrgs.map((org) => (
-                      <PendingOrgCard key={org.id} org={org} />
-                    ))}
-                  </div>
-                </div>
-              )}
-            </>
-          )}
-
-          {/* Section content */}
           {renderContent()}
         </main>
       </div>
