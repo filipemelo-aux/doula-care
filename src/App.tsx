@@ -50,7 +50,7 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
-          
+          <DualRoleAdminCacheGuard />
           <UpdatePrompt />
           <ForceUpdateListener />
           <NotificationListenerProvider />

@@ -19,9 +19,11 @@ export function BirthAlert() {
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [birthDialogOpen, setBirthDialogOpen] = useState(false);
   const isMobile = useIsMobile();
+  const { organizationId } = useAuth();
 
   const { data: clients, isLoading } = useQuery({
-    queryKey: ["birth-alert-clients"],
+    queryKey: ["birth-alert-clients", organizationId],
+    enabled: !!organizationId,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("clients")

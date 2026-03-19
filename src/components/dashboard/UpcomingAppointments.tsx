@@ -34,6 +34,7 @@ interface AppointmentWithClient {
 export function UpcomingAppointments() {
   const queryClient = useQueryClient();
   const isMobile = useIsMobile();
+  const { organizationId } = useAuth();
   const [selectedClient, setSelectedClient] = useState<{ id: string; name: string } | null>(null);
   const [pickClientOpen, setPickClientOpen] = useState(false);
   const [pickedClientId, setPickedClientId] = useState("");
@@ -41,7 +42,8 @@ export function UpcomingAppointments() {
   const [completeApt, setCompleteApt] = useState<AppointmentWithClient | null>(null);
 
   const { data: appointments, isLoading } = useQuery({
-    queryKey: ["all-appointments"],
+    queryKey: ["all-appointments", organizationId],
+    enabled: !!organizationId,
     queryFn: async () => {
       const todayStart = new Date();
       todayStart.setHours(0, 0, 0, 0);
@@ -58,7 +60,7 @@ export function UpcomingAppointments() {
   });
 
   const { data: clients } = useQuery({
-    queryKey: ["clients-for-appointments"],
+    queryKey: ["clients-for-appointments", organizationId],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("clients")
@@ -68,7 +70,7 @@ export function UpcomingAppointments() {
       if (error) throw error;
       return data;
     },
-    enabled: pickClientOpen,
+    enabled: pickClientOpen && !!organizationId,
   });
 
   const handleDelete = async (id: string) => {
