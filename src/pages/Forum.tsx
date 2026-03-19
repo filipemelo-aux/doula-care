@@ -129,54 +129,28 @@ export default function Forum() {
     },
   });
 
-  // Fetch author profiles (with avatars and org logos for doulas)
+  // Fetch author profiles globally via security definer function
   const allAuthorIds = posts.filter((p: any) => !p.is_anonymous).map((p: any) => p.author_id);
+  const uniqueAuthorIds = [...new Set(allAuthorIds)];
   const { data: profileMap = {} } = useQuery({
-    queryKey: ["forum-profiles", allAuthorIds],
+    queryKey: ["forum-profiles", uniqueAuthorIds],
     queryFn: async () => {
-      if (allAuthorIds.length === 0) return {};
-      const { data: profileData } = await supabase.from("profiles").select("user_id, full_name, avatar_url, organization_id").in("user_id", allAuthorIds);
-      const { data: clientData } = await supabase.from("clients").select("user_id, full_name, preferred_name").in("user_id", allAuthorIds);
-      const { data: roleData } = await supabase.from("user_roles").select("user_id, role").in("user_id", allAuthorIds);
-
-      // Fetch org logos for admin/moderator users
-      const adminOrgIds = profileData
-        ?.filter(p => {
-          const roles = roleData?.filter(r => r.user_id === p.user_id).map(r => r.role) || [];
-          return roles.some(r => ["admin", "moderator"].includes(r)) && p.organization_id;
-        })
-        .map(p => p.organization_id!)
-        .filter(Boolean) || [];
-      
-      let orgLogos: Record<string, string> = {};
-      if (adminOrgIds.length > 0) {
-        const { data: orgs } = await supabase.from("organizations").select("id, logo_url").in("id", adminOrgIds);
-        orgs?.forEach(o => { if (o.logo_url) orgLogos[o.id] = o.logo_url; });
-      }
-
-      const map: Record<string, { name: string; avatarUrl: string | null; isDoula: boolean }> = {};
-      profileData?.forEach(p => {
-        const roles = roleData?.filter(r => r.user_id === p.user_id).map(r => r.role) || [];
-        const isDoula = roles.some(r => ["admin", "moderator"].includes(r));
-        const orgLogo = isDoula && p.organization_id ? orgLogos[p.organization_id] : null;
-        map[p.user_id] = {
-          name: p.full_name || "Usuária",
-          avatarUrl: orgLogo || p.avatar_url || null,
-          isDoula,
-        };
+      if (uniqueAuthorIds.length === 0) return {};
+      const { data, error } = await supabase.rpc("get_forum_author_profiles", {
+        p_user_ids: uniqueAuthorIds,
       });
-      clientData?.forEach(c => {
-        if (c.user_id && !map[c.user_id]?.isDoula) {
-          map[c.user_id] = {
-            name: c.preferred_name || c.full_name,
-            avatarUrl: map[c.user_id]?.avatarUrl || null,
-            isDoula: false,
-          };
-        }
+      if (error) throw error;
+      const map: Record<string, { name: string; avatarUrl: string | null; isDoula: boolean }> = {};
+      data?.forEach((row: any) => {
+        map[row.user_id] = {
+          name: row.display_name || "Usuária",
+          avatarUrl: row.avatar_url || null,
+          isDoula: row.is_doula || false,
+        };
       });
       return map;
     },
-    enabled: allAuthorIds.length > 0,
+    enabled: uniqueAuthorIds.length > 0,
   });
 
   // Fetch reactions for all posts to know which ones user liked
