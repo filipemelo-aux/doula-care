@@ -337,7 +337,7 @@ export default function Forum() {
       setShowNewPost(false);
       refetchPosts();
 
-      // Notify all users about the new post (fire and forget)
+      // Notify users about the new post (fire and forget)
       supabase.functions.invoke("notify-forum-post", {
         body: {
           postId: insertedPost.id,
@@ -345,6 +345,7 @@ export default function Forum() {
           authorName: currentUser!.displayName,
           postTitle: newTitle.trim(),
           isAnonymous: newAnonymous,
+          audience: isAdmin ? newAudience : "all",
         },
       }).catch((err) => console.error("Error notifying forum post:", err));
     } catch (err: any) {
