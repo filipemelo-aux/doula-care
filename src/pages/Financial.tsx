@@ -586,17 +586,55 @@ export default function Financial() {
     setDialogOpen(true);
   };
 
-  const handleEditTransaction = (transaction: Transaction) => {
+  const handleEditTransaction = async (transaction: Transaction) => {
     setSelectedTransaction(transaction);
     setSelectedServices([]);
     setCustomServiceName("");
     setShowCustomService(false);
     setShowQuickClient(false);
-    setEntryAlreadyPaid(false);
     setAvistaPaymentStatus("pendente");
     setAvistaPartialValue("");
-    setCustomInstallmentAmounts([]);
+
     const installments = Number(transaction.installments) || 1;
+    let detectedFrequency: "semanal" | "quinzenal" | "mensal" | "manual" = "mensal";
+    let detectedFirstDueDate = "";
+    let detectedEntryPaid = false;
+    let detectedCustomAmounts: number[] = [];
+
+    // Fetch payment records to detect frequency, first due date and entry status
+    if (installments > 1) {
+      const { data: payments } = await supabase
+        .from("payments")
+        .select("amount, amount_paid, due_date, installment_number, total_installments")
+        .eq("transaction_id", transaction.id)
+        .order("installment_number", { ascending: true });
+
+      if (payments && payments.length > 0) {
+        detectedFirstDueDate = payments[0]?.due_date || "";
+        detectedEntryPaid = Number(payments[0]?.amount_paid || 0) >= Number(payments[0]?.amount || 0) && Number(payments[0]?.amount || 0) > 0;
+
+        // Detect frequency from date intervals
+        if (payments.length >= 2 && payments[0]?.due_date && payments[1]?.due_date) {
+          const d1 = new Date(payments[0].due_date + "T12:00:00");
+          const d2 = new Date(payments[1].due_date + "T12:00:00");
+          const diffDays = Math.round((d2.getTime() - d1.getTime()) / (1000 * 60 * 60 * 24));
+          if (diffDays >= 6 && diffDays <= 8) detectedFrequency = "semanal";
+          else if (diffDays >= 14 && diffDays <= 16) detectedFrequency = "quinzenal";
+          else if (diffDays >= 28 && diffDays <= 32) detectedFrequency = "mensal";
+          else detectedFrequency = "manual";
+        }
+
+        // Detect custom installment amounts
+        const hasCustomAmounts = payments.some((p, _, arr) => Math.abs(Number(p.amount || 0) - Number(arr[0]?.amount || 0)) > 0.01);
+        if (hasCustomAmounts) {
+          detectedCustomAmounts = payments.map(p => Number(p.amount) || 0);
+        }
+      }
+    }
+
+    setEntryAlreadyPaid(detectedEntryPaid);
+    setCustomInstallmentAmounts(detectedCustomAmounts);
+
     form.reset({
       description: transaction.description,
       amount: Number(transaction.amount),
@@ -608,9 +646,9 @@ export default function Financial() {
       notes: transaction.notes || "",
       payment_type: installments > 1 ? "parcelado" : "a_vista",
       installments,
-      installment_frequency: "mensal",
+      installment_frequency: detectedFrequency,
       custom_interval_days: 30,
-      first_due_date: "",
+      first_due_date: detectedFirstDueDate,
       installment_value: Number(transaction.installment_value) || 0,
     });
     setDialogOpen(true);
