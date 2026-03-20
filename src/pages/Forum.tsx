@@ -322,13 +322,15 @@ export default function Forum() {
     }
     setPostLoading(true);
     try {
-      const { data: insertedPost, error } = await supabase.from("forum_posts").insert({
+      const insertPayload: any = {
         title: newTitle.trim(),
         content: newContent.trim(),
         category_id: newCategoryId,
         author_id: currentUser!.id,
         is_anonymous: newAnonymous,
-      }).select("id").single();
+        audience: isAdmin ? newAudience : "all",
+      };
+      const { data: insertedPost, error } = await supabase.from("forum_posts").insert(insertPayload).select("id").single();
       if (error) throw error;
       toast.success("Publicado!");
       setNewTitle(""); setNewContent(""); setNewCategoryId(""); setNewAnonymous(false);
