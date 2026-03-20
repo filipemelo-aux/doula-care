@@ -54,7 +54,7 @@ export default function Forum() {
   const [editingPost, setEditingPost] = useState<any>(null);
   const [editTitle, setEditTitle] = useState("");
   const [editContent, setEditContent] = useState("");
-  const [editAudience, setEditAudience] = useState<"all" | "doulas_only">("all");
+  const [editAudience, setEditAudience] = useState<"all" | "doulas_only" | "gestantes_only">("all");
   const [editLoading, setEditLoading] = useState(false);
 
   // Community pull-to-refresh
