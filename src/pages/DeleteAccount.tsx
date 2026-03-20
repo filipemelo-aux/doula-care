@@ -74,7 +74,7 @@ export default function DeleteAccount() {
 
   if (submitted) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+      <div className="h-[100dvh] overflow-y-auto bg-background flex items-center justify-center p-4">
         <Card className="max-w-md w-full">
           <CardContent className="pt-8 pb-8 text-center space-y-4">
             <CheckCircle className="h-12 w-12 text-green-500 mx-auto" />
