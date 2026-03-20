@@ -324,6 +324,20 @@ export default function Clients() {
                           {client.dpp ? format(parseISO(client.dpp), "dd/MM/yyyy") : "—"}
                         </TableCell>
                         <TableCell>
+                          {client.dpp && client.status === "gestante" && !client.birth_occurred ? (() => {
+                            const w = calculateCurrentPregnancyWeeks(client.pregnancy_weeks, client.pregnancy_weeks_set_at, client.dpp);
+                            const d = calculateCurrentPregnancyDays(client.dpp);
+                            const post = isPostTerm(client.dpp);
+                            if (w === null) return "—";
+                            return (
+                              <span className={cn("text-xs font-semibold", post ? "text-destructive" : "text-primary")}>
+                                {post ? "Pós-Data • " : ""}{w}s {d}d
+                              </span>
+                            );
+                          })() : "—"}
+                        </TableCell>
+                        </TableCell>
+                        <TableCell>
                           <Badge
                             variant="outline"
                             className={cn("badge-status border-0", `badge-${client.status}`)}
