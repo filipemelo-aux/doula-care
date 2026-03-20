@@ -782,7 +782,7 @@ export default function SuperAdminDashboard() {
           </Sheet>
         )}
 
-        <main className="flex-1 min-h-0 overflow-y-auto p-3 lg:p-8 space-y-5" style={{ WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' }}>
+        <main className="flex-1 min-h-0 overflow-y-auto p-3 lg:p-8 space-y-5">
           {renderContent()}
         </main>
       </div>

@@ -307,10 +307,8 @@
   }
 
   /* Ensure smooth touch scrolling on all scroll containers */
-  [style*="overflow-y: auto"],
   .overflow-y-auto {
     -webkit-overflow-scrolling: touch;
-    touch-action: pan-y;
   }
 
 
