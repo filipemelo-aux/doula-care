@@ -333,7 +333,7 @@ export default function Forum() {
       const { data: insertedPost, error } = await supabase.from("forum_posts").insert(insertPayload).select("id").single();
       if (error) throw error;
       toast.success("Publicado!");
-      setNewTitle(""); setNewContent(""); setNewCategoryId(""); setNewAnonymous(false);
+      setNewTitle(""); setNewContent(""); setNewCategoryId(""); setNewAnonymous(false); setNewAudience("all");
       setShowNewPost(false);
       refetchPosts();
 
