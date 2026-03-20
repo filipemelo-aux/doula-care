@@ -589,6 +589,7 @@ export default function SuperAdminDashboard() {
         return (
           <div className="space-y-5">
             <MetricsCards />
+            <TopActiveOrgsCard />
             {pendingOrgs.length > 0 && (
               <div className="space-y-3">
                 <div className="flex items-center gap-2">
