@@ -561,6 +561,7 @@ export default function Forum() {
                       <div className="flex items-center gap-2 min-w-0">
                         <span className="font-semibold text-sm text-foreground truncate">{authorName}</span>
                         {post.audience === "doulas_only" && <ShieldCheck className="h-3 w-3 text-primary shrink-0" />}
+                        {post.audience === "gestantes_only" && <Users className="h-3 w-3 text-primary shrink-0" />}
                         {post.is_pinned && <Pin className="h-3 w-3 text-primary shrink-0" />}
                       </div>
                       <div className="flex items-center gap-1.5 text-xs text-muted-foreground flex-wrap">

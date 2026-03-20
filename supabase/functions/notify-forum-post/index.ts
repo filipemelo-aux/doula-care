@@ -29,6 +29,7 @@ Deno.serve(async (req) => {
     }
 
     const isDoulasOnly = audience === "doulas_only";
+    const isGestantesOnly = audience === "gestantes_only";
     const displayAuthor = isAnonymous ? "Anônima" : (authorName || "Alguém");
     const notifTitle = "💬 Nova publicação na Comunidade";
     const notifMessage = `${displayAuthor} publicou: "${postTitle.substring(0, 80)}${postTitle.length > 80 ? "..." : ""}"`;
