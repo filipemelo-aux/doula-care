@@ -763,18 +763,21 @@ export type Database = {
       org_access_log: {
         Row: {
           accessed_at: string
+          action: string
           id: string
           organization_id: string
           user_id: string
         }
         Insert: {
           accessed_at?: string
+          action?: string
           id?: string
           organization_id: string
           user_id: string
         }
         Update: {
           accessed_at?: string
+          action?: string
           id?: string
           organization_id?: string
           user_id?: string
