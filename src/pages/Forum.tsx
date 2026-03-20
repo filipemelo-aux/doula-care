@@ -10,7 +10,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Search, Plus, MessageSquare, Heart, EyeOff, Loader2, Send, Pin, MoreVertical, EyeOffIcon, Trash2, X } from "lucide-react";
+import { Search, Plus, MessageSquare, Heart, EyeOff, Loader2, Send, Pin, MoreVertical, EyeOffIcon, Trash2, X, Users, ShieldCheck } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { formatDistanceToNow } from "date-fns";
@@ -50,6 +50,7 @@ export default function Forum() {
   const [newContent, setNewContent] = useState("");
   const [newCategoryId, setNewCategoryId] = useState("");
   const [newAnonymous, setNewAnonymous] = useState(false);
+  const [newAudience, setNewAudience] = useState<"all" | "doulas_only">("all");
   const [postLoading, setPostLoading] = useState(false);
 
   // Comment form
@@ -321,20 +322,22 @@ export default function Forum() {
     }
     setPostLoading(true);
     try {
-      const { data: insertedPost, error } = await supabase.from("forum_posts").insert({
+      const insertPayload: any = {
         title: newTitle.trim(),
         content: newContent.trim(),
         category_id: newCategoryId,
         author_id: currentUser!.id,
         is_anonymous: newAnonymous,
-      }).select("id").single();
+        audience: isAdmin ? newAudience : "all",
+      };
+      const { data: insertedPost, error } = await supabase.from("forum_posts").insert(insertPayload).select("id").single();
       if (error) throw error;
       toast.success("Publicado!");
-      setNewTitle(""); setNewContent(""); setNewCategoryId(""); setNewAnonymous(false);
+      setNewTitle(""); setNewContent(""); setNewCategoryId(""); setNewAnonymous(false); setNewAudience("all");
       setShowNewPost(false);
       refetchPosts();
 
-      // Notify all users about the new post (fire and forget)
+      // Notify users about the new post (fire and forget)
       supabase.functions.invoke("notify-forum-post", {
         body: {
           postId: insertedPost.id,
@@ -342,6 +345,7 @@ export default function Forum() {
           authorName: currentUser!.displayName,
           postTitle: newTitle.trim(),
           isAnonymous: newAnonymous,
+          audience: isAdmin ? newAudience : "all",
         },
       }).catch((err) => console.error("Error notifying forum post:", err));
     } catch (err: any) {
@@ -520,6 +524,7 @@ export default function Forum() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 min-w-0">
                         <span className="font-semibold text-sm text-foreground truncate">{authorName}</span>
+                        {post.audience === "doulas_only" && <ShieldCheck className="h-3 w-3 text-primary shrink-0" />}
                         {post.is_pinned && <Pin className="h-3 w-3 text-primary shrink-0" />}
                       </div>
                       <div className="flex items-center gap-1.5 text-xs text-muted-foreground flex-wrap">
@@ -746,6 +751,25 @@ export default function Forum() {
               rows={4}
               maxLength={5000}
             />
+
+            {isAdmin && (
+              <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
+                <Users className="h-4 w-4 text-muted-foreground shrink-0" />
+                <div className="flex-1">
+                  <Label className="text-sm font-medium">Público-alvo</Label>
+                  <p className="text-xs text-muted-foreground">Quem pode ver esta publicação</p>
+                </div>
+                <Select value={newAudience} onValueChange={(v) => setNewAudience(v as "all" | "doulas_only")}>
+                  <SelectTrigger className="w-[140px] h-8 text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos</SelectItem>
+                    <SelectItem value="doulas_only">Só Doulas</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
 
             <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
               <EyeOff className="h-4 w-4 text-muted-foreground shrink-0" />

@@ -654,6 +654,7 @@ export type Database = {
       }
       forum_posts: {
         Row: {
+          audience: string
           author_id: string
           category_id: string
           content: string
@@ -669,6 +670,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          audience?: string
           author_id: string
           category_id: string
           content: string
@@ -684,6 +686,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          audience?: string
           author_id?: string
           category_id?: string
           content?: string
