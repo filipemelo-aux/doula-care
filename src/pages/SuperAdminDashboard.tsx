@@ -22,6 +22,7 @@ import { UserManagementCard } from "@/components/superadmin/UserManagementCard";
 import { BroadcastNotificationCard } from "@/components/superadmin/BroadcastNotificationCard";
 import { PromoTriggerButton } from "@/components/superadmin/PromoTriggerButton";
 import { ModerationSection } from "@/components/superadmin/ModerationSection";
+import { TopActiveOrgsCard } from "@/components/superadmin/TopActiveOrgsCard";
 import { useOnlineOrgs } from "@/hooks/useOnlineOrgs";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
