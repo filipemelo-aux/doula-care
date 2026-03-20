@@ -569,7 +569,7 @@ export default function Forum() {
                         <span className="truncate">{post.forum_categories?.icon} {post.forum_categories?.name}</span>
                       </div>
                     </div>
-                    {isAdmin && (
+                    {(isAdmin || post.author_id === currentUser?.id) && (
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0">
@@ -577,14 +577,24 @@ export default function Forum() {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => handlePinPost(post.id, post.is_pinned)}>
-                            <Pin className="h-4 w-4 mr-2" />
-                            {post.is_pinned ? "Desafixar" : "Fixar"}
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleHidePost(post.id)} className="text-destructive">
-                            <EyeOffIcon className="h-4 w-4 mr-2" />
-                            Ocultar
-                          </DropdownMenuItem>
+                          {post.author_id === currentUser?.id && (
+                            <DropdownMenuItem onClick={() => handleEditPost(post)}>
+                              <Pencil className="h-4 w-4 mr-2" />
+                              Editar
+                            </DropdownMenuItem>
+                          )}
+                          {isAdmin && (
+                            <>
+                              <DropdownMenuItem onClick={() => handlePinPost(post.id, post.is_pinned)}>
+                                <Pin className="h-4 w-4 mr-2" />
+                                {post.is_pinned ? "Desafixar" : "Fixar"}
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleHidePost(post.id)} className="text-destructive">
+                                <EyeOffIcon className="h-4 w-4 mr-2" />
+                                Ocultar
+                              </DropdownMenuItem>
+                            </>
+                          )}
                         </DropdownMenuContent>
                       </DropdownMenu>
                     )}
