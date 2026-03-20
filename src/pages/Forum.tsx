@@ -50,6 +50,13 @@ export default function Forum() {
   const [commentAnon, setCommentAnon] = useState<Record<string, boolean>>({});
   const [commentLoading, setCommentLoading] = useState<string | null>(null);
 
+  // Edit post state
+  const [editingPost, setEditingPost] = useState<any>(null);
+  const [editTitle, setEditTitle] = useState("");
+  const [editContent, setEditContent] = useState("");
+  const [editAudience, setEditAudience] = useState<"all" | "doulas_only">("all");
+  const [editLoading, setEditLoading] = useState(false);
+
   // Community pull-to-refresh
   const [pullDistance, setPullDistance] = useState(0);
   const [refreshingCommunity, setRefreshingCommunity] = useState(false);
