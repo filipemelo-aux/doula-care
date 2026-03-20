@@ -864,11 +864,15 @@ export default function Forum() {
                   <Label className="text-sm font-medium">Público-alvo</Label>
                   <p className="text-xs text-muted-foreground">Quem pode ver esta publicação</p>
                 </div>
-                <Select value={editAudience} onValueChange={(v) => setEditAudience(v as "all" | "doulas_only")}>
-                  <SelectTrigger className="w-[140px] h-8 text-xs">
+                <Select value={editAudience} onValueChange={(v) => setEditAudience(v as "all" | "doulas_only" | "gestantes_only")}>
+                  <SelectTrigger className="w-[160px] h-8 text-xs">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="all">Todos</SelectItem>
+                    <SelectItem value="doulas_only">Só Doulas</SelectItem>
+                    <SelectItem value="gestantes_only">Só Gestantes</SelectItem>
+                  </SelectContent>
                     <SelectItem value="all">Todos</SelectItem>
                     <SelectItem value="doulas_only">Só Doulas</SelectItem>
                   </SelectContent>
