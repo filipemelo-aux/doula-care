@@ -751,6 +751,25 @@ export default function Forum() {
               maxLength={5000}
             />
 
+            {isAdmin && (
+              <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
+                <Users className="h-4 w-4 text-muted-foreground shrink-0" />
+                <div className="flex-1">
+                  <Label className="text-sm font-medium">Público-alvo</Label>
+                  <p className="text-xs text-muted-foreground">Quem pode ver esta publicação</p>
+                </div>
+                <Select value={newAudience} onValueChange={(v) => setNewAudience(v as "all" | "doulas_only")}>
+                  <SelectTrigger className="w-[140px] h-8 text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos</SelectItem>
+                    <SelectItem value="doulas_only">Só Doulas</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
             <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
               <EyeOff className="h-4 w-4 text-muted-foreground shrink-0" />
               <div className="flex-1">
