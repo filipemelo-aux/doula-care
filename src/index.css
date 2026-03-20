@@ -143,15 +143,30 @@
   }
 
   html,
-  body {
+  body,
+  #root {
     overflow: hidden;
     height: 100%;
     -webkit-overflow-scrolling: touch;
   }
 
+  html {
+    overscroll-behavior-y: none;
+  }
+
   body {
     @apply bg-background text-foreground antialiased;
     font-family: "DM Sans", "Inter", system-ui, sans-serif;
+  }
+
+  #root {
+    width: 100%;
+  }
+
+  main {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: contain;
+    touch-action: pan-y;
   }
 
   h1,

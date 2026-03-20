@@ -782,7 +782,7 @@ export default function SuperAdminDashboard() {
           </Sheet>
         )}
 
-        <main className="flex-1 min-h-0 overflow-y-auto p-3 lg:p-8 space-y-5">
+        <main className="flex-1 min-h-0 overflow-y-auto overscroll-y-contain touch-pan-y [WebkitOverflowScrolling:touch] p-3 lg:p-8 space-y-5">
           {renderContent()}
         </main>
       </div>

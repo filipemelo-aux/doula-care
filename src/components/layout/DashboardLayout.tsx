@@ -91,7 +91,7 @@ export function DashboardLayout() {
           </Button>
         </header>
 
-        <main className="flex-1 min-h-0 p-3 lg:p-8 overflow-y-auto w-full box-border">
+        <main className="flex-1 min-h-0 p-3 lg:p-8 overflow-y-auto overscroll-y-contain touch-pan-y [WebkitOverflowScrolling:touch] w-full box-border">
           <div className="max-w-7xl mx-auto animate-fade-in">
             <Outlet />
           </div>
