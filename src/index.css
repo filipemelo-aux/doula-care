@@ -303,7 +303,14 @@
   /* Disable pull-to-refresh globally */
   html,
   html body {
-    overscroll-behavior-y: none;
+    overscroll-behavior-y: contain;
+  }
+
+  /* Ensure smooth touch scrolling on all scroll containers */
+  [style*="overflow-y: auto"],
+  .overflow-y-auto {
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
   }
 
 
