@@ -760,6 +760,35 @@ export type Database = {
           },
         ]
       }
+      org_access_log: {
+        Row: {
+          accessed_at: string
+          id: string
+          organization_id: string
+          user_id: string
+        }
+        Insert: {
+          accessed_at?: string
+          id?: string
+          organization_id: string
+          user_id: string
+        }
+        Update: {
+          accessed_at?: string
+          id?: string
+          organization_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "org_access_log_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       org_billing: {
         Row: {
           amount: number
