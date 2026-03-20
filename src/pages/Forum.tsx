@@ -42,7 +42,7 @@ export default function Forum() {
   const [newContent, setNewContent] = useState("");
   const [newCategoryId, setNewCategoryId] = useState("");
   const [newAnonymous, setNewAnonymous] = useState(false);
-  const [newAudience, setNewAudience] = useState<"all" | "doulas_only">("all");
+  const [newAudience, setNewAudience] = useState<"all" | "doulas_only" | "gestantes_only">("all");
   const [postLoading, setPostLoading] = useState(false);
 
   // Comment form
