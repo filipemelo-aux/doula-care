@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { format, parseISO } from "date-fns";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { calculateCurrentPregnancyWeeks, calculateCurrentPregnancyDays, isPostTerm } from "@/lib/pregnancy";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -229,6 +230,17 @@ export default function Clients() {
                           {client.dpp && (
                             <p className="text-[10px] text-muted-foreground">DPP: {format(parseISO(client.dpp), "dd/MM/yyyy")}</p>
                           )}
+                          {client.dpp && client.status === "gestante" && !client.birth_occurred && (() => {
+                            const w = calculateCurrentPregnancyWeeks(client.pregnancy_weeks, client.pregnancy_weeks_set_at, client.dpp);
+                            const d = calculateCurrentPregnancyDays(client.dpp);
+                            const post = isPostTerm(client.dpp);
+                            if (w === null) return null;
+                            return (
+                              <p className={cn("text-[10px] font-semibold", post ? "text-destructive" : "text-primary")}>
+                                {post ? "Pós-Data • " : ""}{w}s {d}d
+                              </p>
+                            );
+                          })()}
                         </div>
                         <div className="flex items-center gap-0 flex-shrink-0">
                           <Button
@@ -289,6 +301,7 @@ export default function Clients() {
                       <TableHead>Nome</TableHead>
                       <TableHead>Telefone</TableHead>
                       <TableHead>DPP</TableHead>
+                      <TableHead>IG</TableHead>
                       <TableHead>Situação</TableHead>
                       <TableHead>Plano</TableHead>
                       <TableHead>Pagamento</TableHead>
@@ -309,6 +322,19 @@ export default function Clients() {
                         <TableCell>{client.phone}</TableCell>
                         <TableCell className="text-muted-foreground">
                           {client.dpp ? format(parseISO(client.dpp), "dd/MM/yyyy") : "—"}
+                        </TableCell>
+                        <TableCell>
+                          {client.dpp && client.status === "gestante" && !client.birth_occurred ? (() => {
+                            const w = calculateCurrentPregnancyWeeks(client.pregnancy_weeks, client.pregnancy_weeks_set_at, client.dpp);
+                            const d = calculateCurrentPregnancyDays(client.dpp);
+                            const post = isPostTerm(client.dpp);
+                            if (w === null) return "—";
+                            return (
+                              <span className={cn("text-xs font-semibold", post ? "text-destructive" : "text-primary")}>
+                                {post ? "Pós-Data • " : ""}{w}s {d}d
+                              </span>
+                            );
+                          })() : "—"}
                         </TableCell>
                         <TableCell>
                           <Badge
