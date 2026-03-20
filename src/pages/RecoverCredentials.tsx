@@ -89,7 +89,7 @@ export default function RecoverCredentials() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-primary/5 p-4">
+    <div className="h-[100dvh] overflow-y-auto flex items-center justify-center bg-gradient-to-br from-background via-background to-primary/5 p-4">
       <Card className="w-full max-w-md card-glass">
         <CardHeader className="text-center space-y-2">
           <div className="flex flex-col items-center gap-1.5">
