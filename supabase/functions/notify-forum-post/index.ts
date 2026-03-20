@@ -34,27 +34,32 @@ Deno.serve(async (req) => {
     const notifTitle = "💬 Nova publicação na Comunidade";
     const notifMessage = `${displayAuthor} publicou: "${postTitle.substring(0, 80)}${postTitle.length > 80 ? "..." : ""}"`;
 
-    // 1. Get all admin/moderator user IDs with their org
-    const { data: adminRoles } = await supabase
-      .from("user_roles")
-      .select("user_id, role")
-      .in("role", ["admin", "moderator"]);
-
-    const adminUserIds = (adminRoles || [])
-      .map((r: any) => r.user_id)
-      .filter((id: string) => id !== authorId);
-
-    // Get org_id for each admin
+    // 1. Get all admin/moderator user IDs with their org (skip if gestantes_only)
+    const adminUserIds: string[] = [];
     const adminOrgMap = new Map<string, string>();
-    if (adminUserIds.length > 0) {
-      const { data: adminProfiles } = await supabase
-        .from("profiles")
-        .select("user_id, organization_id")
-        .in("user_id", adminUserIds);
 
-      for (const p of adminProfiles || []) {
-        if (p.organization_id) {
-          adminOrgMap.set(p.user_id, p.organization_id);
+    if (!isGestantesOnly) {
+      const { data: adminRoles } = await supabase
+        .from("user_roles")
+        .select("user_id, role")
+        .in("role", ["admin", "moderator"]);
+
+      const rawAdminIds = (adminRoles || [])
+        .map((r: any) => r.user_id)
+        .filter((id: string) => id !== authorId);
+
+      adminUserIds.push(...rawAdminIds);
+
+      if (adminUserIds.length > 0) {
+        const { data: adminProfiles } = await supabase
+          .from("profiles")
+          .select("user_id, organization_id")
+          .in("user_id", adminUserIds);
+
+        for (const p of adminProfiles || []) {
+          if (p.organization_id) {
+            adminOrgMap.set(p.user_id, p.organization_id);
+          }
         }
       }
     }
