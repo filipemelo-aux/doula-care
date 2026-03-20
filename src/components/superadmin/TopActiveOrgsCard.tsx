@@ -5,33 +5,15 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Activity, LogIn, UserPlus, CalendarDays, Bell, FileText, FileSignature, CreditCard, Briefcase } from "lucide-react";
+import { Activity, LogIn } from "lucide-react";
 
 interface OrgActivity {
   id: string;
   name: string;
   plan: string;
   logins: number;
-  clientsCreated: number;
-  appointments: number;
-  notifications: number;
-  diaryEntries: number;
-  contracts: number;
-  payments: number;
-  serviceRequests: number;
-  totalActions: number;
+  actions: number;
 }
-
-const actionIcons: Record<string, { icon: typeof LogIn; label: string }> = {
-  login: { icon: LogIn, label: "Acessos" },
-  client_created: { icon: UserPlus, label: "Gestantes" },
-  appointment_created: { icon: CalendarDays, label: "Consultas" },
-  notification_sent: { icon: Bell, label: "Notificações" },
-  diary_entry: { icon: FileText, label: "Diário" },
-  contract_created: { icon: FileSignature, label: "Contratos" },
-  payment_created: { icon: CreditCard, label: "Pagamentos" },
-  service_request: { icon: Briefcase, label: "Serviços" },
-};
 
 function useOrgActivity() {
   return useQuery({
@@ -48,30 +30,20 @@ function useOrgActivity() {
 
       const orgMap = new Map<string, OrgActivity>();
       (organizations || []).forEach((org) => {
-        orgMap.set(org.id, {
-          id: org.id, name: org.name, plan: org.plan,
-          logins: 0, clientsCreated: 0, appointments: 0, notifications: 0,
-          diaryEntries: 0, contracts: 0, payments: 0, serviceRequests: 0, totalActions: 0,
-        });
+        orgMap.set(org.id, { id: org.id, name: org.name, plan: org.plan, logins: 0, actions: 0 });
       });
 
       ((logs as any[]) || []).forEach((log: any) => {
         const org = orgMap.get(log.organization_id);
         if (!org) return;
-        org.totalActions++;
-        switch (log.action) {
-          case "login": org.logins++; break;
-          case "client_created": org.clientsCreated++; break;
-          case "appointment_created": org.appointments++; break;
-          case "notification_sent": org.notifications++; break;
-          case "diary_entry": org.diaryEntries++; break;
-          case "contract_created": org.contracts++; break;
-          case "payment_created": org.payments++; break;
-          case "service_request": org.serviceRequests++; break;
+        if (log.action === "login") {
+          org.logins++;
+        } else {
+          org.actions++;
         }
       });
 
-      return Array.from(orgMap.values()).sort((a, b) => b.totalActions - a.totalActions);
+      return Array.from(orgMap.values()).sort((a, b) => (b.logins + b.actions) - (a.logins + a.actions));
     },
     staleTime: 60_000,
   });
@@ -83,43 +55,25 @@ const planStyle: Record<string, string> = {
   premium: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
 };
 
-function HorizontalBar({ value, max }: { value: number; max: number }) {
-  const pct = max > 0 ? Math.max((value / max) * 100, value > 0 ? 6 : 0) : 0;
+function DualBar({ logins, actions, maxLogins, maxActions }: { logins: number; actions: number; maxLogins: number; maxActions: number }) {
+  const loginPct = maxLogins > 0 ? Math.max((logins / maxLogins) * 100, logins > 0 ? 6 : 0) : 0;
+  const actionPct = maxActions > 0 ? Math.max((actions / maxActions) * 100, actions > 0 ? 6 : 0) : 0;
   return (
-    <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
-      <div
-        className="h-full rounded-full bg-primary transition-all duration-700 ease-out"
-        style={{ width: `${pct}%` }}
-      />
-    </div>
-  );
-}
-
-function ActionChips({ org }: { org: OrgActivity }) {
-  const items = [
-    { key: "login", count: org.logins },
-    { key: "client_created", count: org.clientsCreated },
-    { key: "appointment_created", count: org.appointments },
-    { key: "notification_sent", count: org.notifications },
-    { key: "diary_entry", count: org.diaryEntries },
-    { key: "contract_created", count: org.contracts },
-    { key: "payment_created", count: org.payments },
-    { key: "service_request", count: org.serviceRequests },
-  ].filter((i) => i.count > 0);
-
-  if (items.length === 0) return <span className="text-[11px] text-muted-foreground">Sem atividade no período</span>;
-
-  return (
-    <div className="flex items-center gap-3 text-[11px] text-muted-foreground flex-wrap">
-      {items.map((item) => {
-        const config = actionIcons[item.key];
-        const Icon = config.icon;
-        return (
-          <span key={item.key} className="flex items-center gap-1" title={config.label}>
-            <Icon className="h-3 w-3" />{item.count}
-          </span>
-        );
-      })}
+    <div className="space-y-1">
+      <div className="flex items-center gap-2">
+        <span className="text-[10px] text-muted-foreground w-14 shrink-0">Logins</span>
+        <div className="h-1.5 flex-1 rounded-full bg-muted overflow-hidden">
+          <div className="h-full rounded-full bg-primary transition-all duration-700 ease-out" style={{ width: `${loginPct}%` }} />
+        </div>
+        <span className="text-[10px] font-semibold text-foreground tabular-nums w-6 text-right">{logins}</span>
+      </div>
+      <div className="flex items-center gap-2">
+        <span className="text-[10px] text-muted-foreground w-14 shrink-0">Ações</span>
+        <div className="h-1.5 flex-1 rounded-full bg-muted overflow-hidden">
+          <div className="h-full rounded-full bg-success transition-all duration-700 ease-out" style={{ width: `${actionPct}%` }} />
+        </div>
+        <span className="text-[10px] font-semibold text-foreground tabular-nums w-6 text-right">{actions}</span>
+      </div>
     </div>
   );
 }
@@ -142,7 +96,8 @@ export function TopActiveOrgsCard() {
   }
 
   const top3 = (allOrgs || []).slice(0, 3);
-  const maxScore = top3[0]?.totalActions || 1;
+  const maxLogins = Math.max(...(allOrgs || []).map((o) => o.logins), 1);
+  const maxActions = Math.max(...(allOrgs || []).map((o) => o.actions), 1);
 
   return (
     <>
@@ -156,14 +111,11 @@ export function TopActiveOrgsCard() {
             <p className="text-[11px] font-medium text-muted-foreground">Atividade (30d)</p>
           </div>
           {top3.length > 0 ? (
-            <div className="space-y-2">
+            <div className="space-y-2.5">
               {top3.map((org) => (
-                <div key={org.id} className="space-y-0.5">
-                  <div className="flex items-center justify-between text-[11px] gap-1">
-                    <span className="text-muted-foreground truncate">{org.name}</span>
-                    <span className="font-semibold text-foreground tabular-nums shrink-0">{org.totalActions}</span>
-                  </div>
-                  <HorizontalBar value={org.totalActions} max={maxScore} />
+                <div key={org.id}>
+                  <p className="text-[11px] text-muted-foreground truncate mb-1">{org.name}</p>
+                  <DualBar logins={org.logins} actions={org.actions} maxLogins={maxLogins} maxActions={maxActions} />
                 </div>
               ))}
             </div>
@@ -181,31 +133,29 @@ export function TopActiveOrgsCard() {
               Utilização Real (últimos 30 dias)
             </DialogTitle>
           </DialogHeader>
-          <p className="text-xs text-muted-foreground shrink-0">
-            Registra logins e ações permanentemente — mesmo que dados sejam excluídos depois.
-          </p>
-          <div className="flex-1 min-h-0 overflow-y-auto space-y-1.5 pr-1 mt-2">
-            {(allOrgs || []).map((org, index) => {
-              const globalMax = allOrgs?.[0]?.totalActions || 1;
-              return (
-                <div key={org.id} className="rounded-lg p-3 bg-muted/30 space-y-2">
-                  <div className="flex items-center gap-2">
-                    <span className="text-[11px] font-bold text-muted-foreground w-5 text-center shrink-0">
-                      {index + 1}
-                    </span>
-                    <span className="text-sm font-medium text-foreground truncate flex-1">{org.name}</span>
-                    <Badge variant="outline" className={`text-[10px] h-4 px-1.5 shrink-0 ${planStyle[org.plan] || ""}`}>
-                      {org.plan.charAt(0).toUpperCase() + org.plan.slice(1)}
-                    </Badge>
-                    <span className="text-xs font-bold text-primary tabular-nums shrink-0">
-                      {org.totalActions}
-                    </span>
-                  </div>
-                  <HorizontalBar value={org.totalActions} max={globalMax} />
-                  <ActionChips org={org} />
+          <div className="flex items-center gap-4 text-[11px] text-muted-foreground shrink-0 mt-1">
+            <span className="flex items-center gap-1.5">
+              <span className="h-2 w-2 rounded-full bg-primary" /> Logins
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="h-2 w-2 rounded-full bg-success" /> Ações (gestantes, consultas, notificações…)
+            </span>
+          </div>
+          <div className="flex-1 min-h-0 overflow-y-auto space-y-1 pr-1 mt-3">
+            {(allOrgs || []).map((org, index) => (
+              <div key={org.id} className="rounded-lg p-3 bg-muted/30 space-y-1.5">
+                <div className="flex items-center gap-2">
+                  <span className="text-[11px] font-bold text-muted-foreground w-5 text-center shrink-0">
+                    {index + 1}
+                  </span>
+                  <span className="text-sm font-medium text-foreground truncate flex-1">{org.name}</span>
+                  <Badge variant="outline" className={`text-[10px] h-4 px-1.5 shrink-0 ${planStyle[org.plan] || ""}`}>
+                    {org.plan.charAt(0).toUpperCase() + org.plan.slice(1)}
+                  </Badge>
                 </div>
-              );
-            })}
+                <DualBar logins={org.logins} actions={org.actions} maxLogins={maxLogins} maxActions={maxActions} />
+              </div>
+            ))}
             {(!allOrgs || allOrgs.length === 0) && (
               <p className="text-center text-sm text-muted-foreground py-6">Nenhuma organização cadastrada</p>
             )}
