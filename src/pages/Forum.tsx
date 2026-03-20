@@ -10,7 +10,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Search, Plus, MessageSquare, Heart, EyeOff, Loader2, Send, Pin, MoreVertical, EyeOffIcon, Trash2, X, Users, ShieldCheck } from "lucide-react";
+import { Search, Plus, MessageSquare, Heart, EyeOff, Loader2, Send, Pin, MoreVertical, EyeOffIcon, Trash2, X, Users, ShieldCheck, Pencil } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { formatDistanceToNow } from "date-fns";
@@ -49,6 +49,13 @@ export default function Forum() {
   const [commentTexts, setCommentTexts] = useState<Record<string, string>>({});
   const [commentAnon, setCommentAnon] = useState<Record<string, boolean>>({});
   const [commentLoading, setCommentLoading] = useState<string | null>(null);
+
+  // Edit post state
+  const [editingPost, setEditingPost] = useState<any>(null);
+  const [editTitle, setEditTitle] = useState("");
+  const [editContent, setEditContent] = useState("");
+  const [editAudience, setEditAudience] = useState<"all" | "doulas_only">("all");
+  const [editLoading, setEditLoading] = useState(false);
 
   // Community pull-to-refresh
   const [pullDistance, setPullDistance] = useState(0);
@@ -403,6 +410,39 @@ export default function Forum() {
     refetchPosts();
   };
 
+  const handleEditPost = (post: any) => {
+    setEditingPost(post);
+    setEditTitle(post.title);
+    setEditContent(post.content);
+    setEditAudience(post.audience || "all");
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingPost || !editTitle.trim() || !editContent.trim()) {
+      toast.error("Preencha todos os campos");
+      return;
+    }
+    setEditLoading(true);
+    try {
+      const updates: any = {
+        title: editTitle.trim(),
+        content: editContent.trim(),
+      };
+      if (isAdmin) {
+        updates.audience = editAudience;
+      }
+      const { error } = await supabase.from("forum_posts").update(updates).eq("id", editingPost.id);
+      if (error) throw error;
+      toast.success("Publicação atualizada!");
+      setEditingPost(null);
+      refetchPosts();
+    } catch (err: any) {
+      toast.error(err.message);
+    } finally {
+      setEditLoading(false);
+    }
+  };
+
   return (
     <div
       ref={containerRef}
@@ -529,7 +569,7 @@ export default function Forum() {
                         <span className="truncate">{post.forum_categories?.icon} {post.forum_categories?.name}</span>
                       </div>
                     </div>
-                    {isAdmin && (
+                    {(isAdmin || post.author_id === currentUser?.id) && (
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0">
@@ -537,14 +577,24 @@ export default function Forum() {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => handlePinPost(post.id, post.is_pinned)}>
-                            <Pin className="h-4 w-4 mr-2" />
-                            {post.is_pinned ? "Desafixar" : "Fixar"}
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleHidePost(post.id)} className="text-destructive">
-                            <EyeOffIcon className="h-4 w-4 mr-2" />
-                            Ocultar
-                          </DropdownMenuItem>
+                          {post.author_id === currentUser?.id && (
+                            <DropdownMenuItem onClick={() => handleEditPost(post)}>
+                              <Pencil className="h-4 w-4 mr-2" />
+                              Editar
+                            </DropdownMenuItem>
+                          )}
+                          {isAdmin && (
+                            <>
+                              <DropdownMenuItem onClick={() => handlePinPost(post.id, post.is_pinned)}>
+                                <Pin className="h-4 w-4 mr-2" />
+                                {post.is_pinned ? "Desafixar" : "Fixar"}
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleHidePost(post.id)} className="text-destructive">
+                                <EyeOffIcon className="h-4 w-4 mr-2" />
+                                Ocultar
+                              </DropdownMenuItem>
+                            </>
+                          )}
                         </DropdownMenuContent>
                       </DropdownMenu>
                     )}
@@ -779,6 +829,55 @@ export default function Forum() {
             <Button onClick={handleCreatePost} disabled={postLoading} className="w-full">
               {postLoading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
               Publicar
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Post Dialog */}
+      <Dialog open={!!editingPost} onOpenChange={(open) => { if (!open) setEditingPost(null); }}>
+        <DialogContent className="max-w-lg overflow-hidden">
+          <DialogHeader>
+            <DialogTitle>Editar publicação</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <Input
+              value={editTitle}
+              onChange={(e) => setEditTitle(e.target.value)}
+              placeholder="Título"
+              maxLength={200}
+            />
+
+            <Textarea
+              value={editContent}
+              onChange={(e) => setEditContent(e.target.value)}
+              placeholder="Conteúdo"
+              rows={4}
+              maxLength={5000}
+            />
+
+            {isAdmin && (
+              <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
+                <Users className="h-4 w-4 text-muted-foreground shrink-0" />
+                <div className="flex-1">
+                  <Label className="text-sm font-medium">Público-alvo</Label>
+                  <p className="text-xs text-muted-foreground">Quem pode ver esta publicação</p>
+                </div>
+                <Select value={editAudience} onValueChange={(v) => setEditAudience(v as "all" | "doulas_only")}>
+                  <SelectTrigger className="w-[140px] h-8 text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos</SelectItem>
+                    <SelectItem value="doulas_only">Só Doulas</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            <Button onClick={handleSaveEdit} disabled={editLoading} className="w-full">
+              {editLoading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              Salvar alterações
             </Button>
           </div>
         </DialogContent>
