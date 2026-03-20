@@ -873,9 +873,6 @@ export default function Forum() {
                     <SelectItem value="doulas_only">Só Doulas</SelectItem>
                     <SelectItem value="gestantes_only">Só Gestantes</SelectItem>
                   </SelectContent>
-                    <SelectItem value="all">Todos</SelectItem>
-                    <SelectItem value="doulas_only">Só Doulas</SelectItem>
-                  </SelectContent>
                 </Select>
               </div>
             )}
