@@ -40,6 +40,8 @@ const navItems = [
   { to: "/gestante/comunidade", icon: Users2, label: "Comunidade" },
   { to: "/gestante/perfil", icon: User, label: "Perfil" },
 ];
+// Module-level flag: true after the first mount so SPA navigations don't redirect
+let gestanteLayoutMounted = false;
 
 export function GestanteLayout({ children }: GestanteLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -52,24 +54,18 @@ export function GestanteLayout({ children }: GestanteLayoutProps) {
   const headerLogo = orgLogo || logo;
   const headerName = displayName || "Doula Care";
 
-  // On fresh app open (TWA restoring last URL), redirect gestante to dashboard
-  // unless it was opened from a notification click
+  // On fresh app open (TWA/WebView restoring last URL), redirect gestante to dashboard
+  // unless it was opened from a notification click.
+  // We use a module-level flag to distinguish the very first mount (page load)
+  // from subsequent SPA navigations that re-mount the layout.
   useEffect(() => {
+    if (gestanteLayoutMounted) return; // SPA navigation — skip redirect
+    gestanteLayoutMounted = true;
+
     const isSubPage = location.pathname !== "/gestante" && location.pathname.startsWith("/gestante/");
     const fromNotification = new URLSearchParams(location.search).get("from_notification");
 
-    // Detect cold start: if the page was loaded (not a SPA navigation)
-    // performance.getEntriesByType("navigation") returns "navigate" on cold start,
-    // "back_forward" on restore, but in TWA it may return "navigate" too.
-    // Use a short-lived timestamp flag: set on first render, expire after 5s.
-    const sessionKey = "gestante_nav_ts";
-    const lastNavTs = sessionStorage.getItem(sessionKey);
-    const now = Date.now();
-    const isColdStart = !lastNavTs || (now - Number(lastNavTs)) > 30000; // 30s = likely app was closed
-
-    sessionStorage.setItem(sessionKey, String(now));
-
-    if (isSubPage && !fromNotification && isColdStart) {
+    if (isSubPage && !fromNotification) {
       // Fresh app open landing on a sub-page — redirect to dashboard
       navigate("/gestante", { replace: true });
     }
