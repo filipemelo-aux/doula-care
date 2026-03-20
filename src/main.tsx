@@ -5,6 +5,27 @@ import { isCapacitorNative, setupNativePushListeners } from "@/lib/capacitorPush
 import { configureNativeBars } from "@/lib/capacitorNativeUI";
 import { getCachedBranding } from "@/hooks/useOrgBranding";
 
+const normalizeInitialGestanteRoute = () => {
+  const { pathname, search, hash } = window.location;
+  const params = new URLSearchParams(search);
+  const fromNotification = params.get("from_notification");
+  const isGestanteSubPage = pathname.startsWith("/gestante/") && pathname !== "/gestante/alterar-senha";
+
+  if (isGestanteSubPage && !fromNotification) {
+    window.history.replaceState({}, "", `/gestante${hash || ""}`);
+    return;
+  }
+
+  if (fromNotification) {
+    params.delete("from_notification");
+    const cleanSearch = params.toString();
+    const cleanUrl = pathname + (cleanSearch ? `?${cleanSearch}` : "") + hash;
+    window.history.replaceState({}, "", cleanUrl);
+  }
+};
+
+normalizeInitialGestanteRoute();
+
 // Suppress Chrome's PWA install mini-infobar on mobile devices
 const isMobileUA = /android|iphone|ipad|ipod|mobile/i.test(navigator.userAgent);
 if (isMobileUA) {
