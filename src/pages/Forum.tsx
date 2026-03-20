@@ -413,6 +413,7 @@ export default function Forum() {
 
   return (
     <div
+      ref={containerRef}
       className="p-3 lg:p-8 max-w-2xl mx-auto space-y-4 overflow-x-hidden"
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
