@@ -410,6 +410,39 @@ export default function Forum() {
     refetchPosts();
   };
 
+  const handleEditPost = (post: any) => {
+    setEditingPost(post);
+    setEditTitle(post.title);
+    setEditContent(post.content);
+    setEditAudience(post.audience || "all");
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingPost || !editTitle.trim() || !editContent.trim()) {
+      toast.error("Preencha todos os campos");
+      return;
+    }
+    setEditLoading(true);
+    try {
+      const updates: any = {
+        title: editTitle.trim(),
+        content: editContent.trim(),
+      };
+      if (isAdmin) {
+        updates.audience = editAudience;
+      }
+      const { error } = await supabase.from("forum_posts").update(updates).eq("id", editingPost.id);
+      if (error) throw error;
+      toast.success("Publicação atualizada!");
+      setEditingPost(null);
+      refetchPosts();
+    } catch (err: any) {
+      toast.error(err.message);
+    } finally {
+      setEditLoading(false);
+    }
+  };
+
   return (
     <div
       ref={containerRef}
