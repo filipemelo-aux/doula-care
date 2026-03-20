@@ -274,7 +274,9 @@ export default function Forum() {
   };
 
   const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
-    canPullRef.current = window.scrollY <= 0;
+    const scrollParent = containerRef.current?.closest('main') || containerRef.current?.parentElement;
+    const scrollTop = scrollParent ? scrollParent.scrollTop : 0;
+    canPullRef.current = scrollTop <= 0;
     pullStartYRef.current = canPullRef.current ? e.touches[0].clientY : null;
   };
 
