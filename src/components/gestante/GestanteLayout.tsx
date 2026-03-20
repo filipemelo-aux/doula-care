@@ -43,6 +43,7 @@ const navItems = [
 // Module-level flag: true after the first mount so SPA navigations don't redirect
 let gestanteLayoutMounted = false;
 
+export function GestanteLayout({ children }: GestanteLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
