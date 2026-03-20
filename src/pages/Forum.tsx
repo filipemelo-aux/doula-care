@@ -42,7 +42,7 @@ export default function Forum() {
   const [newContent, setNewContent] = useState("");
   const [newCategoryId, setNewCategoryId] = useState("");
   const [newAnonymous, setNewAnonymous] = useState(false);
-  const [newAudience, setNewAudience] = useState<"all" | "doulas_only">("all");
+  const [newAudience, setNewAudience] = useState<"all" | "doulas_only" | "gestantes_only">("all");
   const [postLoading, setPostLoading] = useState(false);
 
   // Comment form
@@ -54,7 +54,7 @@ export default function Forum() {
   const [editingPost, setEditingPost] = useState<any>(null);
   const [editTitle, setEditTitle] = useState("");
   const [editContent, setEditContent] = useState("");
-  const [editAudience, setEditAudience] = useState<"all" | "doulas_only">("all");
+  const [editAudience, setEditAudience] = useState<"all" | "doulas_only" | "gestantes_only">("all");
   const [editLoading, setEditLoading] = useState(false);
 
   // Community pull-to-refresh
@@ -561,6 +561,7 @@ export default function Forum() {
                       <div className="flex items-center gap-2 min-w-0">
                         <span className="font-semibold text-sm text-foreground truncate">{authorName}</span>
                         {post.audience === "doulas_only" && <ShieldCheck className="h-3 w-3 text-primary shrink-0" />}
+                        {post.audience === "gestantes_only" && <Users className="h-3 w-3 text-primary shrink-0" />}
                         {post.is_pinned && <Pin className="h-3 w-3 text-primary shrink-0" />}
                       </div>
                       <div className="flex items-center gap-1.5 text-xs text-muted-foreground flex-wrap">
@@ -805,13 +806,14 @@ export default function Forum() {
                   <Label className="text-sm font-medium">Público-alvo</Label>
                   <p className="text-xs text-muted-foreground">Quem pode ver esta publicação</p>
                 </div>
-                <Select value={newAudience} onValueChange={(v) => setNewAudience(v as "all" | "doulas_only")}>
-                  <SelectTrigger className="w-[140px] h-8 text-xs">
+                <Select value={newAudience} onValueChange={(v) => setNewAudience(v as "all" | "doulas_only" | "gestantes_only")}>
+                  <SelectTrigger className="w-[160px] h-8 text-xs">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">Todos</SelectItem>
                     <SelectItem value="doulas_only">Só Doulas</SelectItem>
+                    <SelectItem value="gestantes_only">Só Gestantes</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -863,13 +865,14 @@ export default function Forum() {
                   <Label className="text-sm font-medium">Público-alvo</Label>
                   <p className="text-xs text-muted-foreground">Quem pode ver esta publicação</p>
                 </div>
-                <Select value={editAudience} onValueChange={(v) => setEditAudience(v as "all" | "doulas_only")}>
-                  <SelectTrigger className="w-[140px] h-8 text-xs">
+                <Select value={editAudience} onValueChange={(v) => setEditAudience(v as "all" | "doulas_only" | "gestantes_only")}>
+                  <SelectTrigger className="w-[160px] h-8 text-xs">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">Todos</SelectItem>
                     <SelectItem value="doulas_only">Só Doulas</SelectItem>
+                    <SelectItem value="gestantes_only">Só Gestantes</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
