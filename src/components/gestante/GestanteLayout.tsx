@@ -53,18 +53,17 @@ export function GestanteLayout({ children }: GestanteLayoutProps) {
   const headerName = displayName || "Doula Care";
 
   // On fresh app open (TWA/WebView restoring last URL), redirect gestante to dashboard
-  // unless it was opened from a notification click
+  // unless it was opened from a notification click.
+  // We use a module-level flag to distinguish the very first mount (page load)
+  // from subsequent SPA navigations that re-mount the layout.
   useEffect(() => {
+    if (gestanteLayoutMounted) return; // SPA navigation — skip redirect
+    gestanteLayoutMounted = true;
+
     const isSubPage = location.pathname !== "/gestante" && location.pathname.startsWith("/gestante/");
     const fromNotification = new URLSearchParams(location.search).get("from_notification");
 
-    // Detect cold start using performance API — a full page load (not SPA navigation)
-    // indicates the app was opened fresh (or the WebView restored the URL).
-    const navEntries = performance.getEntriesByType("navigation") as PerformanceNavigationTiming[];
-    const navType = navEntries[0]?.type;
-    const isPageLoad = navType === "navigate" || navType === "reload" || navType === "back_forward";
-
-    if (isSubPage && !fromNotification && isPageLoad) {
+    if (isSubPage && !fromNotification) {
       // Fresh app open landing on a sub-page — redirect to dashboard
       navigate("/gestante", { replace: true });
     }
