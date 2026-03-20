@@ -301,6 +301,7 @@ export default function Clients() {
                       <TableHead>Nome</TableHead>
                       <TableHead>Telefone</TableHead>
                       <TableHead>DPP</TableHead>
+                      <TableHead>IG</TableHead>
                       <TableHead>Situação</TableHead>
                       <TableHead>Plano</TableHead>
                       <TableHead>Pagamento</TableHead>
