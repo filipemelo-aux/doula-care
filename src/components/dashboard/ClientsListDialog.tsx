@@ -175,8 +175,8 @@ export function ClientsListDialog({
                                     : "bg-primary/10 text-primary"
                               }`}
                             >
-                              {currentWeeks}s{currentDays > 0 ? `${currentDays}d` : ""}
-                              {postTerm && " - Pós-Data"}
+                              {currentWeeks}s {currentDays}d
+                              {postTerm && " — Pós-Data"}
                             </Badge>
                           )}
                         </div>
