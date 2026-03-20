@@ -30,15 +30,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 export default function Forum() {
-  // Allow pull-to-refresh only while this page is mounted
-  useEffect(() => {
-    document.documentElement.style.overscrollBehaviorY = "auto";
-    document.body.style.overscrollBehaviorY = "auto";
-    return () => {
-      document.documentElement.style.overscrollBehaviorY = "";
-      document.body.style.overscrollBehaviorY = "";
-    };
-  }, []);
+  // No longer needed: body has overflow:hidden globally
 
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
@@ -63,6 +55,7 @@ export default function Forum() {
   const [refreshingCommunity, setRefreshingCommunity] = useState(false);
   const pullStartYRef = useRef<number | null>(null);
   const canPullRef = useRef(false);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const { data: currentUser } = useQuery({
     queryKey: ["current-user-forum"],
@@ -273,7 +266,9 @@ export default function Forum() {
   };
 
   const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
-    canPullRef.current = window.scrollY <= 0;
+    const scrollParent = containerRef.current?.closest('main') || containerRef.current?.parentElement;
+    const scrollTop = scrollParent ? scrollParent.scrollTop : 0;
+    canPullRef.current = scrollTop <= 0;
     pullStartYRef.current = canPullRef.current ? e.touches[0].clientY : null;
   };
 
@@ -410,6 +405,7 @@ export default function Forum() {
 
   return (
     <div
+      ref={containerRef}
       className="p-3 lg:p-8 max-w-2xl mx-auto space-y-4 overflow-x-hidden"
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
