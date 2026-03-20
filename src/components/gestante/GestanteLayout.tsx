@@ -52,24 +52,19 @@ export function GestanteLayout({ children }: GestanteLayoutProps) {
   const headerLogo = orgLogo || logo;
   const headerName = displayName || "Doula Care";
 
-  // On fresh app open (TWA restoring last URL), redirect gestante to dashboard
+  // On fresh app open (TWA/WebView restoring last URL), redirect gestante to dashboard
   // unless it was opened from a notification click
   useEffect(() => {
     const isSubPage = location.pathname !== "/gestante" && location.pathname.startsWith("/gestante/");
     const fromNotification = new URLSearchParams(location.search).get("from_notification");
 
-    // Detect cold start: if the page was loaded (not a SPA navigation)
-    // performance.getEntriesByType("navigation") returns "navigate" on cold start,
-    // "back_forward" on restore, but in TWA it may return "navigate" too.
-    // Use a short-lived timestamp flag: set on first render, expire after 5s.
-    const sessionKey = "gestante_nav_ts";
-    const lastNavTs = sessionStorage.getItem(sessionKey);
-    const now = Date.now();
-    const isColdStart = !lastNavTs || (now - Number(lastNavTs)) > 30000; // 30s = likely app was closed
+    // Detect cold start using performance API — a full page load (not SPA navigation)
+    // indicates the app was opened fresh (or the WebView restored the URL).
+    const navEntries = performance.getEntriesByType("navigation") as PerformanceNavigationTiming[];
+    const navType = navEntries[0]?.type;
+    const isPageLoad = navType === "navigate" || navType === "reload" || navType === "back_forward";
 
-    sessionStorage.setItem(sessionKey, String(now));
-
-    if (isSubPage && !fromNotification && isColdStart) {
+    if (isSubPage && !fromNotification && isPageLoad) {
       // Fresh app open landing on a sub-page — redirect to dashboard
       navigate("/gestante", { replace: true });
     }
