@@ -63,6 +63,7 @@ export default function Forum() {
   const [refreshingCommunity, setRefreshingCommunity] = useState(false);
   const pullStartYRef = useRef<number | null>(null);
   const canPullRef = useRef(false);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const { data: currentUser } = useQuery({
     queryKey: ["current-user-forum"],
