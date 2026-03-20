@@ -336,7 +336,6 @@ export default function Clients() {
                             );
                           })() : "—"}
                         </TableCell>
-                        </TableCell>
                         <TableCell>
                           <Badge
                             variant="outline"
