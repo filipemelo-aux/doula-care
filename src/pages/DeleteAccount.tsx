@@ -96,7 +96,7 @@ export default function DeleteAccount() {
   }
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="h-[100dvh] overflow-y-auto bg-background text-foreground">
       <div className="max-w-lg mx-auto px-4 py-10 sm:py-16">
         <Link
           to="/politica-de-privacidade"

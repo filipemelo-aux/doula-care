@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 
 const PrivacyPolicy = () => {
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="h-[100dvh] overflow-y-auto bg-background text-foreground">
       <div className="max-w-3xl mx-auto px-4 py-10 sm:py-16">
         <Link
           to="/login"
