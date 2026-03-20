@@ -40,8 +40,9 @@ const navItems = [
   { to: "/gestante/comunidade", icon: Users2, label: "Comunidade" },
   { to: "/gestante/perfil", icon: User, label: "Perfil" },
 ];
+// Module-level flag: true after the first mount so SPA navigations don't redirect
+let gestanteLayoutMounted = false;
 
-export function GestanteLayout({ children }: GestanteLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
