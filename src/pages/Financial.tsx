@@ -676,10 +676,12 @@ export default function Financial() {
   };
 
   // Separate contract revenues from service revenues
-  // Contratos: has plan_id AND is auto-generated (came from client registration/contract)
-  // Serviços: everything else (manual entries, service requests, avulso services)
-  const clientTransactions = transactions?.filter((t) => t.plan_id != null && t.is_auto_generated === true) || [];
-  const serviceTransactions = (transactions?.filter((t) => !(t.plan_id != null && t.is_auto_generated === true)) || [])
+  // Contratos: auto-generated from client registration (has plan_id OR description starts with "Contrato")
+  // Serviços: everything else (manual entries, service requests)
+  const isContractTransaction = (t: Transaction) =>
+    t.is_auto_generated === true && (t.plan_id != null || t.description?.startsWith("Contrato"));
+  const clientTransactions = transactions?.filter(isContractTransaction) || [];
+  const serviceTransactions = (transactions?.filter((t) => !isContractTransaction(t)) || [])
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
   const activeTabTransactions = revenueTab === "contratos" ? clientTransactions : serviceTransactions;
