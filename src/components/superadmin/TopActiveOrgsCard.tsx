@@ -5,19 +5,33 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Activity, Users, CalendarDays, MessageSquare, FileText, LogIn } from "lucide-react";
+import { Activity, LogIn, UserPlus, CalendarDays, Bell, FileText, FileSignature, CreditCard, Briefcase } from "lucide-react";
 
 interface OrgActivity {
   id: string;
   name: string;
   plan: string;
-  loginCount: number;
-  clientCount: number;
-  appointmentCount: number;
-  notificationCount: number;
-  diaryCount: number;
-  totalScore: number;
+  logins: number;
+  clientsCreated: number;
+  appointments: number;
+  notifications: number;
+  diaryEntries: number;
+  contracts: number;
+  payments: number;
+  serviceRequests: number;
+  totalActions: number;
 }
+
+const actionIcons: Record<string, { icon: typeof LogIn; label: string }> = {
+  login: { icon: LogIn, label: "Acessos" },
+  client_created: { icon: UserPlus, label: "Gestantes" },
+  appointment_created: { icon: CalendarDays, label: "Consultas" },
+  notification_sent: { icon: Bell, label: "Notificações" },
+  diary_entry: { icon: FileText, label: "Diário" },
+  contract_created: { icon: FileSignature, label: "Contratos" },
+  payment_created: { icon: CreditCard, label: "Pagamentos" },
+  service_request: { icon: Briefcase, label: "Serviços" },
+};
 
 function useOrgActivity() {
   return useQuery({
@@ -27,51 +41,37 @@ function useOrgActivity() {
       oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
       const since = oneMonthAgo.toISOString();
 
-      const [
-        { data: organizations },
-        { data: accessLogs },
-        { data: appointments },
-        { data: notifications },
-        { data: diary },
-        { data: clients },
-      ] = await Promise.all([
+      const [{ data: organizations }, { data: logs }] = await Promise.all([
         supabase.from("organizations").select("id, name, plan"),
-        supabase.from("org_access_log" as any).select("id, organization_id").gte("accessed_at", since),
-        supabase.from("appointments").select("id, organization_id").gte("created_at", since),
-        supabase.from("client_notifications").select("id, organization_id").gte("created_at", since),
-        supabase.from("pregnancy_diary").select("id, organization_id").gte("created_at", since),
-        supabase.from("clients").select("id, organization_id"),
+        supabase.from("org_access_log" as any).select("organization_id, action").gte("accessed_at", since),
       ]);
 
       const orgMap = new Map<string, OrgActivity>();
       (organizations || []).forEach((org) => {
         orgMap.set(org.id, {
           id: org.id, name: org.name, plan: org.plan,
-          loginCount: 0, clientCount: 0, appointmentCount: 0, notificationCount: 0, diaryCount: 0, totalScore: 0,
+          logins: 0, clientsCreated: 0, appointments: 0, notifications: 0,
+          diaryEntries: 0, contracts: 0, payments: 0, serviceRequests: 0, totalActions: 0,
         });
       });
 
-      ((accessLogs as any[]) || []).forEach((l: any) => {
-        if (l.organization_id && orgMap.has(l.organization_id)) orgMap.get(l.organization_id)!.loginCount++;
-      });
-      (clients || []).forEach((c) => {
-        if (c.organization_id && orgMap.has(c.organization_id)) orgMap.get(c.organization_id)!.clientCount++;
-      });
-      (appointments || []).forEach((a) => {
-        if (a.organization_id && orgMap.has(a.organization_id)) orgMap.get(a.organization_id)!.appointmentCount++;
-      });
-      (notifications || []).forEach((n) => {
-        if (n.organization_id && orgMap.has(n.organization_id)) orgMap.get(n.organization_id)!.notificationCount++;
-      });
-      (diary || []).forEach((d) => {
-        if (d.organization_id && orgMap.has(d.organization_id)) orgMap.get(d.organization_id)!.diaryCount++;
-      });
-
-      orgMap.forEach((org) => {
-        org.totalScore = org.loginCount * 4 + org.appointmentCount * 3 + org.notificationCount * 2 + org.diaryCount * 2 + org.clientCount;
+      ((logs as any[]) || []).forEach((log: any) => {
+        const org = orgMap.get(log.organization_id);
+        if (!org) return;
+        org.totalActions++;
+        switch (log.action) {
+          case "login": org.logins++; break;
+          case "client_created": org.clientsCreated++; break;
+          case "appointment_created": org.appointments++; break;
+          case "notification_sent": org.notifications++; break;
+          case "diary_entry": org.diaryEntries++; break;
+          case "contract_created": org.contracts++; break;
+          case "payment_created": org.payments++; break;
+          case "service_request": org.serviceRequests++; break;
+        }
       });
 
-      return Array.from(orgMap.values()).sort((a, b) => b.totalScore - a.totalScore);
+      return Array.from(orgMap.values()).sort((a, b) => b.totalActions - a.totalActions);
     },
     staleTime: 60_000,
   });
@@ -95,6 +95,35 @@ function HorizontalBar({ value, max }: { value: number; max: number }) {
   );
 }
 
+function ActionChips({ org }: { org: OrgActivity }) {
+  const items = [
+    { key: "login", count: org.logins },
+    { key: "client_created", count: org.clientsCreated },
+    { key: "appointment_created", count: org.appointments },
+    { key: "notification_sent", count: org.notifications },
+    { key: "diary_entry", count: org.diaryEntries },
+    { key: "contract_created", count: org.contracts },
+    { key: "payment_created", count: org.payments },
+    { key: "service_request", count: org.serviceRequests },
+  ].filter((i) => i.count > 0);
+
+  if (items.length === 0) return <span className="text-[11px] text-muted-foreground">Sem atividade no período</span>;
+
+  return (
+    <div className="flex items-center gap-3 text-[11px] text-muted-foreground flex-wrap">
+      {items.map((item) => {
+        const config = actionIcons[item.key];
+        const Icon = config.icon;
+        return (
+          <span key={item.key} className="flex items-center gap-1" title={config.label}>
+            <Icon className="h-3 w-3" />{item.count}
+          </span>
+        );
+      })}
+    </div>
+  );
+}
+
 export function TopActiveOrgsCard() {
   const { data: allOrgs, isLoading } = useOrgActivity();
   const [open, setOpen] = useState(false);
@@ -113,7 +142,7 @@ export function TopActiveOrgsCard() {
   }
 
   const top3 = (allOrgs || []).slice(0, 3);
-  const maxScore = top3[0]?.totalScore || 1;
+  const maxScore = top3[0]?.totalActions || 1;
 
   return (
     <>
@@ -132,9 +161,9 @@ export function TopActiveOrgsCard() {
                 <div key={org.id} className="space-y-0.5">
                   <div className="flex items-center justify-between text-[11px] gap-1">
                     <span className="text-muted-foreground truncate">{org.name}</span>
-                    <span className="font-semibold text-foreground tabular-nums shrink-0">{org.totalScore}</span>
+                    <span className="font-semibold text-foreground tabular-nums shrink-0">{org.totalActions}</span>
                   </div>
-                  <HorizontalBar value={org.totalScore} max={maxScore} />
+                  <HorizontalBar value={org.totalActions} max={maxScore} />
                 </div>
               ))}
             </div>
@@ -149,12 +178,15 @@ export function TopActiveOrgsCard() {
           <DialogHeader className="shrink-0">
             <DialogTitle className="flex items-center gap-2 text-base">
               <Activity className="h-4 w-4 text-primary" />
-              Atividade das Organizações (últimos 30 dias)
+              Utilização Real (últimos 30 dias)
             </DialogTitle>
           </DialogHeader>
+          <p className="text-xs text-muted-foreground shrink-0">
+            Registra logins e ações permanentemente — mesmo que dados sejam excluídos depois.
+          </p>
           <div className="flex-1 min-h-0 overflow-y-auto space-y-1.5 pr-1 mt-2">
             {(allOrgs || []).map((org, index) => {
-              const globalMax = allOrgs?.[0]?.totalScore || 1;
+              const globalMax = allOrgs?.[0]?.totalActions || 1;
               return (
                 <div key={org.id} className="rounded-lg p-3 bg-muted/30 space-y-2">
                   <div className="flex items-center gap-2">
@@ -166,27 +198,11 @@ export function TopActiveOrgsCard() {
                       {org.plan.charAt(0).toUpperCase() + org.plan.slice(1)}
                     </Badge>
                     <span className="text-xs font-bold text-primary tabular-nums shrink-0">
-                      {org.totalScore}
+                      {org.totalActions}
                     </span>
                   </div>
-                  <HorizontalBar value={org.totalScore} max={globalMax} />
-                  <div className="flex items-center gap-3 text-[11px] text-muted-foreground flex-wrap">
-                    <span className="flex items-center gap-1" title="Acessos">
-                      <LogIn className="h-3 w-3" />{org.loginCount}
-                    </span>
-                    <span className="flex items-center gap-1" title="Gestantes">
-                      <Users className="h-3 w-3" />{org.clientCount}
-                    </span>
-                    <span className="flex items-center gap-1" title="Consultas">
-                      <CalendarDays className="h-3 w-3" />{org.appointmentCount}
-                    </span>
-                    <span className="flex items-center gap-1" title="Notificações">
-                      <MessageSquare className="h-3 w-3" />{org.notificationCount}
-                    </span>
-                    <span className="flex items-center gap-1" title="Diário">
-                      <FileText className="h-3 w-3" />{org.diaryCount}
-                    </span>
-                  </div>
+                  <HorizontalBar value={org.totalActions} max={globalMax} />
+                  <ActionChips org={org} />
                 </div>
               );
             })}
