@@ -4,8 +4,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Activity, LogIn } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Activity } from "lucide-react";
 
 interface OrgActivity {
   id: string;
@@ -15,64 +21,168 @@ interface OrgActivity {
   actions: number;
 }
 
+type OrgCountRow = {
+  organization_id: string | null;
+};
+
+const countByOrganization = (rows: OrgCountRow[] | null | undefined) => {
+  const counts = new Map<string, number>();
+
+  (rows || []).forEach((row) => {
+    if (!row.organization_id) return;
+    counts.set(row.organization_id, (counts.get(row.organization_id) || 0) + 1);
+  });
+
+  return counts;
+};
+
 function useOrgActivity() {
   return useQuery({
-    queryKey: ["org-activity-last-month"],
+    queryKey: ["org-activity-last-30-days-v2"],
     queryFn: async () => {
       const oneMonthAgo = new Date();
       oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
       const since = oneMonthAgo.toISOString();
 
-      const [{ data: organizations }, { data: logs }] = await Promise.all([
-        supabase.from("organizations").select("id, name, plan"),
-        supabase.from("org_access_log" as any).select("organization_id, action").gte("accessed_at", since),
+      const [
+        organizationsResult,
+        logsResult,
+        clientsResult,
+        appointmentsResult,
+        notificationsResult,
+        diaryResult,
+        contractsResult,
+        paymentsResult,
+        serviceRequestsResult,
+      ] = await Promise.all([
+        supabase.from("organizations").select("id, name, nome_exibicao, plan"),
+        supabase
+          .from("org_access_log")
+          .select("organization_id, action")
+          .gte("accessed_at", since),
+        supabase.from("clients").select("organization_id").gte("updated_at", since),
+        supabase.from("appointments").select("organization_id").gte("updated_at", since),
+        supabase.from("client_notifications").select("organization_id").gte("created_at", since),
+        supabase.from("pregnancy_diary").select("organization_id").gte("updated_at", since),
+        supabase.from("client_contracts").select("organization_id").gte("updated_at", since),
+        supabase.from("payments").select("organization_id").gte("updated_at", since),
+        supabase.from("service_requests").select("organization_id").gte("updated_at", since),
       ]);
 
+      const queryErrors = [
+        organizationsResult.error,
+        logsResult.error,
+        clientsResult.error,
+        appointmentsResult.error,
+        notificationsResult.error,
+        diaryResult.error,
+        contractsResult.error,
+        paymentsResult.error,
+        serviceRequestsResult.error,
+      ].filter(Boolean);
+
+      if (queryErrors.length > 0) {
+        throw queryErrors[0];
+      }
+
+      const fallbackActionCounts = [
+        countByOrganization(clientsResult.data),
+        countByOrganization(appointmentsResult.data),
+        countByOrganization(notificationsResult.data),
+        countByOrganization(diaryResult.data),
+        countByOrganization(contractsResult.data),
+        countByOrganization(paymentsResult.data),
+        countByOrganization(serviceRequestsResult.data),
+      ].reduce((acc, current) => {
+        current.forEach((value, key) => {
+          acc.set(key, (acc.get(key) || 0) + value);
+        });
+        return acc;
+      }, new Map<string, number>());
+
       const orgMap = new Map<string, OrgActivity>();
-      (organizations || []).forEach((org) => {
-        orgMap.set(org.id, { id: org.id, name: org.name, plan: org.plan, logins: 0, actions: 0 });
+      (organizationsResult.data || []).forEach((org) => {
+        orgMap.set(org.id, {
+          id: org.id,
+          name: org.nome_exibicao || org.name,
+          plan: org.plan,
+          logins: 0,
+          actions: 0,
+        });
       });
 
-      ((logs as any[]) || []).forEach((log: any) => {
+      (logsResult.data || []).forEach((log) => {
         const org = orgMap.get(log.organization_id);
         if (!org) return;
+
         if (log.action === "login") {
-          org.logins++;
-        } else {
-          org.actions++;
+          org.logins += 1;
+          return;
         }
+
+        org.actions += 1;
       });
 
-      return Array.from(orgMap.values()).sort((a, b) => (b.logins + b.actions) - (a.logins + a.actions));
+      orgMap.forEach((org) => {
+        const fallbackActions = fallbackActionCounts.get(org.id) || 0;
+        org.actions = Math.max(org.actions, fallbackActions);
+      });
+
+      return Array.from(orgMap.values()).sort((a, b) => {
+        const totalDiff = b.logins + b.actions - (a.logins + a.actions);
+        return totalDiff !== 0 ? totalDiff : a.name.localeCompare(b.name);
+      });
     },
-    staleTime: 60_000,
+    staleTime: 10_000,
+    refetchOnMount: "always",
   });
 }
 
 const planStyle: Record<string, string> = {
   free: "bg-muted text-muted-foreground",
   pro: "bg-primary/10 text-primary",
-  premium: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
+  premium: "bg-secondary text-secondary-foreground",
 };
 
-function DualBar({ logins, actions, maxLogins, maxActions }: { logins: number; actions: number; maxLogins: number; maxActions: number }) {
+function DualBar({
+  logins,
+  actions,
+  maxLogins,
+  maxActions,
+}: {
+  logins: number;
+  actions: number;
+  maxLogins: number;
+  maxActions: number;
+}) {
   const loginPct = maxLogins > 0 ? Math.max((logins / maxLogins) * 100, logins > 0 ? 6 : 0) : 0;
   const actionPct = maxActions > 0 ? Math.max((actions / maxActions) * 100, actions > 0 ? 6 : 0) : 0;
+
   return (
     <div className="space-y-1">
       <div className="flex items-center gap-2">
-        <span className="text-[10px] text-muted-foreground w-14 shrink-0">Logins</span>
-        <div className="h-1.5 flex-1 rounded-full bg-muted overflow-hidden">
-          <div className="h-full rounded-full bg-primary transition-all duration-700 ease-out" style={{ width: `${loginPct}%` }} />
+        <span className="w-14 shrink-0 text-[10px] text-muted-foreground">Logins</span>
+        <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted">
+          <div
+            className="h-full rounded-full bg-primary transition-[width] duration-700 ease-out"
+            style={{ width: `${loginPct}%` }}
+          />
         </div>
-        <span className="text-[10px] font-semibold text-foreground tabular-nums w-6 text-right">{logins}</span>
+        <span className="w-8 text-right text-[10px] font-semibold tabular-nums text-foreground">
+          {logins}
+        </span>
       </div>
       <div className="flex items-center gap-2">
-        <span className="text-[10px] text-muted-foreground w-14 shrink-0">Ações</span>
-        <div className="h-1.5 flex-1 rounded-full bg-muted overflow-hidden">
-          <div className="h-full rounded-full bg-success transition-all duration-700 ease-out" style={{ width: `${actionPct}%` }} />
+        <span className="w-14 shrink-0 text-[10px] text-muted-foreground">Ações</span>
+        <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted">
+          <div
+            className="h-full rounded-full bg-secondary transition-[width] duration-700 ease-out"
+            style={{ width: `${actionPct}%` }}
+          />
         </div>
-        <span className="text-[10px] font-semibold text-foreground tabular-nums w-6 text-right">{actions}</span>
+        <span className="w-8 text-right text-[10px] font-semibold tabular-nums text-foreground">
+          {actions}
+        </span>
       </div>
     </div>
   );
@@ -86,36 +196,39 @@ export function TopActiveOrgsCard() {
     return (
       <Card>
         <CardContent className="p-4">
-          <Skeleton className="h-4 w-24 mb-3" />
-          <Skeleton className="h-2 w-full mt-2" />
-          <Skeleton className="h-2 w-3/4 mt-2" />
-          <Skeleton className="h-2 w-1/2 mt-2" />
+          <Skeleton className="mb-3 h-4 w-24" />
+          <Skeleton className="mt-2 h-2 w-full" />
+          <Skeleton className="mt-2 h-2 w-3/4" />
+          <Skeleton className="mt-2 h-2 w-1/2" />
         </CardContent>
       </Card>
     );
   }
 
   const top3 = (allOrgs || []).slice(0, 3);
-  const maxLogins = Math.max(...(allOrgs || []).map((o) => o.logins), 1);
-  const maxActions = Math.max(...(allOrgs || []).map((o) => o.actions), 1);
+  const maxLogins = Math.max(...(allOrgs || []).map((org) => org.logins), 1);
+  const maxActions = Math.max(...(allOrgs || []).map((org) => org.actions), 1);
 
   return (
     <>
-      <Card
-        className="cursor-pointer hover:shadow-md transition-shadow"
-        onClick={() => setOpen(true)}
-      >
+      <Card className="cursor-pointer transition-shadow hover:shadow-md" onClick={() => setOpen(true)}>
         <CardContent className="p-4">
-          <div className="flex items-center gap-2 mb-3">
+          <div className="mb-3 flex items-center gap-2">
             <Activity className="h-4 w-4 text-primary" />
             <p className="text-[11px] font-medium text-muted-foreground">Atividade (30d)</p>
           </div>
+
           {top3.length > 0 ? (
             <div className="space-y-2.5">
               {top3.map((org) => (
                 <div key={org.id}>
-                  <p className="text-[11px] text-muted-foreground truncate mb-1">{org.name}</p>
-                  <DualBar logins={org.logins} actions={org.actions} maxLogins={maxLogins} maxActions={maxActions} />
+                  <p className="mb-1 truncate text-[11px] text-muted-foreground">{org.name}</p>
+                  <DualBar
+                    logins={org.logins}
+                    actions={org.actions}
+                    maxLogins={maxLogins}
+                    maxActions={maxActions}
+                  />
                 </div>
               ))}
             </div>
@@ -126,38 +239,54 @@ export function TopActiveOrgsCard() {
       </Card>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-lg max-h-[80vh] flex flex-col">
+        <DialogContent className="flex max-h-[80vh] max-w-lg flex-col">
           <DialogHeader className="shrink-0">
             <DialogTitle className="flex items-center gap-2 text-base">
               <Activity className="h-4 w-4 text-primary" />
               Utilização Real (últimos 30 dias)
             </DialogTitle>
+            <DialogDescription>
+              As ações agora usam o histórico salvo e também a movimentação real recente para evitar zeros incorretos.
+            </DialogDescription>
           </DialogHeader>
-          <div className="flex items-center gap-4 text-[11px] text-muted-foreground shrink-0 mt-1">
+
+          <div className="mt-1 flex shrink-0 items-center gap-4 text-[11px] text-muted-foreground">
             <span className="flex items-center gap-1.5">
               <span className="h-2 w-2 rounded-full bg-primary" /> Logins
             </span>
             <span className="flex items-center gap-1.5">
-              <span className="h-2 w-2 rounded-full bg-success" /> Ações (gestantes, consultas, notificações…)
+              <span className="h-2 w-2 rounded-full bg-secondary" /> Ações
             </span>
           </div>
-          <div className="flex-1 min-h-0 overflow-y-auto space-y-1 pr-1 mt-3">
+
+          <div className="mt-3 flex-1 space-y-1 overflow-y-auto pr-1">
             {(allOrgs || []).map((org, index) => (
-              <div key={org.id} className="rounded-lg p-3 bg-muted/30 space-y-1.5">
+              <div key={org.id} className="space-y-1.5 rounded-lg bg-muted/30 p-3">
                 <div className="flex items-center gap-2">
-                  <span className="text-[11px] font-bold text-muted-foreground w-5 text-center shrink-0">
+                  <span className="w-5 shrink-0 text-center text-[11px] font-bold text-muted-foreground">
                     {index + 1}
                   </span>
-                  <span className="text-sm font-medium text-foreground truncate flex-1">{org.name}</span>
-                  <Badge variant="outline" className={`text-[10px] h-4 px-1.5 shrink-0 ${planStyle[org.plan] || ""}`}>
+                  <span className="flex-1 truncate text-sm font-medium text-foreground">{org.name}</span>
+                  <Badge
+                    variant="outline"
+                    className={`h-4 shrink-0 px-1.5 text-[10px] ${planStyle[org.plan] || ""}`}
+                  >
                     {org.plan.charAt(0).toUpperCase() + org.plan.slice(1)}
                   </Badge>
                 </div>
-                <DualBar logins={org.logins} actions={org.actions} maxLogins={maxLogins} maxActions={maxActions} />
+                <DualBar
+                  logins={org.logins}
+                  actions={org.actions}
+                  maxLogins={maxLogins}
+                  maxActions={maxActions}
+                />
               </div>
             ))}
+
             {(!allOrgs || allOrgs.length === 0) && (
-              <p className="text-center text-sm text-muted-foreground py-6">Nenhuma organização cadastrada</p>
+              <p className="py-6 text-center text-sm text-muted-foreground">
+                Nenhuma organização cadastrada
+              </p>
             )}
           </div>
         </DialogContent>
