@@ -5,12 +5,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Activity, Users, CalendarDays, MessageSquare, FileText } from "lucide-react";
+import { Activity, Users, CalendarDays, MessageSquare, FileText, LogIn } from "lucide-react";
 
 interface OrgActivity {
   id: string;
   name: string;
   plan: string;
+  loginCount: number;
   clientCount: number;
   appointmentCount: number;
   notificationCount: number;
@@ -28,12 +29,14 @@ function useOrgActivity() {
 
       const [
         { data: organizations },
+        { data: accessLogs },
         { data: appointments },
         { data: notifications },
         { data: diary },
         { data: clients },
       ] = await Promise.all([
         supabase.from("organizations").select("id, name, plan"),
+        supabase.from("org_access_log" as any).select("id, organization_id").gte("accessed_at", since),
         supabase.from("appointments").select("id, organization_id").gte("created_at", since),
         supabase.from("client_notifications").select("id, organization_id").gte("created_at", since),
         supabase.from("pregnancy_diary").select("id, organization_id").gte("created_at", since),
@@ -44,10 +47,13 @@ function useOrgActivity() {
       (organizations || []).forEach((org) => {
         orgMap.set(org.id, {
           id: org.id, name: org.name, plan: org.plan,
-          clientCount: 0, appointmentCount: 0, notificationCount: 0, diaryCount: 0, totalScore: 0,
+          loginCount: 0, clientCount: 0, appointmentCount: 0, notificationCount: 0, diaryCount: 0, totalScore: 0,
         });
       });
 
+      ((accessLogs as any[]) || []).forEach((l: any) => {
+        if (l.organization_id && orgMap.has(l.organization_id)) orgMap.get(l.organization_id)!.loginCount++;
+      });
       (clients || []).forEach((c) => {
         if (c.organization_id && orgMap.has(c.organization_id)) orgMap.get(c.organization_id)!.clientCount++;
       });
@@ -62,7 +68,7 @@ function useOrgActivity() {
       });
 
       orgMap.forEach((org) => {
-        org.totalScore = org.appointmentCount * 3 + org.notificationCount * 2 + org.diaryCount * 2 + org.clientCount;
+        org.totalScore = org.loginCount * 4 + org.appointmentCount * 3 + org.notificationCount * 2 + org.diaryCount * 2 + org.clientCount;
       });
 
       return Array.from(orgMap.values()).sort((a, b) => b.totalScore - a.totalScore);
@@ -77,12 +83,12 @@ const planStyle: Record<string, string> = {
   premium: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
 };
 
-function HorizontalBar({ value, max, className }: { value: number; max: number; className?: string }) {
+function HorizontalBar({ value, max }: { value: number; max: number }) {
   const pct = max > 0 ? Math.max((value / max) * 100, value > 0 ? 6 : 0) : 0;
   return (
     <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
       <div
-        className={`h-full rounded-full transition-all duration-700 ease-out ${className || "bg-primary"}`}
+        className="h-full rounded-full bg-primary transition-all duration-700 ease-out"
         style={{ width: `${pct}%` }}
       />
     </div>
@@ -163,12 +169,11 @@ export function TopActiveOrgsCard() {
                       {org.totalScore}
                     </span>
                   </div>
-                  <HorizontalBar
-                    value={org.totalScore}
-                    max={globalMax}
-                    className={org.totalScore === 0 ? "bg-muted-foreground/20" : "bg-primary"}
-                  />
-                  <div className="flex items-center gap-3 text-[11px] text-muted-foreground">
+                  <HorizontalBar value={org.totalScore} max={globalMax} />
+                  <div className="flex items-center gap-3 text-[11px] text-muted-foreground flex-wrap">
+                    <span className="flex items-center gap-1" title="Acessos">
+                      <LogIn className="h-3 w-3" />{org.loginCount}
+                    </span>
                     <span className="flex items-center gap-1" title="Gestantes">
                       <Users className="h-3 w-3" />{org.clientCount}
                     </span>

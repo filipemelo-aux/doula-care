@@ -54,6 +54,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [orgStatus, setOrgStatus] = useState<OrgStatus | null>(null);
   // Flag to prevent onAuthStateChange from re-running initializeUser when signIn already handled it
   const signInHandledRef = useRef(false);
+  const accessLoggedRef = useRef<string | null>(null);
 
   const fetchRoles = useCallback(async (userId: string): Promise<AppRoles> => {
     try {
@@ -177,6 +178,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     setRoleChecked(true);
     setLoading(false);
+
+    // Log access for the organization (fire-and-forget, once per session per user)
+    const userId = currentSession.user.id;
+    if (accessLoggedRef.current !== userId) {
+      accessLoggedRef.current = userId;
+      // Resolve orgId from what was just set
+      const resolveOrgId = async () => {
+        const { data: prof } = await supabase
+          .from("profiles")
+          .select("organization_id")
+          .eq("user_id", userId)
+          .maybeSingle();
+        const oid = prof?.organization_id;
+        if (!oid) {
+          // Try client
+          const { data: cli } = await supabase
+            .from("clients")
+            .select("organization_id")
+            .eq("user_id", userId)
+            .maybeSingle();
+          return cli?.organization_id || null;
+        }
+        return oid;
+      };
+      resolveOrgId().then((oid) => {
+        if (oid) {
+          supabase.from("org_access_log").insert({ user_id: userId, organization_id: oid } as any).then(() => {});
+        }
+      });
+    }
   }, [fetchRoles, fetchClientData]);
 
   useEffect(() => {
