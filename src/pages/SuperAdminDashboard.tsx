@@ -468,7 +468,7 @@ export default function SuperAdminDashboard() {
   );
 
   const MetricsCards = () => (
-    <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
+    <div className="grid grid-cols-2 lg:grid-cols-6 gap-3">
       <Popover>
         <PopoverTrigger asChild>
           <Card className={cn(onlineOrgIds.size > 0 ? "bg-success/5 cursor-pointer hover:shadow-md transition-shadow" : "")}>
@@ -546,6 +546,7 @@ export default function SuperAdminDashboard() {
           </div>
         </CardContent>
       </Card>
+      <TopActiveOrgsCard />
     </div>
   );
 
