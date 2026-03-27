@@ -113,18 +113,20 @@ export function Sidebar({ isOpen, onToggle, onNavigate }: SidebarProps) {
         !isOpen && "overflow-hidden lg:overflow-visible"
       )}
     >
-      {/* Logo - mobile only */}
-      <div className="lg:hidden h-20 flex items-center justify-between px-6">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-[40%] bg-[#FFF5EE] overflow-hidden">
-            <img src={sidebarLogo} alt={sidebarName} className="w-full h-full object-cover mix-blend-multiply scale-[1.15]" />
-          </div>
-          <div>
-            <h1 className="font-display text-lg text-sidebar-foreground">{sidebarName}</h1>
-            <p className="text-xs text-sidebar-foreground/60">Dashboard</p>
+      {/* Logo - mobile only (hidden when sidebar collapsed) */}
+      {isOpen && (
+        <div className="lg:hidden h-20 flex items-center justify-between px-6">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-[40%] bg-[#FFF5EE] overflow-hidden">
+              <img src={sidebarLogo} alt={sidebarName} className="w-full h-full object-cover mix-blend-multiply scale-[1.15]" />
+            </div>
+            <div>
+              <h1 className="font-display text-lg text-sidebar-foreground">{sidebarName}</h1>
+              <p className="text-xs text-sidebar-foreground/60">Dashboard</p>
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Navigation */}
       <nav className="flex-1 py-6 px-3 space-y-1 overflow-y-auto">
