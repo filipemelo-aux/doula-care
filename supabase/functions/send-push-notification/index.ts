@@ -61,43 +61,46 @@ function reduceSubscriptionsForDelivery(rawSubscriptions: SubscriptionRow[]) {
     );
 
     const capacitorSubs = sorted.filter((sub) => sub.token_type === "fcm");
+    const androidCapSubs = capacitorSubs.filter((sub) => isAndroidSubscription(sub));
+    const iosCapSubs = capacitorSubs.filter((sub) => isIosSubscription(sub));
     const twaSubs = sorted.filter((sub) => sub.device_type === "android_twa");
 
-    if (capacitorSubs.length > 0) {
-      const [latestCap, ...olderCap] = capacitorSubs;
-      deliverable.push(latestCap);
-      olderCap.forEach((sub) => staleEndpoints.add(sub.endpoint));
+    // Keep the latest iOS Capacitor subscription, mark older ones as stale
+    if (iosCapSubs.length > 0) {
+      const [latestIos, ...olderIos] = iosCapSubs;
+      deliverable.push(latestIos);
+      olderIos.forEach((sub) => staleEndpoints.add(sub.endpoint));
+    }
+
+    // Keep the latest Android Capacitor subscription
+    if (androidCapSubs.length > 0) {
+      const [latestAndroid, ...olderAndroid] = androidCapSubs;
+      deliverable.push(latestAndroid);
+      olderAndroid.forEach((sub) => staleEndpoints.add(sub.endpoint));
+      // Suppress older Android web push subscriptions
       sorted
         .filter((sub) => isAndroidSubscription(sub) && sub.token_type !== "fcm")
         .forEach((sub) => staleEndpoints.add(sub.endpoint));
-      sorted
-        .filter((sub) => !isAndroidSubscription(sub))
-        .forEach((sub) => deliverable.push(sub));
-      continue;
-    }
-
-    if (twaSubs.length > 0) {
+    } else if (twaSubs.length > 0) {
       const [latestTwa, ...olderTwa] = twaSubs;
       deliverable.push(latestTwa);
       olderTwa.forEach((sub) => staleEndpoints.add(sub.endpoint));
       sorted
         .filter((sub) => sub.device_type === "android" || sub.device_type === "android_browser")
         .forEach((sub) => staleEndpoints.add(sub.endpoint));
-      sorted
-        .filter((sub) => !isAndroidSubscription(sub))
-        .forEach((sub) => deliverable.push(sub));
-      continue;
+    } else {
+      // No Capacitor Android or TWA — keep latest Android web push
+      const androidSubs = sorted.filter((sub) => isAndroidSubscription(sub));
+      if (androidSubs.length > 0) {
+        const [latestAndroid, ...olderAndroid] = androidSubs;
+        deliverable.push(latestAndroid);
+        olderAndroid.forEach((sub) => staleEndpoints.add(sub.endpoint));
+      }
     }
 
-    const androidSubs = sorted.filter((sub) => isAndroidSubscription(sub));
-    if (androidSubs.length > 0) {
-      const [latestAndroid, ...olderAndroid] = androidSubs;
-      deliverable.push(latestAndroid);
-      olderAndroid.forEach((sub) => staleEndpoints.add(sub.endpoint));
-    }
-
+    // Keep desktop/other non-Android, non-iOS web push subscriptions
     sorted
-      .filter((sub) => !isAndroidSubscription(sub))
+      .filter((sub) => !isAndroidSubscription(sub) && !isIosSubscription(sub))
       .forEach((sub) => deliverable.push(sub));
   }
 
