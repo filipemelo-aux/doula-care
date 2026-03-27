@@ -49,10 +49,10 @@ export function BillingAlertBanner() {
       {notifications.map((notif) => {
         const isPromo = notif.type === "promotion";
         return (
-        <Alert key={notif.id} variant="destructive" className={`pr-8 ${isPromo
-          ? "border-none border-30 bg-gradient-to-r from-primary/5 to-accent/5 text-foreground"
-          : "bg-amber-50/80 dark:bg-amber-950/20 text-foreground"
-        }`}>
+        <Alert key={notif.id} variant="destructive" className={`pr-16 ${isPromo
+53:           ? "border-none border-30 bg-gradient-to-r from-primary/5 to-accent/5 text-foreground"
+54:           : "bg-amber-50/80 dark:bg-amber-950/20 text-foreground"
+55:         }`}>
           {isPromo ? <Gift className="h-4 w-4 text-primary" /> : <Receipt className="h-4 w-4 text-amber-600" />}
           <AlertTitle className={`${isPromo ? "text-primary" : "text-amber-700 dark:text-amber-400"} text-sm font-semibold`}>
             {notif.title}
@@ -65,9 +65,10 @@ export function BillingAlertBanner() {
           </AlertDescription>
           <Button
             variant="ghost"
-            size="sm"
-            className="absolute right-1 top-1 h-6 w-6 p-0 flex items-center justify-center"
+            size="icon"
+            className="absolute right-2 top-2 h-6 w-6 min-w-0 !pl-0 !pr-0 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/50"
             onClick={() => dismissMutation.mutate(notif.id)}
+            title="Fechar"
           >
             <X className="h-3.5 w-3.5" />
           </Button>
