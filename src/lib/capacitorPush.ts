@@ -140,13 +140,17 @@ async function saveFcmToken(token: string): Promise<boolean> {
       return false;
     }
 
+    // Detect platform: iOS or Android
+    const platform = ((window as any).Capacitor?.getPlatform?.() ?? "android").toLowerCase();
+    const deviceType = platform === "ios" ? "ios_capacitor" : "android_capacitor";
+
     const { error } = await supabase.from("push_subscriptions").upsert(
       {
         user_id: user.id,
         endpoint: token,
         p256dh: "fcm_native",
         auth: "fcm_native",
-        device_type: "android_capacitor",
+        device_type: deviceType,
         token_type: "fcm",
       },
       { onConflict: "user_id,endpoint" }

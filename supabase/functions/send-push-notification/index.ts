@@ -31,6 +31,11 @@ const isAndroidSubscription = (sub: SubscriptionRow) => {
   return type === "android" || type === "android_browser" || type === "android_twa" || type === "android_capacitor";
 };
 
+const isIosSubscription = (sub: SubscriptionRow) => {
+  const type = (sub.device_type ?? "").toLowerCase();
+  return type === "ios_capacitor" || type === "ios";
+};
+
 function reduceSubscriptionsForDelivery(rawSubscriptions: SubscriptionRow[]) {
   const newestByEndpoint = new Map<string, SubscriptionRow>();
   for (const sub of rawSubscriptions) {
@@ -203,6 +208,26 @@ async function sendFcmV1Push(
           click_action: "FCM_PLUGIN_ACTIVITY",
           channel_id: isCritica ? "high_priority" : "default",
           ...(payload.image ? { image: payload.image } : {}),
+        },
+      },
+      apns: {
+        headers: {
+          "apns-priority": isCritica ? "10" : "5",
+          ...(payload.tag ? { "apns-collapse-id": payload.tag } : {}),
+        },
+        payload: {
+          aps: {
+            alert: {
+              title: payload.title,
+              body: payload.body,
+            },
+            sound: isCritica ? "default" : "default",
+            badge: 1,
+            "mutable-content": 1,
+            "content-available": 1,
+          },
+          url: payload.url || "/",
+          type: payload.type || "general",
         },
       },
       data: {
