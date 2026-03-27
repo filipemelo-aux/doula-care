@@ -109,12 +109,10 @@ export function Sidebar({ isOpen, onToggle, onNavigate }: SidebarProps) {
     <aside
       className={cn(
         "fixed top-0 bottom-0 left-0 z-50 flex flex-col bg-sidebar transition-all duration-300 ease-in-out pt-[var(--app-safe-top)] pb-[var(--app-safe-bottom)]",
-        isOpen ? "w-64" : "w-0 lg:w-20"
+        isOpen ? "w-64" : "w-0 lg:w-20",
+        !isOpen && "invisible lg:visible"
       )}
     >
-      {/* On mobile, fully unmount sidebar contents when closed to avoid iOS WKWebView overflow issues */}
-      {!isOpen && <div className="contents hidden lg:contents" />}
-      {(isOpen || typeof window !== "undefined") && (
       {/* Logo - mobile only (hidden when sidebar collapsed) */}
       {isOpen && (
         <div className="lg:hidden h-20 flex items-center justify-between px-6">
