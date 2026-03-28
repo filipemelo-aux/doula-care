@@ -205,15 +205,18 @@
   }
 
   .nav-link {
-    @apply flex items-center gap-3 px-4 py-3 rounded-lg text-sidebar-foreground/70 transition-all duration-200;
+    @apply flex items-center gap-3 px-4 py-3.5 rounded-xl text-sidebar-foreground/55 transition-all duration-200;
+    border-left: 3px solid transparent;
   }
 
   .nav-link:hover {
-    @apply bg-sidebar-accent text-sidebar-accent-foreground;
+    @apply bg-sidebar-accent/60 text-sidebar-foreground/80;
   }
 
   .nav-link.active {
-    @apply bg-sidebar-primary text-sidebar-primary-foreground font-medium;
+    @apply text-primary font-semibold;
+    background: hsl(var(--primary) / 0.08);
+    border-left-color: hsl(var(--primary));
   }
 
   .badge-status {

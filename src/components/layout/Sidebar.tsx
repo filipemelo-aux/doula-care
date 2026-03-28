@@ -99,21 +99,27 @@ export function Sidebar({ isOpen, onToggle, onNavigate }: SidebarProps) {
 
   const handleNavClick = (to: string) => {
     navigate(to);
-    // Collapse sidebar on mobile after navigation
     if (onNavigate) {
       onNavigate();
     }
   };
 
+  const planColors: Record<string, string> = {
+    free: "text-muted-foreground",
+    pro: "text-primary",
+    premium: "text-amber-600",
+  };
+
   return (
     <aside
       className={cn(
-        "fixed top-0 bottom-0 left-0 z-50 flex flex-col bg-sidebar transition-all duration-300 ease-in-out pt-[var(--app-safe-top)] pb-[var(--app-safe-bottom)]",
+        "fixed top-0 bottom-0 left-0 z-50 flex flex-col transition-all duration-300 ease-in-out pt-[var(--app-safe-top)] pb-[var(--app-safe-bottom)]",
+        "bg-[hsl(var(--background))] shadow-[1px_0_12px_-4px_hsl(var(--foreground)/0.08)]",
         isOpen ? "w-64" : "w-0 lg:w-20",
         !isOpen && "invisible lg:visible"
       )}
     >
-      {/* Logo - mobile only (hidden when sidebar collapsed) */}
+      {/* Logo - mobile only */}
       {isOpen && (
         <div className="lg:hidden h-20 flex items-center justify-between px-6">
           <div className="flex items-center gap-3">
@@ -121,15 +127,15 @@ export function Sidebar({ isOpen, onToggle, onNavigate }: SidebarProps) {
               <img src={sidebarLogo} alt={sidebarName} className="w-full h-full object-cover mix-blend-multiply scale-[1.15]" />
             </div>
             <div>
-              <h1 className="font-display text-lg text-sidebar-foreground">{sidebarName}</h1>
-              <p className="text-xs text-sidebar-foreground/60">Dashboard</p>
+              <h1 className="font-display text-lg text-foreground">{sidebarName}</h1>
+              <p className="text-[10px] text-muted-foreground/50 uppercase tracking-wider font-medium">Dashboard</p>
             </div>
           </div>
         </div>
       )}
 
       {/* Navigation */}
-      <nav className="flex-1 py-6 px-3 space-y-1 overflow-y-auto">
+      <nav className="flex-1 py-4 px-3 space-y-0.5 overflow-y-auto">
         {navItems.map((item) => {
           // Submenu item (Financeiro)
           if ("subItems" in item && item.subItems) {
@@ -145,32 +151,40 @@ export function Sidebar({ isOpen, onToggle, onNavigate }: SidebarProps) {
             const isSubActive = item.subItems.some((s) => location.pathname === s.to);
 
             return (
-              <div key={item.label}>
+              <div key={item.label} className="mt-2">
                 <button
                   onClick={() => setFinancialOpen((v) => !v)}
                   disabled={allDisabled}
                   className={cn(
                     "nav-link w-full text-left relative",
                     isSubActive && "active",
-                    !isOpen && "lg:justify-center lg:px-0",
+                    !isOpen && "lg:justify-center lg:px-0 lg:border-l-0",
                     allDisabled && "opacity-40 cursor-not-allowed hover:bg-transparent"
                   )}
                   title={!isOpen ? item.label : allDisabled ? "Recurso indisponível no seu plano" : undefined}
                 >
-                  <item.icon className={cn("w-5 h-5 shrink-0", isSubActive && "text-current")} />
-                  <span className={cn("transition-opacity flex-1", !isOpen && "lg:hidden")}>
+                  <item.icon className="w-[18px] h-[18px] shrink-0" strokeWidth={1.8} />
+                  <span className={cn("transition-opacity flex-1 text-[13px]", !isOpen && "lg:hidden")}>
                     {item.label}
                   </span>
                   <ChevronDown
                     className={cn(
-                      "w-4 h-4 shrink-0 transition-transform duration-200",
+                      "w-3.5 h-3.5 shrink-0 transition-transform duration-300 ease-out",
                       financialOpen && "rotate-180",
                       !isOpen && "lg:hidden"
                     )}
+                    strokeWidth={2}
                   />
                 </button>
-                {financialOpen && isOpen && (
-                  <div className="ml-4 mt-1 space-y-0.5 pl-2">
+
+                {/* Submenu with accordion animation */}
+                <div
+                  className={cn(
+                    "overflow-hidden transition-all duration-300 ease-out",
+                    financialOpen && isOpen ? "max-h-40 opacity-100" : "max-h-0 opacity-0"
+                  )}
+                >
+                  <div className="ml-5 mt-1 space-y-0.5 pl-3 border-l border-border/40">
                     {item.subItems.map((sub) => {
                       const lk = subLimitKeys[sub.to];
                       const subDisabled = lk ? !limits[lk] : false;
@@ -181,21 +195,22 @@ export function Sidebar({ isOpen, onToggle, onNavigate }: SidebarProps) {
                           onClick={() => !subDisabled && handleNavClick(sub.to)}
                           disabled={subDisabled}
                           className={cn(
-                            "nav-link w-full text-left text-sm py-2",
-                            subActive && "active",
+                            "nav-link w-full text-left text-[13px] py-2.5 border-l-0",
+                            subActive && "active !border-l-0",
                             subDisabled && "opacity-40 cursor-not-allowed hover:bg-transparent"
                           )}
                         >
-                          <sub.icon className={cn("w-4 h-4 shrink-0", subActive && "text-current")} />
+                          <sub.icon className="w-4 h-4 shrink-0" strokeWidth={1.8} />
                           <span className="flex-1">{sub.label}</span>
                         </button>
                       );
                     })}
                   </div>
-                )}
-                {/* Collapsed: show sub-items as individual icons */}
+                </div>
+
+                {/* Collapsed: sub-items as icons */}
                 {!isOpen && (
-                  <div className="hidden lg:flex flex-col items-center mt-1 space-y-1">
+                  <div className="hidden lg:flex flex-col items-center mt-1 space-y-0.5">
                     {item.subItems.map((sub) => {
                       const lk = subLimitKeys[sub.to];
                       const subDisabled = lk ? !limits[lk] : false;
@@ -206,13 +221,13 @@ export function Sidebar({ isOpen, onToggle, onNavigate }: SidebarProps) {
                           onClick={() => !subDisabled && handleNavClick(sub.to)}
                           disabled={subDisabled}
                           className={cn(
-                            "nav-link justify-center px-0 w-full",
-                            subActive && "active",
+                            "nav-link justify-center px-0 w-full border-l-0",
+                            subActive && "active !border-l-0",
                             subDisabled && "opacity-40 cursor-not-allowed hover:bg-transparent"
                           )}
                           title={sub.label}
                         >
-                          <sub.icon className={cn("w-4 h-4 shrink-0", subActive && "text-current")} />
+                          <sub.icon className="w-4 h-4 shrink-0" strokeWidth={1.8} />
                         </button>
                       );
                     })}
@@ -234,6 +249,7 @@ export function Sidebar({ isOpen, onToggle, onNavigate }: SidebarProps) {
           const isDisabled = limitKey ? !limits[limitKey] : false;
           const isActive = !isDisabled && location.pathname === item.to;
           const badgeCount = isDisabled ? 0 : getBadgeCount((item as any).badgeKey);
+
           return (
             <button
               key={item.to}
@@ -242,18 +258,18 @@ export function Sidebar({ isOpen, onToggle, onNavigate }: SidebarProps) {
               className={cn(
                 "nav-link w-full text-left relative",
                 isActive && "active",
-                !isOpen && "lg:justify-center lg:px-0",
+                !isOpen && "lg:justify-center lg:px-0 lg:border-l-0",
                 isDisabled && "opacity-40 cursor-not-allowed hover:bg-transparent"
               )}
               title={!isOpen ? item.label : isDisabled ? "Recurso indisponível no seu plano" : undefined}
             >
               <div className="relative">
-                <item.icon className={cn("w-5 h-5 shrink-0", isActive && "text-current")} />
+                <item.icon className="w-[18px] h-[18px] shrink-0" strokeWidth={1.8} />
                 {badgeCount > 0 && !isOpen && (
-                  <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-destructive hidden lg:block" />
+                  <span className="absolute -top-1.5 -right-1.5 h-2 w-2 rounded-full bg-destructive hidden lg:block" />
                 )}
               </div>
-              <span className={cn("transition-opacity flex-1", !isOpen && "lg:hidden")}>
+              <span className={cn("transition-opacity flex-1 text-[13px]", !isOpen && "lg:hidden")}>
                 {item.label}
               </span>
               {badgeCount > 0 && isOpen && (
@@ -264,47 +280,43 @@ export function Sidebar({ isOpen, onToggle, onNavigate }: SidebarProps) {
             </button>
           );
         })}
-
       </nav>
 
-      {/* Footer */}
+      {/* Footer — info card style */}
       <div className={cn("p-4", !isOpen && "lg:hidden")}>
-        <div className="bg-sidebar-accent rounded-lg p-4">
-          <div className="flex items-center justify-between mb-1">
-            <p className="text-sm text-sidebar-accent-foreground font-medium">
-              Plano atual
-            </p>
-            <Badge variant={plan === "free" ? "secondary" : plan === "pro" ? "default" : "outline"} className="uppercase text-[10px]">
+        <div className="rounded-xl bg-muted/40 p-3.5">
+          <div className="flex items-center gap-2 mb-1">
+            <span className={cn("text-xs font-medium", planColors[plan] || "text-muted-foreground")}>
               {planLabel}
-            </Badge>
+            </span>
           </div>
-          <p className="text-xs text-sidebar-foreground/60">
+          <p className="text-[11px] text-muted-foreground/60 leading-relaxed">
             {plan === "free" ? "Limite de 5 gestantes" : plan === "pro" ? "Gestantes ilimitadas" : "Recursos avançados"}
           </p>
           {promoActive && (
-            <div className="mt-2 pt-2/50">
-              <div className="flex items-center gap-1.5 text-primary">
+            <div className="mt-2 pt-2 border-t border-border/30">
+              <div className="flex items-center gap-1.5">
                 {isLifetime && promo.status === "lifetime_active" ? (
                   <>
                     <Crown className="h-3 w-3 text-amber-500" />
-                    <span className="text-[11px] font-medium text-amber-600">Premium Vitalício</span>
+                    <span className="text-[10px] font-medium text-amber-600/80">Premium Vitalício</span>
                   </>
                 ) : (
                   <>
-                    <Gift className="h-3 w-3" />
-                    <span className="text-[11px] font-medium">
+                    <Gift className="h-3 w-3 text-primary/60" />
+                    <span className="text-[10px] font-medium text-primary/70">
                       {promo.status === "trial_active" ? "Trial Beta" : promo.bonus_choice === "extra_30_days" ? "Bônus +30 dias" : "50% desconto anual"}
                     </span>
                   </>
                 )}
               </div>
               {promo.status !== "lifetime_active" && (
-                <p className="text-[10px] text-sidebar-foreground/60 mt-0.5">
+                <p className="text-[10px] text-muted-foreground/50 mt-0.5">
                   {promoDaysLeft} dia{promoDaysLeft !== 1 ? "s" : ""} restante{promoDaysLeft !== 1 ? "s" : ""}
                 </p>
               )}
               {promo.status === "lifetime_active" && (
-                <p className="text-[10px] text-sidebar-foreground/60 mt-0.5">Acesso sem limite de tempo</p>
+                <p className="text-[10px] text-muted-foreground/50 mt-0.5">Acesso sem limite de tempo</p>
               )}
             </div>
           )}
