@@ -325,7 +325,7 @@
   .space-y-2 > label + textarea,
   .space-y-2 > label + div,
   .space-y-2 > label + button {
-    margin-top: 6px;
+    margin-top: 4px;
   }
 
   /* Global input reset — kill any remaining outline/ring from libs */
@@ -365,7 +365,7 @@
 
   /* Form section divider — clear visual grouping */
   .form-section {
-    @apply relative pt-6 first:pt-0;
+    @apply relative pt-5 first:pt-0;
   }
 
   .form-section:not(:first-child)::before {
