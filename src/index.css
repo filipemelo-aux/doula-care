@@ -283,29 +283,45 @@
 
   /* ── Premium Input System ── */
   .premium-input {
-    @apply flex h-10 rounded-xl border-0 text-base outline-none ring-0
+    @apply flex w-full rounded-xl border-0 outline-none ring-0
            file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground
-           placeholder:text-muted-foreground/50
-           disabled:cursor-not-allowed disabled:opacity-50
-           md:text-sm;
-    padding: 0.625rem 1rem;
-    background: hsl(var(--muted) / 0.55);
-    box-shadow: 0 1px 2px hsl(var(--foreground) / 0.04);
-    transition: background 0.2s ease, box-shadow 0.25s ease, transform 0.15s ease;
+           disabled:cursor-not-allowed disabled:opacity-50;
+    height: 44px;
+    padding: 14px 16px;
+    font-size: 14px;
+    line-height: 1.4;
+    color: hsl(var(--foreground));
+    background: hsl(var(--muted) / 0.5);
+    box-shadow: 0 1px 2px hsl(var(--foreground) / 0.03);
+    transition: background 0.2s ease, box-shadow 0.25s ease;
+  }
+
+  .premium-input::placeholder {
+    color: hsl(var(--muted-foreground) / 0.4);
+    font-size: 14px;
   }
 
   .premium-input:hover {
-    background: hsl(var(--muted) / 0.75);
+    background: hsl(var(--muted) / 0.7);
   }
 
   .premium-input:focus {
     background: hsl(var(--background));
-    box-shadow: 0 0 0 2px hsl(var(--primary) / 0.18),
-                0 2px 8px hsl(var(--primary) / 0.08) !important;
+    box-shadow: 0 0 0 2px hsl(var(--primary) / 0.15),
+                0 2px 8px hsl(var(--primary) / 0.06) !important;
   }
 
   .input-field {
-    @apply premium-input h-11;
+    @apply premium-input;
+    height: 46px;
+  }
+
+  /* Form spacing: label → input gap and field → field gap */
+  .space-y-2 > label + input,
+  .space-y-2 > label + textarea,
+  .space-y-2 > label + div,
+  .space-y-2 > label + button {
+    margin-top: 6px;
   }
 
   /* Global input reset — kill any remaining outline/ring from libs */
