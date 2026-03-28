@@ -39,6 +39,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Plus, TrendingUp, Search, Trash2, Zap, Check, X, CheckCircle, CreditCard, Banknote, Building2, QrCode, FileText, Users, Wrench, UserPlus, DollarSign, Eye, Loader2, Pencil } from "lucide-react";
 import { RecordPaymentDialog } from "@/components/financial/RecordPaymentDialog";
 import { RevenueDetailDialog } from "@/components/financial/RevenueDetailDialog";
+import { PaymentMethodBadge } from "@/components/financial/PaymentMethodBadge";
 import { maskCurrency, parseCurrency, maskPhone } from "@/lib/masks";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useForm } from "react-hook-form";
@@ -942,50 +943,13 @@ export default function Financial() {
                         </div>
                       </div>
 
-                      {/* Payment method icons + details button */}
+                      {/* Payment method badge + details button */}
                       <div className="flex items-center justify-between pt-1 border-t">
-                        <div className="flex items-center gap-0">
-                          <Button
-                            variant={currentMethod === "pix" ? "secondary" : "ghost"}
-                            size="icon"
-                            onClick={() => handleChangePaymentMethod(transaction.id, "pix")}
-                            className="h-6 w-6"
-                          >
-                            <QrCode className="h-3 w-3" />
-                          </Button>
-                          <Button
-                            variant={currentMethod === "cartao" ? "secondary" : "ghost"}
-                            size="icon"
-                            onClick={() => handleChangePaymentMethod(transaction.id, "cartao")}
-                            className="h-6 w-6"
-                          >
-                            <CreditCard className="h-3 w-3" />
-                          </Button>
-                          <Button
-                            variant={currentMethod === "dinheiro" ? "secondary" : "ghost"}
-                            size="icon"
-                            onClick={() => handleChangePaymentMethod(transaction.id, "dinheiro")}
-                            className="h-6 w-6"
-                          >
-                            <Banknote className="h-3 w-3" />
-                          </Button>
-                          <Button
-                            variant={currentMethod === "transferencia" ? "secondary" : "ghost"}
-                            size="icon"
-                            onClick={() => handleChangePaymentMethod(transaction.id, "transferencia")}
-                            className="h-6 w-6"
-                          >
-                            <Building2 className="h-3 w-3" />
-                          </Button>
-                          <Button
-                            variant={currentMethod === "boleto" ? "secondary" : "ghost"}
-                            size="icon"
-                            onClick={() => handleChangePaymentMethod(transaction.id, "boleto")}
-                            className="h-6 w-6"
-                          >
-                            <FileText className="h-3 w-3" />
-                          </Button>
-                        </div>
+                        <PaymentMethodBadge
+                          currentMethod={currentMethod}
+                          onChangeMethod={(method) => handleChangePaymentMethod(transaction.id, method)}
+                          compact
+                        />
                         <div className="flex items-center gap-0">
                           <Button
                             variant="ghost"
@@ -1131,25 +1095,11 @@ export default function Financial() {
                             )}
                           </TableCell>
                           <TableCell className="py-2.5">
-                            <div className="flex items-center justify-center gap-0">
-                              {[
-                                { method: "pix", icon: QrCode, label: "Pix" },
-                                { method: "cartao", icon: CreditCard, label: "Cartão" },
-                                { method: "dinheiro", icon: Banknote, label: "Dinheiro" },
-                                { method: "transferencia", icon: Building2, label: "Transf." },
-                                { method: "boleto", icon: FileText, label: "Boleto" },
-                              ].map(({ method, icon: Icon, label }) => (
-                                <Button
-                                  key={method}
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={() => handleChangePaymentMethod(transaction.id, method as any)}
-                                  className={`h-6 w-6 ${currentMethod === method ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground"}`}
-                                  title={label}
-                                >
-                                  <Icon className="h-3 w-3" />
-                                </Button>
-                              ))}
+                            <div className="flex items-center justify-center">
+                              <PaymentMethodBadge
+                                currentMethod={currentMethod}
+                                onChangeMethod={(method) => handleChangePaymentMethod(transaction.id, method)}
+                              />
                             </div>
                           </TableCell>
                           <TableCell className="py-2.5">
