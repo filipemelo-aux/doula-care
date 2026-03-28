@@ -395,16 +395,17 @@
     content: "";
     position: absolute;
     top: 0;
-    left: 0;
-    right: 0;
+    left: 8px;
+    right: 8px;
     height: 1px;
-    background: hsl(var(--border) / 0.4);
+    background: hsl(var(--border) / 0.25);
   }
 
   .form-section-title {
-    @apply text-[11px] font-semibold uppercase tracking-widest mb-3;
-    color: hsl(var(--muted-foreground));
-    letter-spacing: 0.08em;
+    @apply font-semibold uppercase mb-2;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    color: hsl(var(--muted-foreground) / 0.55);
   }
 
   /* Minimal scrollbar for sidebar and nav */
