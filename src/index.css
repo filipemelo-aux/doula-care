@@ -283,7 +283,7 @@
 
   /* ── Premium Input System ── */
   .premium-input {
-    @apply flex items-center w-full rounded-lg border-0 outline-none ring-0
+    @apply flex items-center w-full rounded-[10px] border-0 outline-none ring-0
            file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground
            disabled:cursor-not-allowed disabled:opacity-50;
     padding: 11px 14px;
