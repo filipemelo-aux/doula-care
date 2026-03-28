@@ -650,55 +650,62 @@ export default function Forum() {
                   </div>
                 )}
 
-                {/* Reactions bar */}
-                <div className="px-4 py-2 flex items-center gap-1 text-xs text-muted-foreground">
-                  {reactionCount > 0 && (
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <button type="button" className="flex items-center gap-1 cursor-pointer hover:underline">
-                          <span className="bg-destructive text-destructive-foreground rounded-full h-4 w-4 flex items-center justify-center text-[10px]">❤</span>
-                          {reactionCount}
-                        </button>
-                      </PopoverTrigger>
-                      <PopoverContent side="bottom" align="start" className="w-auto max-w-[200px] p-2">
-                        <div className="flex flex-col gap-0.5 text-xs">
-                          {(reactionsByPost[post.id] || []).slice(0, 10).map((uid: string) => (
-                            <span key={uid}>{(likerProfileMap as Record<string, string>)[uid] || "Usuária"}</span>
-                          ))}
-                          {(reactionsByPost[post.id]?.length || 0) > 10 && (
-                            <span className="text-muted-foreground">e mais {(reactionsByPost[post.id]?.length || 0) - 10}...</span>
-                          )}
-                        </div>
-                      </PopoverContent>
-                    </Popover>
-                  )}
-                  {reactionCount > 0 && commentCount > 0 && <span className="mx-1">·</span>}
-                  {commentCount > 0 && (
-                    <span>{commentCount} comentário{commentCount !== 1 ? "s" : ""}</span>
-                  )}
-                </div>
+                {/* Social proof counts */}
+                {(reactionCount > 0 || commentCount > 0) && (
+                  <div className="px-4 pt-2 pb-1 flex items-center gap-3 text-[11px] text-muted-foreground/50">
+                    {reactionCount > 0 && (
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <button type="button" className="flex items-center gap-1 cursor-pointer hover:text-muted-foreground transition-colors">
+                            <span className="bg-destructive text-destructive-foreground rounded-full h-4 w-4 flex items-center justify-center text-[10px]">❤</span>
+                            <span>{reactionCount}</span>
+                          </button>
+                        </PopoverTrigger>
+                        <PopoverContent side="bottom" align="start" className="w-auto max-w-[200px] p-2">
+                          <div className="flex flex-col gap-0.5 text-xs">
+                            {(reactionsByPost[post.id] || []).slice(0, 10).map((uid: string) => (
+                              <span key={uid}>{(likerProfileMap as Record<string, string>)[uid] || "Usuária"}</span>
+                            ))}
+                            {(reactionsByPost[post.id]?.length || 0) > 10 && (
+                              <span className="text-muted-foreground">e mais {(reactionsByPost[post.id]?.length || 0) - 10}...</span>
+                            )}
+                          </div>
+                        </PopoverContent>
+                      </Popover>
+                    )}
+                    {commentCount > 0 && (
+                      <span>{commentCount} comentário{commentCount !== 1 ? "s" : ""}</span>
+                    )}
+                  </div>
+                )}
 
                 {/* Action buttons */}
-                <div className="mx-4" />
+                <div className="mx-4 border-t border-border/30" />
                 <div className="px-2 py-1 flex">
-                  <Button
-                    variant="ghost"
-                    size="sm"
+                  <button
                     onClick={() => handleToggleLike(post.id)}
-                    className={cn("flex-1 gap-2 rounded-lg", liked && "text-red-500")}
+                    className={cn(
+                      "flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-xs font-medium transition-all duration-200 active:scale-95",
+                      liked
+                        ? "text-destructive"
+                        : "text-muted-foreground/60 hover:text-destructive/80 hover:bg-destructive/5"
+                    )}
                   >
-                    <Heart className={cn("h-4 w-4", liked && "fill-current")} />
+                    <Heart className={cn("h-[18px] w-[18px]", liked && "fill-current")} />
                     Curtir
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
+                  </button>
+                  <button
                     onClick={() => setExpandedPostId(isExpanded ? null : post.id)}
-                    className="flex-1 gap-2 rounded-lg"
+                    className={cn(
+                      "flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-xs font-medium transition-all duration-200 active:scale-95",
+                      isExpanded
+                        ? "text-primary"
+                        : "text-muted-foreground/60 hover:text-primary/80 hover:bg-primary/5"
+                    )}
                   >
-                    <MessageSquare className="h-4 w-4" />
+                    <MessageSquare className="h-[18px] w-[18px]" />
                     Comentar
-                  </Button>
+                  </button>
                 </div>
 
                 {/* Comments section (expanded) */}
