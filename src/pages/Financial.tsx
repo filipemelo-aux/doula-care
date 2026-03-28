@@ -779,34 +779,24 @@ export default function Financial() {
         </Button>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 gap-2 lg:grid-cols-4 lg:gap-4 w-full">
-        <StatCard
-          title="Receita Total"
-          value={formatCurrency(totalIncome)}
-          subtitle="Valor total contratado"
-          icon={Wallet}
-        />
-        <StatCard
-          title="Recebido"
-          value={formatCurrency(totalReceived)}
-          subtitle="Já recebido"
-          icon={Calendar}
-          variant="success"
-        />
-        <StatCard
-          title="A Receber"
-          value={formatCurrency(pendingIncome)}
-          subtitle="Pagamentos pendentes"
-          icon={Clock}
-          variant="warning"
-        />
-        <StatCard
-          title="Transações"
-          value={transactions?.length || 0}
-          subtitle="Total de receitas"
-          icon={TrendingUp}
-        />
+      {/* Stats — Recebido como destaque */}
+      <div className="rounded-2xl bg-gradient-to-br from-success/10 via-success/5 to-transparent p-4 lg:p-6 shadow-card">
+        <p className="text-xs text-muted-foreground/70 mb-0.5">Recebido</p>
+        <p className="text-3xl lg:text-4xl font-bold tracking-tight text-success">{formatCurrency(totalReceived)}</p>
+        <div className="grid grid-cols-3 gap-3 mt-4">
+          <div className="space-y-0.5">
+            <p className="text-[10px] lg:text-xs text-muted-foreground/60 font-normal">Total contratado</p>
+            <p className="text-sm lg:text-base font-semibold text-foreground/80">{formatCurrency(totalIncome)}</p>
+          </div>
+          <div className="space-y-0.5">
+            <p className="text-[10px] lg:text-xs text-muted-foreground/60 font-normal">A receber</p>
+            <p className="text-sm lg:text-base font-semibold text-amber-600/80">{formatCurrency(pendingIncome)}</p>
+          </div>
+          <div className="space-y-0.5">
+            <p className="text-[10px] lg:text-xs text-muted-foreground/60 font-normal">Transações</p>
+            <p className="text-sm lg:text-base font-semibold text-foreground/80">{transactions?.length || 0}</p>
+          </div>
+        </div>
       </div>
 
       {/* Search */}
