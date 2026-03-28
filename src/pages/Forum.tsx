@@ -446,7 +446,7 @@ export default function Forum() {
   return (
     <div
       ref={containerRef}
-      className="p-3 lg:p-8 max-w-2xl mx-auto space-y-4 overflow-x-hidden"
+      className="p-4 lg:p-8 max-w-2xl mx-auto space-y-5 overflow-x-hidden"
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
@@ -536,7 +536,7 @@ export default function Forum() {
       </div>
 
       {/* Feed */}
-      <div className="space-y-4">
+      <div className="space-y-4 lg:space-y-5">
         {posts.length === 0 ? (
           <div className="text-center py-16 text-muted-foreground">
             <MessageSquare className="h-12 w-12 mx-auto mb-3 opacity-20" />
@@ -556,9 +556,9 @@ export default function Forum() {
             const isExpanded = expandedPostId === post.id;
 
             return (
-              <div key={post.id} className="bg-card break-words rounded-xl overflow-hidden">
+              <div key={post.id} className="bg-card break-words rounded-2xl overflow-hidden shadow-[0_1px_4px_rgba(0,0,0,0.04)]">
                 {/* Post header */}
-                <div className="p-4 pb-0">
+                <div className="p-5 pb-0">
                   <div className="flex items-start gap-3 mb-3">
                     <Avatar className="h-9 w-9 mt-0.5">
                       {authorInfo.avatarUrl && (
@@ -652,7 +652,7 @@ export default function Forum() {
 
                 {/* Social proof counts */}
                 {(reactionCount > 0 || commentCount > 0) && (
-                  <div className="px-4 pt-2 pb-1 flex items-center gap-3 text-[11px] text-muted-foreground/50">
+                  <div className="px-5 pt-3 pb-1 flex items-center gap-3 text-[11px] text-muted-foreground/50">
                     {reactionCount > 0 && (
                       <Popover>
                         <PopoverTrigger asChild>
@@ -680,8 +680,8 @@ export default function Forum() {
                 )}
 
                 {/* Action buttons */}
-                <div className="mx-4 border-t border-border/30" />
-                <div className="px-2 py-1 flex">
+                <div className="mx-5 border-t border-border/30" />
+                <div className="px-3 py-1.5 flex">
                   <button
                     onClick={() => handleToggleLike(post.id)}
                     className={cn(
