@@ -272,9 +272,10 @@ export default function Reports() {
 
   const tooltipStyle = {
     backgroundColor: "hsl(var(--card))",
-    border: "1px solid hsl(var(--border))",
-    borderRadius: "var(--radius)",
+    border: "none",
+    borderRadius: "12px",
     fontSize: "12px",
+    boxShadow: "0 4px 16px rgba(0,0,0,0.1)",
   };
 
   return (
@@ -338,44 +339,24 @@ export default function Reports() {
         </div>
       </div>
 
-      {/* KPI Cards - 2 rows of 3 on mobile, 6 cols on desktop */}
-      <div className="grid grid-cols-2 lg:grid-cols-6 gap-2 lg:gap-3 w-full">
-        <KpiCard
-          label="Contratado"
-          value={formatCurrency(metrics?.totalContracted || 0)}
-          icon={<Target className="w-4 h-4 text-primary" />}
-          color="primary"
-        />
-        <KpiCard
-          label="Recebido"
-          value={formatCurrency(metrics?.totalReceived || 0)}
-          icon={<TrendingUp className="w-4 h-4 text-success" />}
-          color="success"
-        />
-        <KpiCard
-          label="Pendente"
-          value={formatCurrency(metrics?.totalPending || 0)}
-          icon={<Wallet className="w-4 h-4 text-warning" />}
-          color="warning"
-        />
-        <KpiCard
-          label="Despesas"
-          value={formatCurrency(metrics?.totalExpenses || 0)}
-          icon={<TrendingDown className="w-4 h-4 text-destructive" />}
-          color="destructive"
-        />
-        <KpiCard
-          label="Ticket Médio"
-          value={formatCurrency(metrics?.averageTicket || 0)}
-          icon={<BarChart3 className="w-4 h-4 text-info" />}
-          color="info"
-        />
-        <KpiCard
-          label="Inadimplência"
-          value={`${(metrics?.defaultRate || 0).toFixed(0)}%`}
-          icon={<Percent className="w-4 h-4 text-muted-foreground" />}
-          color={(metrics?.defaultRate || 0) > 30 ? "destructive" : "success"}
-        />
+      {/* KPI — 3 métricas principais */}
+      <div className="rounded-2xl bg-card p-4 lg:p-6 shadow-card">
+        <div className="grid grid-cols-3 gap-4 lg:gap-6">
+          <div className="space-y-0.5">
+            <p className="text-[10px] lg:text-xs text-muted-foreground/60 font-normal">Recebido</p>
+            <p className="text-lg lg:text-2xl font-bold tracking-tight text-success">{formatCurrency(metrics?.totalReceived || 0)}</p>
+          </div>
+          <div className="space-y-0.5">
+            <p className="text-[10px] lg:text-xs text-muted-foreground/60 font-normal">Despesas</p>
+            <p className="text-lg lg:text-2xl font-bold tracking-tight text-destructive">{formatCurrency(metrics?.totalExpenses || 0)}</p>
+          </div>
+          <div className="space-y-0.5">
+            <p className="text-[10px] lg:text-xs text-muted-foreground/60 font-normal">Saldo</p>
+            <p className={`text-lg lg:text-2xl font-bold tracking-tight ${(metrics?.balance || 0) >= 0 ? "text-success" : "text-destructive"}`}>
+              {formatCurrency(metrics?.balance || 0)}
+            </p>
+          </div>
+        </div>
       </div>
 
       {/* Tabs */}
@@ -403,28 +384,26 @@ export default function Reports() {
         <TabsContent value="financeiro" className="space-y-4">
           {/* Evolution Chart */}
           <Card className="card-glass">
-            <CardHeader className="pb-2 px-3 lg:px-6 pt-4 lg:pt-6">
-              <CardTitle className="text-sm lg:text-lg font-semibold text-foreground">
-                Evolução Financeira — {getPeriodLabel(period)}
+            <CardHeader className="pb-0 px-3 lg:px-6 pt-4 lg:pt-6">
+              <CardTitle className="text-sm lg:text-base font-semibold text-foreground">
+                Evolução — {getPeriodLabel(period)}
               </CardTitle>
             </CardHeader>
-            <CardContent className="px-0 lg:px-6 pb-4">
+            <CardContent className="px-0 lg:px-4 pb-4 pt-2">
               {monthlyData && monthlyData.length > 0 ? (
-                <div className="overflow-x-auto -mx-0">
-                <ResponsiveContainer width="100%" height={280}>
-                  <AreaChart data={monthlyData} margin={{ left: -15, right: 5, top: 5, bottom: 0 }}>
+                <ResponsiveContainer width="100%" height={300}>
+                  <AreaChart data={monthlyData} margin={{ left: -10, right: 10, top: 10, bottom: 0 }}>
                     <defs>
                       <linearGradient id="gRecebido" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="hsl(142 71% 45%)" stopOpacity={0.25} />
+                        <stop offset="5%" stopColor="hsl(142 71% 45%)" stopOpacity={0.2} />
                         <stop offset="95%" stopColor="hsl(142 71% 45%)" stopOpacity={0} />
                       </linearGradient>
                       <linearGradient id="gDespesas" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="hsl(0 72% 51%)" stopOpacity={0.25} />
+                        <stop offset="5%" stopColor="hsl(0 72% 51%)" stopOpacity={0.15} />
                         <stop offset="95%" stopColor="hsl(0 72% 51%)" stopOpacity={0} />
                       </linearGradient>
                     </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                    <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" tick={{ fontSize: 11 }} />
+                    <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
                     <YAxis
                       stroke="hsl(var(--muted-foreground))"
                       tick={{ fontSize: 10 }}
@@ -432,74 +411,43 @@ export default function Reports() {
                         new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", notation: "compact" }).format(v)
                       }
                       width={55}
+                      axisLine={false}
+                      tickLine={false}
                     />
                     <Tooltip formatter={(v: number) => formatCurrency(v)} contentStyle={tooltipStyle} />
-                    <Legend wrapperStyle={{ fontSize: "11px" }} />
-                    <Area type="monotone" dataKey="recebido" name="Recebido" stroke="hsl(142 71% 45%)" strokeWidth={2} fillOpacity={1} fill="url(#gRecebido)" />
-                    <Area type="monotone" dataKey="despesas" name="Despesas" stroke="hsl(0 72% 51%)" strokeWidth={2} fillOpacity={1} fill="url(#gDespesas)" />
+                    <Area type="monotone" dataKey="recebido" name="Recebido" stroke="hsl(142 71% 45%)" strokeWidth={2} fillOpacity={1} fill="url(#gRecebido)" dot={false} />
+                    <Area type="monotone" dataKey="despesas" name="Despesas" stroke="hsl(0 72% 51%)" strokeWidth={2} fillOpacity={1} fill="url(#gDespesas)" dot={false} />
                   </AreaChart>
                 </ResponsiveContainer>
-                </div>
               ) : (
                 <EmptyState text="Sem dados suficientes para exibir" />
               )}
             </CardContent>
           </Card>
 
-          {/* Monthly Table - Mobile cards / Desktop table */}
+          {/* Monthly — compact cards */}
           <Card className="card-glass overflow-hidden">
             <CardHeader className="pb-2 px-3 lg:px-6 pt-4 lg:pt-6">
-              <CardTitle className="text-sm lg:text-lg font-semibold text-foreground">
+              <CardTitle className="text-sm lg:text-base font-semibold text-foreground">
                 Relatório Mensal
               </CardTitle>
             </CardHeader>
             <CardContent className="px-3 lg:px-6 pb-4">
-              {/* Mobile Cards */}
-              <div className="block lg:hidden space-y-2 max-h-[400px] overflow-y-auto">
+              <div className="space-y-2 max-h-[500px] overflow-y-auto">
                 {monthlyTableData?.map((row) => (
-                  <div key={row.month} className="rounded-lg p-3 space-y-2 bg-card/50">
+                  <div key={row.month} className="rounded-xl bg-muted/30 p-3 space-y-2">
                     <div className="flex items-center justify-between">
-                      <p className="font-medium text-xs capitalize text-foreground">{row.monthShort}</p>
-                      <span className="text-[10px] text-muted-foreground">{row.count} mov.</span>
+                      <p className="font-semibold text-sm capitalize text-foreground">{row.month}</p>
+                      <span className={`text-sm font-bold ${row.balance >= 0 ? "text-success" : "text-destructive"}`}>
+                        {formatCurrency(row.balance)}
+                      </span>
                     </div>
-                    <div className="grid grid-cols-4 gap-1">
-                      <MetricCell label="Contrat." value={row.contracted} color="text-foreground" />
-                      <MetricCell label="Receb." value={row.received} color="text-success" />
-                      <MetricCell label="Desp." value={row.expenses} color="text-destructive" />
-                      <MetricCell label="Saldo" value={row.balance} color={row.balance >= 0 ? "text-success" : "text-destructive"} />
+                    <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                      <span>Recebido: <span className="text-success font-medium">{formatCurrency(row.received)}</span></span>
+                      <span>Despesas: <span className="text-destructive font-medium">{formatCurrency(row.expenses)}</span></span>
                     </div>
                   </div>
                 ))}
-              </div>
-
-              {/* Desktop Table */}
-              <div className="hidden lg:block">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b ">
-                      <th className="text-left py-2 font-medium text-muted-foreground">Mês</th>
-                      <th className="text-right py-2 font-medium text-muted-foreground">Contratado</th>
-                      <th className="text-right py-2 font-medium text-muted-foreground">Recebido</th>
-                      <th className="text-right py-2 font-medium text-muted-foreground">Despesas</th>
-                      <th className="text-right py-2 font-medium text-muted-foreground">Saldo</th>
-                      <th className="text-right py-2 font-medium text-muted-foreground">Mov.</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {monthlyTableData?.map((row) => (
-                      <tr key={row.month} className="border-b hover:bg-muted/30 transition-colors">
-                        <td className="py-2.5 font-medium capitalize">{row.month}</td>
-                        <td className="text-right py-2.5">{formatCurrency(row.contracted)}</td>
-                        <td className="text-right py-2.5 text-success font-medium">{formatCurrency(row.received)}</td>
-                        <td className="text-right py-2.5 text-destructive">{formatCurrency(row.expenses)}</td>
-                        <td className={`text-right py-2.5 font-semibold ${row.balance >= 0 ? "text-success" : "text-destructive"}`}>
-                          {formatCurrency(row.balance)}
-                        </td>
-                        <td className="text-right py-2.5 text-muted-foreground">{row.count}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
               </div>
             </CardContent>
           </Card>
