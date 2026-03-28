@@ -945,28 +945,26 @@ export default function Financial() {
                         </div>
                       </div>
 
-                      {/* Payment method badge */}
-                      <div className="flex items-center pt-2 border-t border-border/60">
-                        <PaymentMethodBadge
-                          currentMethod={currentMethod}
-                          onChangeMethod={(method) => handleChangePaymentMethod(transaction.id, method)}
-                          compact
-                        />
-                      </div>
-
-                      {/* Actions row */}
-                      <div className="flex items-center justify-between pt-2 mt-1 border-t border-border/40">
-                        <Button
-                          size="sm"
-                          onClick={() => handleOpenPaymentDialog(transaction)}
-                          className="h-8 px-3 gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm hover:shadow transition-all text-xs font-medium"
-                        >
-                          <DollarSign className="h-3.5 w-3.5" />
-                          Pagar
-                        </Button>
+                      {/* Payment method + actions row */}
+                      <div className="flex items-center justify-between pt-2 border-t border-border/60">
+                        <div className="flex items-center gap-2">
+                          <PaymentMethodBadge
+                            currentMethod={currentMethod}
+                            onChangeMethod={(method) => handleChangePaymentMethod(transaction.id, method)}
+                            compact
+                          />
+                          <Button
+                            size="sm"
+                            onClick={() => handleOpenPaymentDialog(transaction)}
+                            className="h-8 px-3 gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm hover:shadow transition-all text-xs font-medium"
+                          >
+                            <DollarSign className="h-3.5 w-3.5" />
+                            Pagar
+                          </Button>
+                        </div>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button variant="outline" size="sm" className="h-8 w-8 p-0 text-muted-foreground">
+                            <Button variant="outline" size="sm" className="h-10 w-10 p-0 text-muted-foreground flex-shrink-0">
                               <MoreVertical className="h-4 w-4" />
                             </Button>
                           </DropdownMenuTrigger>
