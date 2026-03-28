@@ -1,5 +1,4 @@
 import * as React from "react";
-
 import { cn } from "@/lib/utils";
 import { toTitleCase, maskCPF, maskPhone, maskCEP, maskCurrency } from "@/lib/masks";
 
@@ -7,12 +6,17 @@ export type InputMask = "name" | "cpf" | "phone" | "cep" | "currency" | "upperca
 
 export interface InputProps extends React.ComponentProps<"input"> {
   mask?: InputMask;
+  icon?: React.ReactNode;
+  floatingLabel?: string;
 }
 
 const Input = React.forwardRef<HTMLInputElement, InputProps>(
-  ({ className, type, onChange, value, defaultValue, mask, ...props }, ref) => {
+  ({ className, type, onChange, value, defaultValue, mask, icon, floatingLabel, placeholder, ...props }, ref) => {
+    const [isFocused, setIsFocused] = React.useState(false);
     const shouldBeLowercase = className?.includes("lowercase") || type === "email";
     const isPasswordField = type === "password" || props.autoComplete?.includes("password");
+
+    const hasValue = value !== undefined && value !== null && value !== "";
 
     const applyMask = (raw: string): string => {
       if (mask === "name") return toTitleCase(raw);
@@ -29,7 +33,6 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
         onChange?.(e);
         return;
       }
-
       if (mask) {
         e.target.value = applyMask(e.target.value);
       } else if (shouldBeLowercase) {
@@ -49,20 +52,77 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
     const transformedValue = transformValue(value);
     const transformedDefault = transformValue(defaultValue);
 
+    // If floatingLabel is provided, render the floating label variant
+    if (floatingLabel) {
+      const isLifted = isFocused || hasValue;
+      return (
+        <div className="relative w-full group">
+          {icon && (
+            <span className={cn(
+              "absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none transition-colors duration-200 text-muted-foreground/50",
+              isFocused && "text-primary/70"
+            )}>
+              {icon}
+            </span>
+          )}
+          <input
+            type={type}
+            className={cn(
+              "premium-input peer w-full",
+              icon ? "pl-10" : "pl-4",
+              "pt-5 pb-1.5",
+              shouldBeLowercase && "lowercase",
+              className,
+            )}
+            ref={ref}
+            onChange={handleChange}
+            value={transformedValue}
+            defaultValue={transformedDefault}
+            placeholder=""
+            onFocus={(e) => { setIsFocused(true); props.onFocus?.(e); }}
+            onBlur={(e) => { setIsFocused(false); props.onBlur?.(e); }}
+            {...props}
+          />
+          <span className={cn(
+            "absolute pointer-events-none transition-all duration-200 ease-out",
+            icon ? "left-10" : "left-4",
+            isLifted
+              ? "top-1.5 text-[10px] font-medium text-primary/70"
+              : "top-1/2 -translate-y-1/2 text-sm text-muted-foreground/50"
+          )}>
+            {floatingLabel}
+          </span>
+        </div>
+      );
+    }
+
+    // Standard input (with optional icon)
     return (
-      <input
-        type={type}
-        className={cn(
-          "flex h-10 w-full rounded-xl border-0 bg-muted/60 px-4 py-3 text-base outline-none ring-0 file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground/60 hover:bg-muted/80 focus:bg-background focus:shadow-[0_0_0_2px_hsl(var(--primary)/0.15)] disabled:cursor-not-allowed disabled:opacity-50 transition-all duration-200 md:text-sm",
-          shouldBeLowercase && "lowercase",
-          className,
+      <div className={cn("relative w-full", icon && "group")}>
+        {icon && (
+          <span className={cn(
+            "absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none transition-colors duration-200 text-muted-foreground/50",
+            "group-focus-within:text-primary/70"
+          )}>
+            {icon}
+          </span>
         )}
-        ref={ref}
-        onChange={handleChange}
-        value={transformedValue}
-        defaultValue={transformedDefault}
-        {...props}
-      />
+        <input
+          type={type}
+          className={cn(
+            "premium-input w-full",
+            icon ? "pl-10" : "pl-4",
+            shouldBeLowercase && "lowercase",
+            className,
+          )}
+          ref={ref}
+          onChange={handleChange}
+          value={transformedValue}
+          defaultValue={transformedDefault}
+          placeholder={placeholder}
+          {...props}
+        />
+      </div>
     );
   },
 );
