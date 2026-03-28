@@ -315,47 +315,26 @@ export default function Expenses() {
         </Button>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-6">
-        <StatCard
-          title="Despesas Total"
-          value={formatCurrency(totalExpenses)}
-          subtitle="Todas as despesas"
-          icon={Wallet}
-          variant="warning"
-        />
-        <StatCard
-          title="Este Mês"
-          value={formatCurrency(thisMonthExpenses)}
-          subtitle={formatBrazilDate(new Date(), "MMMM yyyy")}
-          icon={Calendar}
-        />
-        <StatCard
-          title="Transações"
-          value={expenses?.length || 0}
-          subtitle="Total de despesas"
-          icon={TrendingDown}
-        />
-        {topCategory ? (
-          <Card className="stat-card overflow-hidden">
-            <div className="space-y-2 min-w-0">
-              <p className="text-xs lg:text-sm text-muted-foreground truncate">Maior Categoria</p>
-              <p className="text-sm lg:text-lg font-semibold text-foreground truncate">
-                {expenseCategories[topCategory[0] as keyof typeof expenseCategories] || topCategory[0]}
-              </p>
-              <p className="text-lg lg:text-2xl font-bold text-primary truncate">
-                {formatCurrency(topCategory[1])}
-              </p>
-            </div>
-          </Card>
-        ) : (
-          <Card className="stat-card overflow-hidden">
-            <div className="space-y-2 min-w-0">
-              <p className="text-xs lg:text-sm text-muted-foreground">Maior Categoria</p>
-              <p className="text-sm lg:text-lg font-semibold text-foreground">—</p>
-            </div>
-          </Card>
-        )}
+      {/* Stats — Total como destaque */}
+      <div className="rounded-2xl bg-gradient-to-br from-destructive/10 via-destructive/5 to-transparent p-4 lg:p-6 shadow-card">
+        <p className="text-xs text-muted-foreground/70 mb-0.5">Despesas Total</p>
+        <p className="text-3xl lg:text-4xl font-bold tracking-tight text-destructive">{formatCurrency(totalExpenses)}</p>
+        <div className="grid grid-cols-3 gap-3 mt-4">
+          <div className="space-y-0.5">
+            <p className="text-[10px] lg:text-xs text-muted-foreground/60 font-normal">Este mês</p>
+            <p className="text-sm lg:text-base font-semibold text-foreground/80">{formatCurrency(thisMonthExpenses)}</p>
+          </div>
+          <div className="space-y-0.5">
+            <p className="text-[10px] lg:text-xs text-muted-foreground/60 font-normal">Transações</p>
+            <p className="text-sm lg:text-base font-semibold text-foreground/80">{expenses?.length || 0}</p>
+          </div>
+          <div className="space-y-0.5">
+            <p className="text-[10px] lg:text-xs text-muted-foreground/60 font-normal">Maior categoria</p>
+            <p className="text-sm lg:text-base font-semibold text-foreground/80 truncate">
+              {topCategory ? (expenseCategories[topCategory[0] as keyof typeof expenseCategories] || topCategory[0]) : "—"}
+            </p>
+          </div>
+        </div>
       </div>
 
       {/* Search */}
