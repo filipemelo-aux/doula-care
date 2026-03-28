@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, Search, Edit2, Trash2, Eye, Loader2, MoreVertical, Phone } from "lucide-react";
+import { Plus, Search, Edit2, Trash2, Eye, Loader2, MoreVertical, Phone, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   DropdownMenu,
