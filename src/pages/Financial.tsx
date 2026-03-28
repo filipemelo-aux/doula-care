@@ -37,7 +37,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, TrendingUp, Search, Trash2, Zap, Check, X, CheckCircle, CreditCard, Banknote, Building2, QrCode, FileText, Users, Wrench, UserPlus, DollarSign, Eye, Loader2, Pencil } from "lucide-react";
+import { Plus, TrendingUp, Search, Trash2, Zap, Check, X, CheckCircle, CreditCard, Banknote, Building2, QrCode, FileText, Users, Wrench, UserPlus, DollarSign, Eye, Loader2, Pencil, MoreVertical } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { RecordPaymentDialog } from "@/components/financial/RecordPaymentDialog";
 import { RevenueDetailDialog } from "@/components/financial/RevenueDetailDialog";
 import { PaymentMethodBadge } from "@/components/financial/PaymentMethodBadge";
