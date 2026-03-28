@@ -24,6 +24,9 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { formatBrazilDateTime, abbreviateName } from "@/lib/utils";
+import { format, isToday, isYesterday, parseISO } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { toZonedTime } from "date-fns-tz";
 import { Tables } from "@/integrations/supabase/types";
 import { sendPushNotification } from "@/lib/pushNotifications";
 import { cn } from "@/lib/utils";
@@ -299,55 +302,101 @@ export default function AdminMessages() {
                   const lastMsg = getLastMessage(client.id);
                   const isSelected = selectedClientId === client.id;
                   const isOnline = onlineClientIds.has(client.id);
+                  const hasUnread = unread > 0;
+                  const initials = abbreviateName(client.full_name)
+                    .split(" ")
+                    .map((n) => n[0])
+                    .join("")
+                    .substring(0, 2);
+
+                  // Format timestamp
+                  const formatMsgTime = (dateStr: string) => {
+                    const zoned = toZonedTime(new Date(dateStr), "America/Sao_Paulo");
+                    if (isToday(zoned)) return format(zoned, "HH:mm");
+                    if (isYesterday(zoned)) return "Ontem";
+                    return format(zoned, "dd/MM/yy");
+                  };
+
+                  // Avatar color palette based on name hash
+                  const avatarColors = [
+                    "bg-rose-100 text-rose-600",
+                    "bg-sky-100 text-sky-600",
+                    "bg-amber-100 text-amber-700",
+                    "bg-emerald-100 text-emerald-600",
+                    "bg-violet-100 text-violet-600",
+                    "bg-pink-100 text-pink-600",
+                    "bg-teal-100 text-teal-600",
+                    "bg-orange-100 text-orange-600",
+                  ];
+                  const colorIdx = client.full_name.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0) % avatarColors.length;
+
                   return (
                     <button
                       key={client.id}
                       onClick={() => setSelectedClientId(client.id)}
                       className={cn(
-                        "w-full text-left p-3 border-b hover:bg-muted/50 transition-colors",
-                        isSelected && "bg-primary/5 border-l-2 border-l-primary"
+                        "w-full text-left px-3 py-3 transition-colors",
+                        isSelected
+                          ? "bg-primary/5"
+                          : hasUnread
+                          ? "bg-card hover:bg-muted/50"
+                          : "hover:bg-muted/30",
                       )}
                     >
                       <div className="flex items-center gap-3">
                         <div className="relative flex-shrink-0">
-                          <Avatar className="h-9 w-9">
-                            <AvatarFallback className="bg-primary/10 text-primary text-xs">
-                              {abbreviateName(client.full_name)
-                                .split(" ")
-                                .map((n) => n[0])
-                                .join("")
-                                .substring(0, 2)}
+                          <Avatar className="h-11 w-11">
+                            <AvatarFallback className={cn("text-sm font-semibold", avatarColors[colorIdx])}>
+                              {initials}
                             </AvatarFallback>
                           </Avatar>
                           <span
                             className={cn(
-                              "absolute bottom-0 right-0 h-2.5 w-2.5 rounded-fullborder-background",
-                              isOnline ? "bg-green-500" : "bg-muted-foreground/30"
+                              "absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-card",
+                              isOnline ? "bg-emerald-500" : "bg-muted-foreground/25"
                             )}
                           />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center justify-between">
-                            <p className="text-sm font-medium truncate">
+                          <div className="flex items-center justify-between gap-2">
+                            <p className={cn(
+                              "text-sm truncate",
+                              hasUnread ? "font-bold text-foreground" : "font-medium text-foreground"
+                            )}>
                               {abbreviateName(client.full_name)}
                             </p>
-                            {unread > 0 && (
-                              <Badge variant="destructive" className="text-[10px] h-5 min-w-5 flex items-center justify-center">
-                                {unread}
-                              </Badge>
+                            {lastMsg && (
+                              <span className={cn(
+                                "text-[10px] flex-shrink-0",
+                                hasUnread ? "text-primary font-semibold" : "text-muted-foreground/60"
+                              )}>
+                                {formatMsgTime(lastMsg.created_at)}
+                              </span>
                             )}
                           </div>
-                          {lastMsg ? (
-                            <p className="text-xs text-muted-foreground truncate mt-0.5">
-                              {isClientMessage(lastMsg) ? "" : "Você: "}
-                              {lastMsg.message.substring(0, 30)}
-                              {lastMsg.message.length > 30 ? "…" : ""}
-                            </p>
-                          ) : (
-                            <p className="text-xs text-muted-foreground/50 truncate mt-0.5">
-                              Sem mensagens
-                            </p>
-                          )}
+                          <div className="flex items-center justify-between gap-2 mt-0.5">
+                            {lastMsg ? (
+                              <p className={cn(
+                                "text-xs truncate flex-1",
+                                hasUnread ? "text-foreground/80 font-medium" : "text-muted-foreground"
+                              )}>
+                                {isClientMessage(lastMsg) ? "" : "Você: "}
+                                {lastMsg.attachment_type === "image" && !lastMsg.message?.trim() ? "📷 Foto" : ""}
+                                {lastMsg.attachment_type === "file" && !lastMsg.message?.trim() ? "📎 Arquivo" : ""}
+                                {lastMsg.message?.substring(0, 40)}
+                                {(lastMsg.message?.length || 0) > 40 ? "…" : ""}
+                              </p>
+                            ) : (
+                              <p className="text-xs text-muted-foreground/40 truncate flex-1 italic">
+                                Sem mensagens
+                              </p>
+                            )}
+                            {hasUnread && (
+                              <span className="flex-shrink-0 h-5 min-w-5 px-1.5 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center">
+                                {unread}
+                              </span>
+                            )}
+                          </div>
                         </div>
                       </div>
                     </button>
