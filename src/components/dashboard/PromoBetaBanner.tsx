@@ -163,7 +163,7 @@ export function PromoBetaBanner() {
   if (promo.status === "trial_active" && !isTrialExpired) {
     return (
       <>
-        <Alert className="border-none bg-gradient-to-r from-primary/5 to-accent/5 relative pr-8">
+        <Alert className="border-none bg-gradient-to-r from-primary/5 to-accent/5 relative pr-16">
           <Gift className="h-4 w-4 text-primary" />
           <AlertTitle className="text-primary text-sm font-semibold flex items-center gap-2">
             <Sparkles className="h-3.5 w-3.5" />
@@ -185,9 +185,10 @@ export function PromoBetaBanner() {
           </AlertDescription>
           <Button
             variant="ghost"
-            size="sm"
-            className="absolute right-1 top-1 h-6 w-6 p-0"
+            size="icon"
+            className="absolute right-2 top-2 h-6 w-6 min-w-0 !pl-0 !pr-0 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/50"
             onClick={handleDismiss}
+            title="Fechar"
           >
             <X className="h-3.5 w-3.5" />
           </Button>
