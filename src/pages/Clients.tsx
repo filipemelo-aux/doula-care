@@ -15,8 +15,16 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, Search, Edit2, Trash2, Eye, Loader2 } from "lucide-react";
+import { Plus, Search, Edit2, Trash2, Eye, Loader2, MoreVertical, Phone } from "lucide-react";
 import { cn } from "@/lib/utils";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { ClientDialog } from "@/components/clients/ClientDialog";
 import { ClientDetailsDialog } from "@/components/clients/ClientDetailsDialog";
 import { toast } from "sonner";
@@ -213,82 +221,85 @@ export default function Clients() {
           ) : filteredClients && filteredClients.length > 0 ? (
             <>
               {/* Mobile Cards */}
-              <div className="block lg:hidden space-y-1.5 p-3">
+              <div className="block lg:hidden space-y-3 p-3">
                 {filteredClients.map((client, index) => {
                   const inactive = isClientInactive(index);
+                  const initials = client.full_name.split(" ").map(n => n[0]).slice(0, 2).join("").toUpperCase();
                   return (
-                    <Card key={client.id} className={cn("p-2 space-y-1 w-full max-w-full overflow-hidden", inactive && "opacity-50 pointer-events-none relative")}>
+                    <div key={client.id} className={cn("rounded-2xl bg-card p-4 shadow-card space-y-3", inactive && "opacity-50 pointer-events-none relative")}>
                       {inactive && (
-                        <Badge variant="destructive" className="absolute top-1 right-1 text-[8px] px-1 h-4 z-10">
+                        <Badge variant="destructive" className="absolute top-2 right-2 text-[8px] px-1.5 h-4 z-10">
                           Inativa (limite do plano)
                         </Badge>
                       )}
-                      <div className="flex items-center justify-between gap-1">
-                        <div className="flex-1 min-w-0 overflow-hidden">
-                          <p className="font-medium text-xs truncate">{formatClientName(client.full_name)}</p>
-                          <p className="text-[10px] text-muted-foreground truncate">{client.phone}</p>
+                      {/* Top row: Avatar + Info + Menu */}
+                      <div className="flex items-start gap-3">
+                        <Avatar className="w-10 h-10 flex-shrink-0">
+                          <AvatarFallback className="bg-primary/10 text-primary text-sm font-semibold">
+                            {initials}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-semibold text-sm text-foreground truncate">{client.full_name}</p>
+                          <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
+                            <Phone className="w-3 h-3" /> {client.phone}
+                          </p>
                           {client.dpp && (
-                            <p className="text-[10px] text-muted-foreground">DPP: {format(parseISO(client.dpp), "dd/MM/yyyy")}</p>
+                            <p className="text-xs text-muted-foreground mt-0.5">
+                              DPP: {format(parseISO(client.dpp), "dd/MM/yyyy")}
+                              {client.status === "gestante" && !client.birth_occurred && (() => {
+                                const w = calculateCurrentPregnancyWeeks(client.pregnancy_weeks, client.pregnancy_weeks_set_at, client.dpp);
+                                const d = calculateCurrentPregnancyDays(client.dpp);
+                                const post = isPostTerm(client.dpp);
+                                if (w === null) return null;
+                                return (
+                                  <span className={cn("ml-2 font-semibold", post ? "text-destructive" : "text-primary")}>
+                                    {post ? "Pós-Data • " : ""}{w}s {d}d
+                                  </span>
+                                );
+                              })()}
+                            </p>
                           )}
-                          {client.dpp && client.status === "gestante" && !client.birth_occurred && (() => {
-                            const w = calculateCurrentPregnancyWeeks(client.pregnancy_weeks, client.pregnancy_weeks_set_at, client.dpp);
-                            const d = calculateCurrentPregnancyDays(client.dpp);
-                            const post = isPostTerm(client.dpp);
-                            if (w === null) return null;
-                            return (
-                              <p className={cn("text-[10px] font-semibold", post ? "text-destructive" : "text-primary")}>
-                                {post ? "Pós-Data • " : ""}{w}s {d}d
-                              </p>
-                            );
-                          })()}
                         </div>
-                        <div className="flex items-center gap-0 flex-shrink-0">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleView(client)}
-                            className="h-6 w-6"
-                          >
-                            <Eye className="h-3 w-3" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleEdit(client)}
-                            className="h-6 w-6"
-                          >
-                            <Edit2 className="h-3 w-3" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleDelete(client)}
-                            className="h-6 w-6 text-destructive hover:text-destructive"
-                          >
-                            <Trash2 className="h-3 w-3" />
-                          </Button>
-                        </div>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-8 w-8 flex-shrink-0 text-muted-foreground">
+                              <MoreVertical className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-44">
+                            <DropdownMenuItem onClick={() => handleView(client)} className="gap-2.5 py-2.5">
+                              <Eye className="h-4 w-4" /> Ver detalhes
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleEdit(client)} className="gap-2.5 py-2.5">
+                              <Edit2 className="h-4 w-4" /> Editar
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem onClick={() => handleDelete(client)} className="gap-2.5 py-2.5 text-destructive focus:text-destructive focus:bg-destructive/10">
+                              <Trash2 className="h-4 w-4" /> Excluir
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </div>
-                      <div className="flex items-center gap-1 flex-wrap">
+                      {/* Badges row */}
+                      <div className="flex items-center gap-1.5 flex-wrap">
                         <Badge
-                          variant="outline"
-                          className={cn("badge-status border-0 text-[9px] px-1 h-4", `badge-${client.status}`)}
+                          className={cn("badge-status text-[10px] px-2 h-5", `badge-${client.status}`)}
                         >
                           {client.status === "outro" && (client as any).custom_status
                             ? (client as any).custom_status
                             : statusLabels[client.status as keyof typeof statusLabels]}
                         </Badge>
-                        <Badge variant="outline" className="text-[9px] px-1 h-4">
+                        <Badge variant="secondary" className="text-[10px] px-2 h-5">
                           {planLabels[client.plan as keyof typeof planLabels]}
                         </Badge>
                         <Badge
-                          variant="outline"
-                          className={cn("badge-status border-0 text-[9px] px-1 h-4", `badge-${client.payment_status}`)}
+                          className={cn("badge-status text-[10px] px-2 h-5", `badge-${client.payment_status}`)}
                         >
                           {paymentStatusLabels[client.payment_status as keyof typeof paymentStatusLabels]}
                         </Badge>
                       </div>
-                    </Card>
+                    </div>
                   );
                 })}
               </div>
@@ -358,35 +369,25 @@ export default function Clients() {
                           </Badge>
                         </TableCell>
                         <TableCell className="text-right">
-                          <div className="flex items-center justify-end gap-2">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleView(client)}
-                              className="h-8 w-8"
-                              disabled={inactive}
-                            >
-                              <Eye className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleEdit(client)}
-                              className="h-8 w-8"
-                              disabled={inactive}
-                            >
-                              <Edit2 className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleDelete(client)}
-                              className="h-8 w-8 text-destructive hover:text-destructive"
-                              disabled={inactive}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-8 w-8" disabled={inactive}>
+                                <MoreVertical className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-44">
+                              <DropdownMenuItem onClick={() => handleView(client)} className="gap-2.5 py-2">
+                                <Eye className="h-4 w-4" /> Ver detalhes
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleEdit(client)} className="gap-2.5 py-2">
+                                <Edit2 className="h-4 w-4" /> Editar
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem onClick={() => handleDelete(client)} className="gap-2.5 py-2 text-destructive focus:text-destructive focus:bg-destructive/10">
+                                <Trash2 className="h-4 w-4" /> Excluir
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         </TableCell>
                       </TableRow>
                       );
