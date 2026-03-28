@@ -680,8 +680,8 @@ export default function Forum() {
                 )}
 
                 {/* Action buttons */}
-                <div className="mx-4 border-t border-border/30" />
-                <div className="px-2 py-1 flex">
+                <div className="mx-5 border-t border-border/30" />
+                <div className="px-3 py-1.5 flex">
                   <button
                     onClick={() => handleToggleLike(post.id)}
                     className={cn(
