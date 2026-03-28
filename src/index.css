@@ -508,6 +508,16 @@
     height: 100% !important;
   }
 
+  /* Compact form spacing inside dialogs */
+  [data-radix-dialog-content] .space-y-4 > * + * {
+    margin-top: 12px;
+  }
+
+  [data-radix-dialog-content] .space-y-4 > button:last-child,
+  [data-radix-alert-dialog-content] .space-y-4 > button:last-child {
+    margin-top: 16px;
+  }
+
   /* Dialog content containment — prevent elements from cutting on edges */
   [data-radix-dialog-content],
   [data-radix-alert-dialog-content] {
