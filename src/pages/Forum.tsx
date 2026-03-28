@@ -652,7 +652,7 @@ export default function Forum() {
 
                 {/* Social proof counts */}
                 {(reactionCount > 0 || commentCount > 0) && (
-                  <div className="px-4 pt-2 pb-1 flex items-center gap-3 text-[11px] text-muted-foreground/50">
+                  <div className="px-5 pt-3 pb-1 flex items-center gap-3 text-[11px] text-muted-foreground/50">
                     {reactionCount > 0 && (
                       <Popover>
                         <PopoverTrigger asChild>
