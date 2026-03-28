@@ -2,20 +2,19 @@ import { useState, useEffect } from "react";
 import { useFinancialMetrics, formatCurrency } from "@/hooks/useFinancialMetrics";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { StatCard } from "@/components/dashboard/StatCard";
 import { RecentClients } from "@/components/dashboard/RecentClients";
 import { FinancialOverview } from "@/components/dashboard/FinancialOverview";
 import { TopPlansCard } from "@/components/dashboard/TopPlansCard";
-
 import { UpcomingAppointments } from "@/components/dashboard/UpcomingAppointments";
 import { PeriodFilter, PeriodOption } from "@/components/dashboard/PeriodFilter";
 import { ClientsListDialog } from "@/components/dashboard/ClientsListDialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Users, Baby, Heart, Wallet, TrendingUp, BarChart3, UserRound } from "lucide-react";
+import { Heart, Wallet, TrendingUp, CircleDollarSign, Users, Baby, UserRound, CalendarCheck } from "lucide-react";
 import { AdminWelcomeDialog } from "@/components/dashboard/AdminWelcomeDialog";
 import { BillingAlertBanner } from "@/components/dashboard/BillingAlertBanner";
 import { PromoBetaBanner } from "@/components/dashboard/PromoBetaBanner";
 import { NotificationTopBanner } from "@/components/dashboard/NotificationTopBanner";
+import { cn } from "@/lib/utils";
 
 export default function Dashboard() {
   const [period, setPeriod] = useState<PeriodOption>("month");
@@ -35,7 +34,6 @@ export default function Dashboard() {
       .maybeSingle()
       .then(({ data }) => {
         setAvatarUrl(data?.avatar_url || null);
-        // Show welcome dialog only if never seen before
         if (data && !(data as any).welcome_seen) {
           setShowWelcome(true);
         }
@@ -45,7 +43,7 @@ export default function Dashboard() {
   const { data: metrics } = useFinancialMetrics(period);
 
   return (
-    <div className="space-y-4 lg:space-y-6 overflow-x-hidden">
+    <div className="space-y-6 lg:space-y-8 overflow-x-hidden">
       {/* Greeting */}
       {profileName && (
         <div className="flex items-center gap-3">
@@ -62,13 +60,8 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* Promo beta tester banner */}
       <PromoBetaBanner />
-
-      {/* Billing alerts for doula */}
       <BillingAlertBanner />
-
-      {/* Top notification banner */}
       <NotificationTopBanner />
 
       {/* Header */}
@@ -82,64 +75,79 @@ export default function Dashboard() {
         <PeriodFilter selected={period} onChange={setPeriod} />
       </div>
 
-      {/* Stats Grid - Row 1: Clients */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
-        <StatCard
-          title="Total de Clientes"
-          value={metrics?.totalClients || 0}
-          subtitle="Clientes cadastradas"
-          icon={Users}
-          variant="primary"
-        />
-        <StatCard
-          title="Gestantes"
-          value={metrics?.gestantes || 0}
-          subtitle="Em acompanhamento"
-          icon={Baby}
-          onClick={() => setGestantesDialogOpen(true)}
-        />
-        <StatCard
-          title="Puérperas"
-          value={metrics?.puerperas || 0}
-          subtitle="Pós-parto"
-          icon={Heart}
-          onClick={() => setPuerperasDialogOpen(true)}
-        />
-        <StatCard
-          title="Outros"
-          value={metrics?.outros || 0}
-          subtitle="Outras clientes"
-          icon={UserRound}
-          onClick={() => setOutrosDialogOpen(true)}
-        />
+      {/* ═══ BLOCO 1 — Receita (destaque principal) ═══ */}
+      <div className="rounded-2xl bg-gradient-to-br from-success/10 via-success/5 to-transparent p-4 lg:p-6 shadow-card space-y-4">
+        <div className="flex items-center gap-2 mb-1">
+          <div className="w-9 h-9 rounded-xl bg-success/15 flex items-center justify-center">
+            <Wallet className="w-5 h-5 text-success" />
+          </div>
+          <h2 className="font-semibold text-sm text-foreground">Financeiro</h2>
+        </div>
+
+        {/* Hero metric */}
+        <div>
+          <p className="text-xs text-muted-foreground mb-0.5">Receita Contratada</p>
+          <p className="text-3xl lg:text-4xl font-bold tracking-tight text-foreground">
+            {formatCurrency(metrics?.totalContracted || 0)}
+          </p>
+        </div>
+
+        {/* Sub-metrics row */}
+        <div className="grid grid-cols-3 gap-3">
+          <MetricPill
+            icon={CircleDollarSign}
+            label="Recebido"
+            value={formatCurrency(metrics?.totalReceived || 0)}
+            colorClass="text-success"
+          />
+          <MetricPill
+            icon={TrendingUp}
+            label="A Receber"
+            value={formatCurrency(metrics?.totalPending || 0)}
+            colorClass="text-amber-500"
+          />
+          <MetricPill
+            icon={Wallet}
+            label="Ticket Médio"
+            value={formatCurrency(metrics?.averageTicket || 0)}
+            colorClass="text-primary"
+          />
+        </div>
       </div>
 
-      {/* Stats Grid - Row 2: Financial */}
-      <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 lg:gap-4">
-        <StatCard
-          title="Receita Contratada"
-          value={formatCurrency(metrics?.totalContracted || 0)}
-          subtitle={`${formatCurrency(metrics?.totalPending || 0)} pendente`}
-          icon={Wallet}
-          variant="success"
-        />
-        <StatCard
-          title="Ticket Médio"
-          value={formatCurrency(metrics?.averageTicket || 0)}
-          subtitle="Por cliente"
-          icon={BarChart3}
-        />
-        <StatCard
-          title="Receita Média/Mês"
-          value={formatCurrency(metrics?.monthlyAverageRevenue || 0)}
-          subtitle="Média recebida"
-          icon={TrendingUp}
-          variant="success"
-        />
+      {/* ═══ BLOCO 2 — Clientes ═══ */}
+      <div className="rounded-2xl bg-card p-4 lg:p-6 shadow-card space-y-4">
+        <div className="flex items-center gap-2 mb-1">
+          <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
+            <Users className="w-5 h-5 text-primary" />
+          </div>
+          <h2 className="font-semibold text-sm text-foreground">Clientes</h2>
+          <span className="ml-auto text-2xl font-bold text-foreground">{metrics?.totalClients || 0}</span>
+        </div>
+
+        <div className="grid grid-cols-3 gap-3">
+          <ClientPill
+            icon={Baby}
+            label="Gestantes"
+            value={metrics?.gestantes || 0}
+            onClick={() => setGestantesDialogOpen(true)}
+          />
+          <ClientPill
+            icon={Heart}
+            label="Puérperas"
+            value={metrics?.puerperas || 0}
+            onClick={() => setPuerperasDialogOpen(true)}
+          />
+          <ClientPill
+            icon={UserRound}
+            label="Outros"
+            value={metrics?.outros || 0}
+            onClick={() => setOutrosDialogOpen(true)}
+          />
+        </div>
       </div>
 
-
-      {/* Upcoming Appointments */}
+      {/* ═══ BLOCO 3 — Agenda ═══ */}
       <UpcomingAppointments />
 
       {/* Financial Overview */}
@@ -152,21 +160,9 @@ export default function Dashboard() {
       </div>
 
       {/* Dialogs */}
-      <ClientsListDialog
-        open={gestantesDialogOpen}
-        onOpenChange={setGestantesDialogOpen}
-        status="gestante"
-      />
-      <ClientsListDialog
-        open={puerperasDialogOpen}
-        onOpenChange={setPuerperasDialogOpen}
-        status="lactante"
-      />
-      <ClientsListDialog
-        open={outrosDialogOpen}
-        onOpenChange={setOutrosDialogOpen}
-        status="outro"
-      />
+      <ClientsListDialog open={gestantesDialogOpen} onOpenChange={setGestantesDialogOpen} status="gestante" />
+      <ClientsListDialog open={puerperasDialogOpen} onOpenChange={setPuerperasDialogOpen} status="lactante" />
+      <ClientsListDialog open={outrosDialogOpen} onOpenChange={setOutrosDialogOpen} status="outro" />
       <AdminWelcomeDialog
         open={showWelcome}
         onClose={() => {
@@ -182,5 +178,54 @@ export default function Dashboard() {
         name={profileName}
       />
     </div>
+  );
+}
+
+/* ── Inline sub-components ── */
+
+function MetricPill({
+  icon: Icon,
+  label,
+  value,
+  colorClass,
+}: {
+  icon: React.ElementType;
+  label: string;
+  value: string;
+  colorClass: string;
+}) {
+  return (
+    <div className="rounded-xl bg-card/80 backdrop-blur-sm p-3 shadow-sm space-y-1">
+      <div className="flex items-center gap-1.5">
+        <Icon className={cn("w-3.5 h-3.5", colorClass)} />
+        <span className="text-[10px] lg:text-xs text-muted-foreground truncate">{label}</span>
+      </div>
+      <p className={cn("text-sm lg:text-base font-semibold truncate", colorClass)}>{value}</p>
+    </div>
+  );
+}
+
+function ClientPill({
+  icon: Icon,
+  label,
+  value,
+  onClick,
+}: {
+  icon: React.ElementType;
+  label: string;
+  value: number;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className="rounded-xl bg-muted/50 hover:bg-muted p-3 text-left transition-all hover:shadow-sm active:scale-[0.97] space-y-1"
+    >
+      <div className="flex items-center gap-1.5">
+        <Icon className="w-3.5 h-3.5 text-primary" />
+        <span className="text-[10px] lg:text-xs text-muted-foreground truncate">{label}</span>
+      </div>
+      <p className="text-lg lg:text-xl font-bold text-foreground">{value}</p>
+    </button>
   );
 }
