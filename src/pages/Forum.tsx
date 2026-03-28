@@ -446,7 +446,8 @@ export default function Forum() {
   return (
     <div
       ref={containerRef}
-      className="p-4 lg:p-8 max-w-2xl mx-auto space-y-5 overflow-x-hidden"
+      className="p-4 lg:p-8 max-w-2xl mx-auto space-y-5 overflow-x-hidden bg-muted/30 min-h-screen -m-4 lg:-m-8"
+      style={{ padding: '1rem', paddingBottom: '2rem' }}
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
@@ -556,7 +557,7 @@ export default function Forum() {
             const isExpanded = expandedPostId === post.id;
 
             return (
-              <div key={post.id} className="bg-card break-words rounded-2xl overflow-hidden shadow-[0_1px_4px_rgba(0,0,0,0.04)]">
+              <div key={post.id} className="bg-card break-words rounded-2xl overflow-hidden shadow-[0_2px_8px_rgba(0,0,0,0.05)] hover:shadow-[0_4px_16px_rgba(0,0,0,0.08)] transition-shadow duration-200">
                 {/* Post header */}
                 <div className="p-5 pb-0">
                   <div className="flex items-start gap-3 mb-3">
