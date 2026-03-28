@@ -1783,18 +1783,18 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
             </div>
 
             {/* Actions - Fixed at bottom */}
-            <div className="flex justify-end gap-2 pt-4 mt-4 border-t flex-shrink-0">
+            <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 pt-4 mt-4 border-t border-border/40 flex-shrink-0">
               <Button
                 type="button"
-                variant="outline"
-                size="sm"
+                variant="ghost"
+                className="h-11 sm:h-10 text-muted-foreground hover:text-foreground"
                 onClick={() => onOpenChange(false)}
               >
                 Cancelar
               </Button>
               <Button 
                 type="button" 
-                size="sm" 
+                className="h-12 sm:h-11 rounded-xl text-[15px] font-semibold px-8"
                 disabled={mutation.isPending}
                 onClick={handleSubmitClick}
               >
