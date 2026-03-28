@@ -481,11 +481,15 @@ export default function Expenses() {
               </div>
             </>
           ) : (
-            <div className="text-center py-12">
-              <p className="text-muted-foreground mb-4">Nenhuma despesa encontrada</p>
-              <Button onClick={handleOpenDialog} variant="outline">
-                <Plus className="w-4 h-4 mr-2" />
-                Registrar primeira despesa
+            <div className="flex flex-col items-center justify-center py-16 px-4">
+              <div className="w-16 h-16 rounded-2xl bg-muted/50 flex items-center justify-center mb-4">
+                <Wallet className="w-8 h-8 text-muted-foreground/40" />
+              </div>
+              <p className="text-base font-medium text-foreground/70 mb-1">Nenhuma despesa ainda</p>
+              <p className="text-sm text-muted-foreground/60 mb-6 text-center max-w-xs">Você ainda não registrou despesas. Comece a controlar seus gastos agora.</p>
+              <Button onClick={handleOpenDialog} className="gap-2">
+                <Plus className="w-4 h-4" />
+                Registrar despesa
               </Button>
             </div>
           )}
