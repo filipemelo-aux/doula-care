@@ -873,7 +873,7 @@ export default function Financial() {
                     : transaction.description;
 
                   return (
-                    <Card key={transaction.id} className="px-2 py-1.5 space-y-1 w-full box-border min-w-0 overflow-hidden">
+                    <Card key={transaction.id} className="px-3 py-2.5 space-y-1.5 w-full box-border min-w-0 overflow-hidden">
                       {/* Header: Description */}
                       <div className="flex items-center gap-0.5 min-w-0">
                         {transaction.is_auto_generated && (
