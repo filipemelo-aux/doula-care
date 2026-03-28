@@ -248,9 +248,31 @@
     @apply bg-info/15 text-info;
   }
 
+  /* ── Premium Input System ── */
+  .premium-input {
+    @apply flex h-10 rounded-xl border-0 text-base outline-none ring-0
+           file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground
+           placeholder:text-muted-foreground/50
+           disabled:cursor-not-allowed disabled:opacity-50
+           md:text-sm;
+    padding: 0.625rem 1rem;
+    background: hsl(var(--muted) / 0.55);
+    box-shadow: 0 1px 2px hsl(var(--foreground) / 0.04);
+    transition: background 0.2s ease, box-shadow 0.25s ease, transform 0.15s ease;
+  }
+
+  .premium-input:hover {
+    background: hsl(var(--muted) / 0.75);
+  }
+
+  .premium-input:focus {
+    background: hsl(var(--background));
+    box-shadow: 0 0 0 2px hsl(var(--primary) / 0.18),
+                0 2px 8px hsl(var(--primary) / 0.08) !important;
+  }
+
   .input-field {
-    @apply h-11 rounded-xl border-0 bg-muted/60 px-4 transition-all duration-200;
-    @apply focus:bg-background focus:shadow-[0_0_0_2px_hsl(var(--primary)/0.15)];
+    @apply premium-input h-11;
   }
 
   /* Global input reset — kill any remaining outline/ring from libs */
@@ -259,7 +281,6 @@
   select:focus,
   [role="combobox"]:focus {
     outline: none !important;
-    box-shadow: 0 0 0 2px hsl(var(--primary) / 0.15) !important;
   }
 
   input:focus-visible,
@@ -267,7 +288,6 @@
   select:focus-visible,
   [role="combobox"]:focus-visible {
     outline: none !important;
-    ring: none !important;
   }
 
   .table-row-hover {
