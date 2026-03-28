@@ -83,6 +83,7 @@ export default {
         soft: "var(--shadow-soft)",
         medium: "var(--shadow-medium)",
         card: "var(--shadow-card)",
+        "card-hover": "var(--shadow-card-hover)",
       },
       keyframes: {
         "accordion-down": {
