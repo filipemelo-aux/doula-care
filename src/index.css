@@ -519,6 +519,19 @@
     margin-top: 16px;
   }
 
+  /* Smooth scroll inside dialog + auto-scroll focused input into view */
+  [data-radix-dialog-content] .overflow-y-auto {
+    scroll-behavior: smooth;
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--border) / 0.3) transparent;
+  }
+
+  [data-radix-dialog-content] input:focus,
+  [data-radix-dialog-content] textarea:focus,
+  [data-radix-dialog-content] select:focus {
+    scroll-margin-bottom: 120px;
+  }
+
   /* Dialog content containment — prevent elements from cutting on edges */
   [data-radix-dialog-content],
   [data-radix-alert-dialog-content] {
