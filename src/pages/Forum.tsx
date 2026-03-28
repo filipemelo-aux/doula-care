@@ -559,8 +559,8 @@ export default function Forum() {
               <div key={post.id} className="bg-card break-words rounded-xl overflow-hidden">
                 {/* Post header */}
                 <div className="p-4 pb-0">
-                  <div className="flex items-center gap-3 mb-3">
-                    <Avatar className="h-9 w-9">
+                  <div className="flex items-start gap-3 mb-3">
+                    <Avatar className="h-9 w-9 mt-0.5">
                       {authorInfo.avatarUrl && (
                         <AvatarImage src={authorInfo.avatarUrl} alt={authorName} className="object-cover" />
                       )}
@@ -569,24 +569,26 @@ export default function Forum() {
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 min-w-0">
+                      <div className="flex items-center gap-1.5 min-w-0">
                         <span className="font-medium text-sm text-foreground truncate">{authorName}</span>
                         {post.audience === "doulas_only" && <ShieldCheck className="h-3 w-3 text-primary shrink-0" />}
                         {post.audience === "gestantes_only" && <Users className="h-3 w-3 text-primary shrink-0" />}
                         {post.is_pinned && <Pin className="h-3 w-3 text-primary shrink-0" />}
                       </div>
-                      <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground/60">
-                        <span className="truncate">{formatDistanceToNow(new Date(post.created_at), { addSuffix: true, locale: ptBR })}</span>
-                        <span>·</span>
-                        <span className="truncate">{post.forum_categories?.icon} {post.forum_categories?.name}</span>
+                      <div className="flex items-center gap-1.5 mt-0.5">
+                        <span className="text-[11px] text-muted-foreground/50 truncate">{formatDistanceToNow(new Date(post.created_at), { addSuffix: true, locale: ptBR })}</span>
+                        <span className="text-muted-foreground/30 text-[11px]">·</span>
+                        <span className="inline-flex items-center gap-1 text-[10px] font-medium text-muted-foreground/70 bg-muted/50 rounded-full px-2 py-0.5 truncate">
+                          {post.forum_categories?.icon} {post.forum_categories?.name}
+                        </span>
                       </div>
                     </div>
                     {(isAdmin || post.author_id === currentUser?.id) && (
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0">
-                            <MoreVertical className="h-4 w-4" />
-                          </Button>
+                          <button className="h-7 w-7 flex items-center justify-center rounded-full text-muted-foreground/40 hover:text-muted-foreground hover:bg-muted/50 transition-colors shrink-0">
+                            <MoreVertical className="h-3.5 w-3.5" />
+                          </button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           {post.author_id === currentUser?.id && (
