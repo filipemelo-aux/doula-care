@@ -560,22 +560,22 @@ export default function Forum() {
                 {/* Post header */}
                 <div className="p-4 pb-0">
                   <div className="flex items-center gap-3 mb-3">
-                    <Avatar className="h-10 w-10">
+                    <Avatar className="h-9 w-9">
                       {authorInfo.avatarUrl && (
                         <AvatarImage src={authorInfo.avatarUrl} alt={authorName} className="object-cover" />
                       )}
-                      <AvatarFallback className="bg-primary/10 text-primary text-sm font-semibold">
+                      <AvatarFallback className="bg-primary/10 text-primary text-xs font-semibold">
                         {getInitials(authorName)}
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 min-w-0">
-                        <span className="font-semibold text-sm text-foreground truncate">{authorName}</span>
+                        <span className="font-medium text-sm text-foreground truncate">{authorName}</span>
                         {post.audience === "doulas_only" && <ShieldCheck className="h-3 w-3 text-primary shrink-0" />}
                         {post.audience === "gestantes_only" && <Users className="h-3 w-3 text-primary shrink-0" />}
                         {post.is_pinned && <Pin className="h-3 w-3 text-primary shrink-0" />}
                       </div>
-                      <div className="flex items-center gap-1.5 text-xs text-muted-foreground flex-wrap">
+                      <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground/60">
                         <span className="truncate">{formatDistanceToNow(new Date(post.created_at), { addSuffix: true, locale: ptBR })}</span>
                         <span>·</span>
                         <span className="truncate">{post.forum_categories?.icon} {post.forum_categories?.name}</span>
@@ -613,12 +613,32 @@ export default function Forum() {
                   </div>
 
                   {/* Post content */}
-                  <h3 className="font-semibold text-foreground mb-1 break-words">{post.title}</h3>
-                  <p className="text-sm text-foreground/80 whitespace-pre-wrap break-words">
-                    {extractInstagramUrls(post.content).length > 0
+                  <h3 className="font-bold text-[15px] text-foreground mb-1.5 break-words line-clamp-2">{post.title}</h3>
+                  {(() => {
+                    const rawContent = extractInstagramUrls(post.content).length > 0
                       ? removeInstagramMarkdownLinks(post.content)
-                      : post.content}
-                  </p>
+                      : post.content;
+                    const isLong = rawContent.length > 200;
+                    const preview = isLong && !isExpanded ? rawContent.slice(0, 200) : rawContent;
+                    return (
+                      <>
+                        <p className={cn(
+                          "text-sm text-muted-foreground whitespace-pre-wrap break-words leading-relaxed",
+                          !isExpanded && isLong && "line-clamp-3"
+                        )}>
+                          {preview}
+                        </p>
+                        {isLong && !isExpanded && (
+                          <button
+                            onClick={() => setExpandedPostId(post.id)}
+                            className="text-xs text-primary font-medium mt-1 hover:underline"
+                          >
+                            Ver mais
+                          </button>
+                        )}
+                      </>
+                    );
+                  })()}
                   <InstagramLinkPreview content={post.content} />
                 </div>
 
