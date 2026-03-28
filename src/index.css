@@ -359,6 +359,27 @@
     @apply text-lg font-semibold text-foreground mb-4;
   }
 
+  /* Form section divider — clear visual grouping */
+  .form-section {
+    @apply relative pt-6 first:pt-0;
+  }
+
+  .form-section:not(:first-child)::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: hsl(var(--border) / 0.4);
+  }
+
+  .form-section-title {
+    @apply text-[11px] font-semibold uppercase tracking-widest mb-3;
+    color: hsl(var(--muted-foreground));
+    letter-spacing: 0.08em;
+  }
+
   /* Minimal scrollbar for sidebar and nav */
   .scrollbar-none {
     scrollbar-width: none;
