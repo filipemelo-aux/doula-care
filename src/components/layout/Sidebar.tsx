@@ -135,7 +135,7 @@ export function Sidebar({ isOpen, onToggle, onNavigate }: SidebarProps) {
       )}
 
       {/* Navigation */}
-      <nav className="flex-1 py-4 px-3 space-y-0.5 overflow-y-auto">
+      <nav className="flex-1 py-4 px-3 space-y-0.5 overflow-y-auto scrollbar-thin">
         {navItems.map((item) => {
           // Submenu item (Financeiro)
           if ("subItems" in item && item.subItems) {
@@ -158,7 +158,7 @@ export function Sidebar({ isOpen, onToggle, onNavigate }: SidebarProps) {
                   className={cn(
                     "nav-link w-full text-left relative",
                     isSubActive && "active",
-                    !isOpen && "lg:justify-center lg:px-0 lg:border-l-0",
+                    !isOpen && "lg:justify-center lg:px-0",
                     allDisabled && "opacity-40 cursor-not-allowed hover:bg-transparent"
                   )}
                   title={!isOpen ? item.label : allDisabled ? "Recurso indisponível no seu plano" : undefined}
@@ -195,8 +195,8 @@ export function Sidebar({ isOpen, onToggle, onNavigate }: SidebarProps) {
                           onClick={() => !subDisabled && handleNavClick(sub.to)}
                           disabled={subDisabled}
                           className={cn(
-                            "nav-link w-full text-left text-[13px] py-2.5 border-l-0",
-                            subActive && "active !border-l-0",
+                            "nav-link w-full text-left text-[13px] py-2.5",
+                            subActive && "active",
                             subDisabled && "opacity-40 cursor-not-allowed hover:bg-transparent"
                           )}
                         >
@@ -221,8 +221,8 @@ export function Sidebar({ isOpen, onToggle, onNavigate }: SidebarProps) {
                           onClick={() => !subDisabled && handleNavClick(sub.to)}
                           disabled={subDisabled}
                           className={cn(
-                            "nav-link justify-center px-0 w-full border-l-0",
-                            subActive && "active !border-l-0",
+                            "nav-link justify-center px-0 w-full",
+                            subActive && "active",
                             subDisabled && "opacity-40 cursor-not-allowed hover:bg-transparent"
                           )}
                           title={sub.label}
@@ -258,7 +258,7 @@ export function Sidebar({ isOpen, onToggle, onNavigate }: SidebarProps) {
               className={cn(
                 "nav-link w-full text-left relative",
                 isActive && "active",
-                !isOpen && "lg:justify-center lg:px-0 lg:border-l-0",
+                !isOpen && "lg:justify-center lg:px-0",
                 isDisabled && "opacity-40 cursor-not-allowed hover:bg-transparent"
               )}
               title={!isOpen ? item.label : isDisabled ? "Recurso indisponível no seu plano" : undefined}
