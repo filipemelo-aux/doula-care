@@ -955,45 +955,36 @@ export default function Financial() {
 
                       {/* Actions row */}
                       <div className="flex items-center justify-between pt-2 mt-1 border-t border-border/40">
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button
-                              size="sm"
-                              onClick={() => handleOpenPaymentDialog(transaction)}
-                              className="h-8 px-3 gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm hover:shadow transition-all text-xs font-medium"
-                            >
-                              <DollarSign className="h-3.5 w-3.5" />
-                              Pagar
+                        <Button
+                          size="sm"
+                          onClick={() => handleOpenPaymentDialog(transaction)}
+                          className="h-8 px-3 gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm hover:shadow transition-all text-xs font-medium"
+                        >
+                          <DollarSign className="h-3.5 w-3.5" />
+                          Pagar
+                        </Button>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="outline" size="sm" className="h-8 w-8 p-0 text-muted-foreground">
+                              <MoreVertical className="h-4 w-4" />
                             </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>Registrar pagamento</TooltipContent>
-                        </Tooltip>
-                        <div className="flex items-center gap-2">
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button variant="outline" size="sm" onClick={() => handleEditTransaction(transaction)} className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground hover:shadow-sm transition-all">
-                                <Pencil className="h-3.5 w-3.5" />
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>Editar receita</TooltipContent>
-                          </Tooltip>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button variant="outline" size="sm" onClick={() => handleOpenDetailDialog(transaction.id)} className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground hover:shadow-sm transition-all">
-                                <Eye className="h-3.5 w-3.5" />
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>Ver detalhes</TooltipContent>
-                          </Tooltip>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button variant="outline" size="sm" onClick={() => handleDelete(transaction.id)} className="h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10 hover:border-destructive/30 hover:shadow-sm transition-all">
-                                <Trash2 className="h-3.5 w-3.5" />
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>Excluir</TooltipContent>
-                          </Tooltip>
-                        </div>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-44">
+                            <DropdownMenuItem onClick={() => handleEditTransaction(transaction)} className="gap-2 text-xs">
+                              <Pencil className="h-3.5 w-3.5" />
+                              Editar receita
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleOpenDetailDialog(transaction.id)} className="gap-2 text-xs">
+                              <Eye className="h-3.5 w-3.5" />
+                              Ver detalhes
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem onClick={() => handleDelete(transaction.id)} className="gap-2 text-xs text-destructive focus:text-destructive">
+                              <Trash2 className="h-3.5 w-3.5" />
+                              Excluir
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </div>
                     </Card>
                   );
