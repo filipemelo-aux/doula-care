@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, Search, Edit2, Trash2, Eye, Loader2, MoreVertical, Phone } from "lucide-react";
+import { Plus, Search, Edit2, Trash2, Eye, Loader2, MoreVertical, Phone, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   DropdownMenu,
@@ -397,13 +397,15 @@ export default function Clients() {
               </div>
             </>
           ) : (
-            <div className="text-center py-12">
-              <p className="text-muted-foreground mb-4">
-                Nenhuma cliente encontrada
-              </p>
-              <Button onClick={() => setDialogOpen(true)} variant="outline">
-                <Plus className="w-4 h-4 mr-2" />
-                Cadastrar primeira cliente
+            <div className="flex flex-col items-center justify-center py-16 px-4">
+              <div className="w-16 h-16 rounded-2xl bg-muted/50 flex items-center justify-center mb-4">
+                <Users className="w-8 h-8 text-muted-foreground/40" />
+              </div>
+              <p className="text-base font-medium text-foreground/70 mb-1">Nenhuma cliente ainda</p>
+              <p className="text-sm text-muted-foreground/60 mb-6 text-center max-w-xs">Cadastre sua primeira cliente para começar a acompanhar.</p>
+              <Button onClick={() => setDialogOpen(true)} className="gap-2">
+                <Plus className="w-4 h-4" />
+                Cadastrar cliente
               </Button>
             </div>
           )}

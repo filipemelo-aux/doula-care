@@ -1137,13 +1137,15 @@ export default function Financial() {
               </div>
             </>
           ) : (
-            <div className="text-center py-12">
-              <p className="text-muted-foreground mb-4">
-                Nenhuma receita encontrada
-              </p>
-              <Button onClick={handleOpenDialog} variant="outline">
-                <Plus className="w-4 h-4 mr-2" />
-                Registrar primeira receita
+            <div className="flex flex-col items-center justify-center py-16 px-4">
+              <div className="w-16 h-16 rounded-2xl bg-muted/50 flex items-center justify-center mb-4">
+                <TrendingUp className="w-8 h-8 text-muted-foreground/40" />
+              </div>
+              <p className="text-base font-medium text-foreground/70 mb-1">Nenhuma receita ainda</p>
+              <p className="text-sm text-muted-foreground/60 mb-6 text-center max-w-xs">Você ainda não registrou receitas. Comece a acompanhar seus ganhos.</p>
+              <Button onClick={handleOpenDialog} className="gap-2">
+                <Plus className="w-4 h-4" />
+                Registrar receita
               </Button>
             </div>
           )}
