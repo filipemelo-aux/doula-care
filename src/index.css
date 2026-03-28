@@ -587,4 +587,21 @@
     max-width: 100%;
     height: auto;
   }
+
+  /* Ajustes locais para o modal de nova cliente */
+  .client-dialog-form [data-slot="form-item"] {
+    margin-bottom: 0;
+    min-width: 0;
+  }
+
+  .client-dialog-form input.premium-input,
+  .client-dialog-form textarea.premium-input {
+    height: auto !important;
+    min-height: 2.25rem;
+    line-height: 1.4;
+  }
+
+  .client-dialog-form button.premium-input {
+    min-height: 2.25rem;
+  }
 }
