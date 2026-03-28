@@ -35,14 +35,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+// Table imports removed — using list layout now
 import {
   Form,
   FormControl,
@@ -75,7 +68,7 @@ import { PixSettingsCard } from "@/components/settings/PixSettingsCard";
 import { BrandingSettingsCard } from "@/components/settings/BrandingSettingsCard";
 import { PushNotificationStatusCard } from "@/components/settings/PushNotificationStatusCard";
 import { toast } from "sonner";
-import { formatBrazilDate } from "@/lib/utils";
+// formatBrazilDate removed — no longer needed in list layout
 import { ClientAccessCard } from "@/components/settings/ClientAccessCard";
 import { AvatarUpload } from "@/components/gestante/AvatarUpload";
 import { useForm } from "react-hook-form";
