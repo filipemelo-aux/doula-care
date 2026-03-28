@@ -502,27 +502,34 @@ export default function Forum() {
             className="pl-10"
           />
         </div>
-        <div className="flex flex-wrap gap-2">
-          <Button
-            variant={selectedCategory === null ? "default" : "outline"}
-            size="sm"
+        <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide -mx-3 px-3">
+          <button
             onClick={() => setSelectedCategory(null)}
-            className="shrink-0 rounded-full text-xs h-8"
+            className={cn(
+              "shrink-0 rounded-full text-xs h-8 px-3.5 font-medium transition-all duration-200 flex items-center gap-1.5",
+              selectedCategory === null
+                ? "bg-primary text-primary-foreground shadow-sm"
+                : "bg-muted/50 text-muted-foreground hover:bg-muted"
+            )}
           >
             Todos
-          </Button>
+          </button>
           {categories.map((cat: any) => {
             const isSelected = selectedCategory === cat.id;
             return (
-              <Button
+              <button
                 key={cat.id}
-                variant={isSelected ? "default" : "outline"}
-                size="sm"
                 onClick={() => setSelectedCategory(cat.id)}
-                className="shrink-0 rounded-full text-xs h-8"
+                className={cn(
+                  "shrink-0 rounded-full text-xs h-8 px-3.5 font-medium transition-all duration-200 flex items-center gap-1.5 whitespace-nowrap",
+                  isSelected
+                    ? "bg-primary text-primary-foreground shadow-sm"
+                    : "bg-muted/50 text-muted-foreground hover:bg-muted"
+                )}
               >
-                {cat.icon}{isSelected ? ` ${cat.name}` : ""}
-              </Button>
+                <span>{cat.icon}</span>
+                <span>{cat.name}</span>
+              </button>
             );
           })}
         </div>
