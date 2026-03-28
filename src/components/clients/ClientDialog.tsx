@@ -798,12 +798,10 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col flex-1 min-h-0">
-            <div className="flex-1 overflow-y-auto pr-4 space-y-4">
+            <div className="flex-1 overflow-y-auto pr-4 space-y-0 scrollbar-thin">
               {/* Dados Pessoais */}
-              <div className="space-y-3">
-                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                  Dados Pessoais
-                </h3>
+              <div className="form-section">
+                <h3 className="form-section-title">Dados Pessoais</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   <FormField
                     control={form.control}
@@ -858,10 +856,8 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
               </div>
 
               {/* Endereço */}
-              <div className="space-y-3">
-                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                  Endereço
-                </h3>
+              <div className="form-section">
+                <h3 className="form-section-title">Endereço</h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                   <FormField
                     control={form.control}
@@ -967,10 +963,8 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
               </div>
 
               {/* Acompanhante */}
-              <div className="space-y-3">
-                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                  Acompanhante
-                </h3>
+              <div className="form-section">
+                <h3 className="form-section-title">Acompanhante</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   <FormField
                     control={form.control}
@@ -1007,10 +1001,8 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
               </div>
 
               {/* Status e Gestação */}
-              <div className="space-y-3">
-                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                  Status e Gestação
-                </h3>
+              <div className="form-section">
+                <h3 className="form-section-title">Status e Gestação</h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                   <FormField
                     control={form.control}
@@ -1114,10 +1106,8 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
               </div>
 
               {/* Plano e Pagamento */}
-              <div className="space-y-3">
-                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                  Plano e Pagamento
-                </h3>
+              <div className="form-section">
+                <h3 className="form-section-title">Plano e Pagamento</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
                   <FormField
                     control={form.control}
@@ -1524,8 +1514,8 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
                 )}
               </div>
               {/* Pré-natal */}
-              <div className="space-y-3 rounded-lg p-3">
-                <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Pré-natal</h4>
+              <div className="form-section">
+                <h3 className="form-section-title">Pré-natal</h3>
                 <div className="grid grid-cols-2 gap-3">
                   <FormField
                     control={form.control}
@@ -1631,8 +1621,8 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
               </div>
 
               {/* Saúde e Restrições */}
-              <div className="space-y-3 rounded-lg p-3">
-                <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Saúde e Restrições</h4>
+              <div className="form-section">
+                <h3 className="form-section-title">Saúde e Restrições</h3>
                 <FormField
                   control={form.control}
                   name="comorbidades"
@@ -1675,8 +1665,8 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
               </div>
 
               {/* Fotógrafa */}
-              <div className="space-y-3 rounded-lg p-3">
-                <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Fotógrafa</h4>
+              <div className="form-section">
+                <h3 className="form-section-title">Fotógrafa</h3>
                 <FormField
                   control={form.control}
                   name="has_fotografa"
@@ -1739,8 +1729,8 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
               </div>
 
               {/* Redes Sociais */}
-              <div className="space-y-3 rounded-lg p-3">
-                <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Redes Sociais</h4>
+              <div className="form-section">
+                <h3 className="form-section-title">Redes Sociais</h3>
                 <div className="grid grid-cols-2 gap-3">
                   <FormField
                     control={form.control}
@@ -1771,6 +1761,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
                 </div>
               </div>
 
+              <div className="form-section">
               <FormField
                 control={form.control}
                 name="notes"
@@ -1788,6 +1779,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
                   </FormItem>
                 )}
               />
+              </div>
             </div>
 
             {/* Actions - Fixed at bottom */}
