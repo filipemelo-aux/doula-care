@@ -950,43 +950,59 @@ export default function Financial() {
                           onChangeMethod={(method) => handleChangePaymentMethod(transaction.id, method)}
                           compact
                         />
-                        <div className="flex items-center gap-0">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleOpenPaymentDialog(transaction)}
-                            className="h-6 w-6 text-success"
-                            title="Lançar pagamento"
-                          >
-                            <DollarSign className="h-3 w-3" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleEditTransaction(transaction)}
-                            className="h-6 w-6 text-muted-foreground"
-                            title="Editar"
-                          >
-                            <Pencil className="h-3 w-3" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleOpenDetailDialog(transaction.id)}
-                            className="h-6 w-6 text-muted-foreground"
-                            title="Ver detalhes"
-                          >
-                            <Eye className="h-3 w-3" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleDelete(transaction.id)}
-                            className="h-6 w-6 text-destructive"
-                            title="Excluir"
-                          >
-                            <Trash2 className="h-3 w-3" />
-                          </Button>
+                        <div className="flex items-center gap-1">
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleOpenPaymentDialog(transaction)}
+                                className="h-7 px-1.5 gap-1 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 hover:shadow-sm transition-all"
+                              >
+                                <DollarSign className="h-3.5 w-3.5" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>Registrar pagamento</TooltipContent>
+                          </Tooltip>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleEditTransaction(transaction)}
+                                className="h-7 px-1.5 gap-1 text-muted-foreground hover:text-foreground hover:bg-muted hover:shadow-sm transition-all"
+                              >
+                                <Pencil className="h-3.5 w-3.5" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>Editar receita</TooltipContent>
+                          </Tooltip>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleOpenDetailDialog(transaction.id)}
+                                className="h-7 px-1.5 gap-1 text-muted-foreground hover:text-foreground hover:bg-muted hover:shadow-sm transition-all"
+                              >
+                                <Eye className="h-3.5 w-3.5" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>Ver detalhes</TooltipContent>
+                          </Tooltip>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleDelete(transaction.id)}
+                                className="h-7 px-1.5 gap-1 text-destructive hover:text-destructive hover:bg-destructive/10 hover:shadow-sm transition-all"
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>Excluir</TooltipContent>
+                          </Tooltip>
                         </div>
                       </div>
                     </Card>
@@ -1103,43 +1119,59 @@ export default function Financial() {
                             </div>
                           </TableCell>
                           <TableCell className="py-2.5">
-                            <div className="flex items-center gap-0">
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => handleOpenPaymentDialog(transaction)}
-                                className="h-6 w-6 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 opacity-0 group-hover:opacity-100 transition-opacity"
-                                title="Lançar pagamento"
-                              >
-                                <DollarSign className="h-3.5 w-3.5" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => handleEditTransaction(transaction)}
-                                className="h-6 w-6 text-muted-foreground hover:text-foreground opacity-0 group-hover:opacity-100 transition-opacity"
-                                title="Editar"
-                              >
-                                <Pencil className="h-3.5 w-3.5" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => handleOpenDetailDialog(transaction.id)}
-                                className="h-6 w-6 text-muted-foreground hover:text-foreground opacity-0 group-hover:opacity-100 transition-opacity"
-                                title="Ver detalhes"
-                              >
-                                <Eye className="h-3.5 w-3.5" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => handleDelete(transaction.id)}
-                                className="h-6 w-6 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
-                                title="Excluir"
-                              >
-                                <Trash2 className="h-3.5 w-3.5" />
-                              </Button>
+                            <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => handleOpenPaymentDialog(transaction)}
+                                    className="h-7 px-1.5 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 hover:shadow-sm transition-all"
+                                  >
+                                    <DollarSign className="h-3.5 w-3.5" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>Registrar pagamento</TooltipContent>
+                              </Tooltip>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => handleEditTransaction(transaction)}
+                                    className="h-7 px-1.5 text-muted-foreground hover:text-foreground hover:bg-muted hover:shadow-sm transition-all"
+                                  >
+                                    <Pencil className="h-3.5 w-3.5" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>Editar receita</TooltipContent>
+                              </Tooltip>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => handleOpenDetailDialog(transaction.id)}
+                                    className="h-7 px-1.5 text-muted-foreground hover:text-foreground hover:bg-muted hover:shadow-sm transition-all"
+                                  >
+                                    <Eye className="h-3.5 w-3.5" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>Ver detalhes</TooltipContent>
+                              </Tooltip>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => handleDelete(transaction.id)}
+                                    className="h-7 px-1.5 text-destructive hover:text-destructive hover:bg-destructive/10 hover:shadow-sm transition-all"
+                                  >
+                                    <Trash2 className="h-3.5 w-3.5" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>Excluir</TooltipContent>
+                              </Tooltip>
                             </div>
                           </TableCell>
                         </TableRow>
