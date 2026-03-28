@@ -204,10 +204,11 @@ export default function Reports() {
 
   // Monthly table data
   const { data: monthlyTableData } = useQuery({
-    queryKey: ["monthly-table-report"],
+    queryKey: ["monthly-table-report", period],
     queryFn: async () => {
+      const monthCount = period === "year" ? 12 : period === "semester" ? 6 : period === "quarter" ? 3 : 1;
       const months = [];
-      for (let i = 0; i <= 11; i++) {
+      for (let i = 0; i < monthCount; i++) {
         const date = subMonths(new Date(), i);
         const start = startOfMonth(date);
         const end = endOfMonth(date);
