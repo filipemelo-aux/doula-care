@@ -319,12 +319,35 @@
     padding: 12px 14px;
   }
 
-  /* Form spacing: label → input gap and field → field gap */
+  /* ── Form Rhythm System ──
+     label → input: 4px
+     field → field: 12px
+     group → group: 20px
+  */
+
+  /* Label → input: 4px */
   .space-y-2 > label + input,
   .space-y-2 > label + textarea,
   .space-y-2 > label + div,
-  .space-y-2 > label + button {
-    margin-top: 4px;
+  .space-y-2 > label + button,
+  .space-y-4 > label + input,
+  .space-y-4 > label + textarea,
+  .space-y-4 > label + div,
+  .space-y-4 > label + button {
+    margin-top: 4px !important;
+  }
+
+  /* Field → field: 12px (override space-y-*) */
+  .space-y-2 > * + *,
+  .space-y-4 > * + * {
+    margin-top: 12px;
+  }
+
+  /* Group → group: 20px */
+  .space-y-2 > .form-section + .form-section,
+  .space-y-4 > .form-section + .form-section,
+  .space-y-6 > * + * {
+    margin-top: 20px;
   }
 
   /* Global input reset — kill any remaining outline/ring from libs */
@@ -364,7 +387,8 @@
 
   /* Form section divider — clear visual grouping */
   .form-section {
-    @apply relative pt-5 first:pt-0;
+    @apply relative first:pt-0;
+    padding-top: 20px;
   }
 
   .form-section:not(:first-child)::before {
@@ -507,11 +531,7 @@
     height: 100% !important;
   }
 
-  /* Compact form spacing inside dialogs */
-  [data-radix-dialog-content] .space-y-4 > * + * {
-    margin-top: 12px;
-  }
-
+  /* Dialog-scoped: button at end gets 16px top */
   [data-radix-dialog-content] .space-y-4 > button:last-child,
   [data-radix-alert-dialog-content] .space-y-4 > button:last-child {
     margin-top: 16px;
