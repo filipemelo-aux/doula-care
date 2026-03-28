@@ -49,7 +49,14 @@ import {
   List,
   CalendarDays,
   CalendarCheck,
+  MoreVertical,
 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { AppointmentDetailDialog } from "@/components/clients/AppointmentDetailDialog";
 import { AppointmentCompleteDialog } from "@/components/clients/AppointmentCompleteDialog";
 import { format, isToday, isPast, isFuture, parseISO } from "date-fns";
@@ -440,60 +447,58 @@ export default function Agenda() {
   }).length;
 
   return (
-    <div className="space-y-4 lg:space-y-6 overflow-x-hidden">
+    <div className="space-y-6 lg:space-y-8 overflow-x-hidden">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+      <div className="flex items-center justify-between gap-3">
         <div className="page-header mb-0 min-w-0">
           <h1 className="page-title">Agenda</h1>
           <p className="page-description">Consultas e serviços em um só lugar</p>
         </div>
-        <div className="flex gap-2 flex-wrap">
-          <Button onClick={() => setPersonalAptDialog(true)} variant="outline" size="sm">
-            <Plus className="h-4 w-4 mr-1" />
-            Compromisso Pessoal
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <Button onClick={() => setServiceDialog(true)} size="sm" className="gap-1.5">
+            <Plus className="h-4 w-4" />
+            <span className="hidden sm:inline">Novo serviço</span>
           </Button>
-          <Button onClick={() => setAppointmentDialog(true)} variant="outline" size="sm">
-            <Calendar className="h-4 w-4 mr-1" />
-            Nova consulta
-          </Button>
-          <Button onClick={() => setServiceDialog(true)} size="sm">
-            <Briefcase className="h-4 w-4 mr-1" />
-            Novo serviço
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="icon" className="h-9 w-9">
+                <MoreVertical className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuItem onClick={() => setAppointmentDialog(true)} className="gap-2.5 py-2.5">
+                <Calendar className="h-4 w-4" /> Nova consulta
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setPersonalAptDialog(true)} className="gap-2.5 py-2.5">
+                <CalendarCheck className="h-4 w-4" /> Compromisso pessoal
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 
-      {/* Quick Stats */}
-      <div className="grid grid-cols-3 gap-3">
-        <Card className="bg-warning/10">
-          <CardContent className="p-3 text-center">
-            <p className="text-2xl font-bold text-amber-700">{pendingServices}</p>
-            <p className="text-xs text-amber-700/80">Solicitações Pendentes</p>
-          </CardContent>
-        </Card>
-        <Card className="bg-primary/10">
-          <CardContent className="p-3 text-center">
-            <p className="text-2xl font-bold text-primary">{budgetSentServices}</p>
-            <p className="text-xs text-primary/80">Aguardando Resposta</p>
-          </CardContent>
-        </Card>
-        <Card className="bg-success/10">
-          <CardContent className="p-3 text-center">
-            <p className="text-2xl font-bold text-emerald-700">{acceptedServices}</p>
-            <p className="text-xs text-emerald-700/80">Em Andamento</p>
-          </CardContent>
-        </Card>
+      {/* Quick Stats — compact badges */}
+      <div className="flex items-center gap-2 flex-wrap">
+        <Badge className="bg-amber-100 text-amber-800 hover:bg-amber-100 gap-1.5 px-3 py-1.5 text-xs font-medium">
+          <span className="font-bold">{pendingServices}</span> Pendentes
+        </Badge>
+        <Badge className="bg-primary/10 text-primary hover:bg-primary/10 gap-1.5 px-3 py-1.5 text-xs font-medium">
+          <span className="font-bold">{budgetSentServices}</span> Aguardando
+        </Badge>
+        <Badge className="bg-emerald-100 text-emerald-800 hover:bg-emerald-100 gap-1.5 px-3 py-1.5 text-xs font-medium">
+          <span className="font-bold">{acceptedServices}</span> Em andamento
+        </Badge>
       </div>
 
-      {/* View Toggle + Search */}
+      {/* Search + View Toggle */}
       <div className="flex items-center gap-3">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/60" />
           <Input
             placeholder="Buscar por cliente ou serviço..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-9"
+            className="pl-10"
           />
         </div>
         <ToggleGroup type="single" value={viewMode} onValueChange={(v) => v && setViewMode(v as "list" | "calendar")}>
