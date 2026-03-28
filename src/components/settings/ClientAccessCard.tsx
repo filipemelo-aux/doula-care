@@ -1,16 +1,8 @@
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -21,14 +13,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Badge } from "@/components/ui/badge";
 import { Baby, Copy, Eye, EyeOff, Loader2, UserPlus, RotateCcw, Trash2 } from "lucide-react";
 import { toast } from "sonner";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 
 interface Client {
   id: string;
@@ -44,45 +30,17 @@ interface ClientAccessCardProps {
   loadingClients: boolean;
 }
 
-// Generate email from full name
-const generateEmail = (fullName: string): string => {
-  const normalized = fullName
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .trim();
-  const parts = normalized.split(/\s+/);
-  if (parts.length < 2) {
-    return `${parts[0]}@gestante.doula.app`;
-  }
-  return `${parts[0]}.${parts[parts.length - 1]}@gestante.doula.app`;
-};
-
-// Generate username (without @domain)
 const generateUsername = (fullName: string): string => {
-  const normalized = fullName
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .trim();
+  const normalized = fullName.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
   const parts = normalized.split(/\s+/);
-  if (parts.length < 2) {
-    return parts[0];
-  }
-  return `${parts[0]}.${parts[parts.length - 1]}`;
+  return parts.length < 2 ? parts[0] : `${parts[0]}.${parts[parts.length - 1]}`;
 };
 
-// Generate password from DPP (DDMMAA format - day, month, year last 2 digits)
 const generatePassword = (dpp: string): string => {
-  // DPP format is YYYY-MM-DD
   const parts = dpp.split("-");
   if (parts.length === 3) {
-    const year = parts[0].slice(-2); // last 2 digits of year
-    const month = parts[1];
-    const day = parts[2];
-    return `${day}${month}${year}`;
+    return `${parts[2]}${parts[1]}${parts[0].slice(-2)}`;
   }
-  // Fallback
   return dpp.replace(/\D/g, "").slice(0, 6);
 };
 
@@ -92,6 +50,7 @@ export function ClientAccessCard({ clientsWithAccounts, loadingClients }: Client
   const [resettingClientId, setResettingClientId] = useState<string | null>(null);
   const [resetConfirmClient, setResetConfirmClient] = useState<Client | null>(null);
   const [resettingData, setResettingData] = useState(false);
+
   const provisionMutation = useMutation({
     mutationFn: async () => {
       const { data, error } = await supabase.functions.invoke("provision-existing-clients");
@@ -106,57 +65,35 @@ export function ClientAccessCard({ clientsWithAccounts, loadingClients }: Client
       } else {
         toast.info("Nenhuma gestante pendente encontrada");
       }
-      if (data.errors && data.errors.length > 0) {
-        toast.warning(`${data.errors.length} erro(s) durante a criação`, {
-          description: data.errors.slice(0, 3).join(", "),
-        });
+      if (data.errors?.length > 0) {
+        toast.warning(`${data.errors.length} erro(s) durante a criação`, { description: data.errors.slice(0, 3).join(", ") });
       }
     },
+    onError: (error) => toast.error("Erro ao criar usuários", { description: error.message }),
+  });
+
+  const resetPasswordMutation = useMutation({
+    mutationFn: async (clientId: string) => {
+      setResettingClientId(clientId);
+      const { data, error } = await supabase.functions.invoke("reset-client-password", { body: { clientId } });
+      if (error) throw error;
+      if (data.error) throw new Error(data.error);
+      return data;
+    },
+    onSuccess: (data) => {
+      toast.success("Senha resetada!", { description: data.hint });
+      queryClient.invalidateQueries({ queryKey: ["clients-with-accounts"] });
+      setResettingClientId(null);
+    },
     onError: (error) => {
-      toast.error("Erro ao criar usuários", {
-        description: error.message,
-      });
+      toast.error("Erro ao resetar senha", { description: error.message });
+      setResettingClientId(null);
     },
   });
 
   const copyToClipboard = (text: string, label: string) => {
     navigator.clipboard.writeText(text);
     toast.success(`${label} copiado!`);
-  };
-
-  const togglePasswordVisibility = (clientId: string) => {
-    setShowPasswords(prev => ({ ...prev, [clientId]: !prev[clientId] }));
-  };
-
-  const resetPasswordMutation = useMutation({
-    mutationFn: async (clientId: string) => {
-      setResettingClientId(clientId);
-      const { data, error } = await supabase.functions.invoke("reset-client-password", {
-        body: { clientId },
-      });
-      if (error) throw error;
-      if (data.error) throw new Error(data.error);
-      return data;
-    },
-    onSuccess: (data) => {
-      toast.success("Senha resetada com sucesso!", {
-        description: data.hint,
-      });
-      queryClient.invalidateQueries({ queryKey: ["clients-with-accounts"] });
-      setResettingClientId(null);
-    },
-    onError: (error) => {
-      toast.error("Erro ao resetar senha", {
-        description: error.message,
-      });
-      setResettingClientId(null);
-    },
-  });
-
-  const handleResetPassword = (clientId: string, clientName: string) => {
-    if (confirm(`Deseja resetar a senha de ${clientName}?\n\nA nova senha será o dia e mês da DPP (formato DDMM).`)) {
-      resetPasswordMutation.mutate(clientId);
-    }
   };
 
   const handleResetTestData = async () => {
@@ -196,11 +133,8 @@ export function ClientAccessCard({ clientsWithAccounts, loadingClients }: Client
       queryClient.invalidateQueries({ queryKey: ["clients"] });
       queryClient.invalidateQueries({ queryKey: ["clients-with-accounts"] });
       setResetConfirmClient(null);
-      toast.success("Dados limpos!", {
-        description: "Contrações, diário, mensagens, serviços, consultas e dados de parto resetados.",
-      });
-    } catch (error) {
-      console.error("Error resetting test data:", error);
+      toast.success("Dados limpos!");
+    } catch {
       toast.error("Erro ao limpar dados");
     } finally {
       setResettingData(false);
@@ -208,196 +142,113 @@ export function ClientAccessCard({ clientsWithAccounts, loadingClients }: Client
   };
 
   return (
-    <Card className="card-glass">
-      <CardHeader className="pb-2 px-3 sm:px-6">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+    <>
+      <div className="rounded-2xl bg-card border border-border/50 overflow-hidden">
+        <div className="flex items-center justify-between p-4 pb-3">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-accent/10 flex items-center justify-center shrink-0">
-              <Baby className="w-4 h-4 sm:w-5 sm:h-5 text-accent" />
+            <div className="w-9 h-9 rounded-xl bg-accent/10 flex items-center justify-center shrink-0">
+              <Baby className="w-4 h-4 text-accent" />
             </div>
-            <div className="min-w-0">
-              <CardTitle className="text-base sm:text-lg">Acessos Gestantes</CardTitle>
-              <CardDescription className="text-xs truncate">
-                Credenciais das clientes
-              </CardDescription>
+            <div>
+              <h3 className="text-sm font-semibold text-foreground">Acessos Gestantes</h3>
+              <p className="text-xs text-muted-foreground">{clientsWithAccounts?.length || 0} com acesso</p>
             </div>
           </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => provisionMutation.mutate()}
-            disabled={provisionMutation.isPending}
-            className="gap-1.5 text-xs h-8"
-          >
-            {provisionMutation.isPending ? (
-              <Loader2 className="h-3 w-3 animate-spin" />
-            ) : (
-              <UserPlus className="h-3 w-3" />
-            )}
-            <span className="hidden sm:inline">Criar Pendentes</span>
-            <span className="sm:hidden">Criar</span>
+          <Button variant="outline" size="sm" onClick={() => provisionMutation.mutate()} disabled={provisionMutation.isPending} className="h-8 text-xs gap-1.5">
+            {provisionMutation.isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : <UserPlus className="h-3.5 w-3.5" />}
+            Criar
           </Button>
         </div>
-      </CardHeader>
-      <CardContent className="px-2 sm:px-6 pt-0">
-        {loadingClients ? (
-          <div className="flex items-center justify-center py-8">
-            <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
-          </div>
-        ) : clientsWithAccounts && clientsWithAccounts.length > 0 ? (
-          <div className="-mx-2 sm:mx-0">
-            <Table className="text-xs sm:text-sm">
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="px-2">Cliente</TableHead>
-                  <TableHead className="px-2 hidden sm:table-cell">Usuário</TableHead>
-                  <TableHead className="px-2">Senha</TableHead>
-                  <TableHead className="px-2 w-16">Status</TableHead>
-                  <TableHead className="px-2 w-10"></TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {clientsWithAccounts.map((client) => {
-                  const username = generateUsername(client.full_name);
-                  const password = client.dpp ? generatePassword(client.dpp) : "N/A";
-                  const isPasswordVisible = showPasswords[client.id];
-                  
-                  return (
-                    <TableRow key={client.id} className="table-row-hover">
-                      <TableCell className="px-2 py-1.5">
-                        <div className="min-w-0">
-                          <p className="font-medium truncate text-xs sm:text-sm max-w-[80px] sm:max-w-[120px]">
-                            {client.full_name.split(' ')[0]}
-                          </p>
-                          <p className="text-[10px] text-muted-foreground truncate sm:hidden">
-                            {username}
-                          </p>
-                        </div>
-                      </TableCell>
-                      <TableCell className="px-2 py-1.5 hidden sm:table-cell">
-                        <div className="flex items-center gap-1">
-                          <span className="text-xs font-mono truncate max-w-[100px]">
-                            {username}
-                          </span>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-5 w-5 shrink-0"
-                            onClick={() => copyToClipboard(username, "Usuário")}
-                          >
-                            <Copy className="h-3 w-3" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                      <TableCell className="px-2 py-1.5">
+        <div className="px-4 pb-4">
+          {loadingClients ? (
+            <div className="flex justify-center py-8">
+              <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+            </div>
+          ) : clientsWithAccounts && clientsWithAccounts.length > 0 ? (
+            <div className="space-y-1">
+              {clientsWithAccounts.map((client) => {
+                const username = generateUsername(client.full_name);
+                const password = client.dpp ? generatePassword(client.dpp) : "N/A";
+                const isPasswordVisible = showPasswords[client.id];
+
+                return (
+                  <div key={client.id} className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-muted/40 transition-colors">
+                    <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center shrink-0">
+                      <span className="text-xs font-semibold text-accent">
+                        {client.full_name.charAt(0).toUpperCase()}
+                      </span>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        <p className="text-sm font-medium truncate">{client.full_name.split(" ")[0]}</p>
                         {client.first_login ? (
-                          <div className="flex items-center gap-1.5">
-                            <span className="text-xs font-mono min-w-[52px]">
+                          <Badge variant="outline" className="text-[9px] px-1 py-0 bg-warning/10 text-warning border-0">Aguard.</Badge>
+                        ) : (
+                          <Badge variant="outline" className="text-[9px] px-1 py-0 bg-success/10 text-success border-0">Ativo</Badge>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-1 mt-0.5">
+                        <span className="text-[10px] font-mono text-muted-foreground truncate">{username}</span>
+                        <button onClick={() => copyToClipboard(username, "Usuário")} className="text-muted-foreground hover:text-foreground">
+                          <Copy className="h-2.5 w-2.5" />
+                        </button>
+                        <span className="text-[10px] text-muted-foreground/40 mx-0.5">•</span>
+                        {client.first_login ? (
+                          <>
+                            <span className="text-[10px] font-mono text-muted-foreground">
                               {isPasswordVisible ? password : "••••••"}
                             </span>
-                            <div className="flex items-center">
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-6 w-6 shrink-0"
-                                onClick={() => togglePasswordVisibility(client.id)}
-                              >
-                                {isPasswordVisible ? (
-                                  <EyeOff className="h-3.5 w-3.5" />
-                                ) : (
-                                  <Eye className="h-3.5 w-3.5" />
-                                )}
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-6 w-6 shrink-0"
-                                onClick={() => copyToClipboard(password, "Senha")}
-                              >
-                                <Copy className="h-3 w-3" />
-                              </Button>
-                            </div>
-                          </div>
+                            <button onClick={() => setShowPasswords(p => ({ ...p, [client.id]: !p[client.id] }))} className="text-muted-foreground hover:text-foreground">
+                              {isPasswordVisible ? <EyeOff className="h-2.5 w-2.5" /> : <Eye className="h-2.5 w-2.5" />}
+                            </button>
+                            <button onClick={() => copyToClipboard(password, "Senha")} className="text-muted-foreground hover:text-foreground">
+                              <Copy className="h-2.5 w-2.5" />
+                            </button>
+                          </>
                         ) : (
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <span className="text-xs text-muted-foreground italic cursor-help">
-                                Personalizada
-                              </span>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p>Usuária alterou a senha. Use o botão de reset para restaurar.</p>
-                            </TooltipContent>
-                          </Tooltip>
+                          <span className="text-[10px] text-muted-foreground italic">Personalizada</span>
                         )}
-                      </TableCell>
-                      <TableCell className="px-2 py-1.5">
-                        {client.first_login ? (
-                          <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-warning/10 text-warning">
-                            Aguard.
-                          </Badge>
-                        ) : (
-                          <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-success/10 text-success">
-                            Ativo
-                          </Badge>
-                        )}
-                      </TableCell>
-                      <TableCell className="px-2 py-1.5">
-                        <div className="flex items-center gap-0.5">
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-6 w-6"
-                              onClick={() => handleResetPassword(client.id, client.full_name)}
-                              disabled={resettingClientId === client.id}
-                            >
-                              {resettingClientId === client.id ? (
-                                <Loader2 className="h-3 w-3 animate-spin" />
-                              ) : (
-                                <RotateCcw className="h-3 w-3" />
-                              )}
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>Resetar senha</p>
-                          </TooltipContent>
-                        </Tooltip>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-6 w-6 text-destructive hover:text-destructive"
-                              onClick={() => setResetConfirmClient(client)}
-                            >
-                              <Trash2 className="h-3 w-3" />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>Limpar dados da usuária</p>
-                          </TooltipContent>
-                        </Tooltip>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-          </div>
-        ) : (
-          <p className="text-center text-muted-foreground py-8">
-            Nenhuma gestante com acesso criado
-          </p>
-        )}
-      </CardContent>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-0.5 shrink-0">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 text-muted-foreground"
+                        onClick={() => {
+                          if (confirm(`Resetar senha de ${client.full_name.split(" ")[0]}?`)) {
+                            resetPasswordMutation.mutate(client.id);
+                          }
+                        }}
+                        disabled={resettingClientId === client.id}
+                        title="Resetar senha"
+                      >
+                        {resettingClientId === client.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <RotateCcw className="h-3 w-3" />}
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                        onClick={() => setResetConfirmClient(client)}
+                        title="Limpar dados"
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <p className="text-center text-sm text-muted-foreground py-8">Nenhuma gestante com acesso</p>
+          )}
+        </div>
+      </div>
 
       <AlertDialog open={!!resetConfirmClient} onOpenChange={(open) => !open && setResetConfirmClient(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Limpar dados de {resetConfirmClient?.full_name?.split(' ')[0]}?</AlertDialogTitle>
+            <AlertDialogTitle>Limpar dados de {resetConfirmClient?.full_name?.split(" ")[0]}?</AlertDialogTitle>
             <AlertDialogDescription asChild>
               <div className="text-sm text-muted-foreground">
                 <p className="mb-2">As seguintes informações serão apagadas permanentemente:</p>
@@ -408,7 +259,6 @@ export function ClientAccessCard({ clientsWithAccounts, loadingClients }: Client
                   <li>Solicitações de serviço</li>
                   <li>Consultas agendadas</li>
                   <li>Dados de trabalho de parto e nascimento</li>
-                  <li>Status será resetado para "Gestante"</li>
                 </ul>
                 <p><strong>Dados financeiros serão mantidos.</strong></p>
               </div>
@@ -423,6 +273,6 @@ export function ClientAccessCard({ clientsWithAccounts, loadingClients }: Client
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </Card>
+    </>
   );
 }
