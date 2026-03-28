@@ -470,12 +470,12 @@ export default function Forum() {
         </div>
       </div>
 
-      {/* Create post button (compact) */}
+      {/* Create post CTA */}
       <button
         onClick={() => setShowNewPost(true)}
-        className="w-full bg-card rounded-xl p-4 flex items-center gap-3 hover:bg-accent/50 transition-colors text-left"
+        className="group w-full bg-card rounded-2xl p-4 flex items-center gap-3 text-left shadow-[0_2px_12px_rgba(0,0,0,0.06)] hover:shadow-[0_4px_20px_rgba(0,0,0,0.10)] hover:bg-accent/30 active:scale-[0.98] transition-all duration-200"
       >
-        <Avatar className="h-10 w-10 bg-primary/10">
+        <Avatar className="h-10 w-10 ring-2 ring-primary/20">
           {currentUser?.avatarUrl && (
             <AvatarImage src={currentUser.avatarUrl} alt={currentUser.displayName} className="object-cover" />
           )}
@@ -483,8 +483,12 @@ export default function Forum() {
             {currentUser ? getInitials(currentUser.displayName) : "?"}
           </AvatarFallback>
         </Avatar>
-        <span className="text-muted-foreground text-sm flex-1">No que você está pensando?</span>
-        <Plus className="h-5 w-5 text-primary" />
+        <span className="text-muted-foreground/70 text-sm flex-1 group-hover:text-muted-foreground transition-colors">
+          Compartilhe uma experiência, dúvida ou dica...
+        </span>
+        <div className="h-8 w-8 rounded-full bg-primary/10 group-hover:bg-primary/20 flex items-center justify-center transition-colors">
+          <Plus className="h-4 w-4 text-primary" />
+        </div>
       </button>
 
       {/* Search + Filters */}
