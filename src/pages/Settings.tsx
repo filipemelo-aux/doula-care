@@ -35,14 +35,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+// Table imports removed — using list layout now
 import {
   Form,
   FormControl,
@@ -75,7 +68,7 @@ import { PixSettingsCard } from "@/components/settings/PixSettingsCard";
 import { BrandingSettingsCard } from "@/components/settings/BrandingSettingsCard";
 import { PushNotificationStatusCard } from "@/components/settings/PushNotificationStatusCard";
 import { toast } from "sonner";
-import { formatBrazilDate } from "@/lib/utils";
+// formatBrazilDate removed — no longer needed in list layout
 import { ClientAccessCard } from "@/components/settings/ClientAccessCard";
 import { AvatarUpload } from "@/components/gestante/AvatarUpload";
 import { useForm } from "react-hook-form";
@@ -404,32 +397,29 @@ export default function Settings() {
       {/* Header */}
       <div className="page-header">
         <h1 className="page-title">Configurações</h1>
-        <p className="page-description">Gerencie usuários, planos e preferências</p>
       </div>
 
-      {/* Current User Info */}
-      <Card className="card-glass">
-        <CardContent className="pt-6">
-          <div className="flex flex-col gap-4">
-            <div className="flex items-center gap-4">
-              <AvatarUpload
-                currentUrl={avatarUrl}
-                onUploaded={setAvatarUrl}
-                userId={user?.id}
-                name={profileName || ""}
-                size="lg"
-              />
-              <div>
-                <h3 className="font-semibold text-foreground">{profileName || user?.email}</h3>
-                <p className="text-sm text-muted-foreground">{callerIsAdmin ? "Administrador" : callerIsModerator ? "Moderador" : "Usuário"}</p>
-              </div>
-            </div>
-            <Button variant="outline" onClick={signOut} className="gap-2 w-full sm:w-auto">
-              <LogOut className="w-4 h-4" /> Sair
-            </Button>
+      {/* Current User Profile — prominent, minimal */}
+      <div className="rounded-2xl bg-card border border-border/50 p-5">
+        <div className="flex items-center gap-4">
+          <AvatarUpload
+            currentUrl={avatarUrl}
+            onUploaded={setAvatarUrl}
+            userId={user?.id}
+            name={profileName || ""}
+            size="lg"
+          />
+          <div className="flex-1 min-w-0">
+            <h2 className="text-lg font-bold text-foreground truncate">{profileName || user?.email}</h2>
+            <p className="text-sm text-muted-foreground">
+              {callerIsAdmin ? "Administrador" : callerIsModerator ? "Moderador" : "Usuário"}
+            </p>
           </div>
-        </CardContent>
-      </Card>
+          <Button variant="ghost" size="icon" onClick={signOut} className="h-9 w-9 text-muted-foreground hover:text-destructive shrink-0" title="Sair">
+            <LogOut className="w-4 h-4" />
+          </Button>
+        </div>
+      </div>
 
       <Tabs defaultValue="users" className="space-y-4">
         <TabsList className="w-full grid grid-cols-5 gap-0 p-1">
@@ -444,24 +434,23 @@ export default function Settings() {
         <TabsContent value="users" className="space-y-6">
           {isAdmin && (
             <>
-              {/* Admin Users */}
-              <Card className="card-glass overflow-hidden">
-                <CardHeader className="pb-2">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                        <Users className="w-5 h-5 text-primary" />
-                      </div>
-                      <div>
-                        <CardTitle className="text-lg">Usuários do Sistema</CardTitle>
-                        <CardDescription>Gerencie permissões e acessos</CardDescription>
-                      </div>
+              {/* Admin Users — list layout */}
+              <div className="rounded-2xl bg-card border border-border/50 overflow-hidden">
+                <div className="flex items-center justify-between p-4 pb-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                      <Users className="w-4 h-4 text-primary" />
                     </div>
-                    {limits.multiCollaborators ? (
-                      <Dialog open={newUserOpen} onOpenChange={setNewUserOpen}>
-                        <DialogTrigger asChild>
-                          <Button size="sm"><UserPlus className="h-4 w-4 mr-1" />Novo</Button>
-                        </DialogTrigger>
+                    <div>
+                      <h3 className="text-sm font-semibold text-foreground">Equipe</h3>
+                      <p className="text-xs text-muted-foreground">{usersWithRoles?.length || 0} membro(s)</p>
+                    </div>
+                  </div>
+                  {limits.multiCollaborators ? (
+                    <Dialog open={newUserOpen} onOpenChange={setNewUserOpen}>
+                      <DialogTrigger asChild>
+                        <Button size="sm" variant="outline" className="h-8 text-xs gap-1.5"><UserPlus className="h-3.5 w-3.5" />Novo</Button>
+                      </DialogTrigger>
                       <DialogContent>
                         <DialogHeader>
                           <DialogTitle>Criar Novo Usuário</DialogTitle>
@@ -495,96 +484,66 @@ export default function Settings() {
                           </Button>
                         </div>
                       </DialogContent>
-                      </Dialog>
-                    ) : (
-                      <Button size="sm" variant="outline" disabled title="Disponível apenas no plano Premium">
-                        <Crown className="h-4 w-4 mr-1" />Premium
-                      </Button>
-                    )}
-                  </div>
-                </CardHeader>
-                <CardContent className="px-2 sm:px-6">
+                    </Dialog>
+                  ) : (
+                    <Button size="sm" variant="outline" disabled title="Disponível apenas no plano Premium" className="h-8 text-xs">
+                      <Crown className="h-3.5 w-3.5 mr-1" />Premium
+                    </Button>
+                  )}
+                </div>
+                <div className="px-4 pb-4">
                   {loadingUsers ? (
                     <div className="flex justify-center py-8">
-                      <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+                      <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
                     </div>
                   ) : usersWithRoles && usersWithRoles.length > 0 ? (
-                    <div className="-mx-2 sm:mx-0">
-                      <Table className="text-xs sm:text-sm">
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead className="px-2">Usuário</TableHead>
-                            <TableHead className="px-2">Papel</TableHead>
-                            <TableHead className="px-2 w-20">Ações</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {usersWithRoles.map((userProfile) => (
-                            <TableRow key={userProfile.id} className="table-row-hover">
-                              <TableCell className="px-2 py-1.5">
-                                <div className="min-w-0">
-                                  <p className="font-medium truncate text-xs sm:text-sm max-w-[120px] sm:max-w-none">
-                                    {userProfile.full_name || "Sem nome"}
-                                  </p>
-                                  <p className="text-[10px] text-muted-foreground">
-                                    {formatBrazilDate(userProfile.created_at, "dd/MM/yy")}
-                                    {isCurrentUser(userProfile.user_id) && (
-                                      <span className="ml-1 text-primary">(você)</span>
-                                    )}
-                                  </p>
-                                </div>
-                              </TableCell>
-                              <TableCell className="px-2 py-1.5">
-                                <div className="flex flex-wrap gap-0.5">
-                                  {userProfile.roles.length > 0
-                                    ? userProfile.roles.filter((r: string) => r !== "client").map((role: string) => (
-                                        <span key={role}>{getRoleBadge(role)}</span>
-                                      ))
-                                    : getRoleBadge("user")}
-                                </div>
-                              </TableCell>
-                              <TableCell className="px-2 py-1.5">
-                                {(() => {
-                                  const targetIsAdmin = userProfile.roles.includes("admin");
-                                  const canManage = callerIsAdmin || (callerIsModerator && !targetIsAdmin);
-                                  return (
-                                    <div className="flex items-center gap-1">
-                                      {canManage && (
-                                        <Button
-                                          variant="ghost"
-                                          size="icon"
-                                          className="h-7 w-7"
-                                          onClick={() => openEditUser(userProfile)}
-                                          title="Editar"
-                                        >
-                                          <Edit2 className="h-3.5 w-3.5" />
-                                        </Button>
-                                      )}
-                                      {canManage && !isCurrentUser(userProfile.user_id) && (
-                                        <Button
-                                          variant="ghost"
-                                          size="icon"
-                                          className="h-7 w-7 text-destructive hover:text-destructive"
-                                          onClick={() => setDeleteUserId(userProfile.user_id)}
-                                          title="Excluir"
-                                        >
-                                          <Trash2 className="h-3.5 w-3.5" />
-                                        </Button>
-                                      )}
-                                    </div>
-                                  );
-                                })()}
-                              </TableCell>
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
+                    <div className="space-y-1">
+                      {usersWithRoles.map((userProfile) => {
+                        const targetIsAdmin = userProfile.roles.includes("admin");
+                        const canManage = callerIsAdmin || (callerIsModerator && !targetIsAdmin);
+                        return (
+                          <div key={userProfile.id} className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-muted/40 transition-colors">
+                            <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                              <span className="text-xs font-semibold text-primary">
+                                {(userProfile.full_name || "U").charAt(0).toUpperCase()}
+                              </span>
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-1.5">
+                                <p className="text-sm font-medium truncate">{userProfile.full_name || "Sem nome"}</p>
+                                {isCurrentUser(userProfile.user_id) && (
+                                  <span className="text-[10px] text-primary font-medium">(você)</span>
+                                )}
+                              </div>
+                              <div className="flex items-center gap-1 mt-0.5">
+                                {userProfile.roles.length > 0
+                                  ? userProfile.roles.filter((r: string) => r !== "client").map((role: string) => (
+                                      <span key={role}>{getRoleBadge(role)}</span>
+                                    ))
+                                  : getRoleBadge("user")}
+                              </div>
+                            </div>
+                            {canManage && (
+                              <div className="flex items-center gap-0.5 shrink-0">
+                                <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground" onClick={() => openEditUser(userProfile)} title="Editar">
+                                  <Edit2 className="h-3.5 w-3.5" />
+                                </Button>
+                                {!isCurrentUser(userProfile.user_id) && (
+                                  <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => setDeleteUserId(userProfile.user_id)} title="Excluir">
+                                    <Trash2 className="h-3.5 w-3.5" />
+                                  </Button>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
                     </div>
                   ) : (
-                    <p className="text-center text-muted-foreground py-8">Nenhum usuário cadastrado</p>
+                    <p className="text-center text-sm text-muted-foreground py-8">Nenhum usuário cadastrado</p>
                   )}
-                </CardContent>
-              </Card>
+                </div>
+              </div>
 
               {/* Client Users */}
               <ClientAccessCard clientsWithAccounts={clientsWithAccounts} loadingClients={loadingClients} />
