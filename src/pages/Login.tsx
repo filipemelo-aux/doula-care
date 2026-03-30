@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import logo from "@/assets/logo.png";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -6,9 +6,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Heart, Loader2, Eye, EyeOff } from "lucide-react";
+import { Loader2, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import { getCachedBranding } from "@/hooks/useOrgBranding";
+
+type PasswordCredentialConstructor = new (
+  data: HTMLFormElement | { id: string; password: string; name?: string }
+) => Credential;
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -17,10 +21,10 @@ export default function Login() {
   const [submitting, setSubmitting] = useState(false);
   const [cachedLogo, setCachedLogo] = useState<string | null>(null);
   const [cachedName, setCachedName] = useState<string | null>(null);
+  const formRef = useRef<HTMLFormElement>(null);
   const navigate = useNavigate();
   const { signIn, user, role, roleChecked, loading, isFirstLogin } = useAuth();
 
-  // Read cached branding for logo/name (theme already applied in main.tsx)
   useEffect(() => {
     const cached = getCachedBranding();
     if (cached) {
@@ -45,7 +49,7 @@ export default function Login() {
     }
   }, [loading, user, role, roleChecked, isFirstLogin, navigate]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setSubmitting(true);
 
@@ -55,7 +59,7 @@ export default function Login() {
       return;
     }
 
-    const trimmedEmail = email.trim();
+    const trimmedEmail = email.trim().toLowerCase();
     const { error } = await signIn(trimmedEmail, password);
 
     if (error) {
@@ -66,18 +70,20 @@ export default function Login() {
       return;
     }
 
-    // Trigger credential save in supported browsers / WebView
     try {
-      if ((window as any).PasswordCredential) {
-        const cred = new (window as any).PasswordCredential({
+      const passwordCredential = (window as Window & { PasswordCredential?: PasswordCredentialConstructor }).PasswordCredential;
+      if (passwordCredential && navigator.credentials?.store) {
+        const formCredential = formRef.current ? new passwordCredential(formRef.current) : null;
+        const fallbackCredential = new passwordCredential({
           id: trimmedEmail,
-          password: password,
+          password,
           name: trimmedEmail,
         });
-        await navigator.credentials.store(cred);
+
+        await navigator.credentials.store(formCredential ?? fallbackCredential);
       }
     } catch {
-      // Silently ignore – credential storage is best-effort
+      // best-effort only
     }
 
     toast.success("Login realizado com sucesso!");
@@ -116,26 +122,30 @@ export default function Login() {
         <CardHeader className="text-center space-y-2">
           <div className="flex flex-col items-center gap-1.5">
             <div className="w-[4.5rem] h-[4.5rem] rounded-[40%] bg-[#FFF5EE] overflow-hidden">
-               <img src={cachedLogo || logo} alt={cachedName || "Doula Care"} className="w-full h-full object-cover mix-blend-multiply scale-[1.15]" />
-             </div>
-             <CardTitle className="text-2xl font-display font-bold tracking-wide">{cachedName || "Doula Care"}</CardTitle>
+              <img src={cachedLogo || logo} alt={cachedName || "Doula Care"} className="w-full h-full object-cover mix-blend-multiply scale-[1.15]" />
+            </div>
+            <CardTitle className="text-2xl font-display font-bold tracking-wide">{cachedName || "Doula Care"}</CardTitle>
           </div>
           <CardDescription>Entre com seu email e senha</CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} action="/login" method="post" className="space-y-4">
+          <form ref={formRef} onSubmit={handleSubmit} action="/login" method="post" className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Usuário</Label>
               <Input
                 id="email"
-                name="username"
-                type="text"
-                placeholder="Digite seu usuário"
+                name="email"
+                type="email"
+                inputMode="email"
+                enterKeyHint="next"
+                placeholder="Digite seu email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value.toLowerCase())}
                 required
                 autoComplete="username"
                 autoCapitalize="off"
+                autoCorrect="off"
+                spellCheck={false}
                 className="input-field lowercase"
                 style={{ textTransform: "lowercase" }}
               />
@@ -145,12 +155,14 @@ export default function Login() {
               <div className="relative">
                 <Input
                   id="password"
+                  name="password"
                   type={showPassword ? "text" : "password"}
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   autoComplete="current-password"
+                  enterKeyHint="go"
                   className="input-field pr-10"
                 />
                 <Button
