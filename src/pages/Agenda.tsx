@@ -955,6 +955,20 @@ function AppointmentRow({
           )}
         </div>
         <div className="flex items-center gap-1 flex-shrink-0">
+          {apt.address && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 text-blue-600 hover:text-blue-700"
+              onClick={() => {
+                const query = encodeURIComponent(apt.address!);
+                window.open(`https://www.google.com/maps/search/?api=1&query=${query}`, "_blank");
+              }}
+              title="Abrir rota"
+            >
+              <Navigation className="h-3.5 w-3.5" />
+            </Button>
+          )}
           {!apt.completed_at && (
             <Button variant="ghost" size="icon" className="h-8 w-8 text-green-600 hover:text-green-700" onClick={() => setCompleteOpen(true)} title="Concluir consulta">
               <CheckCircle className="h-3.5 w-3.5" />
