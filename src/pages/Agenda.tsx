@@ -50,6 +50,8 @@ import {
   CalendarDays,
   CalendarCheck,
   MoreVertical,
+  MapPin,
+  Navigation,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -79,6 +81,7 @@ interface AppointmentWithClient {
   completed_at: string | null;
   completion_notes: string | null;
   client_id: string;
+  address: string | null;
   clients: { full_name: string };
 }
 
