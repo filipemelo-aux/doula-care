@@ -261,7 +261,7 @@ function AppointmentCard({
                   const query = encodeURIComponent(apt.address!);
                   window.open(`https://www.google.com/maps/search/?api=1&query=${query}`, "_blank");
                 }}
-                className="h-8 px-2.5 gap-1 text-xs font-medium border-primary/30 text-primary hover:bg-primary/10"
+                className="h-8 px-2.5 gap-1 text-xs font-medium bg-blue-600 hover:bg-blue-700 text-white shadow-sm hover:shadow transition-all"
               >
                 <MapPin className="h-3.5 w-3.5" />
                 Rota

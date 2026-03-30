@@ -158,7 +158,7 @@ function ClientPill({
       <div className="flex items-center gap-1.5">
         <Icon className="w-3.5 h-3.5 text-primary" />
         <span className="text-[10px] lg:text-xs text-muted-foreground truncate">{label}</span>
-        <ChevronRight className="w-3 h-3 text-muted-foreground/50 ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
+        <ChevronRight className="w-3 h-3 text-muted-foreground/40 ml-auto transition-transform group-hover:translate-x-0.5" />
       </div>
       <p className="text-lg lg:text-xl font-bold text-foreground">{value}</p>
     </button>
