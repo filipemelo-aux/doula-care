@@ -944,6 +944,12 @@ function AppointmentRow({
             )}
           </p>
           {apt.notes && <p className="text-xs text-muted-foreground truncate mt-0.5">{apt.notes}</p>}
+          {apt.address && (
+            <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5 truncate" title={apt.address}>
+              <MapPin className="h-3 w-3 flex-shrink-0" />
+              <span className="truncate">{apt.address}</span>
+            </p>
+          )}
           {apt.completion_notes && (
             <p className="text-xs text-primary truncate mt-0.5" title={apt.completion_notes}>📝 {apt.completion_notes}</p>
           )}
