@@ -121,7 +121,7 @@ export function UpcomingAppointments() {
           </div>
         ) : appointments && appointments.length > 0 ? (
           <ScrollArea className="max-h-[400px]">
-            <div className="space-y-0">
+            <div className="space-y-2">
               {appointments.map((apt) => (
                 <AppointmentCard
                   key={apt.id}
