@@ -115,7 +115,10 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* ═══ BLOCO 2 — Clientes ═══ */}
+      {/* ═══ BLOCO 2 — Agenda ═══ */}
+      <UpcomingAppointments />
+
+      {/* ═══ BLOCO 3 — Clientes ═══ */}
       <div className="rounded-2xl bg-card p-4 lg:p-6 shadow-card space-y-4">
         <div className="flex items-center gap-2 mb-1">
           <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
@@ -146,9 +149,6 @@ export default function Dashboard() {
           />
         </div>
       </div>
-
-      {/* ═══ BLOCO 3 — Agenda ═══ */}
-      <UpcomingAppointments />
 
       {/* Financial Overview */}
       <FinancialOverview period={period} />
