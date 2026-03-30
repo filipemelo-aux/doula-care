@@ -20,6 +20,7 @@ import { maskCurrency, parseCurrency, maskPhone } from "@/lib/masks";
 import { format } from "date-fns";
 import { fromZonedTime } from "date-fns-tz";
 import { toast } from "sonner";
+import { sendPushNotification } from "@/lib/pushNotifications";
 
 interface NewServiceDialogProps {
   open: boolean;
