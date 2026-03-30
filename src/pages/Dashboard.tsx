@@ -112,10 +112,7 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* ═══ 4 — Receitas por forma de pagamento ═══ */}
-      <PaymentMethodCard period={period} />
-
-      {/* ═══ 5 — Planos mais contratados ═══ */}
+      {/* ═══ 4 — Planos mais contratados ═══ */}
       <TopPlansCard />
 
       {/* Dialogs */}
