@@ -603,9 +603,9 @@ export default function Agenda() {
       </div>
 
       {/* Quick Stats — gradient block like financial */}
-      <div className="rounded-2xl bg-gradient-to-br from-primary/10 via-primary/5 to-transparent p-4 shadow-card">
+       <div className="rounded-2xl bg-gradient-to-br from-primary/10 via-primary/5 to-transparent p-4 shadow-card">
         <p className="text-xs text-muted-foreground/70 mb-0.5">Compromissos futuros</p>
-        <p className="text-3xl font-bold tracking-tight text-primary">{futureApts.length}</p>
+        <p className="text-3xl font-bold tracking-tight text-primary">{allApts.filter(a => !a.completed_at && isFuture(new Date(a.scheduled_at))).length}</p>
         <div className="grid grid-cols-3 gap-3 mt-4">
           <div className="space-y-0.5">
             <p className="text-[10px] text-muted-foreground/60 font-normal">Pendentes</p>
@@ -617,7 +617,7 @@ export default function Agenda() {
           </div>
           <div className="space-y-0.5">
             <p className="text-[10px] text-muted-foreground/60 font-normal">Em andamento</p>
-            <p className="text-sm font-semibold text-success">{acceptedServices}</p>
+            <p className="text-sm font-semibold text-success">{inProgressApts}</p>
           </div>
         </div>
       </div>
