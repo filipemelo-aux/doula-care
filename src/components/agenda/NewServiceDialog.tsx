@@ -219,6 +219,7 @@ export function NewServiceDialog({ open, onOpenChange }: NewServiceDialogProps) 
     setClientId("");
     setAmount("");
     setServiceDate(format(new Date(), "yyyy-MM-dd"));
+    setServiceTime("10:00");
     setPaymentMethod("pix");
     setNotes("");
     setAddress("");
