@@ -818,6 +818,18 @@ export default function Agenda() {
               )}
             </div>
             <div>
+              <Label className="text-xs flex items-center gap-1">
+                <MapPin className="h-3 w-3" />
+                Local (opcional)
+              </Label>
+              <Input
+                placeholder="Adicionar local (opcional)"
+                value={personalAddress}
+                onChange={(e) => setPersonalAddress(e.target.value)}
+                className="mt-1"
+              />
+            </div>
+            <div>
               <Label className="text-xs">Observações (opcional)</Label>
               <Textarea placeholder="Detalhes do compromisso..." value={personalNotes} onChange={(e) => setPersonalNotes(e.target.value)} rows={2} className="mt-1" />
             </div>
