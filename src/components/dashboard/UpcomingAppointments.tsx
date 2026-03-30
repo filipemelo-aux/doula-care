@@ -50,6 +50,7 @@ export function UpcomingAppointments() {
         .from("appointments")
         .select("*, clients(full_name)")
         
+        .is("completed_at", null)
         .gte("scheduled_at", todayStart.toISOString())
         .order("scheduled_at", { ascending: true });
 

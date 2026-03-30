@@ -1124,7 +1124,7 @@ function AppointmentRow({
         {/* Actions row — like financial cards */}
         <div className="flex items-center justify-between pt-2 border-t border-border/60">
           <div className="flex items-center gap-1.5">
-            {apt.address && (
+            {apt.address && !apt.completed_at && (
               <Button
                 size="sm"
                 onClick={() => {
