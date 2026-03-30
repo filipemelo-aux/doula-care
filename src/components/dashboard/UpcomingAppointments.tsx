@@ -120,7 +120,7 @@ export function UpcomingAppointments() {
             <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
           </div>
         ) : appointments && appointments.length > 0 ? (
-          <div className="max-h-[400px] overflow-y-auto overflow-x-visible -mr-1 pr-1">
+          <div className="max-h-[180px] overflow-y-auto overflow-x-visible -mr-1 pr-1">
             <div className="space-y-2">
               {appointments.map((apt) => (
                 <AppointmentCard
