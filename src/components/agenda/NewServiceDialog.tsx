@@ -18,6 +18,7 @@ import { Briefcase, Plus, Check, X, Loader2, CheckCircle, UserPlus, MapPin, Aler
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { maskCurrency, parseCurrency, maskPhone } from "@/lib/masks";
 import { format } from "date-fns";
+import { fromZonedTime } from "date-fns-tz";
 import { toast } from "sonner";
 
 interface NewServiceDialogProps {
@@ -186,11 +187,11 @@ export function NewServiceDialog({ open, onOpenChange }: NewServiceDialogProps) 
 
       // 3. Create appointment
       if (clientId) {
-        const aptDate = new Date(`${serviceDate}T${serviceTime}:00`);
+        const scheduledUtc = fromZonedTime(`${serviceDate}T${serviceTime}`, "America/Sao_Paulo").toISOString();
         await supabase.from("appointments").insert({
           client_id: clientId,
           title: `Serviço: ${selectedServices.join(", ")}`,
-          scheduled_at: aptDate.toISOString(),
+          scheduled_at: scheduledUtc,
           notes: notes || null,
           address: address.trim() || null,
           owner_id: user?.id || null,
