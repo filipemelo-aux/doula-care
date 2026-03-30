@@ -270,7 +270,7 @@ export function NewServiceDialog({ open, onOpenChange }: NewServiceDialogProps) 
     }
   };
 
-  const canSubmit = selectedServices.length > 0 && clientId && parseCurrency(amount) > 0 && serviceDate && (address.trim() || !clientHasNoAddress);
+  const canSubmit = selectedServices.length > 0 && clientId && parseCurrency(amount) > 0 && serviceDate && serviceTime && (address.trim() || !clientHasNoAddress);
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && resetAndClose()}>
