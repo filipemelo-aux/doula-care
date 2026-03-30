@@ -62,17 +62,17 @@ export function FinancialOverview({ period }: FinancialOverviewProps) {
           {formatCurrency(totalReceived)}
         </p>
         <div className="grid grid-cols-3 gap-3 mt-4">
-          <div className="space-y-0.5">
-            <p className="text-[10px] lg:text-xs text-muted-foreground/60 font-normal">Total contratado</p>
-            <p className="text-sm lg:text-base font-semibold text-foreground/80">{formatCurrency(totalIncome)}</p>
+          <div className="space-y-0.5 min-w-0">
+            <p className="text-[10px] lg:text-xs text-muted-foreground/60 font-normal">Contratado</p>
+            <p className="text-xs lg:text-sm font-semibold text-foreground/80 break-all">{formatCurrency(totalIncome)}</p>
           </div>
-          <div className="space-y-0.5">
+          <div className="space-y-0.5 min-w-0">
             <p className="text-[10px] lg:text-xs text-muted-foreground/60 font-normal">A receber</p>
-            <p className="text-sm lg:text-base font-semibold text-amber-600/80">{formatCurrency(totalPending)}</p>
+            <p className="text-xs lg:text-sm font-semibold text-amber-600/80 break-all">{formatCurrency(totalPending)}</p>
           </div>
-          <div className="space-y-0.5">
+          <div className="space-y-0.5 min-w-0">
             <p className="text-[10px] lg:text-xs text-muted-foreground/60 font-normal">Despesas</p>
-            <p className="text-sm lg:text-base font-semibold text-destructive/80">{formatCurrency(totalExpenses)}</p>
+            <p className="text-xs lg:text-sm font-semibold text-destructive/80 break-all">{formatCurrency(totalExpenses)}</p>
           </div>
         </div>
         {/* Balance row */}

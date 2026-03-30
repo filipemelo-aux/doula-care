@@ -251,12 +251,12 @@ function AppointmentCard({
         )}
 
         {/* Actions row — matching agenda/financial style */}
-        <div className="flex items-center justify-between pt-2 border-t border-border/60">
-          <div className="flex items-center gap-1.5">
+        <div className="flex items-center justify-between pt-2 border-t border-border/60 gap-2">
+          <div className="flex items-center gap-1.5 min-w-0 flex-shrink">
             {apt.address && (
               <button
                 type="button"
-                className="inline-flex items-center gap-1 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400 px-2 py-0.5 text-xs font-medium cursor-pointer transition-colors hover:opacity-80"
+                className="inline-flex items-center gap-1 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400 px-2 py-0.5 text-xs font-medium cursor-pointer transition-colors hover:opacity-80 flex-shrink-0"
                 onClick={() => {
                   const query = encodeURIComponent(apt.address!);
                   window.open(`https://www.google.com/maps/search/?api=1&query=${query}`, "_blank");
@@ -267,12 +267,12 @@ function AppointmentCard({
               </button>
             )}
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-shrink-0">
             {!apt.completed_at && (
               <Button
                 size="sm"
                 onClick={() => setCompleteOpen(true)}
-                className="h-8 px-3 gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm hover:shadow transition-all text-xs font-medium"
+                className="h-8 px-2.5 gap-1 bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm hover:shadow transition-all text-xs font-medium"
               >
                 <CheckCircle className="h-3.5 w-3.5" />
                 Concluir
@@ -280,7 +280,7 @@ function AppointmentCard({
             )}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm" className="h-10 w-10 p-0 text-muted-foreground flex-shrink-0 hover:bg-muted transition-colors">
+                <Button variant="outline" size="sm" className="h-8 w-8 p-0 text-muted-foreground flex-shrink-0 hover:bg-muted transition-colors">
                   <MoreVertical className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
