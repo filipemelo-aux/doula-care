@@ -511,12 +511,9 @@ export default function Agenda() {
         </ToggleGroup>
       </div>
 
-      {/* Calendar View - always visible */}
+      {/* Calendar View - availability only */}
       {viewMode === "calendar" && (
-        <div className="space-y-6">
-          <AgendaCalendarView appointments={onlyConsultas} />
-          <AvailabilityManager />
-        </div>
+        <AvailabilityManager />
       )}
 
       {viewMode === "list" && (
