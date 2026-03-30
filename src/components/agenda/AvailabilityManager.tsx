@@ -74,15 +74,22 @@ export function AvailabilityManager() {
     enabled: !!organizationId,
   });
 
-  // Get occupied hours for a given date from appointments
+  // Get occupied hours for a given date from appointments AND existing availability
   function getOccupiedHours(dateStr: string): Set<number> {
     const occupied = new Set<number>();
+    // Hours occupied by appointments
     (appointments || []).forEach((apt) => {
       const aptDate = format(new Date(apt.scheduled_at), "yyyy-MM-dd");
       if (aptDate === dateStr) {
         const hour = new Date(apt.scheduled_at).getHours();
         occupied.add(hour);
       }
+    });
+    // Hours already configured as available
+    (availability || []).filter(a => a.available_date === dateStr).forEach((slot) => {
+      const start = parseInt(slot.start_time.split(":")[0]);
+      const end = parseInt(slot.end_time.split(":")[0]);
+      for (let h = start; h < end; h++) occupied.add(h);
     });
     return occupied;
   }
@@ -300,12 +307,13 @@ export function AvailabilityManager() {
               }}
             />
             <style>{`
-              .available-day {
+              .available-day:not([aria-selected="true"]) {
                 position: relative;
-                background-color: hsl(var(--primary) / 0.15) !important;
+                background-color: hsl(var(--primary) / 0.12) !important;
+                color: hsl(var(--primary)) !important;
                 font-weight: 600;
               }
-              .available-day::after {
+              .available-day:not([aria-selected="true"])::after {
                 content: '';
                 position: absolute;
                 bottom: 2px;
@@ -315,6 +323,16 @@ export function AvailabilityManager() {
                 height: 5px;
                 border-radius: 50%;
                 background-color: hsl(var(--primary));
+              }
+              .rdp-day_selected,
+              .rdp-day_selected:hover,
+              .rdp-day_selected:focus {
+                background-color: hsl(var(--primary)) !important;
+                color: hsl(var(--primary-foreground)) !important;
+              }
+              .rdp-day_today:not([aria-selected="true"]) {
+                background-color: hsl(var(--accent)) !important;
+                color: hsl(var(--accent-foreground)) !important;
               }
             `}</style>
           </div>
@@ -571,12 +589,12 @@ function HourGrid({ hours, onToggle, disabledHours }: { hours: number[]; onToggl
             disabled={isDisabled}
             title={isDisabled ? "Horário ocupado por compromisso" : undefined}
             className={cn(
-              "rounded-md py-2 text-xs font-medium transition-colors",
+              "rounded-md py-2 text-xs font-medium transition-colors border",
               isDisabled
-                ? "bg-muted text-muted-foreground border-border opacity-50 cursor-not-allowed line-through"
+                ? "bg-muted/60 text-muted-foreground/60 border-border/50 opacity-50 cursor-not-allowed line-through"
                 : isSelected
-                  ? "bg-primary text-primary-foreground border-primary"
-                  : "bg-background text-foreground border-border hover:bg-accent hover:text-accent-foreground"
+                  ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                  : "bg-card text-foreground border-border hover:bg-accent/60 hover:text-accent-foreground"
             )}
           >
             {formatHour(h)}
