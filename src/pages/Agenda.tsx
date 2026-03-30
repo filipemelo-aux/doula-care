@@ -496,38 +496,80 @@ export default function Agenda() {
   // ─── Filtering ───────────────────────────────────────────
   const allApts = appointments || [];
 
-  const filteredAppointments = allApts.filter((apt) => {
+  const now = new Date();
+
+  // Filter appointments based on the agenda filter mode
+  const filteredAppointments = useMemo(() => {
+    let apts = allApts;
+
+    // Apply calendar date filter
+    if (agendaFilter === "calendar") {
+      apts = apts.filter((apt) => isSameDay(toZonedTime(new Date(apt.scheduled_at), "America/Sao_Paulo"), selectedDate));
+    }
+
+    // Apply search
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
-      return apt.title.toLowerCase().includes(term) || (apt.clients?.full_name || "").toLowerCase().includes(term);
+      apts = apts.filter((apt) =>
+        apt.title.toLowerCase().includes(term) || (apt.clients?.full_name || "").toLowerCase().includes(term)
+      );
     }
-    return true;
-  });
 
-  const filteredServices = (services || []).filter((svc) => {
-    const status = getServiceStatus(svc);
-    if (serviceStatusFilter !== "all" && status !== serviceStatusFilter) return false;
+    return apts;
+  }, [allApts, agendaFilter, selectedDate, searchTerm]);
+
+  const filteredServices = useMemo(() => {
+    let svcs = services || [];
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
-      return svc.service_type.toLowerCase().includes(term) || svc.clients?.full_name.toLowerCase().includes(term);
+      svcs = svcs.filter((svc) =>
+        svc.service_type.toLowerCase().includes(term) || svc.clients?.full_name.toLowerCase().includes(term)
+      );
     }
-    return true;
-  });
+    return svcs;
+  }, [services, searchTerm]);
 
-  const futureApts = filteredAppointments.filter((a) => isFuture(new Date(a.scheduled_at)) || isToday(new Date(a.scheduled_at)));
-  const pastApts = filteredAppointments.filter((a) => isPast(new Date(a.scheduled_at)) && !isToday(new Date(a.scheduled_at))).sort((a, b) => new Date(b.scheduled_at).getTime() - new Date(a.scheduled_at).getTime());
+  // An appointment is "em andamento" only if current time is within the scheduled hour
+  const getAppointmentStatus = (apt: AppointmentWithClient) => {
+    if (apt.completed_at) return "completed";
+    const scheduledTime = new Date(apt.scheduled_at);
+    const scheduledEnd = addHours(scheduledTime, 1);
+    if (isWithinInterval(now, { start: scheduledTime, end: scheduledEnd })) return "in_progress";
+    if (isBefore(now, scheduledTime)) return "future";
+    return "past";
+  };
+
+  const futureApts = filteredAppointments.filter((a) => {
+    const status = getAppointmentStatus(a);
+    return status === "future" || status === "in_progress";
+  });
+  const pastApts = filteredAppointments.filter((a) => {
+    const status = getAppointmentStatus(a);
+    return status === "past" && !a.completed_at;
+  }).sort((a, b) => new Date(b.scheduled_at).getTime() - new Date(a.scheduled_at).getTime());
+  const completedApts = filteredAppointments.filter((a) => !!a.completed_at).sort((a, b) => new Date(b.scheduled_at).getTime() - new Date(a.scheduled_at).getTime());
 
   const isLoading = loadingApts || loadingSvc;
 
   // ─── Stats ───────────────────────────────────────────────
   const pendingServices = (services || []).filter(s => s.status === "pending").length;
   const budgetSentServices = (services || []).filter(s => s.status === "budget_sent").length;
-  const todayStr = format(new Date(), "yyyy-MM-dd");
-  const acceptedServices = (services || []).filter(s => {
-    if (s.status !== "accepted" || s.completed_at) return false;
-    const svcDate = s.budget_sent_at ? s.budget_sent_at.split("T")[0] : s.created_at.split("T")[0];
-    return svcDate >= todayStr;
+  const inProgressApts = allApts.filter(a => {
+    if (a.completed_at) return false;
+    const scheduledTime = new Date(a.scheduled_at);
+    const scheduledEnd = addHours(scheduledTime, 1);
+    return isWithinInterval(now, { start: scheduledTime, end: scheduledEnd });
   }).length;
+
+  // Dates with appointments for calendar indicator
+  const datesWithAppointments = useMemo(() => {
+    const set = new Set<string>();
+    allApts.forEach((apt) => {
+      const zoned = toZonedTime(new Date(apt.scheduled_at), "America/Sao_Paulo");
+      set.add(format(zoned, "yyyy-MM-dd"));
+    });
+    return set;
+  }, [allApts]);
 
   return (
     <div className="space-y-6 lg:space-y-8 overflow-x-hidden">
