@@ -120,7 +120,7 @@ export function UpcomingAppointments() {
             <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
           </div>
         ) : appointments && appointments.length > 0 ? (
-          <ScrollArea className="max-h-[400px] pr-2">
+          <ScrollArea className="max-h-[400px]">
             <div className="space-y-2">
               {appointments.map((apt) => (
                 <AppointmentCard
@@ -203,7 +203,7 @@ function AppointmentCard({
 
   return (
     <>
-      <Card className="px-3 py-2.5 space-y-1.5 w-full box-border min-w-0 overflow-hidden">
+      <Card className="px-3 py-2.5 space-y-1.5 w-full box-border min-w-0">
         {/* Header: date column + title */}
         <div className="flex items-center gap-3 min-w-0">
           <div className="text-center min-w-[44px] flex-shrink-0">
@@ -251,7 +251,7 @@ function AppointmentCard({
         )}
 
         {/* Actions row — same as Agenda */}
-        <div className="flex items-center justify-between pt-2 border-t border-border/60">
+        <div className="flex items-center flex-wrap gap-1.5 pt-2 border-t border-border/60">
           <div className="flex items-center gap-1.5">
             {apt.address && (
               <Button
@@ -261,19 +261,19 @@ function AppointmentCard({
                   const query = encodeURIComponent(apt.address!);
                   window.open(`https://www.google.com/maps/search/?api=1&query=${query}`, "_blank");
                 }}
-                className="h-8 px-3 gap-1.5 text-xs font-medium border-primary/30 text-primary hover:bg-primary/10"
+                className="h-8 px-2.5 gap-1 text-xs font-medium border-primary/30 text-primary hover:bg-primary/10"
               >
                 <MapPin className="h-3.5 w-3.5" />
                 Rota
               </Button>
             )}
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 ml-auto flex-shrink-0">
             {!apt.completed_at && (
               <Button
                 size="sm"
                 onClick={() => setCompleteOpen(true)}
-                className="h-8 px-3 gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm hover:shadow transition-all text-xs font-medium"
+                className="h-8 px-2.5 gap-1 bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm hover:shadow transition-all text-xs font-medium"
               >
                 <CheckCircle className="h-3.5 w-3.5" />
                 Concluir
@@ -281,7 +281,7 @@ function AppointmentCard({
             )}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm" className="h-10 w-10 p-0 text-muted-foreground flex-shrink-0 hover:bg-muted transition-colors">
+                <Button variant="outline" size="sm" className="h-8 w-8 p-0 text-muted-foreground flex-shrink-0 hover:bg-muted transition-colors">
                   <MoreVertical className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
