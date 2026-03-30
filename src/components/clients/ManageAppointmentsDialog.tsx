@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Calendar, Plus, Trash2, Loader2, Eye, CheckCircle, Undo2 } from "lucide-react";
+import { Calendar, Plus, Trash2, Loader2, Eye, CheckCircle, Undo2, MapPin, Navigation } from "lucide-react";
 import { AppointmentDetailDialog } from "@/components/clients/AppointmentDetailDialog";
 import { AppointmentCompleteDialog } from "@/components/clients/AppointmentCompleteDialog";
 import { Badge } from "@/components/ui/badge";
@@ -33,6 +33,7 @@ interface Appointment {
   title: string;
   scheduled_at: string;
   notes: string | null;
+  address: string | null;
   completed_at: string | null;
   completion_notes: string | null;
 }
@@ -46,6 +47,7 @@ export function ManageAppointmentsDialog({
   const [title, setTitle] = useState("");
   const [scheduledAt, setScheduledAt] = useState("");
   const [notes, setNotes] = useState("");
+  const [address, setAddress] = useState("");
   const [detailApt, setDetailApt] = useState<Appointment | null>(null);
   const [completeApt, setCompleteApt] = useState<Appointment | null>(null);
   const queryClient = useQueryClient();
