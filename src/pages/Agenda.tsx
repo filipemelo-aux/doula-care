@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -62,15 +62,15 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { AppointmentDetailDialog } from "@/components/clients/AppointmentDetailDialog";
 import { AppointmentCompleteDialog } from "@/components/clients/AppointmentCompleteDialog";
-import { format, isToday, isPast, isFuture, parseISO } from "date-fns";
+import { format, isToday, isPast, isFuture, parseISO, isSameDay, startOfDay, addHours, isBefore, isAfter, isWithinInterval } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { fromZonedTime, toZonedTime } from "date-fns-tz";
 import { toast } from "sonner";
 import { SendBudgetDialog } from "@/components/dashboard/SendBudgetDialog";
 import { NewServiceDialog } from "@/components/agenda/NewServiceDialog";
-import { AgendaCalendarView } from "@/components/agenda/AgendaCalendarView";
 import { AvailabilityManager } from "@/components/agenda/AvailabilityManager";
 import { AppointmentRequestsSection } from "@/components/agenda/AppointmentRequestsSection";
+import { Calendar as CalendarPicker } from "@/components/ui/calendar";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import { fetchAddressByCep, formatAddressWithNumber } from "@/lib/address";
@@ -118,7 +118,7 @@ interface ClientOption {
   state?: string;
 }
 
-type ServiceStatusFilter = "all" | "pending" | "budget_sent" | "date_proposed" | "accepted" | "completed" | "rejected";
+type AgendaFilter = "calendar" | "all";
 
 // ─── Status helpers ──────────────────────────────────────
 const statusConfig: Record<string, { label: string; color: string }> = {
@@ -138,9 +138,9 @@ const getServiceStatus = (svc: ServiceRequestFull) => {
 export default function Agenda() {
   const { user, organizationId } = useAuth();
   const queryClient = useQueryClient();
-  const [activeTab, setActiveTab] = useState("all");
+  const [agendaFilter, setAgendaFilter] = useState<AgendaFilter>("calendar");
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [searchTerm, setSearchTerm] = useState("");
-  const [serviceStatusFilter, setServiceStatusFilter] = useState<ServiceStatusFilter>("all");
   const [viewMode, setViewMode] = useState<"list" | "calendar">("list");
 
   // Appointment form
