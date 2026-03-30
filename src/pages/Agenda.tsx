@@ -57,6 +57,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { AppointmentDetailDialog } from "@/components/clients/AppointmentDetailDialog";
