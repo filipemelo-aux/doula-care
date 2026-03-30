@@ -237,6 +237,7 @@ export default function Agenda() {
     setPersonalTitle("");
     setPersonalDate("");
     setPersonalNotes("");
+    setPersonalAddress("");
   };
 
   const savePersonalMutation = useMutation({
