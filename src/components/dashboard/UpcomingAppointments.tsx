@@ -120,7 +120,7 @@ export function UpcomingAppointments() {
             <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
           </div>
         ) : appointments && appointments.length > 0 ? (
-          <ScrollArea className="max-h-[400px]">
+          <ScrollArea className="max-h-[400px] pr-2">
             <div className="space-y-2">
               {appointments.map((apt) => (
                 <AppointmentCard
