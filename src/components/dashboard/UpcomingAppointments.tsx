@@ -254,17 +254,18 @@ function AppointmentCard({
         <div className="flex items-center justify-between pt-2 border-t border-border/60 gap-2">
           <div className="flex items-center gap-1.5 min-w-0 flex-shrink">
             {apt.address && (
-              <button
-                type="button"
-                className="inline-flex items-center gap-1 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400 px-2 py-0.5 text-xs font-medium cursor-pointer transition-colors hover:opacity-80 flex-shrink-0"
+              <Button
+                size="sm"
+                variant="outline"
                 onClick={() => {
                   const query = encodeURIComponent(apt.address!);
                   window.open(`https://www.google.com/maps/search/?api=1&query=${query}`, "_blank");
                 }}
+                className="h-8 px-2.5 gap-1 text-xs font-medium border-primary/30 text-primary hover:bg-primary/10"
               >
-                <Navigation className="h-3 w-3" />
+                <MapPin className="h-3.5 w-3.5" />
                 Rota
-              </button>
+              </Button>
             )}
           </div>
           <div className="flex items-center gap-2 flex-shrink-0">

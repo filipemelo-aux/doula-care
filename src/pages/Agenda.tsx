@@ -1153,7 +1153,7 @@ function AppointmentRow({
                 }}
                 className="h-8 px-3 gap-1.5 text-xs font-medium border-primary/30 text-primary hover:bg-primary/10"
               >
-                <MapPinned className="h-3.5 w-3.5" />
+                <MapPin className="h-3.5 w-3.5" />
                 Rota
               </Button>
             )}
