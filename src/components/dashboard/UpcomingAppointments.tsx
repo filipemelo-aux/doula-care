@@ -250,8 +250,8 @@ function AppointmentCard({
           </p>
         )}
 
-        {/* Actions row — matching agenda/financial style */}
-        <div className="flex items-center justify-between pt-2 border-t border-border/60 gap-1.5">
+        {/* Actions row */}
+        <div className="flex items-center flex-wrap pt-2 border-t border-border/60 gap-1.5">
             {apt.address && (
               <Button
                 size="sm"
@@ -266,7 +266,7 @@ function AppointmentCard({
                 Rota
               </Button>
             )}
-            <div className="flex items-center gap-1.5 flex-shrink-0">
+            <div className="flex items-center gap-1.5 ml-auto">
               {!apt.completed_at && (
                 <Button
                   size="sm"
@@ -279,7 +279,7 @@ function AppointmentCard({
               )}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm" className="h-8 w-8 p-0 text-muted-foreground flex-shrink-0 hover:bg-muted transition-colors">
+                  <Button variant="outline" size="sm" className="h-8 w-8 p-0 text-muted-foreground hover:bg-muted transition-colors">
                     <MoreVertical className="h-4 w-4" />
                   </Button>
                 </DropdownMenuTrigger>
