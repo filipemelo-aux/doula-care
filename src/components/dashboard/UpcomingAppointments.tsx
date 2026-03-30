@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
+
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
@@ -120,7 +120,7 @@ export function UpcomingAppointments() {
             <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
           </div>
         ) : appointments && appointments.length > 0 ? (
-          <ScrollArea className="max-h-[400px]">
+          <div className="max-h-[400px] overflow-y-auto overflow-x-visible -mr-1 pr-1">
             <div className="space-y-2">
               {appointments.map((apt) => (
                 <AppointmentCard
@@ -132,7 +132,7 @@ export function UpcomingAppointments() {
                 />
               ))}
             </div>
-          </ScrollArea>
+          </div>
         ) : (
           <div className="text-center py-8">
             <Calendar className="h-10 w-10 mx-auto text-muted-foreground/40 mb-3" />
