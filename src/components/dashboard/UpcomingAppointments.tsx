@@ -299,7 +299,7 @@ function AppointmentCard({
             </DropdownMenu>
           </div>
         </div>
-      </Card>
+      </div>
 
       <AppointmentDetailDialog
         open={detailOpen}
