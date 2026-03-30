@@ -718,6 +718,21 @@ export default function Agenda() {
               )}
             </div>
             <div>
+              <Label className="text-xs flex items-center gap-1">
+                <MapPin className="h-3 w-3" />
+                Endereço da consulta *
+              </Label>
+              <Input
+                placeholder="Digite o endereço ou local"
+                value={aptAddress}
+                onChange={(e) => setAptAddress(e.target.value)}
+                className="mt-1"
+              />
+              {!aptAddress.trim() && aptDate && (
+                <p className="text-xs text-destructive mt-1">Informe o endereço da consulta</p>
+              )}
+            </div>
+            <div>
               <Label className="text-xs">Observações (opcional)</Label>
               <Textarea placeholder="Observações..." value={aptNotes} onChange={(e) => setAptNotes(e.target.value)} rows={2} className="mt-1" />
             </div>
@@ -738,7 +753,7 @@ export default function Agenda() {
           </div>
           <DialogFooter>
             <Button
-              disabled={!aptTitle || !aptDate || (!editingAppointment && !aptClientId) || saveAppointmentMutation.isPending}
+              disabled={!aptTitle || !aptDate || !aptAddress.trim() || (!editingAppointment && !aptClientId) || saveAppointmentMutation.isPending}
               onClick={() => saveAppointmentMutation.mutate()}
             >
               {saveAppointmentMutation.isPending && <Loader2 className="h-4 w-4 animate-spin mr-1" />}
