@@ -1,10 +1,4 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import {
-  buildPushPayload,
-  type PushSubscription,
-  type PushMessage,
-  type VapidKeys,
-} from "npm:@block65/webcrypto-web-push@^1.0.2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -20,15 +14,6 @@ Deno.serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const vapidPublicKey = Deno.env.get("VAPID_PUBLIC_KEY");
-    const vapidPrivateKey = Deno.env.get("VAPID_PRIVATE_KEY");
-
-    if (!vapidPublicKey || !vapidPrivateKey) {
-      return new Response(JSON.stringify({ error: "VAPID keys not configured" }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
 
     const supabase = createClient(supabaseUrl, serviceRoleKey, {
       auth: { autoRefreshToken: false, persistSession: false },
@@ -54,58 +39,36 @@ Deno.serve(async (req) => {
       .gte("scheduled_at", new Date(now.getTime() + 30 * 60 * 1000).toISOString())
       .lte("scheduled_at", new Date(now.getTime() + 90 * 60 * 1000).toISOString());
 
-    const vapid: VapidKeys = {
-      subject: "mailto:contato@papodedoula.com",
-      publicKey: vapidPublicKey,
-      privateKey: vapidPrivateKey,
-    };
-
     let sent = 0;
-    const expiredEndpoints: string[] = [];
 
+    /**
+     * Delegate push sending to the send-push-notification edge function.
+     * This ensures FCM (Capacitor native) tokens are handled correctly
+     * alongside web push (VAPID) subscriptions.
+     */
     const sendPush = async (userIds: string[], title: string, body: string, url: string, tag: string) => {
       if (userIds.length === 0) return;
 
-      const { data: subscriptions } = await supabase
-        .from("push_subscriptions")
-        .select("*")
-        .in("user_id", userIds);
+      try {
+        const { error } = await supabase.functions.invoke("send-push-notification", {
+          body: {
+            user_ids: userIds,
+            title,
+            message: body,
+            url,
+            tag,
+            type: "appointment_reminder",
+            priority: "normal",
+          },
+        });
 
-      if (!subscriptions || subscriptions.length === 0) return;
-
-      for (const sub of subscriptions) {
-        try {
-          const pushSubscription: PushSubscription = {
-            endpoint: sub.endpoint,
-            keys: { p256dh: sub.p256dh, auth: sub.auth },
-          };
-
-          const pushMessage: PushMessage = {
-            data: JSON.stringify({
-              title,
-              body,
-              icon: "/logo.png",
-              badge: "/notif-icon-appointments.png",
-              url,
-              tag,
-              type: "appointment_reminder",
-              priority: "normal",
-              require_interaction: false,
-            }),
-            options: { ttl: 3600, urgency: "normal" },
-          };
-
-          const payload = await buildPushPayload(pushMessage, pushSubscription, vapid);
-          const response = await fetch(sub.endpoint, payload);
-
-          if (response.ok) {
-            sent++;
-          } else if (response.status === 410 || response.status === 404) {
-            expiredEndpoints.push(sub.endpoint);
-          }
-        } catch (err) {
-          console.error(`Push error for ${sub.endpoint}:`, err);
+        if (error) {
+          console.error("[reminders] send-push-notification error:", error);
+        } else {
+          sent += userIds.length;
         }
+      } catch (err) {
+        console.error("[reminders] Failed to invoke send-push-notification:", err);
       }
     };
 
@@ -210,17 +173,11 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Clean up expired subscriptions
-    if (expiredEndpoints.length > 0) {
-      await supabase.from("push_subscriptions").delete().in("endpoint", expiredEndpoints);
-    }
-
     return new Response(
       JSON.stringify({
         sent,
         reminders_24h: remind24h?.length || 0,
         reminders_1h: remind1h?.length || 0,
-        expired_removed: expiredEndpoints.length,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
