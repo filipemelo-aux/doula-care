@@ -480,6 +480,7 @@ export function NewServiceDialog({ open, onOpenChange }: NewServiceDialogProps) 
             </div>
           )}
 
+          {/* Amount, Date and Time */}
           <div className="grid grid-cols-2 gap-3">
             <div>
               <Label className="text-xs">Valor Total *</Label>
@@ -499,6 +500,15 @@ export function NewServiceDialog({ open, onOpenChange }: NewServiceDialogProps) 
                 className="mt-1 h-8 text-sm"
               />
             </div>
+          </div>
+          <div>
+            <Label className="text-xs">Horário do Serviço *</Label>
+            <Input
+              type="time"
+              value={serviceTime}
+              onChange={(e) => setServiceTime(e.target.value)}
+              className="mt-1 h-8 text-sm w-32"
+            />
           </div>
 
           {/* Payment method */}
