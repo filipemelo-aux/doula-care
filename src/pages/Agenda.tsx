@@ -559,17 +559,24 @@ export default function Agenda() {
         </div>
       </div>
 
-      {/* Quick Stats — compact badges */}
-      <div className="flex items-center gap-2 flex-wrap">
-        <Badge className="bg-amber-100 text-amber-800 hover:bg-amber-100 gap-1.5 px-3 py-1.5 text-xs font-medium">
-          <span className="font-bold">{pendingServices}</span> Pendentes
-        </Badge>
-        <Badge className="bg-primary/10 text-primary hover:bg-primary/10 gap-1.5 px-3 py-1.5 text-xs font-medium">
-          <span className="font-bold">{budgetSentServices}</span> Aguardando
-        </Badge>
-        <Badge className="bg-emerald-100 text-emerald-800 hover:bg-emerald-100 gap-1.5 px-3 py-1.5 text-xs font-medium">
-          <span className="font-bold">{acceptedServices}</span> Em andamento
-        </Badge>
+      {/* Quick Stats — gradient block like financial */}
+      <div className="rounded-2xl bg-gradient-to-br from-primary/10 via-primary/5 to-transparent p-4 shadow-card">
+        <p className="text-xs text-muted-foreground/70 mb-0.5">Compromissos futuros</p>
+        <p className="text-3xl font-bold tracking-tight text-primary">{futureApts.length}</p>
+        <div className="grid grid-cols-3 gap-3 mt-4">
+          <div className="space-y-0.5">
+            <p className="text-[10px] text-muted-foreground/60 font-normal">Pendentes</p>
+            <p className="text-sm font-semibold text-amber-600">{pendingServices}</p>
+          </div>
+          <div className="space-y-0.5">
+            <p className="text-[10px] text-muted-foreground/60 font-normal">Aguardando</p>
+            <p className="text-sm font-semibold text-foreground/80">{budgetSentServices}</p>
+          </div>
+          <div className="space-y-0.5">
+            <p className="text-[10px] text-muted-foreground/60 font-normal">Em andamento</p>
+            <p className="text-sm font-semibold text-success">{acceptedServices}</p>
+          </div>
+        </div>
       </div>
 
       {/* Search + View Toggle */}
@@ -1050,76 +1057,107 @@ function AppointmentRow({
 
   return (
     <>
-      <div className={`flex w-full max-w-full min-w-0 items-center gap-3 rounded-lg p-3 bg-background hover:bg-muted/30 transition-colors overflow-hidden ${apt.completed_at ? "opacity-60" : past ? "opacity-50" : ""}`}>
-        <div className="text-center min-w-[44px]">
-          <p className="text-[10px] text-muted-foreground uppercase">{format(date, "MMM", { locale: ptBR })}</p>
-          <p className="text-lg font-bold leading-tight">{format(date, "dd")}</p>
-        </div>
-        <div className="w-0 flex-1 overflow-hidden">
-          <div className="flex items-center gap-1.5">
-            <p className="block font-medium text-sm line-clamp-2 break-words" title={apt.title}>{apt.title}</p>
-            {apt.completed_at && (
-              <Badge variant="secondary" className="text-[10px] px-1.5 py-0 flex-shrink-0 bg-green-100 text-green-700">
-                Concluída
-              </Badge>
+      <Card className={`px-3 py-2.5 space-y-1.5 w-full box-border min-w-0 overflow-hidden ${apt.completed_at ? "opacity-60" : past ? "opacity-50" : ""}`}>
+        {/* Header: date + title */}
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="text-center min-w-[44px] flex-shrink-0">
+            <p className="text-[10px] text-muted-foreground/60 uppercase">{format(date, "MMM", { locale: ptBR })}</p>
+            <p className="text-lg font-bold leading-tight">{format(date, "dd")}</p>
+          </div>
+          <div className="flex-1 min-w-0 overflow-hidden">
+            <div className="flex items-center gap-1.5">
+              <p className="font-medium text-sm truncate" title={apt.title}>{apt.title}</p>
+              {apt.completed_at && (
+                <span className="inline-flex items-center gap-0.5 rounded-full bg-success/10 text-success px-1.5 py-0 text-[10px] font-medium flex-shrink-0">
+                  <CheckCircle className="h-2.5 w-2.5" /> Concluída
+                </span>
+              )}
+            </div>
+            {apt.clients?.full_name ? (
+              <p className="text-xs text-muted-foreground truncate">{displayName(apt.clients.full_name)}</p>
+            ) : (
+              <p className="text-xs text-muted-foreground/60 truncate italic">Compromisso pessoal</p>
             )}
           </div>
-          {apt.clients?.full_name ? (
-            <p className="text-xs text-muted-foreground truncate">{displayName(apt.clients.full_name)}</p>
-          ) : (
-            <p className="text-xs text-muted-foreground truncate italic">Compromisso pessoal</p>
-          )}
-          <p className="text-xs text-muted-foreground flex items-center gap-1 min-w-0">
+        </div>
+
+        {/* Info row */}
+        <div className="flex items-center gap-3 text-xs text-muted-foreground min-w-0">
+          <span className="flex items-center gap-1">
             <Clock className="h-3 w-3 flex-shrink-0" />
-            <span className="truncate min-w-0">{format(date, "EEEE, HH:mm", { locale: ptBR })}</span>
-            {today && (
-              <Badge variant="secondary" className="text-[10px] px-1.5 py-0 flex-shrink-0 ml-1">
-                Hoje
-              </Badge>
-            )}
+            {format(date, "EEEE, HH:mm", { locale: ptBR })}
+          </span>
+          {today && (
+            <span className="inline-flex items-center rounded-full bg-primary/10 text-primary px-1.5 py-0 text-[10px] font-medium flex-shrink-0">
+              Hoje
+            </span>
+          )}
+        </div>
+
+        {apt.notes && <p className="text-xs text-muted-foreground/70 truncate">{apt.notes}</p>}
+        {apt.address && (
+          <p className="text-xs text-muted-foreground flex items-center gap-1 truncate" title={apt.address}>
+            <MapPin className="h-3 w-3 flex-shrink-0" />
+            <span className="truncate">{apt.address}</span>
           </p>
-          {apt.notes && <p className="text-xs text-muted-foreground truncate mt-0.5">{apt.notes}</p>}
-          {apt.address && (
-            <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5 truncate" title={apt.address}>
-              <MapPin className="h-3 w-3 flex-shrink-0" />
-              <span className="truncate">{apt.address}</span>
-            </p>
-          )}
-          {apt.completion_notes && (
-            <p className="text-xs text-primary truncate mt-0.5" title={apt.completion_notes}>📝 {apt.completion_notes}</p>
-          )}
+        )}
+        {apt.completion_notes && (
+          <p className="text-xs text-primary truncate" title={apt.completion_notes}>📝 {apt.completion_notes}</p>
+        )}
+
+        {/* Actions row — like financial cards */}
+        <div className="flex items-center justify-between pt-2 border-t border-border/60">
+          <div className="flex items-center gap-1.5">
+            {apt.address && (
+              <button
+                type="button"
+                className="inline-flex items-center gap-1 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400 px-2 py-0.5 text-xs font-medium cursor-pointer transition-colors hover:opacity-80"
+                onClick={() => {
+                  const query = encodeURIComponent(apt.address!);
+                  window.open(`https://www.google.com/maps/search/?api=1&query=${query}`, "_blank");
+                }}
+              >
+                <Navigation className="h-3 w-3" />
+                Rota
+              </button>
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            {!apt.completed_at && (
+              <Button
+                size="sm"
+                onClick={() => setCompleteOpen(true)}
+                className="h-8 px-3 gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm hover:shadow transition-all text-xs font-medium"
+              >
+                <CheckCircle className="h-3.5 w-3.5" />
+                Concluir
+              </Button>
+            )}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="h-10 w-10 p-0 text-muted-foreground flex-shrink-0 hover:bg-muted transition-colors">
+                  <MoreVertical className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48 animate-fade-in">
+                <DropdownMenuItem onClick={() => setDetailOpen(true)} className="gap-2.5 text-xs py-2.5 cursor-pointer transition-colors">
+                  <Eye className="h-3.5 w-3.5 text-muted-foreground" />
+                  Ver detalhes
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => onEdit(apt)} className="gap-2.5 text-xs py-2.5 cursor-pointer transition-colors">
+                  <Edit2 className="h-3.5 w-3.5 text-muted-foreground" />
+                  Editar
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => onDelete(apt.id)} className="gap-2.5 text-xs py-2.5 cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/10 transition-colors">
+                  <Trash2 className="h-3.5 w-3.5" />
+                  Excluir
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
-        <div className="flex items-center gap-1 flex-shrink-0">
-          {apt.address && (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 text-blue-600 hover:text-blue-700"
-              onClick={() => {
-                const query = encodeURIComponent(apt.address!);
-                window.open(`https://www.google.com/maps/search/?api=1&query=${query}`, "_blank");
-              }}
-              title="Abrir rota"
-            >
-              <Navigation className="h-3.5 w-3.5" />
-            </Button>
-          )}
-          {!apt.completed_at && (
-            <Button variant="ghost" size="icon" className="h-8 w-8 text-green-600 hover:text-green-700" onClick={() => setCompleteOpen(true)} title="Concluir consulta">
-              <CheckCircle className="h-3.5 w-3.5" />
-            </Button>
-          )}
-          <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary" onClick={() => setDetailOpen(true)} title="Ver detalhes">
-            <Eye className="h-3.5 w-3.5" />
-          </Button>
-          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onEdit(apt)} title="Editar">
-            <Edit2 className="h-3.5 w-3.5" />
-          </Button>
-          <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => onDelete(apt.id)} title="Excluir">
-            <Trash2 className="h-3.5 w-3.5" />
-          </Button>
-        </div>
-      </div>
+      </Card>
       <AppointmentDetailDialog
         open={detailOpen}
         onOpenChange={setDetailOpen}
@@ -1162,73 +1200,100 @@ function ServiceRow({
   const scheduledDate = hasScheduledDate ? toZonedTime(new Date(svc.scheduled_date!), "America/Sao_Paulo") : null;
 
   return (
-    <div className="flex items-center gap-3 rounded-lg p-3 bg-background hover:bg-muted/30 transition-colors">
-      {/* Date column - like appointments */}
-      {hasScheduledDate && scheduledDate ? (
-        <div className="text-center min-w-[44px]">
-          <p className="text-[10px] text-muted-foreground uppercase">{format(scheduledDate, "MMM", { locale: ptBR })}</p>
-          <p className="text-lg font-bold leading-tight">{format(scheduledDate, "dd")}</p>
-        </div>
-      ) : (
-        <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
-          <Briefcase className="h-5 w-5 text-primary" />
-        </div>
-      )}
-      <div className="flex-1 min-w-0 overflow-hidden">
-        <div className="flex items-center gap-2 min-w-0">
-          <p className="font-medium text-sm truncate">{svc.service_type}</p>
-          <Badge variant="outline" className={`text-[10px] px-1.5 py-0 ${config.color}`}>{config.label}</Badge>
-        </div>
-        <p className="text-xs text-muted-foreground truncate">{displayName(svc.clients?.full_name || "")}</p>
-        {hasScheduledDate && scheduledDate && (
-          <p className="text-xs text-muted-foreground flex items-center gap-1">
-            <Clock className="h-3 w-3 flex-shrink-0" />
-            <span>{format(scheduledDate, "EEEE, HH:mm", { locale: ptBR })}</span>
-            {isToday(scheduledDate) && (
-              <Badge variant="secondary" className="text-[10px] px-1.5 py-0 flex-shrink-0 ml-1">Hoje</Badge>
-            )}
-          </p>
-        )}
-        {svc.budget_value && (
-          <p className="text-xs font-semibold text-primary">R$ {svc.budget_value.toFixed(2).replace(".", ",")}</p>
-        )}
-        {svc.preferred_date && !hasScheduledDate && (
-          <p className="text-xs text-muted-foreground flex items-center gap-1">
-            <Calendar className="h-3 w-3 flex-shrink-0" />
-            <span>Preferência: {format(toZonedTime(new Date(svc.preferred_date), "America/Sao_Paulo"), "dd/MM 'às' HH:mm", { locale: ptBR })}</span>
-          </p>
-        )}
-        {svc.rating && (
-          <div className="flex items-center gap-1 mt-0.5">
-            {[1, 2, 3, 4, 5].map((s) => (
-              <Star key={s} className={`h-3 w-3 ${s <= svc.rating! ? "text-amber-400 fill-amber-400" : "text-muted-foreground/30"}`} />
-            ))}
-            {(svc.rating_photos?.length || svc.rating_comment) && (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-5 px-1 text-[10px]"
-                onClick={() => onViewPhotos({ photos: svc.rating_photos || [], comment: svc.rating_comment, rating: svc.rating! })}
-              >
-                <Eye className="h-3 w-3 mr-0.5" />
-                Ver
-              </Button>
-            )}
+    <Card className="px-3 py-2.5 space-y-1.5 w-full box-border min-w-0 overflow-hidden">
+      {/* Header */}
+      <div className="flex items-center gap-3 min-w-0">
+        {hasScheduledDate && scheduledDate ? (
+          <div className="text-center min-w-[44px] flex-shrink-0">
+            <p className="text-[10px] text-muted-foreground/60 uppercase">{format(scheduledDate, "MMM", { locale: ptBR })}</p>
+            <p className="text-lg font-bold leading-tight">{format(scheduledDate, "dd")}</p>
+          </div>
+        ) : (
+          <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+            <Briefcase className="h-5 w-5 text-primary" />
           </div>
         )}
+        <div className="flex-1 min-w-0 overflow-hidden">
+          <div className="flex items-center gap-2 min-w-0">
+            <p className="font-medium text-sm truncate">{svc.service_type}</p>
+            <span className={`inline-flex items-center rounded-full px-1.5 py-0 text-[10px] font-medium flex-shrink-0 ${config.color}`}>
+              {config.label}
+            </span>
+          </div>
+          <p className="text-xs text-muted-foreground truncate">{displayName(svc.clients?.full_name || "")}</p>
+        </div>
       </div>
-      <div className="flex items-center gap-1">
-        {status === "pending" && (
-          <Button variant="outline" size="sm" className="h-8 text-xs" onClick={() => onSendBudget(svc)}>
-            <Send className="h-3.5 w-3.5 mr-1" />
-            Orçar
-          </Button>
-        )}
-        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => onDelete(svc.id)} title="Excluir">
-          <Trash2 className="h-3.5 w-3.5" />
-        </Button>
+
+      {/* Info */}
+      {hasScheduledDate && scheduledDate && (
+        <div className="flex items-center gap-3 text-xs text-muted-foreground">
+          <span className="flex items-center gap-1">
+            <Clock className="h-3 w-3 flex-shrink-0" />
+            {format(scheduledDate, "EEEE, HH:mm", { locale: ptBR })}
+          </span>
+          {isToday(scheduledDate) && (
+            <span className="inline-flex items-center rounded-full bg-primary/10 text-primary px-1.5 py-0 text-[10px] font-medium">Hoje</span>
+          )}
+        </div>
+      )}
+      {svc.budget_value && (
+        <p className="text-xs font-semibold text-primary">R$ {svc.budget_value.toFixed(2).replace(".", ",")}</p>
+      )}
+      {svc.preferred_date && !hasScheduledDate && (
+        <p className="text-xs text-muted-foreground flex items-center gap-1">
+          <Calendar className="h-3 w-3 flex-shrink-0" />
+          <span>Preferência: {format(toZonedTime(new Date(svc.preferred_date), "America/Sao_Paulo"), "dd/MM 'às' HH:mm", { locale: ptBR })}</span>
+        </p>
+      )}
+      {svc.rating && (
+        <div className="flex items-center gap-1 mt-0.5">
+          {[1, 2, 3, 4, 5].map((s) => (
+            <Star key={s} className={`h-3 w-3 ${s <= svc.rating! ? "text-amber-400 fill-amber-400" : "text-muted-foreground/30"}`} />
+          ))}
+          {(svc.rating_photos?.length || svc.rating_comment) && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-5 px-1 text-[10px]"
+              onClick={() => onViewPhotos({ photos: svc.rating_photos || [], comment: svc.rating_comment, rating: svc.rating! })}
+            >
+              <Eye className="h-3 w-3 mr-0.5" />
+              Ver
+            </Button>
+          )}
+        </div>
+      )}
+
+      {/* Actions row — like financial cards */}
+      <div className="flex items-center justify-between pt-2 border-t border-border/60">
+        <div />
+        <div className="flex items-center gap-2">
+          {status === "pending" && (
+            <Button
+              size="sm"
+              onClick={() => onSendBudget(svc)}
+              className="h-8 px-3 gap-1.5 bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm hover:shadow transition-all text-xs font-medium"
+            >
+              <Send className="h-3.5 w-3.5" />
+              Orçar
+            </Button>
+          )}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" className="h-10 w-10 p-0 text-muted-foreground flex-shrink-0 hover:bg-muted transition-colors">
+                <MoreVertical className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48 animate-fade-in">
+              <DropdownMenuItem onClick={() => onDelete(svc.id)} className="gap-2.5 text-xs py-2.5 cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/10 transition-colors">
+                <Trash2 className="h-3.5 w-3.5" />
+                Excluir
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </div>
-    </div>
+    </Card>
   );
 }
 
