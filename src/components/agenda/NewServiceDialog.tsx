@@ -47,13 +47,15 @@ export function NewServiceDialog({ open, onOpenChange }: NewServiceDialogProps) 
   const [showQuickClient, setShowQuickClient] = useState(false);
   const [quickClientName, setQuickClientName] = useState("");
   const [quickClientPhone, setQuickClientPhone] = useState("");
+  const [address, setAddress] = useState("");
+  const [clientHasNoAddress, setClientHasNoAddress] = useState(false);
 
   const { data: clients } = useQuery({
     queryKey: ["agenda-clients-service"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("clients")
-        .select("id, full_name")
+        .select("id, full_name, street, number, neighborhood, city, state")
         .order("full_name");
       if (error) throw error;
       return data;
