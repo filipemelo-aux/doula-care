@@ -49,7 +49,7 @@ export function UpcomingAppointments() {
       const { data, error } = await supabase
         .from("appointments")
         .select("*, clients(full_name)")
-        .not("title", "like", "Serviço:%")
+        
         .gte("scheduled_at", todayStart.toISOString())
         .order("scheduled_at", { ascending: true });
 
