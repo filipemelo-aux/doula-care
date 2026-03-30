@@ -68,8 +68,8 @@ export default function Login() {
 
     // Trigger credential save in supported browsers / WebView
     try {
-      if (window.PasswordCredential) {
-        const cred = new window.PasswordCredential({
+      if ((window as any).PasswordCredential) {
+        const cred = new (window as any).PasswordCredential({
           id: trimmedEmail,
           password: password,
           name: trimmedEmail,
