@@ -18,6 +18,7 @@ import { Briefcase, Plus, Check, X, Loader2, CheckCircle, UserPlus, MapPin, Aler
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { maskCurrency, parseCurrency, maskPhone } from "@/lib/masks";
 import { format } from "date-fns";
+import { fromZonedTime } from "date-fns-tz";
 import { toast } from "sonner";
 
 interface NewServiceDialogProps {
@@ -43,6 +44,7 @@ export function NewServiceDialog({ open, onOpenChange }: NewServiceDialogProps) 
   const [clientId, setClientId] = useState("");
   const [amount, setAmount] = useState("");
   const [serviceDate, setServiceDate] = useState(format(new Date(), "yyyy-MM-dd"));
+  const [serviceTime, setServiceTime] = useState("10:00");
   const [paymentMethod, setPaymentMethod] = useState("pix");
   const [notes, setNotes] = useState("");
   const [showQuickClient, setShowQuickClient] = useState(false);
@@ -185,11 +187,11 @@ export function NewServiceDialog({ open, onOpenChange }: NewServiceDialogProps) 
 
       // 3. Create appointment
       if (clientId) {
-        const aptDate = new Date(serviceDate + "T10:00:00");
+        const scheduledUtc = fromZonedTime(`${serviceDate}T${serviceTime}`, "America/Sao_Paulo").toISOString();
         await supabase.from("appointments").insert({
           client_id: clientId,
           title: `Serviço: ${selectedServices.join(", ")}`,
-          scheduled_at: aptDate.toISOString(),
+          scheduled_at: scheduledUtc,
           notes: notes || null,
           address: address.trim() || null,
           owner_id: user?.id || null,
@@ -218,6 +220,7 @@ export function NewServiceDialog({ open, onOpenChange }: NewServiceDialogProps) 
     setClientId("");
     setAmount("");
     setServiceDate(format(new Date(), "yyyy-MM-dd"));
+    setServiceTime("10:00");
     setPaymentMethod("pix");
     setNotes("");
     setAddress("");
@@ -268,7 +271,7 @@ export function NewServiceDialog({ open, onOpenChange }: NewServiceDialogProps) 
     }
   };
 
-  const canSubmit = selectedServices.length > 0 && clientId && parseCurrency(amount) > 0 && serviceDate && (address.trim() || !clientHasNoAddress);
+  const canSubmit = selectedServices.length > 0 && clientId && parseCurrency(amount) > 0 && serviceDate && serviceTime && (address.trim() || !clientHasNoAddress);
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && resetAndClose()}>
@@ -478,6 +481,7 @@ export function NewServiceDialog({ open, onOpenChange }: NewServiceDialogProps) 
             </div>
           )}
 
+          {/* Amount, Date and Time */}
           <div className="grid grid-cols-2 gap-3">
             <div>
               <Label className="text-xs">Valor Total *</Label>
@@ -497,6 +501,15 @@ export function NewServiceDialog({ open, onOpenChange }: NewServiceDialogProps) 
                 className="mt-1 h-8 text-sm"
               />
             </div>
+          </div>
+          <div>
+            <Label className="text-xs">Horário do Serviço *</Label>
+            <Input
+              type="time"
+              value={serviceTime}
+              onChange={(e) => setServiceTime(e.target.value)}
+              className="mt-1 h-8 text-sm w-32"
+            />
           </div>
 
           {/* Payment method */}
