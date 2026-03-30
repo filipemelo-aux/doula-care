@@ -75,9 +75,10 @@ export function ManageAppointmentsDialog({
         title,
         scheduled_at: new Date(scheduledAt).toISOString(),
         notes: notes || null,
+        address: address.trim() || null,
         owner_id: user?.id || null,
         organization_id: organizationId || null,
-      });
+      } as any);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -87,6 +88,7 @@ export function ManageAppointmentsDialog({
       setTitle("");
       setScheduledAt("");
       setNotes("");
+      setAddress("");
       toast.success("Consulta agendada!");
     },
     onError: () => toast.error("Erro ao agendar consulta"),
