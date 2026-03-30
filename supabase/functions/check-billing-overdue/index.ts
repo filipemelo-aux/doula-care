@@ -1,14 +1,9 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import {
-  buildPushPayload,
-  type PushSubscription,
-  type PushMessage,
-  type VapidKeys,
-} from "npm:@block65/webcrypto-web-push@^1.0.2";
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
+    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
 Deno.serve(async (req) => {
@@ -17,22 +12,17 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const vapidPublicKey = Deno.env.get("VAPID_PUBLIC_KEY");
-    const vapidPrivateKey = Deno.env.get("VAPID_PRIVATE_KEY");
-
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    const vapid: VapidKeys | null = vapidPublicKey && vapidPrivateKey ? {
-      subject: "mailto:contato@papodedoula.com",
-      publicKey: vapidPublicKey,
-      privateKey: vapidPrivateKey,
-    } : null;
-
+    /**
+     * Delegate push sending to the send-push-notification edge function.
+     * This ensures FCM (Capacitor native) tokens are handled correctly
+     * alongside web push (VAPID) subscriptions.
+     */
     const sendPushToOrg = async (orgId: string, title: string, body: string) => {
-      if (!vapid) return;
       // Get admin users in this org
       const { data: orgProfiles } = await supabase
         .from("profiles")
@@ -49,30 +39,21 @@ Deno.serve(async (req) => {
       if (!adminRoles || adminRoles.length === 0) return;
 
       const adminUserIds = adminRoles.map(r => r.user_id);
-      const { data: subscriptions } = await supabase
-        .from("push_subscriptions")
-        .select("*")
-        .in("user_id", adminUserIds);
-      if (!subscriptions || subscriptions.length === 0) return;
 
-      for (const sub of subscriptions) {
-        try {
-          const pushSubscription: PushSubscription = {
-            endpoint: sub.endpoint,
-            keys: { p256dh: sub.p256dh, auth: sub.auth },
-          };
-          const pushMessage: PushMessage = {
-            data: JSON.stringify({
-              title, body, icon: "/pwa-icon-192.png", badge: "/pwa-icon-192.png",
-              url: "/admin", tag: "billing-overdue", type: "general", priority: "normal",
-            }),
-            options: { ttl: 3600, urgency: "normal" },
-          };
-          const payload = await buildPushPayload(pushMessage, pushSubscription, vapid);
-          await fetch(sub.endpoint, payload);
-        } catch (err) {
-          console.error("Push error:", err);
-        }
+      try {
+        await supabase.functions.invoke("send-push-notification", {
+          body: {
+            user_ids: adminUserIds,
+            title,
+            message: body,
+            url: "/admin",
+            tag: "billing-overdue",
+            type: "general",
+            priority: "normal",
+          },
+        });
+      } catch (err) {
+        console.error("[billing] Push error:", err);
       }
     };
 
