@@ -219,10 +219,32 @@ export function NewServiceDialog({ open, onOpenChange }: NewServiceDialogProps) 
     setServiceDate(format(new Date(), "yyyy-MM-dd"));
     setPaymentMethod("pix");
     setNotes("");
+    setAddress("");
+    setClientHasNoAddress(false);
     setShowQuickClient(false);
     setQuickClientName("");
     setQuickClientPhone("");
     onOpenChange(false);
+  };
+
+  const buildClientAddress = (c: any) => {
+    const parts = [c.street, c.number, c.neighborhood, c.city, c.state].filter(Boolean);
+    return parts.join(", ");
+  };
+
+  const handleClientChange = (id: string) => {
+    setClientId(id);
+    const client = clients?.find((c) => c.id === id);
+    if (client) {
+      const addr = buildClientAddress(client);
+      if (addr) {
+        setAddress(addr);
+        setClientHasNoAddress(false);
+      } else {
+        setAddress("");
+        setClientHasNoAddress(true);
+      }
+    }
   };
 
   const handleSelectService = (serviceName: string) => {
