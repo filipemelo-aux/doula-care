@@ -75,45 +75,8 @@ export default function Dashboard() {
         <PeriodFilter selected={period} onChange={setPeriod} />
       </div>
 
-      {/* ═══ BLOCO 1 — Receita (destaque principal) ═══ */}
-      <div className="rounded-2xl bg-gradient-to-br from-success/10 via-success/5 to-transparent p-4 lg:p-6 shadow-card space-y-4">
-        <div className="flex items-center gap-2 mb-1">
-          <div className="w-9 h-9 rounded-xl bg-success/15 flex items-center justify-center">
-            <Wallet className="w-5 h-5 text-success" />
-          </div>
-          <h2 className="font-semibold text-sm text-foreground">Financeiro</h2>
-        </div>
-
-        {/* Hero metric */}
-        <div>
-          <p className="text-xs text-muted-foreground mb-0.5">Receita Contratada</p>
-          <p className="text-3xl lg:text-4xl font-bold tracking-tight text-foreground">
-            {formatCurrency(metrics?.totalContracted || 0)}
-          </p>
-        </div>
-
-        {/* Sub-metrics row */}
-        <div className="grid grid-cols-3 gap-3">
-          <MetricPill
-            icon={CircleDollarSign}
-            label="Recebido"
-            value={formatCurrency(metrics?.totalReceived || 0)}
-            colorClass="text-success"
-          />
-          <MetricPill
-            icon={TrendingUp}
-            label="A Receber"
-            value={formatCurrency(metrics?.totalPending || 0)}
-            colorClass="text-amber-500"
-          />
-          <MetricPill
-            icon={Wallet}
-            label="Ticket Médio"
-            value={formatCurrency(metrics?.averageTicket || 0)}
-            colorClass="text-primary"
-          />
-        </div>
-      </div>
+      {/* ═══ BLOCO 1 — Financeiro ═══ */}
+      <FinancialOverview period={period} />
 
       {/* ═══ BLOCO 2 — Agenda ═══ */}
       <UpcomingAppointments />
