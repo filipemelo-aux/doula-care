@@ -86,7 +86,7 @@ export default function Dashboard() {
           <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
             <Users className="w-5 h-5 text-primary" />
           </div>
-          <h2 className="font-semibold text-sm text-foreground">Clientes</h2>
+          <h2 className="font-semibold text-lg text-foreground">Clientes</h2>
           <span className="ml-auto text-2xl font-bold text-foreground">{metrics?.totalClients || 0}</span>
         </div>
 
