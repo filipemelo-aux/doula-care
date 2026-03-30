@@ -190,8 +190,8 @@ export function ClientsListDialog({
                         )}
                       </div>
 
-                      {/* Action buttons for gestantes - desktop only inline */}
-                      {status === "gestante" && !isMobile && (
+                      {/* Action buttons for gestantes & puérperas - desktop */}
+                      {(status === "gestante" || status === "lactante") && !isMobile && (
                         <div className="flex gap-1 shrink-0">
                           <Button
                             size="icon"
@@ -202,7 +202,7 @@ export function ClientsListDialog({
                               setSelectedClient(client);
                               setDiaryDialogOpen(true);
                             }}
-                            title="Ver diário"
+                            title={status === "lactante" ? "Diário do Puerpério" : "Ver diário"}
                           >
                             <BookHeart className="h-4 w-4 text-primary" />
                             {recentDiaryEntries?.has(client.id) && (
