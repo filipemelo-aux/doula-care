@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { Loader2, ChevronRight, Calendar as CalendarIcon, AlertCircle, Clock } from "lucide-react";
+import { sendPushNotification } from "@/lib/pushNotifications";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -174,6 +175,16 @@ export function ServiceRequestButtons() {
       setSelectedService(null);
       setSelectedDate(undefined);
       setSelectedTime("");
+
+      // Push notification to admin
+      sendPushNotification({
+        send_to_admins: true,
+        title: "🔔 Nova Solicitação de Serviço",
+        message: `${client?.full_name || "Uma cliente"} solicitou: ${selectedService?.name || "serviço"}`,
+        url: "/agenda",
+        tag: "new-service-request",
+        type: "new_appointment",
+      });
     },
     onError: () => {
       toast.error("Erro ao enviar solicitação", {
