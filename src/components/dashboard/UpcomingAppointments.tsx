@@ -203,7 +203,7 @@ function AppointmentCard({
 
   return (
     <>
-      <div className="py-2 space-y-1.5 w-full box-border min-w-0 border-b border-border/40 last:border-b-0">
+      <Card className="px-3 py-2.5 space-y-1.5 w-full box-border min-w-0 overflow-hidden">
         {/* Header: date column + title */}
         <div className="flex items-center gap-3 min-w-0">
           <div className="text-center min-w-[44px] flex-shrink-0">
@@ -250,8 +250,9 @@ function AppointmentCard({
           </p>
         )}
 
-        {/* Actions row */}
-        <div className="flex items-center flex-wrap pt-2 border-t border-border/60 gap-1.5">
+        {/* Actions row — same as Agenda */}
+        <div className="flex items-center justify-between pt-2 border-t border-border/60">
+          <div className="flex items-center gap-1.5">
             {apt.address && (
               <Button
                 size="sm"
@@ -260,44 +261,45 @@ function AppointmentCard({
                   const query = encodeURIComponent(apt.address!);
                   window.open(`https://www.google.com/maps/search/?api=1&query=${query}`, "_blank");
                 }}
-                className="h-8 px-2.5 gap-1 text-xs font-medium border-primary/30 text-primary hover:bg-primary/10"
+                className="h-8 px-3 gap-1.5 text-xs font-medium border-primary/30 text-primary hover:bg-primary/10"
               >
                 <MapPin className="h-3.5 w-3.5" />
                 Rota
               </Button>
             )}
-            <div className="flex items-center gap-1.5 ml-auto">
-              {!apt.completed_at && (
-                <Button
-                  size="sm"
-                  onClick={() => setCompleteOpen(true)}
-                  className="h-8 px-2.5 gap-1 bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm hover:shadow transition-all text-xs font-medium"
-                >
-                  <CheckCircle className="h-3.5 w-3.5" />
-                  Concluir
+          </div>
+          <div className="flex items-center gap-2">
+            {!apt.completed_at && (
+              <Button
+                size="sm"
+                onClick={() => setCompleteOpen(true)}
+                className="h-8 px-3 gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm hover:shadow transition-all text-xs font-medium"
+              >
+                <CheckCircle className="h-3.5 w-3.5" />
+                Concluir
+              </Button>
+            )}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="h-10 w-10 p-0 text-muted-foreground flex-shrink-0 hover:bg-muted transition-colors">
+                  <MoreVertical className="h-4 w-4" />
                 </Button>
-              )}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm" className="h-8 w-8 p-0 text-muted-foreground hover:bg-muted transition-colors">
-                    <MoreVertical className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48 animate-fade-in">
-                  <DropdownMenuItem onClick={() => setDetailOpen(true)} className="gap-2.5 text-xs py-2.5 cursor-pointer transition-colors">
-                    <Eye className="h-3.5 w-3.5 text-muted-foreground" />
-                    Ver detalhes
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => onDelete(apt.id)} className="gap-2.5 text-xs py-2.5 cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/10 transition-colors">
-                    <Trash2 className="h-3.5 w-3.5" />
-                    Excluir
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48 animate-fade-in">
+                <DropdownMenuItem onClick={() => setDetailOpen(true)} className="gap-2.5 text-xs py-2.5 cursor-pointer transition-colors">
+                  <Eye className="h-3.5 w-3.5 text-muted-foreground" />
+                  Ver detalhes
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => onDelete(apt.id)} className="gap-2.5 text-xs py-2.5 cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/10 transition-colors">
+                  <Trash2 className="h-3.5 w-3.5" />
+                  Excluir
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
-      </div>
+      </Card>
 
       <AppointmentDetailDialog
         open={detailOpen}
