@@ -741,9 +741,6 @@ export default function Agenda() {
               {/* Future appointments */}
               {futureApts.filter(a => getAppointmentStatus(a) === "future").length > 0 && (
                 <section>
-                  <h2 className="text-sm font-semibold text-muted-foreground mb-3 flex items-center gap-2">
-                    <Calendar className="h-4 w-4" /> Próximos Compromissos
-                  </h2>
                   <div className="space-y-2">
                     {futureApts.filter(a => getAppointmentStatus(a) === "future").map((apt) => (
                       <AppointmentRow key={apt.id} apt={apt} onEdit={openEditAppointment} onDelete={(id) => setDeleteTarget({ type: "appointment", id })} displayName={displayName} onCompleted={() => queryClient.invalidateQueries({ queryKey: ["agenda-appointments"] })} />
