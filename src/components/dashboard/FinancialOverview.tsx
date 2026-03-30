@@ -53,26 +53,26 @@ export function FinancialOverview({ period }: FinancialOverviewProps) {
 
   return (
     <div className="space-y-4">
-      {/* Hero stats — matching Financial page style */}
+      {/* Hero stats — identical to Financial page */}
       <div className="rounded-2xl bg-gradient-to-br from-success/10 via-success/5 to-transparent p-4 lg:p-6 shadow-card">
-        <p className="text-[10px] lg:text-xs text-muted-foreground/70 mb-0.5">
+        <p className="text-xs text-muted-foreground/70 mb-0.5">
           Recebido — {getPeriodLabel(period)}
         </p>
         <p className="text-3xl lg:text-4xl font-bold tracking-tight text-success">
           {formatCurrency(totalReceived)}
         </p>
         <div className="grid grid-cols-3 gap-3 mt-4">
-          <div className="space-y-0.5 min-w-0">
-            <p className="text-[10px] lg:text-xs text-muted-foreground/60 font-normal">Contratado</p>
-            <p className="text-xs lg:text-sm font-semibold text-foreground/80 break-all">{formatCurrency(totalIncome)}</p>
+          <div className="space-y-0.5">
+            <p className="text-[10px] lg:text-xs text-muted-foreground/60 font-normal">Total contratado</p>
+            <p className="text-sm lg:text-base font-semibold text-foreground/80">{formatCurrency(totalIncome)}</p>
           </div>
-          <div className="space-y-0.5 min-w-0">
+          <div className="space-y-0.5">
             <p className="text-[10px] lg:text-xs text-muted-foreground/60 font-normal">A receber</p>
-            <p className="text-xs lg:text-sm font-semibold text-amber-600/80 break-all">{formatCurrency(totalPending)}</p>
+            <p className="text-sm lg:text-base font-semibold text-amber-600/80">{formatCurrency(totalPending)}</p>
           </div>
-          <div className="space-y-0.5 min-w-0">
+          <div className="space-y-0.5">
             <p className="text-[10px] lg:text-xs text-muted-foreground/60 font-normal">Despesas</p>
-            <p className="text-xs lg:text-sm font-semibold text-destructive/80 break-all">{formatCurrency(totalExpenses)}</p>
+            <p className="text-sm lg:text-base font-semibold text-destructive/80">{formatCurrency(totalExpenses)}</p>
           </div>
         </div>
         {/* Balance row */}
@@ -95,7 +95,7 @@ export function FinancialOverview({ period }: FinancialOverviewProps) {
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             {Object.entries(metrics.incomeByMethod).map(([method, value]) => (
-              <div key={method} className="p-3 rounded-xl bg-muted/30">
+              <div key={method} className="space-y-0.5">
                 <p className="text-[10px] lg:text-xs text-muted-foreground/60">
                   {paymentMethodLabels[method] || method}
                 </p>
@@ -115,15 +115,15 @@ export function FinancialOverview({ period }: FinancialOverviewProps) {
             <Banknote className="w-4 h-4" />
             Top Categorias de Despesa
           </div>
-          <div className="flex flex-wrap gap-2">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             {Object.entries(metrics.expensesByCategory)
               .sort(([, a], [, b]) => b - a)
               .slice(0, 4)
               .map(([category, value]) => (
-                <div key={category} className="px-3 py-2 rounded-xl bg-destructive/5">
-                  <span className="text-[10px] lg:text-xs text-muted-foreground/60">
+                <div key={category} className="space-y-0.5">
+                  <p className="text-[10px] lg:text-xs text-muted-foreground/60">
                     {categoryLabels[category] || category}
-                  </span>
+                  </p>
                   <p className="text-sm font-medium text-destructive">
                     {formatCurrency(value)}
                   </p>
