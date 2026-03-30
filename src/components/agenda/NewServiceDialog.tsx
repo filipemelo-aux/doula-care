@@ -14,7 +14,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Briefcase, Plus, Check, X, Loader2, CheckCircle, UserPlus } from "lucide-react";
+import { Briefcase, Plus, Check, X, Loader2, CheckCircle, UserPlus, MapPin, AlertTriangle } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { maskCurrency, parseCurrency, maskPhone } from "@/lib/masks";
 import { format } from "date-fns";
 import { toast } from "sonner";
@@ -47,13 +48,15 @@ export function NewServiceDialog({ open, onOpenChange }: NewServiceDialogProps) 
   const [showQuickClient, setShowQuickClient] = useState(false);
   const [quickClientName, setQuickClientName] = useState("");
   const [quickClientPhone, setQuickClientPhone] = useState("");
+  const [address, setAddress] = useState("");
+  const [clientHasNoAddress, setClientHasNoAddress] = useState(false);
 
   const { data: clients } = useQuery({
     queryKey: ["agenda-clients-service"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("clients")
-        .select("id, full_name")
+        .select("id, full_name, street, number, neighborhood, city, state")
         .order("full_name");
       if (error) throw error;
       return data;
@@ -188,9 +191,10 @@ export function NewServiceDialog({ open, onOpenChange }: NewServiceDialogProps) 
           title: `Serviço: ${selectedServices.join(", ")}`,
           scheduled_at: aptDate.toISOString(),
           notes: notes || null,
+          address: address.trim() || null,
           owner_id: user?.id || null,
           organization_id: organizationId || null,
-        });
+        } as any);
       }
     },
     onSuccess: () => {
@@ -216,10 +220,32 @@ export function NewServiceDialog({ open, onOpenChange }: NewServiceDialogProps) 
     setServiceDate(format(new Date(), "yyyy-MM-dd"));
     setPaymentMethod("pix");
     setNotes("");
+    setAddress("");
+    setClientHasNoAddress(false);
     setShowQuickClient(false);
     setQuickClientName("");
     setQuickClientPhone("");
     onOpenChange(false);
+  };
+
+  const buildClientAddress = (c: any) => {
+    const parts = [c.street, c.number, c.neighborhood, c.city, c.state].filter(Boolean);
+    return parts.join(", ");
+  };
+
+  const handleClientChange = (id: string) => {
+    setClientId(id);
+    const client = clients?.find((c) => c.id === id);
+    if (client) {
+      const addr = buildClientAddress(client);
+      if (addr) {
+        setAddress(addr);
+        setClientHasNoAddress(false);
+      } else {
+        setAddress("");
+        setClientHasNoAddress(true);
+      }
+    }
   };
 
   const handleSelectService = (serviceName: string) => {
@@ -242,7 +268,7 @@ export function NewServiceDialog({ open, onOpenChange }: NewServiceDialogProps) 
     }
   };
 
-  const canSubmit = selectedServices.length > 0 && clientId && parseCurrency(amount) > 0 && serviceDate;
+  const canSubmit = selectedServices.length > 0 && clientId && parseCurrency(amount) > 0 && serviceDate && (address.trim() || !clientHasNoAddress);
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && resetAndClose()}>
@@ -349,7 +375,7 @@ export function NewServiceDialog({ open, onOpenChange }: NewServiceDialogProps) 
           {/* Client */}
           <div className="space-y-2">
             <Label className="text-xs">Cliente *</Label>
-            <Select value={clientId} onValueChange={setClientId}>
+            <Select value={clientId} onValueChange={handleClientChange}>
               <SelectTrigger className="h-8 text-sm">
                 <SelectValue placeholder="Selecione uma cliente" />
               </SelectTrigger>
@@ -428,7 +454,30 @@ export function NewServiceDialog({ open, onOpenChange }: NewServiceDialogProps) 
             )}
           </div>
 
-          {/* Amount and Date */}
+          {/* Address */}
+          {clientId && (
+            <div className="space-y-2">
+              <Label className="text-xs flex items-center gap-1">
+                <MapPin className="h-3 w-3" />
+                Endereço do atendimento {clientHasNoAddress && "*"}
+              </Label>
+              {clientHasNoAddress && (
+                <Alert variant="destructive" className="py-2 px-3">
+                  <AlertTriangle className="h-3.5 w-3.5" />
+                  <AlertDescription className="text-xs">
+                    Esta cliente não possui endereço cadastrado. Informe o endereço manualmente.
+                  </AlertDescription>
+                </Alert>
+              )}
+              <Input
+                placeholder="Digite o endereço ou local"
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
+                className="h-8 text-sm"
+              />
+            </div>
+          )}
+
           <div className="grid grid-cols-2 gap-3">
             <div>
               <Label className="text-xs">Valor Total *</Label>

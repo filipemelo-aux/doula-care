@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Calendar, Plus, Trash2, Loader2, Eye, CheckCircle, Undo2 } from "lucide-react";
+import { Calendar, Plus, Trash2, Loader2, Eye, CheckCircle, Undo2, MapPin, Navigation } from "lucide-react";
 import { AppointmentDetailDialog } from "@/components/clients/AppointmentDetailDialog";
 import { AppointmentCompleteDialog } from "@/components/clients/AppointmentCompleteDialog";
 import { Badge } from "@/components/ui/badge";
@@ -33,6 +33,7 @@ interface Appointment {
   title: string;
   scheduled_at: string;
   notes: string | null;
+  address: string | null;
   completed_at: string | null;
   completion_notes: string | null;
 }
@@ -46,6 +47,7 @@ export function ManageAppointmentsDialog({
   const [title, setTitle] = useState("");
   const [scheduledAt, setScheduledAt] = useState("");
   const [notes, setNotes] = useState("");
+  const [address, setAddress] = useState("");
   const [detailApt, setDetailApt] = useState<Appointment | null>(null);
   const [completeApt, setCompleteApt] = useState<Appointment | null>(null);
   const queryClient = useQueryClient();
@@ -73,9 +75,10 @@ export function ManageAppointmentsDialog({
         title,
         scheduled_at: new Date(scheduledAt).toISOString(),
         notes: notes || null,
+        address: address.trim() || null,
         owner_id: user?.id || null,
         organization_id: organizationId || null,
-      });
+      } as any);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -85,6 +88,7 @@ export function ManageAppointmentsDialog({
       setTitle("");
       setScheduledAt("");
       setNotes("");
+      setAddress("");
       toast.success("Consulta agendada!");
     },
     onError: () => toast.error("Erro ao agendar consulta"),
@@ -158,6 +162,18 @@ export function ManageAppointmentsDialog({
                 />
               </div>
               <div>
+                <Label className="text-xs flex items-center gap-1">
+                  <MapPin className="h-3 w-3" />
+                  Endereço (opcional)
+                </Label>
+                <Input
+                  placeholder="Digite o endereço ou local"
+                  value={address}
+                  onChange={(e) => setAddress(e.target.value)}
+                  className="mt-1"
+                />
+              </div>
+              <div>
                 <Label className="text-xs">Observações (opcional)</Label>
                 <Textarea
                   placeholder="Observações..."
@@ -221,11 +237,31 @@ export function ManageAppointmentsDialog({
                         {apt.notes && (
                           <p className="text-xs text-muted-foreground truncate">{apt.notes}</p>
                         )}
+                        {apt.address && (
+                          <p className="text-xs text-muted-foreground flex items-center gap-1 truncate" title={apt.address}>
+                            <MapPin className="h-3 w-3 flex-shrink-0" />
+                            <span className="truncate">{apt.address}</span>
+                          </p>
+                        )}
                         {apt.completion_notes && (
                           <p className="text-xs text-primary truncate" title={apt.completion_notes}>📝 {apt.completion_notes}</p>
                         )}
                       </div>
                       <div className="flex items-center gap-0.5 flex-shrink-0">
+                        {apt.address && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-blue-600 hover:text-blue-700"
+                            onClick={() => {
+                              const query = encodeURIComponent(apt.address!);
+                              window.open(`https://www.google.com/maps/search/?api=1&query=${query}`, "_blank");
+                            }}
+                            title="Abrir rota"
+                          >
+                            <Navigation className="h-4 w-4" />
+                          </Button>
+                        )}
                         {!apt.completed_at ? (
                           <Button
                             variant="ghost"

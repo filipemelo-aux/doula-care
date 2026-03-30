@@ -50,6 +50,8 @@ import {
   CalendarDays,
   CalendarCheck,
   MoreVertical,
+  MapPin,
+  Navigation,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -79,6 +81,7 @@ interface AppointmentWithClient {
   completed_at: string | null;
   completion_notes: string | null;
   client_id: string;
+  address: string | null;
   clients: { full_name: string };
 }
 
@@ -140,6 +143,7 @@ export default function Agenda() {
   const [aptNotes, setAptNotes] = useState("");
   const [aptClientId, setAptClientId] = useState("");
   const [aptStatus, setAptStatus] = useState<"pendente" | "concluida">("pendente");
+  const [aptAddress, setAptAddress] = useState("");
   const dateInputRef = useRef<HTMLInputElement>(null);
 
 
@@ -214,6 +218,7 @@ export default function Agenda() {
   const [personalTitle, setPersonalTitle] = useState("");
   const [personalDate, setPersonalDate] = useState("");
   const [personalNotes, setPersonalNotes] = useState("");
+  const [personalAddress, setPersonalAddress] = useState("");
   const personalDateRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -232,6 +237,7 @@ export default function Agenda() {
     setPersonalTitle("");
     setPersonalDate("");
     setPersonalNotes("");
+    setPersonalAddress("");
   };
 
   const savePersonalMutation = useMutation({
@@ -241,6 +247,7 @@ export default function Agenda() {
         title: personalTitle,
         scheduled_at: scheduledUtc,
         notes: personalNotes || null,
+        address: personalAddress.trim() || null,
         owner_id: user?.id || null,
         organization_id: organizationId || null,
       } as any);
@@ -291,6 +298,7 @@ export default function Agenda() {
           title: aptTitle,
           scheduled_at: scheduledUtc,
           notes: aptNotes || null,
+          address: aptAddress.trim() || null,
         };
         // Handle status toggle
         if (aptStatus === "concluida" && !editingAppointment.completed_at) {
@@ -310,9 +318,10 @@ export default function Agenda() {
           title: aptTitle,
           scheduled_at: scheduledUtc,
           notes: aptNotes || null,
+          address: aptAddress.trim() || null,
           owner_id: user?.id || null,
           organization_id: organizationId || null,
-        });
+        } as any);
         if (error) throw error;
       }
     },
@@ -388,6 +397,7 @@ export default function Agenda() {
     setAptTitle("");
     setAptDate("");
     setAptNotes("");
+    setAptAddress("");
     setAptClientId("");
     setAptStatus("pendente");
   };
@@ -398,6 +408,7 @@ export default function Agenda() {
     const zonedDate = toZonedTime(new Date(apt.scheduled_at), "America/Sao_Paulo");
     setAptDate(format(zonedDate, "yyyy-MM-dd'T'HH:mm"));
     setAptNotes(apt.notes || "");
+    setAptAddress(apt.address || "");
     setAptClientId(apt.client_id);
     setAptStatus(apt.completed_at ? "concluida" : "pendente");
     setAppointmentDialog(true);
@@ -707,6 +718,21 @@ export default function Agenda() {
               )}
             </div>
             <div>
+              <Label className="text-xs flex items-center gap-1">
+                <MapPin className="h-3 w-3" />
+                Endereço da consulta *
+              </Label>
+              <Input
+                placeholder="Digite o endereço ou local"
+                value={aptAddress}
+                onChange={(e) => setAptAddress(e.target.value)}
+                className="mt-1"
+              />
+              {!aptAddress.trim() && aptDate && (
+                <p className="text-xs text-destructive mt-1">Informe o endereço da consulta</p>
+              )}
+            </div>
+            <div>
               <Label className="text-xs">Observações (opcional)</Label>
               <Textarea placeholder="Observações..." value={aptNotes} onChange={(e) => setAptNotes(e.target.value)} rows={2} className="mt-1" />
             </div>
@@ -727,7 +753,7 @@ export default function Agenda() {
           </div>
           <DialogFooter>
             <Button
-              disabled={!aptTitle || !aptDate || (!editingAppointment && !aptClientId) || saveAppointmentMutation.isPending}
+              disabled={!aptTitle || !aptDate || !aptAddress.trim() || (!editingAppointment && !aptClientId) || saveAppointmentMutation.isPending}
               onClick={() => saveAppointmentMutation.mutate()}
             >
               {saveAppointmentMutation.isPending && <Loader2 className="h-4 w-4 animate-spin mr-1" />}
@@ -790,6 +816,18 @@ export default function Agenda() {
                   ✓ {format(new Date(personalDate), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
                 </p>
               )}
+            </div>
+            <div>
+              <Label className="text-xs flex items-center gap-1">
+                <MapPin className="h-3 w-3" />
+                Local (opcional)
+              </Label>
+              <Input
+                placeholder="Adicionar local (opcional)"
+                value={personalAddress}
+                onChange={(e) => setPersonalAddress(e.target.value)}
+                className="mt-1"
+              />
             </div>
             <div>
               <Label className="text-xs">Observações (opcional)</Label>
@@ -906,11 +944,31 @@ function AppointmentRow({
             )}
           </p>
           {apt.notes && <p className="text-xs text-muted-foreground truncate mt-0.5">{apt.notes}</p>}
+          {apt.address && (
+            <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5 truncate" title={apt.address}>
+              <MapPin className="h-3 w-3 flex-shrink-0" />
+              <span className="truncate">{apt.address}</span>
+            </p>
+          )}
           {apt.completion_notes && (
             <p className="text-xs text-primary truncate mt-0.5" title={apt.completion_notes}>📝 {apt.completion_notes}</p>
           )}
         </div>
         <div className="flex items-center gap-1 flex-shrink-0">
+          {apt.address && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 text-blue-600 hover:text-blue-700"
+              onClick={() => {
+                const query = encodeURIComponent(apt.address!);
+                window.open(`https://www.google.com/maps/search/?api=1&query=${query}`, "_blank");
+              }}
+              title="Abrir rota"
+            >
+              <Navigation className="h-3.5 w-3.5" />
+            </Button>
+          )}
           {!apt.completed_at && (
             <Button variant="ghost" size="icon" className="h-8 w-8 text-green-600 hover:text-green-700" onClick={() => setCompleteOpen(true)} title="Concluir consulta">
               <CheckCircle className="h-3.5 w-3.5" />
