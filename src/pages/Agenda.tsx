@@ -1124,7 +1124,7 @@ function AppointmentRow({
         {/* Actions row — like financial cards */}
         <div className="flex items-center justify-between pt-2 border-t border-border/60">
           <div className="flex items-center gap-1.5">
-            {apt.address && (
+            {apt.address && !apt.completed_at && (
               <Button
                 size="sm"
                 onClick={() => {
@@ -1160,15 +1160,19 @@ function AppointmentRow({
                   <Eye className="h-3.5 w-3.5 text-muted-foreground" />
                   Ver detalhes
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => onEdit(apt)} className="gap-2.5 text-xs py-2.5 cursor-pointer transition-colors">
-                  <Edit2 className="h-3.5 w-3.5 text-muted-foreground" />
-                  Editar
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => onDelete(apt.id)} className="gap-2.5 text-xs py-2.5 cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/10 transition-colors">
-                  <Trash2 className="h-3.5 w-3.5" />
-                  Excluir
-                </DropdownMenuItem>
+                {!apt.completed_at && (
+                  <>
+                    <DropdownMenuItem onClick={() => onEdit(apt)} className="gap-2.5 text-xs py-2.5 cursor-pointer transition-colors">
+                      <Edit2 className="h-3.5 w-3.5 text-muted-foreground" />
+                      Editar
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => onDelete(apt.id)} className="gap-2.5 text-xs py-2.5 cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/10 transition-colors">
+                      <Trash2 className="h-3.5 w-3.5" />
+                      Excluir
+                    </DropdownMenuItem>
+                  </>
+                )}
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
