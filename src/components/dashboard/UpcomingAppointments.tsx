@@ -109,7 +109,7 @@ export function UpcomingAppointments() {
           <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
             <CalendarCheck className="w-5 h-5 text-primary" />
           </div>
-          <h2 className="font-semibold text-sm text-foreground">Compromissos Agendados</h2>
+          <h2 className="font-semibold text-lg text-foreground">Compromissos Agendados</h2>
           {appointments && appointments.length > 0 && (
             <span className="ml-auto text-2xl font-bold text-foreground">{appointments.length}</span>
           )}
