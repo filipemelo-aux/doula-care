@@ -203,7 +203,7 @@ function AppointmentCard({
 
   return (
     <>
-      <Card className="px-3 py-2.5 space-y-1.5 w-full box-border min-w-0 overflow-hidden">
+      <div className="py-2 space-y-1.5 w-full box-border min-w-0 overflow-hidden border-b border-border/40 last:border-b-0">
         {/* Header: date column + title */}
         <div className="flex items-center gap-3 min-w-0">
           <div className="text-center min-w-[44px] flex-shrink-0">
