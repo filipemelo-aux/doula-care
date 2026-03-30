@@ -144,28 +144,6 @@ export default function Dashboard() {
 
 /* ── Inline sub-components ── */
 
-function MetricPill({
-  icon: Icon,
-  label,
-  value,
-  colorClass,
-}: {
-  icon: React.ElementType;
-  label: string;
-  value: string;
-  colorClass: string;
-}) {
-  return (
-    <div className="rounded-xl bg-card/80 backdrop-blur-sm p-3 shadow-sm space-y-1">
-      <div className="flex items-center gap-1.5">
-        <Icon className={cn("w-3.5 h-3.5", colorClass)} />
-        <span className="text-[10px] lg:text-xs text-muted-foreground truncate">{label}</span>
-      </div>
-      <p className={cn("text-sm lg:text-base font-semibold truncate", colorClass)}>{value}</p>
-    </div>
-  );
-}
-
 function ClientPill({
   icon: Icon,
   label,
