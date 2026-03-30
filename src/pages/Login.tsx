@@ -55,7 +55,8 @@ export default function Login() {
       return;
     }
 
-    const { error } = await signIn(email.trim(), password);
+    const trimmedEmail = email.trim();
+    const { error } = await signIn(trimmedEmail, password);
 
     if (error) {
       toast.error("Erro ao fazer login", {
@@ -63,6 +64,20 @@ export default function Login() {
       });
       setSubmitting(false);
       return;
+    }
+
+    // Trigger credential save in supported browsers / WebView
+    try {
+      if (window.PasswordCredential) {
+        const cred = new window.PasswordCredential({
+          id: trimmedEmail,
+          password: password,
+          name: trimmedEmail,
+        });
+        await navigator.credentials.store(cred);
+      }
+    } catch {
+      // Silently ignore – credential storage is best-effort
     }
 
     toast.success("Login realizado com sucesso!");
