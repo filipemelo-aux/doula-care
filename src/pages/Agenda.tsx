@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -71,6 +71,9 @@ import { AgendaCalendarView } from "@/components/agenda/AgendaCalendarView";
 import { AvailabilityManager } from "@/components/agenda/AvailabilityManager";
 import { AppointmentRequestsSection } from "@/components/agenda/AppointmentRequestsSection";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { Checkbox } from "@/components/ui/checkbox";
+import { fetchAddressByCep, formatAddressWithNumber } from "@/lib/address";
+import { maskCEP } from "@/lib/masks";
 
 // ─── Types ───────────────────────────────────────────────
 interface AppointmentWithClient {
@@ -107,6 +110,11 @@ interface ClientOption {
   id: string;
   full_name: string;
   user_id?: string;
+  street?: string;
+  number?: string;
+  neighborhood?: string;
+  city?: string;
+  state?: string;
 }
 
 type ServiceStatusFilter = "all" | "pending" | "budget_sent" | "date_proposed" | "accepted" | "completed" | "rejected";
@@ -140,24 +148,16 @@ export default function Agenda() {
   const [editingAppointment, setEditingAppointment] = useState<AppointmentWithClient | null>(null);
   const [aptTitle, setAptTitle] = useState("");
   const [aptDate, setAptDate] = useState("");
+  const [aptTime, setAptTime] = useState("10:00");
   const [aptNotes, setAptNotes] = useState("");
   const [aptClientId, setAptClientId] = useState("");
   const [aptStatus, setAptStatus] = useState<"pendente" | "concluida">("pendente");
   const [aptAddress, setAptAddress] = useState("");
-  const dateInputRef = useRef<HTMLInputElement>(null);
-
-
-  // Poll native date input to sync value (Radix dialog blocks native picker events)
-  useEffect(() => {
-    if (!appointmentDialog) return;
-    const interval = setInterval(() => {
-      const val = dateInputRef.current?.value;
-      if (val && val !== aptDate) {
-        setAptDate(val);
-      }
-    }, 250);
-    return () => clearInterval(interval);
-  }, [appointmentDialog, aptDate]);
+  const [aptIsLocal, setAptIsLocal] = useState(false);
+  const [aptCep, setAptCep] = useState("");
+  const [aptCepLoading, setAptCepLoading] = useState(false);
+  const [aptCepData, setAptCepData] = useState<{street:string; neighborhood:string; city:string; state:string} | null>(null);
+  const [aptNumber, setAptNumber] = useState("");
 
 
 
@@ -203,8 +203,7 @@ export default function Agenda() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("clients")
-        .select("id, full_name, user_id")
-        .not("user_id", "is", null)
+        .select("id, full_name, user_id, street, number, neighborhood, city, state")
         .order("full_name");
       if (error) throw error;
       return data as ClientOption[];
@@ -217,32 +216,30 @@ export default function Agenda() {
   const [personalAptDialog, setPersonalAptDialog] = useState(false);
   const [personalTitle, setPersonalTitle] = useState("");
   const [personalDate, setPersonalDate] = useState("");
+  const [personalTime, setPersonalTime] = useState("10:00");
   const [personalNotes, setPersonalNotes] = useState("");
   const [personalAddress, setPersonalAddress] = useState("");
-  const personalDateRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    if (!personalAptDialog) return;
-    const interval = setInterval(() => {
-      const val = personalDateRef.current?.value;
-      if (val && val !== personalDate) {
-        setPersonalDate(val);
-      }
-    }, 250);
-    return () => clearInterval(interval);
-  }, [personalAptDialog, personalDate]);
+  const [personalCep, setPersonalCep] = useState("");
+  const [personalCepLoading, setPersonalCepLoading] = useState(false);
+  const [personalCepData, setPersonalCepData] = useState<{street:string; neighborhood:string; city:string; state:string} | null>(null);
+  const [personalNumber, setPersonalNumber] = useState("");
 
   const closePersonalDialog = () => {
     setPersonalAptDialog(false);
     setPersonalTitle("");
     setPersonalDate("");
+    setPersonalTime("10:00");
     setPersonalNotes("");
     setPersonalAddress("");
+    setPersonalCep("");
+    setPersonalCepLoading(false);
+    setPersonalCepData(null);
+    setPersonalNumber("");
   };
 
   const savePersonalMutation = useMutation({
     mutationFn: async () => {
-      const scheduledUtc = fromZonedTime(personalDate, "America/Sao_Paulo").toISOString();
+      const scheduledUtc = fromZonedTime(`${personalDate}T${personalTime}`, "America/Sao_Paulo").toISOString();
       const { error } = await supabase.from("appointments").insert({
         title: personalTitle,
         scheduled_at: scheduledUtc,
@@ -289,18 +286,16 @@ export default function Agenda() {
 
   const saveAppointmentMutation = useMutation({
     mutationFn: async () => {
-      // datetime-local gives "YYYY-MM-DDTHH:mm" in local time
-      // Convert from Brazil timezone to UTC for storage
-      const scheduledUtc = fromZonedTime(aptDate, "America/Sao_Paulo").toISOString();
+      const scheduledUtc = fromZonedTime(`${aptDate}T${aptTime}`, "America/Sao_Paulo").toISOString();
+      const finalAddress = aptIsLocal ? null : aptAddress.trim() || null;
 
       if (editingAppointment) {
         const updateData: Record<string, unknown> = {
           title: aptTitle,
           scheduled_at: scheduledUtc,
           notes: aptNotes || null,
-          address: aptAddress.trim() || null,
+          address: finalAddress,
         };
-        // Handle status toggle
         if (aptStatus === "concluida" && !editingAppointment.completed_at) {
           updateData.completed_at = new Date().toISOString();
         } else if (aptStatus === "pendente" && editingAppointment.completed_at) {
@@ -314,11 +309,11 @@ export default function Agenda() {
         if (error) throw error;
       } else {
         const { error } = await supabase.from("appointments").insert({
-          client_id: aptClientId,
+          client_id: aptClientId || null,
           title: aptTitle,
           scheduled_at: scheduledUtc,
           notes: aptNotes || null,
-          address: aptAddress.trim() || null,
+          address: finalAddress,
           owner_id: user?.id || null,
           organization_id: organizationId || null,
         } as any);
@@ -396,22 +391,99 @@ export default function Agenda() {
     setEditingAppointment(null);
     setAptTitle("");
     setAptDate("");
+    setAptTime("10:00");
     setAptNotes("");
     setAptAddress("");
     setAptClientId("");
     setAptStatus("pendente");
+    setAptIsLocal(false);
+    setAptCep("");
+    setAptCepLoading(false);
+    setAptCepData(null);
+    setAptNumber("");
   };
 
   const openEditAppointment = (apt: AppointmentWithClient) => {
     setEditingAppointment(apt);
     setAptTitle(apt.title);
     const zonedDate = toZonedTime(new Date(apt.scheduled_at), "America/Sao_Paulo");
-    setAptDate(format(zonedDate, "yyyy-MM-dd'T'HH:mm"));
+    setAptDate(format(zonedDate, "yyyy-MM-dd"));
+    setAptTime(format(zonedDate, "HH:mm"));
     setAptNotes(apt.notes || "");
     setAptAddress(apt.address || "");
     setAptClientId(apt.client_id);
     setAptStatus(apt.completed_at ? "concluida" : "pendente");
+    setAptIsLocal(!apt.address);
     setAppointmentDialog(true);
+  };
+
+  const handleAptClientChange = (id: string) => {
+    setAptClientId(id);
+    const client = clients?.find(c => c.id === id);
+    if (client) {
+      const parts = [client.street, client.number, client.neighborhood, client.city, client.state].filter(Boolean);
+      const addr = parts.join(", ");
+      if (addr) {
+        setAptAddress(addr);
+        setAptCep("");
+        setAptCepData(null);
+        setAptNumber("");
+      } else {
+        setAptAddress("");
+      }
+    } else {
+      setAptAddress("");
+    }
+  };
+
+  const handleAptCepLookup = async (rawCep: string) => {
+    const cep = maskCEP(rawCep);
+    setAptCep(cep);
+    const clean = cep.replace(/\D/g, "");
+    if (clean.length === 8) {
+      setAptCepLoading(true);
+      const result = await fetchAddressByCep(clean);
+      setAptCepLoading(false);
+      if (result) {
+        setAptCepData(result);
+        setAptAddress(formatAddressWithNumber(result, ""));
+        setAptNumber("");
+      } else {
+        toast.error("CEP não encontrado");
+      }
+    }
+  };
+
+  const handleAptNumberChange = (num: string) => {
+    setAptNumber(num);
+    if (aptCepData) {
+      setAptAddress(formatAddressWithNumber(aptCepData, num));
+    }
+  };
+
+  const handlePersonalCepLookup = async (rawCep: string) => {
+    const cep = maskCEP(rawCep);
+    setPersonalCep(cep);
+    const clean = cep.replace(/\D/g, "");
+    if (clean.length === 8) {
+      setPersonalCepLoading(true);
+      const result = await fetchAddressByCep(clean);
+      setPersonalCepLoading(false);
+      if (result) {
+        setPersonalCepData(result);
+        setPersonalAddress(formatAddressWithNumber(result, ""));
+        setPersonalNumber("");
+      } else {
+        toast.error("CEP não encontrado");
+      }
+    }
+  };
+
+  const handlePersonalNumberChange = (num: string) => {
+    setPersonalNumber(num);
+    if (personalCepData) {
+      setPersonalAddress(formatAddressWithNumber(personalCepData, num));
+    }
   };
 
   const displayName = (name: string) => {
@@ -421,10 +493,9 @@ export default function Agenda() {
   };
 
   // ─── Filtering ───────────────────────────────────────────
-  // Only real appointments (exclude service-generated ones)
-  const onlyConsultas = (appointments || []).filter((apt) => !apt.title.startsWith("Serviço:"));
+  const allApts = appointments || [];
 
-  const filteredAppointments = onlyConsultas.filter((apt) => {
+  const filteredAppointments = allApts.filter((apt) => {
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
       return apt.title.toLowerCase().includes(term) || (apt.clients?.full_name || "").toLowerCase().includes(term);
@@ -528,7 +599,7 @@ export default function Agenda() {
       )}
 
       {viewMode === "list" && (
-        <AgendaCalendarView appointments={onlyConsultas} />
+        <AgendaCalendarView appointments={allApts} />
       )}
 
       {/* Tabs */}
@@ -676,7 +747,7 @@ export default function Agenda() {
 
       {/* Appointment Create/Edit */}
       <Dialog open={appointmentDialog} onOpenChange={(o) => !o && closeAppointmentDialog()}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="font-display flex items-center gap-2">
               <Calendar className="h-5 w-5" />
@@ -686,10 +757,10 @@ export default function Agenda() {
           <div className="space-y-4">
             {!editingAppointment && (
               <div>
-                <Label className="text-xs">Cliente</Label>
-                <Select value={aptClientId} onValueChange={setAptClientId}>
+                <Label className="text-xs">Cliente (opcional)</Label>
+                <Select value={aptClientId} onValueChange={handleAptClientChange}>
                   <SelectTrigger className="mt-1">
-                    <SelectValue placeholder="Selecione..." />
+                    <SelectValue placeholder="Selecione ou deixe em branco..." />
                   </SelectTrigger>
                   <SelectContent>
                     {clients?.map((c) => (
@@ -700,38 +771,79 @@ export default function Agenda() {
               </div>
             )}
             <div>
-              <Label className="text-xs">Título</Label>
+              <Label className="text-xs">Título *</Label>
               <Input placeholder="Ex: Consulta pré-natal" value={aptTitle} onChange={(e) => setAptTitle(e.target.value)} className="mt-1" />
             </div>
-            <div>
-              <Label className="text-xs">Data e hora</Label>
-              <input
-                ref={dateInputRef}
-                type="datetime-local"
-                defaultValue={aptDate}
-                className="flex h-10 w-full rounded-md border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 mt-1"
-              />
-              {aptDate && (
-                <p className="text-xs text-muted-foreground mt-1">
-                  ✓ {format(new Date(aptDate), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
-                </p>
-              )}
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label className="text-xs">Data *</Label>
+                <Input type="date" value={aptDate} onChange={(e) => setAptDate(e.target.value)} className="mt-1" />
+              </div>
+              <div>
+                <Label className="text-xs">Horário *</Label>
+                <Input type="time" value={aptTime} onChange={(e) => setAptTime(e.target.value)} className="mt-1" />
+              </div>
             </div>
-            <div>
-              <Label className="text-xs flex items-center gap-1">
-                <MapPin className="h-3 w-3" />
-                Endereço da consulta *
+
+            {/* Local option */}
+            <div className="flex items-center gap-2">
+              <Checkbox
+                id="apt-is-local"
+                checked={aptIsLocal}
+                onCheckedChange={(checked) => setAptIsLocal(checked === true)}
+              />
+              <Label htmlFor="apt-is-local" className="text-xs cursor-pointer">
+                Consulta no local (sem necessidade de endereço)
               </Label>
-              <Input
-                placeholder="Digite o endereço ou local"
-                value={aptAddress}
-                onChange={(e) => setAptAddress(e.target.value)}
-                className="mt-1"
-              />
-              {!aptAddress.trim() && aptDate && (
-                <p className="text-xs text-destructive mt-1">Informe o endereço da consulta</p>
-              )}
             </div>
+
+            {/* Address section */}
+            {!aptIsLocal && (
+              <div className="space-y-3">
+                {!editingAppointment && (
+                  <div className="space-y-2">
+                    <Label className="text-xs">CEP (para buscar endereço)</Label>
+                    <div className="flex gap-2 items-center">
+                      <Input
+                        placeholder="00000-000"
+                        value={aptCep}
+                        onChange={(e) => handleAptCepLookup(e.target.value)}
+                        className="w-36"
+                        maxLength={9}
+                      />
+                      {aptCepLoading && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
+                    </div>
+                  </div>
+                )}
+                {aptCepData && (
+                  <div>
+                    <Label className="text-xs">Número *</Label>
+                    <Input
+                      placeholder="Nº do endereço"
+                      value={aptNumber}
+                      onChange={(e) => handleAptNumberChange(e.target.value)}
+                      className="mt-1 w-32"
+                    />
+                  </div>
+                )}
+                <div>
+                  <Label className="text-xs flex items-center gap-1">
+                    <MapPin className="h-3 w-3" />
+                    Endereço da consulta *
+                  </Label>
+                  <Input
+                    placeholder="Digite o endereço ou use o CEP acima"
+                    value={aptAddress}
+                    onChange={(e) => setAptAddress(e.target.value)}
+                    className="mt-1"
+                  />
+                  {!aptAddress.trim() && aptDate && (
+                    <p className="text-xs text-destructive mt-1">Informe o endereço da consulta</p>
+                  )}
+                </div>
+              </div>
+            )}
+
             <div>
               <Label className="text-xs">Observações (opcional)</Label>
               <Textarea placeholder="Observações..." value={aptNotes} onChange={(e) => setAptNotes(e.target.value)} rows={2} className="mt-1" />
@@ -753,7 +865,7 @@ export default function Agenda() {
           </div>
           <DialogFooter>
             <Button
-              disabled={!aptTitle || !aptDate || !aptAddress.trim() || (!editingAppointment && !aptClientId) || saveAppointmentMutation.isPending}
+              disabled={!aptTitle || !aptDate || !aptTime || (!aptIsLocal && !aptAddress.trim()) || saveAppointmentMutation.isPending}
               onClick={() => saveAppointmentMutation.mutate()}
             >
               {saveAppointmentMutation.isPending && <Loader2 className="h-4 w-4 animate-spin mr-1" />}
@@ -788,7 +900,7 @@ export default function Agenda() {
 
       {/* Personal Appointment Dialog */}
       <Dialog open={personalAptDialog} onOpenChange={(o) => !o && closePersonalDialog()}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="font-display flex items-center gap-2">
               <Plus className="h-5 w-5" />
@@ -800,23 +912,45 @@ export default function Agenda() {
           </DialogHeader>
           <div className="space-y-4">
             <div>
-              <Label className="text-xs">Título</Label>
+              <Label className="text-xs">Título *</Label>
               <Input placeholder="Ex: Gravação de live, Reunião..." value={personalTitle} onChange={(e) => setPersonalTitle(e.target.value)} className="mt-1" />
             </div>
-            <div>
-              <Label className="text-xs">Data e hora</Label>
-              <input
-                ref={personalDateRef}
-                type="datetime-local"
-                defaultValue={personalDate}
-                className="flex h-10 w-full rounded-md border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 mt-1"
-              />
-              {personalDate && (
-                <p className="text-xs text-muted-foreground mt-1">
-                  ✓ {format(new Date(personalDate), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
-                </p>
-              )}
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label className="text-xs">Data *</Label>
+                <Input type="date" value={personalDate} onChange={(e) => setPersonalDate(e.target.value)} className="mt-1" />
+              </div>
+              <div>
+                <Label className="text-xs">Horário *</Label>
+                <Input type="time" value={personalTime} onChange={(e) => setPersonalTime(e.target.value)} className="mt-1" />
+              </div>
             </div>
+
+            {/* Address via CEP */}
+            <div className="space-y-2">
+              <Label className="text-xs">CEP (opcional)</Label>
+              <div className="flex gap-2 items-center">
+                <Input
+                  placeholder="00000-000"
+                  value={personalCep}
+                  onChange={(e) => handlePersonalCepLookup(e.target.value)}
+                  className="w-36"
+                  maxLength={9}
+                />
+                {personalCepLoading && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
+              </div>
+            </div>
+            {personalCepData && (
+              <div>
+                <Label className="text-xs">Número</Label>
+                <Input
+                  placeholder="Nº do endereço"
+                  value={personalNumber}
+                  onChange={(e) => handlePersonalNumberChange(e.target.value)}
+                  className="mt-1 w-32"
+                />
+              </div>
+            )}
             <div>
               <Label className="text-xs flex items-center gap-1">
                 <MapPin className="h-3 w-3" />
@@ -829,6 +963,7 @@ export default function Agenda() {
                 className="mt-1"
               />
             </div>
+
             <div>
               <Label className="text-xs">Observações (opcional)</Label>
               <Textarea placeholder="Detalhes do compromisso..." value={personalNotes} onChange={(e) => setPersonalNotes(e.target.value)} rows={2} className="mt-1" />
@@ -836,7 +971,7 @@ export default function Agenda() {
           </div>
           <DialogFooter>
             <Button
-              disabled={!personalTitle || !personalDate || savePersonalMutation.isPending}
+              disabled={!personalTitle || !personalDate || !personalTime || savePersonalMutation.isPending}
               onClick={() => savePersonalMutation.mutate()}
             >
               {savePersonalMutation.isPending && <Loader2 className="h-4 w-4 animate-spin mr-1" />}
