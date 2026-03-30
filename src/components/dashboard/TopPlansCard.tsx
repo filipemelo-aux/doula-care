@@ -1,6 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Crown, Medal, Award } from "lucide-react";
 
@@ -75,34 +74,36 @@ export function TopPlansCard() {
 
   if (isLoading) {
     return (
-      <Card className="card-glass">
-        <CardHeader>
-          <CardTitle className="text-lg font-semibold text-foreground">
-            Planos Mais Contratados
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
+      <div className="rounded-2xl bg-card p-4 lg:p-6 shadow-card space-y-4">
+        <div className="flex items-center gap-2">
+          <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
+            <Crown className="w-5 h-5 text-primary" />
+          </div>
+          <h2 className="font-semibold text-lg text-foreground">Planos Mais Contratados</h2>
+        </div>
+        <div className="space-y-3">
           {[...Array(3)].map((_, i) => (
-            <Skeleton key={i} className="h-16 w-full" />
+            <Skeleton key={i} className="h-16 w-full rounded-lg" />
           ))}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     );
   }
 
   return (
-    <Card className="card-glass">
-      <CardHeader>
-        <CardTitle className="text-lg font-semibold text-foreground">
-          Planos Mais Contratados
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-3">
+    <div className="rounded-2xl bg-card p-4 lg:p-6 shadow-card space-y-4">
+      <div className="flex items-center gap-2">
+        <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
+          <Crown className="w-5 h-5 text-primary" />
+        </div>
+        <h2 className="font-semibold text-lg text-foreground">Planos Mais Contratados</h2>
+      </div>
+      <div className="space-y-3">
         {planStats && planStats.length > 0 ? (
           planStats.map((plan, index) => (
             <div
               key={plan.type}
-              className={`flex items-center gap-4 p-4 rounded-lg transition-all ${
+              className={`flex items-center gap-4 p-3 rounded-lg transition-all ${
                 index === 0
                   ? "bg-warning/5"
                   : "bg-muted/30"
@@ -130,7 +131,7 @@ export function TopPlansCard() {
             Nenhum plano cadastrado
           </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
