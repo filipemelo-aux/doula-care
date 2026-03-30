@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useFinancialMetrics } from "@/hooks/useFinancialMetrics";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { FinancialOverview, PaymentMethodCard } from "@/components/dashboard/FinancialOverview";
+import { FinancialOverview } from "@/components/dashboard/FinancialOverview";
 import { TopPlansCard } from "@/components/dashboard/TopPlansCard";
 import { UpcomingAppointments } from "@/components/dashboard/UpcomingAppointments";
 import { PeriodFilter, PeriodOption } from "@/components/dashboard/PeriodFilter";
@@ -112,10 +112,7 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* ═══ 4 — Receitas por forma de pagamento ═══ */}
-      <PaymentMethodCard period={period} />
-
-      {/* ═══ 5 — Planos mais contratados ═══ */}
+      {/* ═══ 4 — Planos mais contratados ═══ */}
       <TopPlansCard />
 
       {/* Dialogs */}
