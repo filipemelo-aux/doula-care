@@ -266,7 +266,7 @@ function AppointmentCard({
                 Rota
               </Button>
             )}
-            <div className="flex items-center gap-1.5 ml-auto flex-shrink-0">
+            <div className="flex items-center gap-1.5 flex-shrink-0">
               {!apt.completed_at && (
                 <Button
                   size="sm"
