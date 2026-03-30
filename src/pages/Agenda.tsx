@@ -251,7 +251,6 @@ export default function Agenda() {
         owner_id: user?.id || null,
         organization_id: organizationId || null,
       } as any);
-      } as any);
       if (error) throw error;
     },
     onSuccess: () => {
