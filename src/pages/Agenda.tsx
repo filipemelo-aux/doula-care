@@ -247,8 +247,10 @@ export default function Agenda() {
         title: personalTitle,
         scheduled_at: scheduledUtc,
         notes: personalNotes || null,
+        address: personalAddress.trim() || null,
         owner_id: user?.id || null,
         organization_id: organizationId || null,
+      } as any);
       } as any);
       if (error) throw error;
     },
