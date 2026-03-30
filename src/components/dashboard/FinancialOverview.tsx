@@ -45,43 +45,35 @@ export function FinancialOverview({ period }: FinancialOverviewProps) {
     );
   }
 
+  const totalContracted = metrics?.totalContracted || 0;
   const totalReceived = metrics?.totalReceived || 0;
-  const totalIncome = metrics?.totalIncome || 0;
   const totalPending = metrics?.totalPending || 0;
+  const averageTicket = metrics?.averageTicket || 0;
   const totalExpenses = metrics?.totalExpenses || 0;
   const balance = metrics?.balance || 0;
 
   return (
     <div className="space-y-4">
-      {/* Hero stats — identical to Financial page */}
+      {/* Hero stats — same aesthetic as Financial page */}
       <div className="rounded-2xl bg-gradient-to-br from-success/10 via-success/5 to-transparent p-4 lg:p-6 shadow-card">
         <p className="text-xs text-muted-foreground/70 mb-0.5">
-          Recebido — {getPeriodLabel(period)}
+          Receita Contratada — {getPeriodLabel(period)}
         </p>
-        <p className="text-3xl lg:text-4xl font-bold tracking-tight text-success">
-          {formatCurrency(totalReceived)}
+        <p className="text-3xl lg:text-4xl font-bold tracking-tight text-foreground">
+          {formatCurrency(totalContracted)}
         </p>
         <div className="grid grid-cols-3 gap-3 mt-4">
           <div className="space-y-0.5">
-            <p className="text-[10px] lg:text-xs text-muted-foreground/60 font-normal">Total contratado</p>
-            <p className="text-sm lg:text-base font-semibold text-foreground/80">{formatCurrency(totalIncome)}</p>
+            <p className="text-[10px] lg:text-xs text-muted-foreground/60 font-normal">Recebido</p>
+            <p className="text-sm lg:text-base font-semibold text-success">{formatCurrency(totalReceived)}</p>
           </div>
           <div className="space-y-0.5">
             <p className="text-[10px] lg:text-xs text-muted-foreground/60 font-normal">A receber</p>
             <p className="text-sm lg:text-base font-semibold text-amber-600/80">{formatCurrency(totalPending)}</p>
           </div>
           <div className="space-y-0.5">
-            <p className="text-[10px] lg:text-xs text-muted-foreground/60 font-normal">Despesas</p>
-            <p className="text-sm lg:text-base font-semibold text-destructive/80">{formatCurrency(totalExpenses)}</p>
-          </div>
-        </div>
-        {/* Balance row */}
-        <div className="mt-3 pt-3 border-t border-border/30">
-          <div className="flex items-center justify-between">
-            <p className="text-[10px] lg:text-xs text-muted-foreground/60 font-normal">Saldo</p>
-            <p className={`text-sm lg:text-base font-semibold ${balance >= 0 ? "text-success" : "text-destructive"}`}>
-              {formatCurrency(balance)}
-            </p>
+            <p className="text-[10px] lg:text-xs text-muted-foreground/60 font-normal">Ticket Médio</p>
+            <p className="text-sm lg:text-base font-semibold text-primary">{formatCurrency(averageTicket)}</p>
           </div>
         </div>
       </div>
