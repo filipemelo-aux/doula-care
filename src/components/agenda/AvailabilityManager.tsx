@@ -297,7 +297,7 @@ export function AvailabilityManager() {
               selected={selectedDate}
               onSelect={(d) => d && setSelectedDate(d)}
               locale={ptBR}
-              className="pointer-events-auto w-full"
+              className="pointer-events-auto w-full mx-auto"
               disabled={(date) => isBefore(date, today)}
               modifiers={{
                 available: (date) => availableDates.has(format(date, "yyyy-MM-dd")),

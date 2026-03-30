@@ -49,7 +49,7 @@ export function AgendaCalendarView({ appointments, onDateSelect }: AgendaCalenda
             selected={selectedDate}
             onSelect={handleSelect}
             locale={ptBR}
-            className="pointer-events-auto w-full"
+            className="pointer-events-auto w-full mx-auto"
             modifiers={{
               hasAppointment: (date) =>
                 datesWithAppointments.has(format(date, "yyyy-MM-dd")),
