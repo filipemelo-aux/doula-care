@@ -121,7 +121,7 @@ export function UpcomingAppointments() {
           </div>
         ) : appointments && appointments.length > 0 ? (
           <ScrollArea className="max-h-[400px]">
-            <div className="space-y-2 pr-2">
+            <div className="space-y-0">
               {appointments.map((apt) => (
                 <AppointmentCard
                   key={apt.id}
@@ -251,7 +251,7 @@ function AppointmentCard({
         )}
 
         {/* Actions row — matching agenda/financial style */}
-        <div className="flex items-center justify-between pt-2 border-t border-border/60 gap-2">
+        <div className="flex items-center justify-end pt-2 border-t border-border/60 gap-2">
           <div className="flex items-center gap-1.5 min-w-0 flex-shrink">
             {apt.address && (
               <Button
