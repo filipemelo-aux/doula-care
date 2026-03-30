@@ -59,7 +59,7 @@ export function NewServiceDialog({ open, onOpenChange }: NewServiceDialogProps) 
     queryFn: async () => {
       const { data, error } = await supabase
         .from("clients")
-        .select("id, full_name, street, number, neighborhood, city, state")
+        .select("id, full_name, user_id, street, number, neighborhood, city, state")
         .order("full_name");
       if (error) throw error;
       return data;
@@ -209,6 +209,22 @@ export function NewServiceDialog({ open, onOpenChange }: NewServiceDialogProps) 
       queryClient.invalidateQueries({ queryKey: ["all-appointments"] });
       queryClient.invalidateQueries({ queryKey: ["client-appointments"] });
       toast.success("Serviço criado com sucesso!");
+
+      // Push notification to client
+      if (clientId) {
+        const selectedClient = clients?.find(c => c.id === clientId);
+        if (selectedClient?.user_id) {
+          sendPushNotification({
+            user_ids: [selectedClient.user_id],
+            title: "📋 Novo Serviço Agendado",
+            message: `Sua doula agendou: ${selectedServices.join(", ")}`,
+            url: "/gestante/servicos",
+            tag: "new-service",
+            type: "new_appointment",
+          });
+        }
+      }
+
       resetAndClose();
     },
     onError: () => toast.error("Erro ao criar serviço"),
