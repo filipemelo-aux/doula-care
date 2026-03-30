@@ -92,7 +92,7 @@ export function ClientsListDialog({
       // Return a Set of client IDs that have recent entries
       return new Set(data.map(entry => entry.client_id));
     },
-    enabled: open && status === "gestante",
+    enabled: open && (status === "gestante" || status === "lactante"),
   });
 
   const title = status === "gestante" ? "Gestantes em Acompanhamento" : status === "lactante" ? "Puérperas Pós-Parto" : "Outros Clientes";
@@ -190,8 +190,8 @@ export function ClientsListDialog({
                         )}
                       </div>
 
-                      {/* Action buttons for gestantes - desktop only inline */}
-                      {status === "gestante" && !isMobile && (
+                      {/* Action buttons for gestantes & puérperas - desktop */}
+                      {(status === "gestante" || status === "lactante") && !isMobile && (
                         <div className="flex gap-1 shrink-0">
                           <Button
                             size="icon"
@@ -202,7 +202,7 @@ export function ClientsListDialog({
                               setSelectedClient(client);
                               setDiaryDialogOpen(true);
                             }}
-                            title="Ver diário"
+                            title={status === "lactante" ? "Diário do Puerpério" : "Ver diário"}
                           >
                             <BookHeart className="h-4 w-4 text-primary" />
                             {recentDiaryEntries?.has(client.id) && (
@@ -272,34 +272,69 @@ export function ClientsListDialog({
                     )}
 
                     {/* Puérpera/Birth Info */}
-                    {status === "lactante" && client.birth_occurred && (
+                    {status === "lactante" && (
                       <div className="mt-3 pt-3 border-t">
-                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
-                          {client.birth_date && (
-                            <div className="flex items-center gap-1.5 text-muted-foreground">
-                              <Calendar className="h-3 w-3 text-primary" />
-                              <span>{formatDate(client.birth_date)}</span>
-                              {client.birth_time && (
-                                <span className="flex items-center gap-0.5">
-                                  <Clock className="h-3 w-3" />
-                                  {formatTime(client.birth_time)}
-                                </span>
+                        {client.birth_occurred && (
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs mb-2">
+                            {client.birth_date && (
+                              <div className="flex items-center gap-1.5 text-muted-foreground">
+                                <Calendar className="h-3 w-3 text-primary" />
+                                <span>{formatDate(client.birth_date)}</span>
+                                {client.birth_time && (
+                                  <span className="flex items-center gap-0.5">
+                                    <Clock className="h-3 w-3" />
+                                    {formatTime(client.birth_time)}
+                                  </span>
+                                )}
+                              </div>
+                            )}
+                            {client.birth_weight && (
+                              <div className="flex items-center gap-1.5 text-muted-foreground">
+                                <Scale className="h-3 w-3 text-primary" />
+                                <span>{Number(client.birth_weight).toFixed(3)} kg</span>
+                              </div>
+                            )}
+                            {client.birth_height && (
+                              <div className="flex items-center gap-1.5 text-muted-foreground">
+                                <Ruler className="h-3 w-3 text-primary" />
+                                <span>{Number(client.birth_height).toFixed(2)} cm</span>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                        {isMobile && (
+                          <div className="flex gap-1 justify-end">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-5 px-1.5 text-[9px] relative"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedClient(client);
+                                setDiaryDialogOpen(true);
+                              }}
+                            >
+                              <BookHeart className="h-2.5 w-2.5 mr-0.5 text-primary" />
+                              Diário
+                              {recentDiaryEntries?.has(client.id) && (
+                                <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-primary animate-pulse" />
                               )}
-                            </div>
-                          )}
-                          {client.birth_weight && (
-                            <div className="flex items-center gap-1.5 text-muted-foreground">
-                              <Scale className="h-3 w-3 text-primary" />
-                              <span>{Number(client.birth_weight).toFixed(3)} kg</span>
-                            </div>
-                          )}
-                          {client.birth_height && (
-                            <div className="flex items-center gap-1.5 text-muted-foreground">
-                              <Ruler className="h-3 w-3 text-primary" />
-                              <span>{Number(client.birth_height).toFixed(2)} cm</span>
-                            </div>
-                          )}
-                        </div>
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-5 px-1.5 text-[9px]"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedClient(client);
+                                setNotificationDialogOpen(true);
+                              }}
+                            >
+                              <MessageCircle className="h-2.5 w-2.5 mr-0.5 text-primary" />
+                              Mensagem
+                            </Button>
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>

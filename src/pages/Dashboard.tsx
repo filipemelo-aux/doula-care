@@ -2,14 +2,13 @@ import { useState, useEffect } from "react";
 import { useFinancialMetrics } from "@/hooks/useFinancialMetrics";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { RecentClients } from "@/components/dashboard/RecentClients";
-import { FinancialOverview } from "@/components/dashboard/FinancialOverview";
+import { FinancialOverview, PaymentMethodCard } from "@/components/dashboard/FinancialOverview";
 import { TopPlansCard } from "@/components/dashboard/TopPlansCard";
 import { UpcomingAppointments } from "@/components/dashboard/UpcomingAppointments";
 import { PeriodFilter, PeriodOption } from "@/components/dashboard/PeriodFilter";
 import { ClientsListDialog } from "@/components/dashboard/ClientsListDialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Heart, Users, Baby, UserRound } from "lucide-react";
+import { Heart, Users, Baby, UserRound, ChevronRight } from "lucide-react";
 import { AdminWelcomeDialog } from "@/components/dashboard/AdminWelcomeDialog";
 import { BillingAlertBanner } from "@/components/dashboard/BillingAlertBanner";
 import { PromoBetaBanner } from "@/components/dashboard/PromoBetaBanner";
@@ -75,13 +74,13 @@ export default function Dashboard() {
         <PeriodFilter selected={period} onChange={setPeriod} />
       </div>
 
-      {/* ═══ BLOCO 1 — Financeiro ═══ */}
+      {/* ═══ 1 — Financeiro ═══ */}
       <FinancialOverview period={period} />
 
-      {/* ═══ BLOCO 2 — Agenda ═══ */}
+      {/* ═══ 2 — Compromissos ═══ */}
       <UpcomingAppointments />
 
-      {/* ═══ BLOCO 3 — Clientes ═══ */}
+      {/* ═══ 3 — Clientes ═══ */}
       <div className="rounded-2xl bg-card p-4 lg:p-6 shadow-card space-y-4">
         <div className="flex items-center gap-2 mb-1">
           <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
@@ -113,12 +112,11 @@ export default function Dashboard() {
         </div>
       </div>
 
+      {/* ═══ 4 — Receitas por forma de pagamento ═══ */}
+      <PaymentMethodCard period={period} />
 
-      {/* Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
-        <RecentClients />
-        <TopPlansCard />
-      </div>
+      {/* ═══ 5 — Planos mais contratados ═══ */}
+      <TopPlansCard />
 
       {/* Dialogs */}
       <ClientsListDialog open={gestantesDialogOpen} onOpenChange={setGestantesDialogOpen} status="gestante" />
@@ -158,11 +156,12 @@ function ClientPill({
   return (
     <button
       onClick={onClick}
-      className="rounded-xl bg-muted/50 hover:bg-muted p-3 text-left transition-all hover:shadow-sm active:scale-[0.97] space-y-1"
+      className="group rounded-xl bg-muted/50 hover:bg-muted p-3 text-left transition-all hover:shadow-sm active:scale-[0.97] space-y-1 cursor-pointer"
     >
       <div className="flex items-center gap-1.5">
         <Icon className="w-3.5 h-3.5 text-primary" />
         <span className="text-[10px] lg:text-xs text-muted-foreground truncate">{label}</span>
+        <ChevronRight className="w-3 h-3 text-muted-foreground/50 ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
       </div>
       <p className="text-lg lg:text-xl font-bold text-foreground">{value}</p>
     </button>
