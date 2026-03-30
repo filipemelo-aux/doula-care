@@ -1146,12 +1146,11 @@ function AppointmentRow({
             {apt.address && (
               <Button
                 size="sm"
-                variant="outline"
                 onClick={() => {
                   const query = encodeURIComponent(apt.address!);
                   window.open(`https://www.google.com/maps/search/?api=1&query=${query}`, "_blank");
                 }}
-                className="h-8 px-3 gap-1.5 text-xs font-medium border-primary/30 text-primary hover:bg-primary/10"
+                className="h-8 px-3 gap-1.5 text-xs font-medium bg-blue-600 hover:bg-blue-700 text-white border-0 shadow-none transition-all"
               >
                 <MapPin className="h-3.5 w-3.5" />
                 Rota
