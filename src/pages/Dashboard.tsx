@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useFinancialMetrics, formatCurrency } from "@/hooks/useFinancialMetrics";
+import { useFinancialMetrics } from "@/hooks/useFinancialMetrics";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { RecentClients } from "@/components/dashboard/RecentClients";
@@ -9,12 +9,12 @@ import { UpcomingAppointments } from "@/components/dashboard/UpcomingAppointment
 import { PeriodFilter, PeriodOption } from "@/components/dashboard/PeriodFilter";
 import { ClientsListDialog } from "@/components/dashboard/ClientsListDialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Heart, Wallet, TrendingUp, CircleDollarSign, Users, Baby, UserRound, CalendarCheck } from "lucide-react";
+import { Heart, Users, Baby, UserRound } from "lucide-react";
 import { AdminWelcomeDialog } from "@/components/dashboard/AdminWelcomeDialog";
 import { BillingAlertBanner } from "@/components/dashboard/BillingAlertBanner";
 import { PromoBetaBanner } from "@/components/dashboard/PromoBetaBanner";
 import { NotificationTopBanner } from "@/components/dashboard/NotificationTopBanner";
-import { cn } from "@/lib/utils";
+
 
 export default function Dashboard() {
   const [period, setPeriod] = useState<PeriodOption>("month");
