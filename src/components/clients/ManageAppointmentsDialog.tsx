@@ -237,6 +237,12 @@ export function ManageAppointmentsDialog({
                         {apt.notes && (
                           <p className="text-xs text-muted-foreground truncate">{apt.notes}</p>
                         )}
+                        {apt.address && (
+                          <p className="text-xs text-muted-foreground flex items-center gap-1 truncate" title={apt.address}>
+                            <MapPin className="h-3 w-3 flex-shrink-0" />
+                            <span className="truncate">{apt.address}</span>
+                          </p>
+                        )}
                         {apt.completion_notes && (
                           <p className="text-xs text-primary truncate" title={apt.completion_notes}>📝 {apt.completion_notes}</p>
                         )}
