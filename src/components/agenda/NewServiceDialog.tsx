@@ -43,6 +43,7 @@ export function NewServiceDialog({ open, onOpenChange }: NewServiceDialogProps) 
   const [clientId, setClientId] = useState("");
   const [amount, setAmount] = useState("");
   const [serviceDate, setServiceDate] = useState(format(new Date(), "yyyy-MM-dd"));
+  const [serviceTime, setServiceTime] = useState("10:00");
   const [paymentMethod, setPaymentMethod] = useState("pix");
   const [notes, setNotes] = useState("");
   const [showQuickClient, setShowQuickClient] = useState(false);
@@ -185,7 +186,7 @@ export function NewServiceDialog({ open, onOpenChange }: NewServiceDialogProps) 
 
       // 3. Create appointment
       if (clientId) {
-        const aptDate = new Date(serviceDate + "T10:00:00");
+        const aptDate = new Date(`${serviceDate}T${serviceTime}:00`);
         await supabase.from("appointments").insert({
           client_id: clientId,
           title: `Serviço: ${selectedServices.join(", ")}`,
