@@ -454,7 +454,30 @@ export function NewServiceDialog({ open, onOpenChange }: NewServiceDialogProps) 
             )}
           </div>
 
-          {/* Amount and Date */}
+          {/* Address */}
+          {clientId && (
+            <div className="space-y-2">
+              <Label className="text-xs flex items-center gap-1">
+                <MapPin className="h-3 w-3" />
+                Endereço do atendimento {clientHasNoAddress && "*"}
+              </Label>
+              {clientHasNoAddress && (
+                <Alert variant="destructive" className="py-2 px-3">
+                  <AlertTriangle className="h-3.5 w-3.5" />
+                  <AlertDescription className="text-xs">
+                    Esta cliente não possui endereço cadastrado. Informe o endereço manualmente.
+                  </AlertDescription>
+                </Alert>
+              )}
+              <Input
+                placeholder="Digite o endereço ou local"
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
+                className="h-8 text-sm"
+              />
+            </div>
+          )}
+
           <div className="grid grid-cols-2 gap-3">
             <div>
               <Label className="text-xs">Valor Total *</Label>
