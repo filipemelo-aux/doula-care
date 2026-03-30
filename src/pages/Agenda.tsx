@@ -298,6 +298,7 @@ export default function Agenda() {
           title: aptTitle,
           scheduled_at: scheduledUtc,
           notes: aptNotes || null,
+          address: aptAddress.trim() || null,
         };
         // Handle status toggle
         if (aptStatus === "concluida" && !editingAppointment.completed_at) {
@@ -317,8 +318,10 @@ export default function Agenda() {
           title: aptTitle,
           scheduled_at: scheduledUtc,
           notes: aptNotes || null,
+          address: aptAddress.trim() || null,
           owner_id: user?.id || null,
           organization_id: organizationId || null,
+        } as any);
         });
         if (error) throw error;
       }
@@ -395,6 +398,7 @@ export default function Agenda() {
     setAptTitle("");
     setAptDate("");
     setAptNotes("");
+    setAptAddress("");
     setAptClientId("");
     setAptStatus("pendente");
   };
@@ -405,6 +409,7 @@ export default function Agenda() {
     const zonedDate = toZonedTime(new Date(apt.scheduled_at), "America/Sao_Paulo");
     setAptDate(format(zonedDate, "yyyy-MM-dd'T'HH:mm"));
     setAptNotes(apt.notes || "");
+    setAptAddress(apt.address || "");
     setAptClientId(apt.client_id);
     setAptStatus(apt.completed_at ? "concluida" : "pendente");
     setAppointmentDialog(true);
