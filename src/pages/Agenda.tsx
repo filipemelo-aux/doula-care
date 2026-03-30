@@ -143,6 +143,7 @@ export default function Agenda() {
   const [aptNotes, setAptNotes] = useState("");
   const [aptClientId, setAptClientId] = useState("");
   const [aptStatus, setAptStatus] = useState<"pendente" | "concluida">("pendente");
+  const [aptAddress, setAptAddress] = useState("");
   const dateInputRef = useRef<HTMLInputElement>(null);
 
 
@@ -217,6 +218,7 @@ export default function Agenda() {
   const [personalTitle, setPersonalTitle] = useState("");
   const [personalDate, setPersonalDate] = useState("");
   const [personalNotes, setPersonalNotes] = useState("");
+  const [personalAddress, setPersonalAddress] = useState("");
   const personalDateRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
