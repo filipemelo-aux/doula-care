@@ -191,9 +191,10 @@ export function NewServiceDialog({ open, onOpenChange }: NewServiceDialogProps) 
           title: `Serviço: ${selectedServices.join(", ")}`,
           scheduled_at: aptDate.toISOString(),
           notes: notes || null,
+          address: address.trim() || null,
           owner_id: user?.id || null,
           organization_id: organizationId || null,
-        });
+        } as any);
       }
     },
     onSuccess: () => {
@@ -267,7 +268,7 @@ export function NewServiceDialog({ open, onOpenChange }: NewServiceDialogProps) 
     }
   };
 
-  const canSubmit = selectedServices.length > 0 && clientId && parseCurrency(amount) > 0 && serviceDate;
+  const canSubmit = selectedServices.length > 0 && clientId && parseCurrency(amount) > 0 && serviceDate && (address.trim() || !clientHasNoAddress);
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && resetAndClose()}>
@@ -374,7 +375,7 @@ export function NewServiceDialog({ open, onOpenChange }: NewServiceDialogProps) 
           {/* Client */}
           <div className="space-y-2">
             <Label className="text-xs">Cliente *</Label>
-            <Select value={clientId} onValueChange={setClientId}>
+            <Select value={clientId} onValueChange={handleClientChange}>
               <SelectTrigger className="h-8 text-sm">
                 <SelectValue placeholder="Selecione uma cliente" />
               </SelectTrigger>
