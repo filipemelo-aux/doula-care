@@ -162,6 +162,18 @@ export function ManageAppointmentsDialog({
                 />
               </div>
               <div>
+                <Label className="text-xs flex items-center gap-1">
+                  <MapPin className="h-3 w-3" />
+                  Endereço (opcional)
+                </Label>
+                <Input
+                  placeholder="Digite o endereço ou local"
+                  value={address}
+                  onChange={(e) => setAddress(e.target.value)}
+                  className="mt-1"
+                />
+              </div>
+              <div>
                 <Label className="text-xs">Observações (opcional)</Label>
                 <Textarea
                   placeholder="Observações..."
