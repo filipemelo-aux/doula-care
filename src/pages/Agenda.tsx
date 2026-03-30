@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -10,7 +10,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   Dialog,
@@ -62,15 +61,15 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { AppointmentDetailDialog } from "@/components/clients/AppointmentDetailDialog";
 import { AppointmentCompleteDialog } from "@/components/clients/AppointmentCompleteDialog";
-import { format, isToday, isPast, isFuture, parseISO } from "date-fns";
+import { format, isToday, isPast, isFuture, parseISO, isSameDay, startOfDay, addHours, isBefore, isAfter, isWithinInterval } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { fromZonedTime, toZonedTime } from "date-fns-tz";
 import { toast } from "sonner";
 import { SendBudgetDialog } from "@/components/dashboard/SendBudgetDialog";
 import { NewServiceDialog } from "@/components/agenda/NewServiceDialog";
-import { AgendaCalendarView } from "@/components/agenda/AgendaCalendarView";
 import { AvailabilityManager } from "@/components/agenda/AvailabilityManager";
 import { AppointmentRequestsSection } from "@/components/agenda/AppointmentRequestsSection";
+import { Calendar as CalendarPicker } from "@/components/ui/calendar";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import { fetchAddressByCep, formatAddressWithNumber } from "@/lib/address";
@@ -118,7 +117,7 @@ interface ClientOption {
   state?: string;
 }
 
-type ServiceStatusFilter = "all" | "pending" | "budget_sent" | "date_proposed" | "accepted" | "completed" | "rejected";
+type AgendaFilter = "calendar" | "all";
 
 // ─── Status helpers ──────────────────────────────────────
 const statusConfig: Record<string, { label: string; color: string }> = {
@@ -138,9 +137,9 @@ const getServiceStatus = (svc: ServiceRequestFull) => {
 export default function Agenda() {
   const { user, organizationId } = useAuth();
   const queryClient = useQueryClient();
-  const [activeTab, setActiveTab] = useState("all");
+  const [agendaFilter, setAgendaFilter] = useState<AgendaFilter>("calendar");
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [searchTerm, setSearchTerm] = useState("");
-  const [serviceStatusFilter, setServiceStatusFilter] = useState<ServiceStatusFilter>("all");
   const [viewMode, setViewMode] = useState<"list" | "calendar">("list");
 
   // Appointment form
@@ -496,38 +495,80 @@ export default function Agenda() {
   // ─── Filtering ───────────────────────────────────────────
   const allApts = appointments || [];
 
-  const filteredAppointments = allApts.filter((apt) => {
+  const now = new Date();
+
+  // Filter appointments based on the agenda filter mode
+  const filteredAppointments = useMemo(() => {
+    let apts = allApts;
+
+    // Apply calendar date filter
+    if (agendaFilter === "calendar") {
+      apts = apts.filter((apt) => isSameDay(toZonedTime(new Date(apt.scheduled_at), "America/Sao_Paulo"), selectedDate));
+    }
+
+    // Apply search
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
-      return apt.title.toLowerCase().includes(term) || (apt.clients?.full_name || "").toLowerCase().includes(term);
+      apts = apts.filter((apt) =>
+        apt.title.toLowerCase().includes(term) || (apt.clients?.full_name || "").toLowerCase().includes(term)
+      );
     }
-    return true;
-  });
 
-  const filteredServices = (services || []).filter((svc) => {
-    const status = getServiceStatus(svc);
-    if (serviceStatusFilter !== "all" && status !== serviceStatusFilter) return false;
+    return apts;
+  }, [allApts, agendaFilter, selectedDate, searchTerm]);
+
+  const filteredServices = useMemo(() => {
+    let svcs = services || [];
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
-      return svc.service_type.toLowerCase().includes(term) || svc.clients?.full_name.toLowerCase().includes(term);
+      svcs = svcs.filter((svc) =>
+        svc.service_type.toLowerCase().includes(term) || svc.clients?.full_name.toLowerCase().includes(term)
+      );
     }
-    return true;
-  });
+    return svcs;
+  }, [services, searchTerm]);
 
-  const futureApts = filteredAppointments.filter((a) => isFuture(new Date(a.scheduled_at)) || isToday(new Date(a.scheduled_at)));
-  const pastApts = filteredAppointments.filter((a) => isPast(new Date(a.scheduled_at)) && !isToday(new Date(a.scheduled_at))).sort((a, b) => new Date(b.scheduled_at).getTime() - new Date(a.scheduled_at).getTime());
+  // An appointment is "em andamento" only if current time is within the scheduled hour
+  const getAppointmentStatus = (apt: AppointmentWithClient) => {
+    if (apt.completed_at) return "completed";
+    const scheduledTime = new Date(apt.scheduled_at);
+    const scheduledEnd = addHours(scheduledTime, 1);
+    if (isWithinInterval(now, { start: scheduledTime, end: scheduledEnd })) return "in_progress";
+    if (isBefore(now, scheduledTime)) return "future";
+    return "past";
+  };
+
+  const futureApts = filteredAppointments.filter((a) => {
+    const status = getAppointmentStatus(a);
+    return status === "future" || status === "in_progress";
+  });
+  const pastApts = filteredAppointments.filter((a) => {
+    const status = getAppointmentStatus(a);
+    return status === "past" && !a.completed_at;
+  }).sort((a, b) => new Date(b.scheduled_at).getTime() - new Date(a.scheduled_at).getTime());
+  const completedApts = filteredAppointments.filter((a) => !!a.completed_at).sort((a, b) => new Date(b.scheduled_at).getTime() - new Date(a.scheduled_at).getTime());
 
   const isLoading = loadingApts || loadingSvc;
 
   // ─── Stats ───────────────────────────────────────────────
   const pendingServices = (services || []).filter(s => s.status === "pending").length;
   const budgetSentServices = (services || []).filter(s => s.status === "budget_sent").length;
-  const todayStr = format(new Date(), "yyyy-MM-dd");
-  const acceptedServices = (services || []).filter(s => {
-    if (s.status !== "accepted" || s.completed_at) return false;
-    const svcDate = s.budget_sent_at ? s.budget_sent_at.split("T")[0] : s.created_at.split("T")[0];
-    return svcDate >= todayStr;
+  const inProgressApts = allApts.filter(a => {
+    if (a.completed_at) return false;
+    const scheduledTime = new Date(a.scheduled_at);
+    const scheduledEnd = addHours(scheduledTime, 1);
+    return isWithinInterval(now, { start: scheduledTime, end: scheduledEnd });
   }).length;
+
+  // Dates with appointments for calendar indicator
+  const datesWithAppointments = useMemo(() => {
+    const set = new Set<string>();
+    allApts.forEach((apt) => {
+      const zoned = toZonedTime(new Date(apt.scheduled_at), "America/Sao_Paulo");
+      set.add(format(zoned, "yyyy-MM-dd"));
+    });
+    return set;
+  }, [allApts]);
 
   return (
     <div className="space-y-6 lg:space-y-8 overflow-x-hidden">
@@ -561,9 +602,9 @@ export default function Agenda() {
       </div>
 
       {/* Quick Stats — gradient block like financial */}
-      <div className="rounded-2xl bg-gradient-to-br from-primary/10 via-primary/5 to-transparent p-4 shadow-card">
+       <div className="rounded-2xl bg-gradient-to-br from-primary/10 via-primary/5 to-transparent p-4 shadow-card">
         <p className="text-xs text-muted-foreground/70 mb-0.5">Compromissos futuros</p>
-        <p className="text-3xl font-bold tracking-tight text-primary">{futureApts.length}</p>
+        <p className="text-3xl font-bold tracking-tight text-primary">{allApts.filter(a => !a.completed_at && isFuture(new Date(a.scheduled_at))).length}</p>
         <div className="grid grid-cols-3 gap-3 mt-4">
           <div className="space-y-0.5">
             <p className="text-[10px] text-muted-foreground/60 font-normal">Pendentes</p>
@@ -575,7 +616,7 @@ export default function Agenda() {
           </div>
           <div className="space-y-0.5">
             <p className="text-[10px] text-muted-foreground/60 font-normal">Em andamento</p>
-            <p className="text-sm font-semibold text-success">{acceptedServices}</p>
+            <p className="text-sm font-semibold text-success">{inProgressApts}</p>
           </div>
         </div>
       </div>
@@ -585,7 +626,7 @@ export default function Agenda() {
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/60" />
           <Input
-            placeholder="Buscar por cliente ou serviço..."
+            placeholder="Buscar por cliente ou compromisso..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-10"
@@ -595,7 +636,7 @@ export default function Agenda() {
           <ToggleGroupItem value="list" aria-label="Lista" className="h-10 w-10">
             <List className="h-4 w-4" />
           </ToggleGroupItem>
-          <ToggleGroupItem value="calendar" aria-label="Calendário" className="h-10 w-10">
+          <ToggleGroupItem value="calendar" aria-label="Disponibilidade" className="h-10 w-10">
             <CalendarDays className="h-4 w-4" />
           </ToggleGroupItem>
         </ToggleGroup>
@@ -606,56 +647,112 @@ export default function Agenda() {
         <AvailabilityManager />
       )}
 
+      {/* Filter Toggle: Calendar Date vs All */}
       {viewMode === "list" && (
-        <AgendaCalendarView appointments={allApts} />
-      )}
+        <div className="space-y-4">
+          <ToggleGroup
+            type="single"
+            value={agendaFilter}
+            onValueChange={(v) => v && setAgendaFilter(v as AgendaFilter)}
+            className="w-full"
+          >
+            <ToggleGroupItem value="calendar" className="flex-1 gap-1.5 text-xs data-[state=on]:bg-primary data-[state=on]:text-primary-foreground">
+              <CalendarDays className="h-3.5 w-3.5" />
+              Data no calendário
+            </ToggleGroupItem>
+            <ToggleGroupItem value="all" className="flex-1 gap-1.5 text-xs data-[state=on]:bg-primary data-[state=on]:text-primary-foreground">
+              <List className="h-3.5 w-3.5" />
+              Todos os compromissos
+            </ToggleGroupItem>
+          </ToggleGroup>
 
-      {/* Tabs */}
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="w-full grid grid-cols-3">
-          <TabsTrigger value="all">
-            Tudo
-            {(futureApts.length + (services || []).length) > 0 && (
-              <Badge variant="secondary" className="ml-1.5 text-[10px] px-1.5 py-0">{futureApts.length + (services || []).length}</Badge>
-            )}
-          </TabsTrigger>
-          <TabsTrigger value="appointments">
-             Compromissos
-            {futureApts.length > 0 && (
-              <Badge variant="secondary" className="ml-1.5 text-[10px] px-1.5 py-0">{futureApts.length}</Badge>
-            )}
-          </TabsTrigger>
-          <TabsTrigger value="services">
-            Serviços
-            {(services || []).length > 0 && (
-              <Badge variant="secondary" className="ml-1.5 text-[10px] px-1.5 py-0">{(services || []).length}</Badge>
-            )}
-          </TabsTrigger>
-        </TabsList>
+          {/* Inline calendar when filter is "calendar" */}
+          {agendaFilter === "calendar" && (
+            <Card>
+              <CardContent className="p-3">
+                <CalendarPicker
+                  mode="single"
+                  selected={selectedDate}
+                  onSelect={(date) => date && setSelectedDate(date)}
+                  locale={ptBR}
+                  className="pointer-events-auto w-full mx-auto"
+                  modifiers={{
+                    hasAppointment: (date) =>
+                      datesWithAppointments.has(format(date, "yyyy-MM-dd")),
+                  }}
+                  modifiersClassNames={{
+                    hasAppointment: "has-appointment",
+                  }}
+                />
+                <style>{`
+                  .has-appointment::after {
+                    content: '';
+                    position: absolute;
+                    bottom: 2px;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    width: 5px;
+                    height: 5px;
+                    border-radius: 50%;
+                    background-color: hsl(var(--primary));
+                  }
+                  .has-appointment {
+                    position: relative;
+                  }
+                `}</style>
+              </CardContent>
+            </Card>
+          )}
 
-        {isLoading ? (
-          <div className="flex justify-center py-12">
-            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-          </div>
-        ) : (
-          <>
-            {/* ─── ALL TAB ─── */}
-            <TabsContent value="all" className="space-y-6 mt-4">
-              {/* Appointment Requests from clients */}
-              <AppointmentRequestsSection />
+          {/* Appointment Requests */}
+          <AppointmentRequestsSection />
 
-              {futureApts.length > 0 && (
+          {isLoading ? (
+            <div className="flex justify-center py-12">
+              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            </div>
+          ) : (
+            <div className="space-y-6">
+              {/* Date header when calendar filter */}
+              {agendaFilter === "calendar" && (
+                <h2 className="text-sm font-semibold text-muted-foreground flex items-center gap-2">
+                  <Calendar className="h-4 w-4" />
+                  {format(selectedDate, "dd 'de' MMMM, EEEE", { locale: ptBR })}
+                  <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
+                    {filteredAppointments.length}
+                  </Badge>
+                </h2>
+              )}
+
+              {/* In-progress appointments */}
+              {filteredAppointments.filter(a => getAppointmentStatus(a) === "in_progress").length > 0 && (
                 <section>
-                  <h2 className="text-sm font-semibold text-muted-foreground mb-3 flex items-center gap-2">
-                    <Calendar className="h-4 w-4" /> Próximos Compromissos
+                  <h2 className="text-sm font-semibold text-primary mb-3 flex items-center gap-2">
+                    <Clock className="h-4 w-4" /> Em andamento agora
                   </h2>
                   <div className="space-y-2">
-                    {futureApts.slice(0, 5).map((apt) => (
+                    {filteredAppointments.filter(a => getAppointmentStatus(a) === "in_progress").map((apt) => (
                       <AppointmentRow key={apt.id} apt={apt} onEdit={openEditAppointment} onDelete={(id) => setDeleteTarget({ type: "appointment", id })} displayName={displayName} onCompleted={() => queryClient.invalidateQueries({ queryKey: ["agenda-appointments"] })} />
                     ))}
                   </div>
                 </section>
               )}
+
+              {/* Future appointments */}
+              {futureApts.filter(a => getAppointmentStatus(a) === "future").length > 0 && (
+                <section>
+                  <h2 className="text-sm font-semibold text-muted-foreground mb-3 flex items-center gap-2">
+                    <Calendar className="h-4 w-4" /> Próximos Compromissos
+                  </h2>
+                  <div className="space-y-2">
+                    {futureApts.filter(a => getAppointmentStatus(a) === "future").map((apt) => (
+                      <AppointmentRow key={apt.id} apt={apt} onEdit={openEditAppointment} onDelete={(id) => setDeleteTarget({ type: "appointment", id })} displayName={displayName} onCompleted={() => queryClient.invalidateQueries({ queryKey: ["agenda-appointments"] })} />
+                    ))}
+                  </div>
+                </section>
+              )}
+
+              {/* Services needing attention */}
               {filteredServices.filter(s => s.status === "pending" || s.status === "budget_sent" || s.status === "date_proposed").length > 0 && (
                 <section>
                   <h2 className="text-sm font-semibold text-muted-foreground mb-3 flex items-center gap-2">
@@ -668,89 +765,29 @@ export default function Agenda() {
                   </div>
                 </section>
               )}
-              {filteredServices.filter(s => {
-                if (s.status !== "accepted" || s.completed_at) return false;
-                const svcDate = s.budget_sent_at ? s.budget_sent_at.split("T")[0] : s.created_at.split("T")[0];
-                return svcDate >= todayStr;
-              }).length > 0 && (
+
+              {/* Past / completed appointments */}
+              {(pastApts.length > 0 || completedApts.length > 0) && (
                 <section>
                   <h2 className="text-sm font-semibold text-muted-foreground mb-3 flex items-center gap-2">
-                    <CheckCircle className="h-4 w-4" /> Serviços em andamento
+                    <CheckCircle className="h-4 w-4" /> Histórico
                   </h2>
                   <div className="space-y-2">
-                    {filteredServices.filter(s => {
-                      if (s.status !== "accepted" || s.completed_at) return false;
-                      const svcDate = s.budget_sent_at ? s.budget_sent_at.split("T")[0] : s.created_at.split("T")[0];
-                      return svcDate >= todayStr;
-                    }).map((svc) => (
-                      <ServiceRow key={svc.id} svc={svc} displayName={displayName} onSendBudget={() => {}} onDelete={(id) => setDeleteTarget({ type: "service", id })} onViewPhotos={setViewingPhotos} />
-                    ))}
-                  </div>
-                </section>
-              )}
-            </TabsContent>
-
-            {/* ─── APPOINTMENTS TAB ─── */}
-            <TabsContent value="appointments" className="space-y-6 mt-4">
-              {futureApts.length > 0 && (
-                <section>
-                  <h2 className="text-sm font-semibold text-muted-foreground mb-3">Próximas</h2>
-                  <div className="space-y-2">
-                    {futureApts.map((apt) => (
-                      <AppointmentRow key={apt.id} apt={apt} onEdit={openEditAppointment} onDelete={(id) => setDeleteTarget({ type: "appointment", id })} displayName={displayName} onCompleted={() => queryClient.invalidateQueries({ queryKey: ["agenda-appointments"] })} />
-                    ))}
-                  </div>
-                </section>
-              )}
-              {pastApts.length > 0 && (
-                <section>
-                  <h2 className="text-sm font-semibold text-muted-foreground mb-3">Histórico</h2>
-                  <div className="space-y-2">
-                    {pastApts.map((apt) => (
+                    {[...completedApts, ...pastApts].map((apt) => (
                       <AppointmentRow key={apt.id} apt={apt} onEdit={openEditAppointment} onDelete={(id) => setDeleteTarget({ type: "appointment", id })} displayName={displayName} past onCompleted={() => queryClient.invalidateQueries({ queryKey: ["agenda-appointments"] })} />
                     ))}
                   </div>
                 </section>
               )}
-              {futureApts.length === 0 && pastApts.length === 0 && (
-                <EmptyState icon={Calendar} message="Nenhuma consulta encontrada" />
+
+              {/* Empty state */}
+              {filteredAppointments.length === 0 && filteredServices.length === 0 && (
+                <EmptyState icon={Calendar} message={agendaFilter === "calendar" ? "Nenhum compromisso neste dia" : "Nenhum compromisso encontrado"} />
               )}
-            </TabsContent>
-
-            {/* ─── SERVICES TAB ─── */}
-            <TabsContent value="services" className="space-y-4 mt-4">
-              <div className="flex items-center gap-2">
-                <Filter className="h-4 w-4 text-muted-foreground" />
-                <Select value={serviceStatusFilter} onValueChange={(v) => setServiceStatusFilter(v as ServiceStatusFilter)}>
-                  <SelectTrigger className="w-48 h-8 text-xs">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                     <SelectItem value="all">Todos os status</SelectItem>
-                     <SelectItem value="pending">Pendentes</SelectItem>
-                     <SelectItem value="budget_sent">Orçamento Enviado</SelectItem>
-                     <SelectItem value="date_proposed">Data Proposta</SelectItem>
-                     <SelectItem value="accepted">Aceitos</SelectItem>
-                     <SelectItem value="completed">Concluídos</SelectItem>
-                     <SelectItem value="rejected">Recusados</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                {filteredServices.length > 0 ? (
-                  filteredServices.map((svc) => (
-                    <ServiceRow key={svc.id} svc={svc} displayName={displayName} onSendBudget={(s) => setBudgetRequest({ id: s.id, client_id: s.client_id, service_type: s.service_type, client_name: s.clients?.full_name || "", preferred_date: s.preferred_date })} onDelete={(id) => setDeleteTarget({ type: "service", id })} onViewPhotos={setViewingPhotos} />
-                  ))
-                ) : (
-                  <EmptyState icon={Briefcase} message="Nenhum serviço encontrado" />
-                )}
-              </div>
-            </TabsContent>
-          </>
-        )}
-      </Tabs>
-
+            </div>
+          )}
+        </div>
+      )}
       {/* ─── Dialogs ─── */}
 
       {/* Appointment Create/Edit */}
