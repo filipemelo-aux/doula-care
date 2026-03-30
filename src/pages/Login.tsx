@@ -108,7 +108,7 @@ export default function Login() {
           <CardDescription>Entre com seu email e senha</CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} action="/login" method="post" className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Usuário</Label>
               <Input
