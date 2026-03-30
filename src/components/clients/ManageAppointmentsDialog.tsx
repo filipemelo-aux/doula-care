@@ -248,6 +248,20 @@ export function ManageAppointmentsDialog({
                         )}
                       </div>
                       <div className="flex items-center gap-0.5 flex-shrink-0">
+                        {apt.address && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-blue-600 hover:text-blue-700"
+                            onClick={() => {
+                              const query = encodeURIComponent(apt.address!);
+                              window.open(`https://www.google.com/maps/search/?api=1&query=${query}`, "_blank");
+                            }}
+                            title="Abrir rota"
+                          >
+                            <Navigation className="h-4 w-4" />
+                          </Button>
+                        )}
                         {!apt.completed_at ? (
                           <Button
                             variant="ghost"
