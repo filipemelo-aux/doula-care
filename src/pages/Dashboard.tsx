@@ -113,8 +113,6 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Financial Overview */}
-      <FinancialOverview period={period} />
 
       {/* Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
