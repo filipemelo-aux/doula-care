@@ -1,20 +1,24 @@
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar, Trash2, Loader2, Plus, Clock, Eye, CheckCircle } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Calendar, Trash2, Loader2, Clock, Eye, CheckCircle, MoreVertical, MapPin, Navigation, CalendarCheck } from "lucide-react";
 import { AppointmentDetailDialog } from "@/components/clients/AppointmentDetailDialog";
 import { AppointmentCompleteDialog } from "@/components/clients/AppointmentCompleteDialog";
 import { format, isToday } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
-import { abbreviateName } from "@/lib/utils";
-import { useIsMobile } from "@/hooks/use-mobile";
 import { ManageAppointmentsDialog } from "@/components/clients/ManageAppointmentsDialog";
 
 interface AppointmentWithClient {
@@ -25,6 +29,7 @@ interface AppointmentWithClient {
   completed_at: string | null;
   completion_notes: string | null;
   client_id: string;
+  address?: string | null;
   clients: {
     full_name: string;
   };
@@ -32,12 +37,9 @@ interface AppointmentWithClient {
 
 export function UpcomingAppointments() {
   const queryClient = useQueryClient();
-  const isMobile = useIsMobile();
   const [selectedClient, setSelectedClient] = useState<{ id: string; name: string } | null>(null);
   const [pickClientOpen, setPickClientOpen] = useState(false);
   const [pickedClientId, setPickedClientId] = useState("");
-  const [detailApt, setDetailApt] = useState<AppointmentWithClient | null>(null);
-  const [completeApt, setCompleteApt] = useState<AppointmentWithClient | null>(null);
 
   const { data: appointments, isLoading } = useQuery({
     queryKey: ["all-appointments"],
@@ -92,7 +94,6 @@ export function UpcomingAppointments() {
   const displayName = (name: string) => {
     const parts = name.split(" ");
     if (parts.length <= 3) return name;
-    // Keep first 2, abbreviate middle ones, keep last
     const first = parts.slice(0, 2);
     const middle = parts.slice(2, -1);
     const last = parts[parts.length - 1];
@@ -103,105 +104,42 @@ export function UpcomingAppointments() {
 
   return (
     <>
-      <Card>
-        <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-base font-display flex items-center gap-2">
-              <Calendar className="h-5 w-5 text-primary" />
-              Compromissos Agendados
-            </CardTitle>
+      <div className="rounded-2xl bg-card p-4 lg:p-6 shadow-card space-y-4">
+        <div className="flex items-center gap-2 mb-1">
+          <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
+            <CalendarCheck className="w-5 h-5 text-primary" />
           </div>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <div className="flex justify-center py-6">
-              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-            </div>
-          ) : appointments && appointments.length > 0 ? (
-            <ScrollArea className="max-h-[320px]">
-              <div className="space-y-2 pr-2">
-                {appointments.map((apt) => {
-                  const date = new Date(apt.scheduled_at);
-                  const today = isToday(date);
-
-                  return (
-                    <div
-                      key={apt.id}
-                      className="flex w-full max-w-full min-w-0 items-center gap-3 rounded-lg p-3 bg-background hover:bg-muted/30 transition-colors overflow-hidden"
-                    >
-                      <div className="text-center min-w-[44px]">
-                        <p className="text-[10px] text-muted-foreground uppercase">
-                          {format(date, "MMM", { locale: ptBR })}
-                        </p>
-                        <p className="text-lg font-bold leading-tight">{format(date, "dd")}</p>
-                      </div>
-                      <div className="w-0 flex-1 overflow-hidden">
-                        <p className="block w-full font-medium text-sm line-clamp-2 break-words" title={apt.title}>{apt.title}</p>
-                        {apt.clients?.full_name ? (
-                          <p className="text-xs text-muted-foreground truncate" title={apt.clients.full_name}>
-                            {displayName(apt.clients.full_name)}
-                          </p>
-                        ) : (
-                          <p className="text-xs text-muted-foreground truncate italic">Compromisso pessoal</p>
-                        )}
-                        <p className="text-xs text-muted-foreground flex items-center gap-1 min-w-0">
-                          <Clock className="h-3 w-3 flex-shrink-0" />
-                          <span className="truncate min-w-0">{format(date, "EEEE, HH:mm", { locale: ptBR })}</span>
-                          {today && (
-                            <Badge variant="secondary" className="text-[10px] px-1.5 py-0 flex-shrink-0 ml-1">
-                              Hoje
-                            </Badge>
-                          )}
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-1 flex-shrink-0">
-                        {!apt.completed_at && (
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 text-green-600 hover:text-green-700"
-                            onClick={() => setCompleteApt(apt)}
-                            title="Concluir compromisso"
-                          >
-                            <CheckCircle className="h-4 w-4" />
-                          </Button>
-                        )}
-                        {apt.completed_at && (
-                          <Badge variant="secondary" className="text-[10px] px-1.5 py-0 bg-green-100 text-green-700 mr-1">
-                            ✓
-                          </Badge>
-                        )}
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 text-muted-foreground hover:text-primary"
-                          onClick={() => setDetailApt(apt)}
-                          title="Ver detalhes"
-                        >
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 text-destructive hover:text-destructive"
-                          onClick={() => handleDelete(apt.id)}
-                          title="Remover"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </ScrollArea>
-          ) : (
-            <p className="text-sm text-muted-foreground text-center py-6">
-              Nenhum compromisso agendado
-            </p>
+          <h2 className="font-semibold text-sm text-foreground">Compromissos Agendados</h2>
+          {appointments && appointments.length > 0 && (
+            <span className="ml-auto text-2xl font-bold text-foreground">{appointments.length}</span>
           )}
-        </CardContent>
-      </Card>
+        </div>
+
+        {isLoading ? (
+          <div className="flex justify-center py-6">
+            <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+          </div>
+        ) : appointments && appointments.length > 0 ? (
+          <ScrollArea className="max-h-[400px]">
+            <div className="space-y-2 pr-2">
+              {appointments.map((apt) => (
+                <AppointmentCard
+                  key={apt.id}
+                  apt={apt}
+                  displayName={displayName}
+                  onDelete={handleDelete}
+                  onRefresh={() => queryClient.invalidateQueries({ queryKey: ["all-appointments"] })}
+                />
+              ))}
+            </div>
+          </ScrollArea>
+        ) : (
+          <div className="text-center py-8">
+            <Calendar className="h-10 w-10 mx-auto text-muted-foreground/40 mb-3" />
+            <p className="text-sm text-muted-foreground">Nenhum compromisso agendado</p>
+          </div>
+        )}
+      </div>
 
       {/* Pick client dialog */}
       <Dialog open={pickClientOpen} onOpenChange={setPickClientOpen}>
@@ -242,29 +180,146 @@ export function UpcomingAppointments() {
           clientName={selectedClient.name}
         />
       )}
+    </>
+  );
+}
+
+/* ── Individual appointment card — matching Agenda's AppointmentRow style ── */
+function AppointmentCard({
+  apt,
+  displayName,
+  onDelete,
+  onRefresh,
+}: {
+  apt: AppointmentWithClient;
+  displayName: (name: string) => string;
+  onDelete: (id: string) => void;
+  onRefresh: () => void;
+}) {
+  const [detailOpen, setDetailOpen] = useState(false);
+  const [completeOpen, setCompleteOpen] = useState(false);
+  const date = new Date(apt.scheduled_at);
+  const today = isToday(date);
+
+  return (
+    <>
+      <Card className="px-3 py-2.5 space-y-1.5 w-full box-border min-w-0 overflow-hidden">
+        {/* Header: date column + title */}
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="text-center min-w-[44px] flex-shrink-0">
+            <p className="text-[10px] text-muted-foreground/60 uppercase">
+              {format(date, "MMM", { locale: ptBR })}
+            </p>
+            <p className="text-lg font-bold leading-tight">{format(date, "dd")}</p>
+          </div>
+          <div className="flex-1 min-w-0 overflow-hidden">
+            <div className="flex items-center gap-1.5">
+              <p className="font-medium text-sm truncate" title={apt.title}>{apt.title}</p>
+              {apt.completed_at && (
+                <span className="inline-flex items-center gap-0.5 rounded-full bg-success/10 text-success px-1.5 py-0 text-[10px] font-medium flex-shrink-0">
+                  <CheckCircle className="h-2.5 w-2.5" /> Concluída
+                </span>
+              )}
+            </div>
+            {apt.clients?.full_name ? (
+              <p className="text-xs text-muted-foreground truncate">{displayName(apt.clients.full_name)}</p>
+            ) : (
+              <p className="text-xs text-muted-foreground/60 truncate italic">Compromisso pessoal</p>
+            )}
+          </div>
+        </div>
+
+        {/* Info row */}
+        <div className="flex items-center gap-3 text-xs text-muted-foreground min-w-0">
+          <span className="flex items-center gap-1">
+            <Clock className="h-3 w-3 flex-shrink-0" />
+            {format(date, "EEEE, HH:mm", { locale: ptBR })}
+          </span>
+          {today && (
+            <span className="inline-flex items-center rounded-full bg-primary/10 text-primary px-1.5 py-0 text-[10px] font-medium flex-shrink-0">
+              Hoje
+            </span>
+          )}
+        </div>
+
+        {apt.notes && <p className="text-xs text-muted-foreground/70 truncate">{apt.notes}</p>}
+        {apt.address && (
+          <p className="text-xs text-muted-foreground flex items-center gap-1 truncate" title={apt.address}>
+            <MapPin className="h-3 w-3 flex-shrink-0" />
+            <span className="truncate">{apt.address}</span>
+          </p>
+        )}
+
+        {/* Actions row — matching agenda/financial style */}
+        <div className="flex items-center justify-between pt-2 border-t border-border/60">
+          <div className="flex items-center gap-1.5">
+            {apt.address && (
+              <button
+                type="button"
+                className="inline-flex items-center gap-1 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400 px-2 py-0.5 text-xs font-medium cursor-pointer transition-colors hover:opacity-80"
+                onClick={() => {
+                  const query = encodeURIComponent(apt.address!);
+                  window.open(`https://www.google.com/maps/search/?api=1&query=${query}`, "_blank");
+                }}
+              >
+                <Navigation className="h-3 w-3" />
+                Rota
+              </button>
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            {!apt.completed_at && (
+              <Button
+                size="sm"
+                onClick={() => setCompleteOpen(true)}
+                className="h-8 px-3 gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm hover:shadow transition-all text-xs font-medium"
+              >
+                <CheckCircle className="h-3.5 w-3.5" />
+                Concluir
+              </Button>
+            )}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="h-10 w-10 p-0 text-muted-foreground flex-shrink-0 hover:bg-muted transition-colors">
+                  <MoreVertical className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48 animate-fade-in">
+                <DropdownMenuItem onClick={() => setDetailOpen(true)} className="gap-2.5 text-xs py-2.5 cursor-pointer transition-colors">
+                  <Eye className="h-3.5 w-3.5 text-muted-foreground" />
+                  Ver detalhes
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => onDelete(apt.id)} className="gap-2.5 text-xs py-2.5 cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/10 transition-colors">
+                  <Trash2 className="h-3.5 w-3.5" />
+                  Excluir
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </div>
+      </Card>
 
       <AppointmentDetailDialog
-        open={!!detailApt}
-        onOpenChange={(open) => !open && setDetailApt(null)}
-        appointment={detailApt ? {
-          title: detailApt.title,
-          scheduled_at: detailApt.scheduled_at,
-          notes: detailApt.notes,
-          clientName: detailApt.clients?.full_name,
-          completed_at: detailApt.completed_at,
-          completion_notes: detailApt.completion_notes,
-        } : null}
+        open={detailOpen}
+        onOpenChange={setDetailOpen}
+        appointment={{
+          title: apt.title,
+          scheduled_at: apt.scheduled_at,
+          notes: apt.notes,
+          clientName: apt.clients?.full_name,
+          completed_at: apt.completed_at,
+          completion_notes: apt.completion_notes,
+        }}
       />
 
-      {completeApt && (
+      {completeOpen && (
         <AppointmentCompleteDialog
-          open={!!completeApt}
-          onOpenChange={(open) => !open && setCompleteApt(null)}
-          appointmentId={completeApt.id}
-          appointmentTitle={completeApt.title}
-          onCompleted={() => {
-            queryClient.invalidateQueries({ queryKey: ["all-appointments"] });
-          }}
+          open={completeOpen}
+          onOpenChange={setCompleteOpen}
+          appointmentId={apt.id}
+          appointmentTitle={apt.title}
+          onCompleted={onRefresh}
         />
       )}
     </>
