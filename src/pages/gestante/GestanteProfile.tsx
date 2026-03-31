@@ -34,14 +34,18 @@ export default function GestanteProfile() {
   const [loading, setLoading] = useState(true);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
+  const [autoSelectOverdue, setAutoSelectOverdue] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const { client, user, signOut } = useGestanteAuth();
   const [searchParams, setSearchParams] = useSearchParams();
 
   useEffect(() => {
     if (searchParams.get("tab") === "plano") {
+      const isOverdue = searchParams.get("overdue") === "true";
+      setAutoSelectOverdue(isOverdue);
       setPaymentDialogOpen(true);
       searchParams.delete("tab");
+      searchParams.delete("overdue");
       setSearchParams(searchParams, { replace: true });
     }
   }, []);
