@@ -319,10 +319,20 @@ export function PaymentDetailsDialog({ open, onOpenChange }: PaymentDetailsDialo
                       <p className="text-lg font-semibold text-primary">
                         {formatCurrency(paymentAmount)}
                       </p>
-                      {nextPendingItem && nextPendingItem.total_installments > 1 && (
+                      {targetItem && targetItem.total_installments > 1 && (
                         <p className="text-xs text-muted-foreground">
-                          Parcela {nextPendingItem.installment_number}/{nextPendingItem.total_installments}
+                          Parcela {targetItem.installment_number}/{targetItem.total_installments}
                         </p>
+                      )}
+                      {selectedInstallment && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-xs mt-1"
+                          onClick={() => setSelectedInstallment(null)}
+                        >
+                          ← Voltar para resumo
+                        </Button>
                       )}
                     </div>
 
