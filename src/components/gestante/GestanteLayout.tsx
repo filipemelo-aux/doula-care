@@ -46,13 +46,13 @@ let gestanteLayoutMounted = false;
 
 export function GestanteLayout({ children }: GestanteLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [seenBadgeRoutes, setSeenBadgeRoutes] = useState<Set<string>>(new Set());
+  
   const navigate = useNavigate();
   const location = useLocation();
   const { signOut, client } = useGestanteAuth();
   const { logoUrl: orgLogo, displayName } = useOrgBranding();
   const unreadMessages = useGestanteUnreadCount(client?.id);
-  const menuBadges = useGestanteMenuBadges(client?.id);
+  const menuBadges = useGestanteMenuBadges(client?.id, location.pathname);
   useClientPresenceBroadcast();
   const headerLogo = orgLogo || logo;
   const headerName = displayName || "Doula Care";
@@ -86,10 +86,6 @@ export function GestanteLayout({ children }: GestanteLayoutProps) {
   const handleNavClick = (to: string) => {
     navigate(to);
     setSidebarOpen(false);
-    // Mark badge as seen for this route (session-only)
-    if (["/gestante/consultas", "/gestante/servicos", "/gestante/mensagens"].includes(to)) {
-      setSeenBadgeRoutes((prev) => new Set([...prev, to]));
-    }
   };
 
   return (
@@ -146,14 +142,11 @@ export function GestanteLayout({ children }: GestanteLayoutProps) {
         <nav className="flex-1 py-6 px-3 space-y-1 overflow-y-auto">
           {navItems.map((item) => {
             const isActive = location.pathname === item.to;
-            const rawBadge = 
+            const badgeCount = 
               item.to === "/gestante/mensagens" ? menuBadges.mensagens :
               item.to === "/gestante/consultas" ? menuBadges.consultas :
               item.to === "/gestante/servicos" ? menuBadges.servicos :
               0;
-            // Hide badge if user already visited this route or is currently on it
-            // (except mensagens which has real read tracking)
-            const badgeCount = (item.to !== "/gestante/mensagens" && (seenBadgeRoutes.has(item.to) || isActive)) ? 0 : rawBadge;
             return (
               <button
                 key={item.to}
