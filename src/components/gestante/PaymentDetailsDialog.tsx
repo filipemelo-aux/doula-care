@@ -274,11 +274,13 @@ export function PaymentDetailsDialog({ open, onOpenChange }: PaymentDetailsDialo
             </Card>
 
             {/* Pix Payment */}
-            {pixSettings?.pix_key && totalPending > 0 && (() => {
-              const nextPendingItem = displayItems.find((i) => i.status !== "pago");
-              const paymentAmount = nextPendingItem
-                ? nextPendingItem.amount - nextPendingItem.amount_paid
-                : totalPending;
+            {pixSettings?.pix_key && (() => {
+              const targetItem = selectedInstallment 
+                || displayItems.find((i) => i.status !== "pago");
+              if (!targetItem || targetItem.status === "pago") return null;
+              
+              const paymentAmount = targetItem.amount - targetItem.amount_paid;
+              if (paymentAmount <= 0) return null;
 
               const pixPayload = generatePixPayload({
                 pixKey: pixSettings.pix_key,
