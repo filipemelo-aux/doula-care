@@ -481,10 +481,11 @@ export function PaymentDetailsDialog({ open, onOpenChange }: PaymentDetailsDialo
                       key={item.id} 
                       className={`${item.status !== "pago" ? "cursor-pointer hover:border-primary/50 transition-colors" : ""} ${selectedInstallment?.id === item.id ? "border-primary ring-1 ring-primary/30" : ""}`}
                       onClick={() => {
-                        if (item.status !== "pago" && pixSettings?.pix_key) {
+                        if (item.status !== "pago") {
                           setSelectedInstallment(item);
                           setTimeout(() => {
-                            dialogContentRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+                            const dialogEl = document.querySelector('[role="dialog"]');
+                            dialogEl?.scrollTo({ top: 0, behavior: 'smooth' });
                           }, 100);
                         }
                       }}
