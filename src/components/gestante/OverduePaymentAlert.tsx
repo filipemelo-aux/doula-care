@@ -57,7 +57,7 @@ export function OverduePaymentAlert() {
               variant="outline"
               size="sm"
               className="mt-2 text-xs text-destructive hover:bg-destructive/10"
-              onClick={() => navigate("/gestante/mensagens")}
+              onClick={() => navigate("/gestante/perfil?tab=plano")}
             >
               Ver detalhes
             </Button>
