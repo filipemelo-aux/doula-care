@@ -467,7 +467,18 @@ export function PaymentDetailsDialog({ open, onOpenChange }: PaymentDetailsDialo
                   const StatusIcon = status.icon;
 
                   return (
-                    <Card key={item.id}>
+                    <Card 
+                      key={item.id} 
+                      className={`${item.status !== "pago" ? "cursor-pointer hover:border-primary/50 transition-colors" : ""} ${selectedInstallment?.id === item.id ? "border-primary ring-1 ring-primary/30" : ""}`}
+                      onClick={() => {
+                        if (item.status !== "pago" && pixSettings?.pix_key) {
+                          setSelectedInstallment(item);
+                          // Scroll to top of dialog
+                          const dialogContent = document.querySelector('[role="dialog"] > div');
+                          dialogContent?.scrollTo({ top: 0, behavior: 'smooth' });
+                        }
+                      }}
+                    >
                       <CardContent className="p-3">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
@@ -493,6 +504,9 @@ export function PaymentDetailsDialog({ open, onOpenChange }: PaymentDetailsDialo
                             <Badge variant={status.variant} className="text-[10px] mt-1">
                               {status.label}
                             </Badge>
+                            {item.status !== "pago" && pixSettings?.pix_key && (
+                              <p className="text-[10px] text-primary mt-0.5">Toque para pagar</p>
+                            )}
                           </div>
                         </div>
                       </CardContent>
