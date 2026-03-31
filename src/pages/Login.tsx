@@ -135,8 +135,8 @@ export default function Login() {
               <Input
                 id="email"
                 name="email"
-                type="email"
-                inputMode="email"
+                type="text"
+                inputMode="text"
                 enterKeyHint="next"
                 placeholder="Digite seu email"
                 value={email}
