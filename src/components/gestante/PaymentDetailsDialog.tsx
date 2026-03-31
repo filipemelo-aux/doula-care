@@ -216,6 +216,16 @@ export function PaymentDetailsDialog({ open, onOpenChange, autoSelectOverdue }: 
       }))
     : installmentDetails;
 
+  // Auto-select first overdue/pending installment when opened from alert
+  useEffect(() => {
+    if (autoSelectOverdue && !isLoading && displayItems.length > 0 && !selectedInstallment) {
+      const overdue = displayItems.find((i) => i.status !== "pago");
+      if (overdue) {
+        setSelectedInstallment(overdue);
+      }
+    }
+  }, [autoSelectOverdue, isLoading, displayItems.length]);
+
   const handleCopyPix = async () => {
     if (!pixSettings?.pix_key) return;
     try {
