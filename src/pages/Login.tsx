@@ -126,7 +126,7 @@ export default function Login() {
             </div>
             <CardTitle className="text-2xl font-display font-bold tracking-wide">{cachedName || "Doula Care"}</CardTitle>
           </div>
-          <CardDescription>Entre com seu email e senha</CardDescription>
+          <CardDescription>Entre com seu usuário ou email e senha</CardDescription>
         </CardHeader>
         <CardContent>
           <form ref={formRef} onSubmit={handleSubmit} action="/login" method="post" className="space-y-4">
