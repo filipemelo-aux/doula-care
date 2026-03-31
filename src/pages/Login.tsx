@@ -138,7 +138,7 @@ export default function Login() {
                 type="text"
                 inputMode="text"
                 enterKeyHint="next"
-                placeholder="Digite seu email"
+                placeholder="nome.sobrenome ou email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value.toLowerCase())}
                 required
