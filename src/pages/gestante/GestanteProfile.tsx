@@ -46,6 +46,7 @@ export default function GestanteProfile() {
     }
   }, []);
 
+  useEffect(() => {
     if (user) {
       fetchClientData();
       fetchAvatar();
