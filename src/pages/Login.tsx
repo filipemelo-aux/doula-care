@@ -126,19 +126,19 @@ export default function Login() {
             </div>
             <CardTitle className="text-2xl font-display font-bold tracking-wide">{cachedName || "Doula Care"}</CardTitle>
           </div>
-          <CardDescription>Entre com seu email e senha</CardDescription>
+          <CardDescription>Entre com seu usuário ou email e senha</CardDescription>
         </CardHeader>
         <CardContent>
           <form ref={formRef} onSubmit={handleSubmit} action="/login" method="post" className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Usuário</Label>
+              <Label htmlFor="email">Usuário ou Email</Label>
               <Input
                 id="email"
                 name="email"
                 type="text"
                 inputMode="text"
                 enterKeyHint="next"
-                placeholder="Digite seu email"
+                placeholder="nome.sobrenome ou email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value.toLowerCase())}
                 required
