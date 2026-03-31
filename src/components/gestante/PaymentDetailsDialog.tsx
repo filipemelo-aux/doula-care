@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -56,6 +56,7 @@ export function PaymentDetailsDialog({ open, onOpenChange }: PaymentDetailsDialo
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
+  const dialogContentRef = useRef<HTMLDivElement>(null);
 
   const handleSendReceipt = async (file: File) => {
     if (!client?.id) return;
@@ -246,7 +247,7 @@ export function PaymentDetailsDialog({ open, onOpenChange }: PaymentDetailsDialo
 
   return (
     <Dialog open={open} onOpenChange={(o) => { if (!o) setSelectedInstallment(null); onOpenChange(o); }}>
-      <DialogContent className="max-w-md max-h-[85vh] overflow-y-auto">
+      <DialogContent ref={dialogContentRef} className="max-w-md max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-lg">Detalhes Financeiros</DialogTitle>
         </DialogHeader>
@@ -482,9 +483,9 @@ export function PaymentDetailsDialog({ open, onOpenChange }: PaymentDetailsDialo
                       onClick={() => {
                         if (item.status !== "pago" && pixSettings?.pix_key) {
                           setSelectedInstallment(item);
-                          // Scroll to top of dialog
-                          const dialogContent = document.querySelector('[role="dialog"] > div');
-                          dialogContent?.scrollTo({ top: 0, behavior: 'smooth' });
+                          setTimeout(() => {
+                            dialogContentRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+                          }, 100);
                         }
                       }}
                     >
