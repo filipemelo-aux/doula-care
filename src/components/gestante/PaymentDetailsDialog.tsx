@@ -483,9 +483,9 @@ export function PaymentDetailsDialog({ open, onOpenChange }: PaymentDetailsDialo
                       onClick={() => {
                         if (item.status !== "pago" && pixSettings?.pix_key) {
                           setSelectedInstallment(item);
-                          // Scroll to top of dialog
-                          const dialogContent = document.querySelector('[role="dialog"] > div');
-                          dialogContent?.scrollTo({ top: 0, behavior: 'smooth' });
+                          setTimeout(() => {
+                            dialogContentRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+                          }, 100);
                         }
                       }}
                     >
