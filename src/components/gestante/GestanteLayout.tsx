@@ -151,9 +151,9 @@ export function GestanteLayout({ children }: GestanteLayoutProps) {
               item.to === "/gestante/consultas" ? menuBadges.consultas :
               item.to === "/gestante/servicos" ? menuBadges.servicos :
               0;
-            // Hide badge if user already visited this route in this session
+            // Hide badge if user already visited this route or is currently on it
             // (except mensagens which has real read tracking)
-            const badgeCount = (item.to !== "/gestante/mensagens" && seenBadgeRoutes.has(item.to)) ? 0 : rawBadge;
+            const badgeCount = (item.to !== "/gestante/mensagens" && (seenBadgeRoutes.has(item.to) || isActive)) ? 0 : rawBadge;
             return (
               <button
                 key={item.to}
