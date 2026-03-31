@@ -141,7 +141,11 @@ export function GestanteLayout({ children }: GestanteLayoutProps) {
         <nav className="flex-1 py-6 px-3 space-y-1 overflow-y-auto">
           {navItems.map((item) => {
             const isActive = location.pathname === item.to;
-            const badgeCount = item.to === "/gestante/mensagens" ? unreadMessages : 0;
+            const badgeCount = 
+              item.to === "/gestante/mensagens" ? menuBadges.mensagens :
+              item.to === "/gestante/consultas" ? menuBadges.consultas :
+              item.to === "/gestante/servicos" ? menuBadges.servicos :
+              0;
             return (
               <button
                 key={item.to}
