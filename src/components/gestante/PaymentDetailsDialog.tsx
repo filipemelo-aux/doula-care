@@ -56,7 +56,6 @@ export function PaymentDetailsDialog({ open, onOpenChange }: PaymentDetailsDialo
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
-  const dialogContentRef = useRef<HTMLDivElement>(null);
 
   const handleSendReceipt = async (file: File) => {
     if (!client?.id) return;
