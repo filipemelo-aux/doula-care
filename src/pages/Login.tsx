@@ -131,7 +131,7 @@ export default function Login() {
         <CardContent>
           <form ref={formRef} onSubmit={handleSubmit} action="/login" method="post" className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Usuário</Label>
+              <Label htmlFor="email">Usuário ou Email</Label>
               <Input
                 id="email"
                 name="email"
