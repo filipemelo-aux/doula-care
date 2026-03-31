@@ -4,14 +4,15 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Bell, Baby, AlertTriangle, BookHeart, Sparkles, CalendarCheck, X, CheckCircle, MessageSquare } from "lucide-react";
+import { Bell, Baby, BookHeart, Sparkles, CalendarCheck, X, MessageSquare } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useNavigate } from "react-router-dom";
 
 interface TopNotification {
   id: string;
+  dbId: string;
+  dbTable: string;
   type: string;
   title: string;
   message: string;
@@ -23,20 +24,11 @@ export function NotificationTopBanner() {
   const { organizationId } = useAuth();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
-  const [dismissedIds, setDismissedIds] = useState<Set<string>>(() => {
-    try {
-      const stored = localStorage.getItem("dismissed-top-notifications");
-      return stored ? new Set(JSON.parse(stored)) : new Set();
-    } catch {
-      return new Set();
-    }
-  });
+  const [sessionDismissedIds, setSessionDismissedIds] = useState<Set<string>>(new Set());
 
-  // Fetch the most recent unread notification sources
   const { data: topNotification } = useQuery({
     queryKey: ["top-notification-banner", organizationId],
     queryFn: async (): Promise<TopNotification | null> => {
-      // Check clients in labor (highest priority)
       const { data: laborClients } = await supabase
         .from("clients")
         .select("id, full_name, labor_started_at")
@@ -50,6 +42,8 @@ export function NotificationTopBanner() {
         const c = laborClients[0];
         return {
           id: `labor-${c.id}`,
+          dbId: c.id,
+          dbTable: "clients",
           type: "labor",
           title: "🚨 Trabalho de Parto",
           message: `${c.full_name} iniciou o trabalho de parto`,
@@ -58,7 +52,6 @@ export function NotificationTopBanner() {
         };
       }
 
-      // Pending service requests
       const { data: pendingSvc } = await supabase
         .from("service_requests")
         .select("id, service_type, created_at, clients(full_name)")
@@ -71,6 +64,8 @@ export function NotificationTopBanner() {
         const clientName = (s.clients as any)?.full_name || "Cliente";
         return {
           id: `svc-${s.id}`,
+          dbId: s.id,
+          dbTable: "service_requests",
           type: "service_request",
           title: "Solicitação de Serviço",
           message: `${clientName} solicitou: ${s.service_type}`,
@@ -79,7 +74,6 @@ export function NotificationTopBanner() {
         };
       }
 
-      // Pending appointment requests
       const { data: pendingApt } = await supabase
         .from("appointment_requests")
         .select("id, requested_date, requested_time, created_at, clients(full_name)")
@@ -92,6 +86,8 @@ export function NotificationTopBanner() {
         const clientName = (a.clients as any)?.full_name || "Cliente";
         return {
           id: `aptreq-${a.id}`,
+          dbId: a.id,
+          dbTable: "appointment_requests",
           type: "appointment_request",
           title: "Solicitação de Consulta",
           message: `${clientName} pediu consulta em ${a.requested_date} às ${a.requested_time?.slice(0, 5)}`,
@@ -100,7 +96,6 @@ export function NotificationTopBanner() {
         };
       }
 
-      // Unread diary entries
       const { data: unreadDiary } = await supabase
         .from("pregnancy_diary")
         .select("id, created_at, clients(full_name)")
@@ -113,6 +108,8 @@ export function NotificationTopBanner() {
         const clientName = (d.clients as any)?.full_name || "Cliente";
         return {
           id: `diary-${d.id}`,
+          dbId: d.id,
+          dbTable: "pregnancy_diary",
           type: "diary",
           title: "Novo Diário",
           message: `${clientName} escreveu no diário`,
@@ -121,7 +118,6 @@ export function NotificationTopBanner() {
         };
       }
 
-      // Unread community notifications
       const { data: unreadCommunity } = await supabase
         .from("org_notifications")
         .select("id, title, message, created_at")
@@ -134,6 +130,8 @@ export function NotificationTopBanner() {
         const c = unreadCommunity[0];
         return {
           id: `community-${c.id}`,
+          dbId: c.id,
+          dbTable: "org_notifications",
           type: "community",
           title: c.title,
           message: c.message,
@@ -174,20 +172,26 @@ export function NotificationTopBanner() {
     };
   }, [queryClient]);
 
-  if (!topNotification || dismissedIds.has(topNotification.id)) return null;
+  if (!topNotification || sessionDismissedIds.has(topNotification.id)) return null;
 
-  const handleDismiss = () => {
-    setDismissedIds((prev) => {
-      const next = new Set([...prev, topNotification.id]);
-      try {
-        localStorage.setItem("dismissed-top-notifications", JSON.stringify([...next]));
-      } catch {}
-      return next;
-    });
+  const markAsRead = async (notification: TopNotification) => {
+    try {
+      if (notification.dbTable === "pregnancy_diary") {
+        await supabase.from("pregnancy_diary").update({ read_by_admin: true }).eq("id", notification.dbId);
+      } else if (notification.dbTable === "org_notifications") {
+        await supabase.from("org_notifications").update({ read: true }).eq("id", notification.dbId);
+      }
+      // For service_requests, appointment_requests, clients — no "read" field, session dismiss is enough
+    } catch {}
+    queryClient.invalidateQueries({ queryKey: ["top-notification-banner"] });
   };
 
-  const handleReadAndNavigate = () => {
-    handleDismiss();
+  const handleDismiss = () => {
+    setSessionDismissedIds((prev) => new Set([...prev, topNotification.id]));
+  };
+
+  const handleReadAndNavigate = async () => {
+    await markAsRead(topNotification);
     const destination = topNotification.type === "community" ? "/comunidade" : "/notificacoes";
     navigate(destination);
   };
@@ -248,7 +252,7 @@ export function NotificationTopBanner() {
         size="icon"
         className="absolute right-2 top-2 h-6 w-6 min-w-0 !pl-0 !pr-0 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/50"
         onClick={handleDismiss}
-        title="Fechar definitivamente"
+        title="Fechar temporariamente"
       >
         <X className="h-3.5 w-3.5" />
       </Button>
