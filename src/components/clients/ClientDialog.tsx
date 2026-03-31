@@ -253,8 +253,9 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
     }
   }, [selectedPlanId, selectedPlanSetting, planSettings, form, client]);
 
-  // Reset form when client changes
+  // Reset form when client changes or dialog opens fresh
   useEffect(() => {
+    if (!open) return;
     if (client) {
       const txInstallments = clientTransaction?.installments ? Number(clientTransaction.installments) : 1;
       const isParcelado = txInstallments > 1;
@@ -366,7 +367,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
         notes: "",
       });
     }
-  }, [client, form, planSettings, clientTransaction, clientInstallmentPayments]);
+  }, [client, open, form, planSettings, clientTransaction, clientInstallmentPayments]);
 
   useEffect(() => {
     if (watchedPaymentType !== "parcelado") return;
