@@ -297,42 +297,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         password,
       });
 
-      // If login failed with generated email, try alternative email with suffix
+      // If login failed with generated email, try resolving via edge function (bypasses RLS)
       if (error && error.message.includes("Invalid login credentials") && !email.includes("@")) {
-        const { data: allClients } = await supabase
-          .from("clients")
-          .select("user_id, full_name")
-          .not("user_id", "is", null);
+        try {
+          const response = await supabase.functions.invoke("resolve-client-login", {
+            body: { username: email.toLowerCase() },
+          });
 
-        if (allClients) {
-          const baseUsername = email.toLowerCase();
-          for (const c of allClients) {
-            const nameParts = c.full_name
-              .normalize("NFD")
-              .replace(/[\u0300-\u036f]/g, "")
-              .toLowerCase()
-              .trim()
-              .split(/\s+/);
-
-            if (nameParts.length >= 2) {
-              const expectedUsername = `${nameParts[0]}.${nameParts[nameParts.length - 1]}`;
-              if (expectedUsername === baseUsername) {
-                const response = await supabase.functions.invoke("get-client-email", {
-                  body: { userId: c.user_id },
-                });
-
-                if (response.data?.email) {
-                  const retryResult = await supabase.auth.signInWithPassword({
-                    email: response.data.email,
-                    password,
-                  });
-                  data = retryResult.data;
-                  error = retryResult.error;
-                  break;
-                }
-              }
-            }
+          if (response.data?.email) {
+            const retryResult = await supabase.auth.signInWithPassword({
+              email: response.data.email,
+              password,
+            });
+            data = retryResult.data;
+            error = retryResult.error;
           }
+        } catch (resolveError) {
+          console.error("Error resolving client login:", resolveError);
         }
       }
 

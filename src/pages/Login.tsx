@@ -87,6 +87,7 @@ export default function Login() {
     }
 
     toast.success("Login realizado com sucesso!");
+    setSubmitting(false);
   };
 
   if (loading && !submitting) {
