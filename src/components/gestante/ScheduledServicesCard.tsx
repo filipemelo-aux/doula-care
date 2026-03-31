@@ -51,7 +51,8 @@ export function ScheduledServicesCard({ clientId, organizationId }: ScheduledSer
         .from("service_requests")
         .select("id, service_type, status, budget_value, responded_at, completed_at, scheduled_date, rating, rating_comment, rating_photos")
         .eq("client_id", clientId)
-        .eq("status", "accepted");
+        .eq("status", "accepted")
+        .is("completed_at", null);
 
       if (organizationId) {
         query = query.eq("organization_id", organizationId);
