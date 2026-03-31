@@ -46,7 +46,7 @@ let gestanteLayoutMounted = false;
 
 export function GestanteLayout({ children }: GestanteLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [seenBadgeRoutes, setSeenBadgeRoutes] = useState<Set<string>>(new Set());
+  
   const navigate = useNavigate();
   const location = useLocation();
   const { signOut, client } = useGestanteAuth();
