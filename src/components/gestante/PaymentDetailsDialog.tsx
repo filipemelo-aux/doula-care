@@ -42,7 +42,16 @@ interface PaymentDetailsDialogProps {
 export function PaymentDetailsDialog({ open, onOpenChange }: PaymentDetailsDialogProps) {
   const { client, organizationId } = useGestanteAuth();
   const [copiedId, setCopiedId] = useState<string | null>(null);
-  const [selectedInstallment, setSelectedInstallment] = useState<typeof displayItems[number] | null>(null);
+  const [selectedInstallment, setSelectedInstallment] = useState<{
+    id: string;
+    description: string;
+    installment_number: number;
+    total_installments: number;
+    amount: number;
+    amount_paid: number;
+    status: string;
+    due_date: string | null;
+  } | null>(null);
   const [sendingReceipt, setSendingReceipt] = useState(false);
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
