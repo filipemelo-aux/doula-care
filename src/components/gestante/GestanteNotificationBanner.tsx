@@ -108,7 +108,7 @@ export function GestanteNotificationBanner() {
     if (topNotification.type === "community") {
       navigate("/gestante/comunidade");
     } else if (isPaymentNotification(topNotification)) {
-      navigate("/gestante/perfil?tab=plano");
+      navigate("/gestante/perfil?tab=plano&overdue=true");
     } else {
       navigate("/gestante/mensagens");
     }

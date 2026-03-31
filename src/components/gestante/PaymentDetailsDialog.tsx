@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -37,9 +37,10 @@ import { generatePixPayload } from "@/lib/pixPayload";
 interface PaymentDetailsDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  autoSelectOverdue?: boolean;
 }
 
-export function PaymentDetailsDialog({ open, onOpenChange }: PaymentDetailsDialogProps) {
+export function PaymentDetailsDialog({ open, onOpenChange, autoSelectOverdue }: PaymentDetailsDialogProps) {
   const { client, organizationId } = useGestanteAuth();
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [selectedInstallment, setSelectedInstallment] = useState<{
@@ -214,6 +215,16 @@ export function PaymentDetailsDialog({ open, onOpenChange }: PaymentDetailsDialo
         due_date: p.due_date,
       }))
     : installmentDetails;
+
+  // Auto-select first overdue/pending installment when opened from alert
+  useEffect(() => {
+    if (autoSelectOverdue && !isLoading && displayItems.length > 0 && !selectedInstallment) {
+      const overdue = displayItems.find((i) => i.status !== "pago");
+      if (overdue) {
+        setSelectedInstallment(overdue);
+      }
+    }
+  }, [autoSelectOverdue, isLoading, displayItems.length]);
 
   const handleCopyPix = async () => {
     if (!pixSettings?.pix_key) return;
