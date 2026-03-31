@@ -163,7 +163,7 @@ export function GestanteNotificationBanner() {
           className="h-auto p-0 ml-2 text-xs"
           onClick={handleReadAndNavigate}
         >
-          Ver detalhes →
+          {actionLabel}
         </Button>
       </AlertDescription>
       <Button
