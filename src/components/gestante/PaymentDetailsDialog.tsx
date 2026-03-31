@@ -37,9 +37,10 @@ import { generatePixPayload } from "@/lib/pixPayload";
 interface PaymentDetailsDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  autoSelectOverdue?: boolean;
 }
 
-export function PaymentDetailsDialog({ open, onOpenChange }: PaymentDetailsDialogProps) {
+export function PaymentDetailsDialog({ open, onOpenChange, autoSelectOverdue }: PaymentDetailsDialogProps) {
   const { client, organizationId } = useGestanteAuth();
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [selectedInstallment, setSelectedInstallment] = useState<{
