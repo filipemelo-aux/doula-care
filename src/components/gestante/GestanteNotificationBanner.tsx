@@ -101,18 +101,25 @@ export function GestanteNotificationBanner() {
     n.message?.toLowerCase().includes("pagamento") ||
     n.message?.toLowerCase().includes("parcela");
 
+  const getNotificationRoute = (n: TopNotification): string | null => {
+    if (n.type === "community") return "/gestante/comunidade";
+    if (isPaymentNotification(n)) return "/gestante/perfil?tab=plano&overdue=true";
+    // General notifications (reminders, service alerts, etc.) have no dedicated page
+    return null;
+  };
+
   const handleReadAndNavigate = async () => {
     // Mark as read in DB (permanent dismiss)
     await markAsRead(topNotification.dbId);
 
-    if (topNotification.type === "community") {
-      navigate("/gestante/comunidade");
-    } else if (isPaymentNotification(topNotification)) {
-      navigate("/gestante/perfil?tab=plano&overdue=true");
-    } else {
-      navigate("/gestante/mensagens");
+    const route = getNotificationRoute(topNotification);
+    if (route) {
+      navigate(route);
     }
+    // If no route, banner simply closes (already marked as read so won't reappear)
   };
+
+  const actionLabel = getNotificationRoute(topNotification) ? "Ver detalhes →" : "Entendi ✓";
 
   const iconMap: Record<string, typeof Bell> = {
     community: Users2,
