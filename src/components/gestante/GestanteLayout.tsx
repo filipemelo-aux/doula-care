@@ -5,6 +5,7 @@ import { useOrgBranding } from "@/hooks/useOrgBranding";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useGestanteAuth } from "@/contexts/GestanteAuthContext";
 import { useGestanteUnreadCount } from "@/hooks/useGestanteUnreadCount";
+import { useGestanteMenuBadges } from "@/hooks/useGestanteMenuBadges";
 import { Badge } from "@/components/ui/badge";
 import { 
   LayoutDashboard,
