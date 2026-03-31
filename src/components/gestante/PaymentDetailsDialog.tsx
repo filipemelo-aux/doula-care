@@ -515,7 +515,7 @@ export function PaymentDetailsDialog({ open, onOpenChange }: PaymentDetailsDialo
                             <Badge variant={status.variant} className="text-[10px] mt-1">
                               {status.label}
                             </Badge>
-                            {item.status !== "pago" && pixSettings?.pix_key && (
+                            {item.status !== "pago" && (
                               <p className="text-[10px] text-primary mt-0.5">Toque para pagar</p>
                             )}
                           </div>
