@@ -283,10 +283,9 @@ export function PaymentDetailsDialog({ open, onOpenChange }: PaymentDetailsDialo
             </Card>
 
             {/* Pix Payment */}
-            {pixSettings?.pix_key && (() => {
-              const targetItem = selectedInstallment 
-                || displayItems.find((i) => i.status !== "pago");
-              if (!targetItem || targetItem.status === "pago") return null;
+            {pixSettings?.pix_key && selectedInstallment && (() => {
+              const targetItem = selectedInstallment;
+              if (targetItem.status === "pago") return null;
               
               const paymentAmount = targetItem.amount - targetItem.amount_paid;
               if (paymentAmount <= 0) return null;
