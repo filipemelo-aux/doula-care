@@ -95,10 +95,20 @@ export function GestanteNotificationBanner() {
     });
   };
 
+  const isPaymentNotification = (n: TopNotification) =>
+    n.title?.toLowerCase().includes("pagamento") ||
+    n.title?.toLowerCase().includes("parcela") ||
+    n.title?.toLowerCase().includes("cobrança") ||
+    n.title?.toLowerCase().includes("venciment") ||
+    n.message?.toLowerCase().includes("pagamento") ||
+    n.message?.toLowerCase().includes("parcela");
+
   const handleReadAndNavigate = () => {
     handleDismiss();
     if (topNotification.type === "community") {
       navigate("/gestante/comunidade");
+    } else if (isPaymentNotification(topNotification)) {
+      navigate("/gestante/perfil?tab=plano");
     } else {
       navigate("/gestante/mensagens");
     }
