@@ -4,13 +4,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { useGestanteAuth } from "@/contexts/GestanteAuthContext";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Bell, Users2, Baby, AlertTriangle, X } from "lucide-react";
+import { Bell, Users2, Baby, X } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useNavigate } from "react-router-dom";
 
 interface TopNotification {
   id: string;
+  dbId: string;
   type: string;
   title: string;
   message: string;
@@ -22,21 +23,13 @@ export function GestanteNotificationBanner() {
   const { client } = useGestanteAuth();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
-  const [dismissedIds, setDismissedIds] = useState<Set<string>>(() => {
-    try {
-      const stored = localStorage.getItem("dismissed-gestante-notifications");
-      return stored ? new Set(JSON.parse(stored)) : new Set();
-    } catch {
-      return new Set();
-    }
-  });
+  const [sessionDismissedIds, setSessionDismissedIds] = useState<Set<string>>(new Set());
 
   const { data: topNotification } = useQuery({
     queryKey: ["gestante-top-notification", client?.id],
     queryFn: async (): Promise<TopNotification | null> => {
       if (!client?.id) return null;
 
-      // Unread client notifications (newest first)
       const { data: unread } = await supabase
         .from("client_notifications")
         .select("id, title, message, created_at")
@@ -51,6 +44,7 @@ export function GestanteNotificationBanner() {
         const isLabor = n.title?.includes("parto") || n.title?.includes("bebê");
         return {
           id: `cn-${n.id}`,
+          dbId: n.id,
           type: isCommunity ? "community" : isLabor ? "labor" : "general",
           title: n.title,
           message: n.message,
@@ -83,16 +77,20 @@ export function GestanteNotificationBanner() {
     return () => { supabase.removeChannel(channel); };
   }, [client?.id, queryClient]);
 
-  if (!topNotification || dismissedIds.has(topNotification.id)) return null;
+  if (!topNotification || sessionDismissedIds.has(topNotification.id)) return null;
+
+  const markAsRead = async (dbId: string) => {
+    await supabase
+      .from("client_notifications")
+      .update({ read_by_client: true })
+      .eq("id", dbId);
+    queryClient.invalidateQueries({ queryKey: ["gestante-top-notification"] });
+    queryClient.invalidateQueries({ queryKey: ["gestante-unread-messages"] });
+  };
 
   const handleDismiss = () => {
-    setDismissedIds((prev) => {
-      const next = new Set([...prev, topNotification.id]);
-      try {
-        localStorage.setItem("dismissed-gestante-notifications", JSON.stringify([...next]));
-      } catch {}
-      return next;
-    });
+    // Session-only dismiss (comes back on refresh)
+    setSessionDismissedIds((prev) => new Set([...prev, topNotification.id]));
   };
 
   const isPaymentNotification = (n: TopNotification) =>
@@ -103,8 +101,10 @@ export function GestanteNotificationBanner() {
     n.message?.toLowerCase().includes("pagamento") ||
     n.message?.toLowerCase().includes("parcela");
 
-  const handleReadAndNavigate = () => {
-    handleDismiss();
+  const handleReadAndNavigate = async () => {
+    // Mark as read in DB (permanent dismiss)
+    await markAsRead(topNotification.dbId);
+
     if (topNotification.type === "community") {
       navigate("/gestante/comunidade");
     } else if (isPaymentNotification(topNotification)) {
@@ -164,7 +164,7 @@ export function GestanteNotificationBanner() {
         size="icon"
         className="absolute right-2 top-2 h-6 w-6 min-w-0 !pl-0 !pr-0 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/50"
         onClick={handleDismiss}
-        title="Fechar definitivamente"
+        title="Fechar temporariamente"
       >
         <X className="h-3.5 w-3.5" />
       </Button>

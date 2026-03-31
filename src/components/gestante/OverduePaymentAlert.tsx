@@ -1,14 +1,16 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useGestanteAuth } from "@/contexts/GestanteAuthContext";
 import { Card, CardContent } from "@/components/ui/card";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 
 export function OverduePaymentAlert() {
   const { client } = useGestanteAuth();
   const navigate = useNavigate();
+  const [sessionDismissed, setSessionDismissed] = useState(false);
 
   const { data: overduePayments } = useQuery({
     queryKey: ["overdue-payments", client?.id],
@@ -27,16 +29,25 @@ export function OverduePaymentAlert() {
     enabled: !!client?.id,
   });
 
-  if (!overduePayments || overduePayments.length === 0) return null;
+  if (sessionDismissed || !overduePayments || overduePayments.length === 0) return null;
 
   const totalOverdue = overduePayments.reduce(
     (sum, p) => sum + (Number(p.amount) - 0),
     0
   );
 
+  const handleTemporaryDismiss = () => {
+    setSessionDismissed(true);
+  };
+
+  const handleViewDetails = () => {
+    // Navigate with overdue flag so PaymentDetailsDialog auto-selects the first overdue installment
+    navigate("/gestante/perfil?tab=plano&overdue=true");
+  };
+
   return (
-    <Card className="bg-destructive/5 shadow-md">
-      <CardContent className="p-4">
+    <Card className="bg-destructive/5 shadow-md relative">
+      <CardContent className="p-4 pr-12">
         <div className="flex items-start gap-3">
           <div className="w-10 h-10 rounded-full bg-destructive/10 flex items-center justify-center flex-shrink-0">
             <AlertTriangle className="h-5 w-5 text-destructive animate-pulse" />
@@ -54,15 +65,24 @@ export function OverduePaymentAlert() {
               })}
             </p>
             <Button
-              variant="outline"
+              variant="link"
               size="sm"
-              className="mt-2 text-xs text-destructive hover:bg-destructive/10"
-              onClick={() => navigate("/gestante/perfil?tab=plano&overdue=true")}
+              className="h-auto p-0 mt-1 text-xs text-destructive"
+              onClick={handleViewDetails}
             >
-              Ver detalhes
+              Ver detalhes →
             </Button>
           </div>
         </div>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="absolute right-2 top-2 h-6 w-6 min-w-0 !pl-0 !pr-0 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/50"
+          onClick={handleTemporaryDismiss}
+          title="Fechar temporariamente"
+        >
+          <X className="h-3.5 w-3.5" />
+        </Button>
       </CardContent>
     </Card>
   );
