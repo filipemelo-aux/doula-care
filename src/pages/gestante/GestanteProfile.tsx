@@ -277,7 +277,8 @@ export default function GestanteProfile() {
 
       <PaymentDetailsDialog
         open={paymentDialogOpen}
-        onOpenChange={setPaymentDialogOpen}
+        onOpenChange={(o) => { setPaymentDialogOpen(o); if (!o) setAutoSelectOverdue(false); }}
+        autoSelectOverdue={autoSelectOverdue}
       />
     </GestanteLayout>
   );
