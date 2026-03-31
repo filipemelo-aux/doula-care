@@ -42,6 +42,16 @@ interface PaymentDetailsDialogProps {
 export function PaymentDetailsDialog({ open, onOpenChange }: PaymentDetailsDialogProps) {
   const { client, organizationId } = useGestanteAuth();
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [selectedInstallment, setSelectedInstallment] = useState<{
+    id: string;
+    description: string;
+    installment_number: number;
+    total_installments: number;
+    amount: number;
+    amount_paid: number;
+    status: string;
+    due_date: string | null;
+  } | null>(null);
   const [sendingReceipt, setSendingReceipt] = useState(false);
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -235,7 +245,7 @@ export function PaymentDetailsDialog({ open, onOpenChange }: PaymentDetailsDialo
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={(o) => { if (!o) setSelectedInstallment(null); onOpenChange(o); }}>
       <DialogContent className="max-w-md max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-lg">Detalhes Financeiros</DialogTitle>
@@ -273,11 +283,13 @@ export function PaymentDetailsDialog({ open, onOpenChange }: PaymentDetailsDialo
             </Card>
 
             {/* Pix Payment */}
-            {pixSettings?.pix_key && totalPending > 0 && (() => {
-              const nextPendingItem = displayItems.find((i) => i.status !== "pago");
-              const paymentAmount = nextPendingItem
-                ? nextPendingItem.amount - nextPendingItem.amount_paid
-                : totalPending;
+            {pixSettings?.pix_key && (() => {
+              const targetItem = selectedInstallment 
+                || displayItems.find((i) => i.status !== "pago");
+              if (!targetItem || targetItem.status === "pago") return null;
+              
+              const paymentAmount = targetItem.amount - targetItem.amount_paid;
+              if (paymentAmount <= 0) return null;
 
               const pixPayload = generatePixPayload({
                 pixKey: pixSettings.pix_key,
@@ -316,10 +328,20 @@ export function PaymentDetailsDialog({ open, onOpenChange }: PaymentDetailsDialo
                       <p className="text-lg font-semibold text-primary">
                         {formatCurrency(paymentAmount)}
                       </p>
-                      {nextPendingItem && nextPendingItem.total_installments > 1 && (
+                      {targetItem && targetItem.total_installments > 1 && (
                         <p className="text-xs text-muted-foreground">
-                          Parcela {nextPendingItem.installment_number}/{nextPendingItem.total_installments}
+                          Parcela {targetItem.installment_number}/{targetItem.total_installments}
                         </p>
+                      )}
+                      {selectedInstallment && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-xs mt-1"
+                          onClick={() => setSelectedInstallment(null)}
+                        >
+                          ← Voltar para resumo
+                        </Button>
                       )}
                     </div>
 
@@ -454,7 +476,18 @@ export function PaymentDetailsDialog({ open, onOpenChange }: PaymentDetailsDialo
                   const StatusIcon = status.icon;
 
                   return (
-                    <Card key={item.id}>
+                    <Card 
+                      key={item.id} 
+                      className={`${item.status !== "pago" ? "cursor-pointer hover:border-primary/50 transition-colors" : ""} ${selectedInstallment?.id === item.id ? "border-primary ring-1 ring-primary/30" : ""}`}
+                      onClick={() => {
+                        if (item.status !== "pago" && pixSettings?.pix_key) {
+                          setSelectedInstallment(item);
+                          // Scroll to top of dialog
+                          const dialogContent = document.querySelector('[role="dialog"] > div');
+                          dialogContent?.scrollTo({ top: 0, behavior: 'smooth' });
+                        }
+                      }}
+                    >
                       <CardContent className="p-3">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
@@ -480,6 +513,9 @@ export function PaymentDetailsDialog({ open, onOpenChange }: PaymentDetailsDialo
                             <Badge variant={status.variant} className="text-[10px] mt-1">
                               {status.label}
                             </Badge>
+                            {item.status !== "pago" && pixSettings?.pix_key && (
+                              <p className="text-[10px] text-primary mt-0.5">Toque para pagar</p>
+                            )}
                           </div>
                         </div>
                       </CardContent>
