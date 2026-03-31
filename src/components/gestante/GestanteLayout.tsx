@@ -142,14 +142,11 @@ export function GestanteLayout({ children }: GestanteLayoutProps) {
         <nav className="flex-1 py-6 px-3 space-y-1 overflow-y-auto">
           {navItems.map((item) => {
             const isActive = location.pathname === item.to;
-            const rawBadge = 
+            const badgeCount = 
               item.to === "/gestante/mensagens" ? menuBadges.mensagens :
               item.to === "/gestante/consultas" ? menuBadges.consultas :
               item.to === "/gestante/servicos" ? menuBadges.servicos :
               0;
-            // Hide badge if user already visited this route or is currently on it
-            // (except mensagens which has real read tracking)
-            const badgeCount = (item.to !== "/gestante/mensagens" && (seenBadgeRoutes.has(item.to) || isActive)) ? 0 : rawBadge;
             return (
               <button
                 key={item.to}
