@@ -367,7 +367,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
         notes: "",
       });
     }
-  }, [client, form, planSettings, clientTransaction, clientInstallmentPayments]);
+  }, [client, open, form, planSettings, clientTransaction, clientInstallmentPayments]);
 
   useEffect(() => {
     if (watchedPaymentType !== "parcelado") return;
