@@ -461,6 +461,45 @@ export function PaymentDetailsDialog({ open, onOpenChange }: PaymentDetailsDialo
               );
             })()}
 
+            {/* Fallback when no Pix key configured */}
+            {!pixSettings?.pix_key && selectedInstallment && selectedInstallment.status !== "pago" && (
+              <Card className="border-primary/20 bg-primary/5">
+                <CardContent className="p-4 space-y-3">
+                  <div className="text-center space-y-2">
+                    <p className="font-semibold text-sm">
+                      Parcela {selectedInstallment.installment_number}/{selectedInstallment.total_installments}
+                    </p>
+                    <p className="text-lg font-bold text-primary">
+                      {(selectedInstallment.amount - selectedInstallment.amount_paid).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Entre em contato com sua Doula para obter os dados de pagamento.
+                    </p>
+                    <Button
+                      variant="default"
+                      size="sm"
+                      className="w-full mt-2"
+                      onClick={() => {
+                        onOpenChange(false);
+                        navigate("/gestante/mensagens");
+                      }}
+                    >
+                      <MessageCircle className="h-4 w-4 mr-2" />
+                      Enviar mensagem
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-xs"
+                      onClick={() => setSelectedInstallment(null)}
+                    >
+                      ← Voltar para resumo
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             <Separator />
 
             {/* Installments List */}
