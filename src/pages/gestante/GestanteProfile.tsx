@@ -36,8 +36,16 @@ export default function GestanteProfile() {
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const { client, user, signOut } = useGestanteAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   useEffect(() => {
+    if (searchParams.get("tab") === "plano") {
+      setPaymentDialogOpen(true);
+      searchParams.delete("tab");
+      setSearchParams(searchParams, { replace: true });
+    }
+  }, []);
+
     if (user) {
       fetchClientData();
       fetchAvatar();
