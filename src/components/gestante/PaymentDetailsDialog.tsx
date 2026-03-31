@@ -247,7 +247,7 @@ export function PaymentDetailsDialog({ open, onOpenChange }: PaymentDetailsDialo
 
   return (
     <Dialog open={open} onOpenChange={(o) => { if (!o) setSelectedInstallment(null); onOpenChange(o); }}>
-      <DialogContent className="max-w-md max-h-[85vh] overflow-y-auto">
+      <DialogContent ref={dialogContentRef} className="max-w-md max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-lg">Detalhes Financeiros</DialogTitle>
         </DialogHeader>
