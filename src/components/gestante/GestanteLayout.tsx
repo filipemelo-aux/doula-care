@@ -86,6 +86,10 @@ export function GestanteLayout({ children }: GestanteLayoutProps) {
   const handleNavClick = (to: string) => {
     navigate(to);
     setSidebarOpen(false);
+    // Mark badge as seen for this route (session-only)
+    if (["/gestante/consultas", "/gestante/servicos", "/gestante/mensagens"].includes(to)) {
+      setSeenBadgeRoutes((prev) => new Set([...prev, to]));
+    }
   };
 
   return (
