@@ -141,6 +141,14 @@ export function ManageAppointmentsDialog({
 
   const isPast = (dateStr: string) => new Date(dateStr) < new Date();
 
+  const selectedSlotOccupied = (() => {
+    if (!scheduledAt || !occupiedSlots) return false;
+    const d = new Date(scheduledAt);
+    if (isNaN(d.getTime())) return false;
+    const slotKey = `${format(d, "yyyy-MM-dd")}_${format(d, "HH:mm")}`;
+    return occupiedSlots.has(slotKey);
+  })();
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md max-h-[90vh]">
