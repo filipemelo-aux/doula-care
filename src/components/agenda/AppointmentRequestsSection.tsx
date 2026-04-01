@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useOccupiedSlots } from "@/hooks/useOccupiedSlots";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -47,6 +48,7 @@ interface AppointmentRequestWithClient {
 export function AppointmentRequestsSection() {
   const { user, organizationId } = useAuth();
   const queryClient = useQueryClient();
+  const { data: occupiedSlots } = useOccupiedSlots(organizationId);
   const [respondDialog, setRespondDialog] = useState<{
     request: AppointmentRequestWithClient;
     action: "approve" | "reject";
@@ -76,6 +78,15 @@ export function AppointmentRequestsSection() {
       notes: string;
     }) => {
       const newStatus = action === "approve" ? "approved" : "rejected";
+
+      if (action === "approve") {
+        // Check for conflicts before approving
+        const timeStr = request.requested_time.slice(0, 5);
+        const slotKey = `${request.requested_date}_${timeStr}`;
+        if (occupiedSlots?.has(slotKey)) {
+          throw new Error("SLOT_OCCUPIED");
+        }
+      }
 
       // Update request status
       const { error: updateError } = await supabase
@@ -151,6 +162,7 @@ export function AppointmentRequestsSection() {
       });
       queryClient.invalidateQueries({ queryKey: ["agenda-appointments"] });
       queryClient.invalidateQueries({ queryKey: ["all-appointments"] });
+      queryClient.invalidateQueries({ queryKey: ["occupied-slots"] });
       setRespondDialog(null);
       setAdminNotes("");
       toast.success(
@@ -159,7 +171,13 @@ export function AppointmentRequestsSection() {
           : "Solicitação recusada."
       );
     },
-    onError: () => toast.error("Erro ao processar solicitação"),
+    onError: (err: any) => {
+      if (err?.message === "SLOT_OCCUPIED") {
+        toast.error("Já existe um compromisso neste horário! Não é possível aprovar.");
+      } else {
+        toast.error("Erro ao processar solicitação");
+      }
+    },
   });
 
   const pendingRequests = (requests || []).filter(
