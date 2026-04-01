@@ -90,7 +90,7 @@ export function NotificationTopBanner() {
           dbTable: "appointment_requests",
           type: "appointment_request",
           title: "Solicitação de Consulta",
-          message: `${clientName} pediu consulta em ${a.requested_date} às ${a.requested_time?.slice(0, 5)}`,
+          message: `${clientName} pediu consulta em ${a.requested_date.split("-").reverse().join("/")} às ${a.requested_time?.slice(0, 5)}`,
           timestamp: a.created_at,
           priority: "medium",
         };
