@@ -135,8 +135,20 @@ export function RevenueDetailDialog({ open, onOpenChange, transactionId }: Reven
 
           {/* Financial Summary */}
           <div className="grid grid-cols-2 gap-3">
+            {planOriginalValue > 0 && (
+              <div>
+                <span className="text-[10px] uppercase text-muted-foreground">Valor do Plano</span>
+                <p className="text-sm font-semibold text-foreground/70">{formatCurrency(planOriginalValue)}</p>
+              </div>
+            )}
+            {discount > 0 && (
+              <div>
+                <span className="text-[10px] uppercase text-muted-foreground">Desconto</span>
+                <p className="text-sm font-semibold text-destructive">- {formatCurrency(discount)}</p>
+              </div>
+            )}
             <div>
-              <span className="text-[10px] uppercase text-muted-foreground">Valor Total</span>
+              <span className="text-[10px] uppercase text-muted-foreground">Valor Contratado</span>
               <p className="text-sm font-semibold">{formatCurrency(totalAmount)}</p>
             </div>
             <div>
