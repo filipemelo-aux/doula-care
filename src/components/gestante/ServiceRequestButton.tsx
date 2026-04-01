@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useOccupiedSlots } from "@/hooks/useOccupiedSlots";
 import { useGestanteAuth } from "@/contexts/GestanteAuthContext";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -34,10 +35,6 @@ interface AvailabilitySlot {
   end_time: string;
 }
 
-interface OccupiedSlot {
-  scheduled_at?: string;
-  scheduled_date?: string;
-}
 
 export function ServiceRequestButtons() {
   const [selectedService, setSelectedService] = useState<CustomService | null>(null);
@@ -82,43 +79,8 @@ export function ServiceRequestButtons() {
     enabled: !!clientOrganizationId,
   });
 
-  // Fetch occupied slots (appointments + scheduled services)
-  const { data: occupiedSlots } = useQuery({
-    queryKey: ["occupied-slots-services", clientOrganizationId],
-    queryFn: async () => {
-      const today = new Date().toISOString();
-      const [aptsRes, srRes] = await Promise.all([
-        supabase
-          .from("appointments")
-          .select("scheduled_at")
-          .eq("organization_id", clientOrganizationId!)
-          .gte("scheduled_at", today)
-          .is("completed_at", null),
-        supabase
-          .from("service_requests")
-          .select("scheduled_date")
-          .eq("organization_id", clientOrganizationId!)
-          .in("status", ["accepted", "date_proposed"])
-          .not("scheduled_date", "is", null),
-      ]);
-      
-      const occupied: string[] = [];
-      (aptsRes.data || []).forEach((a: any) => {
-        if (a.scheduled_at) {
-          const d = new Date(a.scheduled_at);
-          occupied.push(`${format(d, "yyyy-MM-dd")}_${format(d, "HH:mm")}`);
-        }
-      });
-      (srRes.data || []).forEach((s: any) => {
-        if (s.scheduled_date) {
-          const d = new Date(s.scheduled_date);
-          occupied.push(`${format(d, "yyyy-MM-dd")}_${format(d, "HH:mm")}`);
-        }
-      });
-      return new Set(occupied);
-    },
-    enabled: !!clientOrganizationId,
-  });
+  // Unified occupied slots (appointments + services + requests)
+  const { data: occupiedSlots } = useOccupiedSlots(clientOrganizationId);
 
   // Filter: gestantes can't see Laserterapia
   const availableServices = services.filter((s) => {
@@ -167,7 +129,7 @@ export function ServiceRequestButtons() {
       queryClient.invalidateQueries({ queryKey: ["service-requests"] });
       queryClient.invalidateQueries({ queryKey: ["my-service-requests"] });
       queryClient.invalidateQueries({ queryKey: ["my-pending-services"] });
-      queryClient.invalidateQueries({ queryKey: ["occupied-slots-services"] });
+      queryClient.invalidateQueries({ queryKey: ["occupied-slots"] });
       toast.success("Solicitação enviada com sucesso!", {
         description: "Sua Doula receberá uma notificação e enviará o orçamento.",
       });
