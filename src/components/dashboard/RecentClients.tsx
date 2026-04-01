@@ -34,6 +34,7 @@ export function RecentClients() {
   const [diaryClient, setDiaryClient] = useState<Tables<"clients"> | null>(null);
   const [notifDialogOpen, setNotifDialogOpen] = useState(false);
   const [notifClient, setNotifClient] = useState<Tables<"clients"> | null>(null);
+  const { getPlanName } = usePlanNames();
   const { data: clients, isLoading } = useQuery({
     queryKey: ["recent-clients"],
     queryFn: async () => {
