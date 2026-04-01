@@ -728,7 +728,8 @@ export default function Financial() {
   const serviceTransactions = (transactions?.filter((t) => !isContractTransaction(t)) || [])
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
-  const activeTabTransactions = revenueTab === "contratos" ? clientTransactions : serviceTransactions;
+  const allTransactions = [...(transactions || [])].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  const activeTabTransactions = revenueTab === "todos" ? allTransactions : revenueTab === "contratos" ? clientTransactions : serviceTransactions;
 
   const filteredTransactions = activeTabTransactions.filter(
     (t) =>
