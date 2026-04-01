@@ -86,14 +86,14 @@ export default function Plans() {
   const { data: clientCounts } = useQuery({
     queryKey: ["client-plan-counts"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("clients").select("plan");
+      const { data, error } = await supabase.from("clients").select("plan, plan_setting_id");
       if (error) throw error;
 
       const counts: Record<string, number> = {};
       data?.forEach((client) => {
-        if (client.plan) {
-          counts[client.plan] = (counts[client.plan] || 0) + 1;
-        }
+        // Group by plan_setting_id when available, otherwise by plan enum
+        const key = client.plan_setting_id || `_enum_${client.plan}`;
+        counts[key] = (counts[key] || 0) + 1;
       });
       return counts;
     },
