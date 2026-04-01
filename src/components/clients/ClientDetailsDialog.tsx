@@ -77,6 +77,7 @@ export function ClientDetailsDialog({
 }: ClientDetailsDialogProps) {
   const [contractDialogOpen, setContractDialogOpen] = useState(false);
   const [clientFileOpen, setClientFileOpen] = useState(false);
+  const { getPlanName } = usePlanNames();
   
   const [revenueDetailOpen, setRevenueDetailOpen] = useState(false);
   
