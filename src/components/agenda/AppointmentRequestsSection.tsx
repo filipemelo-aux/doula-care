@@ -59,7 +59,7 @@ export function AppointmentRequestsSection() {
         .select("*, clients(full_name, user_id)")
         .order("created_at", { ascending: false });
       if (error) throw error;
-      return data as unknown as AppointmentRequestWithClient[];
+      return (data as any) as AppointmentRequestWithClient[];
     },
   });
 
