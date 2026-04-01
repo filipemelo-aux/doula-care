@@ -14,6 +14,52 @@ type PasswordCredentialConstructor = new (
   data: HTMLFormElement | { id: string; password: string; name?: string }
 ) => Credential;
 
+type CredentialNavigator = Navigator & {
+  credentials?: {
+    store?: (credential: Credential) => Promise<Credential | null>;
+    create?: (options: { password: HTMLFormElement }) => Promise<Credential | null>;
+  };
+};
+
+const storeLoginCredential = async ({
+  form,
+  loginId,
+  password,
+}: {
+  form: HTMLFormElement | null;
+  loginId: string;
+  password: string;
+}) => {
+  if (!window.isSecureContext) return;
+
+  try {
+    const credentialNavigator = navigator as CredentialNavigator;
+    const passwordCredential = (window as Window & {
+      PasswordCredential?: PasswordCredentialConstructor;
+    }).PasswordCredential;
+
+    let credential: Credential | null = null;
+
+    if (passwordCredential && form) {
+      credential = new passwordCredential(form);
+    } else if (credentialNavigator.credentials?.create && form) {
+      credential = await credentialNavigator.credentials.create({ password: form });
+    } else if (passwordCredential) {
+      credential = new passwordCredential({
+        id: loginId,
+        password,
+        name: loginId,
+      });
+    }
+
+    if (credential && credentialNavigator.credentials?.store) {
+      await credentialNavigator.credentials.store(credential);
+    }
+  } catch {
+    // Best effort only: unsupported browsers/password managers should fail silently
+  }
+};
+
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -34,6 +80,8 @@ export default function Login() {
   }, []);
 
   useEffect(() => {
+    if (submitting) return;
+
     if (!loading && user && roleChecked && role) {
       if (role === "super_admin") {
         navigate("/super-admin", { replace: true });
@@ -47,7 +95,7 @@ export default function Login() {
         }
       }
     }
-  }, [loading, user, role, roleChecked, isFirstLogin, navigate]);
+  }, [loading, user, role, roleChecked, isFirstLogin, navigate, submitting]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -59,25 +107,8 @@ export default function Login() {
       return;
     }
 
-    const trimmedEmail = email.trim().toLowerCase();
-
-    // Store credentials BEFORE signIn to avoid race condition with navigation
-    try {
-      const passwordCredential = (window as Window & { PasswordCredential?: PasswordCredentialConstructor }).PasswordCredential;
-      if (passwordCredential && navigator.credentials?.store) {
-        const cred = new passwordCredential({
-          id: trimmedEmail,
-          password,
-          name: trimmedEmail,
-        });
-        // Fire and forget — don't block login on this
-        navigator.credentials.store(cred).catch(() => {});
-      }
-    } catch {
-      // best-effort only
-    }
-
-    const { error } = await signIn(trimmedEmail, password);
+    const loginIdentifier = email.trim().toLowerCase();
+    const { error } = await signIn(loginIdentifier, password);
 
     if (error) {
       toast.error("Erro ao fazer login", {
@@ -86,6 +117,12 @@ export default function Login() {
       setSubmitting(false);
       return;
     }
+
+    await storeLoginCredential({
+      form: formRef.current,
+      loginId: loginIdentifier,
+      password,
+    });
 
     toast.success("Login realizado com sucesso!");
     setSubmitting(false);
@@ -131,12 +168,12 @@ export default function Login() {
           <CardDescription>Entre com seu usuário ou email e senha</CardDescription>
         </CardHeader>
         <CardContent>
-          <form ref={formRef} onSubmit={handleSubmit} action="/login" method="post" className="space-y-4">
+          <form ref={formRef} onSubmit={handleSubmit} action="/login" method="post" autoComplete="on" className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Usuário ou Email</Label>
+              <Label htmlFor="username">Usuário ou Email</Label>
               <Input
-                id="email"
-                name="email"
+                id="username"
+                name="username"
                 type="text"
                 inputMode="text"
                 enterKeyHint="next"
