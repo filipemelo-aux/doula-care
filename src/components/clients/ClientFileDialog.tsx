@@ -331,7 +331,7 @@ export function ClientFileDialog({ open, onOpenChange, client }: ClientFileDialo
 
       // Plan & Payment
       addSection("Plano e Pagamento");
-      addText(`Plano: ${planLabels[client.plan] || client.plan}`);
+      addText(`Plano: ${getPlanName(client.plan_setting_id, client.plan)}`);
       addText(`Valor: ${formatCurrency(Number(client.plan_value) || 0)}`);
       addText(`Pagamento: ${paymentMethodLabels[client.payment_method] || client.payment_method}`);
       addText(`Status: ${paymentStatusLabels[client.payment_status] || client.payment_status}`);
