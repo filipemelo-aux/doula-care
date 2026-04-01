@@ -823,6 +823,10 @@ export default function Financial() {
         <CardHeader className="px-3 py-3 lg:p-6">
           <Tabs value={revenueTab} onValueChange={setRevenueTab} className="w-full">
             <TabsList className="w-full">
+              <TabsTrigger value="todos" className="flex-1 gap-1.5">
+                <TrendingUp className="h-3.5 w-3.5" />
+                Todos ({transactions?.length || 0})
+              </TabsTrigger>
               <TabsTrigger value="contratos" className="flex-1 gap-1.5">
                 <FileText className="h-3.5 w-3.5" />
                 Contratos ({clientTransactions.length})
