@@ -53,6 +53,7 @@ export function ManageAppointmentsDialog({
   const [completeApt, setCompleteApt] = useState<Appointment | null>(null);
   const queryClient = useQueryClient();
   const { user, organizationId } = useAuth();
+  const { data: occupiedSlots } = useOccupiedSlots(organizationId);
 
   const { data: appointments, isLoading } = useQuery({
     queryKey: ["client-appointments", clientId],
