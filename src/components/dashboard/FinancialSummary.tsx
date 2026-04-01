@@ -17,34 +17,19 @@ export function FinancialSummary() {
       const startStr = format(monthStart, "yyyy-MM-dd");
       const endStr = format(monthEnd, "yyyy-MM-dd");
 
-      const [{ data: transactions, error }, { data: payments }] = await Promise.all([
-        supabase
-          .from("transactions")
-          .select("*")
-          .gte("date", startStr)
-          .lte("date", endStr),
-        supabase
-          .from("payments")
-          .select("amount_paid, status")
-          .gte("due_date", startStr)
-          .lte("due_date", endStr),
-      ]);
+      const { data: transactions, error } = await supabase
+        .from("transactions")
+        .select("type, amount, amount_received")
+        .gte("date", startStr)
+        .lte("date", endStr);
 
       if (error) throw error;
 
       const incomeTransactions = transactions?.filter((t) => t.type === "receita") || [];
       const expenseTransactions = transactions?.filter((t) => t.type === "despesa") || [];
 
-      // Received from installment payments (by due_date)
-      const receivedFromPayments = (payments || [])
-        .filter((p) => p.status === "pago" || p.status === "parcial")
-        .reduce((sum, p) => sum + Number(p.amount_paid || 0), 0);
-      // Received from service/manual transactions
-      const receivedFromServices = incomeTransactions
-        .filter((t) => t.is_auto_generated === false)
-        .reduce((sum, t) => sum + Number(t.amount_received || 0), 0);
-
-      const income = receivedFromPayments + receivedFromServices;
+      // Same logic as Financial.tsx: received = sum(amount_received) from income transactions
+      const income = incomeTransactions.reduce((sum, t) => sum + Number(t.amount_received || 0), 0);
       const expenses = expenseTransactions.reduce((sum, t) => sum + Number(t.amount), 0);
 
       return { income, expenses, balance: income - expenses };
