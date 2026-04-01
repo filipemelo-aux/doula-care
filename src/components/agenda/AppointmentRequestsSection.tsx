@@ -37,6 +37,7 @@ interface AppointmentRequestWithClient {
   reason: string | null;
   status: string;
   admin_notes: string | null;
+  address: string | null;
   created_at: string;
   clients: { full_name: string; user_id: string | null };
 }
