@@ -851,32 +851,30 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
-        <DialogHeader className="pb-2 flex-shrink-0">
+        <DialogHeader className="pb-0 flex-shrink-0">
           <DialogTitle className="font-display text-lg">
             {client ? "Editar Cliente" : "Nova Cliente"}
           </DialogTitle>
-          {/* Step indicator */}
-          <div className="flex items-center gap-1 pt-2 overflow-x-auto pb-1">
-            {STEPS.map((step, i) => (
+          {/* Tab-style step navigation */}
+          <div className="flex items-center gap-0 pt-2 overflow-x-auto border-b border-border/40 -mx-1">
+            {STEPS.map((step) => (
               <button
                 key={step.id}
                 type="button"
                 onClick={() => handleStepClick(step.id)}
                 className={cn(
-                  "flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-medium transition-all whitespace-nowrap flex-shrink-0",
+                  "relative px-2.5 py-1.5 text-[11px] font-medium transition-all whitespace-nowrap flex-shrink-0",
                   currentStep === step.id
-                    ? "bg-primary text-primary-foreground"
+                    ? "text-primary"
                     : step.id < currentStep
-                    ? "bg-primary/15 text-primary"
-                    : "bg-muted/50 text-muted-foreground"
+                    ? "text-primary/60 hover:text-primary/80"
+                    : "text-muted-foreground/60 hover:text-muted-foreground"
                 )}
               >
-                {step.id < currentStep ? (
-                  <Check className="w-3 h-3" />
-                ) : (
-                  <span className="w-3 h-3 flex items-center justify-center text-[9px]">{step.id}</span>
+                {step.shortTitle}
+                {currentStep === step.id && (
+                  <span className="absolute bottom-0 left-1 right-1 h-[2px] bg-primary rounded-full" />
                 )}
-                <span className="hidden sm:inline">{step.shortTitle}</span>
               </button>
             ))}
           </div>
