@@ -325,7 +325,7 @@ export function ClientDetailsDialog({
                 <div>
                   <p className="text-muted-foreground">Plano</p>
                   <p className="font-medium">
-                    {planLabels[client.plan as keyof typeof planLabels]}
+                    {getPlanName(client.plan_setting_id, client.plan)}
                   </p>
                 </div>
                 <div>

@@ -355,7 +355,7 @@ export default function Clients() {
                           </Badge>
                         </TableCell>
                         <TableCell>
-                          {planLabels[client.plan as keyof typeof planLabels]}
+                          {getPlanName(client.plan_setting_id, client.plan)}
                         </TableCell>
                         <TableCell>
                           <Badge

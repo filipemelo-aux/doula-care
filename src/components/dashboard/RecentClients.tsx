@@ -137,7 +137,7 @@ export function RecentClients() {
                     {statusLabels[client.status as keyof typeof statusLabels]}
                   </Badge>
                   <Badge variant="outline" className="text-[10px] px-1.5 h-5">
-                    {planLabels[client.plan as keyof typeof planLabels]}
+                    {getPlanName(client.plan_setting_id, client.plan)}
                   </Badge>
                   <Badge
                     variant="outline"

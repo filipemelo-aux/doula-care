@@ -534,7 +534,7 @@ export function ClientFileDialog({ open, onOpenChange, client }: ClientFileDialo
 
               {/* Plan & Payment */}
               <Section title="Plano e Pagamento">
-                <Field label="Plano" value={planLabels[client.plan] || client.plan} />
+                <Field label="Plano" value={getPlanName(client.plan_setting_id, client.plan)} />
                 <Field label="Valor" value={formatCurrency(Number(client.plan_value) || 0)} />
                 <Field label="Pagamento" value={paymentMethodLabels[client.payment_method] || client.payment_method} />
                 <Field label="Status" value={paymentStatusLabels[client.payment_status] || client.payment_status} />
