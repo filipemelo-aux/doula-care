@@ -79,6 +79,15 @@ export function AppointmentRequestsSection() {
     }) => {
       const newStatus = action === "approve" ? "approved" : "rejected";
 
+      if (action === "approve") {
+        // Check for conflicts before approving
+        const timeStr = request.requested_time.slice(0, 5);
+        const slotKey = `${request.requested_date}_${timeStr}`;
+        if (occupiedSlots?.has(slotKey)) {
+          throw new Error("SLOT_OCCUPIED");
+        }
+      }
+
       // Update request status
       const { error: updateError } = await supabase
         .from("appointment_requests")
