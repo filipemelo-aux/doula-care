@@ -36,7 +36,7 @@ export function RevenueDetailDialog({ open, onOpenChange, transactionId }: Reven
       if (!transactionId) return null;
       const { data, error } = await supabase
         .from("transactions")
-        .select("*, clients(full_name, dpp, phone, plan), plan_settings(name)")
+        .select("*, clients(full_name, dpp, phone, plan, plan_value), plan_settings(name, default_value)")
         .eq("id", transactionId)
         .single();
       if (error) throw error;
