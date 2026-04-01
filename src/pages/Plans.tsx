@@ -265,7 +265,7 @@ export default function Plans() {
   };
 
   const totalPlanRevenue = plans?.reduce((sum, plan) => {
-    const count = clientCounts?.[plan.plan_type] || 0;
+    const count = clientCounts?.[plan.id] || 0;
     return sum + count * Number(plan.default_value);
   }, 0) || 0;
 
