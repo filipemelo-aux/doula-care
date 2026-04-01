@@ -85,6 +85,12 @@ export function RevenueDetailDialog({ open, onOpenChange, transactionId }: Reven
   const installmentValue = Number(transaction.installment_value) || totalAmount / installments;
   const isAvista = installments <= 1;
 
+  // Discount calculation: original plan value vs contracted amount
+  const planOriginalValue = Number(transaction.plan_settings?.default_value) || 0;
+  const discount = planOriginalValue > 0 && planOriginalValue > totalAmount
+    ? planOriginalValue - totalAmount
+    : 0;
+
   const statusInfo = pendingAmount === 0
     ? { label: "Quitado", variant: "default" as const, icon: CheckCircle, color: "text-success" }
     : receivedAmount > 0
