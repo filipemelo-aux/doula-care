@@ -649,7 +649,7 @@ export default function Agenda() {
 
           {/* Inline calendar when filter is "calendar" */}
           {agendaFilter === "calendar" && (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Card>
                 <CardContent className="p-3">
                   <CalendarPicker
@@ -685,43 +685,52 @@ export default function Agenda() {
                 </CardContent>
               </Card>
 
-              {/* Side panel: selected date appointments with full actions (desktop) */}
-              <div className="hidden lg:block space-y-3">
-                <h3 className="font-semibold text-sm flex items-center gap-2">
-                  <Calendar className="h-4 w-4 text-primary" />
-                  {format(selectedDate, "dd 'de' MMMM, EEEE", { locale: ptBR })}
-                  <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
-                    {filteredAppointments.length}
-                  </Badge>
-                </h3>
-                {filteredAppointments.length > 0 ? (
-                  <ScrollArea className="max-h-[380px]">
-                    <div className="space-y-2">
-                      {filteredAppointments.map((apt) => (
-                        <AppointmentRow
-                          key={apt.id}
-                          apt={apt}
-                          onEdit={openEditAppointment}
-                          onDelete={(id) => setDeleteTarget({ type: "appointment", id })}
-                          displayName={displayName}
-                          past={!!apt.completed_at || getAppointmentStatus(apt) === "past"}
-                          onCompleted={() => queryClient.invalidateQueries({ queryKey: ["agenda-appointments"] })}
-                        />
-                      ))}
+              {/* Side panel: selected date appointments + requests (desktop/tablet) */}
+              <div className="hidden md:block space-y-4">
+                <div className="space-y-3">
+                  <h3 className="font-semibold text-sm flex items-center gap-2">
+                    <Calendar className="h-4 w-4 text-primary" />
+                    {format(selectedDate, "dd 'de' MMMM, EEEE", { locale: ptBR })}
+                    <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
+                      {filteredAppointments.length}
+                    </Badge>
+                  </h3>
+                  {filteredAppointments.length > 0 ? (
+                    <ScrollArea className="max-h-[280px]">
+                      <div className="space-y-2">
+                        {filteredAppointments.map((apt) => (
+                          <AppointmentRow
+                            key={apt.id}
+                            apt={apt}
+                            onEdit={openEditAppointment}
+                            onDelete={(id) => setDeleteTarget({ type: "appointment", id })}
+                            displayName={displayName}
+                            past={!!apt.completed_at || getAppointmentStatus(apt) === "past"}
+                            onCompleted={() => queryClient.invalidateQueries({ queryKey: ["agenda-appointments"] })}
+                          />
+                        ))}
+                      </div>
+                    </ScrollArea>
+                  ) : (
+                    <div className="text-center py-6">
+                      <Calendar className="h-8 w-8 mx-auto text-muted-foreground/30 mb-2" />
+                      <p className="text-sm text-muted-foreground">Nenhum compromisso neste dia</p>
                     </div>
-                  </ScrollArea>
-                ) : (
-                  <div className="text-center py-8">
-                    <Calendar className="h-8 w-8 mx-auto text-muted-foreground/30 mb-2" />
-                    <p className="text-sm text-muted-foreground">Nenhum compromisso neste dia</p>
-                  </div>
-                )}
+                  )}
+                </div>
+                <AppointmentRequestsSection />
               </div>
             </div>
           )}
 
-          {/* Appointment Requests */}
-          <AppointmentRequestsSection />
+          {/* Appointment Requests - mobile only when calendar mode */}
+          {agendaFilter === "calendar" ? (
+            <div className="md:hidden">
+              <AppointmentRequestsSection />
+            </div>
+          ) : (
+            <AppointmentRequestsSection />
+          )}
 
           {isLoading ? (
             <div className="flex justify-center py-12">
