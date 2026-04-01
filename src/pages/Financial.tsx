@@ -116,7 +116,7 @@ export default function Financial() {
   const [paymentTransaction, setPaymentTransaction] = useState<Transaction | null>(null);
   const [editingInstallmentsId, setEditingInstallmentsId] = useState<string | null>(null);
   const [editingInstallmentsValue, setEditingInstallmentsValue] = useState<string>("");
-  const [revenueTab, setRevenueTab] = useState<string>("contratos");
+  const [revenueTab, setRevenueTab] = useState<string>("todos");
   const [selectedServices, setSelectedServices] = useState<string[]>([]);
   const [customServiceName, setCustomServiceName] = useState<string>("");
   const [showCustomService, setShowCustomService] = useState(false);
