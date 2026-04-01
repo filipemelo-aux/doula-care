@@ -234,6 +234,23 @@ export function AppointmentRequestsSection() {
                             {req.reason}
                           </p>
                         )}
+                        {req.address && (
+                          <div className="flex items-center gap-1">
+                            <p className="text-xs text-muted-foreground flex items-center gap-1 flex-1 min-w-0">
+                              <MapPin className="h-3 w-3 flex-shrink-0" />
+                              <span className="truncate">{req.address}</span>
+                            </p>
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="h-6 w-6 text-primary hover:text-primary flex-shrink-0"
+                              title="Abrir rota"
+                              onClick={() => window.open(`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(req.address!)}`, "_blank")}
+                            >
+                              <Navigation className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        )}
                         <p className="text-[10px] text-muted-foreground">
                           Solicitado em{" "}
                           {format(new Date(req.created_at), "dd/MM HH:mm")}
