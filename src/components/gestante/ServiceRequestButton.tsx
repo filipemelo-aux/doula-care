@@ -35,10 +35,6 @@ interface AvailabilitySlot {
   end_time: string;
 }
 
-interface OccupiedSlot {
-  scheduled_at?: string;
-  scheduled_date?: string;
-}
 
 export function ServiceRequestButtons() {
   const [selectedService, setSelectedService] = useState<CustomService | null>(null);
