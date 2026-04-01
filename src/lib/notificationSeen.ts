@@ -1,39 +1,48 @@
-type SeenMap = Record<string, string>;
+import { supabase } from "@/integrations/supabase/client";
 
-function readSeenMap(storageKey: string): SeenMap {
-  if (typeof window === "undefined") return {};
-
-  try {
-    const raw = window.localStorage.getItem(storageKey);
-    if (!raw) return {};
-    const parsed = JSON.parse(raw);
-    return parsed && typeof parsed === "object" ? parsed : {};
-  } catch {
-    return {};
-  }
-}
-
-function writeSeenMap(storageKey: string, value: SeenMap) {
-  if (typeof window === "undefined") return;
-
-  try {
-    window.localStorage.setItem(storageKey, JSON.stringify(value));
-  } catch {}
-}
-
-export function getNotificationSeenAt(storageKey: string, section: string): string | null {
-  const seenMap = readSeenMap(storageKey);
-  return seenMap[section] || null;
-}
-
-export function markNotificationSeen(
+/**
+ * Fetches the "seen_at" timestamp for a given storage_key + section from the DB.
+ * Returns null if not found.
+ */
+export async function getNotificationSeenAt(
   storageKey: string,
   section: string,
-  seenAt = new Date().toISOString()
-) {
-  const seenMap = readSeenMap(storageKey);
-  seenMap[section] = seenAt;
-  writeSeenMap(storageKey, seenMap);
+  userId: string,
+): Promise<string | null> {
+  const { data } = await supabase
+    .from("notification_seen")
+    .select("seen_at")
+    .eq("user_id", userId)
+    .eq("storage_key", storageKey)
+    .eq("section", section)
+    .maybeSingle();
+
+  return data?.seen_at ?? null;
+}
+
+/**
+ * Upserts the "seen_at" timestamp for a given storage_key + section in the DB.
+ * This persists across all devices/logins.
+ */
+export async function markNotificationSeen(
+  storageKey: string,
+  section: string,
+  userId: string,
+  seenAt = new Date().toISOString(),
+): Promise<string> {
+  await supabase
+    .from("notification_seen")
+    .upsert(
+      {
+        user_id: userId,
+        storage_key: storageKey,
+        section,
+        seen_at: seenAt,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "user_id,storage_key,section" },
+    );
+
   return seenAt;
 }
 

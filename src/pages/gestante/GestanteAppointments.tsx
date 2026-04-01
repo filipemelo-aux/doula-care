@@ -69,6 +69,7 @@ export default function GestanteAppointments() {
         .select("id, title, scheduled_at, notes, completed_at")
         .eq("client_id", client!.id)
         .not("title", "like", "Serviço:%")
+        .is("completed_at", null)
         .gte("scheduled_at", new Date().toISOString())
         .order("scheduled_at", { ascending: true });
       if (error) throw error;

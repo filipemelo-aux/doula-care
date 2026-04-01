@@ -49,10 +49,10 @@ export function GestanteLayout({ children }: GestanteLayoutProps) {
   
   const navigate = useNavigate();
   const location = useLocation();
-  const { signOut, client } = useGestanteAuth();
+  const { signOut, client, user } = useGestanteAuth();
   const { logoUrl: orgLogo, displayName } = useOrgBranding();
   const unreadMessages = useGestanteUnreadCount(client?.id);
-  const menuBadges = useGestanteMenuBadges(client?.id, location.pathname);
+  const menuBadges = useGestanteMenuBadges(client?.id, user?.id, location.pathname);
   useClientPresenceBroadcast();
   const headerLogo = orgLogo || logo;
   const headerName = displayName || "Doula Care";
