@@ -220,7 +220,7 @@ export default function GestanteDashboard() {
           <OverduePaymentAlert />
           <PendingContractCard />
 
-          {/* Congratulations Card */}
+          {/* Congratulations Card with baby name + age */}
           <Card className="overflow-hidden bg-gradient-to-br from-primary/10 via-primary/20 to-accent/20 shadow-lg">
             <CardContent className="p-6 text-center">
               <div className="flex justify-center mb-4">
@@ -232,15 +232,41 @@ export default function GestanteDashboard() {
               <h2 className="font-display font-bold text-2xl text-primary mb-2">
                 Parabéns, Mamãe! 🎉
               </h2>
-              <p className="text-muted-foreground mb-4">
+              <p className="text-muted-foreground mb-2">
                 {multipleBabies 
                   ? `Seus bebês ${babyNames?.join(" e ")} chegaram!`
                   : `${babyName} chegou ao mundo!`
                 }
               </p>
+
+              {/* Baby age inline */}
+              {babyAge && (
+                <div className="my-4">
+                  <div className="inline-flex items-center gap-2 bg-background/60 rounded-2xl px-5 py-3">
+                    <Baby className="h-5 w-5 text-primary" />
+                    <p className="text-3xl font-display font-bold text-primary">
+                      {babyAge.weeks > 0 ? (
+                        <>
+                          {babyAge.weeks}
+                          <span className="text-xl">s</span>
+                          {babyAge.days > 0 && (
+                            <span className="text-xl"> {babyAge.days}d</span>
+                          )}
+                        </>
+                      ) : (
+                        <>
+                          {babyAge.days}
+                          <span className="text-xl">d</span>
+                        </>
+                      )}
+                    </p>
+                    <p className="text-xs text-muted-foreground">de vida</p>
+                  </div>
+                </div>
+              )}
               
               {/* Birth Details */}
-               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4">
                 {clientData?.birth_date && (
                   <div className="bg-background/60 rounded-xl p-3 text-center">
                     <Calendar className="h-5 w-5 text-primary mx-auto mb-1" />
@@ -274,40 +300,6 @@ export default function GestanteDashboard() {
               </div>
             </CardContent>
           </Card>
-
-          {/* Baby Age Card */}
-          {babyAge && (
-            <Card className="overflow-hidden bg-gradient-to-br from-secondary to-primary/5">
-              <CardContent className="p-4">
-                <div className="flex items-center gap-2 mb-3">
-                  <Baby className="h-5 w-5 text-primary" />
-                  <h2 className="font-display font-semibold text-base">
-                    {multipleBabies ? "Seus Bebês" : babyName}
-                  </h2>
-                </div>
-                
-                <div className="text-center py-3">
-                  {babyAge.weeks > 0 ? (
-                    <p className="text-4xl font-display font-bold text-primary">
-                      {babyAge.weeks}
-                      <span className="text-2xl">s</span>
-                      {babyAge.days > 0 && (
-                        <span className="text-2xl">{babyAge.days}d</span>
-                      )}
-                    </p>
-                  ) : (
-                    <p className="text-4xl font-display font-bold text-primary">
-                      {babyAge.days}
-                      <span className="text-2xl">d</span>
-                    </p>
-                  )}
-                  <p className="text-muted-foreground text-sm mt-1">
-                    {babyAge.weeks > 0 ? "semanas de vida" : "dias de vida"}
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          )}
 
           {/* Quick Actions for Puérpera */}
           <div className="grid grid-cols-2 gap-3">
