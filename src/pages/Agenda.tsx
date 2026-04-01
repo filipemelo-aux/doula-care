@@ -728,7 +728,7 @@ export default function Agenda() {
               <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
             </div>
           ) : (
-            <div className="space-y-6">
+            <div className={`space-y-6 ${agendaFilter === "calendar" ? "lg:hidden" : ""}`}>
               {/* Date header when calendar filter */}
               {agendaFilter === "calendar" && (
                 <h2 className="text-sm font-semibold text-muted-foreground flex items-center gap-2">
