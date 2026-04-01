@@ -1417,7 +1417,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
                     name="prenatal_type"
                     render={({ field }) => (
                       <FormItem className="space-y-1">
-                        <FormLabel className="text-xs">Tipo de Pré-natal</FormLabel>
+                        <FormLabel className="text-xs">Tipo de atendimento</FormLabel>
                         <Select onValueChange={field.onChange} value={field.value || ""}>
                           <FormControl>
                             <SelectTrigger className="h-9 text-sm">
