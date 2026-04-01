@@ -1,0 +1,1 @@
+ALTER TABLE public.appointment_requests ADD COLUMN address text DEFAULT NULL;

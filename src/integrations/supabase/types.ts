@@ -57,6 +57,7 @@ export type Database = {
       }
       appointment_requests: {
         Row: {
+          address: string | null
           admin_notes: string | null
           client_id: string
           created_at: string
@@ -69,6 +70,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          address?: string | null
           admin_notes?: string | null
           client_id: string
           created_at?: string
@@ -81,6 +83,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          address?: string | null
           admin_notes?: string | null
           client_id?: string
           created_at?: string
