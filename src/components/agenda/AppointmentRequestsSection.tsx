@@ -23,6 +23,8 @@ import {
   XCircle,
   MessageSquare,
   CalendarPlus,
+  MapPin,
+  Navigation,
 } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -37,6 +39,7 @@ interface AppointmentRequestWithClient {
   reason: string | null;
   status: string;
   admin_notes: string | null;
+  address: string | null;
   created_at: string;
   clients: { full_name: string; user_id: string | null };
 }
@@ -58,7 +61,7 @@ export function AppointmentRequestsSection() {
         .select("*, clients(full_name, user_id)")
         .order("created_at", { ascending: false });
       if (error) throw error;
-      return data as unknown as AppointmentRequestWithClient[];
+      return (data as any) as AppointmentRequestWithClient[];
     },
   });
 
@@ -85,7 +88,7 @@ export function AppointmentRequestsSection() {
       if (updateError) throw updateError;
 
       if (action === "approve") {
-        // Create actual appointment
+        // Create actual appointment with client's address
         const scheduledAt = new Date(
           `${request.requested_date}T${request.requested_time}`
         );
@@ -98,6 +101,7 @@ export function AppointmentRequestsSection() {
             notes: request.reason
               ? `Motivo: ${request.reason}${notes ? `\nNota: ${notes}` : ""}`
               : notes || null,
+            address: request.address || null,
             owner_id: user?.id || null,
             organization_id: organizationId || null,
           });
@@ -229,6 +233,23 @@ export function AppointmentRequestsSection() {
                             <MessageSquare className="h-3 w-3" />
                             {req.reason}
                           </p>
+                        )}
+                        {req.address && (
+                          <div className="flex items-center gap-1">
+                            <p className="text-xs text-muted-foreground flex items-center gap-1 flex-1 min-w-0">
+                              <MapPin className="h-3 w-3 flex-shrink-0" />
+                              <span className="truncate">{req.address}</span>
+                            </p>
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="h-6 w-6 text-primary hover:text-primary flex-shrink-0"
+                              title="Abrir rota"
+                              onClick={() => window.open(`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(req.address!)}`, "_blank")}
+                            >
+                              <Navigation className="h-3 w-3" />
+                            </Button>
+                          </div>
                         )}
                         <p className="text-[10px] text-muted-foreground">
                           Solicitado em{" "}
