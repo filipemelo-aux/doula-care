@@ -851,69 +851,96 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
           <DialogTitle className="font-display text-lg">
             {client ? "Editar Cliente" : "Nova Cliente"}
           </DialogTitle>
+          {/* Step indicator */}
+          <div className="flex items-center gap-1 pt-2 overflow-x-auto pb-1">
+            {STEPS.map((step, i) => (
+              <button
+                key={step.id}
+                type="button"
+                onClick={() => handleStepClick(step.id)}
+                className={cn(
+                  "flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-medium transition-all whitespace-nowrap flex-shrink-0",
+                  currentStep === step.id
+                    ? "bg-primary text-primary-foreground"
+                    : step.id < currentStep
+                    ? "bg-primary/15 text-primary"
+                    : "bg-muted/50 text-muted-foreground"
+                )}
+              >
+                {step.id < currentStep ? (
+                  <Check className="w-3 h-3" />
+                ) : (
+                  <span className="w-3 h-3 flex items-center justify-center text-[9px]">{step.id}</span>
+                )}
+                <span className="hidden sm:inline">{step.shortTitle}</span>
+              </button>
+            ))}
+          </div>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="client-dialog-form flex flex-col flex-1 min-h-0">
             <div className="flex-1 overflow-y-auto px-1 pr-3 space-y-0 scrollbar-thin">
-              {/* Dados Pessoais */}
-              <div className="form-section">
-                <h3 className="form-section-title">Dados Pessoais</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <FormField
-                    control={form.control}
-                    name="full_name"
-                    render={({ field }) => (
-                      <FormItem className="space-y-1">
-                        <FormLabel className="text-xs">Nome Completo *</FormLabel>
-                        <FormControl>
-                          <Input {...field} className="h-9 text-sm" placeholder="Nome da cliente" mask="name" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="phone"
-                    render={({ field }) => (
-                      <FormItem className="space-y-1">
-                        <FormLabel className="text-xs">Telefone *</FormLabel>
-                        <FormControl>
-                          <Input 
-                            {...field} 
-                            className="h-9 text-sm" 
-                            placeholder="(00) 00000-0000"
-                            onChange={(e) => field.onChange(maskPhone(e.target.value))}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="cpf"
-                    render={({ field }) => (
-                      <FormItem className="space-y-1">
-                        <FormLabel className="text-xs">CPF</FormLabel>
-                        <FormControl>
-                          <Input 
-                            {...field} 
-                            className="h-9 text-sm" 
-                            placeholder="000.000.000-00"
-                            onChange={(e) => field.onChange(maskCPF(e.target.value))}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              </div>
+              <h3 className="form-section-title pt-2 pb-3">{STEPS[currentStep - 1].title}</h3>
 
-              {/* Endereço */}
-              <div className="form-section">
-                <h3 className="form-section-title">Endereço</h3>
+              {/* Step 1: Dados Pessoais */}
+              {currentStep === 1 && (
+                <div className="space-y-3">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <FormField
+                      control={form.control}
+                      name="full_name"
+                      render={({ field }) => (
+                        <FormItem className="space-y-1">
+                          <FormLabel className="text-xs">Nome Completo *</FormLabel>
+                          <FormControl>
+                            <Input {...field} className="h-9 text-sm" placeholder="Nome da cliente" mask="name" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="phone"
+                      render={({ field }) => (
+                        <FormItem className="space-y-1">
+                          <FormLabel className="text-xs">Telefone</FormLabel>
+                          <FormControl>
+                            <Input 
+                              {...field} 
+                              className="h-9 text-sm" 
+                              placeholder="(00) 00000-0000"
+                              onChange={(e) => field.onChange(maskPhone(e.target.value))}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="cpf"
+                      render={({ field }) => (
+                        <FormItem className="space-y-1">
+                          <FormLabel className="text-xs">CPF</FormLabel>
+                          <FormControl>
+                            <Input 
+                              {...field} 
+                              className="h-9 text-sm" 
+                              placeholder="000.000.000-00"
+                              onChange={(e) => field.onChange(maskCPF(e.target.value))}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Step 2: Endereço */}
+              {currentStep === 2 && (
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                   <FormField
                     control={form.control}
@@ -929,7 +956,6 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
                             onChange={(e) => {
                               const value = maskCEP(e.target.value);
                               field.onChange(value);
-                              // Auto-fill address when CEP has 9 chars (with dash)
                               if (value.replace(/\D/g, "").length === 8) {
                                 fetch(`https://viacep.com.br/ws/${value.replace(/\D/g, "")}/json/`)
                                   .then(res => res.json())
@@ -1016,20 +1042,232 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
                     )}
                   />
                 </div>
-              </div>
+              )}
 
-              {/* Acompanhante */}
-              <div className="form-section">
-                <h3 className="form-section-title">Acompanhante</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {/* Step 3: Gestação e Pré-natal */}
+              {currentStep === 3 && (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <FormField
+                      control={form.control}
+                      name="status"
+                      render={({ field }) => (
+                        <FormItem className="space-y-1">
+                          <FormLabel className="text-xs">Situação *</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value}>
+                            <FormControl>
+                              <SelectTrigger className="h-9 text-sm">
+                                <SelectValue placeholder="Selecione" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="gestante">Gestante</SelectItem>
+                              <SelectItem value="lactante">Puérpera</SelectItem>
+                              <SelectItem value="outro">Outro</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    {status === "outro" && (
+                      <FormField
+                        control={form.control}
+                        name="custom_status"
+                        render={({ field }) => (
+                          <FormItem className="space-y-1 md:col-span-2">
+                            <FormLabel className="text-xs">Definir status</FormLabel>
+                            <FormControl>
+                              <Input
+                                {...field}
+                                className="h-9 text-sm"
+                                placeholder="Ex: Tentante, Consultoria, etc."
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    )}
+                    {status === "gestante" && (
+                      <>
+                        <FormField
+                          control={form.control}
+                          name="dpp"
+                          render={({ field }) => (
+                            <FormItem className="space-y-1">
+                              <FormLabel className="text-xs">DPP (Data Provável do Parto) *</FormLabel>
+                              <FormControl>
+                                <Input 
+                                  type="date" 
+                                  className="h-9 text-sm"
+                                  value={field.value || ""}
+                                  onChange={(e) => field.onChange(e.target.value || null)}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="baby_names"
+                          render={({ field }) => (
+                            <FormItem className="space-y-1">
+                              <FormLabel className="text-xs">Nomes do(s) Bebê(s)</FormLabel>
+                              <FormControl>
+                                <Input 
+                                  {...field} 
+                                  className="h-9 text-sm" 
+                                  placeholder="Nome1, Nome2..."
+                                  mask="name"
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="birth_location"
+                          render={({ field }) => (
+                            <FormItem className="space-y-1 md:col-span-3">
+                              <FormLabel className="text-xs">Local do Parto</FormLabel>
+                              <FormControl>
+                                <Input 
+                                  {...field} 
+                                  className="h-9 text-sm" 
+                                  placeholder="Ex: Hospital São Lucas, Domiciliar..."
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </>
+                    )}
+                  </div>
+
+                  {/* Tipo de atendimento e pré-natal */}
+                  <div className="border-t border-border/30 pt-4 space-y-3">
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Pré-natal</p>
+                    <div className="grid grid-cols-2 gap-3">
+                      <FormField
+                        control={form.control}
+                        name="prenatal_type"
+                        render={({ field }) => (
+                          <FormItem className="space-y-1">
+                            <FormLabel className="text-xs">Tipo de atendimento</FormLabel>
+                            <Select onValueChange={field.onChange} value={field.value || ""}>
+                              <FormControl>
+                                <SelectTrigger className="h-9 text-sm">
+                                  <SelectValue placeholder="Selecione" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value="sus">SUS</SelectItem>
+                                <SelectItem value="plano">Plano de Saúde</SelectItem>
+                                <SelectItem value="particular">Particular</SelectItem>
+                                <SelectItem value="equipe_particular">Equipe Particular</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="prenatal_high_risk"
+                        render={({ field }) => (
+                          <FormItem className="space-y-1">
+                            <FormLabel className="text-xs">Alto Risco?</FormLabel>
+                            <Select 
+                              onValueChange={(v) => field.onChange(v === "true")} 
+                              value={field.value ? "true" : "false"}
+                            >
+                              <FormControl>
+                                <SelectTrigger className="h-9 text-sm">
+                                  <SelectValue />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value="false">Não</SelectItem>
+                                <SelectItem value="true">Sim</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    {form.watch("prenatal_type") === "equipe_particular" && (
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <FormLabel className="text-xs">Equipe</FormLabel>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 text-xs gap-1 px-2"
+                            onClick={() => setPrenatalTeam([...prenatalTeam, { name: "", role: "" }])}
+                          >
+                            + Adicionar
+                          </Button>
+                        </div>
+                        {prenatalTeam.length === 0 && (
+                          <p className="text-xs text-muted-foreground">Nenhum integrante adicionado.</p>
+                        )}
+                        {prenatalTeam.map((member, i) => (
+                          <div key={i} className="flex items-center gap-2">
+                            <Input
+                              className="h-8 text-xs flex-1"
+                              placeholder="Nome"
+                              value={member.name}
+                              onChange={(e) => {
+                                const updated = [...prenatalTeam];
+                                updated[i] = { ...updated[i], name: e.target.value };
+                                setPrenatalTeam(updated);
+                              }}
+                              mask="name"
+                            />
+                            <Input
+                              className="h-8 text-xs flex-1"
+                              placeholder="Função"
+                              value={member.role}
+                              onChange={(e) => {
+                                const updated = [...prenatalTeam];
+                                updated[i] = { ...updated[i], role: e.target.value };
+                                setPrenatalTeam(updated);
+                              }}
+                            />
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                              onClick={() => setPrenatalTeam(prenatalTeam.filter((_, j) => j !== i))}
+                            >
+                              ×
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Step 4: Saúde e Restrições */}
+              {currentStep === 4 && (
+                <div className="space-y-3">
                   <FormField
                     control={form.control}
-                    name="companion_name"
+                    name="comorbidades"
                     render={({ field }) => (
                       <FormItem className="space-y-1">
-                        <FormLabel className="text-xs">Nome do Acompanhante</FormLabel>
+                        <FormLabel className="text-xs">Comorbidades</FormLabel>
                         <FormControl>
-                          <Input {...field} className="h-9 text-sm" placeholder="Nome do acompanhante" mask="name" />
+                          <Textarea {...field} className="min-h-[60px] resize-none text-sm" placeholder="Ex: diabetes gestacional, hipertensão..." />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -1037,235 +1275,382 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
                   />
                   <FormField
                     control={form.control}
-                    name="companion_phone"
+                    name="alergias"
                     render={({ field }) => (
                       <FormItem className="space-y-1">
-                        <FormLabel className="text-xs">Telefone do Acompanhante</FormLabel>
+                        <FormLabel className="text-xs">Alergias</FormLabel>
                         <FormControl>
-                          <Input 
-                            {...field} 
-                            className="h-9 text-sm" 
-                            placeholder="(00) 00000-0000"
-                            onChange={(e) => field.onChange(maskPhone(e.target.value))}
-                          />
+                          <Textarea {...field} className="min-h-[60px] resize-none text-sm" placeholder="Ex: dipirona, látex, amendoim..." />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="restricao_aromaterapia"
+                    render={({ field }) => (
+                      <FormItem className="space-y-1">
+                        <FormLabel className="text-xs">Restrições em Aromaterapia</FormLabel>
+                        <FormControl>
+                          <Textarea {...field} className="min-h-[60px] resize-none text-sm" placeholder="Ex: óleo de canela, hortelã-pimenta..." />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
                 </div>
-              </div>
+              )}
 
-              {/* Plano e Pagamento */}
-              <div className="form-section">
-                <h3 className="form-section-title">Plano e Pagamento</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
-                  <FormField
-                    control={form.control}
-                    name="plan_setting_id"
-                    render={({ field }) => (
-                      <FormItem className="space-y-1">
-                        <FormLabel className="text-xs">Plano *</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value}>
-                          <FormControl>
-                            <SelectTrigger className="h-9 text-sm">
-                              <SelectValue placeholder="Selecione" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {planSettings?.filter(p => p.is_active).map((plan) => (
-                              <SelectItem key={plan.id} value={plan.id}>
-                                {plan.name} — {maskCurrency(String(Math.round(Number(plan.default_value) * 100)))}
-                              </SelectItem>
-                            ))}
-                            <SelectItem value="avulso">Avulso</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="plan_value"
-                    render={({ field }) => (
-                      <FormItem className="space-y-1">
-                        <FormLabel className="text-xs">
-                          Valor (R$) {selectedPlanId !== "avulso" && selectedPlanId && "(do plano)"}
-                        </FormLabel>
-                        <FormControl>
-                          <Input 
-                            className="h-9 text-sm"
-                            value={field.value ? maskCurrency(String(Math.round(field.value * 100))) : ""}
-                            onChange={(e) => field.onChange(parseCurrency(e.target.value))}
-                            placeholder="R$ 0,00"
-                            readOnly={selectedPlanId !== "avulso" && !!selectedPlanId}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="payment_method"
-                    render={({ field }) => (
-                      <FormItem className="space-y-1">
-                        <FormLabel className="text-xs">Método de Pagamento</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value}>
-                          <FormControl>
-                            <SelectTrigger className="h-9 text-sm">
-                              <SelectValue placeholder="Selecione" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="pix">PIX</SelectItem>
-                            <SelectItem value="cartao">Cartão</SelectItem>
-                            <SelectItem value="dinheiro">Dinheiro</SelectItem>
-                            <SelectItem value="transferencia">Transferência</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="payment_type"
-                    render={({ field }) => (
-                      <FormItem className="space-y-1">
-                        <FormLabel className="text-xs">Tipo de Pagamento</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value}>
-                          <FormControl>
-                            <SelectTrigger className="h-9 text-sm">
-                              <SelectValue placeholder="Selecione" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="a_vista">À Vista</SelectItem>
-                            <SelectItem value="parcelado">Parcelado</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="discount_percent"
-                    render={({ field }) => {
-                      const planVal = form.watch("plan_value") || 0;
-                      const disc = Number(field.value ?? 0);
-                      const discountedVal = planVal * (1 - disc / 100);
-                      return (
-                        <FormItem className="space-y-1">
-                          <FormLabel className="text-xs">Desconto (%)</FormLabel>
-                          <FormControl>
-                            <Input
-                              type="text"
-                              inputMode="decimal"
-                              className="h-9 text-sm"
-                              value={field.value === 0 || field.value === undefined || field.value === null ? "" : String(field.value)}
-                              onChange={(e) => {
-                                const rawValue = e.target.value.replace(/[^0-9.,]/g, "");
-                                if (rawValue === "") {
-                                  field.onChange(0);
-                                  return;
-                                }
-                                const parsed = parseFloat(rawValue.replace(",", "."));
-                                if (Number.isNaN(parsed)) return;
-                                field.onChange(Math.min(100, Math.max(0, parsed)));
-                              }}
-                              onBlur={() => {
-                                if (!field.value) field.onChange(0);
-                              }}
-                              placeholder="0"
-                            />
-                          </FormControl>
-                          {disc > 0 && (
-                            <p className="text-[10px] text-muted-foreground">
-                              Valor com desconto: {discountedVal.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
-                            </p>
-                          )}
-                          <FormMessage />
-                        </FormItem>
-                      );
-                    }}
-                  />
-                  {form.watch("payment_type") === "a_vista" && (
+              {/* Step 5: Rede de Apoio */}
+              {currentStep === 5 && (
+                <div className="space-y-4">
+                  {/* Acompanhante */}
+                  <div className="space-y-3">
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Acompanhante</p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <FormField
+                        control={form.control}
+                        name="companion_name"
+                        render={({ field }) => (
+                          <FormItem className="space-y-1">
+                            <FormLabel className="text-xs">Nome do Acompanhante</FormLabel>
+                            <FormControl>
+                              <Input {...field} className="h-9 text-sm" placeholder="Nome do acompanhante" mask="name" />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="companion_phone"
+                        render={({ field }) => (
+                          <FormItem className="space-y-1">
+                            <FormLabel className="text-xs">Telefone do Acompanhante</FormLabel>
+                            <FormControl>
+                              <Input 
+                                {...field} 
+                                className="h-9 text-sm" 
+                                placeholder="(00) 00000-0000"
+                                onChange={(e) => field.onChange(maskPhone(e.target.value))}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Fotógrafa */}
+                  <div className="border-t border-border/30 pt-4 space-y-3">
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Fotógrafa</p>
                     <FormField
                       control={form.control}
-                      name="payment_date_avista"
+                      name="has_fotografa"
                       render={({ field }) => (
                         <FormItem className="space-y-1">
-                          <FormLabel className="text-xs">Data do Pagamento</FormLabel>
+                          <FormLabel className="text-xs">Tem fotógrafa?</FormLabel>
+                          <Select
+                            onValueChange={(v) => field.onChange(v === "true")}
+                            value={field.value ? "true" : "false"}
+                          >
+                            <FormControl>
+                              <SelectTrigger className="h-9 text-sm">
+                                <SelectValue />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="false">Não</SelectItem>
+                              <SelectItem value="true">Sim</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    {form.watch("has_fotografa") && (
+                      <div className="grid grid-cols-2 gap-3">
+                        <FormField
+                          control={form.control}
+                          name="fotografa_name"
+                          render={({ field }) => (
+                            <FormItem className="space-y-1">
+                              <FormLabel className="text-xs">Nome</FormLabel>
+                              <FormControl>
+                                <Input {...field} className="h-9 text-sm" placeholder="Nome da fotógrafa" mask="name" />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="fotografa_phone"
+                          render={({ field }) => (
+                            <FormItem className="space-y-1">
+                              <FormLabel className="text-xs">Telefone</FormLabel>
+                              <FormControl>
+                                <Input
+                                  {...field}
+                                  className="h-9 text-sm"
+                                  placeholder="(00) 00000-0000"
+                                  onChange={(e) => field.onChange(maskPhone(e.target.value))}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Redes Sociais */}
+                  <div className="border-t border-border/30 pt-4 space-y-3">
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Redes Sociais</p>
+                    <div className="grid grid-cols-2 gap-3">
+                      <FormField
+                        control={form.control}
+                        name="instagram_gestante"
+                        render={({ field }) => (
+                          <FormItem className="space-y-1">
+                            <FormLabel className="text-xs">Instagram da Gestante</FormLabel>
+                            <FormControl>
+                              <Input {...field} className="h-9 text-sm lowercase" placeholder="@usuario" />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="instagram_acompanhante"
+                        render={({ field }) => (
+                          <FormItem className="space-y-1">
+                            <FormLabel className="text-xs">Instagram do Acompanhante</FormLabel>
+                            <FormControl>
+                              <Input {...field} className="h-9 text-sm lowercase" placeholder="@usuario" />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Step 6: Plano e Pagamento */}
+              {currentStep === 6 && (
+                <div className="space-y-3">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+                    <FormField
+                      control={form.control}
+                      name="plan_setting_id"
+                      render={({ field }) => (
+                        <FormItem className="space-y-1">
+                          <FormLabel className="text-xs">Plano *</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value}>
+                            <FormControl>
+                              <SelectTrigger className="h-9 text-sm">
+                                <SelectValue placeholder="Selecione" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {planSettings?.filter(p => p.is_active).map((plan) => (
+                                <SelectItem key={plan.id} value={plan.id}>
+                                  {plan.name} — {maskCurrency(String(Math.round(Number(plan.default_value) * 100)))}
+                                </SelectItem>
+                              ))}
+                              <SelectItem value="avulso">Avulso</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="plan_value"
+                      render={({ field }) => (
+                        <FormItem className="space-y-1">
+                          <FormLabel className="text-xs">
+                            Valor (R$) {selectedPlanId !== "avulso" && selectedPlanId && "(do plano)"}
+                          </FormLabel>
                           <FormControl>
                             <Input 
-                              type="date" 
                               className="h-9 text-sm"
-                              value={field.value || ""}
-                              onChange={(e) => field.onChange(e.target.value)}
+                              value={field.value ? maskCurrency(String(Math.round(field.value * 100))) : ""}
+                              onChange={(e) => field.onChange(parseCurrency(e.target.value))}
+                              placeholder="R$ 0,00"
+                              readOnly={selectedPlanId !== "avulso" && !!selectedPlanId}
                             />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
-                  )}
-                   {form.watch("payment_type") === "parcelado" && (
-                    <>
+                    <FormField
+                      control={form.control}
+                      name="payment_method"
+                      render={({ field }) => (
+                        <FormItem className="space-y-1">
+                          <FormLabel className="text-xs">Método de Pagamento</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value}>
+                            <FormControl>
+                              <SelectTrigger className="h-9 text-sm">
+                                <SelectValue placeholder="Selecione" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="pix">PIX</SelectItem>
+                              <SelectItem value="cartao">Cartão</SelectItem>
+                              <SelectItem value="dinheiro">Dinheiro</SelectItem>
+                              <SelectItem value="transferencia">Transferência</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="payment_type"
+                      render={({ field }) => (
+                        <FormItem className="space-y-1">
+                          <FormLabel className="text-xs">Tipo de Pagamento</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value}>
+                            <FormControl>
+                              <SelectTrigger className="h-9 text-sm">
+                                <SelectValue placeholder="Selecione" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="a_vista">À Vista</SelectItem>
+                              <SelectItem value="parcelado">Parcelado</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="discount_percent"
+                      render={({ field }) => {
+                        const planVal = form.watch("plan_value") || 0;
+                        const disc = Number(field.value ?? 0);
+                        const discountedVal = planVal * (1 - disc / 100);
+                        return (
+                          <FormItem className="space-y-1">
+                            <FormLabel className="text-xs">Desconto (%)</FormLabel>
+                            <FormControl>
+                              <Input
+                                type="text"
+                                inputMode="decimal"
+                                className="h-9 text-sm"
+                                value={field.value === 0 || field.value === undefined || field.value === null ? "" : String(field.value)}
+                                onChange={(e) => {
+                                  const rawValue = e.target.value.replace(/[^0-9.,]/g, "");
+                                  if (rawValue === "") {
+                                    field.onChange(0);
+                                    return;
+                                  }
+                                  const parsed = parseFloat(rawValue.replace(",", "."));
+                                  if (Number.isNaN(parsed)) return;
+                                  field.onChange(Math.min(100, Math.max(0, parsed)));
+                                }}
+                                onBlur={() => {
+                                  if (!field.value) field.onChange(0);
+                                }}
+                                placeholder="0"
+                              />
+                            </FormControl>
+                            {disc > 0 && (
+                              <p className="text-[10px] text-muted-foreground">
+                                Valor com desconto: {discountedVal.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+                              </p>
+                            )}
+                            <FormMessage />
+                          </FormItem>
+                        );
+                      }}
+                    />
+                    {form.watch("payment_type") === "a_vista" && (
                       <FormField
                         control={form.control}
-                        name="installments"
+                        name="payment_date_avista"
                         render={({ field }) => (
                           <FormItem className="space-y-1">
-                            <FormLabel className="text-xs">Parcelas</FormLabel>
-                            <Select 
-                              onValueChange={(value) => field.onChange(parseInt(value))} 
-                              value={String(field.value || 1)}
-                            >
-                              <FormControl>
-                                <SelectTrigger className="h-9 text-sm">
-                                  <SelectValue placeholder="Selecione" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                {Array.from({ length: 12 }, (_, i) => i + 1).map((num) => (
-                                  <SelectItem key={num} value={String(num)}>
-                                    {num}x
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
+                            <FormLabel className="text-xs">Data do Pagamento</FormLabel>
+                            <FormControl>
+                              <Input 
+                                type="date" 
+                                className="h-9 text-sm"
+                                value={field.value || ""}
+                                onChange={(e) => field.onChange(e.target.value)}
+                              />
+                            </FormControl>
                             <FormMessage />
                           </FormItem>
                         )}
                       />
-                      <FormField
-                        control={form.control}
-                        name="installment_frequency"
-                        render={({ field }) => (
-                          <FormItem className="space-y-1">
-                            <FormLabel className="text-xs">Frequência</FormLabel>
-                            <Select onValueChange={field.onChange} value={field.value || "mensal"}>
-                              <FormControl>
-                                <SelectTrigger className="h-9 text-sm">
-                                  <SelectValue placeholder="Selecione" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                <SelectItem value="semanal">Semanal (7 dias)</SelectItem>
-                                <SelectItem value="quinzenal">Quinzenal (15 dias)</SelectItem>
-                                <SelectItem value="mensal">Mensal</SelectItem>
-                                <SelectItem value="manual">Personalizado</SelectItem>
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      {form.watch("installment_frequency") === "manual" && (
-                        <>
+                    )}
+                    {form.watch("payment_type") === "parcelado" && (
+                      <>
+                        <FormField
+                          control={form.control}
+                          name="installments"
+                          render={({ field }) => (
+                            <FormItem className="space-y-1">
+                              <FormLabel className="text-xs">Parcelas</FormLabel>
+                              <Select 
+                                onValueChange={(value) => field.onChange(parseInt(value))} 
+                                value={String(field.value || 1)}
+                              >
+                                <FormControl>
+                                  <SelectTrigger className="h-9 text-sm">
+                                    <SelectValue placeholder="Selecione" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  {Array.from({ length: 12 }, (_, i) => i + 1).map((num) => (
+                                    <SelectItem key={num} value={String(num)}>
+                                      {num}x
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="installment_frequency"
+                          render={({ field }) => (
+                            <FormItem className="space-y-1">
+                              <FormLabel className="text-xs">Frequência</FormLabel>
+                              <Select onValueChange={field.onChange} value={field.value || "mensal"}>
+                                <FormControl>
+                                  <SelectTrigger className="h-9 text-sm">
+                                    <SelectValue placeholder="Selecione" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  <SelectItem value="semanal">Semanal (7 dias)</SelectItem>
+                                  <SelectItem value="quinzenal">Quinzenal (15 dias)</SelectItem>
+                                  <SelectItem value="mensal">Mensal</SelectItem>
+                                  <SelectItem value="manual">Personalizado</SelectItem>
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        {form.watch("installment_frequency") === "manual" && (
                           <FormField
                             control={form.control}
                             name="custom_interval_days"
@@ -1293,574 +1678,245 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
                               </FormItem>
                             )}
                           />
-                        </>
-                      )}
-                      {form.watch("installment_frequency") === "manual" && (form.watch("installments") || 1) > 1 && (
-                        <div className="col-span-full space-y-2">
-                          <div className="flex items-center justify-between">
-                            <FormLabel className="text-xs font-medium">Valores por parcela</FormLabel>
+                        )}
+                        {form.watch("installment_frequency") === "manual" && (form.watch("installments") || 1) > 1 && (
+                          <div className="col-span-full space-y-2">
+                            <div className="flex items-center justify-between">
+                              <FormLabel className="text-xs font-medium">Valores por parcela</FormLabel>
+                              <button
+                                type="button"
+                                className="text-[10px] text-primary hover:underline"
+                                onClick={() => {
+                                  const count = form.watch("installments") || 1;
+                                  setCustomInstallmentAmounts(Array(count).fill(effectivePlanValue / count));
+                                }}
+                              >
+                                Dividir igualmente
+                              </button>
+                            </div>
+                            {(() => {
+                              const count = form.watch("installments") || 1;
+                              if (customInstallmentAmounts.length !== count) return null;
+                              const sumCustom = customInstallmentAmounts.reduce((a, b) => a + b, 0);
+                              const diff = Math.abs(sumCustom - effectivePlanValue);
+                              return (
+                                <div className="space-y-1.5">
+                                  {customInstallmentAmounts.map((amt, i) => (
+                                    <div key={i} className="flex items-center gap-2">
+                                      <span className="text-xs text-muted-foreground w-8 text-right">{i + 1}ª</span>
+                                      <Input
+                                        className="h-7 text-xs flex-1"
+                                        value={maskCurrency(String(Math.round(amt * 100)))}
+                                        onChange={(e) => {
+                                          const newAmounts = [...customInstallmentAmounts];
+                                          const newVal = parseCurrency(e.target.value);
+                                          const oldVal = newAmounts[i];
+                                          newAmounts[i] = newVal;
+                                          const subsequentCount = newAmounts.length - i - 1;
+                                          if (subsequentCount > 0) {
+                                            const diff = oldVal - newVal;
+                                            const totalRemaining = newAmounts.slice(i + 1).reduce((a, b) => a + b, 0) + diff;
+                                            const perSubsequent = Math.round((totalRemaining / subsequentCount) * 100) / 100;
+                                            for (let j = i + 1; j < newAmounts.length; j++) {
+                                              newAmounts[j] = perSubsequent;
+                                            }
+                                            const sumSoFar = newAmounts.reduce((a, b) => a + b, 0);
+                                            const totalTarget = effectivePlanValue;
+                                            const roundingDiff = Math.round((totalTarget - sumSoFar) * 100) / 100;
+                                            if (Math.abs(roundingDiff) > 0.001) {
+                                              newAmounts[newAmounts.length - 1] = Math.round((newAmounts[newAmounts.length - 1] + roundingDiff) * 100) / 100;
+                                            }
+                                          }
+                                          setCustomInstallmentAmounts(newAmounts);
+                                        }}
+                                        placeholder="R$ 0,00"
+                                      />
+                                    </div>
+                                  ))}
+                                  {diff > 0.01 && (
+                                    <p className="text-[10px] text-warning">
+                                      Soma das parcelas: {maskCurrency(String(Math.round(sumCustom * 100)))} (diferença de {maskCurrency(String(Math.round(diff * 100)))})
+                                    </p>
+                                  )}
+                                </div>
+                              );
+                            })()}
+                          </div>
+                        )}
+                        <FormField
+                          control={form.control}
+                          name="first_due_date"
+                          render={({ field }) => (
+                            <FormItem className="space-y-1">
+                              <FormLabel className="text-xs">1º Vencimento</FormLabel>
+                              <FormControl>
+                                <Input 
+                                  type="date" 
+                                  className="h-9 text-sm"
+                                  value={field.value || ""}
+                                  onChange={(e) => field.onChange(e.target.value)}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </>
+                    )}
+                  </div>
+
+                  {/* Entrada no parcelado */}
+                  {watchedPaymentType === "parcelado" && (
+                    <div className="rounded-lg p-3 space-y-3">
+                      {watchedInstallments > 1 && (
+                        <div className="space-y-2">
+                          <p className="text-xs font-medium text-muted-foreground">Valor da entrada</p>
+                          <div className="flex gap-2">
                             <button
                               type="button"
-                              className="text-[10px] text-primary hover:underline"
                               onClick={() => {
-                                const count = form.watch("installments") || 1;
-                                setCustomInstallmentAmounts(Array(count).fill(effectivePlanValue / count));
+                                setEntryType("equal");
+                                setEntryPercentage(0);
                               }}
+                              className={`flex-1 text-xs py-1.5 px-2 rounded-md transition-colors ${
+                                entryType === "equal"
+                                  ? "bg-primary text-primary-foreground border-primary"
+                                  : "bg-muted/30 text-muted-foreground border-border hover:bg-muted/50"
+                              }`}
                             >
-                              Dividir igualmente
+                              Parcelas iguais
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setEntryType("percentage")}
+                              className={`flex-1 text-xs py-1.5 px-2 rounded-md transition-colors ${
+                                entryType === "percentage"
+                                  ? "bg-primary text-primary-foreground border-primary"
+                                  : "bg-muted/30 text-muted-foreground border-border hover:bg-muted/50"
+                              }`}
+                            >
+                              Entrada em %
                             </button>
                           </div>
-                          {(() => {
-                            const count = form.watch("installments") || 1;
-                            // Wait for useEffect to sync array length when installments change
-                            if (customInstallmentAmounts.length !== count) {
-                              return null;
-                            }
-                            const sumCustom = customInstallmentAmounts.reduce((a, b) => a + b, 0);
-                            const diff = Math.abs(sumCustom - effectivePlanValue);
-                            return (
-                              <div className="space-y-1.5">
-                                {customInstallmentAmounts.map((amt, i) => (
-                                  <div key={i} className="flex items-center gap-2">
-                                    <span className="text-xs text-muted-foreground w-8 text-right">{i + 1}ª</span>
-                                    <Input
-                                      className="h-7 text-xs flex-1"
-                                      value={maskCurrency(String(Math.round(amt * 100)))}
-                                      onChange={(e) => {
-                                        const newAmounts = [...customInstallmentAmounts];
-                                        const newVal = parseCurrency(e.target.value);
-                                        const oldVal = newAmounts[i];
-                                        newAmounts[i] = newVal;
-                                        // Forward-only redistribution: distribute remaining to subsequent installments
-                                        const subsequentCount = newAmounts.length - i - 1;
-                                        if (subsequentCount > 0) {
-                                          const diff = oldVal - newVal;
-                                          const totalRemaining = newAmounts.slice(i + 1).reduce((a, b) => a + b, 0) + diff;
-                                          const perSubsequent = Math.round((totalRemaining / subsequentCount) * 100) / 100;
-                                          for (let j = i + 1; j < newAmounts.length; j++) {
-                                            newAmounts[j] = perSubsequent;
-                                          }
-                                          // Fix rounding on last installment
-                                          const sumSoFar = newAmounts.reduce((a, b) => a + b, 0);
-                                          const totalTarget = effectivePlanValue;
-                                          const roundingDiff = Math.round((totalTarget - sumSoFar) * 100) / 100;
-                                          if (Math.abs(roundingDiff) > 0.001) {
-                                            newAmounts[newAmounts.length - 1] = Math.round((newAmounts[newAmounts.length - 1] + roundingDiff) * 100) / 100;
-                                          }
-                                        }
-                                        setCustomInstallmentAmounts(newAmounts);
-                                      }}
-                                      placeholder="R$ 0,00"
-                                    />
-                                  </div>
-                                ))}
-                                {diff > 0.01 && (
-                                  <p className="text-[10px] text-warning">
-                                    Soma das parcelas: {maskCurrency(String(Math.round(sumCustom * 100)))} (diferença de {maskCurrency(String(Math.round(diff * 100)))})
-                                  </p>
-                                )}
-                              </div>
-                            );
-                          })()}
+                          {entryType === "percentage" && (
+                            <div className="flex items-center gap-2">
+                              <Input
+                                type="number"
+                                min={1}
+                                max={99}
+                                className="h-8 text-xs w-20"
+                                value={entryPercentage || ""}
+                                onChange={(e) => {
+                                  const val = Math.min(99, Math.max(0, Number(e.target.value)));
+                                  setEntryPercentage(val);
+                                }}
+                                placeholder="Ex: 30"
+                              />
+                              <span className="text-xs text-muted-foreground">%</span>
+                              {entryPercentage > 0 && effectivePlanValue > 0 && (
+                                <span className="text-xs text-foreground font-medium">
+                                  = {maskCurrency(String(Math.round(effectivePlanValue * (entryPercentage / 100) * 100)))}
+                                </span>
+                              )}
+                            </div>
+                          )}
                         </div>
                       )}
-                      <FormField
-                        control={form.control}
-                        name="first_due_date"
-                        render={({ field }) => (
-                          <FormItem className="space-y-1">
-                            <FormLabel className="text-xs">1º Vencimento</FormLabel>
-                            <FormControl>
-                              <Input 
-                                type="date" 
-                                className="h-9 text-sm"
-                                value={field.value || ""}
-                                onChange={(e) => field.onChange(e.target.value)}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </>
-                  )}
-                </div>
 
-                {/* Entrada no parcelado */}
-                {watchedPaymentType === "parcelado" && (
-                  <div className="rounded-lg p-3 space-y-3">
-                    {/* Entry percentage option */}
-                    {watchedInstallments > 1 && (
-                      <div className="space-y-2">
-                        <p className="text-xs font-medium text-muted-foreground">Valor da entrada</p>
-                        <div className="flex gap-2">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setEntryType("equal");
-                              setEntryPercentage(0);
-                            }}
-                            className={`flex-1 text-xs py-1.5 px-2 rounded-md transition-colors ${
-                              entryType === "equal"
-                                ? "bg-primary text-primary-foreground border-primary"
-                                : "bg-muted/30 text-muted-foreground border-border hover:bg-muted/50"
-                            }`}
-                          >
-                            Parcelas iguais
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setEntryType("percentage")}
-                            className={`flex-1 text-xs py-1.5 px-2 rounded-md transition-colors ${
-                              entryType === "percentage"
-                                ? "bg-primary text-primary-foreground border-primary"
-                                : "bg-muted/30 text-muted-foreground border-border hover:bg-muted/50"
-                            }`}
-                          >
-                            Entrada em %
-                          </button>
-                        </div>
-                        {entryType === "percentage" && (
-                          <div className="flex items-center gap-2">
-                            <Input
-                              type="number"
-                              min={1}
-                              max={99}
-                              className="h-8 text-xs w-20"
-                              value={entryPercentage || ""}
-                              onChange={(e) => {
-                                const val = Math.min(99, Math.max(0, Number(e.target.value)));
-                                setEntryPercentage(val);
-                              }}
-                              placeholder="Ex: 30"
-                            />
-                            <span className="text-xs text-muted-foreground">%</span>
-                            {entryPercentage > 0 && effectivePlanValue > 0 && (
-                              <span className="text-xs text-foreground font-medium">
-                                = {maskCurrency(String(Math.round(effectivePlanValue * (entryPercentage / 100) * 100)))}
-                              </span>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    )}
-
-                    {isFirstDueDateInPast ? (
-                      <p className="text-xs text-success flex items-center gap-1.5">
-                        <CheckCircle className="h-3.5 w-3.5" />
-                        A data é anterior a hoje — entrada será marcada como <strong>Recebida</strong> automaticamente.
-                      </p>
-                    ) : (
-                      <label className="flex items-center gap-2 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={entryAlreadyPaid}
-                          onChange={(e) => setEntryAlreadyPaid(e.target.checked)}
-                          className="rounded "
-                        />
-                        <span className="text-xs font-medium">Entrada já foi recebida?</span>
-                      </label>
-                    )}
-                  </div>
-                )}
-              </div>
-
-              {/* Status e Gestação */}
-              <div className="form-section">
-                <h3 className="form-section-title">Status e Gestação</h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                  <FormField
-                    control={form.control}
-                    name="status"
-                    render={({ field }) => (
-                      <FormItem className="space-y-1">
-                        <FormLabel className="text-xs">Situação *</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value}>
-                          <FormControl>
-                            <SelectTrigger className="h-9 text-sm">
-                              <SelectValue placeholder="Selecione" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="gestante">Gestante</SelectItem>
-                            <SelectItem value="lactante">Puérpera</SelectItem>
-                            <SelectItem value="outro">Outro</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  {status === "outro" && (
-                    <FormField
-                      control={form.control}
-                      name="custom_status"
-                      render={({ field }) => (
-                        <FormItem className="space-y-1 md:col-span-2">
-                          <FormLabel className="text-xs">Definir status</FormLabel>
-                          <FormControl>
-                            <Input
-                              {...field}
-                              className="h-9 text-sm"
-                              placeholder="Ex: Tentante, Consultoria, etc."
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
+                      {isFirstDueDateInPast ? (
+                        <p className="text-xs text-success flex items-center gap-1.5">
+                          <CheckCircle className="h-3.5 w-3.5" />
+                          A data é anterior a hoje — entrada será marcada como <strong>Recebida</strong> automaticamente.
+                        </p>
+                      ) : (
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={entryAlreadyPaid}
+                            onChange={(e) => setEntryAlreadyPaid(e.target.checked)}
+                            className="rounded"
+                          />
+                          <span className="text-xs font-medium">Entrada já foi recebida?</span>
+                        </label>
                       )}
-                    />
-                  )}
-                  {status === "gestante" && (
-                    <>
-                      <FormField
-                        control={form.control}
-                        name="dpp"
-                        render={({ field }) => (
-                          <FormItem className="space-y-1">
-                            <FormLabel className="text-xs">DPP (Data Provável do Parto)</FormLabel>
-                            <FormControl>
-                              <Input 
-                                type="date" 
-                                className="h-9 text-sm"
-                                value={field.value || ""}
-                                onChange={(e) => field.onChange(e.target.value || null)}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="baby_names"
-                        render={({ field }) => (
-                          <FormItem className="space-y-1">
-                            <FormLabel className="text-xs">Nomes do(s) Bebê(s)</FormLabel>
-                            <FormControl>
-                              <Input 
-                                {...field} 
-                                className="h-9 text-sm" 
-                                placeholder="Nome1, Nome2..."
-                                mask="name"
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="birth_location"
-                        render={({ field }) => (
-                          <FormItem className="space-y-1 md:col-span-3">
-                            <FormLabel className="text-xs">Local do Parto</FormLabel>
-                            <FormControl>
-                              <Input 
-                                {...field} 
-                                className="h-9 text-sm" 
-                                placeholder="Ex: Hospital São Lucas, Domiciliar..."
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </>
-                  )}
-                </div>
-              </div>
-
-              {/* Atendimento */}
-              <div className="form-section">
-                <div className="grid grid-cols-2 gap-3">
-                  <FormField
-                    control={form.control}
-                    name="prenatal_type"
-                    render={({ field }) => (
-                      <FormItem className="space-y-1">
-                        <FormLabel className="text-xs">Tipo de atendimento</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value || ""}>
-                          <FormControl>
-                            <SelectTrigger className="h-9 text-sm">
-                              <SelectValue placeholder="Selecione" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="sus">SUS</SelectItem>
-                            <SelectItem value="plano">Plano de Saúde</SelectItem>
-                            <SelectItem value="particular">Particular</SelectItem>
-                            <SelectItem value="equipe_particular">Equipe Particular</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="prenatal_high_risk"
-                    render={({ field }) => (
-                      <FormItem className="space-y-1">
-                        <FormLabel className="text-xs">Alto Risco?</FormLabel>
-                        <Select 
-                          onValueChange={(v) => field.onChange(v === "true")} 
-                          value={field.value ? "true" : "false"}
-                        >
-                          <FormControl>
-                            <SelectTrigger className="h-9 text-sm">
-                              <SelectValue />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="false">Não</SelectItem>
-                            <SelectItem value="true">Sim</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-                {form.watch("prenatal_type") === "equipe_particular" && (
-                  <div className="col-span-full space-y-2">
-                    <div className="flex items-center justify-between">
-                      <FormLabel className="text-xs">Equipe</FormLabel>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        className="h-6 text-xs gap-1 px-2"
-                        onClick={() => setPrenatalTeam([...prenatalTeam, { name: "", role: "" }])}
-                      >
-                        + Adicionar
-                      </Button>
                     </div>
-                    {prenatalTeam.length === 0 && (
-                      <p className="text-xs text-muted-foreground">Nenhum integrante adicionado.</p>
-                    )}
-                    {prenatalTeam.map((member, i) => (
-                      <div key={i} className="flex items-center gap-2">
-                        <Input
-                          className="h-8 text-xs flex-1"
-                          placeholder="Nome"
-                          value={member.name}
-                          onChange={(e) => {
-                            const updated = [...prenatalTeam];
-                            updated[i] = { ...updated[i], name: e.target.value };
-                            setPrenatalTeam(updated);
-                          }}
-                          mask="name"
-                        />
-                        <Input
-                          className="h-8 text-xs flex-1"
-                          placeholder="Função"
-                          value={member.role}
-                          onChange={(e) => {
-                            const updated = [...prenatalTeam];
-                            updated[i] = { ...updated[i], role: e.target.value };
-                            setPrenatalTeam(updated);
-                          }}
-                        />
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          className="h-8 w-8 p-0 text-destructive hover:text-destructive"
-                          onClick={() => setPrenatalTeam(prenatalTeam.filter((_, j) => j !== i))}
-                        >
-                          ×
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
+                  )}
+                </div>
+              )}
 
-              {/* Saúde e Restrições */}
-              <div className="form-section">
-                <h3 className="form-section-title">Saúde e Restrições</h3>
-                <FormField
-                  control={form.control}
-                  name="comorbidades"
-                  render={({ field }) => (
-                    <FormItem className="space-y-1">
-                      <FormLabel className="text-xs">Comorbidades</FormLabel>
-                      <FormControl>
-                        <Textarea {...field} className="min-h-[50px] resize-none text-sm" placeholder="Ex: diabetes gestacional, hipertensão..." />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="alergias"
-                  render={({ field }) => (
-                    <FormItem className="space-y-1">
-                      <FormLabel className="text-xs">Alergias</FormLabel>
-                      <FormControl>
-                        <Textarea {...field} className="min-h-[50px] resize-none text-sm" placeholder="Ex: dipirona, látex, amendoim..." />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="restricao_aromaterapia"
-                  render={({ field }) => (
-                    <FormItem className="space-y-1">
-                      <FormLabel className="text-xs">Restrições em Aromaterapia</FormLabel>
-                      <FormControl>
-                        <Textarea {...field} className="min-h-[50px] resize-none text-sm" placeholder="Ex: óleo de canela, hortelã-pimenta..." />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              {/* Fotógrafa */}
-              <div className="form-section">
-                <h3 className="form-section-title">Fotógrafa</h3>
-                <FormField
-                  control={form.control}
-                  name="has_fotografa"
-                  render={({ field }) => (
-                    <FormItem className="space-y-1">
-                      <FormLabel className="text-xs">Tem fotógrafa?</FormLabel>
-                      <Select
-                        onValueChange={(v) => field.onChange(v === "true")}
-                        value={field.value ? "true" : "false"}
-                      >
-                        <FormControl>
-                          <SelectTrigger className="h-9 text-sm">
-                            <SelectValue />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="false">Não</SelectItem>
-                          <SelectItem value="true">Sim</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                {form.watch("has_fotografa") && (
-                  <div className="grid grid-cols-2 gap-3">
-                    <FormField
-                      control={form.control}
-                      name="fotografa_name"
-                      render={({ field }) => (
-                        <FormItem className="space-y-1">
-                          <FormLabel className="text-xs">Nome</FormLabel>
-                          <FormControl>
-                            <Input {...field} className="h-9 text-sm" placeholder="Nome da fotógrafa" mask="name" />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="fotografa_phone"
-                      render={({ field }) => (
-                        <FormItem className="space-y-1">
-                          <FormLabel className="text-xs">Telefone</FormLabel>
-                          <FormControl>
-                            <Input
-                              {...field}
-                              className="h-9 text-sm"
-                              placeholder="(00) 00000-0000"
-                              onChange={(e) => field.onChange(maskPhone(e.target.value))}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                )}
-              </div>
-
-              {/* Redes Sociais */}
-              <div className="form-section">
-                <h3 className="form-section-title">Redes Sociais</h3>
-                <div className="grid grid-cols-2 gap-3">
+              {/* Step 7: Observações */}
+              {currentStep === 7 && (
+                <div className="space-y-3">
                   <FormField
                     control={form.control}
-                    name="instagram_gestante"
+                    name="notes"
                     render={({ field }) => (
                       <FormItem className="space-y-1">
-                        <FormLabel className="text-xs">Instagram da Gestante</FormLabel>
+                        <FormLabel className="text-xs">Observações</FormLabel>
                         <FormControl>
-                          <Input {...field} className="h-9 text-sm lowercase" placeholder="@usuario" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="instagram_acompanhante"
-                    render={({ field }) => (
-                      <FormItem className="space-y-1">
-                        <FormLabel className="text-xs">Instagram do Acompanhante</FormLabel>
-                        <FormControl>
-                          <Input {...field} className="h-9 text-sm lowercase" placeholder="@usuario" />
+                          <Textarea
+                            {...field}
+                            className="min-h-[100px] resize-none text-sm"
+                            placeholder="Anotações sobre a cliente..."
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
                 </div>
-              </div>
-
-              <div className="form-section">
-              <FormField
-                control={form.control}
-                name="notes"
-                render={({ field }) => (
-                  <FormItem className="space-y-1">
-                    <FormLabel className="text-xs">Observações</FormLabel>
-                    <FormControl>
-                      <Textarea
-                        {...field}
-                        className="min-h-[60px] resize-none text-sm"
-                        placeholder="Anotações sobre a cliente..."
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              </div>
+              )}
             </div>
 
-            {/* Actions - Fixed at bottom */}
-            <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 pt-4 mt-4 border-t border-border/40 flex-shrink-0">
-              <Button
-                type="button"
-                variant="ghost"
-                className="h-11 sm:h-10 text-muted-foreground hover:text-foreground"
-                onClick={() => onOpenChange(false)}
-              >
-                Cancelar
-              </Button>
-              <Button 
-                type="button" 
-                className="h-12 sm:h-11 rounded-xl text-[15px] font-semibold px-8"
-                disabled={mutation.isPending}
-                onClick={handleSubmitClick}
-              >
-                {mutation.isPending ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin mr-1" />
-                    Salvando...
-                  </>
-                ) : client ? "Atualizar" : "Cadastrar"}
-              </Button>
+            {/* Navigation - Fixed at bottom */}
+            <div className="flex items-center justify-between pt-4 mt-4 border-t border-border/40 flex-shrink-0">
+              <div>
+                {currentStep > 1 && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    className="h-10 gap-1 text-muted-foreground hover:text-foreground"
+                    onClick={handlePrev}
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                    Voltar
+                  </Button>
+                )}
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="h-10 text-muted-foreground hover:text-foreground"
+                  onClick={() => onOpenChange(false)}
+                >
+                  Cancelar
+                </Button>
+                {currentStep < STEPS.length ? (
+                  <Button
+                    type="button"
+                    className="h-10 gap-1 px-6"
+                    onClick={handleNext}
+                  >
+                    Próximo
+                    <ChevronRight className="w-4 h-4" />
+                  </Button>
+                ) : (
+                  <Button 
+                    type="button" 
+                    className="h-12 sm:h-11 rounded-xl text-[15px] font-semibold px-8"
+                    disabled={mutation.isPending}
+                    onClick={handleFinalSubmit}
+                  >
+                    {mutation.isPending ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin mr-1" />
+                        Salvando...
+                      </>
+                    ) : client ? "Atualizar" : "Cadastrar"}
+                  </Button>
+                )}
+              </div>
             </div>
           </form>
         </Form>
