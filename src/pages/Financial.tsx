@@ -267,7 +267,10 @@ export default function Financial() {
     form.setValue("client_id", clientId);
     const client = clients?.find((c) => c.id === clientId);
     if (client) {
-      const plan = plans?.find((p) => p.plan_type === client.plan);
+      // Match by plan_setting_id first, then fallback to plan_type
+      const plan = client.plan_setting_id 
+        ? plans?.find((p) => p.id === client.plan_setting_id)
+        : plans?.find((p) => p.plan_type === client.plan);
       if (plan) {
         form.setValue("plan_id", plan.id);
         form.setValue("amount", Number(client.plan_value) || Number(plan.default_value));
