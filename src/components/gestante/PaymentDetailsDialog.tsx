@@ -203,10 +203,11 @@ export function PaymentDetailsDialog({ open, onOpenChange, autoSelectOverdue }: 
   }) || [];
 
   // If we have real payments data, use it; otherwise use derived
-  const displayItems = hasPayments
+  // Re-number installments sequentially to avoid confusion when multiple transactions exist
+  const rawItems = hasPayments
     ? payments.map((p) => ({
         id: p.id,
-        description: `Parcela ${p.installment_number}/${p.total_installments}`,
+        description: `Parcela`,
         installment_number: p.installment_number,
         total_installments: p.total_installments,
         amount: Number(p.amount),
@@ -215,6 +216,14 @@ export function PaymentDetailsDialog({ open, onOpenChange, autoSelectOverdue }: 
         due_date: p.due_date,
       }))
     : installmentDetails;
+
+  // Re-number sequentially so gestante sees 1, 2, 3... instead of mixed numbering
+  const totalItems = rawItems.length;
+  const displayItems = rawItems.map((item, index) => ({
+    ...item,
+    installment_number: index + 1,
+    total_installments: totalItems,
+  }));
 
   // Auto-select first overdue/pending installment when opened from alert
   useEffect(() => {
