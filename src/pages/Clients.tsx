@@ -288,7 +288,7 @@ export default function Clients() {
                             : statusLabels[client.status as keyof typeof statusLabels]}
                         </Badge>
                         <Badge variant="secondary" className="text-[10px] px-2 h-5">
-                          {planLabels[client.plan as keyof typeof planLabels]}
+                          {getPlanName(client.plan_setting_id, client.plan)}
                         </Badge>
                         <Badge
                           className={cn("badge-status text-[10px] px-2 h-5", `badge-${client.payment_status}`)}
