@@ -164,6 +164,7 @@ export default function GestanteAppointments() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["my-appointment-requests"] });
+      queryClient.invalidateQueries({ queryKey: ["occupied-slots"] });
       setRequestDialogOpen(false);
       setSelectedDate(undefined);
       setSelectedTime("");
