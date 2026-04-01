@@ -1409,9 +1409,8 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
                   </div>
                 )}
               </div>
-              {/* Pré-natal */}
+              {/* Atendimento */}
               <div className="form-section">
-                <h3 className="form-section-title">Pré-natal</h3>
                 <div className="grid grid-cols-2 gap-3">
                   <FormField
                     control={form.control}
