@@ -763,6 +763,36 @@ export type Database = {
           },
         ]
       }
+      notification_seen: {
+        Row: {
+          created_at: string
+          id: string
+          section: string
+          seen_at: string
+          storage_key: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          section: string
+          seen_at?: string
+          storage_key: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          section?: string
+          seen_at?: string
+          storage_key?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       org_access_log: {
         Row: {
           accessed_at: string
