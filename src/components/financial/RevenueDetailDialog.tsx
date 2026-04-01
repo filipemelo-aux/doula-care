@@ -36,7 +36,7 @@ export function RevenueDetailDialog({ open, onOpenChange, transactionId }: Reven
       if (!transactionId) return null;
       const { data, error } = await supabase
         .from("transactions")
-        .select("*, clients(full_name, dpp, phone, plan), plan_settings(name)")
+        .select("*, clients(full_name, dpp, phone, plan, plan_value), plan_settings(name, default_value)")
         .eq("id", transactionId)
         .single();
       if (error) throw error;
@@ -85,6 +85,12 @@ export function RevenueDetailDialog({ open, onOpenChange, transactionId }: Reven
   const installmentValue = Number(transaction.installment_value) || totalAmount / installments;
   const isAvista = installments <= 1;
 
+  // Discount calculation: original plan value vs contracted amount
+  const planOriginalValue = Number(transaction.plan_settings?.default_value) || 0;
+  const discount = planOriginalValue > 0 && planOriginalValue > totalAmount
+    ? planOriginalValue - totalAmount
+    : 0;
+
   const statusInfo = pendingAmount === 0
     ? { label: "Quitado", variant: "default" as const, icon: CheckCircle, color: "text-success" }
     : receivedAmount > 0
@@ -129,8 +135,20 @@ export function RevenueDetailDialog({ open, onOpenChange, transactionId }: Reven
 
           {/* Financial Summary */}
           <div className="grid grid-cols-2 gap-3">
+            {planOriginalValue > 0 && (
+              <div>
+                <span className="text-[10px] uppercase text-muted-foreground">Valor do Plano</span>
+                <p className="text-sm font-semibold text-foreground/70">{formatCurrency(planOriginalValue)}</p>
+              </div>
+            )}
+            {discount > 0 && (
+              <div>
+                <span className="text-[10px] uppercase text-muted-foreground">Desconto</span>
+                <p className="text-sm font-semibold text-destructive">- {formatCurrency(discount)}</p>
+              </div>
+            )}
             <div>
-              <span className="text-[10px] uppercase text-muted-foreground">Valor Total</span>
+              <span className="text-[10px] uppercase text-muted-foreground">Valor Contratado</span>
               <p className="text-sm font-semibold">{formatCurrency(totalAmount)}</p>
             </div>
             <div>
