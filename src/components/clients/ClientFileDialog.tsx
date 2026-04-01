@@ -79,6 +79,7 @@ const serviceRequestStatusLabels: Record<string, string> = {
 };
 
 export function ClientFileDialog({ open, onOpenChange, client }: ClientFileDialogProps) {
+  const { getPlanName } = usePlanNames();
   const { data: appointments, isLoading: loadingAppts } = useQuery({
     queryKey: ["client-file-appointments", client?.id],
     queryFn: async () => {
