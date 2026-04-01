@@ -4,13 +4,13 @@ import { format } from "date-fns";
 import { PeriodOption, getPeriodDates } from "@/components/dashboard/PeriodFilter";
 
 export interface FinancialMetrics {
-  // Core totals
-  totalContracted: number;       // Total valor contratado (plan_value de clientes)
-  totalIncome: number;           // Total receitas registradas
-  totalReceived: number;         // Receitas efetivamente recebidas (amount_received)
-  totalPending: number;          // Receitas pendentes
-  totalExpenses: number;         // Total despesas
-  balance: number;               // Saldo = recebido - despesas
+  // Core totals (all sourced from transactions table, matching Financial.tsx)
+  totalContracted: number;       // Total valor contratado = sum(transactions.amount) type=receita
+  totalIncome: number;           // Same as totalContracted for receitas
+  totalReceived: number;         // sum(transactions.amount_received) type=receita
+  totalPending: number;          // totalContracted - totalReceived
+  totalExpenses: number;         // sum(transactions.amount) type=despesa
+  balance: number;               // totalReceived - totalExpenses
 
   // Business intelligence
   averageTicket: number;         // Ticket médio por cliente
@@ -39,42 +39,11 @@ export function useFinancialMetrics(period?: PeriodOption) {
   return useQuery({
     queryKey: ["financial-metrics", period || "all"],
     queryFn: async (): Promise<FinancialMetrics> => {
-      // Build period payments query
-      const periodPaymentsQuery = (() => {
-        let q = supabase
-          .from("payments")
-          .select("amount_paid, due_date, status");
-        if (period) {
-          const { start, end } = getPeriodDates(period);
-          q = q.gte("due_date", format(start, "yyyy-MM-dd"))
-               .lte("due_date", format(end, "yyyy-MM-dd"));
-        }
-        return q;
-      })();
-
-      // Build period non-installment income query (services / manual entries without payments)
-      const periodServiceIncomeQuery = (() => {
-        let q = supabase
-          .from("transactions")
-          .select("amount_received, date")
-          .eq("type", "receita")
-          .eq("is_auto_generated", false);
-        if (period) {
-          const { start, end } = getPeriodDates(period);
-          q = q.gte("date", format(start, "yyyy-MM-dd"))
-               .lte("date", format(end, "yyyy-MM-dd"));
-        }
-        return q;
-      })();
-
       // Fetch all data in parallel
       const [
         clientsResult,
         allTransactionsResult,
         periodTransactionsResult,
-        periodPaymentsResult,
-        periodServiceIncomeResult,
-        allPaymentsResult,
       ] = await Promise.all([
         supabase.from("clients").select("id, status, payment_status, plan_value"),
         supabase.from("transactions").select("type, amount, amount_received, date, payment_method, expense_category, is_auto_generated"),
@@ -82,21 +51,15 @@ export function useFinancialMetrics(period?: PeriodOption) {
           const { start, end } = getPeriodDates(period);
           return supabase
             .from("transactions")
-            .select("type, amount, amount_received, payment_method, expense_category, is_auto_generated")
+            .select("type, amount, amount_received, payment_method, expense_category, is_auto_generated, date")
             .gte("date", format(start, "yyyy-MM-dd"))
             .lte("date", format(end, "yyyy-MM-dd"));
         })() : Promise.resolve(null),
-        periodPaymentsQuery,
-        periodServiceIncomeQuery,
-        supabase.from("payments").select("amount_paid, due_date, status"),
       ]);
 
       const clients = clientsResult.data || [];
       const allTransactions = allTransactionsResult.data || [];
       const periodTransactions = periodTransactionsResult?.data || allTransactions;
-      const periodPayments = periodPaymentsResult.data || [];
-      const periodServiceIncome = periodServiceIncomeResult.data || [];
-      const allPayments = allPaymentsResult.data || [];
 
       // Client counts
       const totalClients = clients.length;
@@ -104,44 +67,36 @@ export function useFinancialMetrics(period?: PeriodOption) {
       const puerperas = clients.filter((c) => c.status === "lactante").length;
       const outros = clients.filter((c) => c.status === "outro" || c.status === "tentante").length;
 
-      // Total contracted value from clients
-      const totalContracted = clients.reduce((sum, c) => sum + Number(c.plan_value || 0), 0);
-
-      // Period-based financial calculations
+      // Period-based financial calculations — SAME logic as Financial.tsx
       const incomeTransactions = periodTransactions.filter((t) => t.type === "receita");
       const expenseTransactions = periodTransactions.filter((t) => t.type === "despesa");
 
-      const totalIncome = incomeTransactions.reduce((sum, t) => sum + Number(t.amount), 0);
+      // Total contracted = sum of all income transaction amounts
+      const totalContracted = incomeTransactions.reduce((sum, t) => sum + Number(t.amount || 0), 0);
+      const totalIncome = totalContracted;
 
-      // RECEIVED: use payments table for installment income (distributed by due_date)
-      // + transactions.amount_received for non-auto-generated (service) income
-      const receivedFromPayments = periodPayments
-        .filter((p) => p.status === "pago" || p.status === "parcial")
-        .reduce((sum, p) => sum + Number(p.amount_paid || 0), 0);
-      const receivedFromServices = periodServiceIncome
-        .reduce((sum, t) => sum + Number(t.amount_received || 0), 0);
-      const totalReceived = receivedFromPayments + receivedFromServices;
+      // Total received = sum of amount_received from all income transactions
+      const totalReceived = incomeTransactions.reduce((sum, t) => sum + Number(t.amount_received || 0), 0);
 
-      const totalPending = totalIncome - totalReceived;
+      // Pending = contracted - received (per-transaction to avoid negative)
+      const totalPending = incomeTransactions.reduce((sum, t) => {
+        const total = Number(t.amount || 0);
+        const received = Number(t.amount_received || 0);
+        return sum + Math.max(0, total - received);
+      }, 0);
+
       const totalExpenses = expenseTransactions.reduce((sum, t) => sum + Number(t.amount), 0);
       const balance = totalReceived - totalExpenses;
 
       // Business intelligence
       const clientsWithRevenue = clients.filter((c) => Number(c.plan_value || 0) > 0).length;
-      const averageTicket = clientsWithRevenue > 0 ? totalContracted / clientsWithRevenue : 0;
+      const clientPlanTotal = clients.reduce((sum, c) => sum + Number(c.plan_value || 0), 0);
+      const averageTicket = clientsWithRevenue > 0 ? clientPlanTotal / clientsWithRevenue : 0;
 
-      // Monthly average: group all-time received by month using payments.due_date + service transactions
+      // Monthly average: group all-time received by month from transactions
       const monthlyTotals: Record<string, number> = {};
-      // From payments
-      allPayments
-        .filter((p) => p.status === "pago" || p.status === "parcial")
-        .forEach((p) => {
-          const month = p.due_date?.substring(0, 7) || "unknown";
-          monthlyTotals[month] = (monthlyTotals[month] || 0) + Number(p.amount_paid || 0);
-        });
-      // From service transactions (non-auto-generated)
       allTransactions
-        .filter((t) => t.type === "receita" && t.is_auto_generated === false)
+        .filter((t) => t.type === "receita")
         .forEach((t) => {
           const month = t.date?.substring(0, 7) || "unknown";
           monthlyTotals[month] = (monthlyTotals[month] || 0) + Number(t.amount_received || 0);
@@ -153,7 +108,7 @@ export function useFinancialMetrics(period?: PeriodOption) {
 
       // Default rate: pending / total contracted
       const defaultRate = totalContracted > 0
-        ? ((totalContracted - totalReceived) / totalContracted) * 100
+        ? (totalPending / totalContracted) * 100
         : 0;
 
       // Income by payment method
