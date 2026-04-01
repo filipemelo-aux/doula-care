@@ -685,59 +685,38 @@ export default function Agenda() {
                 </CardContent>
               </Card>
 
-              {/* Side panel: selected date appointments (desktop) */}
-              <Card className="hidden lg:block">
-                <CardContent className="p-4">
-                  <h3 className="font-semibold text-sm mb-3 flex items-center gap-2">
-                    <Calendar className="h-4 w-4 text-primary" />
-                    {format(selectedDate, "dd 'de' MMMM, EEEE", { locale: ptBR })}
-                  </h3>
-                  {filteredAppointments.length > 0 ? (
-                    <ScrollArea className="max-h-[320px]">
-                      <div className="space-y-2">
-                        {filteredAppointments.map((apt) => {
-                          const date = toZonedTime(new Date(apt.scheduled_at), "America/Sao_Paulo");
-                          const status = getAppointmentStatus(apt);
-                          return (
-                            <div
-                              key={apt.id}
-                              className={`rounded-lg p-3 bg-background border border-border/60 ${status === "completed" ? "opacity-60" : ""}`}
-                            >
-                              <div className="flex items-center gap-2">
-                                <p className="font-medium text-sm flex-1 truncate">{apt.title}</p>
-                                {apt.completed_at && (
-                                  <Badge variant="secondary" className="text-[10px] px-1.5 py-0 bg-green-100 text-green-700">
-                                    <CheckCircle className="h-3 w-3 mr-0.5" /> Concluída
-                                  </Badge>
-                                )}
-                                {status === "in_progress" && (
-                                  <Badge variant="secondary" className="text-[10px] px-1.5 py-0 bg-primary/10 text-primary">
-                                    <Clock className="h-3 w-3 mr-0.5" /> Agora
-                                  </Badge>
-                                )}
-                              </div>
-                              {apt.clients?.full_name ? (
-                                <p className="text-xs text-muted-foreground truncate">{apt.clients.full_name}</p>
-                              ) : (
-                                <p className="text-xs text-muted-foreground/60 truncate italic">Compromisso pessoal</p>
-                              )}
-                              <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
-                                <Clock className="h-3 w-3" />
-                                {format(date, "HH:mm")}
-                              </p>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </ScrollArea>
-                  ) : (
-                    <div className="text-center py-8">
-                      <Calendar className="h-8 w-8 mx-auto text-muted-foreground/30 mb-2" />
-                      <p className="text-sm text-muted-foreground">Nenhum compromisso neste dia</p>
+              {/* Side panel: selected date appointments with full actions (desktop) */}
+              <div className="hidden lg:block space-y-3">
+                <h3 className="font-semibold text-sm flex items-center gap-2">
+                  <Calendar className="h-4 w-4 text-primary" />
+                  {format(selectedDate, "dd 'de' MMMM, EEEE", { locale: ptBR })}
+                  <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
+                    {filteredAppointments.length}
+                  </Badge>
+                </h3>
+                {filteredAppointments.length > 0 ? (
+                  <ScrollArea className="max-h-[380px]">
+                    <div className="space-y-2">
+                      {filteredAppointments.map((apt) => (
+                        <AppointmentRow
+                          key={apt.id}
+                          apt={apt}
+                          onEdit={openEditAppointment}
+                          onDelete={(id) => setDeleteTarget({ type: "appointment", id })}
+                          displayName={displayName}
+                          past={!!apt.completed_at || getAppointmentStatus(apt) === "past"}
+                          onCompleted={() => queryClient.invalidateQueries({ queryKey: ["agenda-appointments"] })}
+                        />
+                      ))}
                     </div>
-                  )}
-                </CardContent>
-              </Card>
+                  </ScrollArea>
+                ) : (
+                  <div className="text-center py-8">
+                    <Calendar className="h-8 w-8 mx-auto text-muted-foreground/30 mb-2" />
+                    <p className="text-sm text-muted-foreground">Nenhum compromisso neste dia</p>
+                  </div>
+                )}
+              </div>
             </div>
           )}
 
@@ -749,7 +728,7 @@ export default function Agenda() {
               <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
             </div>
           ) : (
-            <div className="space-y-6">
+            <div className={`space-y-6 ${agendaFilter === "calendar" ? "lg:hidden" : ""}`}>
               {/* Date header when calendar filter */}
               {agendaFilter === "calendar" && (
                 <h2 className="text-sm font-semibold text-muted-foreground flex items-center gap-2">
