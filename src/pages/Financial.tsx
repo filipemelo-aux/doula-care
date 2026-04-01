@@ -184,7 +184,7 @@ export default function Financial() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("clients")
-        .select("id, full_name, plan, plan_value")
+        .select("id, full_name, plan, plan_value, plan_setting_id")
         .order("full_name");
       if (error) throw error;
       return data;
