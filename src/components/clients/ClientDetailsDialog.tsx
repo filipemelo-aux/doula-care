@@ -55,12 +55,7 @@ const statusLabels = {
   outro: "Outro",
 };
 
-const planLabels: Record<string, string> = {
-  basico: "Básico",
-  intermediario: "Intermediário",
-  completo: "Completo",
-  avulso: "Avulso",
-};
+// Plan labels resolved dynamically via usePlanNames hook
 
 const paymentStatusLabels = {
   pendente: "Pendente",
