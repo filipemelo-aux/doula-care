@@ -827,18 +827,22 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
 
   const isEditing = !!client;
 
-  const handleStepClick = async (step: number) => {
-    if (isEditing) {
-      setCurrentStep(step);
-    } else if (step < currentStep) {
-      setCurrentStep(step);
-    } else if (step === currentStep + 1) {
-      const valid = await validateCurrentStep();
-      if (valid) setCurrentStep(step);
-    }
+  const handleStepClick = (step: number) => {
+    setCurrentStep(step);
   };
 
   const handleFinalSubmit = async () => {
+    // Validate required steps: Dados Pessoais + Plano
+    const personalValid = await form.trigger(["full_name"]);
+    if (!personalValid) {
+      setCurrentStep(1);
+      return;
+    }
+    const planValid = await form.trigger(["plan_setting_id"]);
+    if (!planValid) {
+      setCurrentStep(6);
+      return;
+    }
     // Validate gestante needs DPP
     if (form.getValues("status") === "gestante" && !form.getValues("dpp")) {
       form.setError("dpp", { message: "DPP é obrigatória para gestantes" });
