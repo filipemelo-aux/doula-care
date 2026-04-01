@@ -72,10 +72,15 @@ export function ManageAppointmentsDialog({
 
   const addMutation = useMutation({
     mutationFn: async () => {
+      const d = new Date(scheduledAt);
+      const slotKey = `${format(d, "yyyy-MM-dd")}_${format(d, "HH:mm")}`;
+      if (occupiedSlots?.has(slotKey)) {
+        throw new Error("SLOT_OCCUPIED");
+      }
       const { error } = await supabase.from("appointments").insert({
         client_id: clientId,
         title,
-        scheduled_at: new Date(scheduledAt).toISOString(),
+        scheduled_at: d.toISOString(),
         notes: notes || null,
         address: address.trim() || null,
         owner_id: user?.id || null,
@@ -87,13 +92,20 @@ export function ManageAppointmentsDialog({
       queryClient.invalidateQueries({ queryKey: ["client-appointments", clientId] });
       queryClient.invalidateQueries({ queryKey: ["agenda-appointments"] });
       queryClient.invalidateQueries({ queryKey: ["all-appointments"] });
+      queryClient.invalidateQueries({ queryKey: ["occupied-slots"] });
       setTitle("");
       setScheduledAt("");
       setNotes("");
       setAddress("");
       toast.success("Consulta agendada!");
     },
-    onError: () => toast.error("Erro ao agendar consulta"),
+    onError: (err: any) => {
+      if (err?.message === "SLOT_OCCUPIED") {
+        toast.error("Já existe um compromisso neste horário! Escolha outro horário.");
+      } else {
+        toast.error("Erro ao agendar consulta");
+      }
+    },
   });
 
   const deleteMutation = useMutation({

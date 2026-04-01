@@ -162,6 +162,7 @@ export function AppointmentRequestsSection() {
       });
       queryClient.invalidateQueries({ queryKey: ["agenda-appointments"] });
       queryClient.invalidateQueries({ queryKey: ["all-appointments"] });
+      queryClient.invalidateQueries({ queryKey: ["occupied-slots"] });
       setRespondDialog(null);
       setAdminNotes("");
       toast.success(
@@ -170,7 +171,13 @@ export function AppointmentRequestsSection() {
           : "Solicitação recusada."
       );
     },
-    onError: () => toast.error("Erro ao processar solicitação"),
+    onError: (err: any) => {
+      if (err?.message === "SLOT_OCCUPIED") {
+        toast.error("Já existe um compromisso neste horário! Não é possível aprovar.");
+      } else {
+        toast.error("Erro ao processar solicitação");
+      }
+    },
   });
 
   const pendingRequests = (requests || []).filter(
