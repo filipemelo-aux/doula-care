@@ -825,8 +825,12 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
     if (currentStep > 1) setCurrentStep(currentStep - 1);
   };
 
+  const isEditing = !!client;
+
   const handleStepClick = async (step: number) => {
-    if (step < currentStep) {
+    if (isEditing) {
+      setCurrentStep(step);
+    } else if (step < currentStep) {
       setCurrentStep(step);
     } else if (step === currentStep + 1) {
       const valid = await validateCurrentStep();
