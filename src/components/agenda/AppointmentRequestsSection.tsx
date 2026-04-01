@@ -86,7 +86,7 @@ export function AppointmentRequestsSection() {
       if (updateError) throw updateError;
 
       if (action === "approve") {
-        // Create actual appointment
+        // Create actual appointment with client's address
         const scheduledAt = new Date(
           `${request.requested_date}T${request.requested_time}`
         );
@@ -99,6 +99,7 @@ export function AppointmentRequestsSection() {
             notes: request.reason
               ? `Motivo: ${request.reason}${notes ? `\nNota: ${notes}` : ""}`
               : notes || null,
+            address: request.address || null,
             owner_id: user?.id || null,
             organization_id: organizationId || null,
           });
