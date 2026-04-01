@@ -798,7 +798,49 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
     mutation.mutate(data);
   };
 
-  const handleSubmitClick = () => {
+  const validateCurrentStep = async () => {
+    const fieldsPerStep: Record<number, (keyof ClientFormData)[]> = {
+      1: ["full_name"],
+      2: [],
+      3: status === "gestante" ? ["dpp"] : [],
+      4: [],
+      5: [],
+      6: ["plan_setting_id"],
+      7: [],
+    };
+    const fields = fieldsPerStep[currentStep] || [];
+    if (fields.length === 0) return true;
+    const result = await form.trigger(fields);
+    return result;
+  };
+
+  const handleNext = async () => {
+    const valid = await validateCurrentStep();
+    if (valid && currentStep < STEPS.length) {
+      setCurrentStep(currentStep + 1);
+    }
+  };
+
+  const handlePrev = () => {
+    if (currentStep > 1) setCurrentStep(currentStep - 1);
+  };
+
+  const handleStepClick = async (step: number) => {
+    if (step < currentStep) {
+      setCurrentStep(step);
+    } else if (step === currentStep + 1) {
+      const valid = await validateCurrentStep();
+      if (valid) setCurrentStep(step);
+    }
+  };
+
+  const handleFinalSubmit = async () => {
+    // Validate gestante needs DPP
+    if (form.getValues("status") === "gestante" && !form.getValues("dpp")) {
+      form.setError("dpp", { message: "DPP é obrigatória para gestantes" });
+      setCurrentStep(3);
+      return;
+    }
     form.handleSubmit(onSubmit)();
   };
 
