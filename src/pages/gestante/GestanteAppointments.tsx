@@ -170,13 +170,24 @@ export default function GestanteAppointments() {
 
   const requestMutation = useMutation({
     mutationFn: async () => {
+      // Build address from client's registered address
+      const addressParts = [
+        client?.street,
+        client?.number,
+        client?.neighborhood,
+        client?.city,
+        client?.state,
+      ].filter(Boolean);
+      const clientAddress = addressParts.length > 0 ? addressParts.join(", ") : null;
+
       const { error } = await supabase.from("appointment_requests").insert({
         client_id: client!.id,
         organization_id: clientOrganizationId,
         requested_date: format(selectedDate!, "yyyy-MM-dd"),
         requested_time: selectedTime,
         reason: reason || null,
-      });
+        address: clientAddress,
+      } as any);
       if (error) throw error;
     },
     onSuccess: () => {
