@@ -179,9 +179,12 @@ export function ManageAppointmentsDialog({
                   value={scheduledAt}
                   onChange={(e) => setScheduledAt(e.target.value)}
                   onInput={(e) => setScheduledAt((e.target as HTMLInputElement).value)}
-                  onBlur={(e) => setScheduledAt(e.target.value)}
-                  className="mt-1"
+                 onBlur={(e) => setScheduledAt(e.target.value)}
+                  className={`mt-1 ${selectedSlotOccupied ? "border-destructive" : ""}`}
                 />
+                {selectedSlotOccupied && (
+                  <p className="text-xs text-destructive mt-1">⚠ Já existe um compromisso neste horário.</p>
+                )}
               </div>
               <div>
                 <Label className="text-xs flex items-center gap-1">
