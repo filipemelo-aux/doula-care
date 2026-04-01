@@ -8,46 +8,62 @@ export function TopPlansCard() {
     queryKey: ["top-plans"],
     queryFn: async () => {
       const [clientsResult, plansResult] = await Promise.all([
-        supabase.from("clients").select("plan, plan_value"),
+        supabase.from("clients").select("plan, plan_value, plan_setting_id"),
         supabase.from("plan_settings").select("*").eq("is_active", true),
       ]);
 
       const clients = clientsResult.data || [];
       const plans = plansResult.data || [];
 
+      // Build a map of plan_setting_id -> plan info
+      const planById: Record<string, { name: string; planType: string }> = {};
+      plans.forEach((plan) => {
+        planById[plan.id] = { name: plan.name, planType: plan.plan_type };
+      });
+
+      // Group clients by their specific plan_setting_id, or by plan enum for unlinked clients
       const planData: Record<string, { count: number; revenue: number; name: string }> = {};
 
       // Always include "avulso"
-      planData["avulso"] = { count: 0, revenue: 0, name: "Avulso" };
-
-      plans.forEach((plan) => {
-        planData[plan.plan_type] = {
-          count: 0,
-          revenue: 0,
-          name: plan.name,
-        };
-      });
+      planData["_avulso"] = { count: 0, revenue: 0, name: "Avulso" };
 
       clients.forEach((client) => {
-        if (planData[client.plan]) {
-          planData[client.plan].count++;
-          planData[client.plan].revenue += Number(client.plan_value) || 0;
+        // If client has a specific plan_setting_id that exists, group by it
+        if (client.plan_setting_id && planById[client.plan_setting_id]) {
+          const key = client.plan_setting_id;
+          if (!planData[key]) {
+            planData[key] = {
+              count: 0,
+              revenue: 0,
+              name: planById[client.plan_setting_id].name,
+            };
+          }
+          planData[key].count++;
+          planData[key].revenue += Number(client.plan_value) || 0;
+        } else if (client.plan === "avulso") {
+          planData["_avulso"].count++;
+          planData["_avulso"].revenue += Number(client.plan_value) || 0;
         } else {
-          // Plan type exists on client but not in plan_settings
-          planData[client.plan] = {
-            count: 1,
-            revenue: Number(client.plan_value) || 0,
-            name: client.plan.charAt(0).toUpperCase() + client.plan.slice(1),
-          };
+          // Fallback: group by plan enum for clients without plan_setting_id
+          const key = `_enum_${client.plan}`;
+          if (!planData[key]) {
+            planData[key] = {
+              count: 0,
+              revenue: 0,
+              name: client.plan.charAt(0).toUpperCase() + client.plan.slice(1),
+            };
+          }
+          planData[key].count++;
+          planData[key].revenue += Number(client.plan_value) || 0;
         }
       });
 
       return Object.entries(planData)
-        .map(([type, data]) => ({
-          type,
+        .map(([key, data]) => ({
+          type: key,
           ...data,
         }))
-        .filter((p) => p.count > 0 || p.type === "avulso")
+        .filter((p) => p.count > 0 || p.type === "_avulso")
         .sort((a, b) => b.count - a.count);
     },
   });
