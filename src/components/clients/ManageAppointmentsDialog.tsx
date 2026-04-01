@@ -141,6 +141,14 @@ export function ManageAppointmentsDialog({
 
   const isPast = (dateStr: string) => new Date(dateStr) < new Date();
 
+  const selectedSlotOccupied = (() => {
+    if (!scheduledAt || !occupiedSlots) return false;
+    const d = new Date(scheduledAt);
+    if (isNaN(d.getTime())) return false;
+    const slotKey = `${format(d, "yyyy-MM-dd")}_${format(d, "HH:mm")}`;
+    return occupiedSlots.has(slotKey);
+  })();
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md max-h-[90vh]">
@@ -171,9 +179,12 @@ export function ManageAppointmentsDialog({
                   value={scheduledAt}
                   onChange={(e) => setScheduledAt(e.target.value)}
                   onInput={(e) => setScheduledAt((e.target as HTMLInputElement).value)}
-                  onBlur={(e) => setScheduledAt(e.target.value)}
-                  className="mt-1"
+                 onBlur={(e) => setScheduledAt(e.target.value)}
+                  className={`mt-1 ${selectedSlotOccupied ? "border-destructive" : ""}`}
                 />
+                {selectedSlotOccupied && (
+                  <p className="text-xs text-destructive mt-1">⚠ Já existe um compromisso neste horário.</p>
+                )}
               </div>
               <div>
                 <Label className="text-xs flex items-center gap-1">
@@ -200,7 +211,7 @@ export function ManageAppointmentsDialog({
               <Button
                 size="sm"
                 className="w-full"
-                disabled={!title || !scheduledAt || addMutation.isPending}
+                disabled={!title || !scheduledAt || selectedSlotOccupied || addMutation.isPending}
                 onClick={() => addMutation.mutate()}
               >
                 {addMutation.isPending ? (
