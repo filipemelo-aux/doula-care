@@ -133,7 +133,7 @@ export function ServiceRequestButtons() {
       queryClient.invalidateQueries({ queryKey: ["service-requests"] });
       queryClient.invalidateQueries({ queryKey: ["my-service-requests"] });
       queryClient.invalidateQueries({ queryKey: ["my-pending-services"] });
-      queryClient.invalidateQueries({ queryKey: ["occupied-slots-services"] });
+      queryClient.invalidateQueries({ queryKey: ["occupied-slots"] });
       toast.success("Solicitação enviada com sucesso!", {
         description: "Sua Doula receberá uma notificação e enviará o orçamento.",
       });
