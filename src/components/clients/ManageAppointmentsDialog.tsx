@@ -211,7 +211,7 @@ export function ManageAppointmentsDialog({
               <Button
                 size="sm"
                 className="w-full"
-                disabled={!title || !scheduledAt || addMutation.isPending}
+                disabled={!title || !scheduledAt || selectedSlotOccupied || addMutation.isPending}
                 onClick={() => addMutation.mutate()}
               >
                 {addMutation.isPending ? (
