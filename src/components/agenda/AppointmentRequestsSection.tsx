@@ -48,6 +48,7 @@ interface AppointmentRequestWithClient {
 export function AppointmentRequestsSection() {
   const { user, organizationId } = useAuth();
   const queryClient = useQueryClient();
+  const { data: occupiedSlots } = useOccupiedSlots(organizationId);
   const [respondDialog, setRespondDialog] = useState<{
     request: AppointmentRequestWithClient;
     action: "approve" | "reject";
