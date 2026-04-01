@@ -86,6 +86,7 @@ export function GestanteNotificationBanner() {
       .eq("id", dbId);
     queryClient.invalidateQueries({ queryKey: ["gestante-top-notification"] });
     queryClient.invalidateQueries({ queryKey: ["gestante-unread-messages"] });
+    queryClient.invalidateQueries({ queryKey: ["gestante-menu-badges"] });
   };
 
   const handleDismiss = () => {
