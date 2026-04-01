@@ -75,6 +75,7 @@ export default function Clients() {
 
   const queryClient = useQueryClient();
   const { canAddClient, remainingClients, clientCount, limits } = usePlanLimits();
+  const { getPlanName } = usePlanNames();
 
   const { data: clients, isLoading } = useQuery({
     queryKey: ["clients"],
