@@ -957,7 +957,7 @@ export default function Financial() {
                             className="h-8 px-3 gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm hover:shadow transition-all text-xs font-medium"
                           >
                             <DollarSign className="h-3.5 w-3.5" />
-                            Pagar
+                            Registrar Pagamento
                           </Button>
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
