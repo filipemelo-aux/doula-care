@@ -67,23 +67,27 @@ export function useFinancialMetrics(period?: PeriodOption) {
       const puerperas = clients.filter((c) => c.status === "lactante").length;
       const outros = clients.filter((c) => c.status === "outro" || c.status === "tentante").length;
 
-      // Period-based financial calculations — SAME logic as Financial.tsx
-      const incomeTransactions = periodTransactions.filter((t) => t.type === "receita");
-      const expenseTransactions = periodTransactions.filter((t) => t.type === "despesa");
+      // ── Core financial totals: ALWAYS use ALL transactions (no period filter)
+      // This matches the Financial.tsx page which shows all-time totals
+      const allIncomeTransactions = allTransactions.filter((t) => t.type === "receita");
 
-      // Total contracted = sum of all income transaction amounts
-      const totalContracted = incomeTransactions.reduce((sum, t) => sum + Number(t.amount || 0), 0);
+      // Total contracted = sum of all income transaction amounts (all-time)
+      const totalContracted = allIncomeTransactions.reduce((sum, t) => sum + Number(t.amount || 0), 0);
       const totalIncome = totalContracted;
 
-      // Total received = sum of amount_received from all income transactions
-      const totalReceived = incomeTransactions.reduce((sum, t) => sum + Number(t.amount_received || 0), 0);
+      // Total received = sum of amount_received from all income transactions (all-time)
+      const totalReceived = allIncomeTransactions.reduce((sum, t) => sum + Number(t.amount_received || 0), 0);
 
-      // Pending = contracted - received (per-transaction to avoid negative)
-      const totalPending = incomeTransactions.reduce((sum, t) => {
+      // Pending = contracted - received per-transaction (all-time)
+      const totalPending = allIncomeTransactions.reduce((sum, t) => {
         const total = Number(t.amount || 0);
         const received = Number(t.amount_received || 0);
         return sum + Math.max(0, total - received);
       }, 0);
+
+      // ── Period-filtered calculations (for expenses, breakdowns)
+      const incomeTransactions = periodTransactions.filter((t) => t.type === "receita");
+      const expenseTransactions = periodTransactions.filter((t) => t.type === "despesa");
 
       const totalExpenses = expenseTransactions.reduce((sum, t) => sum + Number(t.amount), 0);
       const balance = totalReceived - totalExpenses;
