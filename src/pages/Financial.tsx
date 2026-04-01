@@ -184,7 +184,7 @@ export default function Financial() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("clients")
-        .select("id, full_name, plan, plan_value")
+        .select("id, full_name, plan, plan_value, plan_setting_id")
         .order("full_name");
       if (error) throw error;
       return data;
@@ -267,7 +267,10 @@ export default function Financial() {
     form.setValue("client_id", clientId);
     const client = clients?.find((c) => c.id === clientId);
     if (client) {
-      const plan = plans?.find((p) => p.plan_type === client.plan);
+      // Match by plan_setting_id first, then fallback to plan_type
+      const plan = client.plan_setting_id 
+        ? plans?.find((p) => p.id === client.plan_setting_id)
+        : plans?.find((p) => p.plan_type === client.plan);
       if (plan) {
         form.setValue("plan_id", plan.id);
         form.setValue("amount", Number(client.plan_value) || Number(plan.default_value));

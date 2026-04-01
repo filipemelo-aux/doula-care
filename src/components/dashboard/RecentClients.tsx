@@ -2,6 +2,7 @@ import { useState } from "react";
 import { format, parseISO } from "date-fns";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { usePlanNames } from "@/hooks/usePlanNames";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -20,12 +21,7 @@ const statusLabels = {
   outro: "Outro",
 };
 
-const planLabels: Record<string, string> = {
-  basico: "Básico",
-  intermediario: "Intermediário",
-  completo: "Completo",
-  avulso: "Avulso",
-};
+// Plan labels resolved dynamically via usePlanNames hook
 
 const paymentStatusLabels = {
   pendente: "Pendente",
@@ -38,6 +34,7 @@ export function RecentClients() {
   const [diaryClient, setDiaryClient] = useState<Tables<"clients"> | null>(null);
   const [notifDialogOpen, setNotifDialogOpen] = useState(false);
   const [notifClient, setNotifClient] = useState<Tables<"clients"> | null>(null);
+  const { getPlanName } = usePlanNames();
   const { data: clients, isLoading } = useQuery({
     queryKey: ["recent-clients"],
     queryFn: async () => {
@@ -140,7 +137,7 @@ export function RecentClients() {
                     {statusLabels[client.status as keyof typeof statusLabels]}
                   </Badge>
                   <Badge variant="outline" className="text-[10px] px-1.5 h-5">
-                    {planLabels[client.plan as keyof typeof planLabels]}
+                    {getPlanName(client.plan_setting_id, client.plan)}
                   </Badge>
                   <Badge
                     variant="outline"

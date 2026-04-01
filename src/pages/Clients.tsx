@@ -40,6 +40,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import type { Tables } from "@/integrations/supabase/types";
 import { usePlanLimits } from "@/hooks/usePlanLimits";
+import { usePlanNames } from "@/hooks/usePlanNames";
 import { ClientLimitBanner } from "@/components/plan/UpgradeBanner";
 
 type Client = Tables<"clients">;
@@ -51,12 +52,7 @@ const statusLabels = {
   outro: "Outro",
 };
 
-const planLabels: Record<string, string> = {
-  basico: "Básico",
-  intermediario: "Intermediário",
-  completo: "Completo",
-  avulso: "Avulso",
-};
+// Plan labels are now resolved dynamically via usePlanNames hook
 
 const paymentStatusLabels = {
   pendente: "Pendente",
@@ -79,6 +75,7 @@ export default function Clients() {
 
   const queryClient = useQueryClient();
   const { canAddClient, remainingClients, clientCount, limits } = usePlanLimits();
+  const { getPlanName } = usePlanNames();
 
   const { data: clients, isLoading } = useQuery({
     queryKey: ["clients"],
@@ -291,7 +288,7 @@ export default function Clients() {
                             : statusLabels[client.status as keyof typeof statusLabels]}
                         </Badge>
                         <Badge variant="secondary" className="text-[10px] px-2 h-5">
-                          {planLabels[client.plan as keyof typeof planLabels]}
+                          {getPlanName(client.plan_setting_id, client.plan)}
                         </Badge>
                         <Badge
                           className={cn("badge-status text-[10px] px-2 h-5", `badge-${client.payment_status}`)}
@@ -358,7 +355,7 @@ export default function Clients() {
                           </Badge>
                         </TableCell>
                         <TableCell>
-                          {planLabels[client.plan as keyof typeof planLabels]}
+                          {getPlanName(client.plan_setting_id, client.plan)}
                         </TableCell>
                         <TableCell>
                           <Badge

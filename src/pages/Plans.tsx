@@ -86,14 +86,14 @@ export default function Plans() {
   const { data: clientCounts } = useQuery({
     queryKey: ["client-plan-counts"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("clients").select("plan");
+      const { data, error } = await supabase.from("clients").select("plan, plan_setting_id");
       if (error) throw error;
 
       const counts: Record<string, number> = {};
       data?.forEach((client) => {
-        if (client.plan) {
-          counts[client.plan] = (counts[client.plan] || 0) + 1;
-        }
+        // Group by plan_setting_id when available, otherwise by plan enum
+        const key = client.plan_setting_id || `_enum_${client.plan}`;
+        counts[key] = (counts[key] || 0) + 1;
       });
       return counts;
     },
@@ -265,7 +265,7 @@ export default function Plans() {
   };
 
   const totalPlanRevenue = plans?.reduce((sum, plan) => {
-    const count = clientCounts?.[plan.plan_type] || 0;
+    const count = clientCounts?.[plan.id] || 0;
     return sum + count * Number(plan.default_value);
   }, 0) || 0;
 
@@ -334,7 +334,7 @@ export default function Plans() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {plans?.map((plan) => {
           const isActive = plan.is_active !== false;
-          const clientsInPlan = clientCounts?.[plan.plan_type] || 0;
+          const clientsInPlan = clientCounts?.[plan.id] || 0;
 
           return (
             <Card

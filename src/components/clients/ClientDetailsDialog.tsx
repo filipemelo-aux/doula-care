@@ -37,6 +37,7 @@ import { calculateCurrentPregnancyWeeks, calculateCurrentPregnancyDays } from "@
 
 import { RevenueDetailDialog } from "@/components/financial/RevenueDetailDialog";
 import { supabase } from "@/integrations/supabase/client";
+import { usePlanNames } from "@/hooks/usePlanNames";
 import { toast } from "sonner";
 
 type Client = Tables<"clients">;
@@ -54,12 +55,7 @@ const statusLabels = {
   outro: "Outro",
 };
 
-const planLabels: Record<string, string> = {
-  basico: "Básico",
-  intermediario: "Intermediário",
-  completo: "Completo",
-  avulso: "Avulso",
-};
+// Plan labels resolved dynamically via usePlanNames hook
 
 const paymentStatusLabels = {
   pendente: "Pendente",
@@ -81,6 +77,7 @@ export function ClientDetailsDialog({
 }: ClientDetailsDialogProps) {
   const [contractDialogOpen, setContractDialogOpen] = useState(false);
   const [clientFileOpen, setClientFileOpen] = useState(false);
+  const { getPlanName } = usePlanNames();
   
   const [revenueDetailOpen, setRevenueDetailOpen] = useState(false);
   
@@ -328,7 +325,7 @@ export function ClientDetailsDialog({
                 <div>
                   <p className="text-muted-foreground">Plano</p>
                   <p className="font-medium">
-                    {planLabels[client.plan as keyof typeof planLabels]}
+                    {getPlanName(client.plan_setting_id, client.plan)}
                   </p>
                 </div>
                 <div>

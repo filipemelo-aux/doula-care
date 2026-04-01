@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Download, Loader2 } from "lucide-react";
 import { cn, formatBrazilDate } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
+import { usePlanNames } from "@/hooks/usePlanNames";
 import { toast } from "sonner";
 import type { Tables } from "@/integrations/supabase/types";
 import { calculateCurrentPregnancyWeeks, calculateCurrentPregnancyDays } from "@/lib/pregnancy";
@@ -34,12 +35,7 @@ const statusLabels: Record<string, string> = {
   outro: "Outro",
 };
 
-const planLabels: Record<string, string> = {
-  basico: "Básico",
-  intermediario: "Intermediário",
-  completo: "Completo",
-  avulso: "Avulso",
-};
+// Plan labels resolved dynamically via usePlanNames hook
 
 const paymentStatusLabels: Record<string, string> = {
   pendente: "Pendente",
@@ -83,6 +79,7 @@ const serviceRequestStatusLabels: Record<string, string> = {
 };
 
 export function ClientFileDialog({ open, onOpenChange, client }: ClientFileDialogProps) {
+  const { getPlanName } = usePlanNames();
   const { data: appointments, isLoading: loadingAppts } = useQuery({
     queryKey: ["client-file-appointments", client?.id],
     queryFn: async () => {
@@ -334,7 +331,7 @@ export function ClientFileDialog({ open, onOpenChange, client }: ClientFileDialo
 
       // Plan & Payment
       addSection("Plano e Pagamento");
-      addText(`Plano: ${planLabels[client.plan] || client.plan}`);
+      addText(`Plano: ${getPlanName(client.plan_setting_id, client.plan)}`);
       addText(`Valor: ${formatCurrency(Number(client.plan_value) || 0)}`);
       addText(`Pagamento: ${paymentMethodLabels[client.payment_method] || client.payment_method}`);
       addText(`Status: ${paymentStatusLabels[client.payment_status] || client.payment_status}`);
@@ -537,7 +534,7 @@ export function ClientFileDialog({ open, onOpenChange, client }: ClientFileDialo
 
               {/* Plan & Payment */}
               <Section title="Plano e Pagamento">
-                <Field label="Plano" value={planLabels[client.plan] || client.plan} />
+                <Field label="Plano" value={getPlanName(client.plan_setting_id, client.plan)} />
                 <Field label="Valor" value={formatCurrency(Number(client.plan_value) || 0)} />
                 <Field label="Pagamento" value={paymentMethodLabels[client.payment_method] || client.payment_method} />
                 <Field label="Status" value={paymentStatusLabels[client.payment_status] || client.payment_status} />
