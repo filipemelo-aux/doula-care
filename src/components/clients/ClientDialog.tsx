@@ -89,6 +89,16 @@ interface ClientDialogProps {
   client?: Client | null;
 }
 
+const STEPS = [
+  { id: 1, title: "Dados Pessoais", shortTitle: "Pessoal" },
+  { id: 2, title: "Endereço", shortTitle: "Endereço" },
+  { id: 3, title: "Gestação e Pré-natal", shortTitle: "Gestação" },
+  { id: 4, title: "Saúde e Restrições", shortTitle: "Saúde" },
+  { id: 5, title: "Rede de Apoio", shortTitle: "Apoio" },
+  { id: 6, title: "Plano e Pagamento", shortTitle: "Plano" },
+  { id: 7, title: "Observações", shortTitle: "Obs." },
+];
+
 export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) {
   const queryClient = useQueryClient();
   const { user, organizationId } = useAuth();
