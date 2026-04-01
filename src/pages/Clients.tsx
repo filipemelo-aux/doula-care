@@ -40,6 +40,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import type { Tables } from "@/integrations/supabase/types";
 import { usePlanLimits } from "@/hooks/usePlanLimits";
+import { usePlanNames } from "@/hooks/usePlanNames";
 import { ClientLimitBanner } from "@/components/plan/UpgradeBanner";
 
 type Client = Tables<"clients">;
