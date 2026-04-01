@@ -60,6 +60,23 @@ export default function Login() {
     }
 
     const trimmedEmail = email.trim().toLowerCase();
+
+    // Store credentials BEFORE signIn to avoid race condition with navigation
+    try {
+      const passwordCredential = (window as Window & { PasswordCredential?: PasswordCredentialConstructor }).PasswordCredential;
+      if (passwordCredential && navigator.credentials?.store) {
+        const cred = new passwordCredential({
+          id: trimmedEmail,
+          password,
+          name: trimmedEmail,
+        });
+        // Fire and forget — don't block login on this
+        navigator.credentials.store(cred).catch(() => {});
+      }
+    } catch {
+      // best-effort only
+    }
+
     const { error } = await signIn(trimmedEmail, password);
 
     if (error) {
@@ -68,22 +85,6 @@ export default function Login() {
       });
       setSubmitting(false);
       return;
-    }
-
-    try {
-      const passwordCredential = (window as Window & { PasswordCredential?: PasswordCredentialConstructor }).PasswordCredential;
-      if (passwordCredential && navigator.credentials?.store) {
-        const formCredential = formRef.current ? new passwordCredential(formRef.current) : null;
-        const fallbackCredential = new passwordCredential({
-          id: trimmedEmail,
-          password,
-          name: trimmedEmail,
-        });
-
-        await navigator.credentials.store(formCredential ?? fallbackCredential);
-      }
-    } catch {
-      // best-effort only
     }
 
     toast.success("Login realizado com sucesso!");
