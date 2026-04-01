@@ -37,6 +37,7 @@ import { calculateCurrentPregnancyWeeks, calculateCurrentPregnancyDays } from "@
 
 import { RevenueDetailDialog } from "@/components/financial/RevenueDetailDialog";
 import { supabase } from "@/integrations/supabase/client";
+import { usePlanNames } from "@/hooks/usePlanNames";
 import { toast } from "sonner";
 
 type Client = Tables<"clients">;
