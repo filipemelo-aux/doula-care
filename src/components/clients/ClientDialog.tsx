@@ -268,6 +268,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
   // Reset form when client changes or dialog opens fresh
   useEffect(() => {
     if (!open) return;
+    setCurrentStep(1);
     if (client) {
       const txInstallments = clientTransaction?.installments ? Number(clientTransaction.installments) : 1;
       const isParcelado = txInstallments > 1;
