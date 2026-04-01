@@ -86,6 +86,7 @@ export function GestanteNotificationBanner() {
       .eq("id", dbId);
     queryClient.invalidateQueries({ queryKey: ["gestante-top-notification"] });
     queryClient.invalidateQueries({ queryKey: ["gestante-unread-messages"] });
+    queryClient.invalidateQueries({ queryKey: ["gestante-menu-badges"] });
   };
 
   const handleDismiss = () => {
@@ -101,10 +102,18 @@ export function GestanteNotificationBanner() {
     n.message?.toLowerCase().includes("pagamento") ||
     n.message?.toLowerCase().includes("parcela");
 
+  const isAppointmentNotification = (n: TopNotification) =>
+    n.title?.toLowerCase().includes("consulta") ||
+    n.title?.toLowerCase().includes("compromisso") ||
+    n.title?.toLowerCase().includes("agendamento") ||
+    n.message?.toLowerCase().includes("consulta confirmad") ||
+    n.message?.toLowerCase().includes("consulta cancelad") ||
+    n.message?.toLowerCase().includes("consulta agendad");
+
   const getNotificationRoute = (n: TopNotification): string | null => {
     if (n.type === "community") return "/gestante/comunidade";
     if (isPaymentNotification(n)) return "/gestante/perfil?tab=plano&overdue=true";
-    // General notifications (reminders, service alerts, etc.) have no dedicated page
+    if (isAppointmentNotification(n)) return "/gestante/consultas";
     return null;
   };
 
