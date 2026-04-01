@@ -17,13 +17,14 @@ const FALLBACK_LOOKBACK_MS = 48 * 60 * 60 * 1000;
 
 export function useGestanteMenuBadges(
   clientId: string | undefined,
+  userId: string | undefined,
   activePath?: string,
 ): MenuBadges {
   const queryClient = useQueryClient();
   const seenStorageKey = clientId ? getGestanteNotificationSeenKey(clientId) : null;
 
   useEffect(() => {
-    if (!clientId || !seenStorageKey) return;
+    if (!clientId || !seenStorageKey || !userId) return;
 
     const section =
       activePath === "/gestante/consultas"
@@ -34,20 +35,24 @@ export function useGestanteMenuBadges(
 
     if (!section) return;
 
-    markNotificationSeen(seenStorageKey, section);
+    markNotificationSeen(seenStorageKey, section, userId);
     queryClient.invalidateQueries({ queryKey: ["gestante-menu-badges", clientId] });
-  }, [activePath, clientId, queryClient, seenStorageKey]);
+  }, [activePath, clientId, userId, queryClient, seenStorageKey]);
 
   const { data: badges = { consultas: 0, servicos: 0, mensagens: 0 } } = useQuery({
     queryKey: ["gestante-menu-badges", clientId, activePath],
     queryFn: async (): Promise<MenuBadges> => {
-      if (!clientId || !seenStorageKey) {
+      if (!clientId || !seenStorageKey || !userId) {
         return { consultas: 0, servicos: 0, mensagens: 0 };
       }
 
       const fallbackSeenAt = new Date(Date.now() - FALLBACK_LOOKBACK_MS).toISOString();
-      const consultasSeenAt = getNotificationSeenAt(seenStorageKey, "consultas") ?? fallbackSeenAt;
-      const servicosSeenAt = getNotificationSeenAt(seenStorageKey, "servicos") ?? fallbackSeenAt;
+      const [consultasSeenAt, servicosSeenAt] = await Promise.all([
+        getNotificationSeenAt(seenStorageKey, "consultas", userId),
+        getNotificationSeenAt(seenStorageKey, "servicos", userId),
+      ]);
+      const effectiveConsultasSeen = consultasSeenAt ?? fallbackSeenAt;
+      const effectiveServicosSeen = servicosSeenAt ?? fallbackSeenAt;
       const nowIso = new Date().toISOString();
 
       const [appointmentsRes, servicesRes, messagesRes] = await Promise.all([
@@ -57,13 +62,13 @@ export function useGestanteMenuBadges(
           .eq("client_id", clientId)
           .is("completed_at", null)
           .gte("scheduled_at", nowIso)
-          .gt("created_at", consultasSeenAt),
+          .gt("created_at", effectiveConsultasSeen),
         supabase
           .from("service_requests")
           .select("id", { count: "exact", head: true })
           .eq("client_id", clientId)
           .in("status", ["budget_sent", "date_proposed", "accepted"])
-          .gt("updated_at", servicosSeenAt),
+          .gt("updated_at", effectiveServicosSeen),
         supabase
           .from("client_notifications")
           .select("id", { count: "exact", head: true })
@@ -82,7 +87,7 @@ export function useGestanteMenuBadges(
         mensagens: messagesRes.count || 0,
       };
     },
-    enabled: !!clientId,
+    enabled: !!clientId && !!userId,
     refetchInterval: 30000,
   });
 
