@@ -853,7 +853,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl h-[85vh] overflow-hidden flex flex-col">
+      <DialogContent className="max-w-2xl h-[85vh] overflow-hidden flex flex-col overflow-x-hidden">
         <DialogHeader className="pb-0 flex-shrink-0">
           <DialogTitle className="font-display text-lg">
             {client ? "Editar Cliente" : "Nova Cliente"}
