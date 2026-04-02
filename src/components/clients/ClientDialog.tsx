@@ -813,9 +813,8 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
     return result;
   };
 
-  const handleNext = async () => {
-    const valid = await validateCurrentStep();
-    if (valid && currentStep < STEPS.length) {
+  const handleNext = () => {
+    if (currentStep < STEPS.length) {
       setCurrentStep(currentStep + 1);
     }
   };
@@ -853,7 +852,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl h-[70vh] overflow-hidden flex flex-col overflow-x-hidden">
+      <DialogContent className="max-w-2xl max-h-[70vh] overflow-hidden flex flex-col overflow-x-hidden">
         <DialogHeader className="pb-0 flex-shrink-0">
           <DialogTitle className="font-display text-lg">
             {client ? "Editar Cliente" : "Nova Cliente"}
