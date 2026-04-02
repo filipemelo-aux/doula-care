@@ -1205,7 +1205,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
 
                   {/* Equipe particular - membros da equipe */}
                   {form.watch("prenatal_type") === "equipe_particular" && (
-                    <div className="space-y-3">
+                    <div className="space-y-3" ref={(el) => { if (el) setTimeout(() => scrollContainerRef.current?.scrollTo({ top: scrollContainerRef.current.scrollHeight, behavior: 'smooth' }), 100); }}>
                       <div className="flex items-center justify-between">
                         <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Equipe</p>
                         <Button
