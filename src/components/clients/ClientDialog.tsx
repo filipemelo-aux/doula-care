@@ -108,6 +108,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
   const [customInstallmentAmounts, setCustomInstallmentAmounts] = useState<number[]>([]);
   const lastEffectivePlanValueRef = useRef<number>(0);
   const [prenatalTeam, setPrenatalTeam] = useState<{name: string; role: string}[]>([]);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   const { data: planSettings } = useQuery({
     queryKey: ["plan-settings"],
