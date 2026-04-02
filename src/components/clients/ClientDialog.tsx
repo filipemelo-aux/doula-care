@@ -1152,57 +1152,115 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
                   </div>
 
                   {/* Tipo de atendimento e alto risco */}
-                  <div className="border-t border-border/30 pt-4 space-y-3">
-                    <div className="grid grid-cols-2 gap-3">
-                      <FormField
-                        control={form.control}
-                        name="prenatal_type"
-                        render={({ field }) => (
-                          <FormItem className="space-y-1">
-                            <FormLabel className="text-xs">Tipo de atendimento</FormLabel>
-                            <Select onValueChange={field.onChange} value={field.value || ""}>
-                              <FormControl>
-                                <SelectTrigger className="h-9 text-sm">
-                                  <SelectValue placeholder="Selecione" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                <SelectItem value="sus">SUS</SelectItem>
-                                <SelectItem value="plano">Plano de Saúde</SelectItem>
-                                <SelectItem value="particular">Particular</SelectItem>
-                                <SelectItem value="equipe_particular">Equipe Particular</SelectItem>
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="prenatal_high_risk"
-                        render={({ field }) => (
-                          <FormItem className="space-y-1">
-                            <FormLabel className="text-xs">Alto Risco?</FormLabel>
-                            <Select 
-                              onValueChange={(v) => field.onChange(v === "true")} 
-                              value={field.value ? "true" : "false"}
-                            >
-                              <FormControl>
-                                <SelectTrigger className="h-9 text-sm">
-                                  <SelectValue />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                <SelectItem value="false">Não</SelectItem>
-                                <SelectItem value="true">Sim</SelectItem>
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <FormField
+                      control={form.control}
+                      name="prenatal_type"
+                      render={({ field }) => (
+                        <FormItem className="space-y-1">
+                          <FormLabel className="text-xs">Tipo de atendimento</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value || ""}>
+                            <FormControl>
+                              <SelectTrigger className="h-9 text-sm">
+                                <SelectValue placeholder="Selecione" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="sus">SUS</SelectItem>
+                              <SelectItem value="plano">Plano de Saúde</SelectItem>
+                              <SelectItem value="particular">Particular</SelectItem>
+                              <SelectItem value="equipe_particular">Equipe Particular</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="prenatal_high_risk"
+                      render={({ field }) => (
+                        <FormItem className="space-y-1">
+                          <FormLabel className="text-xs">Alto Risco?</FormLabel>
+                          <Select 
+                            onValueChange={(v) => field.onChange(v === "true")} 
+                            value={field.value ? "true" : "false"}
+                          >
+                            <FormControl>
+                              <SelectTrigger className="h-9 text-sm">
+                                <SelectValue />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="false">Não</SelectItem>
+                              <SelectItem value="true">Sim</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                   </div>
+
+                  {/* Equipe particular - membros da equipe */}
+                  {form.watch("prenatal_type") === "equipe_particular" && (
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Equipe</p>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 text-xs gap-1"
+                          onClick={() => setPrenatalTeam(prev => [...prev, { name: "", role: "" }])}
+                        >
+                          + Adicionar membro
+                        </Button>
+                      </div>
+                      {prenatalTeam.map((member, idx) => (
+                        <div key={idx} className="grid grid-cols-[1fr_1fr_auto] gap-2 items-end">
+                          <div className="space-y-1">
+                            <label className="text-xs text-muted-foreground">Nome</label>
+                            <Input
+                              className="h-9 text-sm"
+                              placeholder="Nome do profissional"
+                              value={member.name}
+                              onChange={(e) => {
+                                const updated = [...prenatalTeam];
+                                updated[idx] = { ...updated[idx], name: e.target.value };
+                                setPrenatalTeam(updated);
+                              }}
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <label className="text-xs text-muted-foreground">Função</label>
+                            <Input
+                              className="h-9 text-sm"
+                              placeholder="Ex: Obstetra, Enfermeira..."
+                              value={member.role}
+                              onChange={(e) => {
+                                const updated = [...prenatalTeam];
+                                updated[idx] = { ...updated[idx], role: e.target.value };
+                                setPrenatalTeam(updated);
+                              }}
+                            />
+                          </div>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="h-9 px-2 text-destructive hover:text-destructive"
+                            onClick={() => setPrenatalTeam(prev => prev.filter((_, i) => i !== idx))}
+                          >
+                            ✕
+                          </Button>
+                        </div>
+                      ))}
+                      {prenatalTeam.length === 0 && (
+                        <p className="text-xs text-muted-foreground italic">Nenhum membro adicionado</p>
+                      )}
+                    </div>
+                  )}
                 </div>
               )}
 
