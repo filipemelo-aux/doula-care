@@ -1818,19 +1818,15 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
 
             {/* Navigation - Fixed at bottom */}
             <div className="flex items-center justify-between pt-3 mt-auto border-t border-border/40 flex-shrink-0 pb-1">
-              <div>
-                {currentStep > 1 && (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    className="h-10 gap-1 text-muted-foreground hover:text-foreground"
-                    onClick={handlePrev}
-                  >
-                    <ChevronLeft className="w-4 h-4" />
-                    Voltar
-                  </Button>
-                )}
-              </div>
+              <Button
+                type="button"
+                variant="ghost"
+                className={cn("h-10 gap-1 text-muted-foreground hover:text-foreground", currentStep <= 1 && "invisible")}
+                onClick={handlePrev}
+              >
+                <ChevronLeft className="w-4 h-4" />
+                Voltar
+              </Button>
               <div className="flex gap-2">
                 <Button
                   type="button"
@@ -1852,7 +1848,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
                 ) : (
                   <Button 
                     type="button" 
-                    className="h-12 sm:h-11 rounded-xl text-[15px] font-semibold px-8"
+                    className="h-10 gap-1 px-6"
                     disabled={mutation.isPending}
                     onClick={handleFinalSubmit}
                   >
