@@ -884,7 +884,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="client-dialog-form flex flex-col flex-1 min-h-0">
-            <div className="flex-1 overflow-y-auto px-1 pr-3 space-y-0 scrollbar-thin pt-3">
+            <div className="flex-1 overflow-y-auto overflow-x-hidden px-1 space-y-0 scrollbar-thin pt-3">
 
               {/* Step 1: Dados Pessoais */}
               {currentStep === 1 && (
