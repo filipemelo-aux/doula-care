@@ -1818,7 +1818,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
             </div>
 
             {/* Navigation - Fixed at bottom */}
-            <div className="flex items-center justify-between pt-4 mt-4 border-t border-border/40 flex-shrink-0">
+            <div className="flex items-center justify-between pt-3 mt-auto border-t border-border/40 flex-shrink-0 pb-1">
               <div>
                 {currentStep > 1 && (
                   <Button
