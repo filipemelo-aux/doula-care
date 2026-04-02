@@ -859,14 +859,14 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
             {client ? "Editar Cliente" : "Nova Cliente"}
           </DialogTitle>
           {/* Tab-style step navigation */}
-          <div className="flex items-center gap-0 pt-2 overflow-x-auto border-b border-border/40 -mx-1">
+          <div className="flex items-center pt-2 border-b border-border/40">
             {STEPS.map((step) => (
               <button
                 key={step.id}
                 type="button"
                 onClick={() => handleStepClick(step.id)}
                 className={cn(
-                  "relative px-2.5 py-1.5 text-[11px] font-medium transition-all whitespace-nowrap flex-shrink-0",
+                  "relative flex-1 px-1 py-1.5 text-[11px] font-medium transition-all whitespace-nowrap text-center",
                   currentStep === step.id
                     ? "text-primary"
                     : step.id < currentStep
