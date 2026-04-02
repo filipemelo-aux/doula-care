@@ -1821,45 +1821,39 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
               <Button
                 type="button"
                 variant="ghost"
-                className={cn("h-10 gap-1 text-muted-foreground hover:text-foreground", currentStep <= 1 && "invisible")}
-                onClick={handlePrev}
+                className="h-10 text-muted-foreground hover:text-foreground"
+                onClick={() => onOpenChange(false)}
               >
-                <ChevronLeft className="w-4 h-4" />
-                Voltar
+                Cancelar
               </Button>
               <div className="flex gap-2">
                 <Button
                   type="button"
                   variant="ghost"
-                  className="h-10 text-muted-foreground hover:text-foreground"
-                  onClick={() => onOpenChange(false)}
+                  className={cn("h-10 gap-1 text-muted-foreground hover:text-foreground", currentStep <= 1 && "invisible")}
+                  onClick={handlePrev}
                 >
-                  Cancelar
+                  <ChevronLeft className="w-4 h-4" />
+                  Voltar
                 </Button>
-                {currentStep < STEPS.length ? (
-                  <Button
-                    type="button"
-                    className="h-10 gap-1 px-6"
-                    onClick={handleNext}
-                  >
-                    Próximo
-                    <ChevronRight className="w-4 h-4" />
-                  </Button>
-                ) : (
-                  <Button 
-                    type="button" 
-                    className="h-10 gap-1 px-6"
-                    disabled={mutation.isPending}
-                    onClick={handleFinalSubmit}
-                  >
-                    {mutation.isPending ? (
-                      <>
-                        <Loader2 className="h-4 w-4 animate-spin mr-1" />
-                        Salvando...
-                      </>
-                    ) : client ? "Atualizar" : "Cadastrar"}
-                  </Button>
-                )}
+                <Button
+                  type="button"
+                  className="h-10 gap-1 px-6"
+                  disabled={currentStep >= STEPS.length && mutation.isPending}
+                  onClick={currentStep < STEPS.length ? handleNext : handleFinalSubmit}
+                >
+                  {currentStep < STEPS.length ? (
+                    <>
+                      Próximo
+                      <ChevronRight className="w-4 h-4" />
+                    </>
+                  ) : mutation.isPending ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin mr-1" />
+                      Salvando...
+                    </>
+                  ) : client ? "Atualizar" : "Cadastrar"}
+                </Button>
               </div>
             </div>
           </form>
