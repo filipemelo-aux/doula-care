@@ -853,7 +853,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl h-[85vh] overflow-hidden flex flex-col">
+      <DialogContent className="max-w-2xl h-[85vh] overflow-hidden flex flex-col overflow-x-hidden">
         <DialogHeader className="pb-0 flex-shrink-0">
           <DialogTitle className="font-display text-lg">
             {client ? "Editar Cliente" : "Nova Cliente"}
@@ -884,7 +884,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="client-dialog-form flex flex-col flex-1 min-h-0">
-            <div className="flex-1 overflow-y-auto px-1 pr-3 space-y-0 scrollbar-thin pt-3">
+            <div className="flex-1 overflow-y-auto overflow-x-hidden px-1 space-y-0 scrollbar-thin pt-3">
 
               {/* Step 1: Dados Pessoais */}
               {currentStep === 1 && (
@@ -1818,7 +1818,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
             </div>
 
             {/* Navigation - Fixed at bottom */}
-            <div className="flex items-center justify-between pt-4 mt-4 border-t border-border/40 flex-shrink-0">
+            <div className="flex items-center justify-between pt-3 mt-auto border-t border-border/40 flex-shrink-0 pb-1">
               <div>
                 {currentStep > 1 && (
                   <Button
