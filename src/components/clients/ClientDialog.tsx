@@ -1791,6 +1791,27 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
                       )}
                     </div>
                   )}
+
+                  {/* Observações */}
+                  <div className="border-t border-border/30 pt-3">
+                    <FormField
+                      control={form.control}
+                      name="notes"
+                      render={({ field }) => (
+                        <FormItem className="space-y-1">
+                          <FormLabel className="text-xs">Observações</FormLabel>
+                          <FormControl>
+                            <Textarea
+                              {...field}
+                              className="min-h-[70px] resize-none text-sm"
+                              placeholder="Anotações sobre a cliente..."
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
                 </div>
               )}
 
