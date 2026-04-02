@@ -1414,16 +1414,16 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
                     )}
                   </div>
 
-                  {/* Redes Sociais */}
+                  {/* Instagram */}
                   <div className="border-t border-border/30 pt-4 space-y-3">
-                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Redes Sociais</p>
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Instagram</p>
                     <div className="grid grid-cols-2 gap-3">
                       <FormField
                         control={form.control}
                         name="instagram_gestante"
                         render={({ field }) => (
                           <FormItem className="space-y-1">
-                            <FormLabel className="text-xs">Instagram da Gestante</FormLabel>
+                            <FormLabel className="text-xs">Gestante</FormLabel>
                             <FormControl>
                               <Input {...field} className="h-9 text-sm lowercase" placeholder="@usuario" />
                             </FormControl>
@@ -1436,7 +1436,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
                         name="instagram_acompanhante"
                         render={({ field }) => (
                           <FormItem className="space-y-1">
-                            <FormLabel className="text-xs">Instagram do Acompanhante</FormLabel>
+                            <FormLabel className="text-xs">Acompanhante</FormLabel>
                             <FormControl>
                               <Input {...field} className="h-9 text-sm lowercase" placeholder="@usuario" />
                             </FormControl>
