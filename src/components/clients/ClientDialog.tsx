@@ -813,9 +813,8 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
     return result;
   };
 
-  const handleNext = async () => {
-    const valid = await validateCurrentStep();
-    if (valid && currentStep < STEPS.length) {
+  const handleNext = () => {
+    if (currentStep < STEPS.length) {
       setCurrentStep(currentStep + 1);
     }
   };
