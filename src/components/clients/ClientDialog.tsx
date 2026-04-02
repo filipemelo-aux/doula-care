@@ -1794,28 +1794,6 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
                 </div>
               )}
 
-              {/* Step 7: Observações */}
-              {currentStep === 7 && (
-                <div className="space-y-3">
-                  <FormField
-                    control={form.control}
-                    name="notes"
-                    render={({ field }) => (
-                      <FormItem className="space-y-1">
-                        <FormLabel className="text-xs">Observações</FormLabel>
-                        <FormControl>
-                          <Textarea
-                            {...field}
-                            className="min-h-[100px] resize-none text-sm"
-                            placeholder="Anotações sobre a cliente..."
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              )}
             </div>
 
             {/* Navigation - Fixed at bottom */}
