@@ -1152,9 +1152,8 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
                     )}
                   </div>
 
-                  {/* Tipo de atendimento e pré-natal */}
+                  {/* Tipo de atendimento e alto risco */}
                   <div className="border-t border-border/30 pt-4 space-y-3">
-                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Pré-natal</p>
                     <div className="grid grid-cols-2 gap-3">
                       <FormField
                         control={form.control}
@@ -1204,59 +1203,6 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
                         )}
                       />
                     </div>
-                    {form.watch("prenatal_type") === "equipe_particular" && (
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <FormLabel className="text-xs">Equipe</FormLabel>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            className="h-6 text-xs gap-1 px-2"
-                            onClick={() => setPrenatalTeam([...prenatalTeam, { name: "", role: "" }])}
-                          >
-                            + Adicionar
-                          </Button>
-                        </div>
-                        {prenatalTeam.length === 0 && (
-                          <p className="text-xs text-muted-foreground">Nenhum integrante adicionado.</p>
-                        )}
-                        {prenatalTeam.map((member, i) => (
-                          <div key={i} className="flex items-center gap-2">
-                            <Input
-                              className="h-8 text-xs flex-1"
-                              placeholder="Nome"
-                              value={member.name}
-                              onChange={(e) => {
-                                const updated = [...prenatalTeam];
-                                updated[i] = { ...updated[i], name: e.target.value };
-                                setPrenatalTeam(updated);
-                              }}
-                              mask="name"
-                            />
-                            <Input
-                              className="h-8 text-xs flex-1"
-                              placeholder="Função"
-                              value={member.role}
-                              onChange={(e) => {
-                                const updated = [...prenatalTeam];
-                                updated[i] = { ...updated[i], role: e.target.value };
-                                setPrenatalTeam(updated);
-                              }}
-                            />
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              className="h-8 w-8 p-0 text-destructive hover:text-destructive"
-                              onClick={() => setPrenatalTeam(prenatalTeam.filter((_, j) => j !== i))}
-                            >
-                              ×
-                            </Button>
-                          </div>
-                        ))}
-                      </div>
-                    )}
                   </div>
                 </div>
               )}
