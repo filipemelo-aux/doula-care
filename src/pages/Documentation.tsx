@@ -96,6 +96,7 @@ export default function Documentation() {
         </div>
       </header>
 
+      <div className="flex-1 min-h-0 overflow-y-auto overscroll-y-contain">
       <div className="max-w-5xl mx-auto px-4 py-8 flex flex-col lg:flex-row gap-8">
         {/* TOC sidebar */}
         <nav className="hidden lg:block w-56 shrink-0">
