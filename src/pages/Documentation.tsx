@@ -342,6 +342,10 @@ export default function Documentation() {
           <BookOpen className="h-5 w-5 text-primary" />
           <h1 className="font-display text-lg font-bold text-foreground">Documentação — Doula Care</h1>
           <Badge variant="secondary" className="ml-auto text-xs">v1.2.2</Badge>
+          <Button variant="outline" size="sm" onClick={exportPdf} className="gap-2 ml-2">
+            <Download className="h-4 w-4" />
+            <span className="hidden sm:inline">Exportar PDF</span>
+          </Button>
         </div>
       </header>
 
