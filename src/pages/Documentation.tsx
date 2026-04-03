@@ -83,7 +83,7 @@ export default function Documentation() {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="h-[100dvh] flex flex-col bg-background overflow-hidden">
       {/* Header */}
       <header className="sticky top-0 z-50 bg-card/95 backdrop-blur-sm border-b border-border/30">
         <div className="max-w-5xl mx-auto flex items-center gap-3 px-4 py-3">
