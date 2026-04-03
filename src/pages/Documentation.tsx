@@ -1,11 +1,12 @@
-import { useState } from "react";
-import { ChevronDown, ChevronRight, ArrowLeft, BookOpen, Users, CalendarDays, Wallet, MessageCircle, Bell, Shield, Settings, Smartphone, Heart, FileText, TrendingUp, TrendingDown, Users2, Baby, Clock, Star, Database, Lock, Zap } from "lucide-react";
+import { useState, useCallback } from "react";
+import { ChevronDown, ChevronRight, ArrowLeft, BookOpen, Users, CalendarDays, Wallet, MessageCircle, Bell, Shield, Settings, Smartphone, Heart, FileText, TrendingUp, TrendingDown, Users2, Baby, Clock, Star, Database, Lock, Zap, Download } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 interface SectionProps {
   id: string;
