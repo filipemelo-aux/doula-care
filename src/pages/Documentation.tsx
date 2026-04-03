@@ -645,6 +645,7 @@ export default function Documentation() {
           </div>
         </div>
       </div>
+      </div>
     </div>
   );
 }
