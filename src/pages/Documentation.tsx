@@ -83,7 +83,7 @@ export default function Documentation() {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="h-[100dvh] flex flex-col bg-background overflow-hidden">
       {/* Header */}
       <header className="sticky top-0 z-50 bg-card/95 backdrop-blur-sm border-b border-border/30">
         <div className="max-w-5xl mx-auto flex items-center gap-3 px-4 py-3">
@@ -96,6 +96,7 @@ export default function Documentation() {
         </div>
       </header>
 
+      <div className="flex-1 min-h-0 overflow-y-auto overscroll-y-contain">
       <div className="max-w-5xl mx-auto px-4 py-8 flex flex-col lg:flex-row gap-8">
         {/* TOC sidebar */}
         <nav className="hidden lg:block w-56 shrink-0">
@@ -643,6 +644,7 @@ export default function Documentation() {
             <p className="mt-1">© 2025 Doula Care. Todos os direitos reservados.</p>
           </div>
         </div>
+      </div>
       </div>
     </div>
   );
