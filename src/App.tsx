@@ -19,6 +19,7 @@ import Register from "./pages/Register";
 import RecoverCredentials from "./pages/RecoverCredentials";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import DeleteAccount from "./pages/DeleteAccount";
+import Documentation from "./pages/Documentation";
 import SuperAdminDashboard from "./pages/SuperAdminDashboard";
 import AdminNotifications from "./pages/AdminNotifications";
 import AdminMessages from "./pages/AdminMessages";
