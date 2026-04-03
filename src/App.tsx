@@ -60,6 +60,7 @@ const App = () => (
             <Route path="/recuperar-acesso" element={<RecoverCredentials />} />
             <Route path="/politica-de-privacidade" element={<PrivacyPolicy />} />
             <Route path="/excluir-conta" element={<DeleteAccount />} />
+            <Route path="/documentacao" element={<Documentation />} />
             {/* Legacy routes redirect to unified login */}
             <Route path="/" element={<Navigate to="/login" replace />} />
             <Route path="/admin/login" element={<Navigate to="/login" replace />} />
