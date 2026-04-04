@@ -374,7 +374,7 @@ export default function Documentation() {
             <h1 className="text-2xl lg:text-3xl font-bold text-foreground mb-3">Doula Care — Documentação Completa</h1>
             <p className="text-muted-foreground leading-relaxed">
               Documentação técnica e funcional da plataforma Doula Care, um sistema SaaS multi-tenant para gestão
-              de atendimentos de doulas, com portal exclusivo para gestantes, puérperas e clientes.
+              de atendimentos de doulas, com portal exclusivo para gestantes e puérperas.
             </p>
           </div>
 
