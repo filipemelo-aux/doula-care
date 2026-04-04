@@ -5,6 +5,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useOccupiedSlots } from "@/hooks/useOccupiedSlots";
 import { Card, CardContent } from "@/components/ui/card";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Calendar } from "@/components/ui/calendar";
@@ -13,7 +14,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Calendar as CalendarIcon, Clock, Plus, Loader2, CheckCircle, XCircle, AlertCircle } from "lucide-react";
+import { Calendar as CalendarIcon, Clock, Plus, Loader2, CheckCircle, XCircle, AlertCircle, ChevronDown } from "lucide-react";
 import { format, isSameDay, isFuture, isToday } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
@@ -60,6 +61,7 @@ export default function GestanteAppointments() {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>();
   const [selectedTime, setSelectedTime] = useState("");
   const [reason, setReason] = useState("");
+  const [historyOpen, setHistoryOpen] = useState(false);
 
   // Fetch upcoming appointments
   const { data: appointments, isLoading: loadingApts } = useQuery({
@@ -110,6 +112,25 @@ export default function GestanteAppointments() {
         .order("created_at", { ascending: false });
       if (error) throw error;
       return data as AppointmentRequest[];
+    },
+    enabled: !!client?.id,
+  });
+
+
+  // Fetch completed appointments history
+  const { data: completedAppointments } = useQuery({
+    queryKey: ["gestante-completed-appointments", client?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("appointments")
+        .select("id, title, scheduled_at, notes, completed_at, completion_notes")
+        .eq("client_id", client!.id)
+        .not("title", "like", "Serviço:%")
+        .not("completed_at", "is", null)
+        .order("completed_at", { ascending: false })
+        .limit(20);
+      if (error) throw error;
+      return data as (Appointment & { completion_notes: string | null })[];
     },
     enabled: !!client?.id,
   });
@@ -312,6 +333,42 @@ export default function GestanteAppointments() {
                 })}
               </div>
             </div>
+          )}
+
+          {/* Completed Appointments History */}
+          {completedAppointments && completedAppointments.length > 0 && (
+            <Collapsible open={historyOpen} onOpenChange={setHistoryOpen}>
+              <CollapsibleTrigger className="flex items-center justify-between w-full py-2 px-1 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors">
+                <span className="flex items-center gap-1.5">
+                  <Clock className="h-3.5 w-3.5" />
+                  Histórico de Consultas ({completedAppointments.length})
+                </span>
+                <ChevronDown className={`h-3.5 w-3.5 transition-transform ${historyOpen ? "rotate-180" : ""}`} />
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <div className="space-y-0 divide-y divide-border/50 rounded-lg border bg-card px-3">
+                  {completedAppointments.map((apt) => {
+                    const date = new Date(apt.scheduled_at);
+                    return (
+                      <div key={apt.id} className="flex items-center justify-between py-2.5 gap-2">
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-medium truncate">{apt.title}</p>
+                          <p className="text-[10px] text-muted-foreground">
+                            {format(date, "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+                          </p>
+                          {apt.completion_notes && (
+                            <p className="text-[10px] text-muted-foreground italic mt-0.5 truncate">
+                              {apt.completion_notes}
+                            </p>
+                          )}
+                        </div>
+                        <CheckCircle className="h-3.5 w-3.5 text-emerald-500 flex-shrink-0" />
+                      </div>
+                    );
+                  })}
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
           )}
 
           {isLoading && (
