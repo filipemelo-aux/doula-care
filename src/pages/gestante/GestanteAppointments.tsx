@@ -116,6 +116,25 @@ export default function GestanteAppointments() {
     enabled: !!client?.id,
   });
 
+
+  // Fetch completed appointments history
+  const { data: completedAppointments } = useQuery({
+    queryKey: ["gestante-completed-appointments", client?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("appointments")
+        .select("id, title, scheduled_at, notes, completed_at, completion_notes")
+        .eq("client_id", client!.id)
+        .not("title", "like", "Serviço:%")
+        .not("completed_at", "is", null)
+        .order("completed_at", { ascending: false })
+        .limit(20);
+      if (error) throw error;
+      return data as (Appointment & { completion_notes: string | null })[];
+    },
+    enabled: !!client?.id,
+  });
+
   const availableDates = new Set((availability || []).map((a) => a.available_date));
 
   const selectedDaySlots = selectedDate
