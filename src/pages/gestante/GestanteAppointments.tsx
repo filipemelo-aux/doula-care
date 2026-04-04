@@ -371,6 +371,7 @@ export default function GestanteAppointments() {
             </Collapsible>
           )}
 
+          {isLoading && (
             <div className="flex justify-center py-8">
               <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
             </div>
