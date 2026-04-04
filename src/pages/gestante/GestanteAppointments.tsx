@@ -335,7 +335,42 @@ export default function GestanteAppointments() {
             </div>
           )}
 
-          {isLoading && (
+          {/* Completed Appointments History */}
+          {completedAppointments && completedAppointments.length > 0 && (
+            <Collapsible open={historyOpen} onOpenChange={setHistoryOpen}>
+              <CollapsibleTrigger className="flex items-center justify-between w-full py-2 px-1 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors">
+                <span className="flex items-center gap-1.5">
+                  <Clock className="h-3.5 w-3.5" />
+                  Histórico de Consultas ({completedAppointments.length})
+                </span>
+                <ChevronDown className={`h-3.5 w-3.5 transition-transform ${historyOpen ? "rotate-180" : ""}`} />
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <div className="space-y-0 divide-y divide-border/50 rounded-lg border bg-card px-3">
+                  {completedAppointments.map((apt) => {
+                    const date = new Date(apt.scheduled_at);
+                    return (
+                      <div key={apt.id} className="flex items-center justify-between py-2.5 gap-2">
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-medium truncate">{apt.title}</p>
+                          <p className="text-[10px] text-muted-foreground">
+                            {format(date, "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+                          </p>
+                          {apt.completion_notes && (
+                            <p className="text-[10px] text-muted-foreground italic mt-0.5 truncate">
+                              {apt.completion_notes}
+                            </p>
+                          )}
+                        </div>
+                        <CheckCircle className="h-3.5 w-3.5 text-emerald-500 flex-shrink-0" />
+                      </div>
+                    );
+                  })}
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
+          )}
+
             <div className="flex justify-center py-8">
               <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
             </div>
