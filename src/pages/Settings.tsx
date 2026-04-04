@@ -78,6 +78,7 @@ import { z } from "zod";
 import type { Tables } from "@/integrations/supabase/types";
 import Plans from "@/pages/Plans";
 import { usePlanLimits } from "@/hooks/usePlanLimits";
+import { promptToSaveUpdatedPassword } from "@/lib/passwordManager";
 
 // ─── Plan Types ──────────────────────────────────────────
 type PlanSetting = Tables<"plan_settings">;
@@ -268,6 +269,7 @@ export default function Settings() {
     mutationFn: async (newPassword: string) => {
       const { error } = await supabase.auth.updateUser({ password: newPassword });
       if (error) throw error;
+      await promptToSaveUpdatedPassword(newPassword, user?.email);
     },
     onSuccess: () => {
       toast.success("Senha alterada com sucesso!");

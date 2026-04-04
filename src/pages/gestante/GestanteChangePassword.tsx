@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Loader2, Eye, EyeOff, Lock } from "lucide-react";
 import { toast } from "sonner";
 import { WelcomeNameDialog } from "@/components/gestante/WelcomeNameDialog";
+import { promptToSaveUpdatedPassword } from "@/lib/passwordManager";
 
 export default function GestanteChangePassword() {
   const [newPassword, setNewPassword] = useState("");
@@ -66,6 +67,8 @@ export default function GestanteChangePassword() {
       });
 
       if (error) throw error;
+
+      await promptToSaveUpdatedPassword(newPassword, user?.email);
 
       await refreshClientData();
 

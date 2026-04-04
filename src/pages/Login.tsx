@@ -9,56 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Loader2, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import { getCachedBranding } from "@/hooks/useOrgBranding";
-
-type PasswordCredentialConstructor = new (
-  data: HTMLFormElement | { id: string; password: string; name?: string }
-) => Credential;
-
-type CredentialNavigator = Navigator & {
-  credentials?: {
-    store?: (credential: Credential) => Promise<Credential | null>;
-    create?: (options: { password: HTMLFormElement }) => Promise<Credential | null>;
-  };
-};
-
-const storeLoginCredential = async ({
-  form,
-  loginId,
-  password,
-}: {
-  form: HTMLFormElement | null;
-  loginId: string;
-  password: string;
-}) => {
-  if (!window.isSecureContext) return;
-
-  try {
-    const credentialNavigator = navigator as CredentialNavigator;
-    const passwordCredential = (window as Window & {
-      PasswordCredential?: PasswordCredentialConstructor;
-    }).PasswordCredential;
-
-    let credential: Credential | null = null;
-
-    if (passwordCredential && form) {
-      credential = new passwordCredential(form);
-    } else if (credentialNavigator.credentials?.create && form) {
-      credential = await credentialNavigator.credentials.create({ password: form });
-    } else if (passwordCredential) {
-      credential = new passwordCredential({
-        id: loginId,
-        password,
-        name: loginId,
-      });
-    }
-
-    if (credential && credentialNavigator.credentials?.store) {
-      await credentialNavigator.credentials.store(credential);
-    }
-  } catch {
-    // Best effort only: unsupported browsers/password managers should fail silently
-  }
-};
+import { promptToSavePassword, rememberLastLoginIdentifier } from "@/lib/passwordManager";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -118,7 +69,9 @@ export default function Login() {
       return;
     }
 
-    await storeLoginCredential({
+    rememberLastLoginIdentifier(loginIdentifier);
+
+    await promptToSavePassword({
       form: formRef.current,
       loginId: loginIdentifier,
       password,
