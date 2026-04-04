@@ -61,6 +61,7 @@ export default function GestanteAppointments() {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>();
   const [selectedTime, setSelectedTime] = useState("");
   const [reason, setReason] = useState("");
+  const [historyOpen, setHistoryOpen] = useState(false);
 
   // Fetch upcoming appointments
   const { data: appointments, isLoading: loadingApts } = useQuery({
