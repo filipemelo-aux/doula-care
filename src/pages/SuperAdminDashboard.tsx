@@ -30,6 +30,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { promptToSaveUpdatedPassword } from "@/lib/passwordManager";
 
 type Section = "dashboard" | "moderation" | "users" | "billing" | "notifications" | "community" | "profile";
 
@@ -124,6 +125,7 @@ function ProfileSection() {
     try {
       const { error } = await supabase.auth.updateUser({ password: newPassword });
       if (error) throw error;
+      await promptToSaveUpdatedPassword(newPassword, user?.email);
       toast.success("Senha alterada com sucesso!");
       setCurrentPassword("");
       setNewPassword("");
