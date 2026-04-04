@@ -11,7 +11,12 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Briefcase, CheckCircle, Star, Loader2, Camera, X, Image as ImageIcon } from "lucide-react";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import { Briefcase, CheckCircle, Star, Loader2, Camera, X, Image as ImageIcon, ChevronDown, Clock } from "lucide-react";
 import { toast } from "sonner";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { formatBrazilDateTime } from "@/lib/utils";
@@ -41,9 +46,11 @@ export function ScheduledServicesCard({ clientId, organizationId }: ScheduledSer
   const [selectedPhotos, setSelectedPhotos] = useState<File[]>([]);
   const [photoPreviewUrls, setPhotoPreviewUrls] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
+  const [historyOpen, setHistoryOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const queryClient = useQueryClient();
 
+  // Active (accepted, not completed, future)
   const { data: services } = useQuery({
     queryKey: ["scheduled-services", clientId, organizationId],
     queryFn: async () => {
@@ -67,19 +74,25 @@ export function ScheduledServicesCard({ clientId, organizationId }: ScheduledSer
     refetchInterval: 30000,
   });
 
-  const completeMutation = useMutation({
-    mutationFn: async (serviceId: string) => {
-      const { error } = await supabase
+  // Completed services history
+  const { data: completedServices } = useQuery({
+    queryKey: ["completed-services-history", clientId, organizationId],
+    queryFn: async () => {
+      let query = supabase
         .from("service_requests")
-        .update({ completed_at: new Date().toISOString() })
-        .eq("id", serviceId);
+        .select("id, service_type, status, budget_value, responded_at, completed_at, scheduled_date, rating, rating_comment, rating_photos")
+        .eq("client_id", clientId)
+        .not("completed_at", "is", null);
+
+      if (organizationId) {
+        query = query.eq("organization_id", organizationId);
+      }
+
+      const { data, error } = await query.order("completed_at", { ascending: false }).limit(20);
       if (error) throw error;
+      return data as ServiceRequest[];
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["scheduled-services"] });
-      toast.success("Serviço marcado como concluído!");
-    },
-    onError: () => toast.error("Erro ao marcar serviço"),
+    enabled: !!clientId,
   });
 
   const rateMutation = useMutation({
@@ -92,6 +105,7 @@ export function ScheduledServicesCard({ clientId, organizationId }: ScheduledSer
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["scheduled-services"] });
+      queryClient.invalidateQueries({ queryKey: ["completed-services-history"] });
       closeRatingDialog();
       toast.success("Avaliação enviada! Obrigada 💕");
     },
@@ -162,7 +176,10 @@ export function ScheduledServicesCard({ clientId, organizationId }: ScheduledSer
 
   const [viewingPhotos, setViewingPhotos] = useState<string[] | null>(null);
 
-  if (!services || services.length === 0) return null;
+  const hasActive = services && services.length > 0;
+  const hasCompleted = completedServices && completedServices.length > 0;
+
+  if (!hasActive && !hasCompleted) return null;
 
   return (
     <>
@@ -174,15 +191,14 @@ export function ScheduledServicesCard({ clientId, organizationId }: ScheduledSer
           </div>
 
           {/* Active/scheduled services */}
-          {services.filter(s => !s.completed_at).length > 0 && (
+          {hasActive && (
             <div className="space-y-2">
-              {services.filter(s => !s.completed_at).map((svc) => (
+              {services!.map((svc) => (
                 <div key={svc.id} className="bg-background/60 rounded-lg p-3 space-y-2">
                   <div className="flex items-center justify-between">
                     <p className="font-medium text-sm">{svc.service_type}</p>
                     <Badge variant="outline" className="text-[10px] text-amber-700">Agendado</Badge>
                   </div>
-
                   <div className="flex items-center justify-between">
                     {svc.budget_value ? (
                       <p className="text-sm text-muted-foreground">
@@ -199,102 +215,74 @@ export function ScheduledServicesCard({ clientId, organizationId }: ScheduledSer
                       </p>
                     ) : null}
                   </div>
-
-                  <div className="flex gap-2 flex-wrap">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="text-xs text-emerald-700 hover:bg-emerald-50 hover:text-emerald-700"
-                      onClick={() => completeMutation.mutate(svc.id)}
-                      disabled={completeMutation.isPending}
-                    >
-                      {completeMutation.isPending ? (
-                        <Loader2 className="h-3 w-3 animate-spin mr-1" />
-                      ) : (
-                        <CheckCircle className="h-3 w-3 mr-1" />
-                      )}
-                      Marcar Concluído
-                    </Button>
-                  </div>
                 </div>
               ))}
             </div>
           )}
 
-          {/* Completed/finalized services - reduced & opaque */}
-          {services.filter(s => !!s.completed_at).length > 0 && (
-            <div className="space-y-2 mt-3">
-              <p className="text-xs font-medium text-muted-foreground/70 px-1">Serviços Finalizados</p>
-              {services.filter(s => !!s.completed_at).map((svc) => (
-                <div key={svc.id} className="bg-background/30 rounded-lg p-2.5 space-y-1.5 opacity-60">
-                  <div className="flex items-center justify-between">
-                    <p className="font-medium text-xs">{svc.service_type}</p>
-                    <Badge className="bg-muted text-muted-foreground text-[10px] border-0">Concluído</Badge>
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    {svc.budget_value ? (
-                      <p className="text-xs text-muted-foreground">
-                        R$ {svc.budget_value.toFixed(2).replace(".", ",")}
-                      </p>
-                    ) : <span />}
-                    {svc.scheduled_date ? (
-                      <p className="text-[10px] text-muted-foreground">
-                        📅 {formatBrazilDateTime(svc.scheduled_date, "dd/MM/yyyy")}
-                      </p>
-                    ) : null}
-                  </div>
-
-                  <div className="flex gap-2 flex-wrap items-center">
-                    {!svc.rating && (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="text-xs h-6 text-amber-700 hover:bg-amber-50 hover:text-amber-700"
-                        onClick={() => {
-                          setRatingDialog(svc);
-                          setSelectedRating(0);
-                          setRatingComment("");
-                          setSelectedPhotos([]);
-                          setPhotoPreviewUrls([]);
-                        }}
-                      >
-                        <Star className="h-3 w-3 mr-1" />
-                        Avaliar
-                      </Button>
-                    )}
-
-                    {svc.rating && (
-                      <div className="flex items-center gap-1">
-                        <div className="flex items-center gap-0.5">
-                          {[1, 2, 3, 4, 5].map((s) => (
-                            <Star
-                              key={s}
-                              className={`h-3 w-3 ${s <= svc.rating! ? "text-amber-400 fill-amber-400" : "text-muted-foreground/30"}`}
-                            />
-                          ))}
+          {/* Completed services - collapsible compact list */}
+          {hasCompleted && (
+            <Collapsible open={historyOpen} onOpenChange={setHistoryOpen} className={hasActive ? "mt-3" : ""}>
+              <CollapsibleTrigger className="flex items-center justify-between w-full py-2 px-1 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors">
+                <span className="flex items-center gap-1.5">
+                  <Clock className="h-3.5 w-3.5" />
+                  Histórico ({completedServices!.length})
+                </span>
+                <ChevronDown className={`h-3.5 w-3.5 transition-transform ${historyOpen ? "rotate-180" : ""}`} />
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <div className="space-y-0 divide-y divide-border/50">
+                  {completedServices!.map((svc) => (
+                    <div key={svc.id} className="flex items-center justify-between py-2 px-1 gap-2">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <p className="text-xs font-medium truncate">{svc.service_type}</p>
+                          {svc.rating ? (
+                            <div className="flex items-center gap-0.5 flex-shrink-0">
+                              {[1, 2, 3, 4, 5].map((s) => (
+                                <Star
+                                  key={s}
+                                  className={`h-2.5 w-2.5 ${s <= svc.rating! ? "text-amber-400 fill-amber-400" : "text-muted-foreground/20"}`}
+                                />
+                              ))}
+                            </div>
+                          ) : (
+                            <button
+                              onClick={() => {
+                                setRatingDialog(svc);
+                                setSelectedRating(0);
+                                setRatingComment("");
+                                setSelectedPhotos([]);
+                                setPhotoPreviewUrls([]);
+                              }}
+                              className="text-[10px] text-amber-600 hover:text-amber-700 font-medium flex-shrink-0"
+                            >
+                              Avaliar
+                            </button>
+                          )}
                         </div>
-                        {svc.rating_photos && svc.rating_photos.length > 0 && (
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="text-xs h-5 px-1"
-                            onClick={() => setViewingPhotos(svc.rating_photos!)}
-                          >
-                            <ImageIcon className="h-3 w-3 mr-0.5" />
-                            {svc.rating_photos.length}
-                          </Button>
-                        )}
+                        <p className="text-[10px] text-muted-foreground">
+                          {svc.completed_at && formatBrazilDateTime(svc.completed_at, "dd/MM/yyyy")}
+                          {svc.budget_value ? ` · R$ ${svc.budget_value.toFixed(2).replace(".", ",")}` : ""}
+                        </p>
                       </div>
-                    )}
-                  </div>
-
-                  {svc.rating_comment && (
-                    <p className="text-[10px] text-muted-foreground italic">"{svc.rating_comment}"</p>
-                  )}
+                      <div className="flex items-center gap-1 flex-shrink-0">
+                        {svc.rating_photos && svc.rating_photos.length > 0 && (
+                          <button
+                            onClick={() => setViewingPhotos(svc.rating_photos!)}
+                            className="text-[10px] text-muted-foreground hover:text-foreground flex items-center gap-0.5"
+                          >
+                            <ImageIcon className="h-3 w-3" />
+                            {svc.rating_photos.length}
+                          </button>
+                        )}
+                        <CheckCircle className="h-3.5 w-3.5 text-emerald-500" />
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
+              </CollapsibleContent>
+            </Collapsible>
           )}
         </CardContent>
       </Card>
