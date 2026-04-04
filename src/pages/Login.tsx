@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Loader2, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import { getCachedBranding } from "@/hooks/useOrgBranding";
+import { useNativeSavedCredential } from "@/hooks/useNativeSavedCredential";
 import { promptToSavePassword, rememberLastLoginIdentifier } from "@/lib/passwordManager";
 
 export default function Login() {
@@ -21,6 +22,7 @@ export default function Login() {
   const formRef = useRef<HTMLFormElement>(null);
   const navigate = useNavigate();
   const { signIn, user, role, roleChecked, loading, isFirstLogin } = useAuth();
+  const savedCredential = useNativeSavedCredential(!loading && !user);
 
   useEffect(() => {
     const cached = getCachedBranding();
@@ -29,6 +31,13 @@ export default function Login() {
       if (cached.displayName) setCachedName(cached.displayName);
     }
   }, []);
+
+  useEffect(() => {
+    if (!savedCredential) return;
+
+    setEmail((current) => current || savedCredential.loginId);
+    setPassword((current) => current || savedCredential.password);
+  }, [savedCredential]);
 
   useEffect(() => {
     if (submitting) return;
@@ -71,11 +80,18 @@ export default function Login() {
 
     rememberLastLoginIdentifier(loginIdentifier);
 
-    await promptToSavePassword({
-      form: formRef.current,
-      loginId: loginIdentifier,
-      password,
-    });
+    const shouldPromptToSave =
+      !savedCredential ||
+      savedCredential.loginId !== loginIdentifier ||
+      savedCredential.password !== password;
+
+    if (shouldPromptToSave) {
+      await promptToSavePassword({
+        form: formRef.current,
+        loginId: loginIdentifier,
+        password,
+      });
+    }
 
     toast.success("Login realizado com sucesso!");
     setSubmitting(false);

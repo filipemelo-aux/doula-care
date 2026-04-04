@@ -18,6 +18,11 @@ interface SavePasswordParams {
   password: string;
 }
 
+export interface SavedPasswordCredential {
+  loginId: string;
+  password: string;
+}
+
 const LAST_LOGIN_IDENTIFIER_KEY = "auth:last-login-identifier";
 const IOS_SHARED_WEB_CREDENTIAL_DOMAIN = "doulacare.app.br";
 
@@ -65,6 +70,25 @@ async function saveCredentialOnNative({ loginId, password }: SavePasswordParams)
     });
   } catch (error) {
     console.error("[PasswordManager] Native credential save failed:", error);
+  }
+}
+
+export async function getSavedNativeCredential(): Promise<SavedPasswordCredential | null> {
+  if (!Capacitor.isNativePlatform()) return null;
+
+  try {
+    const credential = await SavePassword.readPassword();
+
+    if (!credential?.username || !credential.password) {
+      return null;
+    }
+
+    return {
+      loginId: normalizeLoginId(credential.username),
+      password: credential.password,
+    };
+  } catch {
+    return null;
   }
 }
 
