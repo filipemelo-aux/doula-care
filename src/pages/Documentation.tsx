@@ -382,15 +382,17 @@ export default function Documentation() {
           <CollapsibleSection id="visao-geral" title="Visão Geral do Sistema" icon={<BookOpen className="h-5 w-5 text-primary" />} defaultOpen>
             <SubSection title="O que é o Doula Care?">
               <p>
-                O Doula Care é uma plataforma web e mobile (PWA) projetada para doulas gerenciarem seus atendimentos
+                O Doula Care é uma plataforma web e mobile (PWA) projetada para <strong>doulas</strong> gerenciarem seus atendimentos
                 de forma completa. Ele oferece um painel administrativo para a doula e um portal dedicado para cada
-                cliente (gestante, puérpera, tentante ou outro acompanhamento).
+                <strong> cliente</strong>. No sistema, chamamos de "cliente" toda pessoa atendida pela doula — seja ela gestante,
+                puérpera, tentante ou qualquer outro tipo de acompanhamento. A cliente acessa seu próprio portal
+                (Portal da Gestante) para acompanhar sua jornada.
               </p>
             </SubSection>
             <SubSection title="Público-Alvo">
               <FeatureList items={[
-                "Doulas profissionais que desejam organizar clientes, consultas, financeiro e comunicação",
-                "Gestantes e puérperas que querem acompanhar sua jornada com diário, contrações, contratos e serviços",
+                "Doulas profissionais que desejam organizar suas clientes, consultas, financeiro e comunicação em um só lugar",
+                "Clientes (gestantes, puérperas, tentantes e outros perfis) que querem acompanhar sua jornada com diário, contrações, contratos e serviços",
                 "Equipes de doulagem com suporte a múltiplos colaboradores (moderadores)",
               ]} />
             </SubSection>
