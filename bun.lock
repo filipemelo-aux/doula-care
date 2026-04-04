@@ -11,6 +11,7 @@
         "@capacitor/ios": "^8.1.0",
         "@capacitor/push-notifications": "^8.0.2",
         "@capacitor/status-bar": "^8.0.1",
+        "@capgo/capacitor-autofill-save-password": "^8.0.20",
         "@capgo/capacitor-navigation-bar": "^8.0.0",
         "@hookform/resolvers": "^3.10.0",
         "@radix-ui/react-accordion": "^1.2.11",
@@ -293,6 +294,8 @@
     "@capacitor/push-notifications": ["@capacitor/push-notifications@8.0.3", "https://europe-west4-npm.pkg.dev/lovable-core-prod/sandbox-npm-cache/@capacitor/push-notifications/-/push-notifications-8.0.3.tgz", { "peerDependencies": { "@capacitor/core": ">=8.0.0" } }, "sha512-jmBBoJvOzmzem8YoO9dQJBPFiM1bksTNAoV7yksCBN10BybAOtmBF19vFPt/jr2KGAirnPZz0ne2X0OH/rRGtg=="],
 
     "@capacitor/status-bar": ["@capacitor/status-bar@8.0.2", "https://europe-west4-npm.pkg.dev/lovable-core-prod/sandbox-npm-cache/@capacitor/status-bar/-/status-bar-8.0.2.tgz", { "peerDependencies": { "@capacitor/core": ">=8.0.0" } }, "sha512-WXs8YB8B9eEaPZz+bcdY6t2nForF1FLoj/JU0Dl9RRgQnddnS98FEEyDooQhaY7wivr000j4+SC1FyeJkrFO7A=="],
+
+    "@capgo/capacitor-autofill-save-password": ["@capgo/capacitor-autofill-save-password@8.0.20", "https://europe-west4-npm.pkg.dev/lovable-core-prod/sandbox-npm-cache/@capgo/capacitor-autofill-save-password/-/capacitor-autofill-save-password-8.0.20.tgz", { "peerDependencies": { "@capacitor/core": ">=8.0.0" } }, "sha512-9+WG+8uk4jO0ZGUH9iimfbwRGsaMrkgp6cWVfVFHEeMYd3u2QPWCaXkc3rqmHEuzT/N0GBR4kkmQ1+Cd3oIrLw=="],
 
     "@capgo/capacitor-navigation-bar": ["@capgo/capacitor-navigation-bar@8.0.25", "https://europe-west4-npm.pkg.dev/lovable-core-prod/sandbox-npm-cache/@capgo/capacitor-navigation-bar/-/capacitor-navigation-bar-8.0.25.tgz", { "peerDependencies": { "@capacitor/core": ">=8.0.0" } }, "sha512-iQDNIWsx4giBwZORs89DvFoDqV5+qvskpV5CXZ1tWQZfNwMdfL4ILUI7yiyN4GfK201tAf9oqFP0x1zKt/YFVA=="],
 
