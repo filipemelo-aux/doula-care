@@ -582,7 +582,7 @@ export default function Agenda() {
           <DropdownMenuTrigger asChild>
             <Button size="sm" className="gap-1.5">
               <Plus className="h-4 w-4" />
-              Novo
+              Novo compromisso
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-52">
