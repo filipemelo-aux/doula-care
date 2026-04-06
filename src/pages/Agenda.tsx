@@ -597,7 +597,6 @@ export default function Agenda() {
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
-        </div>
       </div>
 
 
