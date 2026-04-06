@@ -578,26 +578,25 @@ export default function Agenda() {
           <h1 className="page-title">Agenda</h1>
           <p className="page-description">Consultas e serviços em um só lugar</p>
         </div>
-        <div className="flex items-center gap-2 flex-shrink-0">
-          <Button onClick={() => setServiceDialog(true)} size="sm" className="gap-1.5">
-            <Plus className="h-4 w-4" />
-            <span className="hidden sm:inline">Novo serviço</span>
-          </Button>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="icon" className="h-9 w-9">
-                <MoreVertical className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48">
-              <DropdownMenuItem onClick={() => setAppointmentDialog(true)} className="gap-2.5 py-2.5">
-                <Calendar className="h-4 w-4" /> Nova consulta
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setPersonalAptDialog(true)} className="gap-2.5 py-2.5">
-                <CalendarCheck className="h-4 w-4" /> Compromisso pessoal
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button size="sm" className="gap-1.5">
+              <Plus className="h-4 w-4" />
+              Novo
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-52">
+            <DropdownMenuItem onClick={() => setPersonalAptDialog(true)} className="gap-2.5 py-2.5">
+              <CalendarCheck className="h-4 w-4" /> Novo compromisso
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setAppointmentDialog(true)} className="gap-2.5 py-2.5">
+              <Calendar className="h-4 w-4" /> Nova consulta
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setServiceDialog(true)} className="gap-2.5 py-2.5">
+              <Briefcase className="h-4 w-4" /> Novo serviço
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
         </div>
       </div>
 
