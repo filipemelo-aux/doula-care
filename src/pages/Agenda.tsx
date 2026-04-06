@@ -586,11 +586,11 @@ export default function Agenda() {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-52">
-            <DropdownMenuItem onClick={() => setPersonalAptDialog(true)} className="gap-2.5 py-2.5">
-              <CalendarCheck className="h-4 w-4" /> Novo compromisso
-            </DropdownMenuItem>
             <DropdownMenuItem onClick={() => setAppointmentDialog(true)} className="gap-2.5 py-2.5">
               <Calendar className="h-4 w-4" /> Nova consulta
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setPersonalAptDialog(true)} className="gap-2.5 py-2.5">
+              <CalendarCheck className="h-4 w-4" /> Novo compromisso
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => setServiceDialog(true)} className="gap-2.5 py-2.5">
               <Briefcase className="h-4 w-4" /> Novo serviço
