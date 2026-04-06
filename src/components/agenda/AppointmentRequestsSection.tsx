@@ -313,8 +313,8 @@ export function AppointmentRequestsSection() {
         </section>
       )}
 
-      {/* Processed Requests (last 5) */}
-      {processedRequests.length > 0 && (
+      {/* Processed Requests - hidden, info already shown in appointment history */}
+      {false && processedRequests.length > 0 && (
         <section>
           <h2 className="text-sm font-semibold text-muted-foreground mb-3 flex items-center gap-2">
             <CalendarCheck className="h-4 w-4" /> Solicitações Processadas
