@@ -21,6 +21,7 @@ import PrivacyPolicy from "./pages/PrivacyPolicy";
 import DeleteAccount from "./pages/DeleteAccount";
 import Documentation from "./pages/Documentation";
 import Support from "./pages/Support";
+import Marketing from "./pages/Marketing";
 import SuperAdminDashboard from "./pages/SuperAdminDashboard";
 import AdminNotifications from "./pages/AdminNotifications";
 import AdminMessages from "./pages/AdminMessages";
