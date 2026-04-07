@@ -20,6 +20,7 @@ import RecoverCredentials from "./pages/RecoverCredentials";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import DeleteAccount from "./pages/DeleteAccount";
 import Documentation from "./pages/Documentation";
+import Support from "./pages/Support";
 import SuperAdminDashboard from "./pages/SuperAdminDashboard";
 import AdminNotifications from "./pages/AdminNotifications";
 import AdminMessages from "./pages/AdminMessages";
@@ -61,6 +62,7 @@ const App = () => (
             <Route path="/politica-de-privacidade" element={<PrivacyPolicy />} />
             <Route path="/excluir-conta" element={<DeleteAccount />} />
             <Route path="/documentacao" element={<Documentation />} />
+            <Route path="/suporte" element={<Support />} />
             {/* Legacy routes redirect to unified login */}
             <Route path="/" element={<Navigate to="/login" replace />} />
             <Route path="/admin/login" element={<Navigate to="/login" replace />} />

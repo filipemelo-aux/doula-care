@@ -174,7 +174,7 @@ export function AvatarUpload({ currentUrl, onUploaded, userId, name, size = "lg"
         ref={cameraInputRef}
         type="file"
         accept="image/*"
-        capture="user"
+        capture="environment"
         className="hidden"
         onChange={handleFileSelected}
       />
