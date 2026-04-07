@@ -21,6 +21,7 @@ import PrivacyPolicy from "./pages/PrivacyPolicy";
 import DeleteAccount from "./pages/DeleteAccount";
 import Documentation from "./pages/Documentation";
 import Support from "./pages/Support";
+import Marketing from "./pages/Marketing";
 import SuperAdminDashboard from "./pages/SuperAdminDashboard";
 import AdminNotifications from "./pages/AdminNotifications";
 import AdminMessages from "./pages/AdminMessages";
@@ -63,6 +64,7 @@ const App = () => (
             <Route path="/excluir-conta" element={<DeleteAccount />} />
             <Route path="/documentacao" element={<Documentation />} />
             <Route path="/suporte" element={<Support />} />
+            <Route path="/marketing" element={<Marketing />} />
             {/* Legacy routes redirect to unified login */}
             <Route path="/" element={<Navigate to="/login" replace />} />
             <Route path="/admin/login" element={<Navigate to="/login" replace />} />
