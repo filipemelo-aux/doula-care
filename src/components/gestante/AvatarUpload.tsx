@@ -30,25 +30,40 @@ export function AvatarUpload({ currentUrl, onUploaded, userId, name, size = "lg"
   const iconSize = size === "lg" ? "w-8 h-8" : "w-5 h-5";
 
   const handleFileSelected = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
+    try {
+      const file = event.target.files?.[0];
+      if (!file) return;
 
-    if (!file.type.startsWith("image/")) {
-      toast.error("Selecione uma imagem");
-      return;
+      if (!file.type.startsWith("image/")) {
+        toast.error("Selecione uma imagem");
+        return;
+      }
+      if (file.size > 2 * 1024 * 1024) {
+        toast.error("A imagem deve ter no máximo 2MB");
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = () => setCropSrc(reader.result as string);
+      reader.onerror = () => toast.error("Erro ao ler a imagem");
+      reader.readAsDataURL(file);
+    } catch (err) {
+      console.error("File selection error:", err);
+      toast.error("Erro ao selecionar imagem");
+    } finally {
+      // Reset inputs so same file can be re-selected
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      if (cameraInputRef.current) cameraInputRef.current.value = "";
     }
-    if (file.size > 2 * 1024 * 1024) {
-      toast.error("A imagem deve ter no máximo 2MB");
-      return;
+  };
+
+  const handleCameraClick = () => {
+    try {
+      cameraInputRef.current?.click();
+    } catch (err) {
+      console.error("Camera access error:", err);
+      toast.error("Não foi possível acessar a câmera. Tente escolher uma foto da galeria.");
     }
-
-    const reader = new FileReader();
-    reader.onload = () => setCropSrc(reader.result as string);
-    reader.readAsDataURL(file);
-
-    // Reset inputs so same file can be re-selected
-    if (fileInputRef.current) fileInputRef.current.value = "";
-    if (cameraInputRef.current) cameraInputRef.current.value = "";
   };
 
   const handleCroppedUpload = async (blob: Blob) => {
@@ -150,7 +165,7 @@ export function AvatarUpload({ currentUrl, onUploaded, userId, name, size = "lg"
             <ImagePlus className="h-4 w-4 mr-2" />
             Escolher foto
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => cameraInputRef.current?.click()}>
+          <DropdownMenuItem onClick={handleCameraClick}>
             <Camera className="h-4 w-4 mr-2" />
             Tirar foto
           </DropdownMenuItem>
