@@ -64,6 +64,7 @@ const App = () => (
             <Route path="/excluir-conta" element={<DeleteAccount />} />
             <Route path="/documentacao" element={<Documentation />} />
             <Route path="/suporte" element={<Support />} />
+            <Route path="/marketing" element={<Marketing />} />
             {/* Legacy routes redirect to unified login */}
             <Route path="/" element={<Navigate to="/login" replace />} />
             <Route path="/admin/login" element={<Navigate to="/login" replace />} />
