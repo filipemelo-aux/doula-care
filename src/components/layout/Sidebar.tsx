@@ -37,10 +37,10 @@ interface SidebarProps {
 }
 
 const navItems = [
-  { to: "/admin", icon: LayoutDashboard, label: "Visão Geral" },
+  { to: "/admin", icon: LayoutDashboard, label: "Visão Geral", bottomNav: true },
   { to: "/notificacoes", icon: Bell, label: "Notificações", badgeKey: "notifications" as const },
-  { to: "/clientes", icon: Users, label: "Clientes" },
-  { to: "/agenda", icon: CalendarDays, label: "Agenda" },
+  { to: "/clientes", icon: Users, label: "Clientes", bottomNav: true },
+  { to: "/agenda", icon: CalendarDays, label: "Agenda", bottomNav: true },
   {
     icon: Wallet,
     label: "Financeiro",
@@ -50,7 +50,7 @@ const navItems = [
       { to: "/relatorios", icon: FileText, label: "Relatórios" },
     ],
   },
-  { to: "/mensagens", icon: MessageCircle, label: "Mensagens", badgeKey: "messages" as const },
+  { to: "/mensagens", icon: MessageCircle, label: "Mensagens", badgeKey: "messages" as const, bottomNav: true },
   { to: "/comunidade", icon: Users2, label: "Comunidade" },
   { to: "/configuracoes", icon: Settings, label: "Configurações" },
 ];
