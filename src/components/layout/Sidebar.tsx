@@ -136,7 +136,8 @@ export function Sidebar({ isOpen, onToggle, onNavigate }: SidebarProps) {
 
       {/* Navigation */}
       <nav className="flex-1 py-4 px-3 space-y-0.5 overflow-y-auto scrollbar-thin">
-        {navItems.filter(item => !('bottomNav' in item && item.bottomNav && isOpen && window.innerWidth < 1024)).map((item) => {
+        {navItems.map((item) => {
+          const hideOnMobile = 'bottomNav' in item && item.bottomNav;
           // Submenu item (Financeiro)
           if ("subItems" in item && item.subItems) {
             const subLimitKeys: Record<string, keyof typeof limits> = {
