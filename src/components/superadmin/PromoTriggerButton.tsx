@@ -267,7 +267,7 @@ export function PromoTriggerButton({ orgId, orgName }: PromoTriggerButtonProps) 
                       <span className="font-semibold text-sm text-foreground">Beta Tester</span>
                     </div>
                     <p className="text-xs text-muted-foreground">
-                      15 dias grátis de Premium → depois escolhe: +30 dias ou 50% desconto anual.
+                      {trialDays} dias grátis de Premium → depois escolhe: +30 dias ou 50% desconto anual.
                     </p>
                   </Label>
                 </div>
@@ -280,14 +280,29 @@ export function PromoTriggerButton({ orgId, orgName }: PromoTriggerButtonProps) 
                       <span className="font-semibold text-sm text-foreground">Acesso Vitalício Premium</span>
                     </div>
                     <p className="text-xs text-muted-foreground">
-                      15 dias de trial → ao final, revela acesso Premium <strong>vitalício</strong>. A doula ficará em suspense!
+                      {trialDays} dias de trial → ao final, revela acesso Premium <strong>vitalício</strong>. A doula ficará em suspense!
                     </p>
                   </Label>
                 </div>
               </RadioGroup>
 
+              <div className="space-y-2">
+                <Label htmlFor="trial-days" className="text-sm font-medium text-foreground">
+                  Dias de trial promocional
+                </Label>
+                <Input
+                  id="trial-days"
+                  type="number"
+                  min={1}
+                  max={365}
+                  value={trialDays}
+                  onChange={(e) => setTrialDays(Math.max(1, Math.min(365, Number(e.target.value) || 1)))}
+                  className="w-32"
+                />
+              </div>
+
               <p className="text-xs text-muted-foreground">
-                O plano será imediatamente atualizado para Premium. Ambas as opções começam com 15 dias de trial.
+                O plano será imediatamente atualizado para Premium. O trial terá duração de <strong>{trialDays} dias</strong>.
               </p>
             </div>
           </AlertDialogDescription>
