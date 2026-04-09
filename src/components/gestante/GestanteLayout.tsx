@@ -223,82 +223,114 @@ export function GestanteLayout({ children }: GestanteLayoutProps) {
       </div>
 
       {/* Fixed bottom navigation bar — mobile only */}
-      <div className={cn("fixed bottom-0 left-0 right-0 z-40 lg:hidden bg-card/95 backdrop-blur-md border-t border-border/20 pb-[var(--app-safe-bottom)]", sidebarOpen && "hidden")}>
-        <div className="flex items-end justify-evenly px-3 h-12 relative max-w-sm mx-auto">
+      <div className={cn(
+        "fixed bottom-0 left-0 right-0 z-40 lg:hidden pb-[var(--app-safe-bottom)]",
+        "bg-[hsl(var(--background))] shadow-[0_-1px_12px_-4px_hsl(var(--foreground)/0.08)]",
+        sidebarOpen && "hidden"
+      )}>
+        <div className="flex items-center justify-evenly px-2 py-1.5 relative max-w-md mx-auto">
           {/* Consultas */}
-          <button
-            onClick={() => navigate("/gestante/consultas")}
-            className={cn(
-              "flex flex-col items-center justify-center gap-0.5 flex-1 h-full transition-colors",
-              location.pathname === "/gestante/consultas" ? "text-primary" : "text-muted-foreground/70"
-            )}
-          >
-            <Stethoscope className="h-[18px] w-[18px]" strokeWidth={1.6} />
-            <span className="text-[9px] font-medium leading-none">Consultas</span>
-          </button>
+          {(() => {
+            const isActive = location.pathname === "/gestante/consultas";
+            return (
+              <button
+                onClick={() => navigate("/gestante/consultas")}
+                className={cn(
+                  "flex flex-col items-center justify-center gap-1 px-3 py-2 rounded-[14px] transition-all duration-200 active:scale-[0.97]",
+                  isActive
+                    ? "bg-primary/10 text-primary font-semibold"
+                    : "text-sidebar-foreground/50 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground/85"
+                )}
+              >
+                <Stethoscope className="h-[18px] w-[18px]" strokeWidth={isActive ? 2 : 1.6} />
+                <span className="text-[9px] font-medium leading-none">Consultas</span>
+              </button>
+            );
+          })()}
 
           {/* Serviços */}
-          <button
-            onClick={() => navigate("/gestante/servicos")}
-            className={cn(
-              "flex flex-col items-center justify-center gap-0.5 flex-1 h-full transition-colors",
-              location.pathname === "/gestante/servicos" ? "text-primary" : "text-muted-foreground/70"
-            )}
-          >
-            <Briefcase className="h-[18px] w-[18px]" strokeWidth={1.6} />
-            <span className="text-[9px] font-medium leading-none">Serviços</span>
-          </button>
+          {(() => {
+            const isActive = location.pathname === "/gestante/servicos";
+            return (
+              <button
+                onClick={() => navigate("/gestante/servicos")}
+                className={cn(
+                  "flex flex-col items-center justify-center gap-1 px-3 py-2 rounded-[14px] transition-all duration-200 active:scale-[0.97]",
+                  isActive
+                    ? "bg-primary/10 text-primary font-semibold"
+                    : "text-sidebar-foreground/50 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground/85"
+                )}
+              >
+                <Briefcase className="h-[18px] w-[18px]" strokeWidth={isActive ? 2 : 1.6} />
+                <span className="text-[9px] font-medium leading-none">Serviços</span>
+              </button>
+            );
+          })()}
 
           {/* Contrações — elevated FAB */}
-          <div className="flex flex-col items-center flex-1 relative">
+          <div className="flex flex-col items-center relative">
             <button
               onClick={() => navigate("/gestante/contracoes")}
               className={cn(
-                "absolute -top-9 w-[56px] h-[56px] rounded-full flex items-center justify-center shadow-xl transition-all active:scale-90 ring-[5px] ring-background",
+                "absolute -top-8 w-[52px] h-[52px] rounded-full flex items-center justify-center shadow-xl transition-all active:scale-90 ring-4 ring-[hsl(var(--background))]",
                 location.pathname === "/gestante/contracoes"
                   ? "bg-primary text-primary-foreground shadow-primary/40"
                   : "bg-gradient-to-br from-warning to-warning/80 text-warning-foreground shadow-warning/25"
               )}
               title="Contrações"
             >
-              <Timer className="h-6 w-6" strokeWidth={2.2} />
+              <Timer className="h-5 w-5" strokeWidth={2.2} />
             </button>
             <span className={cn(
-              "text-[9px] font-medium mt-auto mb-1 leading-none transition-colors",
-              location.pathname === "/gestante/contracoes" ? "text-primary" : "text-muted-foreground/70"
+              "text-[9px] font-medium mt-7 leading-none transition-colors",
+              location.pathname === "/gestante/contracoes" ? "text-primary font-semibold" : "text-sidebar-foreground/50"
             )}>Contrações</span>
           </div>
 
           {/* Mensagens */}
-          <button
-            onClick={() => navigate("/gestante/mensagens")}
-            className={cn(
-              "flex flex-col items-center justify-center gap-0.5 flex-1 h-full transition-colors",
-              location.pathname === "/gestante/mensagens" ? "text-primary" : "text-muted-foreground/70"
-            )}
-          >
-            <div className="relative">
-              <MessageCircle className="h-[18px] w-[18px]" strokeWidth={1.6} />
-              {menuBadges.mensagens > 0 && (
-                <span className="absolute -top-1 -right-1.5 h-3.5 w-3.5 rounded-full bg-destructive text-destructive-foreground text-[8px] flex items-center justify-center font-bold">
-                  {menuBadges.mensagens}
-                </span>
-              )}
-            </div>
-            <span className="text-[9px] font-medium leading-none">Mensagens</span>
-          </button>
+          {(() => {
+            const isActive = location.pathname === "/gestante/mensagens";
+            return (
+              <button
+                onClick={() => navigate("/gestante/mensagens")}
+                className={cn(
+                  "flex flex-col items-center justify-center gap-1 px-3 py-2 rounded-[14px] transition-all duration-200 active:scale-[0.97]",
+                  isActive
+                    ? "bg-primary/10 text-primary font-semibold"
+                    : "text-sidebar-foreground/50 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground/85"
+                )}
+              >
+                <div className="relative">
+                  <MessageCircle className="h-[18px] w-[18px]" strokeWidth={isActive ? 2 : 1.6} />
+                  {menuBadges.mensagens > 0 && (
+                    <span className="absolute -top-1 -right-1.5 h-3.5 w-3.5 rounded-full bg-destructive text-destructive-foreground text-[8px] flex items-center justify-center font-bold">
+                      {menuBadges.mensagens}
+                    </span>
+                  )}
+                </div>
+                <span className="text-[9px] font-medium leading-none">Mensagens</span>
+              </button>
+            );
+          })()}
 
           {/* Perfil */}
-          <button
-            onClick={() => navigate("/gestante/perfil")}
-            className={cn(
-              "flex flex-col items-center justify-center gap-0.5 flex-1 h-full transition-colors",
-              location.pathname === "/gestante/perfil" ? "text-primary" : "text-muted-foreground/70"
-            )}
-          >
-            <CircleUserRound className="h-[18px] w-[18px]" strokeWidth={1.6} />
-            <span className="text-[9px] font-medium leading-none">Perfil</span>
-          </button>
+          {(() => {
+            const isActive = location.pathname === "/gestante/perfil";
+            return (
+              <button
+                onClick={() => navigate("/gestante/perfil")}
+                className={cn(
+                  "flex flex-col items-center justify-center gap-1 px-3 py-2 rounded-[14px] transition-all duration-200 active:scale-[0.97]",
+                  isActive
+                    ? "bg-primary/10 text-primary font-semibold"
+                    : "text-sidebar-foreground/50 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground/85"
+                )}
+              >
+                <CircleUserRound className="h-[18px] w-[18px]" strokeWidth={isActive ? 2 : 1.6} />
+                <span className="text-[9px] font-medium leading-none">Perfil</span>
+              </button>
+            );
+          })()}
         </div>
       </div>
 
