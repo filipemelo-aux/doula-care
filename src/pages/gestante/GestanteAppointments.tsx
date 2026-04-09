@@ -206,6 +206,10 @@ export default function GestanteAppointments() {
   });
 
   const isLoading = loadingApts || loadingRequests;
+  const hasUpcoming = appointments && appointments.length > 0;
+  const pendingRequests = requests?.filter(r => r.status === "pending");
+  const hasPendingRequests = pendingRequests && pendingRequests.length > 0;
+  const hasCompleted = completedAppointments && completedAppointments.length > 0;
 
   return (
     <GestanteLayout>
