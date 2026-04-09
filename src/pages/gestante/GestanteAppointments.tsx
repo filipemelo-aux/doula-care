@@ -213,7 +213,7 @@ export default function GestanteAppointments() {
 
   return (
     <GestanteLayout>
-      <div className="p-3 lg:p-8 max-w-7xl mx-auto animate-fade-in">
+      <div className="space-y-6">
         <div className="page-header">
           <div className="flex items-center justify-between">
             <div>

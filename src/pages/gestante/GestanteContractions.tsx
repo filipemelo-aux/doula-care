@@ -299,7 +299,7 @@ export default function GestanteContractions() {
 
   return (
     <GestanteLayout>
-      <div className="container mx-auto p-3 lg:p-8 space-y-6 max-w-7xl animate-fade-in">
+      <div className="space-y-6">
         {/* Header */}
         <div className="page-header">
           <h1 className="page-title">Contrações</h1>
