@@ -441,22 +441,8 @@ export default function GestanteDashboard() {
           </div>
         )}
 
-        {/* Contractions */}
-        {!isPuerpera && (
-          <button
-            onClick={() => navigate("/gestante/contracoes")}
-            className="rounded-2xl bg-card shadow-card p-4 flex items-center gap-3 w-full text-left hover:shadow-[var(--shadow-card-hover)] transition-all active:scale-[0.98]"
-          >
-            <div className="w-10 h-10 rounded-xl bg-warning/10 flex items-center justify-center flex-shrink-0">
-              <Timer className="h-5 w-5 text-warning" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="font-medium text-sm text-foreground">Contador de Contrações</p>
-              <p className="text-xs text-muted-foreground">Registre e acompanhe suas contrações</p>
-            </div>
-            <ChevronRight className="h-4 w-4 text-muted-foreground/50 flex-shrink-0" />
-          </button>
-        )}
+
+
         {/* Scheduled Services */}
         {client?.id && <ScheduledServicesCard clientId={client.id} organizationId={clientOrganizationId} />}
 

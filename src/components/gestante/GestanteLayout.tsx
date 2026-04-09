@@ -216,11 +216,27 @@ export function GestanteLayout({ children }: GestanteLayoutProps) {
         </header>
 
         {/* Main Content */}
-        <main className="flex-1 min-h-0 overflow-y-auto overscroll-y-contain touch-pan-y [WebkitOverflowScrolling:touch] w-full box-border p-3 lg:p-8">
+        <main className="flex-1 min-h-0 overflow-y-auto overscroll-y-contain touch-pan-y [WebkitOverflowScrolling:touch] w-full box-border p-3 lg:p-8 pb-20 lg:pb-8">
           <div className="max-w-7xl mx-auto animate-fade-in">
             {children}
           </div>
         </main>
+      </div>
+
+      {/* Fixed bottom bar — Contractions shortcut */}
+      <div className="fixed bottom-0 left-0 right-0 z-50 lg:hidden flex justify-center pointer-events-none pb-[var(--app-safe-bottom)]">
+        <button
+          onClick={() => navigate("/gestante/contracoes")}
+          className={cn(
+            "pointer-events-auto mb-3 w-14 h-14 rounded-full flex items-center justify-center shadow-lg transition-all active:scale-90",
+            location.pathname === "/gestante/contracoes"
+              ? "bg-primary text-primary-foreground shadow-primary/30"
+              : "bg-card text-warning border border-border/50 shadow-foreground/10"
+          )}
+          title="Contrações"
+        >
+          <Timer className="h-6 w-6" strokeWidth={2} />
+        </button>
       </div>
 
       {/* Mobile overlay */}
