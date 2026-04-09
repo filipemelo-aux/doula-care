@@ -309,7 +309,7 @@ export default function GestanteDashboard() {
           {client?.id && <ScheduledServicesCard clientId={client.id} organizationId={clientOrganizationId} />}
 
           {/* Quick Actions for Puérpera */}
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 gap-3">
             <Card 
               className="cursor-pointer hover:shadow-md transition-shadow active:scale-[0.98]"
               onClick={() => navigate("/gestante/consultas")}
@@ -483,7 +483,7 @@ export default function GestanteDashboard() {
         )}
 
         {/* Quick Actions */}
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 gap-3">
           <Card 
             className="cursor-pointer hover:shadow-md transition-shadow active:scale-[0.98]"
             onClick={() => navigate("/gestante/consultas")}
