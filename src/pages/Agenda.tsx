@@ -1,7 +1,8 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLocation } from "react-router-dom";
 import { sendPushNotification } from "@/lib/pushNotifications";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -136,6 +137,7 @@ const getServiceStatus = (svc: ServiceRequestFull) => {
 
 export default function Agenda() {
   const { user, organizationId } = useAuth();
+  const location = useLocation();
   const queryClient = useQueryClient();
   const [agendaFilter, setAgendaFilter] = useState<AgendaFilter>("calendar");
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
@@ -223,6 +225,18 @@ export default function Agenda() {
   const [personalCepLoading, setPersonalCepLoading] = useState(false);
   const [personalCepData, setPersonalCepData] = useState<{street:string; neighborhood:string; city:string; state:string} | null>(null);
   const [personalNumber, setPersonalNumber] = useState("");
+
+  // Auto-open dialog from navigation state (e.g. from Dashboard)
+  useEffect(() => {
+    const state = location.state as { openDialog?: string } | null;
+    if (state?.openDialog) {
+      if (state.openDialog === "consulta") setAppointmentDialog(true);
+      else if (state.openDialog === "compromisso") setPersonalAptDialog(true);
+      else if (state.openDialog === "servico") setServiceDialog(true);
+      // Clear the state so it doesn't re-trigger
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
 
   const closePersonalDialog = () => {
     setPersonalAptDialog(false);
