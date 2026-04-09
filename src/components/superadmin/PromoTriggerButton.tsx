@@ -89,7 +89,7 @@ export function PromoTriggerButton({ orgId, orgName }: PromoTriggerButtonProps) 
         .insert({
           organization_id: orgId,
           title: "🎉 Promoção Beta Tester ativada!",
-          message: `Parabéns! Você ganhou 15 dias gratuitos do plano Premium completo como agradecimento por ser uma testadora beta. Ao final do período, você receberá uma surpresa exclusiva!`,
+          message: `Parabéns! Você ganhou ${trialDays} dias gratuitos do plano Premium completo como agradecimento por ser uma testadora beta. Ao final do período, você receberá uma surpresa exclusiva!`,
           type: "promotion",
         });
       if (notifError) throw notifError;
