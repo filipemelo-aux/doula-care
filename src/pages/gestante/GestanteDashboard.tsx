@@ -218,7 +218,7 @@ export default function GestanteDashboard() {
 
     return (
       <GestanteLayout>
-        <div className="space-y-6 lg:space-y-8 overflow-x-hidden">
+        <div className="space-y-4 overflow-x-hidden">
           {/* Greeting */}
           <div className="flex items-center gap-3">
             <Avatar className="w-10 h-10 shadow-md">
@@ -324,7 +324,7 @@ export default function GestanteDashboard() {
           {client?.id && <AppointmentsCard clientId={client.id} />}
 
           {/* Quick Actions */}
-          <div className="space-y-3">
+          <div className="space-y-2">
             <QuickActionCard
               icon={Calendar}
               iconBg="bg-primary/10"
@@ -374,7 +374,7 @@ export default function GestanteDashboard() {
   // ─── Gestante View ────────────────────────────────────────
   return (
     <GestanteLayout>
-      <div className="space-y-6 lg:space-y-8 overflow-x-hidden">
+      <div className="space-y-4 overflow-x-hidden">
         {/* Greeting */}
         <div className="flex items-center gap-3">
           <Avatar className="w-10 h-10 shadow-md">
@@ -447,7 +447,7 @@ export default function GestanteDashboard() {
         {client?.id && <ScheduledServicesCard clientId={client.id} organizationId={clientOrganizationId} />}
 
         {/* Quick Actions */}
-        <div className="space-y-3">
+        <div className="space-y-2">
           <QuickActionCard
             icon={Calendar}
             iconBg="bg-primary/10"
