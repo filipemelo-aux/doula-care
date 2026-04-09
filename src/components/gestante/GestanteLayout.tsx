@@ -229,7 +229,7 @@ export function GestanteLayout({ children }: GestanteLayoutProps) {
 
       {/* Fixed bottom navigation bar — mobile only */}
       <div className="fixed bottom-0 left-0 right-0 z-50 lg:hidden bg-card/95 backdrop-blur-md border-t border-border/20 pb-[var(--app-safe-bottom)]">
-        <div className="flex items-end justify-around px-1 h-14 relative">
+        <div className="flex items-end justify-around px-0 h-12 relative">
           {/* Consultas */}
           <button
             onClick={() => navigate("/gestante/consultas")}
@@ -259,7 +259,7 @@ export function GestanteLayout({ children }: GestanteLayoutProps) {
             <button
               onClick={() => navigate("/gestante/contracoes")}
               className={cn(
-                "absolute -top-7 w-[52px] h-[52px] rounded-full flex items-center justify-center shadow-xl transition-all active:scale-90 ring-4 ring-background",
+                "absolute -top-9 w-[56px] h-[56px] rounded-full flex items-center justify-center shadow-xl transition-all active:scale-90 ring-[5px] ring-background",
                 location.pathname === "/gestante/contracoes"
                   ? "bg-primary text-primary-foreground shadow-primary/40"
                   : "bg-gradient-to-br from-warning to-warning/80 text-warning-foreground shadow-warning/25"
