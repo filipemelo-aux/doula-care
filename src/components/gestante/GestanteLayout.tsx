@@ -216,27 +216,91 @@ export function GestanteLayout({ children }: GestanteLayoutProps) {
         </header>
 
         {/* Main Content */}
-        <main className="flex-1 min-h-0 overflow-y-auto overscroll-y-contain touch-pan-y [WebkitOverflowScrolling:touch] w-full box-border p-3 lg:p-8 pb-20 lg:pb-8">
+        <main className="flex-1 min-h-0 overflow-y-auto overscroll-y-contain touch-pan-y [WebkitOverflowScrolling:touch] w-full box-border p-3 lg:p-8 pb-24 lg:pb-8">
           <div className="max-w-7xl mx-auto animate-fade-in">
             {children}
           </div>
         </main>
       </div>
 
-      {/* Fixed bottom bar — Contractions shortcut */}
-      <div className="fixed bottom-0 left-0 right-0 z-50 lg:hidden flex justify-center pointer-events-none pb-[var(--app-safe-bottom)]">
-        <button
-          onClick={() => navigate("/gestante/contracoes")}
-          className={cn(
-            "pointer-events-auto mb-3 w-14 h-14 rounded-full flex items-center justify-center shadow-lg transition-all active:scale-90",
-            location.pathname === "/gestante/contracoes"
-              ? "bg-primary text-primary-foreground shadow-primary/30"
-              : "bg-card text-warning border border-border/50 shadow-foreground/10"
-          )}
-          title="Contrações"
-        >
-          <Timer className="h-6 w-6" strokeWidth={2} />
-        </button>
+      {/* Fixed bottom navigation bar — mobile only */}
+      <div className="fixed bottom-0 left-0 right-0 z-50 lg:hidden bg-card/95 backdrop-blur-md border-t border-border/30 pb-[var(--app-safe-bottom)]">
+        <div className="flex items-end justify-around px-2 h-16 relative">
+          {/* Consultas */}
+          <button
+            onClick={() => navigate("/gestante/consultas")}
+            className={cn(
+              "flex flex-col items-center justify-center gap-0.5 flex-1 h-full transition-colors",
+              location.pathname === "/gestante/consultas" ? "text-primary" : "text-muted-foreground"
+            )}
+          >
+            <Baby className="h-5 w-5" strokeWidth={1.8} />
+            <span className="text-[10px] font-medium">Consultas</span>
+          </button>
+
+          {/* Serviços */}
+          <button
+            onClick={() => navigate("/gestante/servicos")}
+            className={cn(
+              "flex flex-col items-center justify-center gap-0.5 flex-1 h-full transition-colors",
+              location.pathname === "/gestante/servicos" ? "text-primary" : "text-muted-foreground"
+            )}
+          >
+            <Briefcase className="h-5 w-5" strokeWidth={1.8} />
+            <span className="text-[10px] font-medium">Serviços</span>
+          </button>
+
+          {/* Contrações — elevated FAB */}
+          <div className="flex flex-col items-center flex-1 relative">
+            <button
+              onClick={() => navigate("/gestante/contracoes")}
+              className={cn(
+                "absolute -top-5 w-14 h-14 rounded-full flex items-center justify-center shadow-lg transition-all active:scale-90",
+                location.pathname === "/gestante/contracoes"
+                  ? "bg-primary text-primary-foreground shadow-primary/30"
+                  : "bg-card text-warning border border-border/40 shadow-foreground/10"
+              )}
+              title="Contrações"
+            >
+              <Timer className="h-6 w-6" strokeWidth={2} />
+            </button>
+            <span className={cn(
+              "text-[10px] font-medium mt-auto mb-1.5 transition-colors",
+              location.pathname === "/gestante/contracoes" ? "text-primary" : "text-muted-foreground"
+            )}>Contrações</span>
+          </div>
+
+          {/* Mensagens */}
+          <button
+            onClick={() => navigate("/gestante/mensagens")}
+            className={cn(
+              "flex flex-col items-center justify-center gap-0.5 flex-1 h-full transition-colors relative",
+              location.pathname === "/gestante/mensagens" ? "text-primary" : "text-muted-foreground"
+            )}
+          >
+            <div className="relative">
+              <MessageCircle className="h-5 w-5" strokeWidth={1.8} />
+              {menuBadges.mensagens > 0 && (
+                <span className="absolute -top-1.5 -right-1.5 h-4 w-4 rounded-full bg-destructive text-destructive-foreground text-[9px] flex items-center justify-center font-medium">
+                  {menuBadges.mensagens}
+                </span>
+              )}
+            </div>
+            <span className="text-[10px] font-medium">Mensagens</span>
+          </button>
+
+          {/* Perfil */}
+          <button
+            onClick={() => navigate("/gestante/perfil")}
+            className={cn(
+              "flex flex-col items-center justify-center gap-0.5 flex-1 h-full transition-colors",
+              location.pathname === "/gestante/perfil" ? "text-primary" : "text-muted-foreground"
+            )}
+          >
+            <User className="h-5 w-5" strokeWidth={1.8} />
+            <span className="text-[10px] font-medium">Perfil</span>
+          </button>
+        </div>
       </div>
 
       {/* Mobile overlay */}
