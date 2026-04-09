@@ -238,7 +238,7 @@ export default function Agenda() {
     }
   }, [location.state]);
 
-
+  const closePersonalDialog = () => {
     setPersonalAptDialog(false);
     setPersonalTitle("");
     setPersonalDate("");
