@@ -37,7 +37,7 @@ interface SidebarProps {
 }
 
 const navItems = [
-  { to: "/admin", icon: LayoutDashboard, label: "Visão Geral", bottomNav: true },
+  { to: "/admin", icon: LayoutDashboard, label: "Visão Geral" },
   { to: "/notificacoes", icon: Bell, label: "Notificações", badgeKey: "notifications" as const },
   { to: "/clientes", icon: Users, label: "Clientes", bottomNav: true },
   { to: "/agenda", icon: CalendarDays, label: "Agenda", bottomNav: true },
