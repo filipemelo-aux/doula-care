@@ -238,7 +238,6 @@ export function GestanteLayout({ children }: GestanteLayoutProps) {
           <Timer className="h-6 w-6" strokeWidth={2} />
         </button>
       </div>
-      </div>
 
       {/* Mobile overlay */}
       {sidebarOpen && (
