@@ -37,10 +37,10 @@ interface SidebarProps {
 }
 
 const navItems = [
-  { to: "/admin", icon: LayoutDashboard, label: "Visão Geral" },
+  { to: "/admin", icon: LayoutDashboard, label: "Visão Geral", bottomNav: true },
   { to: "/notificacoes", icon: Bell, label: "Notificações", badgeKey: "notifications" as const },
-  { to: "/clientes", icon: Users, label: "Clientes" },
-  { to: "/agenda", icon: CalendarDays, label: "Agenda" },
+  { to: "/clientes", icon: Users, label: "Clientes", bottomNav: true },
+  { to: "/agenda", icon: CalendarDays, label: "Agenda", bottomNav: true },
   {
     icon: Wallet,
     label: "Financeiro",
@@ -50,7 +50,7 @@ const navItems = [
       { to: "/relatorios", icon: FileText, label: "Relatórios" },
     ],
   },
-  { to: "/mensagens", icon: MessageCircle, label: "Mensagens", badgeKey: "messages" as const },
+  { to: "/mensagens", icon: MessageCircle, label: "Mensagens", badgeKey: "messages" as const, bottomNav: true },
   { to: "/comunidade", icon: Users2, label: "Comunidade" },
   { to: "/configuracoes", icon: Settings, label: "Configurações" },
 ];
@@ -137,6 +137,7 @@ export function Sidebar({ isOpen, onToggle, onNavigate }: SidebarProps) {
       {/* Navigation */}
       <nav className="flex-1 py-4 px-3 space-y-0.5 overflow-y-auto scrollbar-thin">
         {navItems.map((item) => {
+          const hideOnMobile = 'bottomNav' in item && item.bottomNav;
           // Submenu item (Financeiro)
           if ("subItems" in item && item.subItems) {
             const subLimitKeys: Record<string, keyof typeof limits> = {
@@ -259,7 +260,8 @@ export function Sidebar({ isOpen, onToggle, onNavigate }: SidebarProps) {
                 "nav-link w-full text-left relative",
                 isActive && "active",
                 !isOpen && "lg:justify-center lg:px-0",
-                isDisabled && "opacity-40 cursor-not-allowed hover:bg-transparent"
+                isDisabled && "opacity-40 cursor-not-allowed hover:bg-transparent",
+                hideOnMobile && "hidden lg:flex"
               )}
               title={!isOpen ? item.label : isDisabled ? "Recurso indisponível no seu plano" : undefined}
             >
