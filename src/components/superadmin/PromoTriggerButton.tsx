@@ -33,7 +33,7 @@ type PromoType = "beta_tester" | "lifetime_premium";
 
 const statusLabels: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
   pending: { label: "Pendente", variant: "outline" },
-  trial_active: { label: "Trial 15d", variant: "default" },
+  trial_active: { label: "Trial ativo", variant: "default" },
   awaiting_choice: { label: "Aguardando escolha", variant: "secondary" },
   bonus_active: { label: "Bônus ativo", variant: "default" },
   completed: { label: "Concluído", variant: "outline" },
@@ -83,13 +83,13 @@ export function PromoTriggerButton({ orgId, orgName }: PromoTriggerButtonProps) 
         .eq("id", orgId);
       if (orgError) throw orgError;
 
-      // Send in-app notification - same message for both (lifetime is a surprise)
+      // Send in-app notification
       const { error: notifError } = await supabase
         .from("org_notifications")
         .insert({
           organization_id: orgId,
-          title: "🎉 Promoção Beta Tester ativada!",
-          message: `Parabéns! Você ganhou ${trialDays} dias gratuitos do plano Premium completo como agradecimento por ser uma testadora beta. Ao final do período, você receberá uma surpresa exclusiva!`,
+          title: "🎉 Experiência Premium ativada!",
+          message: `Parabéns! Você ganhou ${trialDays} dias gratuitos para experimentar todos os recursos do plano Premium completo. Aproveite ao máximo!`,
           type: "promotion",
         });
       if (notifError) throw notifError;
@@ -104,11 +104,11 @@ export function PromoTriggerButton({ orgId, orgName }: PromoTriggerButtonProps) 
         const adminUserIds = orgProfiles.map(p => p.user_id);
         await sendPushNotification({
           user_ids: adminUserIds,
-          title: "🎁 Você recebeu um presente!",
-          message: "Abra o app para descobrir a surpresa que preparamos para você!",
+          title: "🎁 Experiência Premium liberada!",
+          message: `Você ganhou ${trialDays} dias para experimentar todos os recursos Premium. Confira!`,
           url: "/admin",
           type: "general",
-          tag: "promo-surprise",
+          tag: "promo-trial",
         });
       }
     },
@@ -244,43 +244,43 @@ export function PromoTriggerButton({ orgId, orgName }: PromoTriggerButtonProps) 
           disabled={sendPromoMutation.isPending}
         >
           <Gift className="h-3 w-3" />
-          Enviar Promoção
+          Liberar Trial
         </Button>
       </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Enviar Promoção</AlertDialogTitle>
+          <AlertDialogTitle>Liberar Experiência Premium</AlertDialogTitle>
           <AlertDialogDescription asChild>
             <div className="space-y-4">
-              <p>Escolha o tipo de promoção para <strong>{orgName}</strong>:</p>
+              <p>Libere acesso completo ao plano Premium para <strong>{orgName}</strong> por um período de teste gratuito.</p>
 
               <RadioGroup
                 value={selectedPromo}
                 onValueChange={(v) => setSelectedPromo(v as PromoType)}
                 className="space-y-3"
               >
-                <div className="flex items-start gap-3 p-3 rounded-lg border-border hover:border-primary/40 transition-colors">
+                <div className="flex items-start gap-3 p-3 rounded-lg border border-border hover:border-primary/40 transition-colors">
                   <RadioGroupItem value="beta_tester" id="beta_tester" className="mt-0.5" />
                   <Label htmlFor="beta_tester" className="cursor-pointer flex-1 space-y-1">
                     <div className="flex items-center gap-2">
                       <Gift className="h-4 w-4 text-primary" />
-                      <span className="font-semibold text-sm text-foreground">Beta Tester</span>
+                      <span className="font-semibold text-sm text-foreground">Trial Premium</span>
                     </div>
                     <p className="text-xs text-muted-foreground">
-                      {trialDays} dias grátis de Premium → depois escolhe: +30 dias ou 50% desconto anual.
+                      {trialDays} dias grátis com todos os recursos Premium. Ao final, pode escolher um bônus.
                     </p>
                   </Label>
                 </div>
 
-                <div className="flex items-start gap-3 p-3 rounded-lg border-border hover:border-amber-500/40 transition-colors">
+                <div className="flex items-start gap-3 p-3 rounded-lg border border-border hover:border-amber-500/40 transition-colors">
                   <RadioGroupItem value="lifetime_premium" id="lifetime_premium" className="mt-0.5" />
                   <Label htmlFor="lifetime_premium" className="cursor-pointer flex-1 space-y-1">
                     <div className="flex items-center gap-2">
                       <Crown className="h-4 w-4 text-amber-500" />
-                      <span className="font-semibold text-sm text-foreground">Acesso Vitalício Premium</span>
+                      <span className="font-semibold text-sm text-foreground">Acesso Vitalício</span>
                     </div>
                     <p className="text-xs text-muted-foreground">
-                      {trialDays} dias de trial → ao final, revela acesso Premium <strong>vitalício</strong>. A doula ficará em suspense!
+                      {trialDays} dias de experiência → ao final, revela acesso Premium <strong>vitalício</strong>.
                     </p>
                   </Label>
                 </div>
@@ -288,7 +288,7 @@ export function PromoTriggerButton({ orgId, orgName }: PromoTriggerButtonProps) 
 
               <div className="space-y-2">
                 <Label htmlFor="trial-days" className="text-sm font-medium text-foreground">
-                  Dias de trial promocional
+                  Duração do período gratuito
                 </Label>
                 <Input
                   id="trial-days"
@@ -299,11 +299,10 @@ export function PromoTriggerButton({ orgId, orgName }: PromoTriggerButtonProps) 
                   onChange={(e) => setTrialDays(Math.max(1, Math.min(365, Number(e.target.value) || 1)))}
                   className="w-32"
                 />
+                <p className="text-xs text-muted-foreground">
+                  A doula terá <strong>{trialDays} dias</strong> para experimentar todos os recursos do Premium.
+                </p>
               </div>
-
-              <p className="text-xs text-muted-foreground">
-                O plano será imediatamente atualizado para Premium. O trial terá duração de <strong>{trialDays} dias</strong>.
-              </p>
             </div>
           </AlertDialogDescription>
         </AlertDialogHeader>
@@ -317,7 +316,7 @@ export function PromoTriggerButton({ orgId, orgName }: PromoTriggerButtonProps) 
             ) : (
               <Gift className="h-4 w-4 mr-1" />
             )}
-            Confirmar e Enviar
+            Liberar Acesso
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
