@@ -12,15 +12,14 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Card, CardContent } from "@/components/ui/card";
-import { Gift, CalendarPlus, Percent, Loader2, CheckCircle, Clock, Sparkles, X, Crown } from "lucide-react";
+import { Gift, Loader2, CheckCircle, Clock, Sparkles, X, Crown, Check } from "lucide-react";
 import { toast } from "sonner";
-import { format, differenceInDays, addDays } from "date-fns";
-import { ptBR } from "date-fns/locale";
+import { differenceInDays } from "date-fns";
 
 export function PromoBetaBanner() {
   const { organizationId } = useAuth();
   const queryClient = useQueryClient();
-  const [choiceDialogOpen, setChoiceDialogOpen] = useState(false);
+  const [planDialogOpen, setPlanDialogOpen] = useState(false);
 
   const dismissKey = `promo_banner_dismissed_${organizationId}`;
   const [dismissed, setDismissed] = useState(() => {
@@ -48,49 +47,63 @@ export function PromoBetaBanner() {
     enabled: !!organizationId,
   });
 
-  const chooseBonusMutation = useMutation({
-    mutationFn: async (choice: "extra_30_days" | "annual_50_discount") => {
+  const { data: pricing } = useQuery({
+    queryKey: ["platform-pricing-active"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("platform_plan_pricing")
+        .select("*")
+        .eq("is_active", true)
+        .order("price", { ascending: true });
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const { data: planLimits } = useQuery({
+    queryKey: ["platform-plan-limits"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("platform_plan_limits")
+        .select("*");
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const choosePlanMutation = useMutation({
+    mutationFn: async (plan: string) => {
       if (!promo || !organizationId) throw new Error("Promoção não encontrada");
 
-      const now = new Date();
-      const updates: any = {
-        bonus_choice: choice,
-        bonus_chosen_at: now.toISOString(),
-        status: "bonus_active",
-        bonus_started_at: now.toISOString(),
-      };
-
-      if (choice === "extra_30_days") {
-        updates.bonus_ends_at = addDays(now, 30).toISOString();
-        await supabase.from("org_notifications").insert({
-          organization_id: organizationId,
-          title: "🎉 Bônus ativado: +30 dias Premium!",
-          message: `Seu bônus de 30 dias extras no plano Premium foi ativado! Válido até ${format(addDays(now, 30), "dd/MM/yyyy", { locale: ptBR })}.`,
-          type: "promotion",
-        });
-      } else {
-        await supabase.from("org_notifications").insert({
-          organization_id: organizationId,
-          title: "🎉 Bônus ativado: 50% desconto anual!",
-          message: `Você escolheu 50% de desconto no plano Premium anual. A cobrança será gerada automaticamente com o desconto aplicado.`,
-          type: "promotion",
-        });
-      }
-
+      // Save chosen plan in promo record
       const { error } = await supabase
         .from("org_promotions" as any)
-        .update(updates)
+        .update({
+          chosen_plan: plan,
+          status: "completed",
+        } as any)
         .eq("id", promo.id);
       if (error) throw error;
+
+      // Downgrade org to free (trial ended)
+      const { error: orgError } = await supabase
+        .from("organizations")
+        .update({ plan: "free" as any })
+        .eq("id", organizationId);
+      if (orgError) throw orgError;
+
+      // Send notification
+      await supabase.from("org_notifications").insert({
+        organization_id: organizationId,
+        title: "📋 Plano escolhido!",
+        message: `Você escolheu o plano ${plan.charAt(0).toUpperCase() + plan.slice(1)}. Nosso time entrará em contato para ativar sua assinatura.`,
+        type: "promotion",
+      });
     },
-    onSuccess: (_, choice) => {
+    onSuccess: (_, plan) => {
       queryClient.invalidateQueries({ queryKey: ["my-org-promo", organizationId] });
-      setChoiceDialogOpen(false);
-      toast.success(
-        choice === "extra_30_days"
-          ? "30 dias extras de Premium ativados!"
-          : "Desconto de 50% no plano anual ativado!"
-      );
+      setPlanDialogOpen(false);
+      toast.success(`Plano ${plan.charAt(0).toUpperCase() + plan.slice(1)} selecionado! Entraremos em contato.`);
     },
     onError: (err: Error) => toast.error(`Erro: ${err.message}`),
   });
@@ -119,7 +132,7 @@ export function PromoBetaBanner() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["my-org-promo", organizationId] });
-      setChoiceDialogOpen(false);
+      setPlanDialogOpen(false);
       toast.success("Acesso vitalício Premium ativado! 👑");
     },
     onError: (err: Error) => toast.error(`Erro: ${err.message}`),
@@ -159,56 +172,36 @@ export function PromoBetaBanner() {
     );
   }
 
-  // Trial active banner (same for both promo types — doula doesn't know it's lifetime)
+  // Trial active banner
   if (promo.status === "trial_active" && !isTrialExpired) {
     return (
-      <>
-        <Alert className="border-none bg-gradient-to-r from-primary/5 to-accent/5 relative pr-16">
-          <Gift className="h-4 w-4 text-primary" />
-          <AlertTitle className="text-primary text-sm font-semibold flex items-center gap-2">
-            <Sparkles className="h-3.5 w-3.5" />
-            Teste Premium Gratuito
-          </AlertTitle>
-          <AlertDescription className="text-xs text-muted-foreground">
-            Você está aproveitando o plano Premium gratuitamente!{" "}
-            <strong className="text-foreground">{daysLeft} dia{daysLeft !== 1 ? "s" : ""} restante{daysLeft !== 1 ? "s" : ""}</strong>.
-            {!isLifetime && daysLeft <= 3 && (
-              <Button
-                variant="link"
-                size="sm"
-                className="h-auto p-0 ml-1 text-xs text-primary"
-                onClick={() => setChoiceDialogOpen(true)}
-              >
-                Escolher seu bônus agora →
-              </Button>
-            )}
-          </AlertDescription>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="absolute right-2 top-2 h-6 w-6 min-w-0 !pl-0 !pr-0 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/50"
-            onClick={handleDismiss}
-            title="Fechar"
-          >
-            <X className="h-3.5 w-3.5" />
-          </Button>
-        </Alert>
-        {!isLifetime && (
-          <BonusChoiceDialog
-            open={choiceDialogOpen}
-            onOpenChange={setChoiceDialogOpen}
-            onChoose={(c) => chooseBonusMutation.mutate(c)}
-            isPending={chooseBonusMutation.isPending}
-          />
-        )}
-      </>
+      <Alert className="border-none bg-gradient-to-r from-primary/5 to-accent/5 relative pr-16">
+        <Gift className="h-4 w-4 text-primary" />
+        <AlertTitle className="text-primary text-sm font-semibold flex items-center gap-2">
+          <Sparkles className="h-3.5 w-3.5" />
+          Teste Premium Gratuito
+        </AlertTitle>
+        <AlertDescription className="text-xs text-muted-foreground">
+          Você está aproveitando o plano Premium gratuitamente!{" "}
+          <strong className="text-foreground">{daysLeft} dia{daysLeft !== 1 ? "s" : ""} restante{daysLeft !== 1 ? "s" : ""}</strong>.
+        </AlertDescription>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="absolute right-2 top-2 h-6 w-6 min-w-0 !pl-0 !pr-0 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/50"
+          onClick={handleDismiss}
+          title="Fechar"
+        >
+          <X className="h-3.5 w-3.5" />
+        </Button>
+      </Alert>
     );
   }
 
   // Trial expired
   if (showChoiceButton && isTrialExpired) {
     if (isLifetime) {
-      // Lifetime reveal!
+      // Lifetime reveal
       return (
         <>
           <Alert className="bg-gradient-to-r from-amber-50/80 to-amber-100/50 dark:from-amber-950/20 dark:to-amber-900/10">
@@ -223,7 +216,7 @@ export function PromoBetaBanner() {
                 variant="default"
                 size="sm"
                 className="ml-2 h-7 text-xs bg-amber-500 hover:bg-amber-600"
-                onClick={() => setChoiceDialogOpen(true)}
+                onClick={() => setPlanDialogOpen(true)}
               >
                 <Gift className="h-3 w-3 mr-1" />
                 Revelar Surpresa
@@ -231,8 +224,8 @@ export function PromoBetaBanner() {
             </AlertDescription>
           </Alert>
           <LifetimeRevealDialog
-            open={choiceDialogOpen}
-            onOpenChange={setChoiceDialogOpen}
+            open={planDialogOpen}
+            onOpenChange={setPlanDialogOpen}
             onActivate={() => activateLifetimeMutation.mutate()}
             isPending={activateLifetimeMutation.isPending}
           />
@@ -240,7 +233,7 @@ export function PromoBetaBanner() {
       );
     }
 
-    // Beta tester — choose bonus
+    // Normal trial expired — show plan selection
     return (
       <>
         <Alert className="bg-gradient-to-r from-amber-50/80 to-amber-100/50 dark:from-amber-950/20 dark:to-amber-900/10">
@@ -249,128 +242,154 @@ export function PromoBetaBanner() {
             Seu teste Premium expirou!
           </AlertTitle>
           <AlertDescription className="text-xs text-amber-600 dark:text-amber-300">
-            Escolha seu bônus exclusivo de testadora beta para continuar aproveitando.
+            Escolha um plano para continuar utilizando os recursos.
             <Button
               variant="default"
               size="sm"
               className="ml-2 h-7 text-xs"
-              onClick={() => setChoiceDialogOpen(true)}
+              onClick={() => setPlanDialogOpen(true)}
             >
               <Gift className="h-3 w-3 mr-1" />
-              Escolher Bônus
+              Ver Planos
             </Button>
           </AlertDescription>
         </Alert>
-        <BonusChoiceDialog
-          open={choiceDialogOpen}
-          onOpenChange={setChoiceDialogOpen}
-          onChoose={(c) => chooseBonusMutation.mutate(c)}
-          isPending={chooseBonusMutation.isPending}
+        <PlanSelectionDialog
+          open={planDialogOpen}
+          onOpenChange={setPlanDialogOpen}
+          onChoose={(plan) => choosePlanMutation.mutate(plan)}
+          isPending={choosePlanMutation.isPending}
+          pricing={pricing || []}
+          planLimits={planLimits || []}
         />
       </>
-    );
-  }
-
-  // Bonus active banner (beta_tester only)
-  if (promo.status === "bonus_active") {
-    const bonusEndsAt = promo.bonus_ends_at ? new Date(promo.bonus_ends_at) : null;
-    const bonusDaysLeft = bonusEndsAt ? Math.max(0, differenceInDays(bonusEndsAt, now)) : null;
-
-    if (promo.bonus_choice === "extra_30_days") {
-      return (
-        <Alert className="border-none bg-gradient-to-r from-primary/5 to-accent/5">
-          <CheckCircle className="h-4 w-4 text-primary" />
-          <AlertTitle className="text-primary text-sm font-semibold">
-            Bônus Premium +30 dias ativo
-          </AlertTitle>
-          <AlertDescription className="text-xs text-muted-foreground">
-            Aproveite seu plano Premium gratuito!{" "}
-            {bonusDaysLeft !== null && (
-              <strong className="text-foreground">
-                {bonusDaysLeft} dia{bonusDaysLeft !== 1 ? "s" : ""} restante{bonusDaysLeft !== 1 ? "s" : ""}.
-              </strong>
-            )}
-          </AlertDescription>
-        </Alert>
-      );
-    }
-
-    return (
-      <Alert className="border-none bg-gradient-to-r from-primary/5 to-accent/5">
-        <Percent className="h-4 w-4 text-primary" />
-        <AlertTitle className="text-primary text-sm font-semibold">
-          Desconto de 50% ativado!
-        </AlertTitle>
-        <AlertDescription className="text-xs text-muted-foreground">
-          Você escolheu 50% de desconto no plano Premium anual. A cobrança com desconto será gerada em breve.
-        </AlertDescription>
-      </Alert>
     );
   }
 
   return null;
 }
 
-function BonusChoiceDialog({
+function PlanSelectionDialog({
   open,
   onOpenChange,
   onChoose,
   isPending,
+  pricing,
+  planLimits,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onChoose: (choice: "extra_30_days" | "annual_50_discount") => void;
+  onChoose: (plan: string) => void;
   isPending: boolean;
+  pricing: any[];
+  planLimits: any[];
 }) {
+  const formatCurrency = (value: number) =>
+    new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
+
+  const plans = ["free", "pro", "premium"];
+  const planLabels: Record<string, string> = { free: "Free", pro: "Pro", premium: "Premium" };
+  const planColors: Record<string, string> = {
+    free: "border-muted",
+    pro: "border-primary/40 hover:border-primary",
+    premium: "border-amber-400/40 hover:border-amber-500",
+  };
+  const planIconColors: Record<string, string> = {
+    free: "bg-muted text-muted-foreground",
+    pro: "bg-primary/10 text-primary",
+    premium: "bg-amber-100 text-amber-600 dark:bg-amber-900/20 dark:text-amber-400",
+  };
+
+  const getLimits = (plan: string) => planLimits.find((l) => l.plan === plan);
+
+  const getMonthlyPrice = (plan: string) => {
+    const p = pricing.find((pr) => pr.plan === plan && pr.billing_cycle === "monthly");
+    return p ? p.price : 0;
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Gift className="h-5 w-5 text-primary" />
-            Escolha seu Bônus Exclusivo
+            Escolha seu Plano
           </DialogTitle>
           <DialogDescription>
-            Como agradecimento por ser uma testadora beta, você pode escolher um dos bônus abaixo:
+            Seu período de teste terminou. Selecione o plano ideal para você continuar usando o Doula Care.
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-3 mt-2">
-          <Card
-            className="cursor-pointer hover:border-primary/50 hover:shadow-md transition-all group"
-            onClick={() => !isPending && onChoose("extra_30_days")}
-          >
-            <CardContent className="p-4 flex items-start gap-3">
-              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0 group-hover:bg-primary/20 transition-colors">
-                <CalendarPlus className="h-5 w-5 text-primary" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <h3 className="font-semibold text-sm text-foreground">+30 dias de Premium grátis</h3>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  Continue usando o plano Premium completo por mais 30 dias sem custo. Totalizando 45 dias gratuitos!
-                </p>
-              </div>
-              {isPending && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
-            </CardContent>
-          </Card>
+          {plans.map((plan) => {
+            const limits = getLimits(plan);
+            const monthlyPrice = getMonthlyPrice(plan);
 
-          <Card
-            className="cursor-pointer hover:border-primary/50 hover:shadow-md transition-all group"
-            onClick={() => !isPending && onChoose("annual_50_discount")}
-          >
-            <CardContent className="p-4 flex items-start gap-3">
-              <div className="w-10 h-10 rounded-xl bg-amber-100 dark:bg-amber-900/20 flex items-center justify-center flex-shrink-0 group-hover:bg-amber-200 dark:group-hover:bg-amber-900/30 transition-colors">
-                <Percent className="h-5 w-5 text-amber-600" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <h3 className="font-semibold text-sm text-foreground">50% de desconto no Premium anual</h3>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  Assine o plano Premium anual com 50% de desconto. A cobrança será gerada automaticamente.
-                </p>
-              </div>
-              {isPending && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
-            </CardContent>
-          </Card>
+            return (
+              <Card
+                key={plan}
+                className={`cursor-pointer transition-all group ${planColors[plan]} hover:shadow-md`}
+                onClick={() => !isPending && onChoose(plan)}
+              >
+                <CardContent className="p-4">
+                  <div className="flex items-start gap-3">
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${planIconColors[plan]}`}>
+                      {plan === "premium" ? (
+                        <Crown className="h-5 w-5" />
+                      ) : plan === "pro" ? (
+                        <Sparkles className="h-5 w-5" />
+                      ) : (
+                        <CheckCircle className="h-5 w-5" />
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between">
+                        <h3 className="font-semibold text-sm text-foreground">{planLabels[plan]}</h3>
+                        <span className="text-sm font-bold text-foreground">
+                          {monthlyPrice === 0 ? "Grátis" : `${formatCurrency(monthlyPrice)}/mês`}
+                        </span>
+                      </div>
+                      {limits && (
+                        <div className="mt-2 space-y-1">
+                          <p className="text-xs text-muted-foreground">
+                            {limits.max_clients ? `Até ${limits.max_clients} gestantes` : "Gestantes ilimitadas"}
+                          </p>
+                          <div className="flex flex-wrap gap-1.5 mt-1">
+                            {limits.agenda && (
+                              <span className="inline-flex items-center gap-0.5 text-[10px] text-muted-foreground">
+                                <Check className="h-3 w-3 text-success" /> Agenda
+                              </span>
+                            )}
+                            {limits.financial && (
+                              <span className="inline-flex items-center gap-0.5 text-[10px] text-muted-foreground">
+                                <Check className="h-3 w-3 text-success" /> Financeiro
+                              </span>
+                            )}
+                            {limits.messages && (
+                              <span className="inline-flex items-center gap-0.5 text-[10px] text-muted-foreground">
+                                <Check className="h-3 w-3 text-success" /> Mensagens
+                              </span>
+                            )}
+                            {limits.reports && (
+                              <span className="inline-flex items-center gap-0.5 text-[10px] text-muted-foreground">
+                                <Check className="h-3 w-3 text-success" /> Relatórios
+                              </span>
+                            )}
+                            {limits.push_notifications && (
+                              <span className="inline-flex items-center gap-0.5 text-[10px] text-muted-foreground">
+                                <Check className="h-3 w-3 text-success" /> Push
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                    {isPending && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
       </DialogContent>
     </Dialog>
@@ -398,7 +417,7 @@ function LifetimeRevealDialog({
           </DialogTitle>
           <DialogDescription className="space-y-3 pt-2">
             <p className="text-base">
-              Como reconhecimento especial pela sua incrível contribuição na divulgação, queremos te presentear com algo único:
+              Como reconhecimento especial, queremos te presentear com algo único:
             </p>
             <div className="bg-gradient-to-r from-amber-50 to-amber-100 dark:from-amber-950/30 dark:to-amber-900/20 rounded-xl p-6">
               <Crown className="h-10 w-10 text-amber-500 mx-auto mb-3" />
