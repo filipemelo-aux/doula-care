@@ -228,7 +228,7 @@ export function GestanteLayout({ children }: GestanteLayoutProps) {
       </div>
 
       {/* Fixed bottom navigation bar — mobile only */}
-      <div className="fixed bottom-0 left-0 right-0 z-50 lg:hidden bg-card/95 backdrop-blur-md border-t border-border/20 pb-[var(--app-safe-bottom)]">
+      <div className={cn("fixed bottom-0 left-0 right-0 z-40 lg:hidden bg-card/95 backdrop-blur-md border-t border-border/20 pb-[var(--app-safe-bottom)]", sidebarOpen && "hidden")}>
         <div className="flex items-end justify-evenly px-3 h-12 relative max-w-sm mx-auto">
           {/* Consultas */}
           <button
