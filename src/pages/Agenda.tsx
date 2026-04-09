@@ -226,7 +226,19 @@ export default function Agenda() {
   const [personalCepData, setPersonalCepData] = useState<{street:string; neighborhood:string; city:string; state:string} | null>(null);
   const [personalNumber, setPersonalNumber] = useState("");
 
-  const closePersonalDialog = () => {
+  // Auto-open dialog from navigation state (e.g. from Dashboard)
+  useEffect(() => {
+    const state = location.state as { openDialog?: string } | null;
+    if (state?.openDialog) {
+      if (state.openDialog === "consulta") setAppointmentDialog(true);
+      else if (state.openDialog === "compromisso") setPersonalAptDialog(true);
+      else if (state.openDialog === "servico") setServiceDialog(true);
+      // Clear the state so it doesn't re-trigger
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
+
+
     setPersonalAptDialog(false);
     setPersonalTitle("");
     setPersonalDate("");
