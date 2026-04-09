@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -13,7 +14,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Calendar, Trash2, Loader2, Clock, Eye, CheckCircle, MoreVertical, MapPin, Navigation, CalendarCheck } from "lucide-react";
+import { Calendar, Trash2, Loader2, Clock, Eye, CheckCircle, MoreVertical, MapPin, Navigation, CalendarCheck, Plus, Briefcase } from "lucide-react";
 import { AppointmentDetailDialog } from "@/components/clients/AppointmentDetailDialog";
 import { AppointmentCompleteDialog } from "@/components/clients/AppointmentCompleteDialog";
 import { format, isToday } from "date-fns";
@@ -37,6 +38,7 @@ interface AppointmentWithClient {
 
 export function UpcomingAppointments() {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const [selectedClient, setSelectedClient] = useState<{ id: string; name: string } | null>(null);
   const [pickClientOpen, setPickClientOpen] = useState(false);
   const [pickedClientId, setPickedClientId] = useState("");
@@ -111,9 +113,29 @@ export function UpcomingAppointments() {
             <CalendarCheck className="w-5 h-5 text-primary" />
           </div>
           <h2 className="font-semibold text-lg text-foreground">Compromissos Agendados</h2>
-          {appointments && appointments.length > 0 && (
-            <span className="ml-auto text-2xl font-bold text-foreground">{appointments.length}</span>
-          )}
+          <div className="ml-auto flex items-center gap-2">
+            {appointments && appointments.length > 0 && (
+              <span className="text-2xl font-bold text-foreground">{appointments.length}</span>
+            )}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button size="icon" variant="outline" className="h-8 w-8 rounded-full">
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-52">
+                <DropdownMenuItem onClick={() => navigate("/agenda", { state: { openDialog: "consulta" } })} className="gap-2.5 py-2.5">
+                  <Calendar className="h-4 w-4" /> Nova consulta
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate("/agenda", { state: { openDialog: "compromisso" } })} className="gap-2.5 py-2.5">
+                  <CalendarCheck className="h-4 w-4" /> Novo compromisso
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate("/agenda", { state: { openDialog: "servico" } })} className="gap-2.5 py-2.5">
+                  <Briefcase className="h-4 w-4" /> Novo serviço
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
 
         {isLoading ? (
