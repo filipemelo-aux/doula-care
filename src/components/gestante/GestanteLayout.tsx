@@ -259,7 +259,7 @@ export function GestanteLayout({ children }: GestanteLayoutProps) {
             <button
               onClick={() => navigate("/gestante/contracoes")}
               className={cn(
-                "absolute -top-7 w-[52px] h-[52px] rounded-full flex items-center justify-center shadow-xl transition-all active:scale-90 ring-4 ring-background",
+                "absolute -top-9 w-[56px] h-[56px] rounded-full flex items-center justify-center shadow-xl transition-all active:scale-90 ring-[5px] ring-background",
                 location.pathname === "/gestante/contracoes"
                   ? "bg-primary text-primary-foreground shadow-primary/40"
                   : "bg-gradient-to-br from-warning to-warning/80 text-warning-foreground shadow-warning/25"
