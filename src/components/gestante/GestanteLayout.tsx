@@ -39,6 +39,7 @@ const navItems = [
   { to: "/gestante/documentos", icon: FileText, label: "Documentos" },
   { to: "/gestante/diario", icon: BookHeart, label: "Diário" },
   { to: "/gestante/comunidade", icon: Users2, label: "Comunidade" },
+  { to: "/gestante/perfil", icon: CircleUserRound, label: "Perfil" },
 ];
 
 // Module-level flag: true after the first mount so SPA navigations don't redirect
