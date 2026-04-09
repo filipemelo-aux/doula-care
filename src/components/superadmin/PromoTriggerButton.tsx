@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import { Gift, Loader2, Crown, Trash2, Zap } from "lucide-react";
 import { toast } from "sonner";
 import { addDays, format } from "date-fns";
@@ -42,6 +43,7 @@ const statusLabels: Record<string, { label: string; variant: "default" | "second
 export function PromoTriggerButton({ orgId, orgName }: PromoTriggerButtonProps) {
   const queryClient = useQueryClient();
   const [selectedPromo, setSelectedPromo] = useState<PromoType>("beta_tester");
+  const [trialDays, setTrialDays] = useState<number>(15);
 
   const { data: promo } = useQuery({
     queryKey: ["org-promo", orgId],
@@ -60,7 +62,7 @@ export function PromoTriggerButton({ orgId, orgName }: PromoTriggerButtonProps) 
   const sendPromoMutation = useMutation({
     mutationFn: async () => {
       const now = new Date();
-      const trialEnds = addDays(now, 15);
+      const trialEnds = addDays(now, trialDays);
 
       // Insert promo record
       const { error: promoError } = await supabase
@@ -87,7 +89,7 @@ export function PromoTriggerButton({ orgId, orgName }: PromoTriggerButtonProps) 
         .insert({
           organization_id: orgId,
           title: "🎉 Promoção Beta Tester ativada!",
-          message: `Parabéns! Você ganhou 15 dias gratuitos do plano Premium completo como agradecimento por ser uma testadora beta. Ao final do período, você receberá uma surpresa exclusiva!`,
+          message: `Parabéns! Você ganhou ${trialDays} dias gratuitos do plano Premium completo como agradecimento por ser uma testadora beta. Ao final do período, você receberá uma surpresa exclusiva!`,
           type: "promotion",
         });
       if (notifError) throw notifError;
@@ -265,7 +267,7 @@ export function PromoTriggerButton({ orgId, orgName }: PromoTriggerButtonProps) 
                       <span className="font-semibold text-sm text-foreground">Beta Tester</span>
                     </div>
                     <p className="text-xs text-muted-foreground">
-                      15 dias grátis de Premium → depois escolhe: +30 dias ou 50% desconto anual.
+                      {trialDays} dias grátis de Premium → depois escolhe: +30 dias ou 50% desconto anual.
                     </p>
                   </Label>
                 </div>
@@ -278,14 +280,29 @@ export function PromoTriggerButton({ orgId, orgName }: PromoTriggerButtonProps) 
                       <span className="font-semibold text-sm text-foreground">Acesso Vitalício Premium</span>
                     </div>
                     <p className="text-xs text-muted-foreground">
-                      15 dias de trial → ao final, revela acesso Premium <strong>vitalício</strong>. A doula ficará em suspense!
+                      {trialDays} dias de trial → ao final, revela acesso Premium <strong>vitalício</strong>. A doula ficará em suspense!
                     </p>
                   </Label>
                 </div>
               </RadioGroup>
 
+              <div className="space-y-2">
+                <Label htmlFor="trial-days" className="text-sm font-medium text-foreground">
+                  Dias de trial promocional
+                </Label>
+                <Input
+                  id="trial-days"
+                  type="number"
+                  min={1}
+                  max={365}
+                  value={trialDays}
+                  onChange={(e) => setTrialDays(Math.max(1, Math.min(365, Number(e.target.value) || 1)))}
+                  className="w-32"
+                />
+              </div>
+
               <p className="text-xs text-muted-foreground">
-                O plano será imediatamente atualizado para Premium. Ambas as opções começam com 15 dias de trial.
+                O plano será imediatamente atualizado para Premium. O trial terá duração de <strong>{trialDays} dias</strong>.
               </p>
             </div>
           </AlertDialogDescription>
