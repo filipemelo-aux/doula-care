@@ -53,54 +53,52 @@ export function AppointmentsCard({ clientId }: AppointmentsCardProps) {
   if (appointments.length === 0) return null;
 
   return (
-    <Card className="overflow-hidden bg-gradient-to-br from-blue-50/50 to-indigo-50/50">
-      <CardContent className="p-4">
-        <div className="flex items-center gap-2 mb-3">
-          <Calendar className="h-5 w-5 text-blue-600" />
-          <h2 className="font-display font-semibold text-base">Minhas Consultas</h2>
+    <div className="rounded-2xl bg-card p-4 lg:p-6 shadow-card space-y-3">
+      <div className="flex items-center gap-2 mb-1">
+        <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
+          <Calendar className="h-5 w-5 text-primary" />
         </div>
+        <h2 className="font-semibold text-base text-foreground">Minhas Consultas</h2>
+      </div>
 
-        <div className="space-y-2">
-          {appointments.map((apt) => {
-            const date = new Date(apt.scheduled_at);
-            const today = isToday(date);
+      <div className="space-y-2">
+        {appointments.map((apt) => {
+          const date = new Date(apt.scheduled_at);
+          const today = isToday(date);
 
-            return (
-              <div
-                key={apt.id}
-                className={`flex items-start gap-3 rounded-lg p-3 ${
-                  today
-                    ? "bg-blue-100/80"
-                    : "bg-background/60"
-                }`}
-              >
-                <div className="text-center min-w-[48px]">
-                  <p className="text-xs text-muted-foreground uppercase">
-                    {format(date, "MMM", { locale: ptBR })}
-                  </p>
-                  <p className="text-lg font-bold text-blue-700">
-                    {format(date, "dd")}
-                  </p>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="font-medium text-sm break-words">{apt.title}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {format(date, "EEEE, HH:mm", { locale: ptBR })}
-                  </p>
-                  {apt.notes && (
-                    <p className="text-xs text-muted-foreground mt-0.5 break-words">{apt.notes}</p>
-                  )}
-                </div>
-                {today && (
-                  <span className="text-[10px] bg-blue-600 text-white rounded-full px-2 py-0.5 font-medium">
-                    Hoje
-                  </span>
+          return (
+            <div
+              key={apt.id}
+              className={`flex items-start gap-3 rounded-xl p-3 ${
+                today ? "bg-primary/8" : "bg-muted/50"
+              }`}
+            >
+              <div className="text-center min-w-[44px]">
+                <p className="text-[10px] text-muted-foreground/60 uppercase">
+                  {format(date, "MMM", { locale: ptBR })}
+                </p>
+                <p className="text-lg font-bold leading-tight text-foreground">
+                  {format(date, "dd")}
+                </p>
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-medium text-sm break-words">{apt.title}</p>
+                <p className="text-xs text-muted-foreground">
+                  {format(date, "EEEE, HH:mm", { locale: ptBR })}
+                </p>
+                {apt.notes && (
+                  <p className="text-xs text-muted-foreground mt-0.5 break-words">{apt.notes}</p>
                 )}
               </div>
-            );
-          })}
-        </div>
-      </CardContent>
-    </Card>
+              {today && (
+                <span className="inline-flex items-center rounded-full bg-primary/10 text-primary px-1.5 py-0 text-[10px] font-medium flex-shrink-0">
+                  Hoje
+                </span>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
   );
 }
