@@ -129,7 +129,7 @@ export default function GestanteDiary() {
 
   return (
     <GestanteLayout>
-      <div className="p-3 lg:p-8 max-w-7xl mx-auto animate-fade-in">
+      <div className="space-y-6">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-6">
           <div className="page-header mb-0">
             <h1 className="page-title">

@@ -213,7 +213,7 @@ export default function GestanteAppointments() {
 
   return (
     <GestanteLayout>
-      <div className="p-3 lg:p-8 max-w-7xl mx-auto animate-fade-in">
+      <div className="space-y-6">
         <div className="page-header">
           <div className="flex items-center justify-between">
             <div>
@@ -230,11 +230,12 @@ export default function GestanteAppointments() {
         <div className="space-y-6">
           {/* Appointments Card — matches services card style */}
           {(hasUpcoming || hasPendingRequests || hasCompleted) && (
-            <Card className="overflow-hidden bg-gradient-to-br from-blue-50/50 to-indigo-50/50">
-              <CardContent className="p-4">
+            <div className="rounded-2xl bg-card shadow-card p-4">
                 <div className="flex items-center gap-2 mb-3">
-                  <CalendarIcon className="h-5 w-5 text-blue-600" />
-                  <h2 className="font-display font-semibold text-base">Consultas Agendadas</h2>
+                  <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
+                    <CalendarIcon className="h-5 w-5 text-primary" />
+                  </div>
+                  <h2 className="font-semibold text-base text-foreground">Consultas Agendadas</h2>
                 </div>
 
                 {/* Active upcoming appointments */}
@@ -335,8 +336,7 @@ export default function GestanteAppointments() {
                     </CollapsibleContent>
                   </Collapsible>
                 )}
-              </CardContent>
-            </Card>
+            </div>
           )}
 
           {isLoading && (

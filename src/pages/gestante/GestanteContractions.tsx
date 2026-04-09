@@ -277,7 +277,7 @@ export default function GestanteContractions() {
   if (!loading && client && (client as any).birth_occurred) {
     return (
       <GestanteLayout>
-        <div className="container mx-auto px-4 py-12 text-center space-y-4">
+        <div className="py-12 text-center space-y-4">
           <Baby className="h-12 w-12 text-primary mx-auto" />
           <h2 className="font-display font-bold text-lg">Seu bebê já nasceu! 🎉</h2>
           <p className="text-sm text-muted-foreground">O contador de contrações não está mais disponível.</p>
@@ -299,7 +299,7 @@ export default function GestanteContractions() {
 
   return (
     <GestanteLayout>
-      <div className="container mx-auto p-3 lg:p-8 space-y-6 max-w-7xl animate-fade-in">
+      <div className="space-y-6">
         {/* Header */}
         <div className="page-header">
           <h1 className="page-title">Contrações</h1>

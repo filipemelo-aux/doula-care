@@ -183,12 +183,13 @@ export function ScheduledServicesCard({ clientId, organizationId }: ScheduledSer
 
   return (
     <>
-      <Card className="overflow-hidden bg-gradient-to-br from-emerald-50/50 to-teal-50/50">
-        <CardContent className="p-4">
-          <div className="flex items-center gap-2 mb-3">
-            <Briefcase className="h-5 w-5 text-emerald-600" />
-            <h2 className="font-display font-semibold text-base">Serviços Agendados</h2>
+      <div className="rounded-2xl bg-card p-4 lg:p-6 shadow-card space-y-3">
+        <div className="flex items-center gap-2 mb-1">
+          <div className="w-9 h-9 rounded-xl bg-success/10 flex items-center justify-center">
+            <Briefcase className="h-5 w-5 text-success" />
           </div>
+          <h2 className="font-semibold text-base text-foreground">Serviços Agendados</h2>
+        </div>
 
           {/* Active/scheduled services */}
           {hasActive && (
@@ -284,8 +285,7 @@ export function ScheduledServicesCard({ clientId, organizationId }: ScheduledSer
               </CollapsibleContent>
             </Collapsible>
           )}
-        </CardContent>
-      </Card>
+      </div>
 
       {/* Rating Dialog */}
       <Dialog open={!!ratingDialog} onOpenChange={(o) => !o && closeRatingDialog()}>

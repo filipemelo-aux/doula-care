@@ -102,7 +102,7 @@ export default function GestanteServices() {
 
   return (
     <GestanteLayout>
-      <div className="p-3 lg:p-8 max-w-7xl mx-auto animate-fade-in">
+      <div className="space-y-6">
         <div className="page-header">
           <h1 className="page-title">Serviços</h1>
           <p className="page-description">Solicite e acompanhe seus serviços</p>
