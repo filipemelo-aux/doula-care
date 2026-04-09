@@ -229,7 +229,7 @@ export function GestanteLayout({ children }: GestanteLayoutProps) {
         "bg-[hsl(var(--background))] shadow-[0_-1px_12px_-4px_hsl(var(--foreground)/0.08)]",
         sidebarOpen && "hidden"
       )}>
-        <div className="flex items-center justify-evenly px-2 py-1.5 relative max-w-md mx-auto">
+        <div className="flex items-end justify-evenly px-2 py-1.5 relative max-w-md mx-auto">
           {/* Visão Geral */}
           {(() => {
             const isActive = location.pathname === "/gestante";
@@ -269,21 +269,23 @@ export function GestanteLayout({ children }: GestanteLayoutProps) {
           })()}
 
           {/* Contrações — elevated FAB */}
-          <div className="flex flex-col items-center relative">
-            <button
-              onClick={() => navigate("/gestante/contracoes")}
-              className={cn(
-                "absolute -top-8 w-[52px] h-[52px] rounded-full flex items-center justify-center shadow-xl transition-all active:scale-90 ring-4 ring-[hsl(var(--background))]",
-                location.pathname === "/gestante/contracoes"
-                  ? "bg-primary text-primary-foreground shadow-primary/40"
-                  : "bg-gradient-to-br from-warning to-warning/80 text-warning-foreground shadow-warning/25"
-              )}
-              title="Contrações"
-            >
-              <Timer className="h-5 w-5" strokeWidth={2.2} />
-            </button>
+          <div className="flex flex-col items-center gap-1 px-3 py-2">
+            <div className="relative flex items-center justify-center" style={{ marginTop: '-30px' }}>
+              <button
+                onClick={() => navigate("/gestante/contracoes")}
+                className={cn(
+                  "w-[48px] h-[48px] rounded-full flex items-center justify-center shadow-xl transition-all active:scale-90 ring-4 ring-[hsl(var(--background))]",
+                  location.pathname === "/gestante/contracoes"
+                    ? "bg-primary text-primary-foreground shadow-primary/40"
+                    : "bg-gradient-to-br from-warning to-warning/80 text-warning-foreground shadow-warning/25"
+                )}
+                title="Contrações"
+              >
+                <Timer className="h-5 w-5" strokeWidth={2.2} />
+              </button>
+            </div>
             <span className={cn(
-              "text-[9px] font-medium mt-7 leading-none transition-colors",
+              "text-[9px] font-medium leading-none transition-colors",
               location.pathname === "/gestante/contracoes" ? "text-primary font-semibold" : "text-sidebar-foreground/50"
             )}>Contrações</span>
           </div>
