@@ -62,7 +62,7 @@ export function PromoTriggerButton({ orgId, orgName }: PromoTriggerButtonProps) 
   const sendPromoMutation = useMutation({
     mutationFn: async () => {
       const now = new Date();
-      const trialEnds = addDays(now, 15);
+      const trialEnds = addDays(now, trialDays);
 
       // Insert promo record
       const { error: promoError } = await supabase
