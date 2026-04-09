@@ -49,7 +49,7 @@ Deno.serve(async (req) => {
     // Verify the service request belongs to this user's client
     const { data: clientData } = await supabase
       .from("clients")
-      .select("id, full_name")
+      .select("id, full_name, organization_id")
       .eq("user_id", user.id)
       .maybeSingle();
 
@@ -59,6 +59,18 @@ Deno.serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
+    // Helper: notify admin via org_notifications (not client_notifications)
+    const notifyAdmin = async (title: string, message: string) => {
+      if (!clientData.organization_id) return;
+      await supabase.from("org_notifications").insert({
+        organization_id: clientData.organization_id,
+        title,
+        message,
+        type: "service",
+        read: false,
+      });
+    };
 
     // Handle date acceptance/rejection
     if (action === "accept_date" || action === "reject_date") {
@@ -78,7 +90,6 @@ Deno.serve(async (req) => {
       }
 
       if (action === "accept_date") {
-        // Client accepted proposed date → move to accepted (in progress)
         const { error: updateError } = await supabase
           .from("service_requests")
           .update({ status: "accepted", responded_at: new Date().toISOString() })
@@ -98,32 +109,25 @@ Deno.serve(async (req) => {
           });
         }
 
-        // Format scheduled date for notification
         const scheduledDateStr = serviceRequest.scheduled_date
           ? new Date(serviceRequest.scheduled_date).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" })
           : "";
 
-        // Notify admin
-        await supabase.from("client_notifications").insert({
-          client_id: clientData.id,
-          title: `✅ Data Aceita: ${serviceRequest.service_type}`,
-          message: `${clientData.full_name} aceitou a data proposta${scheduledDateStr ? ` (${scheduledDateStr})` : ""} para ${serviceRequest.service_type}.`,
-          read: false,
-        });
+        await notifyAdmin(
+          `✅ Data Aceita: ${serviceRequest.service_type}`,
+          `${clientData.full_name} aceitou a data proposta${scheduledDateStr ? ` (${scheduledDateStr})` : ""} para ${serviceRequest.service_type}.`
+        );
       } else {
-        // Client rejected proposed date → back to budget_sent so doula can propose again
         const { error: updateError } = await supabase
           .from("service_requests")
           .update({ status: "budget_sent", scheduled_date: null })
           .eq("id", request_id);
         if (updateError) throw updateError;
 
-        await supabase.from("client_notifications").insert({
-          client_id: clientData.id,
-          title: `❌ Data Recusada: ${serviceRequest.service_type}`,
-          message: `${clientData.full_name} recusou a data proposta para ${serviceRequest.service_type}. Proponha uma nova data.`,
-          read: false,
-        });
+        await notifyAdmin(
+          `❌ Data Recusada: ${serviceRequest.service_type}`,
+          `${clientData.full_name} recusou a data proposta para ${serviceRequest.service_type}. Proponha uma nova data.`
+        );
       }
 
       return new Response(
@@ -155,12 +159,10 @@ Deno.serve(async (req) => {
         .eq("id", request_id);
       if (updateError) throw updateError;
 
-      await supabase.from("client_notifications").insert({
-        client_id: clientData.id,
-        title: `❌ Orçamento Recusado: ${serviceRequest.service_type}`,
-        message: `${clientData.full_name} recusou o orçamento de R$ ${(serviceRequest.budget_value || 0).toFixed(2).replace(".", ",")} para ${serviceRequest.service_type}.`,
-        read: false,
-      });
+      await notifyAdmin(
+        `❌ Orçamento Recusado: ${serviceRequest.service_type}`,
+        `${clientData.full_name} recusou o orçamento de R$ ${(serviceRequest.budget_value || 0).toFixed(2).replace(".", ",")} para ${serviceRequest.service_type}.`
+      );
 
       return new Response(
         JSON.stringify({ success: true, status: "rejected" }),
@@ -169,13 +171,11 @@ Deno.serve(async (req) => {
     }
 
     // action === "accept"
-    // Check if doula proposed a different date than client's preferred date
     const datesDiffer = serviceRequest.preferred_date &&
       serviceRequest.scheduled_date &&
       serviceRequest.preferred_date !== serviceRequest.scheduled_date;
 
     if (datesDiffer) {
-      // Budget accepted but date needs confirmation → date_proposed
       const { error: updateError } = await supabase
         .from("service_requests")
         .update({ status: "date_proposed", responded_at: new Date().toISOString() })
@@ -186,12 +186,10 @@ Deno.serve(async (req) => {
         ? new Date(serviceRequest.scheduled_date).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" })
         : "";
 
-      await supabase.from("client_notifications").insert({
-        client_id: clientData.id,
-        title: `📅 Confirme a Data: ${serviceRequest.service_type}`,
-        message: `${clientData.full_name} aceitou o orçamento, mas a data proposta é diferente${proposedDateStr ? ` (${proposedDateStr})` : ""}. Confirme a nova data.`,
-        read: false,
-      });
+      await notifyAdmin(
+        `📅 Orçamento Aceito (data pendente): ${serviceRequest.service_type}`,
+        `${clientData.full_name} aceitou o orçamento, mas a data proposta é diferente${proposedDateStr ? ` (${proposedDateStr})` : ""}. Aguardando confirmação da data.`
+      );
 
       return new Response(
         JSON.stringify({ success: true, status: "date_proposed" }),
@@ -219,19 +217,15 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Format confirmed date for notification
     const confirmedDate = serviceRequest.scheduled_date || serviceRequest.preferred_date;
     const confirmedDateStr = confirmedDate
       ? new Date(confirmedDate).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" })
       : "";
 
-    // Notify admin
-    await supabase.from("client_notifications").insert({
-      client_id: clientData.id,
-      title: `✅ Orçamento Aceito: ${serviceRequest.service_type}`,
-      message: `${clientData.full_name} aceitou o orçamento de R$ ${(serviceRequest.budget_value || 0).toFixed(2).replace(".", ",")} para ${serviceRequest.service_type}.${confirmedDateStr ? ` Data confirmada: ${confirmedDateStr}.` : ""}`,
-      read: false,
-    });
+    await notifyAdmin(
+      `✅ Orçamento Aceito: ${serviceRequest.service_type}`,
+      `${clientData.full_name} aceitou o orçamento de R$ ${(serviceRequest.budget_value || 0).toFixed(2).replace(".", ",")} para ${serviceRequest.service_type}.${confirmedDateStr ? ` Data confirmada: ${confirmedDateStr}.` : ""}`
+    );
 
     return new Response(
       JSON.stringify({ success: true, status: "accepted" }),
