@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useGestanteAuth } from "@/contexts/GestanteAuthContext";
-import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { 
   Heart, 
@@ -12,7 +11,6 @@ import {
   MessageCircle,
   ChevronRight,
   Timer,
-  LogOut,
   Sparkles,
   Scale,
   Ruler,
@@ -48,13 +46,11 @@ export default function GestanteDashboard() {
   const clientOrganizationId = client?.organization_id || authOrgId || null;
   const navigate = useNavigate();
 
-  // Reactive unread count via shared hook
   const unreadMessages = useGestanteUnreadCount(client?.id);
 
   useEffect(() => {
     if (user) {
       fetchFullClientData();
-      // Fetch avatar
       supabase
         .from("profiles")
         .select("avatar_url")
@@ -64,7 +60,6 @@ export default function GestanteDashboard() {
     }
   }, [user]);
 
-  // Listen for realtime updates to this client's record (e.g., doula registering labor)
   useEffect(() => {
     if (!client?.id) return;
 
@@ -112,10 +107,6 @@ export default function GestanteDashboard() {
     }
   };
 
-  // fetchUnreadCount is now handled by useQuery above
-
-  // Payment message check removed — no longer redirects away from dashboard
-
   const calculateGestationalAge = () => {
     if (!clientData?.dpp) return null;
     
@@ -153,7 +144,6 @@ export default function GestanteDashboard() {
   const gestationalAge = calculateGestationalAge();
   const babyAge = calculateBabyAge();
   const isPuerpera = clientData?.status === "lactante" && clientData?.birth_occurred;
-
   const isGestante = clientData?.status === "gestante";
 
   const { data: orgServices } = useQuery({
@@ -190,7 +180,37 @@ export default function GestanteDashboard() {
     );
   }
 
-  // Puérpera View - After birth
+  // ─── Quick Action Card (reusable) ─────────────────────────
+  const QuickActionCard = ({ icon: Icon, iconBg, iconColor, label, sublabel, onClick, badge }: {
+    icon: React.ElementType;
+    iconBg: string;
+    iconColor: string;
+    label: string;
+    sublabel: string;
+    onClick: () => void;
+    badge?: number;
+  }) => (
+    <button
+      onClick={onClick}
+      className="rounded-2xl bg-card p-4 shadow-card flex items-center gap-3 w-full text-left hover:shadow-[var(--shadow-card-hover)] transition-all active:scale-[0.98]"
+    >
+      <div className={`w-10 h-10 rounded-xl ${iconBg} flex items-center justify-center relative flex-shrink-0`}>
+        <Icon className={`h-5 w-5 ${iconColor}`} />
+        {badge && badge > 0 ? (
+          <span className="absolute -top-1 -right-1 w-5 h-5 bg-destructive text-destructive-foreground text-[10px] rounded-full flex items-center justify-center font-medium">
+            {badge}
+          </span>
+        ) : null}
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="font-medium text-sm text-foreground">{label}</p>
+        <p className="text-xs text-muted-foreground truncate">{sublabel}</p>
+      </div>
+      <ChevronRight className="h-4 w-4 text-muted-foreground/50 flex-shrink-0" />
+    </button>
+  );
+
+  // ─── Puérpera View ────────────────────────────────────────
   if (isPuerpera) {
     const babyNames = clientData?.baby_names as string[] | null;
     const babyName = babyNames && babyNames.length > 0 ? babyNames[0] : "seu bebê";
@@ -198,8 +218,8 @@ export default function GestanteDashboard() {
 
     return (
       <GestanteLayout>
-        {/* Greeting for Puérpera */}
-        <div className="bg-gradient-to-b from-primary/15 to-background px-4 lg:px-8 py-4">
+        <div className="space-y-6 lg:space-y-8 overflow-x-hidden">
+          {/* Greeting */}
           <div className="flex items-center gap-3">
             <Avatar className="w-10 h-10 shadow-md">
               <AvatarImage src={avatarUrl || undefined} alt="Perfil" className="object-cover" />
@@ -212,17 +232,14 @@ export default function GestanteDashboard() {
               <h1 className="font-display font-bold text-base">{displayName}!</h1>
             </div>
           </div>
-        </div>
 
-        <div className="container mx-auto px-4 py-6 space-y-6">
           <GestanteNotificationBanner />
-          {/* Overdue Payment Alert */}
           <OverduePaymentAlert />
           <PendingContractCard />
 
-          {/* Congratulations Card with baby name + age */}
-          <Card className="overflow-hidden bg-gradient-to-br from-primary/10 via-primary/20 to-accent/20 shadow-lg">
-            <CardContent className="p-6 text-center">
+          {/* Congratulations Card */}
+          <div className="rounded-2xl bg-card shadow-card overflow-hidden">
+            <div className="bg-gradient-to-br from-primary/10 via-primary/15 to-accent/15 p-6 text-center">
               <div className="flex justify-center mb-4">
                 <div className="relative">
                   <Sparkles className="h-12 w-12 text-primary animate-pulse" />
@@ -239,7 +256,6 @@ export default function GestanteDashboard() {
                 }
               </p>
 
-              {/* Baby age inline */}
               {babyAge && (
                 <div className="my-4">
                   <div className="inline-flex items-center gap-2 bg-background/60 rounded-2xl px-5 py-3">
@@ -264,7 +280,7 @@ export default function GestanteDashboard() {
                   </div>
                 </div>
               )}
-              
+
               {/* Birth Details */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4">
                 {clientData?.birth_date && (
@@ -298,101 +314,68 @@ export default function GestanteDashboard() {
                   </div>
                 )}
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
 
-          {/* Quick Actions for Puérpera */}
           {/* Appointments */}
           {client?.id && <AppointmentsCard clientId={client.id} />}
 
           {/* Scheduled Services */}
           {client?.id && <ScheduledServicesCard clientId={client.id} organizationId={clientOrganizationId} />}
 
-          {/* Quick Actions for Puérpera */}
-          <div className="grid grid-cols-1 gap-3">
-            <Card 
-              className="cursor-pointer hover:shadow-md transition-shadow active:scale-[0.98]"
+          {/* Quick Actions */}
+          <div className="space-y-3">
+            <QuickActionCard
+              icon={Calendar}
+              iconBg="bg-primary/10"
+              iconColor="text-primary"
+              label="Consultas"
+              sublabel="Agendar e acompanhar"
               onClick={() => navigate("/gestante/consultas")}
-            >
-              <CardContent className="p-4 flex items-center gap-3">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-100 to-violet-200 flex items-center justify-center">
-                  <Calendar className="h-6 w-6 text-purple-600" />
-                </div>
-                <div className="flex-1">
-                  <p className="font-medium text-sm">Consultas</p>
-                  <p className="text-xs text-muted-foreground">Agendar e acompanhar</p>
-                </div>
-                <ChevronRight className="h-4 w-4 text-muted-foreground" />
-              </CardContent>
-            </Card>
-
-            <Card 
-              className="cursor-pointer hover:shadow-md transition-shadow active:scale-[0.98]"
+            />
+            <QuickActionCard
+              icon={Briefcase}
+              iconBg="bg-success/10"
+              iconColor="text-success"
+              label="Serviços"
+              sublabel={serviceExamples}
               onClick={() => navigate("/gestante/servicos")}
-            >
-              <CardContent className="p-4 flex items-center gap-3">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-100 to-teal-200 flex items-center justify-center">
-                  <Briefcase className="h-6 w-6 text-emerald-600" />
-                </div>
-                <div className="flex-1">
-                  <p className="font-medium text-sm">Serviços</p>
-                  <p className="text-xs text-muted-foreground">{serviceExamples}</p>
-                </div>
-                <ChevronRight className="h-4 w-4 text-muted-foreground" />
-              </CardContent>
-            </Card>
-
-            <Card 
-              className="cursor-pointer hover:shadow-md transition-shadow active:scale-[0.98] relative"
+            />
+            <QuickActionCard
+              icon={MessageCircle}
+              iconBg="bg-info/10"
+              iconColor="text-info"
+              label="Mensagens"
+              sublabel="Da sua Doula"
               onClick={() => navigate("/gestante/mensagens")}
-            >
-              <CardContent className="p-4 flex items-center gap-3">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center relative">
-                  <MessageCircle className="h-6 w-6 text-blue-600" />
-                  {unreadMessages > 0 && (
-                    <span className="absolute -top-1 -right-1 w-5 h-5 bg-destructive text-destructive-foreground text-xs rounded-full flex items-center justify-center font-medium">
-                      {unreadMessages}
-                    </span>
-                  )}
-                </div>
-                <div className="flex-1">
-                  <p className="font-medium text-sm">Mensagens</p>
-                  <p className="text-xs text-muted-foreground">Da sua Doula</p>
-                </div>
-                <ChevronRight className="h-4 w-4 text-muted-foreground" />
-              </CardContent>
-            </Card>
+              badge={unreadMessages}
+            />
           </div>
 
-
-
-
-          {/* Welcome to Motherhood Message */}
-          <Card className="bg-gradient-to-br from-secondary to-primary/5">
-            <CardContent className="p-4">
-              <div className="flex items-start gap-3">
-                <Heart className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
-                <div>
-                  <p className="font-medium text-sm text-accent mb-1">
-                    Bem-vinda à maternidade!
-                  </p>
-                  <p className="text-xs text-accent/80">
-                    Continue usando o app para registrar momentos especiais e manter contato com sua Doula nesta nova fase.
-                  </p>
-                </div>
+          {/* Welcome to Motherhood */}
+          <div className="rounded-2xl bg-card shadow-card p-4">
+            <div className="flex items-start gap-3">
+              <Heart className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
+              <div>
+                <p className="font-medium text-sm text-foreground mb-1">
+                  Bem-vinda à maternidade!
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Continue usando o app para registrar momentos especiais e manter contato com sua Doula nesta nova fase.
+                </p>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </div>
       </GestanteLayout>
     );
   }
 
-  // Gestante View - Before birth (original)
+  // ─── Gestante View ────────────────────────────────────────
   return (
     <GestanteLayout>
-      {/* Greeting */}
-      <div className="bg-gradient-to-b from-primary/15 to-background px-4 lg:px-8 py-4">
+      <div className="space-y-6 lg:space-y-8 overflow-x-hidden">
+        {/* Greeting */}
         <div className="flex items-center gap-3">
           <Avatar className="w-10 h-10 shadow-md">
             <AvatarImage src={avatarUrl || undefined} alt="Perfil" className="object-cover" />
@@ -401,24 +384,20 @@ export default function GestanteDashboard() {
             </AvatarFallback>
           </Avatar>
           <div>
-              <p className="text-xs text-muted-foreground">Olá,</p>
-              <h1 className="font-display font-bold text-base">{displayName}!</h1>
+            <p className="text-xs text-muted-foreground">Olá,</p>
+            <h1 className="font-display font-bold text-base">{displayName}!</h1>
           </div>
         </div>
-      </div>
 
-      <div className="container mx-auto px-4 py-6 space-y-6">
         <GestanteNotificationBanner />
-        {/* Overdue Payment Alert */}
         <OverduePaymentAlert />
         <PendingContractCard />
 
-        {/* Pregnancy Progress + Labor Button Row */}
+        {/* Pregnancy Progress + Labor Button */}
         {gestationalAge && (
           <div className={`grid gap-4 ${gestationalAge.weeks >= 37 ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-1'}`}>
-            {/* Pregnancy Progress Card */}
-            <Card className="overflow-hidden bg-gradient-to-br from-primary/10 to-accent/10">
-              <CardContent className="p-4">
+            <div className="rounded-2xl bg-card shadow-card overflow-hidden">
+              <div className="bg-gradient-to-br from-primary/10 to-accent/10 p-4">
                 <div className="flex items-center gap-2 mb-3">
                   <Baby className="h-5 w-5 text-primary" />
                   <h2 className="font-display font-semibold text-base">Sua Gestação</h2>
@@ -450,10 +429,9 @@ export default function GestanteDashboard() {
                     🎉 Faltam apenas <span className="font-semibold text-primary">{gestationalAge.daysUntilDpp}</span> dias!
                   </div>
                 )}
-              </CardContent>
-            </Card>
+              </div>
+            </div>
 
-            {/* Labor Start Button - Show for gestantes 37+ weeks */}
             {gestationalAge.weeks >= 37 && (
               <LaborStartButton 
                 laborStarted={!!clientData?.labor_started_at}
@@ -463,79 +441,50 @@ export default function GestanteDashboard() {
           </div>
         )}
 
-        {/* Contractions Card - only show if birth NOT registered */}
+        {/* Contractions */}
         {!isPuerpera && (
-          <Card 
-            className="cursor-pointer hover:shadow-md transition-shadow active:scale-[0.98] bg-gradient-to-br from-orange-50 to-amber-50 dark:from-orange-950/30 dark:to-amber-950/30"
+          <button
             onClick={() => navigate("/gestante/contracoes")}
+            className="rounded-2xl bg-card shadow-card p-4 flex items-center gap-3 w-full text-left hover:shadow-[var(--shadow-card-hover)] transition-all active:scale-[0.98]"
           >
-            <CardContent className="p-4 flex items-center gap-3">
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-orange-400 to-amber-500 flex items-center justify-center">
-                <Timer className="h-6 w-6 text-white" />
-              </div>
-              <div className="flex-1">
-                <p className="font-medium text-sm">Contador de Contrações</p>
-                <p className="text-xs text-muted-foreground">Registre e acompanhe suas contrações</p>
-              </div>
-              <ChevronRight className="h-4 w-4 text-muted-foreground" />
-            </CardContent>
-          </Card>
+            <div className="w-10 h-10 rounded-xl bg-warning/10 flex items-center justify-center flex-shrink-0">
+              <Timer className="h-5 w-5 text-warning" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="font-medium text-sm text-foreground">Contador de Contrações</p>
+              <p className="text-xs text-muted-foreground">Registre e acompanhe suas contrações</p>
+            </div>
+            <ChevronRight className="h-4 w-4 text-muted-foreground/50 flex-shrink-0" />
+          </button>
         )}
 
         {/* Quick Actions */}
-        <div className="grid grid-cols-1 gap-3">
-          <Card 
-            className="cursor-pointer hover:shadow-md transition-shadow active:scale-[0.98]"
+        <div className="space-y-3">
+          <QuickActionCard
+            icon={Calendar}
+            iconBg="bg-primary/10"
+            iconColor="text-primary"
+            label="Consultas"
+            sublabel="Agendar e acompanhar"
             onClick={() => navigate("/gestante/consultas")}
-          >
-            <CardContent className="p-4 flex items-center gap-3">
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-100 to-violet-200 flex items-center justify-center">
-                <Calendar className="h-6 w-6 text-purple-600" />
-              </div>
-              <div className="flex-1">
-                <p className="font-medium text-sm">Consultas</p>
-                <p className="text-xs text-muted-foreground">Agendar e acompanhar</p>
-              </div>
-              <ChevronRight className="h-4 w-4 text-muted-foreground" />
-            </CardContent>
-          </Card>
-
-          <Card 
-            className="cursor-pointer hover:shadow-md transition-shadow active:scale-[0.98]"
+          />
+          <QuickActionCard
+            icon={Briefcase}
+            iconBg="bg-success/10"
+            iconColor="text-success"
+            label="Serviços"
+            sublabel={serviceExamples}
             onClick={() => navigate("/gestante/servicos")}
-          >
-            <CardContent className="p-4 flex items-center gap-3">
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-100 to-teal-200 flex items-center justify-center">
-                <Briefcase className="h-6 w-6 text-emerald-600" />
-              </div>
-              <div className="flex-1">
-                <p className="font-medium text-sm">Serviços</p>
-                <p className="text-xs text-muted-foreground">{serviceExamples}</p>
-              </div>
-              <ChevronRight className="h-4 w-4 text-muted-foreground" />
-            </CardContent>
-          </Card>
-
-          <Card 
-            className="cursor-pointer hover:shadow-md transition-shadow active:scale-[0.98] relative"
+          />
+          <QuickActionCard
+            icon={MessageCircle}
+            iconBg="bg-info/10"
+            iconColor="text-info"
+            label="Mensagens"
+            sublabel="Da sua Doula"
             onClick={() => navigate("/gestante/mensagens")}
-          >
-            <CardContent className="p-4 flex items-center gap-3">
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center relative">
-                <MessageCircle className="h-6 w-6 text-blue-600" />
-                {unreadMessages > 0 && (
-                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-destructive text-destructive-foreground text-xs rounded-full flex items-center justify-center font-medium">
-                    {unreadMessages}
-                  </span>
-                )}
-              </div>
-              <div className="flex-1">
-                <p className="font-medium text-sm">Mensagens</p>
-                <p className="text-xs text-muted-foreground">Da sua Doula</p>
-              </div>
-              <ChevronRight className="h-4 w-4 text-muted-foreground" />
-            </CardContent>
-          </Card>
+            badge={unreadMessages}
+          />
         </div>
 
         {/* Appointments */}
@@ -544,13 +493,10 @@ export default function GestanteDashboard() {
         {/* Scheduled Services */}
         {client?.id && <ScheduledServicesCard clientId={client.id} organizationId={clientOrganizationId} />}
 
-
-
-
-        {/* Labor Started - Welcoming Message */}
+        {/* Labor Started Message */}
         {clientData?.labor_started_at && (
-          <Card className="overflow-hidden bg-gradient-to-br from-primary/10 via-primary/15 to-accent/15 shadow-lg ring-2 ring-primary/20">
-            <CardContent className="p-5 text-center space-y-3">
+          <div className="rounded-2xl bg-card shadow-card overflow-hidden ring-2 ring-primary/20">
+            <div className="bg-gradient-to-br from-primary/10 via-primary/15 to-accent/15 p-5 text-center space-y-3">
               <div className="flex justify-center">
                 <div className="relative">
                   <Baby className="h-12 w-12 text-primary animate-pulse" />
@@ -565,28 +511,25 @@ export default function GestanteDashboard() {
                 Sua Doula está acompanhando tudo de perto e estará ao seu lado. 
                 Cada contração te aproxima do momento mais lindo da sua vida. 🌸
               </p>
-              <div 
-                className="cursor-pointer bg-primary/10 rounded-xl p-3 flex items-center justify-center gap-2 hover:bg-primary/20 transition-colors"
+              <button
+                className="bg-primary/10 rounded-xl p-3 flex items-center justify-center gap-2 hover:bg-primary/20 transition-colors w-full"
                 onClick={() => navigate("/gestante/contracoes")}
               >
                 <Timer className="h-5 w-5 text-primary" />
                 <span className="font-medium text-sm text-primary">Registrar Contrações</span>
                 <ChevronRight className="h-4 w-4 text-primary" />
-              </div>
-            </CardContent>
-          </Card>
+              </button>
+            </div>
+          </div>
         )}
 
-
-        {/* Welcome Message for new users */}
+        {/* Welcome Message */}
         {clientData && !clientData.dpp && (
-          <Card className="bg-gradient-to-br from-yellow-50 to-orange-50">
-            <CardContent className="p-4">
-              <p className="text-sm text-yellow-800">
-                <strong>Bem-vinda!</strong> Sua Doula em breve atualizará seu perfil com a data prevista do parto e outras informações importantes.
-              </p>
-            </CardContent>
-          </Card>
+          <div className="rounded-2xl bg-card shadow-card p-4">
+            <p className="text-sm text-muted-foreground">
+              <strong className="text-foreground">Bem-vinda!</strong> Sua Doula em breve atualizará seu perfil com a data prevista do parto e outras informações importantes.
+            </p>
+          </div>
         )}
       </div>
     </GestanteLayout>
