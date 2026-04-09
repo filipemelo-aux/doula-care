@@ -19,7 +19,11 @@ import {
   ChevronLeft,
   Briefcase,
   FileText,
-  Users2
+  Users2,
+  Stethoscope,
+  Sparkles,
+  Send,
+  CircleUserRound
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -224,18 +228,18 @@ export function GestanteLayout({ children }: GestanteLayoutProps) {
       </div>
 
       {/* Fixed bottom navigation bar — mobile only */}
-      <div className="fixed bottom-0 left-0 right-0 z-50 lg:hidden bg-card/95 backdrop-blur-md border-t border-border/30 pb-[var(--app-safe-bottom)]">
-        <div className="flex items-end justify-around px-2 h-16 relative">
+      <div className="fixed bottom-0 left-0 right-0 z-50 lg:hidden bg-card/95 backdrop-blur-md border-t border-border/20 pb-[var(--app-safe-bottom)]">
+        <div className="flex items-end justify-around px-1 h-14 relative">
           {/* Consultas */}
           <button
             onClick={() => navigate("/gestante/consultas")}
             className={cn(
               "flex flex-col items-center justify-center gap-0.5 flex-1 h-full transition-colors",
-              location.pathname === "/gestante/consultas" ? "text-primary" : "text-muted-foreground"
+              location.pathname === "/gestante/consultas" ? "text-primary" : "text-muted-foreground/70"
             )}
           >
-            <Baby className="h-5 w-5" strokeWidth={1.8} />
-            <span className="text-[10px] font-medium">Consultas</span>
+            <Stethoscope className="h-[18px] w-[18px]" strokeWidth={1.6} />
+            <span className="text-[9px] font-medium leading-none">Consultas</span>
           </button>
 
           {/* Serviços */}
@@ -243,11 +247,11 @@ export function GestanteLayout({ children }: GestanteLayoutProps) {
             onClick={() => navigate("/gestante/servicos")}
             className={cn(
               "flex flex-col items-center justify-center gap-0.5 flex-1 h-full transition-colors",
-              location.pathname === "/gestante/servicos" ? "text-primary" : "text-muted-foreground"
+              location.pathname === "/gestante/servicos" ? "text-primary" : "text-muted-foreground/70"
             )}
           >
-            <Briefcase className="h-5 w-5" strokeWidth={1.8} />
-            <span className="text-[10px] font-medium">Serviços</span>
+            <Sparkles className="h-[18px] w-[18px]" strokeWidth={1.6} />
+            <span className="text-[9px] font-medium leading-none">Serviços</span>
           </button>
 
           {/* Contrações — elevated FAB */}
@@ -255,18 +259,18 @@ export function GestanteLayout({ children }: GestanteLayoutProps) {
             <button
               onClick={() => navigate("/gestante/contracoes")}
               className={cn(
-                "absolute -top-5 w-14 h-14 rounded-full flex items-center justify-center shadow-lg transition-all active:scale-90",
+                "absolute -top-7 w-[52px] h-[52px] rounded-full flex items-center justify-center shadow-xl transition-all active:scale-90 ring-4 ring-background",
                 location.pathname === "/gestante/contracoes"
-                  ? "bg-primary text-primary-foreground shadow-primary/30"
-                  : "bg-card text-warning border border-border/40 shadow-foreground/10"
+                  ? "bg-primary text-primary-foreground shadow-primary/40"
+                  : "bg-gradient-to-br from-warning to-warning/80 text-warning-foreground shadow-warning/25"
               )}
               title="Contrações"
             >
-              <Timer className="h-6 w-6" strokeWidth={2} />
+              <Timer className="h-6 w-6" strokeWidth={2.2} />
             </button>
             <span className={cn(
-              "text-[10px] font-medium mt-auto mb-1.5 transition-colors",
-              location.pathname === "/gestante/contracoes" ? "text-primary" : "text-muted-foreground"
+              "text-[9px] font-medium mt-auto mb-1 leading-none transition-colors",
+              location.pathname === "/gestante/contracoes" ? "text-primary" : "text-muted-foreground/70"
             )}>Contrações</span>
           </div>
 
@@ -274,19 +278,19 @@ export function GestanteLayout({ children }: GestanteLayoutProps) {
           <button
             onClick={() => navigate("/gestante/mensagens")}
             className={cn(
-              "flex flex-col items-center justify-center gap-0.5 flex-1 h-full transition-colors relative",
-              location.pathname === "/gestante/mensagens" ? "text-primary" : "text-muted-foreground"
+              "flex flex-col items-center justify-center gap-0.5 flex-1 h-full transition-colors",
+              location.pathname === "/gestante/mensagens" ? "text-primary" : "text-muted-foreground/70"
             )}
           >
             <div className="relative">
-              <MessageCircle className="h-5 w-5" strokeWidth={1.8} />
+              <Send className="h-[18px] w-[18px]" strokeWidth={1.6} />
               {menuBadges.mensagens > 0 && (
-                <span className="absolute -top-1.5 -right-1.5 h-4 w-4 rounded-full bg-destructive text-destructive-foreground text-[9px] flex items-center justify-center font-medium">
+                <span className="absolute -top-1 -right-1.5 h-3.5 w-3.5 rounded-full bg-destructive text-destructive-foreground text-[8px] flex items-center justify-center font-bold">
                   {menuBadges.mensagens}
                 </span>
               )}
             </div>
-            <span className="text-[10px] font-medium">Mensagens</span>
+            <span className="text-[9px] font-medium leading-none">Mensagens</span>
           </button>
 
           {/* Perfil */}
@@ -294,11 +298,11 @@ export function GestanteLayout({ children }: GestanteLayoutProps) {
             onClick={() => navigate("/gestante/perfil")}
             className={cn(
               "flex flex-col items-center justify-center gap-0.5 flex-1 h-full transition-colors",
-              location.pathname === "/gestante/perfil" ? "text-primary" : "text-muted-foreground"
+              location.pathname === "/gestante/perfil" ? "text-primary" : "text-muted-foreground/70"
             )}
           >
-            <User className="h-5 w-5" strokeWidth={1.8} />
-            <span className="text-[10px] font-medium">Perfil</span>
+            <CircleUserRound className="h-[18px] w-[18px]" strokeWidth={1.6} />
+            <span className="text-[9px] font-medium leading-none">Perfil</span>
           </button>
         </div>
       </div>
