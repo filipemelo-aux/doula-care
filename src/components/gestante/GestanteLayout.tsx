@@ -36,14 +36,9 @@ interface GestanteLayoutProps {
 
 const navItems = [
   { to: "/gestante", icon: LayoutDashboard, label: "Visão Geral" },
-  { to: "/gestante/contracoes", icon: Timer, label: "Contrações" },
-  { to: "/gestante/consultas", icon: Baby, label: "Consultas" },
-  { to: "/gestante/servicos", icon: Briefcase, label: "Serviços" },
   { to: "/gestante/documentos", icon: FileText, label: "Documentos" },
-  { to: "/gestante/mensagens", icon: MessageCircle, label: "Mensagens" },
   { to: "/gestante/diario", icon: BookHeart, label: "Diário" },
   { to: "/gestante/comunidade", icon: Users2, label: "Comunidade" },
-  { to: "/gestante/perfil", icon: User, label: "Perfil" },
 ];
 
 // Module-level flag: true after the first mount so SPA navigations don't redirect
