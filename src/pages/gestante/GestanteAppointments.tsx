@@ -301,40 +301,6 @@ export default function GestanteAppointments() {
             </div>
           )}
 
-          {/* Past Requests */}
-          {requests && requests.filter(r => r.status !== "pending").length > 0 && (
-            <div className="space-y-3">
-              <h3 className="font-display font-semibold text-sm text-muted-foreground px-1">
-                Histórico de Solicitações
-              </h3>
-              <div className="space-y-2">
-                {requests.filter(r => r.status !== "pending").map((req) => {
-                  const config = statusConfig[req.status] || statusConfig.pending;
-                  const StatusIcon = config.icon;
-                  return (
-                    <Card key={req.id} className="opacity-70">
-                      <CardContent className="p-3 space-y-1">
-                        <div className="flex items-center justify-between">
-                          <p className="font-medium text-sm">
-                            {format(new Date(req.requested_date + "T00:00:00"), "dd/MM/yyyy")} às {req.requested_time.slice(0, 5)}
-                          </p>
-                          <Badge variant="outline" className={`text-[10px] ${config.className}`}>
-                            <StatusIcon className="h-3 w-3 mr-1" />
-                            {config.label}
-                          </Badge>
-                        </div>
-                        {req.reason && <p className="text-xs text-muted-foreground">{req.reason}</p>}
-                        {req.admin_notes && (
-                          <p className="text-xs text-primary">Nota: {req.admin_notes}</p>
-                        )}
-                      </CardContent>
-                    </Card>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
           {/* Completed Appointments History */}
           {completedAppointments && completedAppointments.length > 0 && (
             <Collapsible open={historyOpen} onOpenChange={setHistoryOpen}>
