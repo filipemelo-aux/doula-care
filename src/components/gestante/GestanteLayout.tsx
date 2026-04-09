@@ -229,7 +229,7 @@ export function GestanteLayout({ children }: GestanteLayoutProps) {
 
       {/* Fixed bottom navigation bar — mobile only */}
       <div className="fixed bottom-0 left-0 right-0 z-50 lg:hidden bg-card/95 backdrop-blur-md border-t border-border/20 pb-[var(--app-safe-bottom)]">
-        <div className="flex items-end justify-around px-1 h-14 relative">
+        <div className="flex items-end justify-around px-0 h-12 relative">
           {/* Consultas */}
           <button
             onClick={() => navigate("/gestante/consultas")}
