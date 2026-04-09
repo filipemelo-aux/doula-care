@@ -1,0 +1,1 @@
+ALTER TABLE public.org_promotions ADD COLUMN chosen_plan text DEFAULT NULL;

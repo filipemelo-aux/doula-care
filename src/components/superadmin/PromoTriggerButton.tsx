@@ -34,16 +34,16 @@ type PromoType = "beta_tester" | "lifetime_premium";
 const statusLabels: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
   pending: { label: "Pendente", variant: "outline" },
   trial_active: { label: "Trial ativo", variant: "default" },
-  awaiting_choice: { label: "Aguardando escolha", variant: "secondary" },
-  bonus_active: { label: "Bônus ativo", variant: "default" },
   completed: { label: "Concluído", variant: "outline" },
   lifetime_active: { label: "Vitalício ∞", variant: "default" },
 };
 
+const planLabels: Record<string, string> = { free: "Free", pro: "Pro", premium: "Premium" };
+
 export function PromoTriggerButton({ orgId, orgName }: PromoTriggerButtonProps) {
   const queryClient = useQueryClient();
   const [selectedPromo, setSelectedPromo] = useState<PromoType>("beta_tester");
-  const [trialDays, setTrialDays] = useState<number>(15);
+  const [trialDays, setTrialDays] = useState<number>(7);
 
   const { data: promo } = useQuery({
     queryKey: ["org-promo", orgId],
@@ -64,7 +64,6 @@ export function PromoTriggerButton({ orgId, orgName }: PromoTriggerButtonProps) 
       const now = new Date();
       const trialEnds = addDays(now, trialDays);
 
-      // Insert promo record
       const { error: promoError } = await supabase
         .from("org_promotions" as any)
         .insert({
@@ -76,14 +75,12 @@ export function PromoTriggerButton({ orgId, orgName }: PromoTriggerButtonProps) 
         } as any);
       if (promoError) throw promoError;
 
-      // Upgrade org to premium
       const { error: orgError } = await supabase
         .from("organizations")
         .update({ plan: "premium" as any })
         .eq("id", orgId);
       if (orgError) throw orgError;
 
-      // Send in-app notification
       const { error: notifError } = await supabase
         .from("org_notifications")
         .insert({
@@ -94,7 +91,6 @@ export function PromoTriggerButton({ orgId, orgName }: PromoTriggerButtonProps) 
         });
       if (notifError) throw notifError;
 
-      // Send push notification to org admins to create curiosity
       const { data: orgProfiles } = await supabase
         .from("profiles")
         .select("user_id")
@@ -123,8 +119,6 @@ export function PromoTriggerButton({ orgId, orgName }: PromoTriggerButtonProps) 
   const removePromoMutation = useMutation({
     mutationFn: async () => {
       if (!promo) throw new Error("Sem promoção");
-
-      // Remove promo record (plan is NOT reverted — super admin can set it manually via the plan dropdown)
       const { error: delError } = await supabase
         .from("org_promotions" as any)
         .delete()
@@ -142,12 +136,9 @@ export function PromoTriggerButton({ orgId, orgName }: PromoTriggerButtonProps) 
   const forceExpireMutation = useMutation({
     mutationFn: async () => {
       if (!promo) throw new Error("Sem promoção");
-      // Set trial_ends_at to now so the doula sees the post-trial experience
       const { error } = await supabase
         .from("org_promotions" as any)
-        .update({
-          trial_ends_at: new Date().toISOString(),
-        } as any)
+        .update({ trial_ends_at: new Date().toISOString() } as any)
         .eq("id", promo.id);
       if (error) throw error;
     },
@@ -162,7 +153,7 @@ export function PromoTriggerButton({ orgId, orgName }: PromoTriggerButtonProps) 
     const info = statusLabels[promo.status] || statusLabels.pending;
     const isLifetime = promo.promotion_type === "lifetime_premium";
     return (
-      <div className="flex items-center gap-1.5">
+      <div className="flex items-center gap-1.5 flex-wrap">
         {isLifetime ? (
           <Crown className="h-3.5 w-3.5 text-amber-500" />
         ) : (
@@ -171,9 +162,9 @@ export function PromoTriggerButton({ orgId, orgName }: PromoTriggerButtonProps) 
         <Badge variant={info.variant} className="text-[10px] h-5">
           {info.label}
         </Badge>
-        {promo.bonus_choice && !isLifetime && (
-          <Badge variant="outline" className="text-[10px] h-5">
-            {promo.bonus_choice === "extra_30_days" ? "+30 dias" : "50% anual"}
+        {promo.chosen_plan && (
+          <Badge variant="outline" className="text-[10px] h-5 bg-primary/5 text-primary">
+            Quer: {planLabels[promo.chosen_plan] || promo.chosen_plan}
           </Badge>
         )}
         {isLifetime && promo.status === "trial_active" && (
@@ -267,7 +258,7 @@ export function PromoTriggerButton({ orgId, orgName }: PromoTriggerButtonProps) 
                       <span className="font-semibold text-sm text-foreground">Trial Premium</span>
                     </div>
                     <p className="text-xs text-muted-foreground">
-                      {trialDays} dias grátis com todos os recursos Premium. Ao final, pode escolher um bônus.
+                      {trialDays} dias grátis com todos os recursos Premium. Ao final, escolhe um plano.
                     </p>
                   </Label>
                 </div>

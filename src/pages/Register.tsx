@@ -61,8 +61,8 @@ export default function Register() {
         return;
       }
 
-      toast.success("Cadastro enviado com sucesso!", {
-        description: "Seu acesso será liberado após aprovação do administrador.",
+      toast.success("Cadastro realizado com sucesso!", {
+        description: "Você já pode fazer login e experimentar o plano Premium por 7 dias grátis!",
       });
       navigate("/login");
     } catch (err) {

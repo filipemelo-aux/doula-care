@@ -938,6 +938,7 @@ export type Database = {
           bonus_chosen_at: string | null
           bonus_ends_at: string | null
           bonus_started_at: string | null
+          chosen_plan: string | null
           created_at: string
           id: string
           organization_id: string
@@ -952,6 +953,7 @@ export type Database = {
           bonus_chosen_at?: string | null
           bonus_ends_at?: string | null
           bonus_started_at?: string | null
+          chosen_plan?: string | null
           created_at?: string
           id?: string
           organization_id: string
@@ -966,6 +968,7 @@ export type Database = {
           bonus_chosen_at?: string | null
           bonus_ends_at?: string | null
           bonus_started_at?: string | null
+          chosen_plan?: string | null
           created_at?: string
           id?: string
           organization_id?: string

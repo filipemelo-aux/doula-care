@@ -24,7 +24,7 @@ export function AdminWelcomeDialog({ open, onClose, name }: AdminWelcomeDialogPr
         </DialogHeader>
         <div className="space-y-4 py-2">
           <p className="text-muted-foreground">
-            Seu cadastro foi aprovado e seu espaço está pronto!
+            Seu espaço está pronto! Você tem 7 dias grátis de Premium para explorar tudo.
           </p>
           <div className="bg-muted/50 rounded-lg p-4 text-left space-y-2 text-sm">
             <p className="font-medium">Primeiros passos:</p>
