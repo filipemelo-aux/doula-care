@@ -374,11 +374,11 @@
   }
 
   .page-title {
-    @apply text-3xl text-foreground mb-2;
+    @apply text-2xl font-display font-bold text-foreground;
   }
 
   .page-description {
-    @apply text-muted-foreground;
+    @apply text-sm text-muted-foreground mt-1;
   }
 
   .section-title {
