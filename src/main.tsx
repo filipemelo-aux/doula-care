@@ -77,4 +77,3 @@ setTimeout(() => {
     setTimeout(() => splash.remove(), 400);
   }
 }, 1200);
-
