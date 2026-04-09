@@ -285,8 +285,7 @@ export function ScheduledServicesCard({ clientId, organizationId }: ScheduledSer
               </CollapsibleContent>
             </Collapsible>
           )}
-        </CardContent>
-      </Card>
+      </div>
 
       {/* Rating Dialog */}
       <Dialog open={!!ratingDialog} onOpenChange={(o) => !o && closeRatingDialog()}>
