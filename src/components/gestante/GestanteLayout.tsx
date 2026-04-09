@@ -230,6 +230,25 @@ export function GestanteLayout({ children }: GestanteLayoutProps) {
         sidebarOpen && "hidden"
       )}>
         <div className="flex items-center justify-evenly px-2 py-1.5 relative max-w-md mx-auto">
+          {/* Visão Geral */}
+          {(() => {
+            const isActive = location.pathname === "/gestante";
+            return (
+              <button
+                onClick={() => navigate("/gestante")}
+                className={cn(
+                  "flex flex-col items-center justify-center gap-1 px-3 py-2 rounded-[14px] transition-all duration-200 active:scale-[0.97]",
+                  isActive
+                    ? "bg-primary/10 text-primary font-semibold"
+                    : "text-sidebar-foreground/50 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground/85"
+                )}
+              >
+                <LayoutDashboard className="h-[18px] w-[18px]" strokeWidth={isActive ? 2 : 1.6} />
+                <span className="text-[9px] font-medium leading-none">Início</span>
+              </button>
+            );
+          })()}
+
           {/* Consultas */}
           {(() => {
             const isActive = location.pathname === "/gestante/consultas";
@@ -245,25 +264,6 @@ export function GestanteLayout({ children }: GestanteLayoutProps) {
               >
                 <Stethoscope className="h-[18px] w-[18px]" strokeWidth={isActive ? 2 : 1.6} />
                 <span className="text-[9px] font-medium leading-none">Consultas</span>
-              </button>
-            );
-          })()}
-
-          {/* Serviços */}
-          {(() => {
-            const isActive = location.pathname === "/gestante/servicos";
-            return (
-              <button
-                onClick={() => navigate("/gestante/servicos")}
-                className={cn(
-                  "flex flex-col items-center justify-center gap-1 px-3 py-2 rounded-[14px] transition-all duration-200 active:scale-[0.97]",
-                  isActive
-                    ? "bg-primary/10 text-primary font-semibold"
-                    : "text-sidebar-foreground/50 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground/85"
-                )}
-              >
-                <Briefcase className="h-[18px] w-[18px]" strokeWidth={isActive ? 2 : 1.6} />
-                <span className="text-[9px] font-medium leading-none">Serviços</span>
               </button>
             );
           })()}
@@ -288,6 +288,25 @@ export function GestanteLayout({ children }: GestanteLayoutProps) {
             )}>Contrações</span>
           </div>
 
+          {/* Serviços */}
+          {(() => {
+            const isActive = location.pathname === "/gestante/servicos";
+            return (
+              <button
+                onClick={() => navigate("/gestante/servicos")}
+                className={cn(
+                  "flex flex-col items-center justify-center gap-1 px-3 py-2 rounded-[14px] transition-all duration-200 active:scale-[0.97]",
+                  isActive
+                    ? "bg-primary/10 text-primary font-semibold"
+                    : "text-sidebar-foreground/50 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground/85"
+                )}
+              >
+                <Briefcase className="h-[18px] w-[18px]" strokeWidth={isActive ? 2 : 1.6} />
+                <span className="text-[9px] font-medium leading-none">Serviços</span>
+              </button>
+            );
+          })()}
+
           {/* Mensagens */}
           {(() => {
             const isActive = location.pathname === "/gestante/mensagens";
@@ -310,25 +329,6 @@ export function GestanteLayout({ children }: GestanteLayoutProps) {
                   )}
                 </div>
                 <span className="text-[9px] font-medium leading-none">Mensagens</span>
-              </button>
-            );
-          })()}
-
-          {/* Perfil */}
-          {(() => {
-            const isActive = location.pathname === "/gestante/perfil";
-            return (
-              <button
-                onClick={() => navigate("/gestante/perfil")}
-                className={cn(
-                  "flex flex-col items-center justify-center gap-1 px-3 py-2 rounded-[14px] transition-all duration-200 active:scale-[0.97]",
-                  isActive
-                    ? "bg-primary/10 text-primary font-semibold"
-                    : "text-sidebar-foreground/50 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground/85"
-                )}
-              >
-                <CircleUserRound className="h-[18px] w-[18px]" strokeWidth={isActive ? 2 : 1.6} />
-                <span className="text-[9px] font-medium leading-none">Perfil</span>
               </button>
             );
           })()}
