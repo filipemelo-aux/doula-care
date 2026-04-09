@@ -8,6 +8,7 @@ import { Bell, Baby, BookHeart, Sparkles, CalendarCheck, X, MessageSquare } from
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useNavigate } from "react-router-dom";
+import { markNotificationSeen, getNotificationSeenAt } from "@/lib/notificationSeen";
 
 interface TopNotification {
   id: string;
@@ -20,11 +21,28 @@ interface TopNotification {
   priority: "high" | "medium" | "low";
 }
 
+const BANNER_STORAGE_KEY = "admin-banner-dismiss";
+
 export function NotificationTopBanner() {
-  const { organizationId } = useAuth();
+  const { organizationId, user } = useAuth();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
-  const [sessionDismissedIds, setSessionDismissedIds] = useState<Set<string>>(new Set());
+
+  // Fetch permanently dismissed IDs from DB
+  const { data: dismissedIds = new Set<string>() } = useQuery({
+    queryKey: ["admin-banner-dismissed", user?.id],
+    queryFn: async () => {
+      if (!user?.id) return new Set<string>();
+      const { data } = await supabase
+        .from("notification_seen")
+        .select("section")
+        .eq("user_id", user.id)
+        .eq("storage_key", BANNER_STORAGE_KEY);
+      return new Set((data || []).map((r) => r.section));
+    },
+    enabled: !!user?.id,
+    staleTime: 60000,
+  });
 
   const { data: topNotification } = useQuery({
     queryKey: ["top-notification-banner", organizationId],
@@ -172,26 +190,30 @@ export function NotificationTopBanner() {
     };
   }, [queryClient]);
 
-  if (!topNotification || sessionDismissedIds.has(topNotification.id)) return null;
+  if (!topNotification || dismissedIds.has(topNotification.id)) return null;
 
-  const markAsRead = async (notification: TopNotification) => {
-    try {
-      if (notification.dbTable === "pregnancy_diary") {
-        await supabase.from("pregnancy_diary").update({ read_by_admin: true }).eq("id", notification.dbId);
-      } else if (notification.dbTable === "org_notifications") {
-        await supabase.from("org_notifications").update({ read: true }).eq("id", notification.dbId);
-      }
-      // For service_requests, appointment_requests, clients — no "read" field, session dismiss is enough
-    } catch {}
+  const handleDismiss = async () => {
+    if (!user?.id) return;
+    // Permanently dismiss this banner in DB — notification stays active in its area
+    await markNotificationSeen(BANNER_STORAGE_KEY, topNotification.id, user.id);
+    queryClient.invalidateQueries({ queryKey: ["admin-banner-dismissed"] });
     queryClient.invalidateQueries({ queryKey: ["top-notification-banner"] });
   };
 
-  const handleDismiss = () => {
-    setSessionDismissedIds((prev) => new Set([...prev, topNotification.id]));
-  };
-
   const handleReadAndNavigate = async () => {
-    await markAsRead(topNotification);
+    // Mark as read AND dismiss banner permanently
+    try {
+      if (topNotification.dbTable === "pregnancy_diary") {
+        await supabase.from("pregnancy_diary").update({ read_by_admin: true }).eq("id", topNotification.dbId);
+      } else if (topNotification.dbTable === "org_notifications") {
+        await supabase.from("org_notifications").update({ read: true }).eq("id", topNotification.dbId);
+      }
+    } catch {}
+    if (user?.id) {
+      await markNotificationSeen(BANNER_STORAGE_KEY, topNotification.id, user.id);
+      queryClient.invalidateQueries({ queryKey: ["admin-banner-dismissed"] });
+    }
+    queryClient.invalidateQueries({ queryKey: ["top-notification-banner"] });
     const destination = topNotification.type === "community" ? "/comunidade" : "/notificacoes";
     navigate(destination);
   };
@@ -252,7 +274,7 @@ export function NotificationTopBanner() {
         size="icon"
         className="absolute right-2 top-2 h-6 w-6 min-w-0 !pl-0 !pr-0 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/50"
         onClick={handleDismiss}
-        title="Fechar temporariamente"
+        title="Fechar"
       >
         <X className="h-3.5 w-3.5" />
       </Button>

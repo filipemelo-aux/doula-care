@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useGestanteAuth } from "@/contexts/GestanteAuthContext";
@@ -8,6 +8,7 @@ import { Bell, Users2, Baby, X } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useNavigate } from "react-router-dom";
+import { markNotificationSeen } from "@/lib/notificationSeen";
 
 interface TopNotification {
   id: string;
@@ -19,11 +20,28 @@ interface TopNotification {
   priority: "high" | "medium" | "low";
 }
 
+const BANNER_STORAGE_KEY = "gestante-banner-dismiss";
+
 export function GestanteNotificationBanner() {
-  const { client } = useGestanteAuth();
+  const { client, user } = useGestanteAuth();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
-  const [sessionDismissedIds, setSessionDismissedIds] = useState<Set<string>>(new Set());
+
+  // Fetch permanently dismissed IDs from DB
+  const { data: dismissedIds = new Set<string>() } = useQuery({
+    queryKey: ["gestante-banner-dismissed", user?.id],
+    queryFn: async () => {
+      if (!user?.id) return new Set<string>();
+      const { data } = await supabase
+        .from("notification_seen")
+        .select("section")
+        .eq("user_id", user.id)
+        .eq("storage_key", BANNER_STORAGE_KEY);
+      return new Set((data || []).map((r) => r.section));
+    },
+    enabled: !!user?.id,
+    staleTime: 60000,
+  });
 
   const { data: topNotification } = useQuery({
     queryKey: ["gestante-top-notification", client?.id],
@@ -77,21 +95,14 @@ export function GestanteNotificationBanner() {
     return () => { supabase.removeChannel(channel); };
   }, [client?.id, queryClient]);
 
-  if (!topNotification || sessionDismissedIds.has(topNotification.id)) return null;
+  if (!topNotification || dismissedIds.has(topNotification.id)) return null;
 
-  const markAsRead = async (dbId: string) => {
-    await supabase
-      .from("client_notifications")
-      .update({ read_by_client: true })
-      .eq("id", dbId);
+  const handleDismiss = async () => {
+    if (!user?.id) return;
+    // Permanently dismiss banner — notification stays unread in its dedicated area
+    await markNotificationSeen(BANNER_STORAGE_KEY, topNotification.id, user.id);
+    queryClient.invalidateQueries({ queryKey: ["gestante-banner-dismissed"] });
     queryClient.invalidateQueries({ queryKey: ["gestante-top-notification"] });
-    queryClient.invalidateQueries({ queryKey: ["gestante-unread-messages"] });
-    queryClient.invalidateQueries({ queryKey: ["gestante-menu-badges"] });
-  };
-
-  const handleDismiss = () => {
-    // Session-only dismiss (comes back on refresh)
-    setSessionDismissedIds((prev) => new Set([...prev, topNotification.id]));
   };
 
   const isPaymentNotification = (n: TopNotification) =>
@@ -118,14 +129,25 @@ export function GestanteNotificationBanner() {
   };
 
   const handleReadAndNavigate = async () => {
-    // Mark as read in DB (permanent dismiss)
-    await markAsRead(topNotification.dbId);
+    // Mark as read in DB (permanent) + dismiss banner
+    await supabase
+      .from("client_notifications")
+      .update({ read_by_client: true })
+      .eq("id", topNotification.dbId);
+
+    if (user?.id) {
+      await markNotificationSeen(BANNER_STORAGE_KEY, topNotification.id, user.id);
+      queryClient.invalidateQueries({ queryKey: ["gestante-banner-dismissed"] });
+    }
+
+    queryClient.invalidateQueries({ queryKey: ["gestante-top-notification"] });
+    queryClient.invalidateQueries({ queryKey: ["gestante-unread-messages"] });
+    queryClient.invalidateQueries({ queryKey: ["gestante-menu-badges"] });
 
     const route = getNotificationRoute(topNotification);
     if (route) {
       navigate(route);
     }
-    // If no route, banner simply closes (already marked as read so won't reappear)
   };
 
   const actionLabel = getNotificationRoute(topNotification) ? "Ver detalhes →" : "Entendi ✓";
@@ -180,7 +202,7 @@ export function GestanteNotificationBanner() {
         size="icon"
         className="absolute right-2 top-2 h-6 w-6 min-w-0 !pl-0 !pr-0 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/50"
         onClick={handleDismiss}
-        title="Fechar temporariamente"
+        title="Fechar"
       >
         <X className="h-3.5 w-3.5" />
       </Button>
