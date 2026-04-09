@@ -260,7 +260,8 @@ export function Sidebar({ isOpen, onToggle, onNavigate }: SidebarProps) {
                 "nav-link w-full text-left relative",
                 isActive && "active",
                 !isOpen && "lg:justify-center lg:px-0",
-                isDisabled && "opacity-40 cursor-not-allowed hover:bg-transparent"
+                isDisabled && "opacity-40 cursor-not-allowed hover:bg-transparent",
+                hideOnMobile && "hidden lg:flex"
               )}
               title={!isOpen ? item.label : isDisabled ? "Recurso indisponível no seu plano" : undefined}
             >
