@@ -179,7 +179,7 @@ export function ScheduledServicesCard({ clientId, organizationId }: ScheduledSer
   const hasActive = services && services.length > 0;
   const hasCompleted = completedServices && completedServices.length > 0;
 
-  if (!hasActive && !hasCompleted) return null;
+  if (!hasActive) return null;
 
   return (
     <>
