@@ -37,6 +37,7 @@ import GestanteDiary from "./pages/gestante/GestanteDiary";
 import GestanteMessages from "./pages/gestante/GestanteMessages";
 import GestanteProfile from "./pages/gestante/GestanteProfile";
 import GestanteContractions from "./pages/gestante/GestanteContractions";
+import GestanteBreastfeeding from "./pages/gestante/GestanteBreastfeeding";
 import GestanteServices from "./pages/gestante/GestanteServices";
 import GestanteDocuments from "./pages/gestante/GestanteDocuments";
 import GestanteAppointments from "./pages/gestante/GestanteAppointments";
@@ -118,6 +119,14 @@ const App = () => (
               element={
                 <ProtectedRoute allowedRoles={["client"]}>
                   <GestanteContractions />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/gestante/amamentacao"
+              element={
+                <ProtectedRoute allowedRoles={["client"]}>
+                  <GestanteBreastfeeding />
                 </ProtectedRoute>
               }
             />
