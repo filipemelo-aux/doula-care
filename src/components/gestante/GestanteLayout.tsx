@@ -245,7 +245,7 @@ export function GestanteLayout({ children }: GestanteLayoutProps) {
               location.pathname === "/gestante/servicos" ? "text-primary" : "text-muted-foreground/70"
             )}
           >
-            <Sparkles className="h-[18px] w-[18px]" strokeWidth={1.6} />
+            <Briefcase className="h-[18px] w-[18px]" strokeWidth={1.6} />
             <span className="text-[9px] font-medium leading-none">Serviços</span>
           </button>
 
