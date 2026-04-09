@@ -336,8 +336,8 @@ export default function GestanteAppointments() {
                     </CollapsibleContent>
                   </Collapsible>
                 )}
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           )}
 
           {isLoading && (
