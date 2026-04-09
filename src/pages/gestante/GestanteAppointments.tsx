@@ -224,117 +224,115 @@ export default function GestanteAppointments() {
         </div>
 
         <div className="space-y-6">
-          {/* Upcoming Appointments */}
-          {appointments && appointments.length > 0 && (
-            <div className="space-y-3">
-              <h3 className="font-display font-semibold text-sm text-muted-foreground px-1">
-                Próximas Consultas
-              </h3>
-              <div className="space-y-2">
-                {appointments.map((apt) => {
-                  const date = new Date(apt.scheduled_at);
-                  return (
-                    <Card key={apt.id}>
-                      <CardContent className="p-3">
-                        <div className="flex items-center gap-3">
-                          <div className="text-center min-w-[44px]">
-                            <p className="text-[10px] text-muted-foreground uppercase">
-                              {format(date, "MMM", { locale: ptBR })}
-                            </p>
-                            <p className="text-lg font-bold leading-tight">{format(date, "dd")}</p>
-                          </div>
-                          <div className="flex-1 min-w-0">
+          {/* Appointments Card — matches services card style */}
+          {(hasUpcoming || hasPendingRequests || hasCompleted) && (
+            <Card className="overflow-hidden bg-gradient-to-br from-blue-50/50 to-indigo-50/50">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <CalendarIcon className="h-5 w-5 text-blue-600" />
+                  <h2 className="font-display font-semibold text-base">Consultas Agendadas</h2>
+                </div>
+
+                {/* Active upcoming appointments */}
+                {hasUpcoming && (
+                  <div className="space-y-2">
+                    {appointments!.map((apt) => {
+                      const date = new Date(apt.scheduled_at);
+                      return (
+                        <div key={apt.id} className="bg-background/60 rounded-lg p-3 space-y-2">
+                          <div className="flex items-center justify-between">
                             <p className="font-medium text-sm truncate">{apt.title}</p>
+                            {isToday(date) ? (
+                              <Badge variant="outline" className="text-[10px] bg-amber-100 text-amber-800">Hoje</Badge>
+                            ) : (
+                              <Badge variant="outline" className="text-[10px] text-blue-700">Agendada</Badge>
+                            )}
+                          </div>
+                          <div className="flex items-center justify-between">
                             <p className="text-xs text-muted-foreground flex items-center gap-1">
                               <Clock className="h-3 w-3" />
                               {format(date, "EEEE, HH:mm", { locale: ptBR })}
-                              {isToday(date) && (
-                                <Badge variant="secondary" className="text-[10px] px-1.5 py-0 ml-1">Hoje</Badge>
-                              )}
                             </p>
-                            {apt.notes && (
-                              <p className="text-xs text-muted-foreground truncate mt-0.5">{apt.notes}</p>
-                            )}
+                            <p className="text-xs text-primary font-medium">
+                              📅 {format(date, "dd/MM/yyyy", { locale: ptBR })}
+                            </p>
                           </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
-          {/* Pending Requests */}
-          {requests && requests.filter(r => r.status === "pending").length > 0 && (
-            <div className="space-y-3">
-              <h3 className="font-display font-semibold text-sm text-muted-foreground px-1">
-                Solicitações Pendentes
-              </h3>
-              <div className="space-y-2">
-                {requests.filter(r => r.status === "pending").map((req) => {
-                  const config = statusConfig[req.status] || statusConfig.pending;
-                  const StatusIcon = config.icon;
-                  return (
-                    <Card key={req.id}>
-                      <CardContent className="p-3 space-y-1">
-                        <div className="flex items-center justify-between">
-                          <p className="font-medium text-sm">
-                            {format(new Date(req.requested_date + "T00:00:00"), "dd/MM/yyyy")} às {req.requested_time.slice(0, 5)}
-                          </p>
-                          <Badge variant="outline" className={`text-[10px] ${config.className}`}>
-                            <StatusIcon className="h-3 w-3 mr-1" />
-                            {config.label}
-                          </Badge>
-                        </div>
-                        {req.reason && (
-                          <p className="text-xs text-muted-foreground">{req.reason}</p>
-                        )}
-                        <p className="text-xs text-muted-foreground">
-                          Solicitado em {formatBrazilDateTime(req.created_at, "dd/MM/yyyy")}
-                        </p>
-                      </CardContent>
-                    </Card>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
-          {/* Completed Appointments History */}
-          {completedAppointments && completedAppointments.length > 0 && (
-            <Collapsible open={historyOpen} onOpenChange={setHistoryOpen}>
-              <CollapsibleTrigger className="flex items-center justify-between w-full py-2 px-1 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors">
-                <span className="flex items-center gap-1.5">
-                  <Clock className="h-3.5 w-3.5" />
-                  Histórico de Consultas ({completedAppointments.length})
-                </span>
-                <ChevronDown className={`h-3.5 w-3.5 transition-transform ${historyOpen ? "rotate-180" : ""}`} />
-              </CollapsibleTrigger>
-              <CollapsibleContent>
-                <div className="space-y-0 divide-y divide-border/50 rounded-lg border bg-card px-3">
-                  {completedAppointments.map((apt) => {
-                    const date = new Date(apt.scheduled_at);
-                    return (
-                      <div key={apt.id} className="flex items-center justify-between py-2.5 gap-2">
-                        <div className="flex-1 min-w-0">
-                          <p className="text-xs font-medium truncate">{apt.title}</p>
-                          <p className="text-[10px] text-muted-foreground">
-                            {format(date, "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
-                          </p>
-                          {apt.completion_notes && (
-                            <p className="text-[10px] text-muted-foreground italic mt-0.5 truncate">
-                              {apt.completion_notes}
-                            </p>
+                          {apt.notes && (
+                            <p className="text-xs text-muted-foreground truncate">{apt.notes}</p>
                           )}
                         </div>
-                        <CheckCircle className="h-3.5 w-3.5 text-emerald-500 flex-shrink-0" />
+                      );
+                    })}
+                  </div>
+                )}
+
+                {/* Pending Requests */}
+                {hasPendingRequests && (
+                  <div className={cn("space-y-2", hasUpcoming && "mt-3")}>
+                    <p className="text-xs font-medium text-muted-foreground px-1">Solicitações Pendentes</p>
+                    {pendingRequests!.map((req) => {
+                      const config = statusConfig[req.status] || statusConfig.pending;
+                      const StatusIcon = config.icon;
+                      return (
+                        <div key={req.id} className="bg-background/60 rounded-lg p-3 space-y-1">
+                          <div className="flex items-center justify-between">
+                            <p className="font-medium text-sm">
+                              {format(new Date(req.requested_date + "T00:00:00"), "dd/MM/yyyy")} às {req.requested_time.slice(0, 5)}
+                            </p>
+                            <Badge variant="outline" className={`text-[10px] ${config.className}`}>
+                              <StatusIcon className="h-3 w-3 mr-1" />
+                              {config.label}
+                            </Badge>
+                          </div>
+                          {req.reason && (
+                            <p className="text-xs text-muted-foreground">{req.reason}</p>
+                          )}
+                          <p className="text-xs text-muted-foreground">
+                            Solicitado em {formatBrazilDateTime(req.created_at, "dd/MM/yyyy")}
+                          </p>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {/* Completed Appointments History — collapsible compact list */}
+                {hasCompleted && (
+                  <Collapsible open={historyOpen} onOpenChange={setHistoryOpen} className={(hasUpcoming || hasPendingRequests) ? "mt-3" : ""}>
+                    <CollapsibleTrigger className="flex items-center justify-between w-full py-2 px-1 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors">
+                      <span className="flex items-center gap-1.5">
+                        <Clock className="h-3.5 w-3.5" />
+                        Histórico ({completedAppointments!.length})
+                      </span>
+                      <ChevronDown className={`h-3.5 w-3.5 transition-transform ${historyOpen ? "rotate-180" : ""}`} />
+                    </CollapsibleTrigger>
+                    <CollapsibleContent>
+                      <div className="space-y-0 divide-y divide-border/50">
+                        {completedAppointments!.map((apt) => {
+                          const date = new Date(apt.scheduled_at);
+                          return (
+                            <div key={apt.id} className="flex items-center justify-between py-2 px-1 gap-2">
+                              <div className="flex-1 min-w-0">
+                                <p className="text-xs font-medium truncate">{apt.title}</p>
+                                <p className="text-[10px] text-muted-foreground">
+                                  {format(date, "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+                                </p>
+                                {apt.completion_notes && (
+                                  <p className="text-[10px] text-muted-foreground italic mt-0.5 truncate">
+                                    {apt.completion_notes}
+                                  </p>
+                                )}
+                              </div>
+                              <CheckCircle className="h-3.5 w-3.5 text-emerald-500 flex-shrink-0" />
+                            </div>
+                          );
+                        })}
                       </div>
-                    );
-                  })}
-                </div>
-              </CollapsibleContent>
-            </Collapsible>
+                    </CollapsibleContent>
+                  </Collapsible>
+                )}
+              </CardContent>
+            </Card>
           )}
 
           {isLoading && (
@@ -343,7 +341,7 @@ export default function GestanteAppointments() {
             </div>
           )}
 
-          {!isLoading && (!appointments || appointments.length === 0) && (!requests || requests.length === 0) && (
+          {!isLoading && !hasUpcoming && !hasPendingRequests && !hasCompleted && (
             <div className="text-center py-12">
               <CalendarIcon className="h-12 w-12 mx-auto text-muted-foreground/30 mb-3" />
               <p className="text-sm text-muted-foreground">Nenhuma consulta agendada</p>
