@@ -317,11 +317,11 @@ export default function GestanteDashboard() {
             </div>
           </div>
 
-          {/* Appointments */}
-          {client?.id && <AppointmentsCard clientId={client.id} />}
-
           {/* Scheduled Services */}
           {client?.id && <ScheduledServicesCard clientId={client.id} organizationId={clientOrganizationId} />}
+
+          {/* Appointments */}
+          {client?.id && <AppointmentsCard clientId={client.id} />}
 
           {/* Quick Actions */}
           <div className="space-y-3">
@@ -457,6 +457,8 @@ export default function GestanteDashboard() {
             <ChevronRight className="h-4 w-4 text-muted-foreground/50 flex-shrink-0" />
           </button>
         )}
+        {/* Scheduled Services */}
+        {client?.id && <ScheduledServicesCard clientId={client.id} organizationId={clientOrganizationId} />}
 
         {/* Quick Actions */}
         <div className="space-y-3">
@@ -487,11 +489,8 @@ export default function GestanteDashboard() {
           />
         </div>
 
-        {/* Appointments */}
-        {client?.id && <AppointmentsCard clientId={client.id} />}
-
-        {/* Scheduled Services */}
-        {client?.id && <ScheduledServicesCard clientId={client.id} organizationId={clientOrganizationId} />}
+          {/* Appointments */}
+          {client?.id && <AppointmentsCard clientId={client.id} />}
 
         {/* Labor Started Message */}
         {clientData?.labor_started_at && (
