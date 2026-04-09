@@ -336,7 +336,6 @@ export default function GestanteAppointments() {
                     </CollapsibleContent>
                   </Collapsible>
                 )}
-              </div>
             </div>
           )}
 
