@@ -269,7 +269,7 @@ export function GestanteLayout({ children }: GestanteLayoutProps) {
           })()}
 
           {/* Contrações — elevated FAB */}
-          <div className="flex flex-col items-center gap-1 px-3 py-2">
+          <div className="flex flex-col items-center justify-end gap-1 px-3 py-2">
             <div className="relative flex items-center justify-center" style={{ marginTop: '-30px' }}>
               <button
                 onClick={() => navigate("/gestante/contracoes")}
