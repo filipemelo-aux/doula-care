@@ -121,8 +121,18 @@ export function GestanteNotificationBanner() {
     n.message?.toLowerCase().includes("consulta cancelad") ||
     n.message?.toLowerCase().includes("consulta agendad");
 
+  const isBudgetNotification = (n: TopNotification) =>
+    n.title?.toLowerCase().includes("orçamento") ||
+    n.title?.toLowerCase().includes("orcamento") ||
+    n.title?.toLowerCase().includes("serviço") ||
+    n.title?.toLowerCase().includes("servico") ||
+    n.message?.toLowerCase().includes("orçamento") ||
+    n.message?.toLowerCase().includes("novo orçamento") ||
+    n.message?.toLowerCase().includes("budget");
+
   const getNotificationRoute = (n: TopNotification): string | null => {
     if (n.type === "community") return "/gestante/comunidade";
+    if (isBudgetNotification(n)) return "/gestante/servicos";
     if (isPaymentNotification(n)) return "/gestante/perfil?tab=plano&overdue=true";
     if (isAppointmentNotification(n)) return "/gestante/consultas";
     return null;
