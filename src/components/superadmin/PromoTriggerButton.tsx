@@ -43,6 +43,7 @@ const statusLabels: Record<string, { label: string; variant: "default" | "second
 export function PromoTriggerButton({ orgId, orgName }: PromoTriggerButtonProps) {
   const queryClient = useQueryClient();
   const [selectedPromo, setSelectedPromo] = useState<PromoType>("beta_tester");
+  const [trialDays, setTrialDays] = useState<number>(15);
 
   const { data: promo } = useQuery({
     queryKey: ["org-promo", orgId],
