@@ -6,8 +6,8 @@ export default function GestanteBreastfeeding() {
     <GestanteLayout>
       <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-display font-bold text-foreground">Dicas de Amamentação</h1>
-          <p className="text-sm text-muted-foreground mt-1">Conteúdos e orientações para o seu puerpério</p>
+          <h1 className="page-title">Dicas de Amamentação</h1>
+          <p className="page-description">Conteúdos e orientações para o seu puerpério</p>
         </div>
 
         <div className="flex flex-col items-center justify-center py-16 text-center space-y-4">
