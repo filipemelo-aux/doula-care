@@ -77,5 +77,3 @@ setTimeout(() => {
     setTimeout(() => splash.remove(), 400);
   }
 }, 1200);
-
-// cache bust 1775771656
