@@ -137,6 +137,7 @@ const getServiceStatus = (svc: ServiceRequestFull) => {
 
 export default function Agenda() {
   const { user, organizationId } = useAuth();
+  const location = useLocation();
   const queryClient = useQueryClient();
   const [agendaFilter, setAgendaFilter] = useState<AgendaFilter>("calendar");
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
