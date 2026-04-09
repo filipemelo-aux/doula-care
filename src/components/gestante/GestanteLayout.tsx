@@ -278,7 +278,7 @@ export function GestanteLayout({ children }: GestanteLayoutProps) {
             )}
           >
             <div className="relative">
-              <Send className="h-[18px] w-[18px]" strokeWidth={1.6} />
+              <MessageCircle className="h-[18px] w-[18px]" strokeWidth={1.6} />
               {menuBadges.mensagens > 0 && (
                 <span className="absolute -top-1 -right-1.5 h-3.5 w-3.5 rounded-full bg-destructive text-destructive-foreground text-[8px] flex items-center justify-center font-bold">
                   {menuBadges.mensagens}
