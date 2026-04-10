@@ -285,18 +285,16 @@ export default function Subscription() {
       setPaymentResult(data);
       setShowCustomerForm(false);
       setPendingPlan(null);
-      // If we only have checkout_url (no direct pix data), open externally
-      if (!data.qr_code_base64 && !data.pix_code && data.checkout_url) {
+      setCheckoutStep("contact");
+      if (data.checkout_url) {
         window.open(data.checkout_url, '_blank');
-        setPaymentDialog(true);
-      } else {
-        setPaymentDialog(true);
       }
+      setPaymentDialog(true);
     },
     onError: (err: any) => {
       if (err?.missing_fields?.length > 0) {
         setShowCustomerForm(true);
-        toast.info("Preencha seus dados para gerar o Pix");
+        toast.info("Preencha seus dados para continuar");
       } else {
         toast.error(err?.message || "Erro ao gerar pagamento");
       }
