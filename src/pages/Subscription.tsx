@@ -325,7 +325,7 @@ export default function Subscription() {
     } else {
       setPendingPlan({ plan_id: plan.id, billing_type: billingType });
       setShowCustomerForm(true);
-      toast.info("Preencha seus dados para gerar o Pix");
+      toast.info("Preencha seus dados para continuar");
     }
   };
 
@@ -899,7 +899,7 @@ export default function Subscription() {
                     {payMutation.isPending ? (
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                     ) : null}
-                    Pagar com Pix
+                    Continuar para pagamento
                   </Button>
                 </div>
               </div>
