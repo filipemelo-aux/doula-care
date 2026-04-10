@@ -190,6 +190,7 @@ Deno.serve(async (req) => {
       JSON.stringify({
         qr_code_base64: qrCodeBase64,
         pix_code: pixCode,
+        checkout_url: checkoutUrl,
         order_nsu: orderNsu,
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
