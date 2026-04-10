@@ -137,8 +137,9 @@ export function usePlanLimits() {
 
   const isSubscriptionExpired = (() => {
     if (plan === "free") return false;
-    if (!subscription) return (plan as string) !== "free";
-    if (subscription.status === "pending") return true; // pending = expired awaiting payment
+    // No subscription record = plan set by Super Admin, trust the org plan
+    if (!subscription) return false;
+    if (subscription.status === "pending") return true;
     if (subscription.current_period_end) {
       return new Date(subscription.current_period_end) < new Date();
     }
