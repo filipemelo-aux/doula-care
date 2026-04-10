@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useState, useEffect, useRef, useCallback } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePlanLimits } from "@/hooks/usePlanLimits";
@@ -13,7 +13,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Check, Copy, Crown, Loader2, QrCode, Sparkles, Star } from "lucide-react";
+import { Check, CheckCircle2, Copy, Crown, Loader2, QrCode, Sparkles, Star } from "lucide-react";
 import { toast } from "sonner";
 
 type BillingType = "monthly" | "yearly";
@@ -84,6 +84,7 @@ function buildFeatureList(plan: PlatformPlan): string[] {
 
 export default function Subscription() {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const {
     plan: effectivePlan,
     originalPlan,
@@ -97,6 +98,61 @@ export default function Subscription() {
   const [paymentResult, setPaymentResult] = useState<PaymentResult | null>(null);
   const [selectedPlanName, setSelectedPlanName] = useState("");
   const [copied, setCopied] = useState(false);
+  const [paymentConfirmed, setPaymentConfirmed] = useState(false);
+  const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const stopPolling = useCallback(() => {
+    if (pollingRef.current) {
+      clearInterval(pollingRef.current);
+      pollingRef.current = null;
+    }
+  }, []);
+
+  // Poll payment status every 5 seconds when dialog is open
+  useEffect(() => {
+    if (!paymentDialog || !paymentResult?.order_nsu || paymentConfirmed) {
+      stopPolling();
+      return;
+    }
+
+    const checkStatus = async () => {
+      const { data, error } = await supabase
+        .from("plan_payments")
+        .select("status")
+        .eq("order_nsu", paymentResult.order_nsu)
+        .maybeSingle();
+
+      if (!error && data?.status === "paid") {
+        setPaymentConfirmed(true);
+        stopPolling();
+        toast.success("Pagamento confirmado! Seu plano foi ativado.");
+        // Refresh all relevant queries
+        queryClient.invalidateQueries({ queryKey: ["my-subscription"] });
+        queryClient.invalidateQueries({ queryKey: ["current-subscription"] });
+        queryClient.invalidateQueries({ queryKey: ["org-plan"] });
+        queryClient.invalidateQueries({ queryKey: ["active-subscription"] });
+        queryClient.invalidateQueries({ queryKey: ["platform-plan-limits"] });
+      }
+    };
+
+    // Check immediately, then every 5s
+    checkStatus();
+    pollingRef.current = setInterval(checkStatus, 5000);
+
+    return () => stopPolling();
+  }, [paymentDialog, paymentResult?.order_nsu, paymentConfirmed, stopPolling, queryClient]);
+
+  // Reset confirmed state when dialog closes
+  const handleDialogClose = (open: boolean) => {
+    setPaymentDialog(open);
+    if (!open) {
+      stopPolling();
+      if (paymentConfirmed) {
+        setPaymentResult(null);
+        setPaymentConfirmed(false);
+      }
+    }
+  };
 
   const { data: plans, isLoading } = useQuery({
     queryKey: ["platform-plans-subscription"],
@@ -373,16 +429,44 @@ export default function Subscription() {
       </div>
 
       {/* Payment Dialog */}
-      <Dialog open={paymentDialog} onOpenChange={setPaymentDialog}>
+      <Dialog open={paymentDialog} onOpenChange={handleDialogClose}>
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle className="font-display flex items-center gap-2">
-              <QrCode className="w-5 h-5" />
-              Pagamento Pix — {selectedPlanName}
+              {paymentConfirmed ? (
+                <CheckCircle2 className="w-5 h-5 text-primary" />
+              ) : (
+                <QrCode className="w-5 h-5" />
+              )}
+              {paymentConfirmed
+                ? "Pagamento confirmado!"
+                : `Pagamento Pix — ${selectedPlanName}`}
             </DialogTitle>
           </DialogHeader>
 
-          {paymentResult ? (
+          {paymentConfirmed ? (
+            <div className="space-y-4 py-4">
+              <div className="flex justify-center">
+                <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center">
+                  <CheckCircle2 className="w-10 h-10 text-primary" />
+                </div>
+              </div>
+              <div className="text-center space-y-2">
+                <p className="text-lg font-semibold text-foreground">
+                  Pagamento confirmado!
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  Seu plano {selectedPlanName} foi ativado com sucesso.
+                </p>
+              </div>
+              <Button
+                className="w-full"
+                onClick={() => handleDialogClose(false)}
+              >
+                Fechar
+              </Button>
+            </div>
+          ) : paymentResult ? (
             <div className="space-y-4">
               {/* QR Code */}
               {paymentResult.qr_code_base64 && (
@@ -432,11 +516,12 @@ export default function Subscription() {
                 <p className="text-sm text-muted-foreground">
                   Status do pagamento
                 </p>
-                <Badge variant="secondary" className="mt-1">
-                  Aguardando pagamento
-                </Badge>
+                <div className="flex items-center justify-center gap-2 mt-1">
+                  <Loader2 className="w-3 h-3 animate-spin text-muted-foreground" />
+                  <Badge variant="secondary">Aguardando pagamento</Badge>
+                </div>
                 <p className="text-xs text-muted-foreground mt-2">
-                  Após o pagamento, seu plano será ativado automaticamente.
+                  Verificando automaticamente a cada 5 segundos...
                 </p>
               </div>
 
