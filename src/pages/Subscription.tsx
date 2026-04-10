@@ -8,16 +8,58 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Check, CheckCircle2, Clock, Copy, Crown, ExternalLink, Loader2, QrCode, RefreshCw, Sparkles, Star } from "lucide-react";
+import { Check, CheckCircle2, Clock, Copy, Crown, ExternalLink, Loader2, MapPin, QrCode, RefreshCw, Sparkles, Star } from "lucide-react";
 import { toast } from "sonner";
+import { maskCPF, maskPhone, maskCEP } from "@/lib/masks";
+import { fetchAddressByCep } from "@/lib/address";
 
 type BillingType = "monthly" | "yearly";
+
+interface CustomerData {
+  phone: string;
+  cpf: string;
+  street: string;
+  number: string;
+  complement: string;
+  neighborhood: string;
+  city: string;
+  state: string;
+  zipcode: string;
+}
+
+const EMPTY_CUSTOMER: CustomerData = {
+  phone: "",
+  cpf: "",
+  street: "",
+  number: "",
+  complement: "",
+  neighborhood: "",
+  city: "",
+  state: "",
+  zipcode: "",
+};
+
+function isCustomerComplete(c: CustomerData): boolean {
+  const digits = (v: string) => v.replace(/\D/g, "");
+  return (
+    digits(c.phone).length >= 10 &&
+    digits(c.cpf).length === 11 &&
+    !!c.street.trim() &&
+    !!c.number.trim() &&
+    !!c.neighborhood.trim() &&
+    !!c.city.trim() &&
+    c.state.replace(/\s/g, "").length === 2 &&
+    digits(c.zipcode).length === 8
+  );
+}
 
 interface PlatformPlan {
   id: string;
@@ -104,6 +146,27 @@ export default function Subscription() {
   const [paymentConfirmed, setPaymentConfirmed] = useState(false);
   const [manualChecking, setManualChecking] = useState(false);
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [customerData, setCustomerData] = useState<CustomerData>(EMPTY_CUSTOMER);
+  const [showCustomerForm, setShowCustomerForm] = useState(false);
+  const [pendingPlan, setPendingPlan] = useState<{ plan_id: string; billing_type: BillingType } | null>(null);
+  const [cepLoading, setCepLoading] = useState(false);
+
+  const handleCepBlur = async () => {
+    const clean = customerData.zipcode.replace(/\D/g, "");
+    if (clean.length !== 8) return;
+    setCepLoading(true);
+    const addr = await fetchAddressByCep(clean);
+    setCepLoading(false);
+    if (addr) {
+      setCustomerData((prev) => ({
+        ...prev,
+        street: addr.street || prev.street,
+        neighborhood: addr.neighborhood || prev.neighborhood,
+        city: addr.city || prev.city,
+        state: addr.state || prev.state,
+      }));
+    }
+  };
 
   const stopPolling = useCallback(() => {
     if (pollingRef.current) {
@@ -192,31 +255,99 @@ export default function Subscription() {
     mutationFn: async ({
       plan_id,
       billing_type,
+      customer,
+      address,
     }: {
       plan_id: string;
       billing_type: BillingType;
+      customer?: Record<string, string>;
+      address?: Record<string, string>;
     }) => {
       const { data, error } = await supabase.functions.invoke(
         "create-pix-payment-for-plan",
         {
-          body: { plan_id, billing_type },
+          body: { plan_id, billing_type, customer, address },
         }
       );
-      if (error) throw error;
+      if (error) {
+        // Try to parse the error response for missing_fields
+        throw error;
+      }
+      if (data?.error) {
+        const err: any = new Error(data.error);
+        err.missing_fields = data.missing_fields;
+        throw err;
+      }
       return data as PaymentResult;
     },
     onSuccess: (data) => {
       setPaymentResult(data);
       setPaymentDialog(true);
+      setShowCustomerForm(false);
+      setPendingPlan(null);
     },
     onError: (err: any) => {
-      toast.error(err?.message || "Erro ao gerar pagamento");
+      if (err?.missing_fields?.length > 0) {
+        setShowCustomerForm(true);
+        toast.info("Preencha seus dados para gerar o Pix");
+      } else {
+        toast.error(err?.message || "Erro ao gerar pagamento");
+      }
     },
   });
 
   const handleSubscribe = (plan: PlatformPlan, billingType: BillingType) => {
     setSelectedPlanName(plan.name);
-    payMutation.mutate({ plan_id: plan.id, billing_type: billingType });
+    const digits = (v: string) => v.replace(/\D/g, "");
+    if (isCustomerComplete(customerData)) {
+      payMutation.mutate({
+        plan_id: plan.id,
+        billing_type: billingType,
+        customer: {
+          phone_number: digits(customerData.phone),
+          document: digits(customerData.cpf),
+        },
+        address: {
+          street: customerData.street.trim(),
+          number: customerData.number.trim(),
+          complement: customerData.complement.trim(),
+          neighborhood: customerData.neighborhood.trim(),
+          city: customerData.city.trim(),
+          state: customerData.state.trim().toUpperCase(),
+          zipcode: digits(customerData.zipcode),
+        },
+      });
+    } else {
+      setPendingPlan({ plan_id: plan.id, billing_type: billingType });
+      setShowCustomerForm(true);
+      toast.info("Preencha seus dados para gerar o Pix");
+    }
+  };
+
+  const handleSubmitCustomerForm = () => {
+    if (!pendingPlan) return;
+    if (!isCustomerComplete(customerData)) {
+      toast.error("Preencha todos os campos obrigatórios");
+      return;
+    }
+    const digits = (v: string) => v.replace(/\D/g, "");
+    payMutation.mutate({
+      plan_id: pendingPlan.plan_id,
+      billing_type: pendingPlan.billing_type,
+      customer: {
+        phone_number: digits(customerData.phone),
+        document: digits(customerData.cpf),
+      },
+      address: {
+        street: customerData.street.trim(),
+        number: customerData.number.trim(),
+        complement: customerData.complement.trim(),
+        neighborhood: customerData.neighborhood.trim(),
+        city: customerData.city.trim(),
+        state: customerData.state.trim().toUpperCase(),
+        zipcode: digits(customerData.zipcode),
+      },
+    });
   };
 
   const handleActivateFree = async () => {
@@ -463,7 +594,7 @@ export default function Subscription() {
 
       {/* Payment Dialog */}
       <Dialog open={paymentDialog} onOpenChange={handleDialogClose}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="font-display flex items-center gap-2">
               {paymentConfirmed ? (
@@ -658,6 +789,127 @@ export default function Subscription() {
               <Loader2 className="w-8 h-8 animate-spin text-primary" />
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Customer Data Dialog */}
+      <Dialog open={showCustomerForm} onOpenChange={(open) => { setShowCustomerForm(open); if (!open) setPendingPlan(null); }}>
+        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="font-display flex items-center gap-2">
+              <MapPin className="w-5 h-5" />
+              Dados para pagamento
+            </DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            Preencha telefone, CPF e endereço para gerar o QR Code Pix automaticamente.
+          </p>
+          <div className="space-y-3">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label className="text-xs">Telefone *</Label>
+                <Input
+                  mask="phone"
+                  placeholder="(00) 00000-0000"
+                  value={customerData.phone}
+                  onChange={(e) => setCustomerData((p) => ({ ...p, phone: e.target.value }))}
+                  maxLength={15}
+                />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">CPF *</Label>
+                <Input
+                  mask="cpf"
+                  placeholder="000.000.000-00"
+                  value={customerData.cpf}
+                  onChange={(e) => setCustomerData((p) => ({ ...p, cpf: e.target.value }))}
+                  maxLength={14}
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-3 gap-3">
+              <div className="col-span-1 space-y-1">
+                <Label className="text-xs">CEP *</Label>
+                <Input
+                  mask="cep"
+                  placeholder="00000-000"
+                  value={customerData.zipcode}
+                  onChange={(e) => setCustomerData((p) => ({ ...p, zipcode: e.target.value }))}
+                  onBlur={handleCepBlur}
+                  maxLength={9}
+                />
+              </div>
+              <div className="col-span-2 space-y-1">
+                <Label className="text-xs">Rua *</Label>
+                <Input
+                  placeholder={cepLoading ? "Buscando..." : "Rua / Av"}
+                  value={customerData.street}
+                  onChange={(e) => setCustomerData((p) => ({ ...p, street: e.target.value }))}
+                  disabled={cepLoading}
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-3 gap-3">
+              <div className="space-y-1">
+                <Label className="text-xs">Nº *</Label>
+                <Input
+                  placeholder="123"
+                  value={customerData.number}
+                  onChange={(e) => setCustomerData((p) => ({ ...p, number: e.target.value }))}
+                />
+              </div>
+              <div className="col-span-2 space-y-1">
+                <Label className="text-xs">Complemento</Label>
+                <Input
+                  placeholder="Apto / Sala"
+                  value={customerData.complement}
+                  onChange={(e) => setCustomerData((p) => ({ ...p, complement: e.target.value }))}
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-3 gap-3">
+              <div className="col-span-1 space-y-1">
+                <Label className="text-xs">Bairro *</Label>
+                <Input
+                  placeholder="Bairro"
+                  value={customerData.neighborhood}
+                  onChange={(e) => setCustomerData((p) => ({ ...p, neighborhood: e.target.value }))}
+                  disabled={cepLoading}
+                />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Cidade *</Label>
+                <Input
+                  placeholder="Cidade"
+                  value={customerData.city}
+                  onChange={(e) => setCustomerData((p) => ({ ...p, city: e.target.value }))}
+                  disabled={cepLoading}
+                />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">UF *</Label>
+                <Input
+                  placeholder="SP"
+                  value={customerData.state}
+                  onChange={(e) => setCustomerData((p) => ({ ...p, state: e.target.value.toUpperCase().slice(0, 2) }))}
+                  maxLength={2}
+                  disabled={cepLoading}
+                />
+              </div>
+            </div>
+          </div>
+          <Button
+            className="w-full mt-2"
+            onClick={handleSubmitCustomerForm}
+            disabled={payMutation.isPending || !isCustomerComplete(customerData)}
+          >
+            {payMutation.isPending ? (
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            ) : (
+              <QrCode className="w-4 h-4 mr-2" />
+            )}
+            Gerar Pix
+          </Button>
         </DialogContent>
       </Dialog>
     </div>
