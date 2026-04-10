@@ -689,17 +689,6 @@ export default function Subscription() {
                 </div>
               )}
 
-              {/* Open checkout iframe */}
-              {paymentResult.checkout_url && (
-                <Button
-                  variant="outline"
-                  className="w-full"
-                  onClick={() => setShowCheckoutIframe(true)}
-                >
-                  <ExternalLink className="w-4 h-4 mr-2" />
-                  Abrir página de pagamento
-                </Button>
-              )}
 
               {/* Pix Code copy-paste */}
               {paymentResult.pix_code && (
