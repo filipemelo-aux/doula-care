@@ -787,124 +787,189 @@ export default function Subscription() {
         </DialogContent>
       </Dialog>
 
-      {/* Customer Data Dialog */}
-      <Dialog open={showCustomerForm} onOpenChange={(open) => { setShowCustomerForm(open); if (!open) setPendingPlan(null); }}>
-        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="font-display flex items-center gap-2">
-              <MapPin className="w-5 h-5" />
-              Dados para pagamento
-            </DialogTitle>
-          </DialogHeader>
-          <p className="text-sm text-muted-foreground">
-            Preencha telefone, CPF e endereço para gerar o QR Code Pix automaticamente.
-          </p>
-          <div className="space-y-3">
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1">
-                <Label className="text-xs">Telefone *</Label>
-                <Input
-                  mask="phone"
-                  placeholder="(00) 00000-0000"
-                  value={customerData.phone}
-                  onChange={(e) => setCustomerData((p) => ({ ...p, phone: e.target.value }))}
-                  maxLength={15}
-                />
+      {/* Customer Data Dialog – InfinitePay-style checkout */}
+      <Dialog open={showCustomerForm} onOpenChange={(open) => { setShowCustomerForm(open); if (!open) { setPendingPlan(null); setCheckoutStep("contact"); } }}>
+        <DialogContent className="p-0 gap-0 max-w-md max-h-[95vh] overflow-hidden rounded-2xl border-0">
+          {/* Resumo da compra header */}
+          {pendingPlan && (() => {
+            const plan = plans?.find(p => p.id === pendingPlan.plan_id);
+            if (!plan) return null;
+            const price = pendingPlan.billing_type === "yearly"
+              ? (plan.price_yearly > 0 ? plan.price_yearly : plan.price_monthly * 12)
+              : plan.price_monthly;
+            return (
+              <div className="bg-muted/60 px-5 py-4 flex items-center justify-between border-b border-border">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium text-foreground">Resumo da compra</span>
+                </div>
+                <span className="text-base font-bold text-foreground">{formatCentavos(price)}</span>
               </div>
-              <div className="space-y-1">
-                <Label className="text-xs">CPF *</Label>
-                <Input
-                  mask="cpf"
-                  placeholder="000.000.000-00"
-                  value={customerData.cpf}
-                  onChange={(e) => setCustomerData((p) => ({ ...p, cpf: e.target.value }))}
-                  maxLength={14}
-                />
-              </div>
-            </div>
-            <div className="grid grid-cols-3 gap-3">
-              <div className="col-span-1 space-y-1">
-                <Label className="text-xs">CEP *</Label>
-                <Input
-                  mask="cep"
-                  placeholder="00000-000"
-                  value={customerData.zipcode}
-                  onChange={(e) => setCustomerData((p) => ({ ...p, zipcode: e.target.value }))}
-                  onBlur={handleCepBlur}
-                  maxLength={9}
-                />
-              </div>
-              <div className="col-span-2 space-y-1">
-                <Label className="text-xs">Rua *</Label>
-                <Input
-                  placeholder={cepLoading ? "Buscando..." : "Rua / Av"}
-                  value={customerData.street}
-                  onChange={(e) => setCustomerData((p) => ({ ...p, street: e.target.value }))}
-                  disabled={cepLoading}
-                />
-              </div>
-            </div>
-            <div className="grid grid-cols-3 gap-3">
-              <div className="space-y-1">
-                <Label className="text-xs">Nº *</Label>
-                <Input
-                  placeholder="123"
-                  value={customerData.number}
-                  onChange={(e) => setCustomerData((p) => ({ ...p, number: e.target.value }))}
-                />
-              </div>
-              <div className="col-span-2 space-y-1">
-                <Label className="text-xs">Complemento</Label>
-                <Input
-                  placeholder="Apto / Sala"
-                  value={customerData.complement}
-                  onChange={(e) => setCustomerData((p) => ({ ...p, complement: e.target.value }))}
-                />
-              </div>
-            </div>
-            <div className="grid grid-cols-3 gap-3">
-              <div className="col-span-1 space-y-1">
-                <Label className="text-xs">Bairro *</Label>
-                <Input
-                  placeholder="Bairro"
-                  value={customerData.neighborhood}
-                  onChange={(e) => setCustomerData((p) => ({ ...p, neighborhood: e.target.value }))}
-                  disabled={cepLoading}
-                />
-              </div>
-              <div className="space-y-1">
-                <Label className="text-xs">Cidade *</Label>
-                <Input
-                  placeholder="Cidade"
-                  value={customerData.city}
-                  onChange={(e) => setCustomerData((p) => ({ ...p, city: e.target.value }))}
-                  disabled={cepLoading}
-                />
-              </div>
-              <div className="space-y-1">
-                <Label className="text-xs">UF *</Label>
-                <Input
-                  placeholder="SP"
-                  value={customerData.state}
-                  onChange={(e) => setCustomerData((p) => ({ ...p, state: e.target.value.toUpperCase().slice(0, 2) }))}
-                  maxLength={2}
-                  disabled={cepLoading}
-                />
-              </div>
-            </div>
+            );
+          })()}
+
+          {/* Step indicator */}
+          <div className="flex items-center justify-center gap-2 px-5 pt-4 pb-2 text-xs text-muted-foreground">
+            <span className={checkoutStep === "contact" ? "text-foreground font-semibold" : ""}>Contato</span>
+            <span className="text-muted-foreground/40">›</span>
+            <span className={checkoutStep === "address" ? "text-foreground font-semibold" : ""}>Endereço</span>
+            <span className="text-muted-foreground/40">›</span>
+            <span className="text-muted-foreground/40">Pagamento</span>
           </div>
-          <Button
-            className="w-full mt-2"
-            onClick={handleSubmitCustomerForm}
-            disabled={payMutation.isPending || !isCustomerComplete(customerData)}
-          >
-            {payMutation.isPending ? (
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+
+          <div className="px-5 pb-5 pt-2 overflow-y-auto max-h-[70vh]">
+            {checkoutStep === "contact" ? (
+              <div className="space-y-4">
+                <div>
+                  <h3 className="text-sm font-semibold text-foreground mb-3">Contato</h3>
+                  <div className="space-y-3">
+                    <div className="space-y-1.5">
+                      <Label className="text-xs text-muted-foreground">Telefone</Label>
+                      <Input
+                        mask="phone"
+                        placeholder="(00) 00000-0000"
+                        value={customerData.phone}
+                        onChange={(e) => setCustomerData((p) => ({ ...p, phone: e.target.value }))}
+                        maxLength={15}
+                        className="h-11"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs text-muted-foreground">CPF</Label>
+                      <Input
+                        mask="cpf"
+                        placeholder="000.000.000-00"
+                        value={customerData.cpf}
+                        onChange={(e) => setCustomerData((p) => ({ ...p, cpf: e.target.value }))}
+                        maxLength={14}
+                        className="h-11"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <Button
+                  className="w-full h-11 rounded-xl"
+                  onClick={() => {
+                    const digits = (v: string) => v.replace(/\D/g, "");
+                    if (digits(customerData.phone).length < 10) {
+                      toast.error("Informe um telefone válido");
+                      return;
+                    }
+                    if (digits(customerData.cpf).length !== 11) {
+                      toast.error("Informe um CPF válido");
+                      return;
+                    }
+                    setCheckoutStep("address");
+                  }}
+                >
+                  Continuar
+                </Button>
+              </div>
             ) : (
-              <QrCode className="w-4 h-4 mr-2" />
+              <div className="space-y-4">
+                <div>
+                  <h3 className="text-sm font-semibold text-foreground mb-3">Endereço</h3>
+                  <div className="space-y-3">
+                    <div className="space-y-1.5">
+                      <Label className="text-xs text-muted-foreground">CEP</Label>
+                      <Input
+                        mask="cep"
+                        placeholder="00000-000"
+                        value={customerData.zipcode}
+                        onChange={(e) => setCustomerData((p) => ({ ...p, zipcode: e.target.value }))}
+                        onBlur={handleCepBlur}
+                        maxLength={9}
+                        className="h-11"
+                      />
+                    </div>
+                    <div className="grid grid-cols-3 gap-3">
+                      <div className="col-span-2 space-y-1.5">
+                        <Label className="text-xs text-muted-foreground">Rua</Label>
+                        <Input
+                          placeholder={cepLoading ? "Buscando..." : "Rua / Av"}
+                          value={customerData.street}
+                          onChange={(e) => setCustomerData((p) => ({ ...p, street: e.target.value }))}
+                          disabled={cepLoading}
+                          className="h-11"
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label className="text-xs text-muted-foreground">Nº</Label>
+                        <Input
+                          placeholder="123"
+                          value={customerData.number}
+                          onChange={(e) => setCustomerData((p) => ({ ...p, number: e.target.value }))}
+                          className="h-11"
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs text-muted-foreground">Complemento</Label>
+                      <Input
+                        placeholder="Apto / Sala (opcional)"
+                        value={customerData.complement}
+                        onChange={(e) => setCustomerData((p) => ({ ...p, complement: e.target.value }))}
+                        className="h-11"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs text-muted-foreground">Bairro</Label>
+                      <Input
+                        placeholder="Bairro"
+                        value={customerData.neighborhood}
+                        onChange={(e) => setCustomerData((p) => ({ ...p, neighborhood: e.target.value }))}
+                        disabled={cepLoading}
+                        className="h-11"
+                      />
+                    </div>
+                    <div className="grid grid-cols-3 gap-3">
+                      <div className="col-span-2 space-y-1.5">
+                        <Label className="text-xs text-muted-foreground">Cidade</Label>
+                        <Input
+                          placeholder="Cidade"
+                          value={customerData.city}
+                          onChange={(e) => setCustomerData((p) => ({ ...p, city: e.target.value }))}
+                          disabled={cepLoading}
+                          className="h-11"
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label className="text-xs text-muted-foreground">UF</Label>
+                        <Input
+                          placeholder="SP"
+                          value={customerData.state}
+                          onChange={(e) => setCustomerData((p) => ({ ...p, state: e.target.value.toUpperCase().slice(0, 2) }))}
+                          maxLength={2}
+                          disabled={cepLoading}
+                          className="h-11"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    className="flex-1 h-11 rounded-xl"
+                    onClick={() => setCheckoutStep("contact")}
+                  >
+                    Voltar
+                  </Button>
+                  <Button
+                    className="flex-1 h-11 rounded-xl"
+                    onClick={handleSubmitCustomerForm}
+                    disabled={payMutation.isPending || !isCustomerComplete(customerData)}
+                  >
+                    {payMutation.isPending ? (
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    ) : null}
+                    Pagar com Pix
+                  </Button>
+                </div>
+              </div>
             )}
-            Gerar Pix
-          </Button>
+          </div>
         </DialogContent>
       </Dialog>
 
