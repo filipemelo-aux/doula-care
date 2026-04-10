@@ -135,7 +135,7 @@ export function usePlanLimits() {
   // Determine if subscription is expired (client-side check for immediate feedback)
   const isSubscriptionExpired = (() => {
     if (plan === "free") return false; // Free plan never expires
-    if (!subscription) return plan !== "free"; // Paid plan but no active sub = expired
+    if (!subscription) return (plan as string) !== "free"; // Paid plan but no active sub = expired
     if (subscription.current_period_end) {
       return new Date(subscription.current_period_end) < new Date();
     }
