@@ -19,11 +19,16 @@ Deno.serve(async (req) => {
   }
 
   try {
+    const rawHeaders = Object.fromEntries(req.headers.entries());
+    console.log("[webhook-infinitepay] Headers:", JSON.stringify(rawHeaders));
+
     const body = await req.json();
-    console.log("Webhook received:", JSON.stringify(body));
+    console.log("[webhook-infinitepay] Body completo:", JSON.stringify(body));
 
     const orderNsu = body?.order_nsu || body?.data?.order_nsu;
     const status = body?.status || body?.data?.status;
+
+    console.log("[webhook-infinitepay] order_nsu:", orderNsu, "| status:", status);
 
     if (!orderNsu) {
       console.error("Missing order_nsu in webhook payload");
