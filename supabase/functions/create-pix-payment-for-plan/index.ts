@@ -42,7 +42,7 @@ Deno.serve(async (req) => {
 
     // Parse & validate body
     const body = await req.json();
-    const { plan_id, billing_type } = body;
+    const { plan_id, billing_type, phone } = body;
 
     if (!plan_id || typeof plan_id !== "string") {
       return new Response(JSON.stringify({ error: "plan_id é obrigatório" }), {
@@ -97,7 +97,7 @@ Deno.serve(async (req) => {
 
     const userName = profile?.full_name || client?.full_name || "Usuário";
     const userEmail = claimsData.user.email || "";
-    const userPhone = client?.phone || "";
+    const userPhone = phone || client?.phone || "00000000000";
 
     // 3. Define amount (centavos)
     const amount: number = billing_type === "monthly" ? plan.price_monthly : plan.price_yearly;
