@@ -27,8 +27,10 @@ Deno.serve(async (req) => {
 
     const orderNsu = body?.order_nsu || body?.data?.order_nsu;
     const status = body?.status || body?.data?.status;
+    const invoiceSlug = body?.invoice_slug || body?.data?.invoice_slug;
+    const captureMethod = body?.capture_method || body?.data?.capture_method;
 
-    console.log("[webhook-infinitepay] order_nsu:", orderNsu, "| status:", status);
+    console.log("[webhook-infinitepay] order_nsu:", orderNsu, "| status:", status, "| capture_method:", captureMethod, "| invoice_slug:", invoiceSlug);
 
     if (!orderNsu) {
       console.error("Missing order_nsu in webhook payload");
