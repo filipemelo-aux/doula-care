@@ -501,12 +501,14 @@ export default function Subscription() {
             </div>
           ) : paymentResult ? (
             <div className="space-y-4">
-              {/* Instruction */}
+              {/* Payment instructions */}
               <p className="text-sm text-center text-muted-foreground">
-                Escaneie o QR Code com seu app de banco para pagar via Pix
+                {paymentResult.qr_code_base64 || paymentResult.pix_code
+                  ? "Escaneie o QR Code com seu app de banco ou use o código Pix abaixo."
+                  : "A InfinitePay abriu esta cobrança em uma página segura. Use o botão abaixo para concluir o pagamento Pix."}
               </p>
 
-              {/* QR Code - from base64 or generated from checkout URL */}
+              {/* Real Pix QR only */}
               {paymentResult.qr_code_base64 ? (
                 <div className="flex justify-center p-4 bg-white rounded-lg">
                   <img
@@ -519,15 +521,26 @@ export default function Subscription() {
                     className="w-56 h-56"
                   />
                 </div>
+              ) : paymentResult.pix_code ? (
+                <div className="flex justify-center p-4 bg-white rounded-lg">
+                  <QRCodeSVG
+                    value={paymentResult.pix_code}
+                    size={224}
+                    level="M"
+                    includeMargin
+                  />
+                </div>
               ) : paymentResult.checkout_url ? (
-                <div className="flex flex-col items-center gap-3">
-                  <div className="p-4 bg-white rounded-lg">
-                    <QRCodeSVG
-                      value={paymentResult.checkout_url}
-                      size={224}
-                      level="M"
-                    />
+                <div className="rounded-lg border border-border bg-muted/40 p-4 text-center space-y-2">
+                  <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+                    <QrCode className="w-6 h-6 text-primary" />
                   </div>
+                  <p className="text-sm font-medium text-foreground">
+                    QR Pix direto não foi disponibilizado para esta cobrança.
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Abra a página de pagamento da InfinitePay para concluir o Pix com segurança.
+                  </p>
                 </div>
               ) : (
                 <div className="text-center py-4">
@@ -539,17 +552,16 @@ export default function Subscription() {
 
               {/* Direct link to checkout */}
               {paymentResult.checkout_url && (
-                <div className="text-center">
+                <Button asChild className="w-full">
                   <a
                     href={paymentResult.checkout_url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline"
                   >
-                    <ExternalLink className="w-3.5 h-3.5" />
+                    <ExternalLink className="w-4 h-4 mr-2" />
                     Abrir página de pagamento
                   </a>
-                </div>
+                </Button>
               )}
 
               {/* Pix Code copy-paste */}
