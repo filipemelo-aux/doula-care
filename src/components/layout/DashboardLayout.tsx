@@ -9,6 +9,7 @@ import { PushNotificationToggle } from "@/components/pwa/PushNotificationToggle"
 import { useOrgBranding } from "@/hooks/useOrgBranding";
 import { usePresenceBroadcast } from "@/hooks/usePresence";
 import { useAdminUnreadCounts } from "@/hooks/useAdminUnreadCounts";
+import { useActiveLaborCount } from "@/hooks/useActiveLaborCount";
 import { BirthAlertDialog } from "@/components/dashboard/BirthAlertDialog";
 import { cn } from "@/lib/utils";
 
@@ -18,6 +19,7 @@ export function DashboardLayout() {
   const { signOut } = useAuth();
   const { logoUrl: orgLogo, displayName, brandingReady } = useOrgBranding();
   const { unreadMessages } = useAdminUnreadCounts();
+  const { laborCount, alertCount } = useActiveLaborCount();
   const location = useLocation();
   const navigate = useNavigate();
   usePresenceBroadcast();
