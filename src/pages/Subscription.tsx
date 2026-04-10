@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { QRCodeSVG } from "qrcode.react";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePlanLimits } from "@/hooks/usePlanLimits";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
