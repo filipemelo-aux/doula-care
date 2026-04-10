@@ -178,7 +178,7 @@ export default function Subscription() {
 
   // Poll payment status every 5 seconds when dialog is open
   useEffect(() => {
-    if (!paymentDialog || !paymentResult?.order_nsu || paymentConfirmed) {
+    if ((!paymentDialog && !showCheckoutIframe) || !paymentResult?.order_nsu || paymentConfirmed) {
       stopPolling();
       return;
     }
@@ -208,7 +208,7 @@ export default function Subscription() {
     pollingRef.current = setInterval(checkStatus, 5000);
 
     return () => stopPolling();
-  }, [paymentDialog, paymentResult?.order_nsu, paymentConfirmed, stopPolling, queryClient]);
+  }, [paymentDialog, showCheckoutIframe, paymentResult?.order_nsu, paymentConfirmed, stopPolling, queryClient]);
 
   // Reset confirmed state when dialog closes
   const handleDialogClose = (open: boolean) => {
@@ -283,9 +283,15 @@ export default function Subscription() {
     },
     onSuccess: (data) => {
       setPaymentResult(data);
-      setPaymentDialog(true);
       setShowCustomerForm(false);
       setPendingPlan(null);
+      // If we only have checkout_url (no direct pix data), go straight to iframe
+      if (!data.qr_code_base64 && !data.pix_code && data.checkout_url) {
+        setShowCheckoutIframe(true);
+        setPaymentDialog(false);
+      } else {
+        setPaymentDialog(true);
+      }
     },
     onError: (err: any) => {
       if (err?.missing_fields?.length > 0) {
@@ -663,13 +669,17 @@ export default function Subscription() {
                   />
                 </div>
               ) : paymentResult.checkout_url ? (
-                <div className="flex justify-center p-4 bg-white rounded-lg">
-                  <QRCodeSVG
-                    value={paymentResult.checkout_url}
-                    size={224}
-                    level="M"
-                    includeMargin
-                  />
+                <div className="text-center py-4 space-y-3">
+                  <p className="text-sm text-muted-foreground">
+                    Clique abaixo para visualizar o QR Code Pix na página segura da InfinitePay.
+                  </p>
+                  <Button
+                    className="w-full"
+                    onClick={() => setShowCheckoutIframe(true)}
+                  >
+                    <QrCode className="w-4 h-4 mr-2" />
+                    Ver QR Code Pix
+                  </Button>
                 </div>
               ) : (
                 <div className="text-center py-4">
@@ -679,17 +689,6 @@ export default function Subscription() {
                 </div>
               )}
 
-              {/* Open checkout iframe */}
-              {paymentResult.checkout_url && (
-                <Button
-                  variant="outline"
-                  className="w-full"
-                  onClick={() => setShowCheckoutIframe(true)}
-                >
-                  <ExternalLink className="w-4 h-4 mr-2" />
-                  Abrir página de pagamento
-                </Button>
-              )}
 
               {/* Pix Code copy-paste */}
               {paymentResult.pix_code && (
