@@ -150,6 +150,7 @@ export default function Subscription() {
   const [showCustomerForm, setShowCustomerForm] = useState(false);
   const [pendingPlan, setPendingPlan] = useState<{ plan_id: string; billing_type: BillingType } | null>(null);
   const [cepLoading, setCepLoading] = useState(false);
+  const [showCheckoutIframe, setShowCheckoutIframe] = useState(false);
 
   const handleCepBlur = async () => {
     const clean = customerData.zipcode.replace(/\D/g, "");
