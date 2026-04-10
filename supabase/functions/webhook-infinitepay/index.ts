@@ -22,7 +22,6 @@ Deno.serve(async (req) => {
     const body = await req.json();
     console.log("Webhook received:", JSON.stringify(body));
 
-    // Validate required fields
     const orderNsu = body?.order_nsu || body?.data?.order_nsu;
     const status = body?.status || body?.data?.status;
 
@@ -34,7 +33,6 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Only process "paid" events
     if (status !== "paid" && status !== "approved" && status !== "completed") {
       console.log(`Ignoring webhook with status: ${status}`);
       return new Response(JSON.stringify({ ok: true, action: "ignored" }), {
@@ -85,7 +83,22 @@ Deno.serve(async (req) => {
       });
     }
 
-    // 3. Calculate subscription period
+    // 3. Fetch the plan details to get the plan slug (free/pro/premium)
+    const { data: planData, error: planError } = await supabase
+      .from("platform_plan_limits")
+      .select("id, plan, name")
+      .eq("id", payment.plan_id)
+      .single();
+
+    if (planError || !planData) {
+      console.error("Plan not found for plan_id:", payment.plan_id, planError);
+      return new Response(JSON.stringify({ error: "Plan not found" }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // 4. Calculate subscription period
     const now = new Date();
     const periodEnd = new Date(now);
 
@@ -95,14 +108,14 @@ Deno.serve(async (req) => {
       periodEnd.setDate(periodEnd.getDate() + 30);
     }
 
-    // 4. Cancel any existing active subscription for this user
+    // 5. Cancel any existing active subscription for this user
     await supabase
       .from("subscriptions")
       .update({ status: "canceled" })
       .eq("user_id", payment.user_id)
       .eq("status", "active");
 
-    // 5. Create new active subscription
+    // 6. Create new active subscription
     const { error: subError } = await supabase.from("subscriptions").insert({
       user_id: payment.user_id,
       plan_id: payment.plan_id,
@@ -119,10 +132,37 @@ Deno.serve(async (req) => {
       });
     }
 
+    // 7. Update the organization's plan to match the purchased plan
+    // Find the user's organization via profiles
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("organization_id")
+      .eq("user_id", payment.user_id)
+      .single();
+
+    if (profile?.organization_id) {
+      const orgPlan = planData.plan as "free" | "pro" | "premium";
+      const { error: orgError } = await supabase
+        .from("organizations")
+        .update({
+          plan: orgPlan,
+          billing_cycle: payment.billing_type === "yearly" ? "yearly" : "monthly",
+          next_billing_date: periodEnd.toISOString().split("T")[0],
+        })
+        .eq("id", profile.organization_id);
+
+      if (orgError) {
+        console.error("Error updating organization plan:", orgError);
+        // Non-fatal: subscription is active, org plan update failed
+      } else {
+        console.log(`Organization ${profile.organization_id} upgraded to plan: ${orgPlan}`);
+      }
+    }
+
     console.log("Payment confirmed & subscription activated for user:", payment.user_id);
 
     return new Response(
-      JSON.stringify({ ok: true, action: "payment_confirmed", user_id: payment.user_id }),
+      JSON.stringify({ ok: true, action: "payment_confirmed", user_id: payment.user_id, plan: planData.plan }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (err) {
