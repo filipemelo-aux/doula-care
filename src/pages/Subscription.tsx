@@ -663,16 +663,13 @@ export default function Subscription() {
                   />
                 </div>
               ) : paymentResult.checkout_url ? (
-                <div className="rounded-lg border border-border bg-muted/40 p-4 text-center space-y-2">
-                  <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
-                    <QrCode className="w-6 h-6 text-primary" />
-                  </div>
-                  <p className="text-sm font-medium text-foreground">
-                    QR Pix direto não foi disponibilizado para esta cobrança.
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    Abra a página de pagamento da InfinitePay para concluir o Pix com segurança.
-                  </p>
+                <div className="flex justify-center p-4 bg-white rounded-lg">
+                  <QRCodeSVG
+                    value={paymentResult.checkout_url}
+                    size={224}
+                    level="M"
+                    includeMargin
+                  />
                 </div>
               ) : (
                 <div className="text-center py-4">
@@ -682,17 +679,15 @@ export default function Subscription() {
                 </div>
               )}
 
-              {/* Direct link to checkout */}
+              {/* Open checkout iframe */}
               {paymentResult.checkout_url && (
-                <Button asChild className="w-full">
-                  <a
-                    href={paymentResult.checkout_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    <ExternalLink className="w-4 h-4 mr-2" />
-                    Abrir página de pagamento
-                  </a>
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => setShowCheckoutIframe(true)}
+                >
+                  <ExternalLink className="w-4 h-4 mr-2" />
+                  Abrir página de pagamento
                 </Button>
               )}
 
