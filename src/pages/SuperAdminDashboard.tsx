@@ -19,6 +19,7 @@ import { PlanPricingCard } from "@/components/superadmin/PlanPricingCard";
 import { PlanLimitsCard } from "@/components/superadmin/PlanLimitsCard";
 import { OrgBillingCard } from "@/components/superadmin/OrgBillingCard";
 import { UserManagementCard } from "@/components/superadmin/UserManagementCard";
+import { SubscriptionBillingCard } from "@/components/superadmin/SubscriptionBillingCard";
 import { BroadcastNotificationCard } from "@/components/superadmin/BroadcastNotificationCard";
 import { PromoTriggerButton } from "@/components/superadmin/PromoTriggerButton";
 import { ModerationSection } from "@/components/superadmin/ModerationSection";
@@ -642,6 +643,7 @@ export default function SuperAdminDashboard() {
       case "billing":
         return (
           <div className="space-y-6">
+            <SubscriptionBillingCard />
             <PlanLimitsCard />
             <PlanPricingCard />
             <OrgBillingCard />
