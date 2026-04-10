@@ -266,8 +266,8 @@ Deno.serve(async (req) => {
     const checkoutUrl = ipData?.url || ipData?.checkout_url || ipData?.link || null;
     const checkoutSlug = ipData?.slug || null;
 
-    if (!pixCode) {
-      console.error("InfinitePay did not return PIX copy-paste code");
+    if (!pixCode && !qrCodeBase64 && !checkoutUrl) {
+      console.error("InfinitePay did not return PIX data or checkout URL");
       return new Response(
         JSON.stringify({ error: "Pix não foi gerado corretamente", details: ipData }),
         { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
