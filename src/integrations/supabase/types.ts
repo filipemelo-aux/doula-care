@@ -1115,6 +1115,59 @@ export type Database = {
           },
         ]
       }
+      plan_payments: {
+        Row: {
+          amount: number
+          billing_type: string
+          created_at: string
+          id: string
+          infinitepay_response: Json | null
+          order_nsu: string
+          pix_code: string | null
+          plan_id: string
+          qr_code_base64: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          billing_type: string
+          created_at?: string
+          id?: string
+          infinitepay_response?: Json | null
+          order_nsu: string
+          pix_code?: string | null
+          plan_id: string
+          qr_code_base64?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          billing_type?: string
+          created_at?: string
+          id?: string
+          infinitepay_response?: Json | null
+          order_nsu?: string
+          pix_code?: string | null
+          plan_id?: string
+          qr_code_base64?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "plan_payments_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "platform_plan_limits"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       plan_settings: {
         Row: {
           created_at: string
