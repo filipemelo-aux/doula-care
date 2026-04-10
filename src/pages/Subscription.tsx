@@ -669,13 +669,17 @@ export default function Subscription() {
                   />
                 </div>
               ) : paymentResult.checkout_url ? (
-                <div className="flex justify-center p-4 bg-white rounded-lg">
-                  <QRCodeSVG
-                    value={paymentResult.checkout_url}
-                    size={224}
-                    level="M"
-                    includeMargin
-                  />
+                <div className="text-center py-4 space-y-3">
+                  <p className="text-sm text-muted-foreground">
+                    Clique abaixo para visualizar o QR Code Pix na página segura da InfinitePay.
+                  </p>
+                  <Button
+                    className="w-full"
+                    onClick={() => setShowCheckoutIframe(true)}
+                  >
+                    <QrCode className="w-4 h-4 mr-2" />
+                    Ver QR Code Pix
+                  </Button>
                 </div>
               ) : (
                 <div className="text-center py-4">
