@@ -1,22 +1,8 @@
-import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { toast } from "sonner";
-import { DollarSign, Save, Sparkles, Crown } from "lucide-react";
-import { maskCurrency, parseCurrency } from "@/lib/masks";
-
-interface PricingRow {
-  id: string;
-  plan: string;
-  billing_cycle: string;
-  price: number;
-}
+import { Badge } from "@/components/ui/badge";
+import { DollarSign, Sparkles, Crown } from "lucide-react";
 
 const planConfig: Record<string, { label: string; icon: React.ReactNode; badgeClass: string; gradientClass: string }> = {
   pro: {
@@ -33,58 +19,21 @@ const planConfig: Record<string, { label: string; icon: React.ReactNode; badgeCl
   },
 };
 
-export function PlanPricingCard() {
-  const queryClient = useQueryClient();
-  const [editValues, setEditValues] = useState<Record<string, string>>({});
+const formatCurrency = (centavos: number) =>
+  new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(centavos / 100);
 
-  const { data: pricing, isLoading } = useQuery({
-    queryKey: ["platform-plan-pricing"],
+export function PlanPricingCard() {
+  const { data: plans, isLoading } = useQuery({
+    queryKey: ["platform-plan-limits-pricing"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("platform_plan_pricing")
-        .select("*")
-        .eq("is_active", true)
-        .order("plan")
-        .order("billing_cycle");
+        .from("platform_plan_limits" as any)
+        .select("id, plan, name, price_monthly, price_yearly, is_free")
+        .order("plan");
       if (error) throw error;
-      return data as PricingRow[];
+      return data as any[];
     },
   });
-
-  const updateMutation = useMutation({
-    mutationFn: async ({ id, price }: { id: string; price: number }) => {
-      const { error } = await supabase
-        .from("platform_plan_pricing")
-        .update({ price })
-        .eq("id", id);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["platform-plan-pricing"] });
-      toast.success("Preço atualizado!");
-    },
-    onError: () => toast.error("Erro ao atualizar preço"),
-  });
-
-  const handleSave = (row: PricingRow) => {
-    const key = `${row.plan}-${row.billing_cycle}`;
-    const rawValue = editValues[key];
-    if (rawValue === undefined) return;
-    const price = parseCurrency(rawValue);
-    updateMutation.mutate({ id: row.id, price });
-  };
-
-  const getValue = (row: PricingRow) => {
-    const key = `${row.plan}-${row.billing_cycle}`;
-    if (editValues[key] !== undefined) return editValues[key];
-    return maskCurrency(String(row.price * 100));
-  };
-
-  const handleChange = (key: string, value: string) => {
-    setEditValues((prev) => ({ ...prev, [key]: maskCurrency(value) }));
-  };
-
-  const cycleLabel = (cycle: string) => (cycle === "monthly" ? "Mensal" : "Anual");
 
   if (isLoading) {
     return (
@@ -95,17 +44,15 @@ export function PlanPricingCard() {
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {[...Array(3)].map((_, i) => (
-            <Skeleton key={i} className="h-36 w-full rounded-xl" />
+            <Skeleton key={i} className="h-24 w-full rounded-xl" />
           ))}
         </div>
       </div>
     );
   }
 
-  const grouped = {
-    pro: pricing?.filter((p) => p.plan === "pro") || [],
-    premium: pricing?.filter((p) => p.plan === "premium") || [],
-  };
+  const free = plans?.find((p) => p.plan === "free");
+  const paid = plans?.filter((p) => !p.is_free) || [];
 
   return (
     <div className="space-y-3">
@@ -115,76 +62,46 @@ export function PlanPricingCard() {
       </h2>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-        {/* Free card */}
-        <Card className="">
-          <CardContent className="p-4">
-            <div className="flex items-start gap-3">
-              <div className="flex-shrink-0 w-10 h-10 rounded-full bg-muted flex items-center justify-center">
-                <DollarSign className="h-5 w-5 text-muted-foreground" />
-              </div>
-              <div className="flex-1 min-w-0 space-y-1">
-                <div className="flex items-center gap-2">
-                  <h3 className="font-semibold text-sm text-foreground">Free</h3>
-                  <Badge variant="outline" className="text-[10px] h-5 bg-muted text-muted-foreground">
-                    Gratuito
-                  </Badge>
+        {/* Free */}
+        <div className="rounded-xl border bg-card p-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
+              <DollarSign className="h-5 w-5 text-muted-foreground" />
+            </div>
+            <div>
+              <h3 className="font-semibold text-sm text-foreground">Free</h3>
+              <Badge variant="outline" className="text-[10px] h-5 bg-muted text-muted-foreground">Gratuito</Badge>
+            </div>
+          </div>
+          <p className="text-lg font-bold text-foreground mt-2">R$ 0,00</p>
+        </div>
+
+        {/* Paid plans */}
+        {paid.map((plan) => {
+          const config = planConfig[plan.plan];
+          if (!config) return null;
+          return (
+            <div key={plan.id} className="rounded-xl border bg-card p-4 hover:shadow-md transition-all">
+              <div className="flex items-center gap-3">
+                <div className={`w-10 h-10 rounded-full bg-gradient-to-br ${config.gradientClass} flex items-center justify-center`}>
+                  {config.icon}
                 </div>
-                <p className="text-xs text-muted-foreground">Sempre gratuito</p>
-                <p className="text-lg font-bold text-foreground mt-1">R$ 0,00</p>
+                <div>
+                  <h3 className="font-semibold text-sm text-foreground">{config.label}</h3>
+                  <Badge variant="outline" className={`text-[10px] h-5 ${config.badgeClass}`}>{config.label}</Badge>
+                </div>
+              </div>
+              <div className="mt-2 space-y-0.5">
+                <p className="text-sm text-muted-foreground">
+                  Mensal: <span className="font-semibold text-foreground">{formatCurrency(plan.price_monthly)}</span>
+                </p>
+                {plan.price_yearly > 0 && (
+                  <p className="text-sm text-muted-foreground">
+                    Anual: <span className="font-semibold text-foreground">{formatCurrency(plan.price_yearly)}</span>
+                  </p>
+                )}
               </div>
             </div>
-          </CardContent>
-        </Card>
-
-        {/* Pro & Premium cards */}
-        {(["pro", "premium"] as const).map((plan) => {
-          const config = planConfig[plan];
-          return (
-            <Card key={plan} className="group hover:shadow-md transition-all duration-200">
-              <CardContent className="p-4">
-                <div className="flex items-start gap-3">
-                  <div className={`flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br ${config.gradientClass} flex items-center justify-center`}>
-                    {config.icon}
-                  </div>
-                  <div className="flex-1 min-w-0 space-y-1">
-                    <div className="flex items-center gap-2">
-                      <h3 className="font-semibold text-sm text-foreground">{config.label}</h3>
-                      <Badge variant="outline" className={`text-[10px] h-5 ${config.badgeClass}`}>
-                        {config.label}
-                      </Badge>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="mt-3 pt-3 border-t space-y-2">
-                  {grouped[plan].map((row) => {
-                    const key = `${row.plan}-${row.billing_cycle}`;
-                    return (
-                      <div key={row.id} className="flex items-center gap-2">
-                        <Label className="text-xs text-muted-foreground w-14 flex-shrink-0">
-                          {cycleLabel(row.billing_cycle)}
-                        </Label>
-                        <Input
-                          value={getValue(row)}
-                          onChange={(e) => handleChange(key, e.target.value)}
-                          placeholder="R$ 0,00"
-                          className="h-8 text-sm flex-1"
-                        />
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="h-8 w-8 p-0 flex-shrink-0"
-                          disabled={editValues[key] === undefined || updateMutation.isPending}
-                          onClick={() => handleSave(row)}
-                        >
-                          <Save className="h-3.5 w-3.5" />
-                        </Button>
-                      </div>
-                    );
-                  })}
-                </div>
-              </CardContent>
-            </Card>
           );
         })}
       </div>
