@@ -594,7 +594,11 @@ export default function Subscription() {
               <div className="bg-muted/50 rounded-lg p-3 text-center space-y-1">
                 <div className="flex items-center justify-center gap-2">
                   <Loader2 className="w-3 h-3 animate-spin text-muted-foreground" />
-                  <Badge variant="secondary">Aguardando pagamento</Badge>
+                  <Badge variant="secondary">
+                    {paymentResult.created_at && Date.now() - new Date(paymentResult.created_at).getTime() > 15 * 60 * 1000
+                      ? "Cobrança expirada"
+                      : "Aguardando pagamento"}
+                  </Badge>
                 </div>
                 <p className="text-xs text-muted-foreground">
                   Verificando automaticamente a cada 5 segundos...
@@ -602,8 +606,7 @@ export default function Subscription() {
                 {paymentResult.created_at && (
                   <p className="text-xs text-muted-foreground flex items-center justify-center gap-1">
                     <Clock className="w-3 h-3" />
-                    Gerado em{" "}
-                    {new Date(paymentResult.created_at).toLocaleTimeString("pt-BR", {
+                    Gerado em {new Date(paymentResult.created_at).toLocaleTimeString("pt-BR", {
                       hour: "2-digit",
                       minute: "2-digit",
                     })}
