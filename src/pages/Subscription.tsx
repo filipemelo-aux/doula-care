@@ -501,6 +501,11 @@ export default function Subscription() {
             </div>
           ) : paymentResult ? (
             <div className="space-y-4">
+              {/* Instruction */}
+              <p className="text-sm text-center text-muted-foreground">
+                Escaneie o QR Code com seu app de banco para pagar via Pix
+              </p>
+
               {/* QR Code - from base64 or generated from checkout URL */}
               {paymentResult.qr_code_base64 ? (
                 <div className="flex justify-center p-4 bg-white rounded-lg">
@@ -523,17 +528,6 @@ export default function Subscription() {
                       level="M"
                     />
                   </div>
-                  <p className="text-xs text-muted-foreground text-center">
-                    Escaneie o QR Code ou{" "}
-                    <a
-                      href={paymentResult.checkout_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-primary underline"
-                    >
-                      clique aqui para pagar
-                    </a>
-                  </p>
                 </div>
               ) : (
                 <div className="text-center py-4">
@@ -543,7 +537,22 @@ export default function Subscription() {
                 </div>
               )}
 
-              {/* Pix Code */}
+              {/* Direct link to checkout */}
+              {paymentResult.checkout_url && (
+                <div className="text-center">
+                  <a
+                    href={paymentResult.checkout_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline"
+                  >
+                    <ExternalLink className="w-3.5 h-3.5" />
+                    Abrir página de pagamento
+                  </a>
+                </div>
+              )}
+
+              {/* Pix Code copy-paste */}
               {paymentResult.pix_code && (
                 <div className="space-y-2">
                   <p className="text-sm font-medium text-foreground">
@@ -557,9 +566,7 @@ export default function Subscription() {
                       size="sm"
                       variant="outline"
                       className="shrink-0"
-                      onClick={() =>
-                        handleCopyPix(paymentResult.pix_code!)
-                      }
+                      onClick={() => handleCopyPix(paymentResult.pix_code!)}
                     >
                       {copied ? (
                         <Check className="w-4 h-4 text-primary" />
@@ -571,62 +578,65 @@ export default function Subscription() {
                 </div>
               )}
 
-              {/* Checkout URL as copyable fallback when no pix_code */}
-              {!paymentResult.pix_code && paymentResult.checkout_url && (
-                <div className="space-y-2">
-                  <p className="text-sm font-medium text-foreground">
-                    Link de pagamento:
-                  </p>
-                  <div className="flex gap-2">
-                    <code className="flex-1 text-xs bg-muted p-3 rounded-md break-all max-h-20 overflow-y-auto">
-                      {paymentResult.checkout_url}
-                    </code>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="shrink-0"
-                      onClick={() =>
-                        handleCopyPix(paymentResult.checkout_url!)
-                      }
-                    >
-                      {copied ? (
-                        <Check className="w-4 h-4 text-primary" />
-                      ) : (
-                        <Copy className="w-4 h-4" />
-                      )}
-                    </Button>
-                  </div>
-                </div>
-              )}
-
-              {/* Status */}
-              <div className="bg-muted/50 rounded-lg p-3 text-center">
-                <p className="text-sm text-muted-foreground">
-                  Status do pagamento
-                </p>
-                <div className="flex items-center justify-center gap-2 mt-1">
+              {/* Status + timestamp */}
+              <div className="bg-muted/50 rounded-lg p-3 text-center space-y-1">
+                <div className="flex items-center justify-center gap-2">
                   <Loader2 className="w-3 h-3 animate-spin text-muted-foreground" />
                   <Badge variant="secondary">Aguardando pagamento</Badge>
                 </div>
-                <p className="text-xs text-muted-foreground mt-2">
+                <p className="text-xs text-muted-foreground">
                   Verificando automaticamente a cada 5 segundos...
                 </p>
+                {paymentResult.created_at && (
+                  <p className="text-xs text-muted-foreground flex items-center justify-center gap-1">
+                    <Clock className="w-3 h-3" />
+                    Gerado em{" "}
+                    {new Date(paymentResult.created_at).toLocaleTimeString("pt-BR", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </p>
+                )}
               </div>
 
-              {/* Fallback: Já paguei */}
-              <Button
-                variant="outline"
-                className="w-full"
-                onClick={handleManualCheck}
-                disabled={manualChecking}
-              >
-                {manualChecking ? (
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                ) : (
-                  <CheckCircle2 className="w-4 h-4 mr-2" />
-                )}
-                Já paguei
-              </Button>
+              {/* Fallback buttons */}
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  className="flex-1"
+                  onClick={handleManualCheck}
+                  disabled={manualChecking}
+                >
+                  {manualChecking ? (
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  ) : (
+                    <CheckCircle2 className="w-4 h-4 mr-2" />
+                  )}
+                  Já paguei
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  title="Gerar novo pagamento"
+                  onClick={() => {
+                    setPaymentResult(null);
+                    setPaymentConfirmed(false);
+                    stopPolling();
+                    payMutation.mutate({
+                      plan_id: plans?.find((p) => p.name === selectedPlanName)?.id || "",
+                      billing_type: "monthly",
+                    });
+                  }}
+                  disabled={payMutation.isPending}
+                >
+                  <RefreshCw className={`w-4 h-4 ${payMutation.isPending ? "animate-spin" : ""}`} />
+                </Button>
+              </div>
+
+              {/* Order ref */}
+              <p className="text-xs text-muted-foreground text-center">
+                Ref: {paymentResult.order_nsu}
+              </p>
             </div>
           ) : (
             <div className="flex justify-center py-8">
