@@ -5,7 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 export type OrgPlan = "free" | "pro" | "premium";
 
 export interface PlanLimits {
-  maxClients: number | null; // null = unlimited
+  maxClients: number | null;
   reports: boolean;
   exportReports: boolean;
   pushNotifications: boolean;
@@ -84,16 +84,16 @@ export function usePlanLimits() {
 
   const plan = (orgData?.plan as OrgPlan) || "free";
 
-  // Check active subscription status
+  // Check subscription status (active OR pending)
   const { data: subscription, isLoading: subLoading } = useQuery({
-    queryKey: ["active-subscription", user?.id],
+    queryKey: ["current-subscription", user?.id],
     queryFn: async () => {
       if (!user?.id) return null;
       const { data, error } = await supabase
         .from("subscriptions")
         .select("id, status, current_period_end, plan_id")
         .eq("user_id", user.id)
-        .eq("status", "active")
+        .in("status", ["active", "pending"])
         .order("created_at", { ascending: false })
         .limit(1)
         .maybeSingle();
@@ -132,22 +132,38 @@ export function usePlanLimits() {
     enabled: !!organizationId,
   });
 
-  // Determine if subscription is expired (client-side check for immediate feedback)
+  // Determine subscription state
+  const isSubscriptionPending = subscription?.status === "pending";
+
   const isSubscriptionExpired = (() => {
-    if (plan === "free") return false; // Free plan never expires
-    if (!subscription) return (plan as string) !== "free"; // Paid plan but no active sub = expired
+    if (plan === "free") return false;
+    if (!subscription) return (plan as string) !== "free";
+    if (subscription.status === "pending") return true; // pending = expired awaiting payment
     if (subscription.current_period_end) {
       return new Date(subscription.current_period_end) < new Date();
     }
     return false;
   })();
 
-  // If subscription expired, enforce free limits
+  // Calculate days overdue for pending subscriptions (grace period tracking)
+  const daysOverdue = (() => {
+    if (!subscription?.current_period_end) return 0;
+    if (subscription.status !== "pending" && !isSubscriptionExpired) return 0;
+    const endDate = new Date(subscription.current_period_end);
+    const diffMs = Date.now() - endDate.getTime();
+    return Math.max(0, Math.floor(diffMs / (1000 * 60 * 60 * 24)));
+  })();
+
+  // Grace period: 3 days. After that, access is blocked by the cron job (org status = suspenso)
+  const isGracePeriod = isSubscriptionPending && daysOverdue <= 3;
+  const isBlocked = orgData?.status === "suspenso";
+
+  // If subscription expired/pending, enforce free limits
   const effectivePlan: OrgPlan = isSubscriptionExpired ? "free" : plan;
   const fallback = DEFAULT_LIMITS[effectivePlan];
 
   const limits: PlanLimits = isSubscriptionExpired
-    ? fallback // Force free limits when expired
+    ? fallback
     : dbLimits
       ? {
           maxClients: dbLimits.max_clients ?? null,
@@ -171,13 +187,17 @@ export function usePlanLimits() {
 
   return {
     plan: effectivePlan,
-    originalPlan: plan, // The plan stored in org (before expiry enforcement)
+    originalPlan: plan,
     limits,
     clientCount,
     canAddClient,
     remainingClients,
     isOrgSuspended,
     isSubscriptionExpired,
+    isSubscriptionPending,
+    isGracePeriod,
+    isBlocked,
+    daysOverdue,
     subscriptionEndDate: subscription?.current_period_end ?? null,
     isLoading: orgLoading || countLoading || limitsLoading || subLoading,
     planLabel: effectivePlan === "free" ? "Free" : effectivePlan === "pro" ? "Pro" : "Premium",
