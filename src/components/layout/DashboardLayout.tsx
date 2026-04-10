@@ -12,6 +12,7 @@ import { useAdminUnreadCounts } from "@/hooks/useAdminUnreadCounts";
 import { useActiveLaborCount } from "@/hooks/useActiveLaborCount";
 import { BirthAlertDialog } from "@/components/dashboard/BirthAlertDialog";
 import { NotificationTopBanner } from "@/components/dashboard/NotificationTopBanner";
+import { ExpiredPlanBanner } from "@/components/dashboard/ExpiredPlanBanner";
 import { cn } from "@/lib/utils";
 
 export function DashboardLayout() {
