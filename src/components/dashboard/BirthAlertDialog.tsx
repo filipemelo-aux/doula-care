@@ -85,73 +85,74 @@ export function BirthAlertDialog({ open, onOpenChange }: BirthAlertDialogProps) 
                       key={client.id}
                       className={`py-3 px-1 transition-colors ${client.is_in_labor ? "bg-destructive/5" : ""}`}
                     >
-                      <div className="flex items-center gap-2.5">
-                        <div
-                          className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
-                            client.is_in_labor
-                              ? "bg-destructive/20"
-                              : client.is_post_term
-                              ? "bg-destructive/15"
-                              : isHighPriority
-                              ? "bg-warning/15"
-                              : "bg-warning/10"
-                          }`}
-                        >
-                          {client.is_in_labor ? (
-                            <Baby className="h-4 w-4 text-destructive animate-bounce" />
-                          ) : client.is_post_term ? (
-                            <AlertTriangle className="h-4 w-4 text-destructive" />
-                          ) : (
-                            <Baby className={`h-4 w-4 ${isHighPriority ? "text-warning" : "text-warning/80"}`} />
-                          )}
-                        </div>
-
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium truncate">{client.full_name}</p>
-                          <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
-                            <span className="text-[11px] text-muted-foreground">{statusLabel}</span>
-                            {client.dpp && (
-                              <>
-                                <span className="text-muted-foreground/40">•</span>
-                                <span className="flex items-center gap-0.5 text-[11px] text-muted-foreground">
-                                  <Calendar className="h-2.5 w-2.5" />
-                                  {formatBrazilDate(client.dpp, "dd/MM")}
-                                </span>
-                              </>
-                            )}
-                            {weeksLabel && (
-                              <Badge
-                                variant="outline"
-                                className={`text-[9px] px-1 h-4 border-0 ${
-                                  client.is_in_labor
-                                    ? "bg-destructive/20 text-destructive"
-                                    : client.is_post_term
-                                    ? "bg-destructive/20 text-destructive"
-                                    : isHighPriority
-                                    ? "bg-warning/20 text-warning"
-                                    : "bg-warning/15 text-warning/90"
-                                }`}
-                              >
-                                {weeksLabel}
-                              </Badge>
+                      <div className="flex flex-col gap-2">
+                        <div className="flex items-center gap-2.5">
+                          <div
+                            className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+                              client.is_in_labor
+                                ? "bg-destructive/20"
+                                : client.is_post_term
+                                ? "bg-destructive/15"
+                                : isHighPriority
+                                ? "bg-warning/15"
+                                : "bg-warning/10"
+                            }`}
+                          >
+                            {client.is_in_labor ? (
+                              <Baby className="h-4 w-4 text-destructive animate-bounce" />
+                            ) : client.is_post_term ? (
+                              <AlertTriangle className="h-4 w-4 text-destructive" />
+                            ) : (
+                              <Baby className={`h-4 w-4 ${isHighPriority ? "text-warning" : "text-warning/80"}`} />
                             )}
                           </div>
 
-                          {client.is_in_labor && (
-                            <Badge className="bg-destructive text-destructive-foreground text-[9px] px-1.5 h-4 animate-pulse mt-1">
-                              {laborBadgeLabel}
-                            </Badge>
-                          )}
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium truncate">{client.full_name}</p>
+                            <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                              <span className="text-[11px] text-muted-foreground">{statusLabel}</span>
+                              {client.dpp && (
+                                <>
+                                  <span className="text-muted-foreground/40">•</span>
+                                  <span className="flex items-center gap-0.5 text-[11px] text-muted-foreground">
+                                    <Calendar className="h-2.5 w-2.5" />
+                                    {formatBrazilDate(client.dpp, "dd/MM")}
+                                  </span>
+                                </>
+                              )}
+                              {weeksLabel && (
+                                <Badge
+                                  variant="outline"
+                                  className={`text-[9px] px-1 h-4 border-0 ${
+                                    client.is_in_labor
+                                      ? "bg-destructive/20 text-destructive"
+                                      : client.is_post_term
+                                      ? "bg-destructive/20 text-destructive"
+                                      : isHighPriority
+                                      ? "bg-warning/20 text-warning"
+                                      : "bg-warning/15 text-warning/90"
+                                  }`}
+                                >
+                                  {weeksLabel}
+                                </Badge>
+                              )}
+                            </div>
+
+                            {client.is_in_labor && (
+                              <Badge className="bg-destructive text-destructive-foreground text-[9px] px-1.5 h-4 animate-pulse mt-1">
+                                {laborBadgeLabel}
+                              </Badge>
+                            )}
+                          </div>
                         </div>
 
                         <Button
                           size="sm"
-                          variant="outline"
-                          className="h-7 px-2 text-[10px] border-dashed text-primary hover:bg-primary hover:text-primary-foreground hover:border-solid flex-shrink-0"
+                          className="h-7 w-full text-[11px] bg-emerald-600 hover:bg-emerald-700 text-white"
                           onClick={() => handleRegisterBirth(client as Client)}
                         >
                           <CheckCircle className="h-3 w-3 mr-1" />
-                          Nascimento
+                          Registrar Nascimento
                         </Button>
                       </div>
                     </div>
