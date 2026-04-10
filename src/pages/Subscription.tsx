@@ -178,7 +178,7 @@ export default function Subscription() {
 
   // Poll payment status every 5 seconds when dialog is open
   useEffect(() => {
-    if (!paymentDialog || !paymentResult?.order_nsu || paymentConfirmed) {
+    if ((!paymentDialog && !showCheckoutIframe) || !paymentResult?.order_nsu || paymentConfirmed) {
       stopPolling();
       return;
     }
