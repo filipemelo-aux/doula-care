@@ -12,7 +12,6 @@ import { Heart, Users, Baby, UserRound, ChevronRight } from "lucide-react";
 import { AdminWelcomeDialog } from "@/components/dashboard/AdminWelcomeDialog";
 import { BillingAlertBanner } from "@/components/dashboard/BillingAlertBanner";
 import { PromoBetaBanner } from "@/components/dashboard/PromoBetaBanner";
-import { NotificationTopBanner } from "@/components/dashboard/NotificationTopBanner";
 
 
 export default function Dashboard() {
@@ -61,7 +60,6 @@ export default function Dashboard() {
 
       <PromoBetaBanner />
       <BillingAlertBanner />
-      <NotificationTopBanner />
 
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
