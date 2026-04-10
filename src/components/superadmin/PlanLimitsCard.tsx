@@ -10,10 +10,15 @@ import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { Settings2, Save, Sparkles, Crown, DollarSign, Infinity } from "lucide-react";
+import { maskCurrency, parseCurrency } from "@/lib/masks";
 
 interface LimitsRow {
   id: string;
   plan: string;
+  name: string;
+  price_monthly: number;
+  price_yearly: number;
+  is_free: boolean;
   max_clients: number | null;
   reports: boolean;
   export_reports: boolean;
