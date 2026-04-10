@@ -101,6 +101,7 @@ export default function Subscription() {
   const [selectedPlanName, setSelectedPlanName] = useState("");
   const [copied, setCopied] = useState(false);
   const [paymentConfirmed, setPaymentConfirmed] = useState(false);
+  const [manualChecking, setManualChecking] = useState(false);
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const stopPolling = useCallback(() => {
