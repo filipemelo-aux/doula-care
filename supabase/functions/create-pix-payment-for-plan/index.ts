@@ -12,6 +12,12 @@ const normalizeText = (value: unknown) =>
 const normalizeDigits = (value: unknown) =>
   typeof value === "string" ? value.replace(/\D/g, "") : "";
 
+const formatBrazilPhone = (value: string) => {
+  if (!value) return "";
+  if (value.startsWith("55") && value.length >= 12) return `+${value}`;
+  return `+55${value}`;
+};
+
 const isLikelyBase64Image = (value: string | null) => {
   if (!value) return false;
   if (value.startsWith("data:image/")) return true;
@@ -123,6 +129,7 @@ Deno.serve(async (req) => {
       normalizeDigits((customerInput as Record<string, unknown>)?.phone_number) ||
       normalizeDigits(phone) ||
       normalizeDigits(client?.phone);
+    const formattedUserPhone = formatBrazilPhone(userPhone);
     const userDocument =
       normalizeDigits((customerInput as Record<string, unknown>)?.document) ||
       normalizeDigits(client?.cpf);
@@ -145,7 +152,8 @@ Deno.serve(async (req) => {
         normalizeText((addressInput as Record<string, unknown>)?.state) ||
         normalizeText(client?.state)
       ).toUpperCase(),
-      zipcode:
+      cep:
+        normalizeDigits((addressInput as Record<string, unknown>)?.cep) ||
         normalizeDigits((addressInput as Record<string, unknown>)?.zipcode) ||
         normalizeDigits(client?.zip_code),
     };
@@ -158,7 +166,7 @@ Deno.serve(async (req) => {
     if (!address.neighborhood) missingFields.push("bairro");
     if (!address.city) missingFields.push("cidade");
     if (address.state.length !== 2) missingFields.push("estado");
-    if (address.zipcode.length !== 8) missingFields.push("cep");
+    if (address.cep.length !== 8) missingFields.push("cep");
 
     if (missingFields.length > 0) {
       return new Response(
@@ -183,6 +191,7 @@ Deno.serve(async (req) => {
     // 4. Generate order_nsu
     const timestamp = Date.now();
     const orderNsu = `${userId}_${plan_id}_${timestamp}`;
+    const paymentExpiresAt = new Date(Date.now() + 15 * 60 * 1000).toISOString();
 
     // 5. Call InfinitePay API
     const webhookUrl = `${supabaseUrl}/functions/v1/webhook-infinitepay`;
@@ -195,26 +204,19 @@ Deno.serve(async (req) => {
       customer: {
         name: userName,
         email: userEmail,
-        phone_number: userPhone,
+        phone_number: formattedUserPhone,
         document: userDocument,
-        address: {
-          street: address.street,
-          number: address.number,
-          complement: address.complement || undefined,
-          neighborhood: address.neighborhood,
-          city: address.city,
-          state: address.state,
-          zipcode: address.zipcode,
-        },
+        document_number: userDocument,
       },
       address: {
+        cep: address.cep,
         street: address.street,
         number: address.number,
         complement: address.complement || undefined,
         neighborhood: address.neighborhood,
         city: address.city,
         state: address.state,
-        zipcode: address.zipcode,
+        zipcode: address.cep,
       },
       items: [
         {
@@ -224,6 +226,10 @@ Deno.serve(async (req) => {
         },
       ],
       payment_methods: ["pix"],
+      options: {
+        single_payment: true,
+        valid_until: paymentExpiresAt,
+      },
     };
 
     console.log("InfinitePay request:", JSON.stringify(infinitePayBody));
