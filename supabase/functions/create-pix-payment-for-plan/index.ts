@@ -162,6 +162,7 @@ Deno.serve(async (req) => {
 
     const qrCodeBase64 = ipData?.qr_code_base64 || ipData?.pix?.qr_code_base64 || null;
     const pixCode = ipData?.pix_code || ipData?.pix?.code || ipData?.pix?.emv || null;
+    const checkoutUrl = ipData?.url || null;
 
     // 6. Save to plan_payments
     const { error: insertError } = await supabaseAdmin.from("plan_payments").insert({
@@ -189,6 +190,7 @@ Deno.serve(async (req) => {
       JSON.stringify({
         qr_code_base64: qrCodeBase64,
         pix_code: pixCode,
+        checkout_url: checkoutUrl,
         order_nsu: orderNsu,
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }

@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { QRCodeSVG } from "qrcode.react";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePlanLimits } from "@/hooks/usePlanLimits";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -40,6 +41,7 @@ interface PlatformPlan {
 interface PaymentResult {
   qr_code_base64: string | null;
   pix_code: string | null;
+  checkout_url: string | null;
   order_nsu: string;
 }
 
@@ -470,8 +472,8 @@ export default function Subscription() {
             </div>
           ) : paymentResult ? (
             <div className="space-y-4">
-              {/* QR Code */}
-              {paymentResult.qr_code_base64 && (
+              {/* QR Code - from base64 or generated from checkout URL */}
+              {paymentResult.qr_code_base64 ? (
                 <div className="flex justify-center p-4 bg-white rounded-lg">
                   <img
                     src={
@@ -480,8 +482,35 @@ export default function Subscription() {
                         : `data:image/png;base64,${paymentResult.qr_code_base64}`
                     }
                     alt="QR Code Pix"
-                    className="w-48 h-48"
+                    className="w-56 h-56"
                   />
+                </div>
+              ) : paymentResult.checkout_url ? (
+                <div className="flex flex-col items-center gap-3">
+                  <div className="p-4 bg-white rounded-lg">
+                    <QRCodeSVG
+                      value={paymentResult.checkout_url}
+                      size={224}
+                      level="M"
+                    />
+                  </div>
+                  <p className="text-xs text-muted-foreground text-center">
+                    Escaneie o QR Code ou{" "}
+                    <a
+                      href={paymentResult.checkout_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-primary underline"
+                    >
+                      clique aqui para pagar
+                    </a>
+                  </p>
+                </div>
+              ) : (
+                <div className="text-center py-4">
+                  <p className="text-sm text-destructive">
+                    Erro ao gerar QR Code. Tente novamente.
+                  </p>
                 </div>
               )}
 
@@ -501,6 +530,34 @@ export default function Subscription() {
                       className="shrink-0"
                       onClick={() =>
                         handleCopyPix(paymentResult.pix_code!)
+                      }
+                    >
+                      {copied ? (
+                        <Check className="w-4 h-4 text-primary" />
+                      ) : (
+                        <Copy className="w-4 h-4" />
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {/* Checkout URL as copyable fallback when no pix_code */}
+              {!paymentResult.pix_code && paymentResult.checkout_url && (
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-foreground">
+                    Link de pagamento:
+                  </p>
+                  <div className="flex gap-2">
+                    <code className="flex-1 text-xs bg-muted p-3 rounded-md break-all max-h-20 overflow-y-auto">
+                      {paymentResult.checkout_url}
+                    </code>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="shrink-0"
+                      onClick={() =>
+                        handleCopyPix(paymentResult.checkout_url!)
                       }
                     >
                       {copied ? (
