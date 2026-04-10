@@ -208,7 +208,7 @@ export default function Subscription() {
     pollingRef.current = setInterval(checkStatus, 5000);
 
     return () => stopPolling();
-  }, [paymentDialog, paymentResult?.order_nsu, paymentConfirmed, stopPolling, queryClient]);
+  }, [paymentDialog, showCheckoutIframe, paymentResult?.order_nsu, paymentConfirmed, stopPolling, queryClient]);
 
   // Reset confirmed state when dialog closes
   const handleDialogClose = (open: boolean) => {
