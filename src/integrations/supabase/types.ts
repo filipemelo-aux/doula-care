@@ -1174,12 +1174,16 @@ export type Database = {
           export_reports: boolean
           financial: boolean
           id: string
+          is_free: boolean
           max_clients: number | null
           max_collaborators: number
           messages: boolean
           multi_collaborators: boolean
+          name: string
           notifications: boolean
           plan: string
+          price_monthly: number
+          price_yearly: number
           push_notifications: boolean
           reports: boolean
           updated_at: string
@@ -1192,12 +1196,16 @@ export type Database = {
           export_reports?: boolean
           financial?: boolean
           id?: string
+          is_free?: boolean
           max_clients?: number | null
           max_collaborators?: number
           messages?: boolean
           multi_collaborators?: boolean
+          name?: string
           notifications?: boolean
           plan: string
+          price_monthly?: number
+          price_yearly?: number
           push_notifications?: boolean
           reports?: boolean
           updated_at?: string
@@ -1210,12 +1218,16 @@ export type Database = {
           export_reports?: boolean
           financial?: boolean
           id?: string
+          is_free?: boolean
           max_clients?: number | null
           max_collaborators?: number
           messages?: boolean
           multi_collaborators?: boolean
+          name?: string
           notifications?: boolean
           plan?: string
+          price_monthly?: number
+          price_yearly?: number
           push_notifications?: boolean
           reports?: boolean
           updated_at?: string
@@ -1687,6 +1699,16 @@ export type Database = {
         Returns: {
           client_count: number
           organization_id: string
+        }[]
+      }
+      get_plan_by_id: {
+        Args: { p_plan_id: string }
+        Returns: {
+          id: string
+          is_free: boolean
+          name: string
+          price_monthly: number
+          price_yearly: number
         }[]
       }
       get_user_organization_id: { Args: never; Returns: string }
