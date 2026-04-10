@@ -114,10 +114,12 @@ Deno.serve(async (req) => {
     const orderNsu = `${userId}_${plan_id}_${timestamp}`;
 
     // 5. Call InfinitePay API
+    const webhookUrl = `${supabaseUrl}/functions/v1/webhook-infinitepay`;
+
     const infinitePayBody = {
       handle: "meualishop",
       redirect_url: "https://doulacare.app.br/pagamento-sucesso",
-      webhook_url: "https://doulacare.app.br/webhook/infinitepay",
+      webhook_url: webhookUrl,
       order_nsu: orderNsu,
       customer: {
         name: userName,
