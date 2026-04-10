@@ -63,24 +63,7 @@ export function NotificationsCenter({ fullPage = false }: NotificationsCenterPro
 
   const { data: birthAlertClients, isLoading: loadingBirth } = useQuery({
     queryKey: ["birth-alert-clients"],
-    queryFn: async () => {
-      const { data, error } = await supabase.from("clients").select("*")
-        .eq("status", "gestante").eq("birth_occurred", false).order("pregnancy_weeks", { ascending: false });
-      if (error) throw error;
-      return data.map(client => ({
-        ...client,
-        current_weeks: calculateCurrentPregnancyWeeks(client.pregnancy_weeks, client.pregnancy_weeks_set_at, client.dpp),
-        current_days: calculateCurrentPregnancyDays(client.dpp),
-        is_post_term: isPostTerm(client.dpp)
-      })).filter(c => c.labor_started_at || (c.current_weeks !== null && c.current_weeks >= 37))
-        .sort((a, b) => {
-          if (a.labor_started_at && !b.labor_started_at) return -1;
-          if (!a.labor_started_at && b.labor_started_at) return 1;
-          if (a.is_post_term && !b.is_post_term) return -1;
-          if (!a.is_post_term && b.is_post_term) return 1;
-          return (b.current_weeks || 0) - (a.current_weeks || 0);
-        });
-    },
+    queryFn: fetchBirthAlertClients,
     refetchInterval: 30000,
   });
 
