@@ -285,10 +285,10 @@ export default function Subscription() {
       setPaymentResult(data);
       setShowCustomerForm(false);
       setPendingPlan(null);
-      // If we only have checkout_url (no direct pix data), go straight to iframe
+      // If we only have checkout_url (no direct pix data), open externally
       if (!data.qr_code_base64 && !data.pix_code && data.checkout_url) {
-        setShowCheckoutIframe(true);
-        setPaymentDialog(false);
+        window.open(data.checkout_url, '_blank');
+        setPaymentDialog(true);
       } else {
         setPaymentDialog(true);
       }
@@ -675,10 +675,10 @@ export default function Subscription() {
                   </p>
                   <Button
                     className="w-full"
-                    onClick={() => setShowCheckoutIframe(true)}
+                    onClick={() => window.open(paymentResult.checkout_url!, '_blank')}
                   >
-                    <QrCode className="w-4 h-4 mr-2" />
-                    Ver QR Code Pix
+                    <ExternalLink className="w-4 h-4 mr-2" />
+                    Abrir Checkout Pix
                   </Button>
                 </div>
               ) : (
@@ -908,44 +908,6 @@ export default function Subscription() {
         </DialogContent>
       </Dialog>
 
-      {/* Fullscreen Checkout Iframe Modal */}
-      <Dialog open={showCheckoutIframe} onOpenChange={setShowCheckoutIframe}>
-        <DialogContent className="max-w-none w-screen h-screen max-h-screen rounded-none p-0 gap-0 border-0">
-          <div className="flex items-center justify-between px-4 py-2 border-b border-border bg-background">
-            <p className="text-sm font-medium text-foreground">Pagamento Seguro</p>
-            <div className="flex gap-2">
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={handleManualCheck}
-                disabled={manualChecking}
-              >
-                {manualChecking ? (
-                  <Loader2 className="w-4 h-4 mr-1 animate-spin" />
-                ) : (
-                  <CheckCircle2 className="w-4 h-4 mr-1" />
-                )}
-                Já paguei
-              </Button>
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={() => setShowCheckoutIframe(false)}
-              >
-                Fechar
-              </Button>
-            </div>
-          </div>
-          {paymentResult?.checkout_url && (
-            <iframe
-              src={paymentResult.checkout_url}
-              className="w-full flex-1 border-0"
-              style={{ height: 'calc(100vh - 49px)' }}
-              allow="payment"
-            />
-          )}
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
