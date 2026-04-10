@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import logo from "@/assets/logo.png";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { Sidebar } from "./Sidebar";
@@ -20,7 +20,7 @@ export function DashboardLayout() {
   const { signOut } = useAuth();
   const { logoUrl: orgLogo, displayName, brandingReady } = useOrgBranding();
   const { unreadMessages } = useAdminUnreadCounts();
-  const { laborCount, alertCount } = useActiveLaborCount();
+  const { laborCount, alertCount, markAsSeen } = useActiveLaborCount();
   const location = useLocation();
   const navigate = useNavigate();
   usePresenceBroadcast();
@@ -157,7 +157,7 @@ export function DashboardLayout() {
           <div className="flex flex-col items-center justify-end gap-1 px-3 py-2">
             <div className="relative flex items-center justify-center" style={{ marginTop: '-30px' }}>
               <button
-                onClick={() => setBirthAlertOpen(true)}
+                onClick={() => { setBirthAlertOpen(true); markAsSeen(); }}
                 className={cn(
                   "w-[48px] h-[48px] rounded-full flex items-center justify-center shadow-xl transition-all active:scale-90 ring-4 ring-[hsl(var(--background))] bg-gradient-to-br from-warning to-warning/80 text-warning-foreground shadow-warning/25",
                   laborCount > 0 && "animate-pulse from-destructive to-destructive/80 shadow-destructive/40"
