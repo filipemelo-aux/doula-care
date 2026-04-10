@@ -15,6 +15,8 @@ export function ExpiredPlanBanner() {
   } = usePlanLimits();
   const navigate = useNavigate();
 
+  // Super admins never see this banner (already handled by usePlanLimits, but double-safe)
+
   if (!isSubscriptionExpired && !isBlocked) return null;
 
   const planLabel =

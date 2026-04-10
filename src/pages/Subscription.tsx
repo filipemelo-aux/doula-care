@@ -345,29 +345,33 @@ export default function Subscription() {
                     <p className="text-sm text-muted-foreground">Para sempre</p>
                   </div>
                 ) : (
-                  <div className="space-y-1">
-                    <div>
-                      <span className="text-3xl font-bold text-foreground">
-                        {formatCentavos(plan.price_monthly)}
-                      </span>
-                      <span className="text-sm text-muted-foreground">/mês</span>
-                    </div>
-                    <div>
-                      <span className="text-lg font-semibold text-muted-foreground">
-                        {formatCentavos(plan.price_yearly)}
-                      </span>
-                      <span className="text-xs text-muted-foreground">/ano</span>
-                      {plan.price_yearly > 0 && plan.price_monthly > 0 && (
-                        <Badge variant="secondary" className="ml-2 text-xs">
-                          {Math.round(
-                            (1 - plan.price_yearly / (plan.price_monthly * 12)) *
-                              100
+                  (() => {
+                    const yearly = plan.price_yearly > 0 ? plan.price_yearly : plan.price_monthly * 12;
+                    const hasDiscount = yearly < plan.price_monthly * 12;
+                    return (
+                      <div className="space-y-1">
+                        <div>
+                          <span className="text-3xl font-bold text-foreground">
+                            {formatCentavos(plan.price_monthly)}
+                          </span>
+                          <span className="text-sm text-muted-foreground">/mês</span>
+                        </div>
+                        <div>
+                          <span className="text-lg font-semibold text-muted-foreground">
+                            {formatCentavos(yearly)}
+                          </span>
+                          <span className="text-xs text-muted-foreground">/ano</span>
+                          {hasDiscount && (
+                            <Badge variant="secondary" className="ml-2 text-xs">
+                              {Math.round(
+                                (1 - yearly / (plan.price_monthly * 12)) * 100
+                              )}% off
+                            </Badge>
                           )}
-                          % off
-                        </Badge>
-                      )}
-                    </div>
-                  </div>
+                        </div>
+                      </div>
+                    );
+                  })()
                 )}
 
                 {/* Features */}
@@ -409,16 +413,14 @@ export default function Subscription() {
                         ) : null}
                         Assinar mensal — {formatCentavos(plan.price_monthly)}
                       </Button>
-                      {plan.price_yearly > 0 && (
-                        <Button
-                          variant="outline"
-                          className="w-full"
-                          onClick={() => handleSubscribe(plan, "yearly")}
-                          disabled={payMutation.isPending}
-                        >
-                          Assinar anual — {formatCentavos(plan.price_yearly)}
-                        </Button>
-                      )}
+                      <Button
+                        variant="outline"
+                        className="w-full"
+                        onClick={() => handleSubscribe(plan, "yearly")}
+                        disabled={payMutation.isPending}
+                      >
+                        Assinar anual — {formatCentavos(plan.price_yearly > 0 ? plan.price_yearly : plan.price_monthly * 12)}
+                      </Button>
                     </>
                   )}
                 </div>

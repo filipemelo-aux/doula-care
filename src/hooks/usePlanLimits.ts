@@ -19,54 +19,43 @@ export interface PlanLimits {
   messages: boolean;
 }
 
-const DEFAULT_LIMITS: Record<OrgPlan, PlanLimits> = {
-  free: {
-    maxClients: 5,
-    reports: false,
-    exportReports: false,
-    pushNotifications: true,
-    multiCollaborators: false,
-    maxCollaborators: 1,
-    agenda: true,
-    clients: true,
-    financial: true,
-    expenses: true,
-    notifications: true,
-    messages: true,
-  },
-  pro: {
-    maxClients: null,
-    reports: true,
-    exportReports: true,
-    pushNotifications: true,
-    multiCollaborators: false,
-    maxCollaborators: 1,
-    agenda: true,
-    clients: true,
-    financial: true,
-    expenses: true,
-    notifications: true,
-    messages: true,
-  },
-  premium: {
-    maxClients: null,
-    reports: true,
-    exportReports: true,
-    pushNotifications: true,
-    multiCollaborators: true,
-    maxCollaborators: 5,
-    agenda: true,
-    clients: true,
-    financial: true,
-    expenses: true,
-    notifications: true,
-    messages: true,
-  },
+// Fallback mínimo caso a tabela platform_plan_limits esteja inacessível
+const FREE_FALLBACK: PlanLimits = {
+  maxClients: 5,
+  reports: false,
+  exportReports: false,
+  pushNotifications: true,
+  multiCollaborators: false,
+  maxCollaborators: 1,
+  agenda: true,
+  clients: true,
+  financial: true,
+  expenses: true,
+  notifications: true,
+  messages: true,
 };
 
-export function usePlanLimits() {
-  const { organizationId, user } = useAuth();
+function dbRowToLimits(row: any): PlanLimits {
+  return {
+    maxClients: row.max_clients ?? null,
+    reports: row.reports ?? false,
+    exportReports: row.export_reports ?? false,
+    pushNotifications: row.push_notifications ?? true,
+    multiCollaborators: row.multi_collaborators ?? false,
+    maxCollaborators: row.max_collaborators ?? 1,
+    agenda: row.agenda ?? true,
+    clients: row.clients ?? true,
+    financial: row.financial ?? true,
+    expenses: row.expenses ?? true,
+    notifications: row.notifications ?? true,
+    messages: row.messages ?? true,
+  };
+}
 
+export function usePlanLimits() {
+  const { organizationId, user, isSuperAdmin } = useAuth();
+
+  // 1. Org data — source of truth for the plan slug
   const { data: orgData, isLoading: orgLoading } = useQuery({
     queryKey: ["org-plan", organizationId],
     queryFn: async () => {
@@ -84,7 +73,7 @@ export function usePlanLimits() {
 
   const plan = (orgData?.plan as OrgPlan) || "free";
 
-  // Check subscription status (active OR pending)
+  // 2. Subscription record (if any)
   const { data: subscription, isLoading: subLoading } = useQuery({
     queryKey: ["current-subscription", user?.id],
     queryFn: async () => {
@@ -104,6 +93,7 @@ export function usePlanLimits() {
     staleTime: 2 * 60 * 1000,
   });
 
+  // 3. Plan limits from DB — single source of truth (Super Admin config)
   const { data: dbLimits, isLoading: limitsLoading } = useQuery({
     queryKey: ["platform-plan-limits", plan],
     queryFn: async () => {
@@ -118,6 +108,7 @@ export function usePlanLimits() {
     staleTime: 5 * 60 * 1000,
   });
 
+  // 4. Client count
   const { data: clientCount = 0, isLoading: countLoading } = useQuery({
     queryKey: ["client-count", organizationId],
     queryFn: async () => {
@@ -132,12 +123,12 @@ export function usePlanLimits() {
     enabled: !!organizationId,
   });
 
-  // Determine subscription state
-  const isSubscriptionPending = subscription?.status === "pending";
-
+  // ── Subscription state ──
+  // Super admins are NEVER considered expired or blocked
   const isSubscriptionExpired = (() => {
+    if (isSuperAdmin) return false;
     if (plan === "free") return false;
-    // No subscription record = plan set by Super Admin, trust the org plan
+    // No subscription record → plan set by Super Admin, trust it
     if (!subscription) return false;
     if (subscription.status === "pending") return true;
     if (subscription.current_period_end) {
@@ -146,8 +137,10 @@ export function usePlanLimits() {
     return false;
   })();
 
-  // Calculate days overdue for pending subscriptions (grace period tracking)
+  const isSubscriptionPending = isSuperAdmin ? false : subscription?.status === "pending";
+
   const daysOverdue = (() => {
+    if (isSuperAdmin) return 0;
     if (!subscription?.current_period_end) return 0;
     if (subscription.status !== "pending" && !isSubscriptionExpired) return 0;
     const endDate = new Date(subscription.current_period_end);
@@ -155,34 +148,32 @@ export function usePlanLimits() {
     return Math.max(0, Math.floor(diffMs / (1000 * 60 * 60 * 24)));
   })();
 
-  // Grace period: 3 days. After that, access is blocked by the cron job (org status = suspenso)
   const isGracePeriod = isSubscriptionPending && daysOverdue <= 3;
-  const isBlocked = orgData?.status === "suspenso";
+  const isBlocked = isSuperAdmin ? false : orgData?.status === "suspenso";
 
-  // If subscription expired/pending, enforce free limits
+  // Effective plan: if expired (and not super admin), fall back to free
   const effectivePlan: OrgPlan = isSubscriptionExpired ? "free" : plan;
-  const fallback = DEFAULT_LIMITS[effectivePlan];
 
-  const limits: PlanLimits = isSubscriptionExpired
-    ? fallback
-    : dbLimits
-      ? {
-          maxClients: dbLimits.max_clients ?? null,
-          reports: dbLimits.reports ?? fallback.reports,
-          exportReports: dbLimits.export_reports ?? fallback.exportReports,
-          pushNotifications: dbLimits.push_notifications ?? fallback.pushNotifications,
-          multiCollaborators: dbLimits.multi_collaborators ?? fallback.multiCollaborators,
-          maxCollaborators: dbLimits.max_collaborators ?? fallback.maxCollaborators,
-          agenda: dbLimits.agenda ?? fallback.agenda,
-          clients: dbLimits.clients ?? fallback.clients,
-          financial: dbLimits.financial ?? fallback.financial,
-          expenses: dbLimits.expenses ?? fallback.expenses,
-          notifications: dbLimits.notifications ?? fallback.notifications,
-          messages: dbLimits.messages ?? fallback.messages,
-        }
-      : fallback;
+  // Limits: use DB limits mapped to effectivePlan; fallback only if DB unavailable
+  const { data: effectiveDbLimits } = useQuery({
+    queryKey: ["platform-plan-limits", effectivePlan],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("platform_plan_limits" as any)
+        .select("*")
+        .eq("plan", effectivePlan)
+        .single();
+      if (error) return null;
+      return data as any;
+    },
+    staleTime: 5 * 60 * 1000,
+    enabled: effectivePlan !== plan, // only fetch if different from already-fetched plan
+  });
 
-  const isOrgSuspended = orgData?.status === "suspenso";
+  const resolvedDbRow = effectivePlan === plan ? dbLimits : (effectiveDbLimits ?? dbLimits);
+  const limits: PlanLimits = resolvedDbRow ? dbRowToLimits(resolvedDbRow) : FREE_FALLBACK;
+
+  const isOrgSuspended = isSuperAdmin ? false : orgData?.status === "suspenso";
   const canAddClient = limits.maxClients === null || clientCount < limits.maxClients;
   const remainingClients = limits.maxClients !== null ? Math.max(0, limits.maxClients - clientCount) : null;
 
