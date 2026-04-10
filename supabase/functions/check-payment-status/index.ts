@@ -65,7 +65,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Already paid
+    // Already paid in our DB
     if (payment.status === "paid") {
       return new Response(
         JSON.stringify({ paid: true, status: "paid" }),
@@ -73,7 +73,98 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Check if there's an active subscription already created by webhook
+    // Try InfinitePay's payment_check API
+    const slug = payment.checkout_slug;
+    if (slug) {
+      try {
+        const checkResponse = await fetch(
+          "https://api.infinitepay.io/invoices/public/checkout/payment_check",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              handle: "meualishop",
+              order_nsu: order_nsu,
+              slug: slug,
+            }),
+          }
+        );
+
+        const checkData = await checkResponse.json();
+        console.log("[check-payment-status] InfinitePay response:", JSON.stringify(checkData));
+
+        if (checkData?.paid === true) {
+          // Payment confirmed via InfinitePay - update our DB
+          await supabaseAdmin
+            .from("plan_payments")
+            .update({ status: "paid" })
+            .eq("id", payment.id);
+
+          // Activate subscription (same logic as webhook)
+          const { data: planData } = await supabaseAdmin
+            .from("platform_plan_limits")
+            .select("id, plan, name")
+            .eq("id", payment.plan_id)
+            .single();
+
+          const now = new Date();
+          const periodEnd = new Date(now);
+          if (payment.billing_type === "yearly") {
+            periodEnd.setDate(periodEnd.getDate() + 365);
+          } else {
+            periodEnd.setDate(periodEnd.getDate() + 30);
+          }
+
+          // Cancel existing active subscriptions
+          await supabaseAdmin
+            .from("subscriptions")
+            .update({ status: "canceled" })
+            .eq("user_id", userId)
+            .eq("status", "active");
+
+          // Create new subscription
+          await supabaseAdmin.from("subscriptions").insert({
+            user_id: userId,
+            plan_id: payment.plan_id,
+            status: "active",
+            current_period_start: now.toISOString(),
+            current_period_end: periodEnd.toISOString(),
+          });
+
+          // Update organization plan
+          if (planData) {
+            const { data: profile } = await supabaseAdmin
+              .from("profiles")
+              .select("organization_id")
+              .eq("user_id", userId)
+              .single();
+
+            if (profile?.organization_id) {
+              await supabaseAdmin
+                .from("organizations")
+                .update({
+                  plan: planData.plan as "free" | "pro" | "premium",
+                  billing_cycle: payment.billing_type === "yearly" ? "yearly" : "monthly",
+                  next_billing_date: periodEnd.toISOString().split("T")[0],
+                })
+                .eq("id", profile.organization_id);
+            }
+          }
+
+          console.log("[check-payment-status] Payment confirmed and subscription activated for:", userId);
+
+          return new Response(
+            JSON.stringify({ paid: true, status: "paid" }),
+            { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+      } catch (checkErr) {
+        console.error("[check-payment-status] InfinitePay check error:", checkErr);
+        // Fall through to return pending status
+      }
+    }
+
+    // Also check if webhook already created subscription
     const { data: subscription } = await supabaseAdmin
       .from("subscriptions")
       .select("id, status")
@@ -83,7 +174,6 @@ Deno.serve(async (req) => {
       .maybeSingle();
 
     if (subscription) {
-      // Webhook already processed it, just update payment record
       await supabaseAdmin
         .from("plan_payments")
         .update({ status: "paid" })
