@@ -163,8 +163,17 @@ Deno.serve(async (req) => {
     console.log("InfinitePay response:", JSON.stringify(ipData));
 
     const qrCodeBase64 = ipData?.qr_code_base64 || ipData?.pix?.qr_code_base64 || null;
-    const pixCode = ipData?.pix_code || ipData?.pix?.code || ipData?.pix?.emv || null;
-    const checkoutUrl = ipData?.url || null;
+    const pixCode = ipData?.pix_code || ipData?.pix?.copy_paste || ipData?.pix?.code || ipData?.pix?.emv || null;
+    const checkoutUrl = ipData?.url || ipData?.checkout_url || ipData?.link || null;
+    const checkoutSlug = ipData?.slug || null;
+
+    if (!checkoutUrl && !qrCodeBase64) {
+      console.error("InfinitePay did not return checkout_url or qr_code");
+      return new Response(
+        JSON.stringify({ error: "Pix não foi gerado corretamente" }),
+        { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
     // 6. Save to plan_payments
     const { error: insertError } = await supabaseAdmin.from("plan_payments").insert({
@@ -176,6 +185,8 @@ Deno.serve(async (req) => {
       status: "pending",
       qr_code_base64: qrCodeBase64,
       pix_code: pixCode,
+      checkout_url: checkoutUrl,
+      checkout_slug: checkoutSlug,
       infinitepay_response: ipData,
     });
 
@@ -194,6 +205,7 @@ Deno.serve(async (req) => {
         pix_code: pixCode,
         checkout_url: checkoutUrl,
         order_nsu: orderNsu,
+        created_at: new Date().toISOString(),
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
