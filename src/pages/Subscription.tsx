@@ -908,6 +908,45 @@ export default function Subscription() {
           </Button>
         </DialogContent>
       </Dialog>
+
+      {/* Fullscreen Checkout Iframe Modal */}
+      <Dialog open={showCheckoutIframe} onOpenChange={setShowCheckoutIframe}>
+        <DialogContent className="max-w-none w-screen h-screen max-h-screen rounded-none p-0 gap-0 border-0">
+          <div className="flex items-center justify-between px-4 py-2 border-b border-border bg-background">
+            <p className="text-sm font-medium text-foreground">Pagamento Seguro</p>
+            <div className="flex gap-2">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={handleManualCheck}
+                disabled={manualChecking}
+              >
+                {manualChecking ? (
+                  <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                ) : (
+                  <CheckCircle2 className="w-4 h-4 mr-1" />
+                )}
+                Já paguei
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => setShowCheckoutIframe(false)}
+              >
+                Fechar
+              </Button>
+            </div>
+          </div>
+          {paymentResult?.checkout_url && (
+            <iframe
+              src={paymentResult.checkout_url}
+              className="w-full flex-1 border-0"
+              style={{ height: 'calc(100vh - 49px)' }}
+              allow="payment"
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
