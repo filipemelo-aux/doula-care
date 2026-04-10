@@ -283,9 +283,15 @@ export default function Subscription() {
     },
     onSuccess: (data) => {
       setPaymentResult(data);
-      setPaymentDialog(true);
       setShowCustomerForm(false);
       setPendingPlan(null);
+      // If we only have checkout_url (no direct pix data), go straight to iframe
+      if (!data.qr_code_base64 && !data.pix_code && data.checkout_url) {
+        setShowCheckoutIframe(true);
+        setPaymentDialog(false);
+      } else {
+        setPaymentDialog(true);
+      }
     },
     onError: (err: any) => {
       if (err?.missing_fields?.length > 0) {
