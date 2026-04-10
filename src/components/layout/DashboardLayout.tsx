@@ -11,6 +11,7 @@ import { usePresenceBroadcast } from "@/hooks/usePresence";
 import { useAdminUnreadCounts } from "@/hooks/useAdminUnreadCounts";
 import { useActiveLaborCount } from "@/hooks/useActiveLaborCount";
 import { BirthAlertDialog } from "@/components/dashboard/BirthAlertDialog";
+import { NotificationTopBanner } from "@/components/dashboard/NotificationTopBanner";
 import { cn } from "@/lib/utils";
 
 export function DashboardLayout() {
@@ -100,7 +101,8 @@ export function DashboardLayout() {
         </header>
 
         <main className="flex-1 min-h-0 p-3 lg:p-8 pb-24 lg:pb-8 overflow-y-auto overscroll-y-contain touch-pan-y [WebkitOverflowScrolling:touch] w-full box-border">
-          <div className="max-w-7xl mx-auto animate-fade-in">
+          <div className="max-w-7xl mx-auto animate-fade-in space-y-4 lg:space-y-6">
+            <NotificationTopBanner />
             <Outlet />
           </div>
         </main>
