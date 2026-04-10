@@ -429,16 +429,44 @@ export default function Subscription() {
       </div>
 
       {/* Payment Dialog */}
-      <Dialog open={paymentDialog} onOpenChange={setPaymentDialog}>
+      <Dialog open={paymentDialog} onOpenChange={handleDialogClose}>
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle className="font-display flex items-center gap-2">
-              <QrCode className="w-5 h-5" />
-              Pagamento Pix — {selectedPlanName}
+              {paymentConfirmed ? (
+                <CheckCircle2 className="w-5 h-5 text-primary" />
+              ) : (
+                <QrCode className="w-5 h-5" />
+              )}
+              {paymentConfirmed
+                ? "Pagamento confirmado!"
+                : `Pagamento Pix — ${selectedPlanName}`}
             </DialogTitle>
           </DialogHeader>
 
-          {paymentResult ? (
+          {paymentConfirmed ? (
+            <div className="space-y-4 py-4">
+              <div className="flex justify-center">
+                <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center">
+                  <CheckCircle2 className="w-10 h-10 text-primary" />
+                </div>
+              </div>
+              <div className="text-center space-y-2">
+                <p className="text-lg font-semibold text-foreground">
+                  Pagamento confirmado!
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  Seu plano {selectedPlanName} foi ativado com sucesso.
+                </p>
+              </div>
+              <Button
+                className="w-full"
+                onClick={() => handleDialogClose(false)}
+              >
+                Fechar
+              </Button>
+            </div>
+          ) : paymentResult ? (
             <div className="space-y-4">
               {/* QR Code */}
               {paymentResult.qr_code_base64 && (
@@ -488,11 +516,12 @@ export default function Subscription() {
                 <p className="text-sm text-muted-foreground">
                   Status do pagamento
                 </p>
-                <Badge variant="secondary" className="mt-1">
-                  Aguardando pagamento
-                </Badge>
+                <div className="flex items-center justify-center gap-2 mt-1">
+                  <Loader2 className="w-3 h-3 animate-spin text-muted-foreground" />
+                  <Badge variant="secondary">Aguardando pagamento</Badge>
+                </div>
                 <p className="text-xs text-muted-foreground mt-2">
-                  Após o pagamento, seu plano será ativado automaticamente.
+                  Verificando automaticamente a cada 5 segundos...
                 </p>
               </div>
 
