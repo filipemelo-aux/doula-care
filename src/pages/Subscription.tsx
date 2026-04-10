@@ -1,0 +1,457 @@
+import { useState } from "react";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { usePlanLimits } from "@/hooks/usePlanLimits";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Check, Copy, Crown, Loader2, QrCode, Sparkles, Star } from "lucide-react";
+import { toast } from "sonner";
+
+type BillingType = "monthly" | "yearly";
+
+interface PlatformPlan {
+  id: string;
+  name: string;
+  plan: string;
+  price_monthly: number;
+  price_yearly: number;
+  is_free: boolean;
+  max_clients: number | null;
+  reports: boolean;
+  export_reports: boolean;
+  push_notifications: boolean;
+  multi_collaborators: boolean;
+  max_collaborators: number;
+  agenda: boolean;
+  financial: boolean;
+  expenses: boolean;
+  messages: boolean;
+}
+
+interface PaymentResult {
+  qr_code_base64: string | null;
+  pix_code: string | null;
+  order_nsu: string;
+}
+
+const planIcons: Record<string, React.ReactNode> = {
+  free: <Star className="w-6 h-6" />,
+  pro: <Sparkles className="w-6 h-6" />,
+  premium: <Crown className="w-6 h-6" />,
+};
+
+const planColors: Record<string, string> = {
+  free: "border-muted",
+  pro: "border-primary/50 ring-1 ring-primary/20",
+  premium: "border-amber-500/50 ring-1 ring-amber-500/20",
+};
+
+function formatCentavos(centavos: number): string {
+  return new Intl.NumberFormat("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+  }).format(centavos / 100);
+}
+
+function buildFeatureList(plan: PlatformPlan): string[] {
+  const features: string[] = [];
+  if (plan.max_clients === null) {
+    features.push("Clientes ilimitados");
+  } else {
+    features.push(`Até ${plan.max_clients} clientes`);
+  }
+  if (plan.agenda) features.push("Agenda");
+  if (plan.financial) features.push("Financeiro");
+  if (plan.expenses) features.push("Controle de despesas");
+  if (plan.messages) features.push("Mensagens");
+  if (plan.reports) features.push("Relatórios");
+  if (plan.export_reports) features.push("Exportar relatórios");
+  if (plan.push_notifications) features.push("Notificações push");
+  if (plan.multi_collaborators) {
+    features.push(`Até ${plan.max_collaborators} colaboradores`);
+  }
+  return features;
+}
+
+export default function Subscription() {
+  const { user } = useAuth();
+  const {
+    plan: effectivePlan,
+    originalPlan,
+    isSubscriptionExpired,
+    isSubscriptionPending,
+    subscriptionEndDate,
+    isLoading: planLoading,
+  } = usePlanLimits();
+
+  const [paymentDialog, setPaymentDialog] = useState(false);
+  const [paymentResult, setPaymentResult] = useState<PaymentResult | null>(null);
+  const [selectedPlanName, setSelectedPlanName] = useState("");
+  const [copied, setCopied] = useState(false);
+
+  const { data: plans, isLoading } = useQuery({
+    queryKey: ["platform-plans-subscription"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("platform_plan_limits" as any)
+        .select("*")
+        .order("price_monthly", { ascending: true });
+      if (error) throw error;
+      return data as unknown as PlatformPlan[];
+    },
+  });
+
+  const { data: activeSubscription } = useQuery({
+    queryKey: ["my-subscription", user?.id],
+    queryFn: async () => {
+      if (!user?.id) return null;
+      const { data, error } = await supabase
+        .from("subscriptions")
+        .select("id, status, current_period_start, current_period_end, plan_id")
+        .eq("user_id", user.id)
+        .in("status", ["active", "pending"])
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user?.id,
+  });
+
+  const payMutation = useMutation({
+    mutationFn: async ({
+      plan_id,
+      billing_type,
+    }: {
+      plan_id: string;
+      billing_type: BillingType;
+    }) => {
+      const { data, error } = await supabase.functions.invoke(
+        "create-pix-payment-for-plan",
+        {
+          body: { plan_id, billing_type },
+        }
+      );
+      if (error) throw error;
+      return data as PaymentResult;
+    },
+    onSuccess: (data) => {
+      setPaymentResult(data);
+      setPaymentDialog(true);
+    },
+    onError: (err: any) => {
+      toast.error(err?.message || "Erro ao gerar pagamento");
+    },
+  });
+
+  const handleSubscribe = (plan: PlatformPlan, billingType: BillingType) => {
+    setSelectedPlanName(plan.name);
+    payMutation.mutate({ plan_id: plan.id, billing_type: billingType });
+  };
+
+  const handleActivateFree = async () => {
+    // For free plan, just update the org directly - no payment needed
+    toast.success("Plano gratuito ativado!");
+  };
+
+  const handleCopyPix = async (code: string) => {
+    try {
+      await navigator.clipboard.writeText(code);
+      setCopied(true);
+      toast.success("Código Pix copiado!");
+      setTimeout(() => setCopied(false), 3000);
+    } catch {
+      toast.error("Erro ao copiar");
+    }
+  };
+
+  const formatDate = (dateStr: string | null) => {
+    if (!dateStr) return "—";
+    return new Date(dateStr).toLocaleDateString("pt-BR");
+  };
+
+  if (isLoading || planLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="page-header">
+          <h1 className="page-title">Assinatura</h1>
+          <p className="page-description">Gerencie seu plano</p>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {[...Array(3)].map((_, i) => (
+            <Skeleton key={i} className="h-[420px]" />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  const currentPlanSlug = originalPlan;
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="page-header">
+        <h1 className="page-title">Assinatura</h1>
+        <p className="page-description">
+          Escolha o melhor plano para o seu negócio
+        </p>
+      </div>
+
+      {/* Current Plan Status */}
+      <Card className="card-glass">
+        <CardContent className="pt-6">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <p className="text-sm text-muted-foreground">Plano atual</p>
+              <p className="text-2xl font-bold text-foreground capitalize">
+                {currentPlanSlug}
+              </p>
+              {activeSubscription && (
+                <div className="flex items-center gap-2 mt-1">
+                  <Badge
+                    variant={
+                      activeSubscription.status === "active"
+                        ? "default"
+                        : "secondary"
+                    }
+                    className={
+                      activeSubscription.status === "active"
+                        ? "bg-emerald-500/10 text-emerald-700 border-emerald-500/30"
+                        : ""
+                    }
+                  >
+                    {activeSubscription.status === "active"
+                      ? "Ativo"
+                      : activeSubscription.status === "pending"
+                        ? "Pendente"
+                        : "Cancelado"}
+                  </Badge>
+                  <span className="text-xs text-muted-foreground">
+                    Válido até {formatDate(activeSubscription.current_period_end)}
+                  </span>
+                </div>
+              )}
+              {isSubscriptionExpired && (
+                <p className="text-sm text-destructive mt-1">
+                  Sua assinatura expirou. Renove para reativar os recursos premium.
+                </p>
+              )}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Plan Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {plans?.map((plan) => {
+          const isCurrentPlan =
+            plan.plan === currentPlanSlug && !isSubscriptionExpired;
+          const features = buildFeatureList(plan);
+
+          return (
+            <Card
+              key={plan.id}
+              className={`relative overflow-hidden transition-all card-glass ${
+                planColors[plan.plan] || ""
+              } ${isCurrentPlan ? "ring-2 ring-primary" : ""}`}
+            >
+              {isCurrentPlan && (
+                <div className="absolute top-0 left-0 right-0 bg-primary text-primary-foreground text-center text-xs py-1 font-medium">
+                  Plano atual
+                </div>
+              )}
+
+              <CardHeader className={isCurrentPlan ? "pt-10" : ""}>
+                <div className="flex items-center gap-2 text-foreground">
+                  {planIcons[plan.plan]}
+                  <CardTitle className="text-xl font-display capitalize">
+                    {plan.name}
+                  </CardTitle>
+                </div>
+              </CardHeader>
+
+              <CardContent className="space-y-6">
+                {/* Pricing */}
+                {plan.is_free ? (
+                  <div>
+                    <p className="text-3xl font-bold text-foreground">Grátis</p>
+                    <p className="text-sm text-muted-foreground">Para sempre</p>
+                  </div>
+                ) : (
+                  <div className="space-y-1">
+                    <div>
+                      <span className="text-3xl font-bold text-foreground">
+                        {formatCentavos(plan.price_monthly)}
+                      </span>
+                      <span className="text-sm text-muted-foreground">/mês</span>
+                    </div>
+                    <div>
+                      <span className="text-lg font-semibold text-muted-foreground">
+                        {formatCentavos(plan.price_yearly)}
+                      </span>
+                      <span className="text-xs text-muted-foreground">/ano</span>
+                      {plan.price_yearly > 0 && plan.price_monthly > 0 && (
+                        <Badge variant="secondary" className="ml-2 text-xs">
+                          {Math.round(
+                            (1 - plan.price_yearly / (plan.price_monthly * 12)) *
+                              100
+                          )}
+                          % off
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Features */}
+                <div className="space-y-2 min-h-[140px]">
+                  {features.map((feature, i) => (
+                    <div key={i} className="flex items-start gap-2">
+                      <Check className="w-4 h-4 text-primary mt-0.5 shrink-0" />
+                      <span className="text-sm text-foreground">{feature}</span>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Buttons */}
+                <div className="space-y-2 pt-4 border-t border-border">
+                  {plan.is_free ? (
+                    <Button
+                      variant="outline"
+                      className="w-full"
+                      disabled={isCurrentPlan}
+                      onClick={handleActivateFree}
+                    >
+                      {isCurrentPlan
+                        ? "Plano atual"
+                        : "Ativar plano gratuito"}
+                    </Button>
+                  ) : isCurrentPlan ? (
+                    <Button variant="outline" className="w-full" disabled>
+                      Plano atual
+                    </Button>
+                  ) : (
+                    <>
+                      <Button
+                        className="w-full"
+                        onClick={() => handleSubscribe(plan, "monthly")}
+                        disabled={payMutation.isPending}
+                      >
+                        {payMutation.isPending ? (
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        ) : null}
+                        Assinar mensal — {formatCentavos(plan.price_monthly)}
+                      </Button>
+                      {plan.price_yearly > 0 && (
+                        <Button
+                          variant="outline"
+                          className="w-full"
+                          onClick={() => handleSubscribe(plan, "yearly")}
+                          disabled={payMutation.isPending}
+                        >
+                          Assinar anual — {formatCentavos(plan.price_yearly)}
+                        </Button>
+                      )}
+                    </>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
+
+      {/* Payment Dialog */}
+      <Dialog open={paymentDialog} onOpenChange={setPaymentDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="font-display flex items-center gap-2">
+              <QrCode className="w-5 h-5" />
+              Pagamento Pix — {selectedPlanName}
+            </DialogTitle>
+          </DialogHeader>
+
+          {paymentResult ? (
+            <div className="space-y-4">
+              {/* QR Code */}
+              {paymentResult.qr_code_base64 && (
+                <div className="flex justify-center p-4 bg-white rounded-lg">
+                  <img
+                    src={
+                      paymentResult.qr_code_base64.startsWith("data:")
+                        ? paymentResult.qr_code_base64
+                        : `data:image/png;base64,${paymentResult.qr_code_base64}`
+                    }
+                    alt="QR Code Pix"
+                    className="w-48 h-48"
+                  />
+                </div>
+              )}
+
+              {/* Pix Code */}
+              {paymentResult.pix_code && (
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-foreground">
+                    Código Pix copia e cola:
+                  </p>
+                  <div className="flex gap-2">
+                    <code className="flex-1 text-xs bg-muted p-3 rounded-md break-all max-h-20 overflow-y-auto">
+                      {paymentResult.pix_code}
+                    </code>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="shrink-0"
+                      onClick={() =>
+                        handleCopyPix(paymentResult.pix_code!)
+                      }
+                    >
+                      {copied ? (
+                        <Check className="w-4 h-4 text-primary" />
+                      ) : (
+                        <Copy className="w-4 h-4" />
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {/* Status */}
+              <div className="bg-muted/50 rounded-lg p-3 text-center">
+                <p className="text-sm text-muted-foreground">
+                  Status do pagamento
+                </p>
+                <Badge variant="secondary" className="mt-1">
+                  Aguardando pagamento
+                </Badge>
+                <p className="text-xs text-muted-foreground mt-2">
+                  Após o pagamento, seu plano será ativado automaticamente.
+                </p>
+              </div>
+
+              {/* Order NSU */}
+              <p className="text-xs text-muted-foreground text-center">
+                Ref: {paymentResult.order_nsu}
+              </p>
+            </div>
+          ) : (
+            <div className="flex justify-center py-8">
+              <Loader2 className="w-8 h-8 animate-spin text-primary" />
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}

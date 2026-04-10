@@ -25,6 +25,7 @@ import Marketing from "./pages/Marketing";
 import SuperAdminDashboard from "./pages/SuperAdminDashboard";
 import AdminNotifications from "./pages/AdminNotifications";
 import AdminMessages from "./pages/AdminMessages";
+import Subscription from "./pages/Subscription";
 
 import UpdatePrompt from "./components/pwa/UpdatePrompt";
 import { NotificationListenerProvider } from "./components/notifications/NotificationListenerProvider";
@@ -189,6 +190,7 @@ const App = () => (
               <Route path="/relatorios" element={<Reports />} />
               <Route path="/comunidade" element={<Forum />} />
               <Route path="/configuracoes" element={<Settings />} />
+              <Route path="/admin/assinatura" element={<Subscription />} />
             </Route>
 
             <Route path="*" element={<NotFound />} />
