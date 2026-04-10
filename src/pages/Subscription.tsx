@@ -612,10 +612,20 @@ export default function Subscription() {
                 </p>
               </div>
 
-              {/* Order NSU */}
-              <p className="text-xs text-muted-foreground text-center">
-                Ref: {paymentResult.order_nsu}
-              </p>
+              {/* Fallback: Já paguei */}
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={handleManualCheck}
+                disabled={manualChecking}
+              >
+                {manualChecking ? (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                ) : (
+                  <CheckCircle2 className="w-4 h-4 mr-2" />
+                )}
+                Já paguei
+              </Button>
             </div>
           ) : (
             <div className="flex justify-center py-8">
