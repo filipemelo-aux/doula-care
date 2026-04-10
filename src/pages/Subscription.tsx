@@ -599,191 +599,138 @@ export default function Subscription() {
         })}
       </div>
 
-      {/* Payment Dialog */}
+      {/* Payment Status Dialog – checkout-style */}
       <Dialog open={paymentDialog} onOpenChange={handleDialogClose}>
-        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="font-display flex items-center gap-2">
-              {paymentConfirmed ? (
-                <CheckCircle2 className="w-5 h-5 text-primary" />
-              ) : (
-                <QrCode className="w-5 h-5" />
-              )}
-              {paymentConfirmed
-                ? "Pagamento confirmado!"
-                : `Pagamento Pix — ${selectedPlanName}`}
-            </DialogTitle>
-          </DialogHeader>
-
-          {paymentConfirmed ? (
-            <div className="space-y-4 py-4">
-              <div className="flex justify-center">
-                <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center">
-                  <CheckCircle2 className="w-10 h-10 text-primary" />
-                </div>
+        <DialogContent className="p-0 gap-0 max-w-md max-h-[95vh] overflow-hidden rounded-2xl border-0">
+          {/* Resumo da compra header */}
+          {paymentResult && (() => {
+            const plan = plans?.find(p => p.name === selectedPlanName);
+            const price = plan ? (
+              paymentResult.order_nsu ? plan.price_monthly : plan.price_monthly
+            ) : 0;
+            return (
+              <div className="bg-muted/60 px-5 py-4 flex items-center justify-between border-b border-border">
+                <span className="text-sm font-medium text-foreground">Resumo da compra</span>
+                {plan && <span className="text-base font-bold text-foreground">{formatCentavos(
+                  activeSubscription?.plan_id === plan.id ? plan.price_monthly :
+                  plan.price_monthly
+                )}</span>}
               </div>
-              <div className="text-center space-y-2">
-                <p className="text-lg font-semibold text-foreground">
-                  Pagamento confirmado!
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  Seu plano {selectedPlanName} foi ativado com sucesso.
-                </p>
-              </div>
-              <Button
-                className="w-full"
-                onClick={() => handleDialogClose(false)}
-              >
-                Fechar
-              </Button>
-            </div>
-          ) : paymentResult ? (
-            <div className="space-y-4">
-              {/* Payment instructions */}
-              <p className="text-sm text-center text-muted-foreground">
-                {paymentResult.qr_code_base64 || paymentResult.pix_code
-                  ? "Escaneie o QR Code com seu app de banco ou use o código Pix abaixo."
-                  : "A InfinitePay abriu esta cobrança em uma página segura. Use o botão abaixo para concluir o pagamento Pix."}
-              </p>
+            );
+          })()}
 
-              {/* Real Pix QR only */}
-              {paymentResult.qr_code_base64 ? (
-                <div className="flex justify-center p-4 bg-white rounded-lg">
-                  <img
-                    src={
-                      paymentResult.qr_code_base64.startsWith("data:")
-                        ? paymentResult.qr_code_base64
-                        : `data:image/png;base64,${paymentResult.qr_code_base64}`
-                    }
-                    alt="QR Code Pix"
-                    className="w-56 h-56"
-                  />
+          {/* Step indicator */}
+          <div className="flex items-center justify-center gap-2 px-5 pt-4 pb-2 text-xs text-muted-foreground">
+            <span>Contato</span>
+            <span className="text-muted-foreground/40">›</span>
+            <span>Endereço</span>
+            <span className="text-muted-foreground/40">›</span>
+            <span className="text-foreground font-semibold">Pagamento</span>
+          </div>
+
+          <div className="px-5 pb-5 pt-2">
+            {paymentConfirmed ? (
+              <div className="space-y-5 py-4">
+                <div className="flex justify-center">
+                  <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center">
+                    <CheckCircle2 className="w-10 h-10 text-primary" />
+                  </div>
                 </div>
-              ) : paymentResult.pix_code ? (
-                <div className="flex justify-center p-4 bg-white rounded-lg">
-                  <QRCodeSVG
-                    value={paymentResult.pix_code}
-                    size={224}
-                    level="M"
-                    includeMargin
-                  />
-                </div>
-              ) : paymentResult.checkout_url ? (
-                <div className="text-center py-4 space-y-3">
-                  <p className="text-sm text-muted-foreground">
-                    Clique abaixo para visualizar o QR Code Pix na página segura da InfinitePay.
+                <div className="text-center space-y-2">
+                  <p className="text-lg font-semibold text-foreground">
+                    Pagamento confirmado!
                   </p>
+                  <p className="text-sm text-muted-foreground">
+                    Seu plano {selectedPlanName} foi ativado com sucesso.
+                  </p>
+                </div>
+                <Button
+                  className="w-full h-11 rounded-xl"
+                  onClick={() => handleDialogClose(false)}
+                >
+                  Fechar
+                </Button>
+              </div>
+            ) : paymentResult ? (
+              <div className="space-y-5">
+                <div>
+                  <h3 className="text-sm font-semibold text-foreground mb-3">Pagamento</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Complete o pagamento na página segura da InfinitePay. Ao finalizar, o sistema detectará automaticamente.
+                  </p>
+                </div>
+
+                {/* Open checkout button */}
+                {paymentResult.checkout_url && (
                   <Button
-                    className="w-full"
+                    className="w-full h-12 rounded-xl text-base"
                     onClick={() => window.open(paymentResult.checkout_url!, '_blank')}
                   >
                     <ExternalLink className="w-4 h-4 mr-2" />
-                    Abrir Checkout Pix
+                    Ir para pagamento
+                  </Button>
+                )}
+
+                {/* Status indicator */}
+                <div className="bg-muted/50 rounded-xl p-4 text-center space-y-2">
+                  <div className="flex items-center justify-center gap-2">
+                    <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+                    <span className="text-sm font-medium text-foreground">
+                      {paymentResult.created_at && Date.now() - new Date(paymentResult.created_at).getTime() > 15 * 60 * 1000
+                        ? "Cobrança expirada"
+                        : "Aguardando pagamento"}
+                    </span>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Verificando automaticamente...
+                  </p>
+                </div>
+
+                {/* Actions */}
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    className="flex-1 h-11 rounded-xl"
+                    onClick={handleManualCheck}
+                    disabled={manualChecking}
+                  >
+                    {manualChecking ? (
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    ) : (
+                      <CheckCircle2 className="w-4 h-4 mr-2" />
+                    )}
+                    Já paguei
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-11 w-11 rounded-xl"
+                    title="Gerar novo pagamento"
+                    onClick={() => {
+                      setPaymentResult(null);
+                      setPaymentConfirmed(false);
+                      stopPolling();
+                      payMutation.mutate({
+                        plan_id: plans?.find((p) => p.name === selectedPlanName)?.id || "",
+                        billing_type: "monthly",
+                      });
+                    }}
+                    disabled={payMutation.isPending}
+                  >
+                    <RefreshCw className={`w-4 h-4 ${payMutation.isPending ? "animate-spin" : ""}`} />
                   </Button>
                 </div>
-              ) : (
-                <div className="text-center py-4">
-                  <p className="text-sm text-destructive">
-                    Erro ao gerar QR Code. Tente novamente.
-                  </p>
-                </div>
-              )}
 
-
-              {/* Pix Code copy-paste */}
-              {paymentResult.pix_code && (
-                <div className="space-y-2">
-                  <p className="text-sm font-medium text-foreground">
-                    Código Pix copia e cola:
-                  </p>
-                  <div className="flex gap-2">
-                    <code className="flex-1 text-xs bg-muted p-3 rounded-md break-all max-h-20 overflow-y-auto">
-                      {paymentResult.pix_code}
-                    </code>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="shrink-0"
-                      onClick={() => handleCopyPix(paymentResult.pix_code!)}
-                    >
-                      {copied ? (
-                        <Check className="w-4 h-4 text-primary" />
-                      ) : (
-                        <Copy className="w-4 h-4" />
-                      )}
-                    </Button>
-                  </div>
-                </div>
-              )}
-
-              {/* Status + timestamp */}
-              <div className="bg-muted/50 rounded-lg p-3 text-center space-y-1">
-                <div className="flex items-center justify-center gap-2">
-                  <Loader2 className="w-3 h-3 animate-spin text-muted-foreground" />
-                  <Badge variant="secondary">
-                    {paymentResult.created_at && Date.now() - new Date(paymentResult.created_at).getTime() > 15 * 60 * 1000
-                      ? "Cobrança expirada"
-                      : "Aguardando pagamento"}
-                  </Badge>
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  Verificando automaticamente a cada 5 segundos...
+                <p className="text-[10px] text-muted-foreground/60 text-center">
+                  Ref: {paymentResult.order_nsu}
                 </p>
-                {paymentResult.created_at && (
-                  <p className="text-xs text-muted-foreground flex items-center justify-center gap-1">
-                    <Clock className="w-3 h-3" />
-                    Gerado em {new Date(paymentResult.created_at).toLocaleTimeString("pt-BR", {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
-                  </p>
-                )}
               </div>
-
-              {/* Fallback buttons */}
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  className="flex-1"
-                  onClick={handleManualCheck}
-                  disabled={manualChecking}
-                >
-                  {manualChecking ? (
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  ) : (
-                    <CheckCircle2 className="w-4 h-4 mr-2" />
-                  )}
-                  Já paguei
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  title="Gerar novo pagamento"
-                  onClick={() => {
-                    setPaymentResult(null);
-                    setPaymentConfirmed(false);
-                    stopPolling();
-                    payMutation.mutate({
-                      plan_id: plans?.find((p) => p.name === selectedPlanName)?.id || "",
-                      billing_type: "monthly",
-                    });
-                  }}
-                  disabled={payMutation.isPending}
-                >
-                  <RefreshCw className={`w-4 h-4 ${payMutation.isPending ? "animate-spin" : ""}`} />
-                </Button>
+            ) : (
+              <div className="flex justify-center py-8">
+                <Loader2 className="w-8 h-8 animate-spin text-primary" />
               </div>
-
-              {/* Order ref */}
-              <p className="text-xs text-muted-foreground text-center">
-                Ref: {paymentResult.order_nsu}
-              </p>
-            </div>
-          ) : (
-            <div className="flex justify-center py-8">
-              <Loader2 className="w-8 h-8 animate-spin text-primary" />
-            </div>
-          )}
+            )}
+          </div>
         </DialogContent>
       </Dialog>
 
