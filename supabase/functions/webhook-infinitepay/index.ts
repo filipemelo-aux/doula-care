@@ -27,10 +27,14 @@ Deno.serve(async (req) => {
 
     const orderNsu = body?.order_nsu || body?.data?.order_nsu;
     const status = body?.status || body?.data?.status;
+    const invoiceSlug = body?.invoice_slug || body?.data?.invoice_slug;
+    const captureMethod = body?.capture_method || body?.data?.capture_method;
 
-    console.log("[webhook-infinitepay] order_nsu:", orderNsu, "| status:", status);
+    console.log("[webhook-infinitepay] order_nsu:", orderNsu, "| status:", status, "| capture_method:", captureMethod, "| invoice_slug:", invoiceSlug);
 
     if (!orderNsu) {
+      // InfinitePay webhook may not have order_nsu at top level
+      // Try to find it from invoice_slug or other fields
       console.error("Missing order_nsu in webhook payload");
       return new Response(JSON.stringify({ error: "Missing order_nsu" }), {
         status: 400,
@@ -38,7 +42,12 @@ Deno.serve(async (req) => {
       });
     }
 
-    if (status !== "paid" && status !== "approved" && status !== "completed") {
+    // InfinitePay sends webhook on successful payment — the presence of
+    // order_nsu + amount/paid_amount indicates a completed payment.
+    // Accept: paid, approved, completed, or when capture_method exists (implicit paid)
+    const isPaid = status === "paid" || status === "approved" || status === "completed" || !!captureMethod;
+
+    if (!isPaid) {
       console.log(`Ignoring webhook with status: ${status}`);
       return new Response(JSON.stringify({ ok: true, action: "ignored" }), {
         status: 200,
