@@ -150,7 +150,7 @@ export default function Subscription() {
   const [showCustomerForm, setShowCustomerForm] = useState(false);
   const [pendingPlan, setPendingPlan] = useState<{ plan_id: string; billing_type: BillingType } | null>(null);
   const [cepLoading, setCepLoading] = useState(false);
-  const [showCheckoutIframe, setShowCheckoutIframe] = useState(false);
+  
 
   const handleCepBlur = async () => {
     const clean = customerData.zipcode.replace(/\D/g, "");
@@ -178,7 +178,7 @@ export default function Subscription() {
 
   // Poll payment status every 5 seconds when dialog is open
   useEffect(() => {
-    if ((!paymentDialog && !showCheckoutIframe) || !paymentResult?.order_nsu || paymentConfirmed) {
+    if (!paymentDialog || !paymentResult?.order_nsu || paymentConfirmed) {
       stopPolling();
       return;
     }
@@ -208,7 +208,7 @@ export default function Subscription() {
     pollingRef.current = setInterval(checkStatus, 5000);
 
     return () => stopPolling();
-  }, [paymentDialog, showCheckoutIframe, paymentResult?.order_nsu, paymentConfirmed, stopPolling, queryClient]);
+  }, [paymentDialog, paymentResult?.order_nsu, paymentConfirmed, stopPolling, queryClient]);
 
   // Reset confirmed state when dialog closes
   const handleDialogClose = (open: boolean) => {
