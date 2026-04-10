@@ -65,7 +65,7 @@ const DEFAULT_LIMITS: Record<OrgPlan, PlanLimits> = {
 };
 
 export function usePlanLimits() {
-  const { organizationId } = useAuth();
+  const { organizationId, user } = useAuth();
 
   const { data: orgData, isLoading: orgLoading } = useQuery({
     queryKey: ["org-plan", organizationId],
@@ -83,6 +83,26 @@ export function usePlanLimits() {
   });
 
   const plan = (orgData?.plan as OrgPlan) || "free";
+
+  // Check active subscription status
+  const { data: subscription, isLoading: subLoading } = useQuery({
+    queryKey: ["active-subscription", user?.id],
+    queryFn: async () => {
+      if (!user?.id) return null;
+      const { data, error } = await supabase
+        .from("subscriptions")
+        .select("id, status, current_period_end, plan_id")
+        .eq("user_id", user.id)
+        .eq("status", "active")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user?.id,
+    staleTime: 2 * 60 * 1000,
+  });
 
   const { data: dbLimits, isLoading: limitsLoading } = useQuery({
     queryKey: ["platform-plan-limits", plan],
@@ -112,36 +132,54 @@ export function usePlanLimits() {
     enabled: !!organizationId,
   });
 
-  const fallback = DEFAULT_LIMITS[plan];
-  const limits: PlanLimits = dbLimits
-    ? {
-        maxClients: dbLimits.max_clients ?? null,
-        reports: dbLimits.reports ?? fallback.reports,
-        exportReports: dbLimits.export_reports ?? fallback.exportReports,
-        pushNotifications: dbLimits.push_notifications ?? fallback.pushNotifications,
-        multiCollaborators: dbLimits.multi_collaborators ?? fallback.multiCollaborators,
-        maxCollaborators: dbLimits.max_collaborators ?? fallback.maxCollaborators,
-        agenda: dbLimits.agenda ?? fallback.agenda,
-        clients: dbLimits.clients ?? fallback.clients,
-        financial: dbLimits.financial ?? fallback.financial,
-        expenses: dbLimits.expenses ?? fallback.expenses,
-        notifications: dbLimits.notifications ?? fallback.notifications,
-        messages: dbLimits.messages ?? fallback.messages,
-      }
-    : fallback;
+  // Determine if subscription is expired (client-side check for immediate feedback)
+  const isSubscriptionExpired = (() => {
+    if (plan === "free") return false; // Free plan never expires
+    if (!subscription) return (plan as string) !== "free"; // Paid plan but no active sub = expired
+    if (subscription.current_period_end) {
+      return new Date(subscription.current_period_end) < new Date();
+    }
+    return false;
+  })();
+
+  // If subscription expired, enforce free limits
+  const effectivePlan: OrgPlan = isSubscriptionExpired ? "free" : plan;
+  const fallback = DEFAULT_LIMITS[effectivePlan];
+
+  const limits: PlanLimits = isSubscriptionExpired
+    ? fallback // Force free limits when expired
+    : dbLimits
+      ? {
+          maxClients: dbLimits.max_clients ?? null,
+          reports: dbLimits.reports ?? fallback.reports,
+          exportReports: dbLimits.export_reports ?? fallback.exportReports,
+          pushNotifications: dbLimits.push_notifications ?? fallback.pushNotifications,
+          multiCollaborators: dbLimits.multi_collaborators ?? fallback.multiCollaborators,
+          maxCollaborators: dbLimits.max_collaborators ?? fallback.maxCollaborators,
+          agenda: dbLimits.agenda ?? fallback.agenda,
+          clients: dbLimits.clients ?? fallback.clients,
+          financial: dbLimits.financial ?? fallback.financial,
+          expenses: dbLimits.expenses ?? fallback.expenses,
+          notifications: dbLimits.notifications ?? fallback.notifications,
+          messages: dbLimits.messages ?? fallback.messages,
+        }
+      : fallback;
 
   const isOrgSuspended = orgData?.status === "suspenso";
   const canAddClient = limits.maxClients === null || clientCount < limits.maxClients;
   const remainingClients = limits.maxClients !== null ? Math.max(0, limits.maxClients - clientCount) : null;
 
   return {
-    plan,
+    plan: effectivePlan,
+    originalPlan: plan, // The plan stored in org (before expiry enforcement)
     limits,
     clientCount,
     canAddClient,
     remainingClients,
     isOrgSuspended,
-    isLoading: orgLoading || countLoading || limitsLoading,
-    planLabel: plan === "free" ? "Free" : plan === "pro" ? "Pro" : "Premium",
+    isSubscriptionExpired,
+    subscriptionEndDate: subscription?.current_period_end ?? null,
+    isLoading: orgLoading || countLoading || limitsLoading || subLoading,
+    planLabel: effectivePlan === "free" ? "Free" : effectivePlan === "pro" ? "Pro" : "Premium",
   };
 }
