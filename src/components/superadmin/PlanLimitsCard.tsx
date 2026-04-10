@@ -10,10 +10,15 @@ import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { Settings2, Save, Sparkles, Crown, DollarSign, Infinity } from "lucide-react";
+import { maskCurrency, parseCurrency } from "@/lib/masks";
 
 interface LimitsRow {
   id: string;
   plan: string;
+  name: string;
+  price_monthly: number;
+  price_yearly: number;
+  is_free: boolean;
   max_clients: number | null;
   reports: boolean;
   export_reports: boolean;
@@ -162,6 +167,34 @@ export function PlanLimitsCard() {
                 </div>
 
                 <div className="mt-3 pt-3 border-t space-y-3">
+                  {/* Pricing */}
+                  {!row.is_free && (
+                    <div className="space-y-1.5">
+                      <Label className="text-xs text-muted-foreground">Preço mensal</Label>
+                      <Input
+                        value={
+                          getEditValue(row.plan).price_monthly !== undefined
+                            ? maskCurrency(String(getEditValue(row.plan).price_monthly))
+                            : maskCurrency(String(row.price_monthly))
+                        }
+                        onChange={(e) => setField(row.plan, "price_monthly", parseCurrency(e.target.value) * 100)}
+                        placeholder="R$ 0,00"
+                        className="h-8 text-sm"
+                      />
+                      <Label className="text-xs text-muted-foreground">Preço anual</Label>
+                      <Input
+                        value={
+                          getEditValue(row.plan).price_yearly !== undefined
+                            ? maskCurrency(String(getEditValue(row.plan).price_yearly))
+                            : maskCurrency(String(row.price_yearly))
+                        }
+                        onChange={(e) => setField(row.plan, "price_yearly", parseCurrency(e.target.value) * 100)}
+                        placeholder="R$ 0,00"
+                        className="h-8 text-sm"
+                      />
+                    </div>
+                  )}
+
                   {/* Max gestantes */}
                   <div className="space-y-1.5">
                     <Label className="text-xs text-muted-foreground">Máx. gestantes</Label>
