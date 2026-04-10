@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { QRCodeSVG } from "qrcode.react";
+
 import { useAuth } from "@/contexts/AuthContext";
 import { usePlanLimits } from "@/hooks/usePlanLimits";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -16,7 +16,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Check, CheckCircle2, Clock, Copy, Crown, ExternalLink, Loader2, MapPin, QrCode, RefreshCw, Sparkles, Star } from "lucide-react";
+import { Check, CheckCircle2, Clock, Crown, ExternalLink, Loader2, MapPin, RefreshCw, Sparkles, Star } from "lucide-react";
 import { toast } from "sonner";
 import { maskCPF, maskPhone, maskCEP } from "@/lib/masks";
 import { fetchAddressByCep } from "@/lib/address";
@@ -142,7 +142,7 @@ export default function Subscription() {
   const [paymentDialog, setPaymentDialog] = useState(false);
   const [paymentResult, setPaymentResult] = useState<PaymentResult | null>(null);
   const [selectedPlanName, setSelectedPlanName] = useState("");
-  const [copied, setCopied] = useState(false);
+  
   const [paymentConfirmed, setPaymentConfirmed] = useState(false);
   const [manualChecking, setManualChecking] = useState(false);
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -362,16 +362,6 @@ export default function Subscription() {
     toast.success("Plano gratuito ativado!");
   };
 
-  const handleCopyPix = async (code: string) => {
-    try {
-      await navigator.clipboard.writeText(code);
-      setCopied(true);
-      toast.success("Código Pix copiado!");
-      setTimeout(() => setCopied(false), 3000);
-    } catch {
-      toast.error("Erro ao copiar");
-    }
-  };
 
   const handleManualCheck = async () => {
     if (!paymentResult?.order_nsu) return;
