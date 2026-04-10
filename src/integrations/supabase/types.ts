@@ -1119,6 +1119,8 @@ export type Database = {
         Row: {
           amount: number
           billing_type: string
+          checkout_slug: string | null
+          checkout_url: string | null
           created_at: string
           id: string
           infinitepay_response: Json | null
@@ -1133,6 +1135,8 @@ export type Database = {
         Insert: {
           amount: number
           billing_type: string
+          checkout_slug?: string | null
+          checkout_url?: string | null
           created_at?: string
           id?: string
           infinitepay_response?: Json | null
@@ -1147,6 +1151,8 @@ export type Database = {
         Update: {
           amount?: number
           billing_type?: string
+          checkout_slug?: string | null
+          checkout_url?: string | null
           created_at?: string
           id?: string
           infinitepay_response?: Json | null
