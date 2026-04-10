@@ -41,6 +41,7 @@ interface PlatformPlan {
 interface PaymentResult {
   qr_code_base64: string | null;
   pix_code: string | null;
+  checkout_url: string | null;
   order_nsu: string;
 }
 
