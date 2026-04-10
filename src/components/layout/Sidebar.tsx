@@ -52,6 +52,7 @@ const navItems = [
   },
   { to: "/mensagens", icon: MessageCircle, label: "Mensagens", badgeKey: "messages" as const, bottomNav: true },
   { to: "/comunidade", icon: Users2, label: "Comunidade" },
+  { to: "/admin/assinatura", icon: Crown, label: "Assinatura" },
   { to: "/configuracoes", icon: Settings, label: "Configurações" },
 ];
 
