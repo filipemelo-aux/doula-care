@@ -3,10 +3,11 @@ import { useQuery } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Baby, AlertTriangle, CheckCircle, Calendar } from "lucide-react";
+import { Baby, AlertTriangle, CheckCircle, Calendar, Activity, Clock } from "lucide-react";
 import { formatBrazilDate } from "@/lib/utils";
-import { fetchBirthAlertClients } from "@/lib/birthAlerts";
+import { fetchBirthAlertClients, type BirthAlertClient } from "@/lib/birthAlerts";
 import { BirthRegistrationDialog } from "@/components/clients/BirthRegistrationDialog";
+import { cn } from "@/lib/utils";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Client = Tables<"clients">;
@@ -31,133 +32,84 @@ export function BirthAlertDialog({ open, onOpenChange }: BirthAlertDialogProps) 
     setBirthDialogOpen(true);
   };
 
+  const laborClients = clients?.filter((c) => c.is_in_labor) ?? [];
+  const watchClients = clients?.filter((c) => !c.is_in_labor) ?? [];
+
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-md max-h-[80vh] overflow-hidden flex flex-col">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-base">
-              <Baby className="h-5 w-5 text-warning" />
-              Alertas de Parto
-            </DialogTitle>
-          </DialogHeader>
+        <DialogContent className="max-w-[420px] max-h-[80vh] overflow-hidden flex flex-col gap-0 p-0 rounded-[18px]">
+          {/* Header */}
+          <div className="flex items-center gap-3 px-5 pt-5 pb-3">
+            <div className="w-9 h-9 rounded-2xl bg-primary/10 flex items-center justify-center">
+              <Baby className="h-[18px] w-[18px] text-primary" />
+            </div>
+            <div>
+              <DialogTitle className="text-base font-semibold">Alertas de Parto</DialogTitle>
+              <p className="text-[11px] text-muted-foreground mt-0.5">
+                {clients?.length
+                  ? `${laborClients.length > 0 ? `${laborClients.length} em trabalho de parto • ` : ""}${clients.length} gestante${clients.length > 1 ? "s" : ""} em acompanhamento`
+                  : "Nenhum alerta no momento"}
+              </p>
+            </div>
+          </div>
 
-          <div className="flex-1 overflow-y-auto -mx-6 px-6">
+          {/* Content */}
+          <div className="flex-1 overflow-y-auto px-4 pb-4">
             {isLoading ? (
-              <div className="space-y-3 py-4">
+              <div className="space-y-3 py-2">
                 {[...Array(3)].map((_, i) => (
-                  <div key={i} className="h-16 rounded-lg bg-muted/50 animate-pulse" />
+                  <div key={i} className="h-20 rounded-2xl bg-muted/40 animate-pulse" />
                 ))}
               </div>
             ) : !clients || clients.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-8 gap-2 text-center">
-                <div className="w-12 h-12 rounded-full bg-muted/50 flex items-center justify-center">
-                  <Baby className="h-6 w-6 text-muted-foreground" />
+              <div className="flex flex-col items-center justify-center py-10 gap-3 text-center">
+                <div className="w-16 h-16 rounded-[20px] bg-muted/30 flex items-center justify-center">
+                  <Baby className="h-7 w-7 text-muted-foreground/40" />
                 </div>
-                <p className="text-sm text-muted-foreground">Nenhuma gestante em alerta</p>
-                <p className="text-xs text-muted-foreground/60">
-                  Trabalho de parto, contração em andamento e gestantes com 37+ semanas aparecerão aqui
-                </p>
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Tudo tranquilo</p>
+                  <p className="text-xs text-muted-foreground/50 mt-1 max-w-[220px] mx-auto">
+                    Gestantes com 37+ semanas ou em trabalho de parto aparecerão aqui
+                  </p>
+                </div>
               </div>
             ) : (
-              <div className="divide-y divide-border/50 py-1">
-                {clients.map((client) => {
-                  const isHighPriority =
-                    client.is_in_labor || client.is_post_term || (client.current_weeks !== null && client.current_weeks >= 39);
-                  const statusLabel = client.labor_started_at
-                    ? "Trabalho de parto"
-                    : client.has_ongoing_contraction
-                    ? "Contração em andamento"
-                    : client.is_post_term
-                    ? "Pós-data"
-                    : "Parto próximo";
-                  const weeksLabel =
-                    client.current_weeks !== null
-                      ? `${client.current_weeks}s${client.current_days > 0 ? `${client.current_days}d` : ""}${client.is_post_term ? " Pós" : ""}`
-                      : null;
-                  const laborBadgeLabel =
-                    client.labor_started_at || client.recent_contractions_10m >= 3
-                      ? "🚨 EM TRABALHO DE PARTO"
-                      : "⚠️ CONTRAÇÃO EM ANDAMENTO";
+              <div className="space-y-2">
+                {/* Active labor section */}
+                {laborClients.length > 0 && (
+                  <div className="space-y-2">
+                    {laborClients.map((client) => (
+                      <AlertCard
+                        key={client.id}
+                        client={client}
+                        onRegisterBirth={handleRegisterBirth}
+                      />
+                    ))}
+                  </div>
+                )}
 
-                  return (
-                    <div
-                      key={client.id}
-                      className={`py-3 px-1 transition-colors ${client.is_in_labor ? "bg-destructive/5" : ""}`}
-                    >
-                      <div className="flex flex-col gap-2">
-                        <div className="flex items-center gap-2.5">
-                          <div
-                            className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
-                              client.is_in_labor
-                                ? "bg-destructive/20"
-                                : client.is_post_term
-                                ? "bg-destructive/15"
-                                : isHighPriority
-                                ? "bg-warning/15"
-                                : "bg-warning/10"
-                            }`}
-                          >
-                            {client.is_in_labor ? (
-                              <Baby className="h-4 w-4 text-destructive animate-bounce" />
-                            ) : client.is_post_term ? (
-                              <AlertTriangle className="h-4 w-4 text-destructive" />
-                            ) : (
-                              <Baby className={`h-4 w-4 ${isHighPriority ? "text-warning" : "text-warning/80"}`} />
-                            )}
-                          </div>
-
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium truncate">{client.full_name}</p>
-                            <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
-                              <span className="text-[11px] text-muted-foreground">{statusLabel}</span>
-                              {client.dpp && (
-                                <>
-                                  <span className="text-muted-foreground/40">•</span>
-                                  <span className="flex items-center gap-0.5 text-[11px] text-muted-foreground">
-                                    <Calendar className="h-2.5 w-2.5" />
-                                    {formatBrazilDate(client.dpp, "dd/MM")}
-                                  </span>
-                                </>
-                              )}
-                              {weeksLabel && (
-                                <Badge
-                                  variant="outline"
-                                  className={`text-[9px] px-1 h-4 border-0 ${
-                                    client.is_in_labor
-                                      ? "bg-destructive/20 text-destructive"
-                                      : client.is_post_term
-                                      ? "bg-destructive/20 text-destructive"
-                                      : isHighPriority
-                                      ? "bg-warning/20 text-warning"
-                                      : "bg-warning/15 text-warning/90"
-                                  }`}
-                                >
-                                  {weeksLabel}
-                                </Badge>
-                              )}
-                            </div>
-
-                            {client.is_in_labor && (
-                              <Badge className="bg-destructive text-destructive-foreground text-[9px] px-1.5 h-4 animate-pulse mt-1">
-                                {laborBadgeLabel}
-                              </Badge>
-                            )}
-                          </div>
-                        </div>
-
-                        <Button
-                          size="sm"
-                          className="h-7 w-full text-[11px] bg-emerald-600 hover:bg-emerald-700 text-white"
-                          onClick={() => handleRegisterBirth(client as Client)}
-                        >
-                          <CheckCircle className="h-3 w-3 mr-1" />
-                          Registrar Nascimento
-                        </Button>
+                {/* Watching section */}
+                {watchClients.length > 0 && (
+                  <>
+                    {laborClients.length > 0 && (
+                      <div className="flex items-center gap-2 pt-2 pb-1">
+                        <div className="h-px flex-1 bg-border/50" />
+                        <span className="text-[10px] font-medium text-muted-foreground/60 uppercase tracking-wider">Em observação</span>
+                        <div className="h-px flex-1 bg-border/50" />
                       </div>
+                    )}
+                    <div className="space-y-2">
+                      {watchClients.map((client) => (
+                        <AlertCard
+                          key={client.id}
+                          client={client}
+                          onRegisterBirth={handleRegisterBirth}
+                        />
+                      ))}
                     </div>
-                  );
-                })}
+                  </>
+                )}
               </div>
             )}
           </div>
@@ -170,5 +122,139 @@ export function BirthAlertDialog({ open, onOpenChange }: BirthAlertDialogProps) 
         client={selectedClient}
       />
     </>
+  );
+}
+
+/* ─── Card component ─── */
+
+function AlertCard({
+  client,
+  onRegisterBirth,
+}: {
+  client: BirthAlertClient;
+  onRegisterBirth: (c: Client) => void;
+}) {
+  const isLabor = client.is_in_labor;
+  const isHighPriority = isLabor || client.is_post_term || (client.current_weeks !== null && client.current_weeks >= 39);
+
+  const weeksLabel =
+    client.current_weeks !== null
+      ? `${client.current_weeks}s${client.current_days > 0 ? `${client.current_days}d` : ""}`
+      : null;
+
+  const statusConfig = isLabor
+    ? {
+        label: client.labor_started_at ? "Em trabalho de parto" : client.has_ongoing_contraction ? "Contração em andamento" : "Contrações frequentes",
+        badge: client.labor_started_at || client.recent_contractions_10m >= 3 ? "TRABALHO DE PARTO" : "CONTRAÇÃO ATIVA",
+        cardBg: "bg-destructive/[0.04]",
+        iconBg: "bg-destructive/15",
+        iconColor: "text-destructive",
+        weeksBg: "bg-destructive/10 text-destructive",
+      }
+    : client.is_post_term
+    ? {
+        label: "Gestação pós-data",
+        badge: null,
+        cardBg: "bg-warning/[0.04]",
+        iconBg: "bg-warning/15",
+        iconColor: "text-warning",
+        weeksBg: "bg-destructive/10 text-destructive",
+      }
+    : {
+        label: "Parto se aproximando",
+        badge: null,
+        cardBg: "hover:bg-muted/30",
+        iconBg: isHighPriority ? "bg-warning/12" : "bg-primary/8",
+        iconColor: isHighPriority ? "text-warning" : "text-primary/70",
+        weeksBg: isHighPriority ? "bg-warning/10 text-warning" : "bg-primary/8 text-primary/70",
+      };
+
+  return (
+    <div
+      className={cn(
+        "rounded-2xl p-3 transition-all duration-200",
+        statusConfig.cardBg,
+        isLabor && "ring-1 ring-destructive/15"
+      )}
+    >
+      <div className="flex items-start gap-3">
+        {/* Icon */}
+        <div
+          className={cn(
+            "w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5",
+            statusConfig.iconBg
+          )}
+        >
+          {isLabor ? (
+            <Activity className={cn("h-4 w-4", statusConfig.iconColor, "animate-pulse")} />
+          ) : client.is_post_term ? (
+            <AlertTriangle className={cn("h-4 w-4", statusConfig.iconColor)} />
+          ) : (
+            <Baby className={cn("h-4 w-4", statusConfig.iconColor)} />
+          )}
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-[13px] font-semibold text-foreground truncate">{client.full_name}</p>
+            {weeksLabel && (
+              <Badge
+                variant="outline"
+                className={cn(
+                  "text-[10px] px-1.5 h-[18px] border-0 font-semibold flex-shrink-0 rounded-md",
+                  statusConfig.weeksBg
+                )}
+              >
+                {weeksLabel}
+              </Badge>
+            )}
+          </div>
+
+          <div className="flex items-center gap-1.5 mt-1">
+            <span className="text-[11px] text-muted-foreground">{statusConfig.label}</span>
+            {client.dpp && (
+              <>
+                <span className="text-muted-foreground/30">•</span>
+                <span className="flex items-center gap-0.5 text-[11px] text-muted-foreground/70">
+                  <Calendar className="h-2.5 w-2.5" />
+                  DPP {formatBrazilDate(client.dpp, "dd/MM")}
+                </span>
+              </>
+            )}
+          </div>
+
+          {/* Labor active badge */}
+          {isLabor && statusConfig.badge && (
+            <div className="mt-1.5">
+              <Badge className="bg-destructive/90 text-destructive-foreground text-[9px] px-2 h-[18px] font-bold tracking-wide animate-pulse rounded-md">
+                <Activity className="h-2.5 w-2.5 mr-1" />
+                {statusConfig.badge}
+              </Badge>
+            </div>
+          )}
+
+          {/* Contraction info */}
+          {client.recent_contractions_10m > 0 && (
+            <div className="flex items-center gap-1 mt-1.5">
+              <Clock className="h-2.5 w-2.5 text-muted-foreground/50" />
+              <span className="text-[10px] text-muted-foreground/70">
+                {client.recent_contractions_10m} contração(ões) nos últimos 10min
+              </span>
+            </div>
+          )}
+
+          {/* Register birth button */}
+          <Button
+            size="sm"
+            className="h-8 w-full mt-2.5 text-[11px] font-semibold bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl active:scale-[0.97] transition-all"
+            onClick={() => onRegisterBirth(client as Client)}
+          >
+            <CheckCircle className="h-3.5 w-3.5 mr-1.5" />
+            Registrar Nascimento
+          </Button>
+        </div>
+      </div>
+    </div>
   );
 }
