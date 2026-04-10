@@ -43,6 +43,7 @@ interface PaymentResult {
   pix_code: string | null;
   checkout_url: string | null;
   order_nsu: string;
+  created_at: string;
 }
 
 const planIcons: Record<string, React.ReactNode> = {
