@@ -273,7 +273,6 @@ export function GestanteLayout({ children }: GestanteLayoutProps) {
           {(() => {
             const fabRoute = isPuerpera ? "/gestante/amamentacao" : "/gestante/contracoes";
             const fabLabel = isPuerpera ? "Amamentação" : "Contrações";
-            const fabActive = location.pathname === fabRoute;
             return (
               <div className="flex flex-col items-center justify-end gap-1 px-3 py-2">
                 <div className="relative flex items-center justify-center" style={{ marginTop: '-30px' }}>
@@ -281,21 +280,16 @@ export function GestanteLayout({ children }: GestanteLayoutProps) {
                     onClick={() => navigate(fabRoute)}
                     className={cn(
                       "w-[48px] h-[48px] rounded-full flex items-center justify-center shadow-xl transition-all active:scale-90 ring-4 ring-[hsl(var(--background))]",
-                      fabActive
-                        ? "bg-primary text-primary-foreground shadow-primary/40"
-                        : isPuerpera
-                          ? "bg-gradient-to-br from-primary/80 to-primary/60 text-primary-foreground shadow-primary/25"
-                          : "bg-gradient-to-br from-warning to-warning/80 text-warning-foreground shadow-warning/25"
+                      isPuerpera
+                        ? "bg-gradient-to-br from-primary/80 to-primary/60 text-primary-foreground shadow-primary/25"
+                        : "bg-gradient-to-br from-warning to-warning/80 text-warning-foreground shadow-warning/25"
                     )}
                     title={fabLabel}
                   >
                     {isPuerpera ? <Baby className="h-5 w-5" strokeWidth={2.2} /> : <Timer className="h-5 w-5" strokeWidth={2.2} />}
                   </button>
                 </div>
-                <span className={cn(
-                  "text-[9px] font-medium leading-none transition-colors",
-                  fabActive ? "text-primary font-semibold" : "text-sidebar-foreground/50"
-                )}>{fabLabel}</span>
+                <span className="text-[9px] font-medium leading-none text-sidebar-foreground/50">{fabLabel}</span>
               </div>
             );
           })()}
