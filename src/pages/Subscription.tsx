@@ -13,7 +13,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Check, Copy, Crown, Loader2, QrCode, Sparkles, Star } from "lucide-react";
+import { Check, CheckCircle2, Copy, Crown, Loader2, QrCode, Sparkles, Star } from "lucide-react";
 import { toast } from "sonner";
 
 type BillingType = "monthly" | "yearly";
