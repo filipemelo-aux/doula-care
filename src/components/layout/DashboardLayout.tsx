@@ -20,7 +20,7 @@ export function DashboardLayout() {
   const { signOut } = useAuth();
   const { logoUrl: orgLogo, displayName, brandingReady } = useOrgBranding();
   const { unreadMessages } = useAdminUnreadCounts();
-  const { laborCount, alertCount } = useActiveLaborCount();
+  const { laborCount, alertCount, markAsSeen } = useActiveLaborCount();
   const location = useLocation();
   const navigate = useNavigate();
   usePresenceBroadcast();
