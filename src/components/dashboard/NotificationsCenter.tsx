@@ -1,13 +1,11 @@
 import { useState, useEffect } from "react";
-import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Bell, Baby, CheckCircle, AlertTriangle, Calendar, Clock, Activity, BookHeart, Timer, ChevronDown, ChevronRight, Sparkles, Send, History, CalendarCheck, Pause } from "lucide-react";
+import { Bell, Baby, CheckCircle, AlertTriangle, Calendar, Clock, Activity, BookHeart, Timer, Sparkles, Send, History, CalendarCheck, Pause } from "lucide-react";
 import { calculateCurrentPregnancyWeeks, calculateCurrentPregnancyDays, isPostTerm } from "@/lib/pregnancy";
 import { BirthRegistrationDialog } from "@/components/clients/BirthRegistrationDialog";
 import { ClientDiaryDialog } from "@/components/dashboard/ClientDiaryDialog";
@@ -19,79 +17,20 @@ import { toast } from "sonner";
 
 type Client = Tables<"clients">;
 
-interface EnrichedClient extends Client {
-  current_weeks: number | null;
-  current_days: number;
-  is_post_term: boolean;
-}
-
-interface DiaryEntry {
+interface FlatNotification {
   id: string;
-  client_id: string;
-  created_at: string;
-  read_by_admin: boolean;
-  client_name?: string;
-}
-
-interface ContractionEntry {
-  id: string;
-  client_id: string;
-  started_at: string;
-  duration_seconds: number | null;
-  read_by_admin: boolean;
-  client_name?: string;
-}
-
-interface ServiceRequest {
-  id: string;
-  client_id: string;
-  service_type: string;
-  status: string;
-  created_at: string;
-  client_name?: string;
-  preferred_date?: string | null;
-}
-
-interface AppointmentRequest {
-  id: string;
-  client_id: string;
-  requested_date: string;
-  requested_time: string;
-  reason: string | null;
-  status: string;
-  created_at: string;
-  client_name?: string;
-}
-
-interface ChildNotification {
-  id: string;
-  type: "labor_started" | "new_contraction" | "new_diary_entry" | "service_request" | "appointment_request";
+  type: "labor" | "post_term" | "birth_approaching" | "contraction" | "diary" | "service_request" | "appointment_request";
   title: string;
-  description: string;
-  timestamp?: string;
-  extraInfo?: string;
+  subtitle: string;
+  detail?: string;
+  timestamp: string;
   priority: "high" | "medium" | "low";
   clientId?: string;
-  notificationId?: string;
+  client?: Client;
+  requestId?: string;
   isRead?: boolean;
+  weeksBadge?: string;
 }
-
-interface ParentNotification {
-  id: string;
-  type: "birth_approaching" | "post_term" | "new_diary_entry" | "service_request" | "appointment_request";
-  title: string;
-  description: string;
-  client?: EnrichedClient;
-  priority: "high" | "medium" | "low";
-  icon: typeof Baby;
-  timestamp?: string;
-  children: ChildNotification[];
-  isInLabor?: boolean;
-  clientId?: string;
-  notificationId?: string;
-  isRead?: boolean;
-}
-
 
 interface NotificationsCenterProps {
   fullPage?: boolean;
@@ -106,25 +45,14 @@ export function NotificationsCenter({ fullPage = false }: NotificationsCenterPro
   const [contractionsClient, setContractionsClient] = useState<Client | null>(null);
   const [budgetDialogOpen, setBudgetDialogOpen] = useState(false);
   const [selectedServiceRequest, setSelectedServiceRequest] = useState<{
-    id: string;
-    client_id: string;
-    service_type: string;
-    client_name: string;
-    preferred_date?: string | null;
+    id: string; client_id: string; service_type: string; client_name: string; preferred_date?: string | null;
   } | null>(null);
-  const [expandedNotifications, setExpandedNotifications] = useState<Set<string>>(new Set());
-  const [readContractionClients, setReadContractionClients] = useState<Set<string>>(new Set());
-  const [readLaborClients, setReadLaborClients] = useState<Set<string>>(new Set());
   const queryClient = useQueryClient();
 
-  // Fetch all clients for lookup (needed for diary/contraction notifications)
   const { data: allClients } = useQuery({
     queryKey: ["all-clients-lookup"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("clients")
-        .select("*")
-        .order("full_name");
+      const { data, error } = await supabase.from("clients").select("*").order("full_name");
       if (error) throw error;
       return data as Client[];
     },
@@ -136,31 +64,15 @@ export function NotificationsCenter({ fullPage = false }: NotificationsCenterPro
   const { data: birthAlertClients, isLoading: loadingBirth } = useQuery({
     queryKey: ["birth-alert-clients"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("clients")
-        .select("*")
-        .eq("status", "gestante")
-        .eq("birth_occurred", false)
-        .order("pregnancy_weeks", { ascending: false });
-
+      const { data, error } = await supabase.from("clients").select("*")
+        .eq("status", "gestante").eq("birth_occurred", false).order("pregnancy_weeks", { ascending: false });
       if (error) throw error;
-      
-      const enrichedClients = data.map(client => ({
+      return data.map(client => ({
         ...client,
-        current_weeks: calculateCurrentPregnancyWeeks(
-          client.pregnancy_weeks,
-          client.pregnancy_weeks_set_at,
-          client.dpp
-        ),
+        current_weeks: calculateCurrentPregnancyWeeks(client.pregnancy_weeks, client.pregnancy_weeks_set_at, client.dpp),
         current_days: calculateCurrentPregnancyDays(client.dpp),
         is_post_term: isPostTerm(client.dpp)
-      }));
-
-      return enrichedClients
-        .filter(client => 
-          (client.current_weeks !== null && client.current_weeks >= 37) || 
-          client.labor_started_at
-        )
+      })).filter(c => c.labor_started_at || (c.current_weeks !== null && c.current_weeks >= 37))
         .sort((a, b) => {
           if (a.labor_started_at && !b.labor_started_at) return -1;
           if (!a.labor_started_at && b.labor_started_at) return 1;
@@ -175,27 +87,17 @@ export function NotificationsCenter({ fullPage = false }: NotificationsCenterPro
   const { data: recentDiaryEntries, isLoading: loadingDiary } = useQuery({
     queryKey: ["recent-diary-entries"],
     queryFn: async () => {
-      const twentyFourHoursAgo = new Date();
-      twentyFourHoursAgo.setHours(twentyFourHoursAgo.getHours() - 24);
-
-      const { data, error } = await supabase
-        .from("pregnancy_diary")
+      const cutoff = new Date();
+      cutoff.setHours(cutoff.getHours() - 24);
+      const { data, error } = await supabase.from("pregnancy_diary")
         .select("id, client_id, created_at, read_by_admin, clients(full_name)")
-        .gte("created_at", twentyFourHoursAgo.toISOString())
-        .order("created_at", { ascending: false });
-
-      if (error) {
-        console.error("Error fetching diary entries:", error);
-        throw error;
-      }
-      
-      return data.map(entry => ({
-        id: entry.id,
-        client_id: entry.client_id,
-        created_at: entry.created_at,
-        read_by_admin: entry.read_by_admin ?? false,
-        client_name: (entry.clients as { full_name: string } | null)?.full_name || "Cliente"
-      })) as DiaryEntry[];
+        .gte("created_at", cutoff.toISOString()).order("created_at", { ascending: false });
+      if (error) throw error;
+      return data.map(e => ({
+        id: e.id, client_id: e.client_id, created_at: e.created_at,
+        read_by_admin: e.read_by_admin ?? false,
+        client_name: (e.clients as any)?.full_name || "Cliente"
+      }));
     },
     refetchInterval: 60000,
   });
@@ -203,600 +105,230 @@ export function NotificationsCenter({ fullPage = false }: NotificationsCenterPro
   const { data: recentContractions, isLoading: loadingContractions } = useQuery({
     queryKey: ["recent-contractions"],
     queryFn: async () => {
-      const twentyFourHoursAgo = new Date();
-      twentyFourHoursAgo.setHours(twentyFourHoursAgo.getHours() - 24);
-
-      // Only fetch contractions for gestante clients (not lactante)
-      const { data, error } = await supabase
-        .from("contractions")
+      const cutoff = new Date();
+      cutoff.setHours(cutoff.getHours() - 24);
+      const { data, error } = await supabase.from("contractions")
         .select("id, client_id, started_at, duration_seconds, read_by_admin, clients!inner(full_name, status, birth_occurred)")
-        .gte("started_at", twentyFourHoursAgo.toISOString())
-        .eq("clients.status", "gestante")
-        .eq("clients.birth_occurred", false)
+        .gte("started_at", cutoff.toISOString())
+        .eq("clients.status", "gestante").eq("clients.birth_occurred", false)
         .order("started_at", { ascending: false });
-
-      if (error) {
-        console.error("Error fetching contractions:", error);
-        throw error;
-      }
-      
-      return data.map(entry => ({
-        id: entry.id,
-        client_id: entry.client_id,
-        started_at: entry.started_at,
-        duration_seconds: entry.duration_seconds,
-        read_by_admin: (entry as any).read_by_admin ?? false,
-        client_name: (entry.clients as { full_name: string; status: string; birth_occurred: boolean } | null)?.full_name || "Cliente"
-      })) as ContractionEntry[];
+      if (error) throw error;
+      return data.map(e => ({
+        id: e.id, client_id: e.client_id, started_at: e.started_at,
+        duration_seconds: e.duration_seconds, read_by_admin: (e as any).read_by_admin ?? false,
+        client_name: (e.clients as any)?.full_name || "Cliente"
+      }));
     },
     refetchInterval: 30000,
   });
 
-  // Fetch pending service requests from service_requests table
-  const { data: serviceRequests, isLoading: loadingServiceRequests } = useQuery({
+  const { data: serviceRequests, isLoading: loadingSvc } = useQuery({
     queryKey: ["service-requests-pending"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("service_requests")
+      const { data, error } = await supabase.from("service_requests")
         .select("id, client_id, service_type, status, created_at, preferred_date, clients(full_name)")
-        .eq("status", "pending")
-        .order("created_at", { ascending: false });
-
-      if (error) {
-        console.error("Error fetching service requests:", error);
-        throw error;
-      }
-      
-      return data.map(entry => ({
-        id: entry.id,
-        client_id: entry.client_id,
-        service_type: entry.service_type,
-        status: entry.status,
-        created_at: entry.created_at,
-        preferred_date: entry.preferred_date,
-        client_name: (entry.clients as { full_name: string } | null)?.full_name || "Cliente"
-      })) as ServiceRequest[];
+        .eq("status", "pending").order("created_at", { ascending: false });
+      if (error) throw error;
+      return data.map(e => ({
+        id: e.id, client_id: e.client_id, service_type: e.service_type,
+        status: e.status, created_at: e.created_at, preferred_date: e.preferred_date,
+        client_name: (e.clients as any)?.full_name || "Cliente"
+      }));
     },
     refetchInterval: 30000,
   });
 
-  // Fetch pending appointment requests
-  const { data: appointmentRequests, isLoading: loadingAppointmentRequests } = useQuery({
+  const { data: appointmentRequests, isLoading: loadingApt } = useQuery({
     queryKey: ["appointment-requests-pending"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("appointment_requests")
+      const { data, error } = await supabase.from("appointment_requests")
         .select("id, client_id, requested_date, requested_time, reason, status, created_at, clients(full_name)")
-        .eq("status", "pending")
-        .order("created_at", { ascending: false });
-
-      if (error) {
-        console.error("Error fetching appointment requests:", error);
-        throw error;
-      }
-      
-      return data.map(entry => ({
-        id: entry.id,
-        client_id: entry.client_id,
-        requested_date: entry.requested_date,
-        requested_time: entry.requested_time,
-        reason: entry.reason,
-        status: entry.status,
-        created_at: entry.created_at,
-        client_name: (entry.clients as { full_name: string } | null)?.full_name || "Cliente"
-      })) as AppointmentRequest[];
+        .eq("status", "pending").order("created_at", { ascending: false });
+      if (error) throw error;
+      return data.map(e => ({
+        id: e.id, client_id: e.client_id, requested_date: e.requested_date,
+        requested_time: e.requested_time, reason: e.reason,
+        status: e.status, created_at: e.created_at,
+        client_name: (e.clients as any)?.full_name || "Cliente"
+      }));
     },
     refetchInterval: 30000,
   });
 
-  // Handle opening budget dialog
-  const handleOpenBudgetDialog = (request: ServiceRequest) => {
-    setSelectedServiceRequest({
-      id: request.id,
-      client_id: request.client_id,
-      service_type: request.service_type,
-      client_name: request.client_name || "Cliente",
-      preferred_date: (request as any).preferred_date || null,
+  // Realtime
+  useEffect(() => {
+    const channel = supabase.channel('notifications-center-rt')
+      .on("postgres_changes", { event: "*", schema: "public", table: "contractions" }, () => {
+        queryClient.invalidateQueries({ queryKey: ["recent-contractions"] });
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "pregnancy_diary" }, () => {
+        queryClient.invalidateQueries({ queryKey: ["recent-diary-entries"] });
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "service_requests" }, () => {
+        queryClient.invalidateQueries({ queryKey: ["service-requests-pending"] });
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "appointment_requests" }, () => {
+        queryClient.invalidateQueries({ queryKey: ["appointment-requests-pending"] });
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "clients" }, () => {
+        queryClient.invalidateQueries({ queryKey: ["birth-alert-clients"] });
+        queryClient.invalidateQueries({ queryKey: ["all-clients-lookup"] });
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [queryClient]);
+
+  // Build flat notification list
+  const notifications: FlatNotification[] = [];
+
+  // 1. Labor / Birth alerts
+  birthAlertClients?.forEach(client => {
+    const weekStr = `${client.current_weeks}s${client.current_days > 0 ? `${client.current_days}d` : ""}`;
+    if (client.labor_started_at) {
+      notifications.push({
+        id: `labor-${client.id}`, type: "labor",
+        title: "🚨 Em Trabalho de Parto",
+        subtitle: client.full_name,
+        detail: `Iniciado ${formatBrazilDateTime(client.labor_started_at, "dd/MM 'às' HH:mm")}`,
+        timestamp: client.labor_started_at, priority: "high",
+        clientId: client.id, client: client as Client, weeksBadge: weekStr,
+      });
+    } else if (client.is_post_term) {
+      notifications.push({
+        id: `postterm-${client.id}`, type: "post_term",
+        title: "⚠️ Gestação Pós-Data",
+        subtitle: client.full_name,
+        detail: client.dpp ? `DPP: ${formatBrazilDate(client.dpp)}` : undefined,
+        timestamp: client.dpp || client.created_at, priority: "high",
+        clientId: client.id, client: client as Client, weeksBadge: weekStr,
+      });
+    } else {
+      notifications.push({
+        id: `approaching-${client.id}`, type: "birth_approaching",
+        title: "Parto se Aproximando",
+        subtitle: client.full_name,
+        detail: client.dpp ? `DPP: ${formatBrazilDate(client.dpp)}` : undefined,
+        timestamp: client.dpp || client.created_at, priority: "medium",
+        clientId: client.id, client: client as Client, weeksBadge: weekStr,
+      });
+    }
+  });
+
+  // 2. Contractions (grouped by client)
+  const contractionsByClient = new Map<string, { count: number; latest: any; clientName: string; allRead: boolean }>();
+  recentContractions?.forEach(e => {
+    const existing = contractionsByClient.get(e.client_id);
+    if (existing) { existing.count++; if (!e.read_by_admin) existing.allRead = false; }
+    else contractionsByClient.set(e.client_id, { count: 1, latest: e, clientName: e.client_name, allRead: e.read_by_admin });
+  });
+  contractionsByClient.forEach(({ count, latest, clientName, allRead }, clientId) => {
+    // Skip if client already has labor notification
+    if (notifications.some(n => n.type === "labor" && n.clientId === clientId)) return;
+    const dur = latest.duration_seconds ? `${latest.duration_seconds}s` : "Em andamento";
+    notifications.push({
+      id: `contraction-${clientId}`, type: "contraction",
+      title: count >= 3 ? "⚠️ Contrações Frequentes" : "Contração Registrada",
+      subtitle: clientName,
+      detail: `Duração: ${dur} • ${count} nas últimas 24h`,
+      timestamp: latest.started_at, priority: count >= 3 ? "high" : "medium",
+      clientId, isRead: allRead,
     });
-    setBudgetDialogOpen(true);
-  };
+  });
 
-  // Real-time subscription for contractions
-  useEffect(() => {
-    const channel = supabase
-      .channel('contractions-realtime')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'contractions'
-        },
-        () => {
-          queryClient.invalidateQueries({ queryKey: ["recent-contractions"] });
-        }
-      )
-      .subscribe();
+  // 3. Diary entries (grouped by client)
+  const diaryByClient = new Map<string, { count: number; unread: number; latest: any; clientName: string; allRead: boolean }>();
+  recentDiaryEntries?.forEach(e => {
+    const existing = diaryByClient.get(e.client_id);
+    if (existing) { existing.count++; if (!e.read_by_admin) { existing.unread++; existing.allRead = false; } }
+    else diaryByClient.set(e.client_id, { count: 1, unread: e.read_by_admin ? 0 : 1, latest: e, clientName: e.client_name, allRead: e.read_by_admin });
+  });
+  diaryByClient.forEach(({ count, unread, latest, clientName, allRead }, clientId) => {
+    if (!fullPage && allRead) return;
+    notifications.push({
+      id: `diary-${clientId}`, type: "diary",
+      title: count > 1 ? `${count} Registros no Diário` : "Registro no Diário",
+      subtitle: clientName,
+      detail: unread > 0 ? `${unread} não lido(s)` : "Já visualizado",
+      timestamp: latest.created_at, priority: "low",
+      clientId, isRead: allRead,
+    });
+  });
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [queryClient]);
+  // 4. Service requests
+  serviceRequests?.forEach(req => {
+    notifications.push({
+      id: `svc-${req.id}`, type: "service_request",
+      title: "Solicitação de Serviço",
+      subtitle: req.client_name,
+      detail: req.service_type,
+      timestamp: req.created_at, priority: "medium",
+      clientId: req.client_id, requestId: req.id,
+    });
+  });
 
-  // Real-time subscription for diary entries
-  useEffect(() => {
-    const channel = supabase
-      .channel('diary-realtime')
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'pregnancy_diary'
-        },
-        () => {
-          queryClient.invalidateQueries({ queryKey: ["recent-diary-entries"] });
-        }
-      )
-      .subscribe();
+  // 5. Appointment requests
+  appointmentRequests?.forEach(req => {
+    const dateStr = formatBrazilDate(req.requested_date, "dd/MM");
+    const timeStr = req.requested_time?.slice(0, 5) || "";
+    notifications.push({
+      id: `apt-${req.id}`, type: "appointment_request",
+      title: "Solicitação de Consulta",
+      subtitle: req.client_name,
+      detail: `${dateStr} às ${timeStr}${req.reason ? ` — ${req.reason}` : ""}`,
+      timestamp: req.created_at, priority: "medium",
+      clientId: req.client_id, requestId: req.id,
+    });
+  });
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [queryClient]);
+  // Sort
+  notifications.sort((a, b) => {
+    const p = { high: 0, medium: 1, low: 2 };
+    const pd = p[a.priority] - p[b.priority];
+    if (pd !== 0) return pd;
+    return new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime();
+  });
 
-  // Real-time subscription for service requests
-  useEffect(() => {
-    const channel = supabase
-      .channel('service-requests-realtime')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'service_requests'
-        },
-        () => {
-          queryClient.invalidateQueries({ queryKey: ["service-requests-pending"] });
-        }
-      )
-      .subscribe();
+  const isLoading = loadingBirth || loadingDiary || loadingContractions || loadingSvc || loadingApt;
+  const unreadCount = notifications.filter(n => !n.isRead).length;
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [queryClient]);
-
-  // Real-time subscription for appointment requests
-  useEffect(() => {
-    const channel = supabase
-      .channel('appointment-requests-realtime')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'appointment_requests'
-        },
-        () => {
-          queryClient.invalidateQueries({ queryKey: ["appointment-requests-pending"] });
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [queryClient]);
-
-  useEffect(() => {
-    const channel = supabase
-      .channel('clients-realtime-notifications')
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'clients'
-        },
-        () => {
-          queryClient.invalidateQueries({ queryKey: ["birth-alert-clients"] });
-          queryClient.invalidateQueries({ queryKey: ["all-clients-lookup"] });
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [queryClient]);
-
-  const handleRegisterBirth = (client: Client) => {
-    setSelectedClient(client);
-    setBirthDialogOpen(true);
-  };
+  // Handlers
+  const handleRegisterBirth = (client: Client) => { setSelectedClient(client); setBirthDialogOpen(true); };
 
   const handleStartLabor = async (clientId: string) => {
     const client = clientsMap.get(clientId);
     if (!client) return;
-    
-    const { error } = await supabase
-      .from("clients")
-      .update({ labor_started_at: new Date().toISOString() })
-      .eq("id", clientId);
-
-    if (error) {
-      toast.error("Erro ao registrar trabalho de parto");
-      return;
-    }
-
+    const { error } = await supabase.from("clients").update({ labor_started_at: new Date().toISOString() }).eq("id", clientId);
+    if (error) { toast.error("Erro ao registrar trabalho de parto"); return; }
     toast.success(`Trabalho de parto registrado para ${client.full_name}`);
     queryClient.invalidateQueries({ queryKey: ["birth-alert-clients"] });
     queryClient.invalidateQueries({ queryKey: ["all-clients-lookup"] });
   };
 
   const handleMarkContractionRead = async (clientId: string) => {
-    setReadContractionClients(prev => new Set([...prev, clientId]));
-    
-    // Mark all contractions for this client as read in DB
-    const { error } = await supabase
-      .from("contractions")
-      .update({ read_by_admin: true } as any)
-      .eq("client_id", clientId)
-      .eq("read_by_admin", false);
-
-    if (!error) {
-      queryClient.invalidateQueries({ queryKey: ["recent-contractions"] });
-    }
+    await supabase.from("contractions").update({ read_by_admin: true } as any).eq("client_id", clientId).eq("read_by_admin", false);
+    queryClient.invalidateQueries({ queryKey: ["recent-contractions"] });
   };
 
-  const toggleExpanded = (id: string) => {
-    setExpandedNotifications(prev => {
-      const next = new Set(prev);
-      if (next.has(id)) {
-        next.delete(id);
-      } else {
-        next.add(id);
-      }
-      return next;
+  const handleOpenBudgetDialog = (requestId: string) => {
+    const req = serviceRequests?.find(r => r.id === requestId);
+    if (!req) return;
+    setSelectedServiceRequest({
+      id: req.id, client_id: req.client_id, service_type: req.service_type,
+      client_name: req.client_name || "Cliente", preferred_date: req.preferred_date || null,
     });
-
-    // Mark labor as read when expanding a birth notification
-    const match = id.match(/^birth-(.+)$/);
-    if (match) {
-      const clientId = match[1];
-      const client = clientsMap.get(clientId);
-      if (client?.labor_started_at) {
-        setReadLaborClients(prev => new Set([...prev, clientId]));
-      }
-    }
+    setBudgetDialogOpen(true);
   };
 
-  // Group contractions by client
-  const contractionsByClient = new Map<string, { entries: ContractionEntry[]; clientName: string; allRead: boolean }>();
-  recentContractions?.forEach(entry => {
-    const existing = contractionsByClient.get(entry.client_id);
-    if (existing) {
-      existing.entries.push(entry);
-      if (!entry.read_by_admin) existing.allRead = false;
-    } else {
-      contractionsByClient.set(entry.client_id, {
-        entries: [entry],
-        clientName: entry.client_name || "Cliente",
-        allRead: entry.read_by_admin
-      });
-    }
-  });
-
-  // Group diary entries by client
-  const diaryByClient = new Map<string, { entries: DiaryEntry[]; clientName: string; allRead: boolean }>();
-  recentDiaryEntries?.forEach(entry => {
-    const existing = diaryByClient.get(entry.client_id);
-    if (existing) {
-      existing.entries.push(entry);
-      if (!entry.read_by_admin) existing.allRead = false;
-    } else {
-      diaryByClient.set(entry.client_id, {
-        entries: [entry],
-        clientName: entry.client_name || "Cliente",
-        allRead: entry.read_by_admin
-      });
-    }
-  });
-
-  // Build parent notifications with children
-  const parentNotifications: ParentNotification[] = [];
-
-  // Track which clients have birth alerts
-  const clientsWithBirthAlert = new Set<string>();
-  birthAlertClients?.forEach(client => clientsWithBirthAlert.add(client.id));
-
-  // Parent: Birth approaching/Post-term with children (labor, contractions, diary)
-  birthAlertClients?.forEach(client => {
-    const children: ChildNotification[] = [];
-    
-    // Child: Labor started
-    if (client.labor_started_at) {
-      const laborRead = readLaborClients.has(client.id);
-      children.push({
-        id: `labor-${client.id}`,
-        type: "labor_started",
-        title: "Trabalho de Parto Iniciado",
-        description: "Alerta de alta prioridade",
-        timestamp: client.labor_started_at,
-        priority: laborRead ? "low" : "high",
-        isRead: laborRead
-      });
-    }
-
-    // Child: Contractions - check if intervals are less than 2 minutes
-    const clientContractions = contractionsByClient.get(client.id);
-    if (clientContractions) {
-      const count = clientContractions.entries.length;
-      const latestEntry = clientContractions.entries[0];
-      const durationText = latestEntry.duration_seconds 
-        ? `${latestEntry.duration_seconds}s` 
-        : "Em andamento";
-
-      // Calculate if last intervals are less than 2 minutes (urgent)
-      let isUrgentContractions = false;
-      if (count >= 2) {
-        const sortedEntries = [...clientContractions.entries].sort(
-          (a, b) => new Date(b.started_at).getTime() - new Date(a.started_at).getTime()
-        );
-        // Check last 2 intervals
-        const intervals: number[] = [];
-        for (let i = 0; i < Math.min(sortedEntries.length - 1, 2); i++) {
-          const interval = (new Date(sortedEntries[i].started_at).getTime() - 
-                           new Date(sortedEntries[i + 1].started_at).getTime()) / 1000 / 60;
-          intervals.push(interval);
-        }
-        // If all recent intervals are less than 2 minutes, it's urgent
-        isUrgentContractions = intervals.length > 0 && intervals.every(interval => interval < 2);
-      }
-
-      children.push({
-        id: `contraction-${client.id}`,
-        type: "new_contraction",
-        title: isUrgentContractions ? "⚠️ Contrações Urgentes" : "Última Contração",
-        description: `Duração: ${durationText}` + (count > 1 ? ` • ${count} total nas 24h` : ""),
-        timestamp: latestEntry.started_at,
-        extraInfo: durationText,
-        priority: isUrgentContractions ? "high" : "medium",
-        clientId: client.id,
-        isRead: clientContractions.allRead || readContractionClients.has(client.id)
-      });
-
-      // Remove from map so we don't duplicate
-      contractionsByClient.delete(client.id);
-    }
-
-    // Child: Diary entries (add as child when client has birth alert)
-    const clientDiary = diaryByClient.get(client.id);
-    if (clientDiary) {
-      const count = clientDiary.entries.length;
-      const unreadCount = clientDiary.entries.filter(e => !e.read_by_admin).length;
-      const latestEntry = clientDiary.entries[0];
-
-      children.push({
-        id: `diary-child-${client.id}`,
-        type: "new_diary_entry",
-        title: count > 1 ? `${count} Registros no Diário` : "Registro no Diário",
-        description: unreadCount > 0 ? `${unreadCount} não lido(s)` : "Já visualizado",
-        timestamp: latestEntry.created_at,
-        priority: "low",
-        clientId: client.id,
-        isRead: clientDiary.allRead
-      });
-
-      // Remove from map so we don't duplicate as parent
-      diaryByClient.delete(client.id);
-    }
-
-    // Sort children by timestamp descending (most recent first)
-    children.sort((a, b) => {
-      if (!a.timestamp || !b.timestamp) return 0;
-      return new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime();
-    });
-
-    // Determine parent type
-    const parentType = client.is_post_term ? "post_term" : "birth_approaching";
-    const hasHighPriorityChild = children.some(c => c.priority === "high");
-    const isInLabor = !!client.labor_started_at;
-    const isLaborRead = readLaborClients.has(client.id);
-    
-    parentNotifications.push({
-      id: `birth-${client.id}`,
-      type: parentType,
-      title: isInLabor ? "Em Trabalho de Parto" : (client.is_post_term ? "Gestação Pós-Data" : "Parto se Aproximando"),
-      description: client.full_name,
-      client,
-      priority: hasHighPriorityChild || client.is_post_term || (client.current_weeks && client.current_weeks >= 39) ? "high" : "medium",
-      icon: isInLabor ? Baby : (client.is_post_term ? AlertTriangle : Baby),
-      children,
-      isInLabor,
-      isRead: isInLabor ? isLaborRead : undefined
-    });
-  });
-
-  // Parent: New diary entries (standalone - only for clients WITHOUT birth alert)
-  diaryByClient.forEach(({ entries, clientName, allRead }, clientId) => {
-    const latestEntry = entries[0];
-    const count = entries.length;
-    const unreadCount = entries.filter(e => !e.read_by_admin).length;
-    const lookupClient = clientsMap.get(clientId) || null;
-    
-    parentNotifications.push({
-      id: `diary-${clientId}`,
-      type: "new_diary_entry",
-      title: count > 1 ? `${count} Registros no Diário` : "Registro no Diário",
-      description: clientName,
-      priority: "low",
-      icon: BookHeart,
-      timestamp: latestEntry.created_at,
-      children: [],
-      clientId,
-      client: lookupClient as EnrichedClient | undefined,
-      isRead: allRead
-    });
-  });
-
-  // Parent: Service requests from clients - store full request for budget dialog
-  const serviceRequestsMap = new Map<string, ServiceRequest>();
-  serviceRequests?.forEach(request => {
-    serviceRequestsMap.set(request.id, request);
-    const serviceName = request.service_type;
-    const clientName = request.client_name || "Cliente";
-    
-    parentNotifications.push({
-      id: `service-${request.id}`,
-      type: "service_request",
-      title: `Solicitação de Serviço`,
-      description: abbreviateName(clientName),
-      priority: "medium",
-      icon: Sparkles,
-      timestamp: request.created_at,
-      children: [{
-        id: `service-child-${request.id}`,
-        type: "service_request",
-        title: serviceName,
-        description: "Informe o valor do serviço",
-        timestamp: request.created_at,
-        priority: "medium",
-        notificationId: request.id
-      }],
-      notificationId: request.id
-    });
-  });
-
-  // Parent: Appointment requests from clients
-  appointmentRequests?.forEach(request => {
-    const clientName = request.client_name || "Cliente";
-    const dateStr = formatBrazilDate(request.requested_date, "dd/MM");
-    const timeStr = request.requested_time?.slice(0, 5) || "";
-    
-    parentNotifications.push({
-      id: `appointment-req-${request.id}`,
-      type: "appointment_request",
-      title: `Solicitação de Consulta`,
-      description: abbreviateName(clientName),
-      priority: "medium",
-      icon: CalendarCheck,
-      timestamp: request.created_at,
-      children: [{
-        id: `appointment-req-child-${request.id}`,
-        type: "appointment_request",
-        title: `${dateStr} às ${timeStr}`,
-        description: request.reason || "Sem motivo informado",
-        timestamp: request.created_at,
-        priority: "medium",
-        notificationId: request.id
-      }],
-      notificationId: request.id
-    });
-  });
-
-  // Handle orphan contractions (clients not in 37+ weeks alert)
-  contractionsByClient.forEach(({ entries, clientName, allRead }, clientId) => {
-    const count = entries.length;
-    const latestEntry = entries[0];
-    const isActiveLabor = count >= 3;
-    const durationText = latestEntry.duration_seconds 
-      ? `${latestEntry.duration_seconds}s` 
-      : "Em andamento";
-    const isRead = allRead || readContractionClients.has(clientId);
-
-    // Create as parent since client isn't in birth alert
-    parentNotifications.push({
-      id: `contraction-orphan-${clientId}`,
-      type: "birth_approaching",
-      title: "Atividade de Contração",
-      description: clientName,
-      priority: isActiveLabor ? "high" : "medium",
-      icon: Timer,
-      timestamp: latestEntry.started_at,
-      isRead,
-      children: [{
-        id: `contraction-${clientId}`,
-        type: "new_contraction",
-        title: isActiveLabor ? "⚠️ Contrações Urgentes" : "Última Contração",
-        description: `Duração: ${durationText}` + (count > 1 ? ` • ${count} total nas 24h` : ""),
-        timestamp: latestEntry.started_at,
-        extraInfo: durationText,
-        priority: isActiveLabor ? "high" : "medium",
-        clientId,
-        isRead
-      }]
-    });
-  });
-
-  // In dashboard mode (non-fullPage), filter out read notifications
-  if (!fullPage) {
-    // Remove read diary and contraction children from birth alert parents
-    parentNotifications.forEach(n => {
-      n.children = n.children.filter(c => {
-        if (c.type === "new_diary_entry" && c.isRead) return false;
-        if (c.type === "new_contraction" && c.isRead) return false;
-        // Labor started notifications stay visible even when read (just lose animation)
-        return true;
-      });
-    });
-
-    // Remove standalone read parent notifications (diary and orphan contractions)
-    const filtered = parentNotifications.filter(n => {
-      if (n.type === "new_diary_entry" && n.isRead) return false;
-      if (n.isRead && n.children.length === 0) return false;
-      return true;
-    });
-    parentNotifications.length = 0;
-    parentNotifications.push(...filtered);
-  }
-
-  // Sort by priority (high priority children count too)
-  parentNotifications.sort((a, b) => {
-    const priorityOrder = { high: 0, medium: 1, low: 2 };
-    const aHasHighChild = a.children.some(c => c.priority === "high");
-    const bHasHighChild = b.children.some(c => c.priority === "high");
-    
-    // High priority parents or parents with high priority children first
-    const aEffectivePriority = a.priority === "high" || aHasHighChild ? "high" : a.priority;
-    const bEffectivePriority = b.priority === "high" || bHasHighChild ? "high" : b.priority;
-    
-    const priorityDiff = priorityOrder[aEffectivePriority] - priorityOrder[bEffectivePriority];
-    if (priorityDiff !== 0) return priorityDiff;
-    
-    // Then by timestamp
-    const aTime = a.timestamp ? new Date(a.timestamp).getTime() : 0;
-    const bTime = b.timestamp ? new Date(b.timestamp).getTime() : 0;
-    return bTime - aTime;
-  });
-
-  const isLoading = loadingBirth || loadingDiary || loadingContractions || loadingServiceRequests || loadingAppointmentRequests;
-  const hasNotifications = parentNotifications.length > 0;
-  const highPriorityCount = parentNotifications.filter(n => {
-    // Don't count labor notifications that have been read/acknowledged
-    if (n.isInLabor && n.isRead) return false;
-    return (n.priority === "high" || n.children.some(c => c.priority === "high" && !c.isRead));
-  }).length;
-  
-  // Unread count: unread diary entries + pending service requests + pending appointment requests
-  const unreadDiaryCount = recentDiaryEntries?.filter(e => !e.read_by_admin).length || 0;
-  const pendingServiceCount = serviceRequests?.length || 0;
-  const pendingAppointmentCount = appointmentRequests?.length || 0;
-  const unreadCount = unreadDiaryCount + pendingServiceCount + pendingAppointmentCount + highPriorityCount;
-
-  // Auto-expand notifications with high priority children
-  useEffect(() => {
-    const toExpand = new Set<string>();
-    parentNotifications.forEach(n => {
-      if (n.children.some(c => c.priority === "high")) {
-        toExpand.add(n.id);
-      }
-    });
-    if (toExpand.size > 0) {
-      setExpandedNotifications(prev => new Set([...prev, ...toExpand]));
-    }
-  }, [parentNotifications.length]);
+  // Style configs
+  const styleMap = {
+    labor: { bg: "bg-destructive/10 ring-1 ring-destructive/30", icon: Activity, iconColor: "text-destructive", titleColor: "text-destructive" },
+    post_term: { bg: "bg-destructive/8 ring-1 ring-destructive/20", icon: AlertTriangle, iconColor: "text-destructive", titleColor: "text-destructive" },
+    birth_approaching: { bg: "bg-warning/8", icon: Baby, iconColor: "text-warning", titleColor: "text-warning" },
+    contraction: { bg: "bg-orange-500/8", icon: Timer, iconColor: "text-orange-500", titleColor: "text-orange-600" },
+    diary: { bg: "bg-emerald-500/8", icon: BookHeart, iconColor: "text-emerald-600", titleColor: "text-emerald-700" },
+    service_request: { bg: "bg-purple-500/8", icon: Sparkles, iconColor: "text-purple-600", titleColor: "text-purple-700" },
+    appointment_request: { bg: "bg-blue-500/8", icon: CalendarCheck, iconColor: "text-blue-600", titleColor: "text-blue-700" },
+  };
 
   if (isLoading) {
     return (
@@ -809,9 +341,7 @@ export function NotificationsCenter({ fullPage = false }: NotificationsCenterPro
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
-            {[...Array(3)].map((_, i) => (
-              <Skeleton key={i} className="h-16 w-full rounded-lg" />
-            ))}
+            {[...Array(3)].map((_, i) => <Skeleton key={i} className="h-20 w-full rounded-xl" />)}
           </div>
         </CardContent>
       </Card>
@@ -826,499 +356,155 @@ export function NotificationsCenter({ fullPage = false }: NotificationsCenterPro
             <div className="flex items-center gap-2">
               <div className="relative">
                 <Bell className="h-4 w-4 text-muted-foreground" />
-                {unreadCount > 0 && (
-                  <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-destructive animate-pulse" />
-                )}
+                {unreadCount > 0 && <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-destructive animate-pulse" />}
               </div>
               <CardTitle className="text-base font-semibold">Notificações</CardTitle>
             </div>
-            {unreadCount > 0 ? (
-              <Badge variant="destructive" className="text-xs">
-                {unreadCount}
-              </Badge>
-            ) : hasNotifications ? (
-              <Badge variant="secondary" className="text-xs">
-                {parentNotifications.length}
-              </Badge>
-            ) : null}
+            {unreadCount > 0 && (
+              <Badge variant="destructive" className="text-xs">{unreadCount}</Badge>
+            )}
           </div>
         </CardHeader>
         <CardContent className="p-0 overflow-x-hidden">
-          {!hasNotifications ? (
-            <div className="flex flex-col items-center justify-center h-full text-center px-6 py-8">
-              <div className="w-12 h-12 rounded-full bg-muted/50 flex items-center justify-center mb-3">
-                <Bell className="h-5 w-5 text-muted-foreground" />
+          {notifications.length === 0 ? (
+            <div className="flex flex-col items-center justify-center text-center px-6 py-10">
+              <div className="w-14 h-14 rounded-2xl bg-muted/50 flex items-center justify-center mb-3">
+                <Bell className="h-6 w-6 text-muted-foreground/60" />
               </div>
-              <p className="text-sm text-muted-foreground">Nenhuma notificação</p>
-              <p className="text-xs text-muted-foreground/70 mt-1">Tudo em dia!</p>
+              <p className="text-sm font-medium text-muted-foreground">Nenhuma notificação</p>
+              <p className="text-xs text-muted-foreground/60 mt-1">Tudo em dia! 🎉</p>
             </div>
           ) : (
             <div className={cn(
-              "overflow-y-auto overflow-x-hidden px-1.5 lg:px-4 pb-2 lg:pb-4",
-              fullPage ? "max-h-[calc(100vh-14rem)]" : "max-h-[300px] lg:max-h-[400px]"
+              "overflow-y-auto overflow-x-hidden px-2 lg:px-4 pb-3 lg:pb-4",
+              fullPage ? "max-h-[calc(100vh-14rem)]" : "max-h-[400px] lg:max-h-[500px]"
             )}>
-              <div className="space-y-1.5 lg:space-y-2 pt-1">
-                {parentNotifications.map((notification) => {
-                  const hasChildren = notification.children.length > 0;
-                  const isExpanded = expandedNotifications.has(notification.id);
-                  // Only post-term gets high priority styling
-                  const isPostTerm = notification.type === "post_term";
+              <div className="space-y-2 pt-1">
+                {notifications.map((n) => {
+                  const style = styleMap[n.type];
+                  const Icon = style.icon;
+                  const isLabor = n.type === "labor";
 
                   return (
-                    <Collapsible
-                      key={notification.id}
-                      open={isExpanded}
-                      onOpenChange={() => hasChildren && toggleExpanded(notification.id)}
+                    <div
+                      key={n.id}
+                      className={cn(
+                        "rounded-xl p-3 lg:p-4 transition-all",
+                        style.bg,
+                        n.isRead && "opacity-50",
+                        isLabor && "animate-pulse"
+                      )}
                     >
-                      <div
-                        className={`rounded-lg transition-colors overflow-hidden ${
-                          notification.isRead && !notification.isInLabor
-                            ? "bg-muted/30 opacity-60"
-                            : notification.isInLabor
-                            ? "bg-destructive/10 ring-1 ring-destructive/20"
-                            : isPostTerm
-                            ? "bg-destructive/5"
-                            : notification.type === "new_diary_entry"
-                            ? "bg-primary/5"
-                            : notification.type === "service_request"
-                            ? "bg-purple-500/5"
-                            : notification.type === "appointment_request"
-                            ? "bg-primary/5"
-                            : "bg-warning/5"
-                        }`}
-                      >
-                        {/* Parent notification */}
-                        <CollapsibleTrigger asChild disabled={!hasChildren && notification.type !== "new_diary_entry"}>
-                          <div 
-                            className={`p-2 lg:p-3 ${hasChildren ? "cursor-pointer hover:bg-black/5" : notification.type === "new_diary_entry" ? "cursor-pointer hover:bg-primary/10" : ""}`}
-                            onClick={() => {
-                              // Standalone diary notification without children - open diary dialog directly
-                              if (!hasChildren && notification.type === "new_diary_entry") {
-                                const clientId = notification.clientId;
-                                const lookupClient = clientId ? clientsMap.get(clientId) : notification.client;
-                                if (lookupClient) {
-                                  setDiaryClient(lookupClient);
-                                  setDiaryDialogOpen(true);
-                                }
-                              }
-                            }}
-                          >
-                            <div className="flex items-start gap-1.5 lg:gap-2 overflow-hidden">
-                              <div className={`w-7 h-7 lg:w-8 lg:h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
-                                isPostTerm
-                                  ? "bg-destructive/15"
-                                  : notification.type === "new_diary_entry" || notification.type === "appointment_request"
-                                  ? "bg-primary/15"
-                                  : notification.type === "service_request"
-                                  ? "bg-purple-500/15"
-                                  : "bg-warning/15"
-                              }`}>
-                                <notification.icon className={`h-3.5 w-3.5 lg:h-4 lg:w-4 ${
-                                  isPostTerm
-                                    ? "text-destructive"
-                                    : notification.type === "new_diary_entry" || notification.type === "appointment_request"
-                                    ? "text-primary"
-                                    : notification.type === "service_request"
-                                    ? "text-purple-600"
-                                    : "text-warning"
-                                }`} />
-                              </div>
-                              <div className="flex-1 min-w-0 overflow-hidden">
-                                <div className="flex items-center gap-1 mb-0.5 overflow-hidden">
-                                  <span className={`text-[11px] lg:text-xs font-medium truncate ${
-                                    isPostTerm
-                                      ? "text-destructive"
-                                      : notification.type === "new_diary_entry" || notification.type === "appointment_request"
-                                      ? "text-primary"
-                                      : notification.type === "service_request"
-                                      ? "text-purple-600"
-                                      : "text-warning"
-                                  }`}>
-                                    {notification.title}
-                                  </span>
-                                  {notification.client && (
-                                    <Badge 
-                                      variant="outline" 
-                                      className={`text-[9px] lg:text-[10px] px-1 lg:px-1.5 h-4 border-0 ${
-                                        notification.client.is_post_term
-                                          ? "bg-destructive/20 text-destructive"
-                                          : "bg-warning/20 text-warning"
-                                      }`}
-                                    >
-                                      {notification.client.current_weeks}s{notification.client.current_days > 0 ? `${notification.client.current_days}d` : ""}
-                                    </Badge>
-                                  )}
-                                  {hasChildren && (
-                                    <Badge variant="secondary" className="text-[9px] lg:text-[10px] px-1 lg:px-1.5 h-4">
-                                      {notification.children.length}
-                                    </Badge>
-                                  )}
-                                  {hasChildren && (
-                                    isExpanded ? (
-                                      <ChevronDown className="h-3.5 w-3.5 text-muted-foreground ml-auto flex-shrink-0" />
-                                    ) : (
-                                      <ChevronRight className="h-3.5 w-3.5 text-muted-foreground ml-auto flex-shrink-0" />
-                                    )
-                                  )}
-                                </div>
-                                <p className="text-xs lg:text-sm font-medium text-foreground truncate">
-                                  {notification.description}
-                                </p>
-                                {/* Labor badge - pulsing */}
-                                {notification.isInLabor && (
-                                  <Badge className={`bg-destructive text-destructive-foreground text-[9px] lg:text-[10px] px-1.5 h-4 lg:h-5 mt-1 ${
-                                    notification.isRead ? "" : "animate-pulse"
-                                  }`}>
-                                    {notification.isRead ? "⚠️ EM TRABALHO DE PARTO" : "🚨 EM TRABALHO DE PARTO"}
-                                  </Badge>
-                                )}
-                                {notification.client?.dpp && notification.type !== "new_diary_entry" && notification.type !== "service_request" && (
-                                  <p className="text-[10px] lg:text-xs text-muted-foreground mt-0.5 flex items-center gap-1">
-                                    <Calendar className="h-2.5 w-2.5 lg:h-3 lg:w-3 flex-shrink-0" />
-                                    DPP: {formatBrazilDate(notification.client.dpp)}
-                                  </p>
-                                )}
-                                {notification.type === "new_diary_entry" && notification.timestamp && (
-                                  <p className="text-[10px] lg:text-xs text-primary mt-0.5 flex items-center gap-1">
-                                    <Clock className="h-2.5 w-2.5 lg:h-3 lg:w-3 flex-shrink-0" />
-                                    {formatBrazilDateTime(notification.timestamp, "dd/MM 'às' HH:mm")}
-                                  </p>
-                                )}
-                                {notification.type === "service_request" && notification.timestamp && (
-                                  <p className="text-[10px] lg:text-xs text-purple-600 mt-0.5 flex items-center gap-1">
-                                    <Clock className="h-2.5 w-2.5 lg:h-3 lg:w-3 flex-shrink-0" />
-                                    {formatBrazilDateTime(notification.timestamp, "dd/MM 'às' HH:mm")}
-                                  </p>
-                                )}
-                                {notification.type === "appointment_request" && notification.timestamp && (
-                                  <p className="text-[10px] lg:text-xs text-primary mt-0.5 flex items-center gap-1">
-                                    <Clock className="h-2.5 w-2.5 lg:h-3 lg:w-3 flex-shrink-0" />
-                                    {formatBrazilDateTime(notification.timestamp, "dd/MM 'às' HH:mm")}
-                                  </p>
-                                )}
-                                {/* Send budget button for service requests - mobile */}
-                                {notification.type === "service_request" && notification.notificationId && (
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    className="h-6 px-2 text-[10px] lg:text-xs border-dashed border-purple-300 hover:bg-purple-500/10 mt-1.5 w-full lg:hidden"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      const request = serviceRequestsMap.get(notification.notificationId!);
-                                      if (request) handleOpenBudgetDialog(request);
-                                    }}
-                                  >
-                                    <Send className="h-3 w-3 mr-1 flex-shrink-0" />
-                                    Enviar Orçamento
-                                  </Button>
-                                )}
-                                {/* Ver Agenda button for appointment requests - mobile */}
-                                {notification.type === "appointment_request" && (
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    className="h-6 px-2 text-[10px] lg:text-xs border-dashed hover:bg-primary/10 mt-1.5 w-full lg:hidden"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      window.location.href = "/agenda";
-                                    }}
-                                  >
-                                    <CalendarCheck className="h-3 w-3 mr-1 flex-shrink-0 text-primary" />
-                                    <span className="text-primary">Ver Agenda</span>
-                                  </Button>
-                                )}
-                                {/* Button on mobile - below content - for birth-type notifications */}
-                                {notification.client && !notification.client.birth_occurred && 
-                                 (notification.type === "birth_approaching" || notification.type === "post_term") && (
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    className="h-6 px-2 text-[10px] lg:text-xs border-dashed hover:bg-destructive/10 mt-1.5 w-full lg:hidden"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleRegisterBirth(notification.client as Client);
-                                    }}
-                                  >
-                                    <Baby className="h-3 w-3 mr-1 flex-shrink-0 text-destructive" />
-                                    <span className="text-destructive">Registrar nascimento</span>
-                                  </Button>
-                                )}
-                              </div>
-                              {/* Button on desktop - right side - for birth-type notifications */}
-                              {notification.client && !notification.client.birth_occurred && 
-                               (notification.type === "birth_approaching" || notification.type === "post_term") && (
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  className="h-7 px-2 text-xs border-dashed hover:bg-destructive/10 hidden lg:flex flex-shrink-0"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleRegisterBirth(notification.client as Client);
-                                  }}
-                                >
-                                  <Baby className="h-3 w-3 mr-1 text-destructive" />
-                                  <span className="text-destructive">Registrar nascimento</span>
-                                </Button>
-                              )}
-                              {/* Send budget button for service requests - desktop */}
-                              {notification.type === "service_request" && notification.notificationId && (
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  className="h-7 px-2 text-xs border-dashed border-purple-300 hover:bg-purple-500/10 hidden lg:flex flex-shrink-0"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    const request = serviceRequestsMap.get(notification.notificationId!);
-                                    if (request) handleOpenBudgetDialog(request);
-                                  }}
-                                >
-                                  <Send className="h-3 w-3 mr-1" />
-                                  Enviar Orçamento
-                                </Button>
-                              )}
-                              {/* Ver Agenda button for appointment requests - desktop */}
-                              {notification.type === "appointment_request" && (
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  className="h-7 px-2 text-xs border-dashed hover:bg-primary/10 hidden lg:flex flex-shrink-0"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    window.location.href = "/agenda";
-                                  }}
-                                >
-                                  <CalendarCheck className="h-3 w-3 mr-1 text-primary" />
-                                  <span className="text-primary">Ver Agenda</span>
-                                </Button>
-                              )}
-                            </div>
+                      <div className="flex items-start gap-3">
+                        {/* Icon */}
+                        <div className={cn(
+                          "w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0",
+                          isLabor ? "bg-destructive/20" : "bg-background/80"
+                        )}>
+                          <Icon className={cn("h-4 w-4", style.iconColor)} />
+                        </div>
+
+                        {/* Content */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className={cn("text-xs font-semibold", style.titleColor)}>{n.title}</span>
+                            {n.weeksBadge && (
+                              <Badge variant="outline" className={cn(
+                                "text-[10px] px-1.5 h-4 border-0",
+                                n.type === "labor" || n.type === "post_term" ? "bg-destructive/20 text-destructive" : "bg-warning/20 text-warning"
+                              )}>
+                                {n.weeksBadge}
+                              </Badge>
+                            )}
                           </div>
-                        </CollapsibleTrigger>
+                          <p className="text-sm font-medium text-foreground mt-0.5 truncate">{n.subtitle}</p>
+                          {n.detail && (
+                            <p className="text-xs text-muted-foreground mt-0.5">{n.detail}</p>
+                          )}
+                          <p className="text-[10px] text-muted-foreground/70 mt-1 flex items-center gap-1">
+                            <Clock className="h-2.5 w-2.5" />
+                            {formatBrazilDateTime(n.timestamp, "dd/MM 'às' HH:mm")}
+                          </p>
 
-                        {/* Child notifications */}
-                        <CollapsibleContent>
-                          <div className="border-t mx-1 lg:mx-3 mb-1.5 lg:mb-3 pt-1.5 lg:pt-2 space-y-1 lg:space-y-2 overflow-x-hidden">
-                            {notification.children.map((child) => {
-                              const contractionClientId = child.clientId || notification.clientId;
-                              const contractionClient = contractionClientId ? clientsMap.get(contractionClientId) : notification.client;
-                              const isLaborStarted = contractionClient?.labor_started_at;
-                              
-                              const isActiveLaborPattern = child.type === "new_contraction" && child.priority === "high" && !isLaborStarted;
-                              const isContractionRead = child.isRead || (contractionClientId ? readContractionClients.has(contractionClientId) : false);
+                          {/* Actions */}
+                          <div className="flex flex-wrap gap-1.5 mt-2">
+                            {/* Birth alerts: Register birth */}
+                            {(n.type === "labor" || n.type === "post_term" || n.type === "birth_approaching") && n.client && (
+                              <Button size="sm" variant="outline"
+                                className="h-7 px-2.5 text-[11px] border-dashed hover:bg-destructive/10"
+                                onClick={() => handleRegisterBirth(n.client!)}>
+                                <Baby className="h-3 w-3 mr-1 text-destructive" />
+                                <span className="text-destructive">Registrar Nascimento</span>
+                              </Button>
+                            )}
 
-                              // In dashboard mode, hide read notifications
-                              if (!fullPage && child.type === "new_contraction" && isContractionRead) return null;
-                              if (!fullPage && child.type === "labor_started" && child.isRead) return null;
+                            {/* Contractions */}
+                            {n.type === "contraction" && n.clientId && (
+                              <>
+                                <Button size="sm" variant="outline"
+                                  className="h-7 px-2.5 text-[11px] border-dashed border-orange-300 hover:bg-orange-500/10"
+                                  onClick={() => {
+                                    const c = clientsMap.get(n.clientId!);
+                                    if (c) { handleMarkContractionRead(n.clientId!); setContractionsClient(c); setContractionsDialogOpen(true); }
+                                  }}>
+                                  <History className="h-3 w-3 mr-1 text-orange-500" />
+                                  <span className="text-orange-600">Ver Histórico</span>
+                                </Button>
+                                {!clientsMap.get(n.clientId!)?.labor_started_at && (
+                                  <Button size="sm" variant="outline"
+                                    className="h-7 px-2.5 text-[11px] border-dashed hover:bg-destructive/10"
+                                    onClick={() => handleStartLabor(n.clientId!)}>
+                                    <Activity className="h-3 w-3 mr-1 text-destructive" />
+                                    <span className="text-destructive">Registrar Parto</span>
+                                  </Button>
+                                )}
+                                {!n.isRead && (
+                                  <Button size="sm" variant="outline"
+                                    className="h-7 px-2.5 text-[11px] border-dashed border-muted-foreground/40 hover:bg-muted/30"
+                                    onClick={() => handleMarkContractionRead(n.clientId!)}>
+                                    <Pause className="h-3 w-3 mr-1 text-muted-foreground" />
+                                    <span className="text-muted-foreground">Aguardar</span>
+                                  </Button>
+                                )}
+                              </>
+                            )}
 
-                              return (
-                              <div
-                                key={child.id}
+                            {/* Diary */}
+                            {n.type === "diary" && n.clientId && (
+                              <Button size="sm" variant="outline"
+                                className="h-7 px-2.5 text-[11px] border-dashed border-emerald-300 hover:bg-emerald-500/10"
                                 onClick={() => {
-                                  if (child.type === "new_diary_entry" && notification.client) {
-                                    setDiaryClient(notification.client);
-                                    setDiaryDialogOpen(true);
-                                  } else if (child.type === "new_contraction") {
-                                    // Mark as read and open contractions dialog
-                                    if (contractionClientId) {
-                                      handleMarkContractionRead(contractionClientId);
-                                    }
-                                    if (notification.client) {
-                                      setContractionsClient(notification.client);
-                                      setContractionsDialogOpen(true);
-                                    }
-                                  }
-                                }}
-                                className={`p-1 lg:p-1.5 rounded-md border-l-2 ${
-                                  (child.isRead || isContractionRead)
-                                    ? "bg-muted/20 border-l-muted-foreground/30 opacity-50"
-                                    : child.type === "labor_started"
-                                    ? "bg-destructive/10 border-l-destructive"
-                                    : child.type === "new_contraction" && child.priority === "high"
-                                    ? "bg-destructive/10 border-l-destructive"
-                                    : child.type === "new_contraction"
-                                    ? "bg-orange-500/10 border-l-orange-500"
-                                    : child.type === "service_request"
-                                    ? "bg-purple-500/10 border-l-purple-500"
-                                    : child.type === "appointment_request"
-                                    ? "bg-primary/10 border-l-primary"
-                                    : "bg-emerald-500/10 border-l-emerald-500"
-                                } ${child.type === "new_diary_entry" ? "cursor-pointer hover:bg-emerald-500/20 transition-colors" : ""} ${child.type === "new_contraction" ? "cursor-pointer hover:bg-orange-500/20 transition-colors" : ""}`}
-                              >
-                                <div className="flex items-start gap-1.5">
-                                  <div className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 ${
-                                    child.type === "labor_started"
-                                      ? "bg-destructive/20"
-                                      : child.type === "new_contraction" && child.priority === "high"
-                                      ? "bg-destructive/20"
-                                      : child.type === "new_contraction"
-                                      ? "bg-orange-500/20"
-                                      : child.type === "service_request"
-                                      ? "bg-purple-500/20"
-                                      : child.type === "appointment_request"
-                                      ? "bg-primary/20"
-                                      : "bg-emerald-500/20"
-                                  }`}>
-                                    {child.type === "labor_started" ? (
-                                      <Activity className="h-2.5 w-2.5 text-destructive" />
-                                    ) : child.type === "new_diary_entry" ? (
-                                      <BookHeart className="h-2.5 w-2.5 text-emerald-600" />
-                                    ) : child.type === "service_request" ? (
-                                      <Sparkles className="h-2.5 w-2.5 text-purple-600" />
-                                    ) : child.type === "appointment_request" ? (
-                                      <CalendarCheck className="h-2.5 w-2.5 text-primary" />
-                                    ) : (
-                                      <Timer className={`h-2.5 w-2.5 ${
-                                        child.priority === "high" ? "text-destructive" : "text-orange-500"
-                                      }`} />
-                                    )}
-                                  </div>
-                                  <div className="flex-1 min-w-0">
-                                    <span className={`text-[10px] font-medium block truncate ${
-                                      child.type === "labor_started"
-                                        ? "text-destructive" 
-                                        : child.type === "new_contraction" && child.priority === "high"
-                                        ? "text-destructive"
-                                        : child.type === "new_contraction"
-                                        ? "text-orange-600"
-                                        : child.type === "service_request"
-                                        ? "text-purple-700"
-                                        : child.type === "appointment_request"
-                                        ? "text-primary"
-                                        : "text-emerald-700"
-                                    }`}>
-                                      {child.title}
-                                    </span>
-                                    <p className="text-[10px] text-muted-foreground truncate">
-                                      {child.description}
-                                    </p>
-                                    {child.timestamp && (
-                                      <div className={`text-[10px] mt-0.5 flex items-center gap-1 ${
-                                        child.type === "labor_started"
-                                          ? "text-destructive" 
-                                          : child.type === "new_contraction" && child.priority === "high"
-                                          ? "text-destructive"
-                                          : child.type === "new_contraction"
-                                          ? "text-orange-500"
-                                          : child.type === "service_request"
-                                          ? "text-purple-600"
-                                          : child.type === "appointment_request"
-                                          ? "text-primary"
-                                          : "text-emerald-600"
-                                      }`}>
-                                        <Clock className="h-2.5 w-2.5 flex-shrink-0" />
-                                        <span className="truncate">{formatBrazilDateTime(child.timestamp, "dd/MM HH:mm")}</span>
-                                        {child.extraInfo && (
-                                          <Badge 
-                                            variant="outline" 
-                                            className={`text-[9px] h-3.5 px-1 flex-shrink-0 ${
-                                              child.priority === "high" 
-                                                ? "border-destructive/50 text-destructive bg-destructive/10"
-                                                : child.type === "new_contraction"
-                                                ? "border-orange-300 text-orange-600 bg-orange-50"
-                                                : "border-emerald-300 text-emerald-600 bg-emerald-50"
-                                            }`}
-                                          >
-                                            {child.extraInfo}
-                                          </Badge>
-                                        )}
-                                      </div>
-                                    )}
-                                  </div>
-                                </div>
-                                {/* Contraction action buttons */}
-                                {child.type === "new_contraction" && contractionClientId && (
-                                  <div className="flex flex-wrap gap-1 mt-1.5">
-                                    {/* History button - always show */}
-                                    <Button
-                                      size="sm"
-                                      variant="outline"
-                                      className="h-5 px-2 text-[9px] lg:text-[10px] border-dashed border-orange-300 hover:bg-orange-500/10"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        if (contractionClientId) {
-                                          handleMarkContractionRead(contractionClientId);
-                                        }
-                                        const client = contractionClient || notification.client;
-                                        if (client) {
-                                          setContractionsClient(client as Client);
-                                          setContractionsDialogOpen(true);
-                                        }
-                                      }}
-                                    >
-                                      <History className="h-2.5 w-2.5 mr-1 text-orange-500" />
-                                      <span className="text-orange-600">Ver Histórico</span>
-                                    </Button>
-                                    {/* Start labor - only when not already started and urgent pattern */}
-                                    {!isLaborStarted && (
-                                      <Button
-                                        size="sm"
-                                        variant="outline"
-                                        className="h-5 px-2 text-[9px] lg:text-[10px] border-dashed hover:bg-destructive/10"
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          handleStartLabor(contractionClientId);
-                                        }}
-                                      >
-                                        <Activity className="h-2.5 w-2.5 mr-1 text-destructive" />
-                                        <span className="text-destructive">Registrar Parto</span>
-                                      </Button>
-                                    )}
-                                    {/* Register birth - only when labor already started */}
-                                    {isLaborStarted && contractionClient && (
-                                      <Button
-                                        size="sm"
-                                        variant="outline"
-                                        className="h-5 px-2 text-[9px] lg:text-[10px] border-dashed hover:bg-destructive/10"
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          handleRegisterBirth(contractionClient as Client);
-                                        }}
-                                      >
-                                        <Baby className="h-2.5 w-2.5 mr-1 text-destructive" />
-                                        <span className="text-destructive">Registrar Nascimento</span>
-                                      </Button>
-                                    )}
-                                    {/* Wait button */}
-                                    {!isContractionRead && (
-                                      <Button
-                                        size="sm"
-                                        variant="outline"
-                                        className="h-5 px-2 text-[9px] lg:text-[10px] border-dashed border-muted-foreground/50 hover:bg-muted/30"
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          if (contractionClientId) {
-                                            handleMarkContractionRead(contractionClientId);
-                                          }
-                                        }}
-                                      >
-                                        <Pause className="h-2.5 w-2.5 mr-1 text-muted-foreground" />
-                                        <span className="text-muted-foreground">Aguardar</span>
-                                      </Button>
-                                    )}
-                                  </div>
-                                )}
-                                {/* Appointment request action - go to agenda */}
-                                {child.type === "appointment_request" && (
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    className="h-5 px-2 text-[9px] lg:text-[10px] border-dashed hover:bg-primary/10 mt-1"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      window.location.href = "/agenda";
-                                    }}
-                                  >
-                                    <CalendarCheck className="h-2.5 w-2.5 mr-1 text-primary" />
-                                    <span className="text-primary">Ver Agenda</span>
-                                  </Button>
-                                )}
-                              </div>
-                              );
-                            })}
+                                  const c = clientsMap.get(n.clientId!);
+                                  if (c) { setDiaryClient(c); setDiaryDialogOpen(true); }
+                                }}>
+                                <BookHeart className="h-3 w-3 mr-1 text-emerald-500" />
+                                <span className="text-emerald-600">Ver Diário</span>
+                              </Button>
+                            )}
+
+                            {/* Service requests */}
+                            {n.type === "service_request" && n.requestId && (
+                              <Button size="sm" variant="outline"
+                                className="h-7 px-2.5 text-[11px] border-dashed border-purple-300 hover:bg-purple-500/10"
+                                onClick={() => handleOpenBudgetDialog(n.requestId!)}>
+                                <Send className="h-3 w-3 mr-1 text-purple-500" />
+                                <span className="text-purple-600">Enviar Orçamento</span>
+                              </Button>
+                            )}
+
+                            {/* Appointment requests */}
+                            {n.type === "appointment_request" && (
+                              <Button size="sm" variant="outline"
+                                className="h-7 px-2.5 text-[11px] border-dashed hover:bg-blue-500/10"
+                                onClick={() => { window.location.href = "/agenda"; }}>
+                                <CalendarCheck className="h-3 w-3 mr-1 text-blue-500" />
+                                <span className="text-blue-600">Ver Agenda</span>
+                              </Button>
+                            )}
                           </div>
-                        </CollapsibleContent>
+                        </div>
                       </div>
-                    </Collapsible>
+                    </div>
                   );
                 })}
               </div>
@@ -1327,29 +513,10 @@ export function NotificationsCenter({ fullPage = false }: NotificationsCenterPro
         </CardContent>
       </Card>
 
-      <BirthRegistrationDialog
-        open={birthDialogOpen}
-        onOpenChange={setBirthDialogOpen}
-        client={selectedClient}
-      />
-
-      <ClientDiaryDialog
-        open={diaryDialogOpen}
-        onOpenChange={setDiaryDialogOpen}
-        client={diaryClient}
-      />
-
-      <ClientContractionsDialog
-        open={contractionsDialogOpen}
-        onOpenChange={setContractionsDialogOpen}
-        client={contractionsClient}
-      />
-
-      <SendBudgetDialog
-        open={budgetDialogOpen}
-        onOpenChange={setBudgetDialogOpen}
-        serviceRequest={selectedServiceRequest}
-      />
+      <BirthRegistrationDialog open={birthDialogOpen} onOpenChange={setBirthDialogOpen} client={selectedClient} />
+      <ClientDiaryDialog open={diaryDialogOpen} onOpenChange={setDiaryDialogOpen} client={diaryClient} />
+      <ClientContractionsDialog open={contractionsDialogOpen} onOpenChange={setContractionsDialogOpen} client={contractionsClient} />
+      <SendBudgetDialog open={budgetDialogOpen} onOpenChange={setBudgetDialogOpen} serviceRequest={selectedServiceRequest} />
     </>
   );
 }

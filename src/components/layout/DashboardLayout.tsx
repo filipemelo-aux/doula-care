@@ -9,6 +9,7 @@ import { PushNotificationToggle } from "@/components/pwa/PushNotificationToggle"
 import { useOrgBranding } from "@/hooks/useOrgBranding";
 import { usePresenceBroadcast } from "@/hooks/usePresence";
 import { useAdminUnreadCounts } from "@/hooks/useAdminUnreadCounts";
+import { useActiveLaborCount } from "@/hooks/useActiveLaborCount";
 import { BirthAlertDialog } from "@/components/dashboard/BirthAlertDialog";
 import { cn } from "@/lib/utils";
 
@@ -18,6 +19,7 @@ export function DashboardLayout() {
   const { signOut } = useAuth();
   const { logoUrl: orgLogo, displayName, brandingReady } = useOrgBranding();
   const { unreadMessages } = useAdminUnreadCounts();
+  const { laborCount, alertCount } = useActiveLaborCount();
   const location = useLocation();
   const navigate = useNavigate();
   usePresenceBroadcast();
@@ -154,11 +156,19 @@ export function DashboardLayout() {
             <div className="relative flex items-center justify-center" style={{ marginTop: '-30px' }}>
               <button
                 onClick={() => setBirthAlertOpen(true)}
-                className="w-[48px] h-[48px] rounded-full flex items-center justify-center shadow-xl transition-all active:scale-90 ring-4 ring-[hsl(var(--background))] bg-gradient-to-br from-warning to-warning/80 text-warning-foreground shadow-warning/25"
+                className={cn(
+                  "w-[48px] h-[48px] rounded-full flex items-center justify-center shadow-xl transition-all active:scale-90 ring-4 ring-[hsl(var(--background))] bg-gradient-to-br from-warning to-warning/80 text-warning-foreground shadow-warning/25",
+                  laborCount > 0 && "animate-pulse from-destructive to-destructive/80 shadow-destructive/40"
+                )}
                 title="Alertas de Parto"
               >
                 <Baby className="h-5 w-5" strokeWidth={2.2} />
               </button>
+              {alertCount > 0 && (
+                <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-destructive text-destructive-foreground text-[10px] flex items-center justify-center font-bold ring-2 ring-[hsl(var(--background))]">
+                  {alertCount}
+                </span>
+              )}
             </div>
             <span className="text-[9px] font-medium leading-none text-sidebar-foreground/50">Alertas</span>
           </div>
