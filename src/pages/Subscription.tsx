@@ -168,56 +168,10 @@ export default function Subscription() {
     }
   };
 
-  const stopPolling = useCallback(() => {
-    if (pollingRef.current) {
-      clearInterval(pollingRef.current);
-      pollingRef.current = null;
-    }
-  }, []);
-
-  // Poll payment status every 5 seconds when dialog is open
-  useEffect(() => {
-    if (!paymentDialog || !paymentResult?.order_nsu || paymentConfirmed) {
-      stopPolling();
-      return;
-    }
-
-    const checkStatus = async () => {
-      const { data, error } = await supabase
-        .from("plan_payments")
-        .select("status")
-        .eq("order_nsu", paymentResult.order_nsu)
-        .maybeSingle();
-
-      if (!error && data?.status === "paid") {
-        setPaymentConfirmed(true);
-        stopPolling();
-        toast.success("Pagamento confirmado! Seu plano foi ativado.");
-        // Refresh all relevant queries
-        queryClient.invalidateQueries({ queryKey: ["my-subscription"] });
-        queryClient.invalidateQueries({ queryKey: ["current-subscription"] });
-        queryClient.invalidateQueries({ queryKey: ["org-plan"] });
-        queryClient.invalidateQueries({ queryKey: ["active-subscription"] });
-        queryClient.invalidateQueries({ queryKey: ["platform-plan-limits"] });
-      }
-    };
-
-    // Check immediately, then every 5s
-    checkStatus();
-    pollingRef.current = setInterval(checkStatus, 5000);
-
-    return () => stopPolling();
-  }, [paymentDialog, paymentResult?.order_nsu, paymentConfirmed, stopPolling, queryClient]);
-
-  // Reset confirmed state when dialog closes
   const handleDialogClose = (open: boolean) => {
     setPaymentDialog(open);
     if (!open) {
-      stopPolling();
-      if (paymentConfirmed) {
-        setPaymentResult(null);
-        setPaymentConfirmed(false);
-      }
+      setPaymentResult(null);
     }
   };
 
