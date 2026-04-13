@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Check, Crown, ExternalLink, Loader2, Settings, Sparkles, Star } from "lucide-react";
 import { toast } from "sonner";
+import { CheckoutTransitionDialog } from "@/components/subscription/CheckoutTransitionDialog";
 
 type BillingType = "monthly" | "yearly";
 
