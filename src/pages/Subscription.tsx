@@ -390,20 +390,16 @@ export default function Subscription() {
                       <Button
                         className="w-full"
                         onClick={() => handleSubscribe(plan, "monthly")}
-                        disabled={checkoutMutation.isPending}
+                        disabled={checkoutDialog.open}
                       >
-                        {checkoutMutation.isPending ? (
-                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        ) : (
-                          <ExternalLink className="w-4 h-4 mr-2" />
-                        )}
+                        <ExternalLink className="w-4 h-4 mr-2" />
                         Assinar mensal — {formatCentavos(plan.price_monthly)}
                       </Button>
                       <Button
                         variant="outline"
                         className="w-full"
                         onClick={() => handleSubscribe(plan, "yearly")}
-                        disabled={checkoutMutation.isPending}
+                        disabled={checkoutDialog.open}
                       >
                         Assinar anual — {formatCentavos(plan.price_yearly > 0 ? plan.price_yearly : plan.price_monthly * 12)}
                       </Button>
@@ -415,6 +411,16 @@ export default function Subscription() {
           );
         })}
       </div>
+
+      <CheckoutTransitionDialog
+        open={checkoutDialog.open}
+        onOpenChange={(o) => setCheckoutDialog((prev) => ({ ...prev, open: o }))}
+        planName={checkoutDialog.planName}
+        planPrice={checkoutDialog.planPrice}
+        checkoutUrl={checkoutDialog.checkoutUrl}
+        error={checkoutDialog.error}
+        onRetry={handleRetryCheckout}
+      />
     </div>
   );
 }
