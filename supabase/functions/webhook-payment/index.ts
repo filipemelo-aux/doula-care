@@ -259,7 +259,10 @@ async function handleInvoiceSucceeded(
   if (profile?.organization_id) {
     await supabase
       .from("organizations")
-      .update({ next_billing_date: periodEnd.split("T")[0] })
+      .update({
+        next_billing_date: periodEnd.split("T")[0],
+        status: "ativo" as "ativo",
+      })
       .eq("id", profile.organization_id);
   }
 
@@ -362,12 +365,14 @@ async function updateOrgPlan(
         plan: planData.plan as "free" | "pro" | "premium",
         billing_cycle: billingType === "yearly" ? "yearly" : "monthly",
         next_billing_date: periodEnd.toISOString().split("T")[0],
+        status: "ativo" as "ativo",
       })
       .eq("id", profile.organization_id);
 
-    logStep("Organization plan updated", {
+    logStep("Organization plan & status updated", {
       orgId: profile.organization_id,
       plan: planData.plan,
+      status: "ativo",
     });
   }
 }
