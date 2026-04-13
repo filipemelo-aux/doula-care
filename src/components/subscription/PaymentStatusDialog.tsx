@@ -1,29 +1,28 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, CheckCircle2, Loader2, ShieldCheck } from "lucide-react";
+import { CheckCircle2, Loader2, ShieldCheck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 
-interface FullscreenCheckoutProps {
+interface PaymentStatusDialogProps {
   open: boolean;
   onClose: () => void;
-  checkoutUrl: string;
   orderNsu: string;
   planName: string;
   planPrice: string;
+  gateway: string;
 }
 
-export default function FullscreenCheckout({
+export default function PaymentStatusDialog({
   open,
-  checkoutUrl,
   orderNsu,
   planName,
   planPrice,
+  gateway,
   onClose,
-}: FullscreenCheckoutProps) {
+}: PaymentStatusDialogProps) {
   const queryClient = useQueryClient();
-  const [iframeLoaded, setIframeLoaded] = useState(false);
   const [confirmed, setConfirmed] = useState(false);
   const [manualChecking, setManualChecking] = useState(false);
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -58,7 +57,6 @@ export default function FullscreenCheckout({
     }
   }, [orderNsu, stopPolling, invalidateAll]);
 
-  // Start polling when open
   useEffect(() => {
     if (!open || confirmed || !orderNsu) {
       stopPolling();
@@ -69,10 +67,8 @@ export default function FullscreenCheckout({
     return () => stopPolling();
   }, [open, confirmed, orderNsu, checkPayment, stopPolling]);
 
-  // Reset on open
   useEffect(() => {
     if (open) {
-      setIframeLoaded(false);
       setConfirmed(false);
     }
   }, [open]);
@@ -80,7 +76,7 @@ export default function FullscreenCheckout({
   const handleManualCheck = async () => {
     setManualChecking(true);
     try {
-      const { data, error } = await supabase.functions.invoke("check-payment-status", {
+      const { data, error } = await supabase.functions.invoke("get-payment-status", {
         body: { order_nsu: orderNsu },
       });
       if (error) throw error;
@@ -113,15 +109,9 @@ export default function FullscreenCheckout({
     >
       {/* Header */}
       <div className="shrink-0 flex items-center gap-3 px-4 h-14 border-b border-border/50 bg-background">
-        <button
-          onClick={handleClose}
-          className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-muted/60 active:scale-95 transition-all"
-        >
-          <ArrowLeft className="w-5 h-5 text-foreground" />
-        </button>
         <div className="flex-1 min-w-0">
           <p className="text-sm font-semibold text-foreground leading-tight truncate">
-            Finalizar pagamento
+            Processando pagamento
           </p>
           <p className="text-xs text-muted-foreground truncate">
             {planName} — {planPrice}
@@ -130,7 +120,7 @@ export default function FullscreenCheckout({
         <ShieldCheck className="w-5 h-5 text-primary/60 shrink-0" />
       </div>
 
-      {/* Confirmed state */}
+      {/* Content */}
       {confirmed ? (
         <div className="flex-1 flex flex-col items-center justify-center gap-6 px-6">
           <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center">
@@ -149,35 +139,22 @@ export default function FullscreenCheckout({
           </Button>
         </div>
       ) : (
-        <>
-          {/* Loading skeleton */}
-          {!iframeLoaded && (
-            <div className="flex-1 flex flex-col items-center justify-center gap-4">
-              <Loader2 className="w-8 h-8 animate-spin text-primary" />
-              <p className="text-sm text-muted-foreground">Preparando pagamento...</p>
-            </div>
-          )}
+        <div className="flex-1 flex flex-col items-center justify-center gap-6 px-6">
+          <Loader2 className="w-10 h-10 animate-spin text-primary" />
+          <div className="text-center space-y-2">
+            <p className="text-base font-semibold text-foreground">
+              Aguardando confirmação
+            </p>
+            <p className="text-sm text-muted-foreground">
+              {gateway === "mock"
+                ? "Pagamento em modo de teste. Use o botão abaixo para simular."
+                : "Seu pagamento está sendo processado..."}
+            </p>
+          </div>
 
-          {/* Iframe */}
-          <iframe
-            src={checkoutUrl}
-            className={`flex-1 w-full border-0 ${iframeLoaded ? "" : "sr-only"}`}
-            onLoad={() => setIframeLoaded(true)}
-            allow="payment"
-            sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-top-navigation"
-          />
-
-          {/* Footer */}
-          <div className="shrink-0 border-t border-border/50 bg-background px-4 py-3 flex gap-3 safe-area-bottom">
+          <div className="w-full max-w-xs space-y-3">
             <Button
-              variant="outline"
-              className="flex-1 h-11 rounded-xl"
-              onClick={handleClose}
-            >
-              Cancelar
-            </Button>
-            <Button
-              className="flex-1 h-11 rounded-xl"
+              className="w-full h-11 rounded-xl"
               onClick={handleManualCheck}
               disabled={manualChecking}
             >
@@ -188,8 +165,19 @@ export default function FullscreenCheckout({
               )}
               Já fiz o pagamento
             </Button>
+            <Button
+              variant="ghost"
+              className="w-full h-11 rounded-xl"
+              onClick={handleClose}
+            >
+              Cancelar
+            </Button>
           </div>
-        </>
+
+          <p className="text-[10px] text-muted-foreground/60">
+            Ref: {orderNsu}
+          </p>
+        </div>
       )}
     </div>
   );

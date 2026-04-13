@@ -72,10 +72,10 @@ Deno.serve(async (req) => {
           }
         }
 
-        // 1c. Generate new PIX payment via create-pix-payment-for-plan
+        // 1c. Generate new payment via create-checkout-session
         try {
-          const pixResponse = await fetch(
-            `${supabaseUrl}/functions/v1/create-pix-payment-for-plan`,
+          const paymentResponse = await fetch(
+            `${supabaseUrl}/functions/v1/create-checkout-session`,
             {
               method: "POST",
               headers: {
@@ -89,14 +89,14 @@ Deno.serve(async (req) => {
             }
           );
 
-          if (!pixResponse.ok) {
-            const errBody = await pixResponse.text();
-            console.error(`PIX payment generation failed for user ${sub.user_id}:`, errBody);
+          if (!paymentResponse.ok) {
+            const errBody = await paymentResponse.text();
+            console.error(`Payment generation failed for user ${sub.user_id}:`, errBody);
           } else {
-            console.log(`PIX payment generated for user ${sub.user_id}`);
+            console.log(`Payment generated for user ${sub.user_id}`);
           }
-        } catch (pixErr) {
-          console.error(`PIX payment call error for user ${sub.user_id}:`, pixErr);
+        } catch (payErr) {
+          console.error(`Payment call error for user ${sub.user_id}:`, payErr);
         }
 
         // 1d. Notify user via org_notifications
