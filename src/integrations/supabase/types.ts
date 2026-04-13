@@ -1119,15 +1119,12 @@ export type Database = {
         Row: {
           amount: number
           billing_type: string
-          checkout_slug: string | null
-          checkout_url: string | null
           created_at: string
+          gateway: string
+          gateway_payment_id: string | null
           id: string
-          infinitepay_response: Json | null
           order_nsu: string
-          pix_code: string | null
           plan_id: string
-          qr_code_base64: string | null
           status: string
           updated_at: string
           user_id: string
@@ -1135,15 +1132,12 @@ export type Database = {
         Insert: {
           amount: number
           billing_type: string
-          checkout_slug?: string | null
-          checkout_url?: string | null
           created_at?: string
+          gateway?: string
+          gateway_payment_id?: string | null
           id?: string
-          infinitepay_response?: Json | null
           order_nsu: string
-          pix_code?: string | null
           plan_id: string
-          qr_code_base64?: string | null
           status?: string
           updated_at?: string
           user_id: string
@@ -1151,15 +1145,12 @@ export type Database = {
         Update: {
           amount?: number
           billing_type?: string
-          checkout_slug?: string | null
-          checkout_url?: string | null
           created_at?: string
+          gateway?: string
+          gateway_payment_id?: string | null
           id?: string
-          infinitepay_response?: Json | null
           order_nsu?: string
-          pix_code?: string | null
           plan_id?: string
-          qr_code_base64?: string | null
           status?: string
           updated_at?: string
           user_id?: string
