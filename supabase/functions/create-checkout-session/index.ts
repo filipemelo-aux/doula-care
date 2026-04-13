@@ -112,7 +112,7 @@ Deno.serve(async (req) => {
       logStep("Existing Stripe customer found", { customerId });
     }
 
-    const origin = req.headers.get("origin") || "https://doula-care.lovable.app";
+    const origin = req.headers.get("origin") || body?.return_url || "https://doulacare.app.br";
 
     // 7. Create Stripe Checkout session with price_data
     const session = await stripe.checkout.sessions.create({
