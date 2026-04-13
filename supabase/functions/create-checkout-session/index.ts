@@ -135,8 +135,8 @@ Deno.serve(async (req) => {
         },
       ],
       mode: "subscription",
-      success_url: `${origin}/assinatura?session_id={CHECKOUT_SESSION_ID}&success=true`,
-      cancel_url: `${origin}/assinatura?canceled=true`,
+      success_url: `${origin}/admin/assinatura?session_id={CHECKOUT_SESSION_ID}&success=true`,
+      cancel_url: `${origin}/admin/assinatura?canceled=true`,
       metadata: {
         user_id: user.id,
         plan_id: plan_id,
