@@ -4,63 +4,15 @@ import { supabase } from "@/integrations/supabase/client";
 
 import { useAuth } from "@/contexts/AuthContext";
 import { usePlanLimits } from "@/hooks/usePlanLimits";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { Check, Crown, Loader2, Sparkles, Star } from "lucide-react";
-import FullscreenCheckout from "@/components/subscription/FullscreenCheckout";
+import PaymentStatusDialog from "@/components/subscription/PaymentStatusDialog";
 import { toast } from "sonner";
-import { maskCPF, maskPhone, maskCEP } from "@/lib/masks";
-import { fetchAddressByCep } from "@/lib/address";
 
 type BillingType = "monthly" | "yearly";
-
-interface CustomerData {
-  phone: string;
-  cpf: string;
-  street: string;
-  number: string;
-  complement: string;
-  neighborhood: string;
-  city: string;
-  state: string;
-  zipcode: string;
-}
-
-const EMPTY_CUSTOMER: CustomerData = {
-  phone: "",
-  cpf: "",
-  street: "",
-  number: "",
-  complement: "",
-  neighborhood: "",
-  city: "",
-  state: "",
-  zipcode: "",
-};
-
-function isCustomerComplete(c: CustomerData): boolean {
-  const digits = (v: string) => v.replace(/\D/g, "");
-  return (
-    digits(c.phone).length >= 10 &&
-    digits(c.cpf).length === 11 &&
-    !!c.street.trim() &&
-    !!c.number.trim() &&
-    !!c.neighborhood.trim() &&
-    !!c.city.trim() &&
-    c.state.replace(/\s/g, "").length === 2 &&
-    digits(c.zipcode).length === 8
-  );
-}
 
 interface PlatformPlan {
   id: string;
@@ -82,11 +34,12 @@ interface PlatformPlan {
 }
 
 interface PaymentResult {
-  qr_code_base64: string | null;
-  pix_code: string | null;
-  checkout_url: string | null;
+  payment_id: string;
   order_nsu: string;
-  created_at: string;
+  gateway: string;
+  status: string;
+  amount: number;
+  plan_name: string;
 }
 
 const planIcons: Record<string, React.ReactNode> = {
@@ -143,35 +96,10 @@ export default function Subscription() {
   const [paymentDialog, setPaymentDialog] = useState(false);
   const [paymentResult, setPaymentResult] = useState<PaymentResult | null>(null);
   const [selectedPlanName, setSelectedPlanName] = useState("");
-  
-  const [customerData, setCustomerData] = useState<CustomerData>(EMPTY_CUSTOMER);
-  const [showCustomerForm, setShowCustomerForm] = useState(false);
-  const [pendingPlan, setPendingPlan] = useState<{ plan_id: string; billing_type: BillingType } | null>(null);
-  const [cepLoading, setCepLoading] = useState(false);
-  const [checkoutStep, setCheckoutStep] = useState<"contact" | "address">("contact");
 
-  const handleCepBlur = async () => {
-    const clean = customerData.zipcode.replace(/\D/g, "");
-    if (clean.length !== 8) return;
-    setCepLoading(true);
-    const addr = await fetchAddressByCep(clean);
-    setCepLoading(false);
-    if (addr) {
-      setCustomerData((prev) => ({
-        ...prev,
-        street: addr.street || prev.street,
-        neighborhood: addr.neighborhood || prev.neighborhood,
-        city: addr.city || prev.city,
-        state: addr.state || prev.state,
-      }));
-    }
-  };
-
-  const handleDialogClose = (open: boolean) => {
-    setPaymentDialog(open);
-    if (!open) {
-      setPaymentResult(null);
-    }
+  const handleDialogClose = () => {
+    setPaymentDialog(false);
+    setPaymentResult(null);
   };
 
   const { data: plans, isLoading } = useQuery({
@@ -208,107 +136,35 @@ export default function Subscription() {
     mutationFn: async ({
       plan_id,
       billing_type,
-      customer,
-      address,
     }: {
       plan_id: string;
       billing_type: BillingType;
-      customer?: Record<string, string>;
-      address?: Record<string, string>;
     }) => {
       const { data, error } = await supabase.functions.invoke(
-        "create-pix-payment-for-plan",
-        {
-          body: { plan_id, billing_type, customer, address },
-        }
+        "create-checkout-session",
+        { body: { plan_id, billing_type } }
       );
-      if (error) {
-        // Try to parse the error response for missing_fields
-        throw error;
-      }
-      if (data?.error) {
-        const err: any = new Error(data.error);
-        err.missing_fields = data.missing_fields;
-        throw err;
-      }
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
       return data as PaymentResult;
     },
     onSuccess: (data) => {
       setPaymentResult(data);
-      setShowCustomerForm(false);
-      setPendingPlan(null);
-      setCheckoutStep("contact");
       setPaymentDialog(true);
     },
     onError: (err: any) => {
-      if (err?.missing_fields?.length > 0) {
-        setShowCustomerForm(true);
-        toast.info("Preencha seus dados para continuar");
-      } else {
-        toast.error(err?.message || "Erro ao gerar pagamento");
-      }
+      toast.error(err?.message || "Erro ao iniciar pagamento");
     },
   });
 
   const handleSubscribe = (plan: PlatformPlan, billingType: BillingType) => {
     setSelectedPlanName(plan.name);
-    const digits = (v: string) => v.replace(/\D/g, "");
-    if (isCustomerComplete(customerData)) {
-      payMutation.mutate({
-        plan_id: plan.id,
-        billing_type: billingType,
-        customer: {
-          phone_number: digits(customerData.phone),
-          document: digits(customerData.cpf),
-        },
-        address: {
-          street: customerData.street.trim(),
-          number: customerData.number.trim(),
-          complement: customerData.complement.trim(),
-          neighborhood: customerData.neighborhood.trim(),
-          city: customerData.city.trim(),
-          state: customerData.state.trim().toUpperCase(),
-          zipcode: digits(customerData.zipcode),
-        },
-      });
-    } else {
-      setPendingPlan({ plan_id: plan.id, billing_type: billingType });
-      setShowCustomerForm(true);
-      toast.info("Preencha seus dados para continuar");
-    }
-  };
-
-  const handleSubmitCustomerForm = () => {
-    if (!pendingPlan) return;
-    if (!isCustomerComplete(customerData)) {
-      toast.error("Preencha todos os campos obrigatórios");
-      return;
-    }
-    const digits = (v: string) => v.replace(/\D/g, "");
-    payMutation.mutate({
-      plan_id: pendingPlan.plan_id,
-      billing_type: pendingPlan.billing_type,
-      customer: {
-        phone_number: digits(customerData.phone),
-        document: digits(customerData.cpf),
-      },
-      address: {
-        street: customerData.street.trim(),
-        number: customerData.number.trim(),
-        complement: customerData.complement.trim(),
-        neighborhood: customerData.neighborhood.trim(),
-        city: customerData.city.trim(),
-        state: customerData.state.trim().toUpperCase(),
-        zipcode: digits(customerData.zipcode),
-      },
-    });
+    payMutation.mutate({ plan_id: plan.id, billing_type: billingType });
   };
 
   const handleActivateFree = async () => {
-    // For free plan, just update the org directly - no payment needed
     toast.success("Plano gratuito ativado!");
   };
-
 
   const formatDate = (dateStr: string | null) => {
     if (!dateStr) return "—";
@@ -509,205 +365,18 @@ export default function Subscription() {
         })}
       </div>
 
-      {/* Fullscreen Checkout */}
-      <FullscreenCheckout
-        open={paymentDialog && !!paymentResult?.checkout_url}
-        onClose={() => handleDialogClose(false)}
-        checkoutUrl={paymentResult?.checkout_url || ""}
+      {/* Payment Status Dialog */}
+      <PaymentStatusDialog
+        open={paymentDialog}
+        onClose={handleDialogClose}
         orderNsu={paymentResult?.order_nsu || ""}
         planName={selectedPlanName}
         planPrice={(() => {
           const plan = plans?.find(p => p.name === selectedPlanName);
           return plan ? formatCentavos(plan.price_monthly) : "";
         })()}
+        gateway={paymentResult?.gateway || "mock"}
       />
-
-      {/* Customer Data Dialog – InfinitePay-style checkout */}
-      <Dialog open={showCustomerForm} onOpenChange={(open) => { setShowCustomerForm(open); if (!open) { setPendingPlan(null); setCheckoutStep("contact"); } }}>
-        <DialogContent className="p-0 gap-0 max-w-md max-h-[95vh] overflow-hidden rounded-2xl border-0">
-          {/* Resumo da compra header */}
-          {pendingPlan && (() => {
-            const plan = plans?.find(p => p.id === pendingPlan.plan_id);
-            if (!plan) return null;
-            const price = pendingPlan.billing_type === "yearly"
-              ? (plan.price_yearly > 0 ? plan.price_yearly : plan.price_monthly * 12)
-              : plan.price_monthly;
-            return (
-              <div className="bg-muted/60 px-5 py-4 flex items-center justify-between border-b border-border">
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium text-foreground">Resumo da compra</span>
-                </div>
-                <span className="text-base font-bold text-foreground">{formatCentavos(price)}</span>
-              </div>
-            );
-          })()}
-
-          {/* Step indicator */}
-          <div className="flex items-center justify-center gap-2 px-5 pt-4 pb-2 text-xs text-muted-foreground">
-            <span className={checkoutStep === "contact" ? "text-foreground font-semibold" : ""}>Contato</span>
-            <span className="text-muted-foreground/40">›</span>
-            <span className={checkoutStep === "address" ? "text-foreground font-semibold" : ""}>Endereço</span>
-            <span className="text-muted-foreground/40">›</span>
-            <span className="text-muted-foreground/40">Pagamento</span>
-          </div>
-
-          <div className="px-5 pb-5 pt-2 overflow-y-auto max-h-[70vh]">
-            {checkoutStep === "contact" ? (
-              <div className="space-y-4">
-                <div>
-                  <h3 className="text-sm font-semibold text-foreground mb-3">Contato</h3>
-                  <div className="space-y-3">
-                    <div className="space-y-1.5">
-                      <Label className="text-xs text-muted-foreground">Telefone</Label>
-                      <Input
-                        mask="phone"
-                        placeholder="(00) 00000-0000"
-                        value={customerData.phone}
-                        onChange={(e) => setCustomerData((p) => ({ ...p, phone: e.target.value }))}
-                        maxLength={15}
-                        className="h-11"
-                      />
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label className="text-xs text-muted-foreground">CPF</Label>
-                      <Input
-                        mask="cpf"
-                        placeholder="000.000.000-00"
-                        value={customerData.cpf}
-                        onChange={(e) => setCustomerData((p) => ({ ...p, cpf: e.target.value }))}
-                        maxLength={14}
-                        className="h-11"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <Button
-                  className="w-full h-11 rounded-xl"
-                  onClick={() => {
-                    const digits = (v: string) => v.replace(/\D/g, "");
-                    if (digits(customerData.phone).length < 10) {
-                      toast.error("Informe um telefone válido");
-                      return;
-                    }
-                    if (digits(customerData.cpf).length !== 11) {
-                      toast.error("Informe um CPF válido");
-                      return;
-                    }
-                    setCheckoutStep("address");
-                  }}
-                >
-                  Continuar
-                </Button>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                <div>
-                  <h3 className="text-sm font-semibold text-foreground mb-3">Endereço</h3>
-                  <div className="space-y-3">
-                    <div className="space-y-1.5">
-                      <Label className="text-xs text-muted-foreground">CEP</Label>
-                      <Input
-                        mask="cep"
-                        placeholder="00000-000"
-                        value={customerData.zipcode}
-                        onChange={(e) => setCustomerData((p) => ({ ...p, zipcode: e.target.value }))}
-                        onBlur={handleCepBlur}
-                        maxLength={9}
-                        className="h-11"
-                      />
-                    </div>
-                    <div className="grid grid-cols-3 gap-3">
-                      <div className="col-span-2 space-y-1.5">
-                        <Label className="text-xs text-muted-foreground">Rua</Label>
-                        <Input
-                          placeholder={cepLoading ? "Buscando..." : "Rua / Av"}
-                          value={customerData.street}
-                          onChange={(e) => setCustomerData((p) => ({ ...p, street: e.target.value }))}
-                          disabled={cepLoading}
-                          className="h-11"
-                        />
-                      </div>
-                      <div className="space-y-1.5">
-                        <Label className="text-xs text-muted-foreground">Nº</Label>
-                        <Input
-                          placeholder="123"
-                          value={customerData.number}
-                          onChange={(e) => setCustomerData((p) => ({ ...p, number: e.target.value }))}
-                          className="h-11"
-                        />
-                      </div>
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label className="text-xs text-muted-foreground">Complemento</Label>
-                      <Input
-                        placeholder="Apto / Sala (opcional)"
-                        value={customerData.complement}
-                        onChange={(e) => setCustomerData((p) => ({ ...p, complement: e.target.value }))}
-                        className="h-11"
-                      />
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label className="text-xs text-muted-foreground">Bairro</Label>
-                      <Input
-                        placeholder="Bairro"
-                        value={customerData.neighborhood}
-                        onChange={(e) => setCustomerData((p) => ({ ...p, neighborhood: e.target.value }))}
-                        disabled={cepLoading}
-                        className="h-11"
-                      />
-                    </div>
-                    <div className="grid grid-cols-3 gap-3">
-                      <div className="col-span-2 space-y-1.5">
-                        <Label className="text-xs text-muted-foreground">Cidade</Label>
-                        <Input
-                          placeholder="Cidade"
-                          value={customerData.city}
-                          onChange={(e) => setCustomerData((p) => ({ ...p, city: e.target.value }))}
-                          disabled={cepLoading}
-                          className="h-11"
-                        />
-                      </div>
-                      <div className="space-y-1.5">
-                        <Label className="text-xs text-muted-foreground">UF</Label>
-                        <Input
-                          placeholder="SP"
-                          value={customerData.state}
-                          onChange={(e) => setCustomerData((p) => ({ ...p, state: e.target.value.toUpperCase().slice(0, 2) }))}
-                          maxLength={2}
-                          disabled={cepLoading}
-                          className="h-11"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    className="flex-1 h-11 rounded-xl"
-                    onClick={() => setCheckoutStep("contact")}
-                  >
-                    Voltar
-                  </Button>
-                  <Button
-                    className="flex-1 h-11 rounded-xl"
-                    onClick={handleSubmitCustomerForm}
-                    disabled={payMutation.isPending || !isCustomerComplete(customerData)}
-                  >
-                    {payMutation.isPending ? (
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    ) : null}
-                    Continuar para pagamento
-                  </Button>
-                </div>
-              </div>
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
-
     </div>
   );
 }
