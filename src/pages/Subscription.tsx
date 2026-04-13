@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useSearchParams } from "react-router-dom";
 
 import { useAuth } from "@/contexts/AuthContext";
 import { usePlanLimits } from "@/hooks/usePlanLimits";
@@ -8,8 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Check, Crown, Loader2, Sparkles, Star } from "lucide-react";
-import PaymentStatusDialog from "@/components/subscription/PaymentStatusDialog";
+import { Check, Crown, ExternalLink, Loader2, Settings, Sparkles, Star } from "lucide-react";
 import { toast } from "sonner";
 
 type BillingType = "monthly" | "yearly";
@@ -31,15 +31,6 @@ interface PlatformPlan {
   financial: boolean;
   expenses: boolean;
   messages: boolean;
-}
-
-interface PaymentResult {
-  payment_id: string;
-  order_nsu: string;
-  gateway: string;
-  status: string;
-  amount: number;
-  plan_name: string;
 }
 
 const planIcons: Record<string, React.ReactNode> = {
@@ -84,6 +75,7 @@ function buildFeatureList(plan: PlatformPlan): string[] {
 export default function Subscription() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const [searchParams, setSearchParams] = useSearchParams();
   const {
     plan: effectivePlan,
     originalPlan,
@@ -93,14 +85,31 @@ export default function Subscription() {
     isLoading: planLoading,
   } = usePlanLimits();
 
-  const [paymentDialog, setPaymentDialog] = useState(false);
-  const [paymentResult, setPaymentResult] = useState<PaymentResult | null>(null);
-  const [selectedPlanName, setSelectedPlanName] = useState("");
-
-  const handleDialogClose = () => {
-    setPaymentDialog(false);
-    setPaymentResult(null);
-  };
+  // Handle Stripe redirect success
+  useEffect(() => {
+    const success = searchParams.get("success");
+    const sessionId = searchParams.get("session_id");
+    if (success === "true" && sessionId) {
+      toast.success("Pagamento confirmado! Seu plano foi ativado.");
+      // Sync subscription from Stripe
+      supabase.functions.invoke("check-subscription").then(({ data }) => {
+        if (data?.subscribed) {
+          queryClient.invalidateQueries({ queryKey: ["my-subscription"] });
+          queryClient.invalidateQueries({ queryKey: ["current-subscription"] });
+          queryClient.invalidateQueries({ queryKey: ["org-plan"] });
+          queryClient.invalidateQueries({ queryKey: ["active-subscription"] });
+          queryClient.invalidateQueries({ queryKey: ["platform-plan-limits"] });
+        }
+      });
+      // Clean URL
+      setSearchParams({}, { replace: true });
+    }
+    const canceled = searchParams.get("canceled");
+    if (canceled === "true") {
+      toast.info("Pagamento cancelado.");
+      setSearchParams({}, { replace: true });
+    }
+  }, [searchParams, setSearchParams, queryClient]);
 
   const { data: plans, isLoading } = useQuery({
     queryKey: ["platform-plans-subscription"],
@@ -132,34 +141,44 @@ export default function Subscription() {
     enabled: !!user?.id,
   });
 
-  const payMutation = useMutation({
-    mutationFn: async ({
-      plan_id,
-      billing_type,
-    }: {
-      plan_id: string;
-      billing_type: BillingType;
-    }) => {
-      const { data, error } = await supabase.functions.invoke(
-        "create-checkout-session",
-        { body: { plan_id, billing_type } }
-      );
+  const checkoutMutation = useMutation({
+    mutationFn: async ({ plan_id, billing_type }: { plan_id: string; billing_type: BillingType }) => {
+      const { data, error } = await supabase.functions.invoke("create-checkout-session", {
+        body: { plan_id, billing_type },
+      });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
-      return data as PaymentResult;
+      return data as { url: string };
     },
     onSuccess: (data) => {
-      setPaymentResult(data);
-      setPaymentDialog(true);
+      if (data.url) {
+        window.location.href = data.url;
+      }
     },
     onError: (err: any) => {
       toast.error(err?.message || "Erro ao iniciar pagamento");
     },
   });
 
+  const portalMutation = useMutation({
+    mutationFn: async () => {
+      const { data, error } = await supabase.functions.invoke("customer-portal");
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      return data as { url: string };
+    },
+    onSuccess: (data) => {
+      if (data.url) {
+        window.open(data.url, "_blank");
+      }
+    },
+    onError: (err: any) => {
+      toast.error(err?.message || "Erro ao abrir portal");
+    },
+  });
+
   const handleSubscribe = (plan: PlatformPlan, billingType: BillingType) => {
-    setSelectedPlanName(plan.name);
-    payMutation.mutate({ plan_id: plan.id, billing_type: billingType });
+    checkoutMutation.mutate({ plan_id: plan.id, billing_type: billingType });
   };
 
   const handleActivateFree = async () => {
@@ -188,6 +207,7 @@ export default function Subscription() {
   }
 
   const currentPlanSlug = originalPlan;
+  const hasActiveSub = activeSubscription?.status === "active" && !isSubscriptionExpired;
 
   return (
     <div className="space-y-6">
@@ -211,11 +231,7 @@ export default function Subscription() {
               {activeSubscription && (
                 <div className="flex items-center gap-2 mt-1">
                   <Badge
-                    variant={
-                      activeSubscription.status === "active"
-                        ? "default"
-                        : "secondary"
-                    }
+                    variant={activeSubscription.status === "active" ? "default" : "secondary"}
                     className={
                       activeSubscription.status === "active"
                         ? "bg-emerald-500/10 text-emerald-700 border-emerald-500/30"
@@ -239,6 +255,21 @@ export default function Subscription() {
                 </p>
               )}
             </div>
+            {hasActiveSub && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => portalMutation.mutate()}
+                disabled={portalMutation.isPending}
+              >
+                {portalMutation.isPending ? (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                ) : (
+                  <Settings className="w-4 h-4 mr-2" />
+                )}
+                Gerenciar assinatura
+              </Button>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -246,8 +277,7 @@ export default function Subscription() {
       {/* Plan Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {plans?.map((plan) => {
-          const isCurrentPlan =
-            plan.plan === currentPlanSlug && !isSubscriptionExpired;
+          const isCurrentPlan = plan.plan === currentPlanSlug && !isSubscriptionExpired;
           const features = buildFeatureList(plan);
 
           return (
@@ -298,9 +328,7 @@ export default function Subscription() {
                           <span className="text-xs text-muted-foreground">/ano</span>
                           {hasDiscount && (
                             <Badge variant="secondary" className="ml-2 text-xs">
-                              {Math.round(
-                                (1 - yearly / (plan.price_monthly * 12)) * 100
-                              )}% off
+                              {Math.round((1 - yearly / (plan.price_monthly * 12)) * 100)}% off
                             </Badge>
                           )}
                         </div>
@@ -328,9 +356,7 @@ export default function Subscription() {
                       disabled={isCurrentPlan}
                       onClick={handleActivateFree}
                     >
-                      {isCurrentPlan
-                        ? "Plano atual"
-                        : "Ativar plano gratuito"}
+                      {isCurrentPlan ? "Plano atual" : "Ativar plano gratuito"}
                     </Button>
                   ) : isCurrentPlan ? (
                     <Button variant="outline" className="w-full" disabled>
@@ -341,18 +367,20 @@ export default function Subscription() {
                       <Button
                         className="w-full"
                         onClick={() => handleSubscribe(plan, "monthly")}
-                        disabled={payMutation.isPending}
+                        disabled={checkoutMutation.isPending}
                       >
-                        {payMutation.isPending ? (
+                        {checkoutMutation.isPending ? (
                           <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        ) : null}
+                        ) : (
+                          <ExternalLink className="w-4 h-4 mr-2" />
+                        )}
                         Assinar mensal — {formatCentavos(plan.price_monthly)}
                       </Button>
                       <Button
                         variant="outline"
                         className="w-full"
                         onClick={() => handleSubscribe(plan, "yearly")}
-                        disabled={payMutation.isPending}
+                        disabled={checkoutMutation.isPending}
                       >
                         Assinar anual — {formatCentavos(plan.price_yearly > 0 ? plan.price_yearly : plan.price_monthly * 12)}
                       </Button>
@@ -364,19 +392,6 @@ export default function Subscription() {
           );
         })}
       </div>
-
-      {/* Payment Status Dialog */}
-      <PaymentStatusDialog
-        open={paymentDialog}
-        onClose={handleDialogClose}
-        orderNsu={paymentResult?.order_nsu || ""}
-        planName={selectedPlanName}
-        planPrice={(() => {
-          const plan = plans?.find(p => p.name === selectedPlanName);
-          return plan ? formatCentavos(plan.price_monthly) : "";
-        })()}
-        gateway={paymentResult?.gateway || "mock"}
-      />
     </div>
   );
 }
