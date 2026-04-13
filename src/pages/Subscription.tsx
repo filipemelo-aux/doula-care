@@ -77,6 +77,16 @@ export default function Subscription() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [searchParams, setSearchParams] = useSearchParams();
+  const [checkoutDialog, setCheckoutDialog] = useState<{
+    open: boolean;
+    planName: string;
+    planPrice: string;
+    checkoutUrl: string | null;
+    error: string | null;
+    pendingPlanId: string | null;
+    pendingBillingType: BillingType | null;
+  }>({ open: false, planName: "", planPrice: "", checkoutUrl: null, error: null, pendingPlanId: null, pendingBillingType: null });
+
   const {
     plan: effectivePlan,
     originalPlan,
@@ -92,7 +102,6 @@ export default function Subscription() {
     const sessionId = searchParams.get("session_id");
     if (success === "true" && sessionId) {
       toast.success("Pagamento confirmado! Seu plano foi ativado.");
-      // Sync subscription from Stripe
       supabase.functions.invoke("check-subscription").then(({ data }) => {
         if (data?.subscribed) {
           queryClient.invalidateQueries({ queryKey: ["my-subscription"] });
@@ -102,7 +111,6 @@ export default function Subscription() {
           queryClient.invalidateQueries({ queryKey: ["platform-plan-limits"] });
         }
       });
-      // Clean URL
       setSearchParams({}, { replace: true });
     }
     const canceled = searchParams.get("canceled");
@@ -142,25 +150,6 @@ export default function Subscription() {
     enabled: !!user?.id,
   });
 
-  const checkoutMutation = useMutation({
-    mutationFn: async ({ plan_id, billing_type }: { plan_id: string; billing_type: BillingType }) => {
-      const { data, error } = await supabase.functions.invoke("create-checkout-session", {
-        body: { plan_id, billing_type },
-      });
-      if (error) throw error;
-      if (data?.error) throw new Error(data.error);
-      return data as { url: string };
-    },
-    onSuccess: (data) => {
-      if (data.url) {
-        window.location.href = data.url;
-      }
-    },
-    onError: (err: any) => {
-      toast.error(err?.message || "Erro ao iniciar pagamento");
-    },
-  });
-
   const portalMutation = useMutation({
     mutationFn: async () => {
       const { data, error } = await supabase.functions.invoke("customer-portal");
@@ -178,8 +167,41 @@ export default function Subscription() {
     },
   });
 
-  const handleSubscribe = (plan: PlatformPlan, billingType: BillingType) => {
-    checkoutMutation.mutate({ plan_id: plan.id, billing_type: billingType });
+  const handleSubscribe = async (plan: PlatformPlan, billingType: BillingType) => {
+    const price = billingType === "yearly"
+      ? (plan.price_yearly > 0 ? plan.price_yearly : plan.price_monthly * 12)
+      : plan.price_monthly;
+
+    setCheckoutDialog({
+      open: true,
+      planName: plan.name,
+      planPrice: formatCentavos(price) + (billingType === "yearly" ? "/ano" : "/mês"),
+      checkoutUrl: null,
+      error: null,
+      pendingPlanId: plan.id,
+      pendingBillingType: billingType,
+    });
+
+    try {
+      const { data, error } = await supabase.functions.invoke("create-checkout-session", {
+        body: { plan_id: plan.id, billing_type: billingType },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      setCheckoutDialog((prev) => ({ ...prev, checkoutUrl: data.url }));
+    } catch (err: any) {
+      setCheckoutDialog((prev) => ({
+        ...prev,
+        error: err?.message || "Erro ao iniciar pagamento",
+      }));
+    }
+  };
+
+  const handleRetryCheckout = () => {
+    const plan = plans?.find((p) => p.id === checkoutDialog.pendingPlanId);
+    if (plan && checkoutDialog.pendingBillingType) {
+      handleSubscribe(plan, checkoutDialog.pendingBillingType);
+    }
   };
 
   const handleActivateFree = async () => {
