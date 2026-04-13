@@ -259,7 +259,10 @@ async function handleInvoiceSucceeded(
   if (profile?.organization_id) {
     await supabase
       .from("organizations")
-      .update({ next_billing_date: periodEnd.split("T")[0] })
+      .update({
+        next_billing_date: periodEnd.split("T")[0],
+        status: "ativo" as "ativo",
+      })
       .eq("id", profile.organization_id);
   }
 
