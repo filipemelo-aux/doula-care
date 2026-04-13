@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
@@ -48,6 +48,12 @@ import Forum from "./pages/Forum";
 
 const queryClient = new QueryClient();
 
+const LegacySubscriptionRedirect = () => {
+  const location = useLocation();
+
+  return <Navigate to={`/admin/assinatura${location.search}`} replace />;
+};
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
@@ -71,6 +77,7 @@ const App = () => (
             <Route path="/portal" element={<Portal />} />
             {/* Legacy routes redirect to unified login */}
             <Route path="/" element={<Navigate to="/login" replace />} />
+            <Route path="/assinatura" element={<LegacySubscriptionRedirect />} />
             <Route path="/admin/login" element={<Navigate to="/login" replace />} />
             <Route path="/gestante/login" element={<Navigate to="/login" replace />} />
 
