@@ -144,9 +144,7 @@ export default function Subscription() {
   const [paymentResult, setPaymentResult] = useState<PaymentResult | null>(null);
   const [selectedPlanName, setSelectedPlanName] = useState("");
   
-  const [paymentConfirmed, setPaymentConfirmed] = useState(false);
   const [manualChecking, setManualChecking] = useState(false);
-  const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [customerData, setCustomerData] = useState<CustomerData>(EMPTY_CUSTOMER);
   const [showCustomerForm, setShowCustomerForm] = useState(false);
   const [pendingPlan, setPendingPlan] = useState<{ plan_id: string; billing_type: BillingType } | null>(null);
