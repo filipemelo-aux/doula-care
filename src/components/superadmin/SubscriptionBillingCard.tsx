@@ -114,7 +114,7 @@ export function SubscriptionBillingCard() {
   const resendMutation = useMutation({
     mutationFn: async (payment: PlanPaymentRow) => {
       const { data, error } = await supabase.functions.invoke(
-        "create-pix-payment-for-plan",
+        "create-checkout-session",
         {
           body: { plan_id: payment.plan_id, billing_type: payment.billing_type },
           headers: {
