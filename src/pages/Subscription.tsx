@@ -16,7 +16,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Check, CheckCircle2, Clock, Crown, ExternalLink, Loader2, MapPin, RefreshCw, Sparkles, Star } from "lucide-react";
+import { Check, CheckCircle2, Clock, Crown, Loader2, MapPin, Sparkles, Star } from "lucide-react";
+import FullscreenCheckout from "@/components/subscription/FullscreenCheckout";
 import { toast } from "sonner";
 import { maskCPF, maskPhone, maskCEP } from "@/lib/masks";
 import { fetchAddressByCep } from "@/lib/address";
