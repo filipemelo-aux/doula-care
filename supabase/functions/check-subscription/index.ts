@@ -12,6 +12,11 @@ const logStep = (step: string, details?: unknown) => {
   console.log(`[check-subscription] ${step}${d}`);
 };
 
+/**
+ * Lightweight polling fallback — reads Stripe as source of truth
+ * and reconciles local DB if needed. Does NOT generate payments
+ * or manage recurrence; that is Stripe's job via webhooks.
+ */
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -37,7 +42,7 @@ Deno.serve(async (req) => {
     const user = userData.user;
     logStep("User authenticated", { userId: user.id, email: user.email });
 
-    // 1. Check local subscription first (fastest path)
+    // ── Read local subscription (fast path) ──
     const { data: localSub } = await supabase
       .from("subscriptions")
       .select("id, plan_id, status, current_period_start, current_period_end, stripe_subscription_id, stripe_customer_id")
@@ -47,12 +52,20 @@ Deno.serve(async (req) => {
       .limit(1)
       .maybeSingle();
 
-    // 2. Verify with Stripe for accuracy
+    // ── Verify against Stripe (source of truth) ──
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
     const customers = await stripe.customers.list({ email: user.email!, limit: 1 });
 
     if (customers.data.length === 0) {
       logStep("No Stripe customer found");
+      // If local says active but Stripe says no customer → reconcile
+      if (localSub?.status === "active") {
+        await supabase
+          .from("subscriptions")
+          .update({ status: "canceled" })
+          .eq("id", localSub.id);
+        logStep("Local subscription canceled (no Stripe customer)");
+      }
       return jsonResponse({ subscribed: false });
     }
 
@@ -65,33 +78,25 @@ Deno.serve(async (req) => {
 
     if (subscriptions.data.length === 0) {
       logStep("No active Stripe subscription");
-
-      // If we have a local active sub but Stripe says no, mark as expired
       if (localSub?.status === "active") {
         await supabase
           .from("subscriptions")
           .update({ status: "canceled" })
           .eq("id", localSub.id);
-        logStep("Local subscription canceled (no Stripe sub)");
+        logStep("Local subscription canceled (Stripe has no active sub)");
       }
-
       return jsonResponse({ subscribed: false });
     }
 
+    // ── Active Stripe subscription found — reconcile local state ──
     const stripeSub = subscriptions.data[0];
     const subscriptionEnd = new Date(stripeSub.current_period_end * 1000).toISOString();
     const subscriptionStart = new Date(stripeSub.current_period_start * 1000).toISOString();
 
-    // Determine plan from local subscription or metadata
-    let planId: string | null = localSub?.plan_id || null;
+    // Resolve plan from local sub
+    const planId = localSub?.plan_id || null;
     let planSlug = "unknown";
 
-    // If no local sub linked, try to find via stripe_subscription_id
-    if (!planId && localSub?.stripe_subscription_id === stripeSub.id) {
-      planId = localSub.plan_id;
-    }
-
-    // Resolve plan slug from DB
     if (planId) {
       const { data: planData } = await supabase
         .from("platform_plan_limits")
@@ -101,7 +106,7 @@ Deno.serve(async (req) => {
       if (planData) planSlug = planData.plan;
     }
 
-    // Sync local subscription
+    // Reconcile local subscription record
     if (localSub) {
       await supabase
         .from("subscriptions")
@@ -113,26 +118,9 @@ Deno.serve(async (req) => {
           stripe_subscription_id: stripeSub.id,
         })
         .eq("id", localSub.id);
-    } else if (planId) {
-      // Cancel old subs and create new
-      await supabase
-        .from("subscriptions")
-        .update({ status: "canceled" })
-        .eq("user_id", user.id)
-        .eq("status", "active");
-
-      await supabase.from("subscriptions").insert({
-        user_id: user.id,
-        plan_id: planId,
-        status: "active",
-        current_period_start: subscriptionStart,
-        current_period_end: subscriptionEnd,
-        stripe_customer_id: customerId,
-        stripe_subscription_id: stripeSub.id,
-      });
     }
 
-    // Update organization plan
+    // Reconcile organization plan
     if (planSlug !== "unknown") {
       const { data: profile } = await supabase
         .from("profiles")
@@ -145,6 +133,7 @@ Deno.serve(async (req) => {
           .from("organizations")
           .update({
             plan: planSlug as "free" | "pro" | "premium",
+            status: "ativo",
             next_billing_date: subscriptionEnd.split("T")[0],
           })
           .eq("id", profile.organization_id);
