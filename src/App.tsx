@@ -22,6 +22,7 @@ import DeleteAccount from "./pages/DeleteAccount";
 import Documentation from "./pages/Documentation";
 import Support from "./pages/Support";
 import Marketing from "./pages/Marketing";
+import Portal from "./pages/Portal";
 import SuperAdminDashboard from "./pages/SuperAdminDashboard";
 import AdminNotifications from "./pages/AdminNotifications";
 import AdminMessages from "./pages/AdminMessages";
@@ -67,6 +68,7 @@ const App = () => (
             <Route path="/documentacao" element={<Documentation />} />
             <Route path="/suporte" element={<Support />} />
             <Route path="/marketing" element={<Marketing />} />
+            <Route path="/portal" element={<Portal />} />
             {/* Legacy routes redirect to unified login */}
             <Route path="/" element={<Navigate to="/login" replace />} />
             <Route path="/admin/login" element={<Navigate to="/login" replace />} />
