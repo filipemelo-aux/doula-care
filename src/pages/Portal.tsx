@@ -104,7 +104,7 @@ const Portal = () => {
       <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Baby className="h-6 w-6 text-primary" />
+            <img src="/logo.png" alt="Doula Care" className="h-7 w-7 rounded-lg object-contain" />
             <span className="text-lg font-bold text-foreground">Doula Care</span>
           </div>
           <div className="flex items-center gap-2">
@@ -320,7 +320,7 @@ const Portal = () => {
           <div className="space-y-4">
             {[
               { q: "Preciso pagar para começar?", a: "Não! O plano Free é totalmente gratuito e permite cadastrar até 3 clientes. Você pode evoluir para um plano pago quando quiser." },
-              { q: "Minhas clientes precisam baixar algum app?", a: "Não. O Doula Care funciona como um Progressive Web App (PWA). Suas clientes acessam pelo navegador e podem instalar diretamente na tela inicial do celular." },
+              { q: "Minhas clientes precisam baixar algum app?", a: "Não é necessário baixar nada. Suas clientes podem acessar diretamente pelo navegador ou, se preferirem, instalar o app na tela inicial do celular para uma experiência ainda mais prática." },
               { q: "Meus dados estão seguros?", a: "Sim. Utilizamos criptografia de ponta a ponta e políticas de segurança em nível de linha (RLS), garantindo que cada profissional só acesse os dados de suas próprias clientes." },
               { q: "Posso cancelar a qualquer momento?", a: "Sim. Não há fidelidade ou multa. Você pode cancelar sua assinatura quando quiser diretamente pelo app." },
               { q: "O sistema funciona no celular?", a: "Sim! O Doula Care é totalmente responsivo e funciona perfeitamente em smartphones, tablets e computadores." },
