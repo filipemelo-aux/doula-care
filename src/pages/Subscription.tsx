@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -16,7 +16,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Check, CheckCircle2, Clock, Crown, ExternalLink, Loader2, MapPin, RefreshCw, Sparkles, Star } from "lucide-react";
+import { Check, Crown, Loader2, Sparkles, Star } from "lucide-react";
+import FullscreenCheckout from "@/components/subscription/FullscreenCheckout";
 import { toast } from "sonner";
 import { maskCPF, maskPhone, maskCEP } from "@/lib/masks";
 import { fetchAddressByCep } from "@/lib/address";
@@ -143,9 +144,6 @@ export default function Subscription() {
   const [paymentResult, setPaymentResult] = useState<PaymentResult | null>(null);
   const [selectedPlanName, setSelectedPlanName] = useState("");
   
-  const [paymentConfirmed, setPaymentConfirmed] = useState(false);
-  const [manualChecking, setManualChecking] = useState(false);
-  const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [customerData, setCustomerData] = useState<CustomerData>(EMPTY_CUSTOMER);
   const [showCustomerForm, setShowCustomerForm] = useState(false);
   const [pendingPlan, setPendingPlan] = useState<{ plan_id: string; billing_type: BillingType } | null>(null);
@@ -169,56 +167,10 @@ export default function Subscription() {
     }
   };
 
-  const stopPolling = useCallback(() => {
-    if (pollingRef.current) {
-      clearInterval(pollingRef.current);
-      pollingRef.current = null;
-    }
-  }, []);
-
-  // Poll payment status every 5 seconds when dialog is open
-  useEffect(() => {
-    if (!paymentDialog || !paymentResult?.order_nsu || paymentConfirmed) {
-      stopPolling();
-      return;
-    }
-
-    const checkStatus = async () => {
-      const { data, error } = await supabase
-        .from("plan_payments")
-        .select("status")
-        .eq("order_nsu", paymentResult.order_nsu)
-        .maybeSingle();
-
-      if (!error && data?.status === "paid") {
-        setPaymentConfirmed(true);
-        stopPolling();
-        toast.success("Pagamento confirmado! Seu plano foi ativado.");
-        // Refresh all relevant queries
-        queryClient.invalidateQueries({ queryKey: ["my-subscription"] });
-        queryClient.invalidateQueries({ queryKey: ["current-subscription"] });
-        queryClient.invalidateQueries({ queryKey: ["org-plan"] });
-        queryClient.invalidateQueries({ queryKey: ["active-subscription"] });
-        queryClient.invalidateQueries({ queryKey: ["platform-plan-limits"] });
-      }
-    };
-
-    // Check immediately, then every 5s
-    checkStatus();
-    pollingRef.current = setInterval(checkStatus, 5000);
-
-    return () => stopPolling();
-  }, [paymentDialog, paymentResult?.order_nsu, paymentConfirmed, stopPolling, queryClient]);
-
-  // Reset confirmed state when dialog closes
   const handleDialogClose = (open: boolean) => {
     setPaymentDialog(open);
     if (!open) {
-      stopPolling();
-      if (paymentConfirmed) {
-        setPaymentResult(null);
-        setPaymentConfirmed(false);
-      }
+      setPaymentResult(null);
     }
   };
 
@@ -286,9 +238,6 @@ export default function Subscription() {
       setShowCustomerForm(false);
       setPendingPlan(null);
       setCheckoutStep("contact");
-      if (data.checkout_url) {
-        window.open(data.checkout_url, '_blank');
-      }
       setPaymentDialog(true);
     },
     onError: (err: any) => {
@@ -360,33 +309,6 @@ export default function Subscription() {
     toast.success("Plano gratuito ativado!");
   };
 
-
-  const handleManualCheck = async () => {
-    if (!paymentResult?.order_nsu) return;
-    setManualChecking(true);
-    try {
-      const { data, error } = await supabase.functions.invoke("check-payment-status", {
-        body: { order_nsu: paymentResult.order_nsu },
-      });
-      if (error) throw error;
-      if (data?.paid) {
-        setPaymentConfirmed(true);
-        stopPolling();
-        toast.success("Pagamento confirmado! Seu plano foi ativado.");
-        queryClient.invalidateQueries({ queryKey: ["my-subscription"] });
-        queryClient.invalidateQueries({ queryKey: ["current-subscription"] });
-        queryClient.invalidateQueries({ queryKey: ["org-plan"] });
-        queryClient.invalidateQueries({ queryKey: ["active-subscription"] });
-        queryClient.invalidateQueries({ queryKey: ["platform-plan-limits"] });
-      } else {
-        toast.info("Pagamento ainda não confirmado. Aguarde alguns instantes.");
-      }
-    } catch {
-      toast.error("Erro ao verificar pagamento.");
-    } finally {
-      setManualChecking(false);
-    }
-  };
 
   const formatDate = (dateStr: string | null) => {
     if (!dateStr) return "—";
@@ -587,140 +509,18 @@ export default function Subscription() {
         })}
       </div>
 
-      {/* Payment Status Dialog – checkout-style */}
-      <Dialog open={paymentDialog} onOpenChange={handleDialogClose}>
-        <DialogContent className="p-0 gap-0 max-w-md max-h-[95vh] overflow-hidden rounded-2xl border-0">
-          {/* Resumo da compra header */}
-          {paymentResult && (() => {
-            const plan = plans?.find(p => p.name === selectedPlanName);
-            const price = plan ? (
-              paymentResult.order_nsu ? plan.price_monthly : plan.price_monthly
-            ) : 0;
-            return (
-              <div className="bg-muted/60 px-5 py-4 flex items-center justify-between border-b border-border">
-                <span className="text-sm font-medium text-foreground">Resumo da compra</span>
-                {plan && <span className="text-base font-bold text-foreground">{formatCentavos(
-                  activeSubscription?.plan_id === plan.id ? plan.price_monthly :
-                  plan.price_monthly
-                )}</span>}
-              </div>
-            );
-          })()}
-
-          {/* Step indicator */}
-          <div className="flex items-center justify-center gap-2 px-5 pt-4 pb-2 text-xs text-muted-foreground">
-            <span>Contato</span>
-            <span className="text-muted-foreground/40">›</span>
-            <span>Endereço</span>
-            <span className="text-muted-foreground/40">›</span>
-            <span className="text-foreground font-semibold">Pagamento</span>
-          </div>
-
-          <div className="px-5 pb-5 pt-2">
-            {paymentConfirmed ? (
-              <div className="space-y-5 py-4">
-                <div className="flex justify-center">
-                  <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center">
-                    <CheckCircle2 className="w-10 h-10 text-primary" />
-                  </div>
-                </div>
-                <div className="text-center space-y-2">
-                  <p className="text-lg font-semibold text-foreground">
-                    Pagamento confirmado!
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    Seu plano {selectedPlanName} foi ativado com sucesso.
-                  </p>
-                </div>
-                <Button
-                  className="w-full h-11 rounded-xl"
-                  onClick={() => handleDialogClose(false)}
-                >
-                  Fechar
-                </Button>
-              </div>
-            ) : paymentResult ? (
-              <div className="space-y-5">
-                <div>
-                  <h3 className="text-sm font-semibold text-foreground mb-3">Pagamento</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Complete o pagamento na página segura da InfinitePay. Ao finalizar, o sistema detectará automaticamente.
-                  </p>
-                </div>
-
-                {/* Open checkout button */}
-                {paymentResult.checkout_url && (
-                  <Button
-                    className="w-full h-12 rounded-xl text-base"
-                    onClick={() => window.open(paymentResult.checkout_url!, '_blank')}
-                  >
-                    <ExternalLink className="w-4 h-4 mr-2" />
-                    Ir para pagamento
-                  </Button>
-                )}
-
-                {/* Status indicator */}
-                <div className="bg-muted/50 rounded-xl p-4 text-center space-y-2">
-                  <div className="flex items-center justify-center gap-2">
-                    <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
-                    <span className="text-sm font-medium text-foreground">
-                      {paymentResult.created_at && Date.now() - new Date(paymentResult.created_at).getTime() > 15 * 60 * 1000
-                        ? "Cobrança expirada"
-                        : "Aguardando pagamento"}
-                    </span>
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    Verificando automaticamente...
-                  </p>
-                </div>
-
-                {/* Actions */}
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    className="flex-1 h-11 rounded-xl"
-                    onClick={handleManualCheck}
-                    disabled={manualChecking}
-                  >
-                    {manualChecking ? (
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    ) : (
-                      <CheckCircle2 className="w-4 h-4 mr-2" />
-                    )}
-                    Já paguei
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-11 w-11 rounded-xl"
-                    title="Gerar novo pagamento"
-                    onClick={() => {
-                      setPaymentResult(null);
-                      setPaymentConfirmed(false);
-                      stopPolling();
-                      payMutation.mutate({
-                        plan_id: plans?.find((p) => p.name === selectedPlanName)?.id || "",
-                        billing_type: "monthly",
-                      });
-                    }}
-                    disabled={payMutation.isPending}
-                  >
-                    <RefreshCw className={`w-4 h-4 ${payMutation.isPending ? "animate-spin" : ""}`} />
-                  </Button>
-                </div>
-
-                <p className="text-[10px] text-muted-foreground/60 text-center">
-                  Ref: {paymentResult.order_nsu}
-                </p>
-              </div>
-            ) : (
-              <div className="flex justify-center py-8">
-                <Loader2 className="w-8 h-8 animate-spin text-primary" />
-              </div>
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
+      {/* Fullscreen Checkout */}
+      <FullscreenCheckout
+        open={paymentDialog && !!paymentResult?.checkout_url}
+        onClose={() => handleDialogClose(false)}
+        checkoutUrl={paymentResult?.checkout_url || ""}
+        orderNsu={paymentResult?.order_nsu || ""}
+        planName={selectedPlanName}
+        planPrice={(() => {
+          const plan = plans?.find(p => p.name === selectedPlanName);
+          return plan ? formatCentavos(plan.price_monthly) : "";
+        })()}
+      />
 
       {/* Customer Data Dialog – InfinitePay-style checkout */}
       <Dialog open={showCustomerForm} onOpenChange={(open) => { setShowCustomerForm(open); if (!open) { setPendingPlan(null); setCheckoutStep("contact"); } }}>
