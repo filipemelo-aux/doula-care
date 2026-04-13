@@ -99,7 +99,7 @@ const testimonials = [
 
 const Portal = () => {
   return (
-    <div className="min-h-[100dvh] bg-background text-foreground overflow-y-auto">
+    <div className="h-[100dvh] bg-background text-foreground overflow-y-auto">
       {/* Header */}
       <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
