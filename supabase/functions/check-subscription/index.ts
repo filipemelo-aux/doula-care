@@ -7,18 +7,9 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-// Map Stripe product IDs to internal plan slugs
-const PRODUCT_TO_PLAN: Record<string, string> = {
-  "prod_UKM6hbhYC9HypI": "pro",
-  "prod_UKM6QipeLhe3VE": "pro",
-  "prod_UKM6TAbsh0NPKM": "premium",
-  "prod_UKM7UM7sJu38Nq": "premium",
-};
-
-// Map internal plan slugs to platform_plan_limits IDs
-const PLAN_TO_DB_ID: Record<string, string> = {
-  "pro": "a4bd9641-83cb-41bc-aae3-5028cf13e29d",
-  "premium": "e84bd89e-cc54-42f6-8f9c-e9354c7058bd",
+const logStep = (step: string, details?: unknown) => {
+  const d = details ? ` - ${JSON.stringify(details)}` : "";
+  console.log(`[check-subscription] ${step}${d}`);
 };
 
 Deno.serve(async (req) => {
@@ -33,25 +24,36 @@ Deno.serve(async (req) => {
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) throw new Error("No authorization header");
 
-    const supabaseClient = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
       { auth: { persistSession: false } }
     );
 
     const token = authHeader.replace("Bearer ", "");
-    const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
+    const { data: userData, error: userError } = await supabase.auth.getUser(token);
     if (userError || !userData?.user?.email) throw new Error("User not authenticated");
 
     const user = userData.user;
-    const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
+    logStep("User authenticated", { userId: user.id, email: user.email });
 
-    // Find Stripe customer
+    // 1. Check local subscription first (fastest path)
+    const { data: localSub } = await supabase
+      .from("subscriptions")
+      .select("id, plan_id, status, current_period_start, current_period_end, stripe_subscription_id, stripe_customer_id")
+      .eq("user_id", user.id)
+      .in("status", ["active", "pending"])
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    // 2. Verify with Stripe for accuracy
+    const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
     const customers = await stripe.customers.list({ email: user.email!, limit: 1 });
+
     if (customers.data.length === 0) {
-      return new Response(JSON.stringify({ subscribed: false }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      logStep("No Stripe customer found");
+      return jsonResponse({ subscribed: false });
     }
 
     const customerId = customers.data[0].id;
@@ -62,45 +64,84 @@ Deno.serve(async (req) => {
     });
 
     if (subscriptions.data.length === 0) {
-      return new Response(JSON.stringify({ subscribed: false }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      logStep("No active Stripe subscription");
+
+      // If we have a local active sub but Stripe says no, mark as expired
+      if (localSub?.status === "active") {
+        await supabase
+          .from("subscriptions")
+          .update({ status: "canceled" })
+          .eq("id", localSub.id);
+        logStep("Local subscription canceled (no Stripe sub)");
+      }
+
+      return jsonResponse({ subscribed: false });
     }
 
-    const subscription = subscriptions.data[0];
-    const productId = subscription.items.data[0].price.product as string;
-    const planSlug = PRODUCT_TO_PLAN[productId] || "unknown";
-    const planDbId = PLAN_TO_DB_ID[planSlug];
-    const subscriptionEnd = new Date(subscription.current_period_end * 1000).toISOString();
-    const subscriptionStart = new Date(subscription.current_period_start * 1000).toISOString();
+    const stripeSub = subscriptions.data[0];
+    const subscriptionEnd = new Date(stripeSub.current_period_end * 1000).toISOString();
+    const subscriptionStart = new Date(stripeSub.current_period_start * 1000).toISOString();
 
-    // Sync to local subscriptions table
-    if (planDbId) {
-      // Cancel any existing active subs
-      await supabaseClient
+    // Determine plan from local subscription or metadata
+    let planId: string | null = localSub?.plan_id || null;
+    let planSlug = "unknown";
+
+    // If no local sub linked, try to find via stripe_subscription_id
+    if (!planId && localSub?.stripe_subscription_id === stripeSub.id) {
+      planId = localSub.plan_id;
+    }
+
+    // Resolve plan slug from DB
+    if (planId) {
+      const { data: planData } = await supabase
+        .from("platform_plan_limits")
+        .select("plan")
+        .eq("id", planId)
+        .single();
+      if (planData) planSlug = planData.plan;
+    }
+
+    // Sync local subscription
+    if (localSub) {
+      await supabase
+        .from("subscriptions")
+        .update({
+          status: "active",
+          current_period_start: subscriptionStart,
+          current_period_end: subscriptionEnd,
+          stripe_customer_id: customerId,
+          stripe_subscription_id: stripeSub.id,
+        })
+        .eq("id", localSub.id);
+    } else if (planId) {
+      // Cancel old subs and create new
+      await supabase
         .from("subscriptions")
         .update({ status: "canceled" })
         .eq("user_id", user.id)
         .eq("status", "active");
 
-      // Upsert current subscription
-      await supabaseClient.from("subscriptions").upsert({
+      await supabase.from("subscriptions").insert({
         user_id: user.id,
-        plan_id: planDbId,
+        plan_id: planId,
         status: "active",
         current_period_start: subscriptionStart,
         current_period_end: subscriptionEnd,
-      }, { onConflict: "user_id,plan_id" }).select();
+        stripe_customer_id: customerId,
+        stripe_subscription_id: stripeSub.id,
+      });
+    }
 
-      // Also update organization plan
-      const { data: profile } = await supabaseClient
+    // Update organization plan
+    if (planSlug !== "unknown") {
+      const { data: profile } = await supabase
         .from("profiles")
         .select("organization_id")
         .eq("user_id", user.id)
         .single();
 
       if (profile?.organization_id) {
-        await supabaseClient
+        await supabase
           .from("organizations")
           .update({
             plan: planSlug as "free" | "pro" | "premium",
@@ -110,13 +151,13 @@ Deno.serve(async (req) => {
       }
     }
 
-    return new Response(JSON.stringify({
+    logStep("Subscription verified", { plan: planSlug, end: subscriptionEnd });
+
+    return jsonResponse({
       subscribed: true,
       plan: planSlug,
-      plan_id: planDbId,
+      plan_id: planId,
       subscription_end: subscriptionEnd,
-    }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);
@@ -127,3 +168,9 @@ Deno.serve(async (req) => {
     });
   }
 });
+
+function jsonResponse(data: unknown) {
+  return new Response(JSON.stringify(data), {
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+}
