@@ -287,9 +287,6 @@ export default function Subscription() {
       setShowCustomerForm(false);
       setPendingPlan(null);
       setCheckoutStep("contact");
-      if (data.checkout_url) {
-        window.open(data.checkout_url, '_blank');
-      }
       setPaymentDialog(true);
     },
     onError: (err: any) => {
