@@ -311,33 +311,6 @@ export default function Subscription() {
   };
 
 
-  const handleManualCheck = async () => {
-    if (!paymentResult?.order_nsu) return;
-    setManualChecking(true);
-    try {
-      const { data, error } = await supabase.functions.invoke("check-payment-status", {
-        body: { order_nsu: paymentResult.order_nsu },
-      });
-      if (error) throw error;
-      if (data?.paid) {
-        setPaymentConfirmed(true);
-        stopPolling();
-        toast.success("Pagamento confirmado! Seu plano foi ativado.");
-        queryClient.invalidateQueries({ queryKey: ["my-subscription"] });
-        queryClient.invalidateQueries({ queryKey: ["current-subscription"] });
-        queryClient.invalidateQueries({ queryKey: ["org-plan"] });
-        queryClient.invalidateQueries({ queryKey: ["active-subscription"] });
-        queryClient.invalidateQueries({ queryKey: ["platform-plan-limits"] });
-      } else {
-        toast.info("Pagamento ainda não confirmado. Aguarde alguns instantes.");
-      }
-    } catch {
-      toast.error("Erro ao verificar pagamento.");
-    } finally {
-      setManualChecking(false);
-    }
-  };
-
   const formatDate = (dateStr: string | null) => {
     if (!dateStr) return "—";
     return new Date(dateStr).toLocaleDateString("pt-BR");
