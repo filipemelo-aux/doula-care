@@ -58,7 +58,7 @@ const plans = [
     price: "Grátis",
     period: "",
     description: "Ideal para começar",
-    features: ["Até 3 clientes", "Agenda básica", "Diário da gestante", "Contrações"],
+    features: ["Até 1 cliente", "Agenda", "Gestão de clientes", "Gestão financeira", "Despesas", "Push notifications"],
     highlighted: false,
   },
   {
@@ -66,7 +66,7 @@ const plans = [
     price: "R$ 41,25",
     period: "/mês",
     description: "Para doulas em crescimento",
-    features: ["Até 15 clientes", "Tudo do Free", "Contratos digitais", "Notificações push", "Gestão financeira", "Relatórios"],
+    features: ["Até 10 clientes", "Tudo do Free", "Notificações", "Mensagens", "Relatórios", "Exportação de relatórios"],
     highlighted: true,
   },
   {
@@ -74,7 +74,7 @@ const plans = [
     price: "R$ 50,41",
     period: "/mês",
     description: "Para profissionais consolidadas",
-    features: ["Clientes ilimitados", "Tudo do Pro", "Múltiplos colaboradores", "Exportação de relatórios", "Suporte prioritário"],
+    features: ["Clientes ilimitados", "Tudo do Pro", "Até 5 colaboradores", "Push notifications", "Suporte prioritário"],
     highlighted: false,
   },
 ];
@@ -359,7 +359,7 @@ const Portal = () => {
           <div className="grid sm:grid-cols-3 gap-8 mb-8">
             <div>
               <div className="flex items-center gap-2 mb-3">
-                <Baby className="h-5 w-5 text-primary" />
+                <img src="/logo.png" alt="Doula Care" className="h-6 w-6 rounded-lg object-contain" />
                 <span className="font-bold">Doula Care</span>
               </div>
               <p className="text-xs text-muted-foreground leading-relaxed">
@@ -378,7 +378,7 @@ const Portal = () => {
             <div>
               <h4 className="font-semibold text-sm mb-3">Contato</h4>
               <ul className="space-y-2 text-sm text-muted-foreground">
-                <li>suporte@dfranco.com.br</li>
+                <li>larissamacieldoula@gmail.com</li>
               </ul>
             </div>
           </div>
