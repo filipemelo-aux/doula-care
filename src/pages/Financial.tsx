@@ -333,18 +333,25 @@ export default function Financial() {
         const frequency = data.installment_frequency || "mensal";
         const customDays = data.custom_interval_days || 30;
 
+        const useCustomDates = data.installment_frequency === "manual" && customInstallmentDates.length === installments;
+
         const paymentRecords = Array.from({ length: installments }, (_, i) => {
-          const dueDate = new Date(firstDueDate);
-          if (frequency === "semanal") {
-            dueDate.setDate(dueDate.getDate() + (7 * i));
-          } else if (frequency === "quinzenal") {
-            dueDate.setDate(dueDate.getDate() + (15 * i));
-          } else if (frequency === "manual") {
-            dueDate.setDate(dueDate.getDate() + (customDays * i));
+          let dueDateStr: string;
+          if (useCustomDates && customInstallmentDates[i]) {
+            dueDateStr = customInstallmentDates[i];
           } else {
-            dueDate.setMonth(dueDate.getMonth() + i);
+            const dueDate = new Date(firstDueDate);
+            if (frequency === "semanal") {
+              dueDate.setDate(dueDate.getDate() + (7 * i));
+            } else if (frequency === "quinzenal") {
+              dueDate.setDate(dueDate.getDate() + (15 * i));
+            } else if (frequency === "manual") {
+              dueDate.setDate(dueDate.getDate() + (customDays * i));
+            } else {
+              dueDate.setMonth(dueDate.getMonth() + i);
+            }
+            dueDateStr = dueDate.toISOString().split("T")[0];
           }
-          const dueDateStr = dueDate.toISOString().split("T")[0];
           const thisInstVal = useCustomAmounts ? customInstallmentAmounts[i] : installmentValue;
           const isFirstPaid = entryAlreadyPaid && i === 0;
           return {
@@ -576,6 +583,7 @@ export default function Financial() {
     setAvistaPaymentStatus("pendente");
     setAvistaPartialValue("");
     setCustomInstallmentAmounts([]);
+    setCustomInstallmentDates([]);
     form.reset({
       description: "",
       amount: 0,
@@ -607,6 +615,7 @@ export default function Financial() {
     let detectedFirstDueDate = "";
     let detectedEntryPaid = false;
     let detectedCustomAmounts: number[] = [];
+    let detectedCustomDates: string[] = [];
 
     // Fetch payment records to detect frequency, first due date and entry status
     if (installments > 1) {
@@ -636,11 +645,15 @@ export default function Financial() {
         if (hasCustomAmounts) {
           detectedCustomAmounts = payments.map(p => Number(p.amount) || 0);
         }
+
+        // Load individual due dates for manual frequency
+        detectedCustomDates = payments.map(p => p.due_date || "");
       }
     }
 
     setEntryAlreadyPaid(detectedEntryPaid);
     setCustomInstallmentAmounts(detectedCustomAmounts);
+    setCustomInstallmentDates(detectedCustomDates);
 
     form.reset({
       description: transaction.description,
