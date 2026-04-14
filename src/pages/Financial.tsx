@@ -125,6 +125,7 @@ export default function Financial() {
   const [quickClientPhone, setQuickClientPhone] = useState("");
   const [entryAlreadyPaid, setEntryAlreadyPaid] = useState(false);
   const [customInstallmentAmounts, setCustomInstallmentAmounts] = useState<number[]>([]);
+  const [customInstallmentDates, setCustomInstallmentDates] = useState<string[]>([]);
   const [avistaPaymentStatus, setAvistaPaymentStatus] = useState<"pago" | "parcial" | "pendente">("pendente");
   const [avistaPartialValue, setAvistaPartialValue] = useState<string>("");
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
@@ -332,18 +333,25 @@ export default function Financial() {
         const frequency = data.installment_frequency || "mensal";
         const customDays = data.custom_interval_days || 30;
 
+        const useCustomDates = data.installment_frequency === "manual" && customInstallmentDates.length === installments;
+
         const paymentRecords = Array.from({ length: installments }, (_, i) => {
-          const dueDate = new Date(firstDueDate);
-          if (frequency === "semanal") {
-            dueDate.setDate(dueDate.getDate() + (7 * i));
-          } else if (frequency === "quinzenal") {
-            dueDate.setDate(dueDate.getDate() + (15 * i));
-          } else if (frequency === "manual") {
-            dueDate.setDate(dueDate.getDate() + (customDays * i));
+          let dueDateStr: string;
+          if (useCustomDates && customInstallmentDates[i]) {
+            dueDateStr = customInstallmentDates[i];
           } else {
-            dueDate.setMonth(dueDate.getMonth() + i);
+            const dueDate = new Date(firstDueDate);
+            if (frequency === "semanal") {
+              dueDate.setDate(dueDate.getDate() + (7 * i));
+            } else if (frequency === "quinzenal") {
+              dueDate.setDate(dueDate.getDate() + (15 * i));
+            } else if (frequency === "manual") {
+              dueDate.setDate(dueDate.getDate() + (customDays * i));
+            } else {
+              dueDate.setMonth(dueDate.getMonth() + i);
+            }
+            dueDateStr = dueDate.toISOString().split("T")[0];
           }
-          const dueDateStr = dueDate.toISOString().split("T")[0];
           const thisInstVal = useCustomAmounts ? customInstallmentAmounts[i] : installmentValue;
           const isFirstPaid = entryAlreadyPaid && i === 0;
           return {
@@ -575,6 +583,7 @@ export default function Financial() {
     setAvistaPaymentStatus("pendente");
     setAvistaPartialValue("");
     setCustomInstallmentAmounts([]);
+    setCustomInstallmentDates([]);
     form.reset({
       description: "",
       amount: 0,
@@ -606,6 +615,7 @@ export default function Financial() {
     let detectedFirstDueDate = "";
     let detectedEntryPaid = false;
     let detectedCustomAmounts: number[] = [];
+    let detectedCustomDates: string[] = [];
 
     // Fetch payment records to detect frequency, first due date and entry status
     if (installments > 1) {
@@ -635,11 +645,15 @@ export default function Financial() {
         if (hasCustomAmounts) {
           detectedCustomAmounts = payments.map(p => Number(p.amount) || 0);
         }
+
+        // Load individual due dates for manual frequency
+        detectedCustomDates = payments.map(p => p.due_date || "");
       }
     }
 
     setEntryAlreadyPaid(detectedEntryPaid);
     setCustomInstallmentAmounts(detectedCustomAmounts);
+    setCustomInstallmentDates(detectedCustomDates);
 
     form.reset({
       description: transaction.description,
@@ -1592,6 +1606,10 @@ export default function Financial() {
                       {(() => {
                         const count = form.watch("installments") || 1;
                         const total = form.watch("amount") || 0;
+                        const firstDue = form.watch("first_due_date");
+                        const customDays = form.watch("custom_interval_days") || 30;
+
+                        // Initialize amounts if needed
                         if (customInstallmentAmounts.length !== count) {
                           const equalVal = total / count;
                           const initial = Array(count).fill(equalVal);
@@ -1600,21 +1618,34 @@ export default function Financial() {
                           }
                           return null;
                         }
+
+                        // Initialize dates if needed
+                        if (customInstallmentDates.length !== count) {
+                          const baseDateStr = firstDue || format(new Date(), "yyyy-MM-dd");
+                          const baseDate = new Date(baseDateStr + "T12:00:00");
+                          const dates = Array.from({ length: count }, (_, i) => {
+                            const d = new Date(baseDate);
+                            d.setDate(d.getDate() + (customDays * i));
+                            return d.toISOString().split("T")[0];
+                          });
+                          setTimeout(() => setCustomInstallmentDates(dates), 0);
+                          return null;
+                        }
+
                         const sumCustom = customInstallmentAmounts.reduce((a, b) => a + b, 0);
                         const diff = Math.abs(sumCustom - total);
                         return (
                           <div className="space-y-1.5">
                             {customInstallmentAmounts.map((amt, i) => (
                               <div key={i} className="flex items-center gap-2">
-                                <span className="text-xs text-muted-foreground w-8 text-right">{i + 1}ª</span>
+                                <span className="text-xs text-muted-foreground w-6 text-right shrink-0">{i + 1}ª</span>
                                 <Input
-                                  className="input-field h-7 text-xs flex-1"
+                                  className="input-field h-7 text-xs flex-1 min-w-0"
                                   value={maskCurrency(String(Math.round(amt * 100)))}
                                   onChange={(e) => {
                                     const newAmounts = [...customInstallmentAmounts];
                                     const newVal = parseCurrency(e.target.value);
                                     newAmounts[i] = newVal;
-                                    // Auto-distribute remaining among NEXT installments only (not previous ones)
                                     const nextCount = count - 1 - i;
                                     if (nextCount > 0) {
                                       const sumPrevious = newAmounts.slice(0, i).reduce((a, b) => a + b, 0);
@@ -1623,7 +1654,6 @@ export default function Financial() {
                                       for (let j = i + 1; j < count; j++) {
                                         newAmounts[j] = Math.round(perNext * 100) / 100;
                                       }
-                                      // Adjust rounding on last installment
                                       const sumAll = newAmounts.reduce((a, b) => a + b, 0);
                                       const roundDiff = total - sumAll;
                                       if (Math.abs(roundDiff) > 0.001) {
@@ -1633,6 +1663,16 @@ export default function Financial() {
                                     setCustomInstallmentAmounts(newAmounts);
                                   }}
                                   placeholder="R$ 0,00"
+                                />
+                                <Input
+                                  type="date"
+                                  className="input-field h-7 text-xs w-[130px] shrink-0"
+                                  value={customInstallmentDates[i] || ""}
+                                  onChange={(e) => {
+                                    const newDates = [...customInstallmentDates];
+                                    newDates[i] = e.target.value;
+                                    setCustomInstallmentDates(newDates);
+                                  }}
                                 />
                               </div>
                             ))}
