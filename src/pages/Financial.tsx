@@ -125,6 +125,7 @@ export default function Financial() {
   const [quickClientPhone, setQuickClientPhone] = useState("");
   const [entryAlreadyPaid, setEntryAlreadyPaid] = useState(false);
   const [customInstallmentAmounts, setCustomInstallmentAmounts] = useState<number[]>([]);
+  const [customInstallmentDates, setCustomInstallmentDates] = useState<string[]>([]);
   const [avistaPaymentStatus, setAvistaPaymentStatus] = useState<"pago" | "parcial" | "pendente">("pendente");
   const [avistaPartialValue, setAvistaPartialValue] = useState<string>("");
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
