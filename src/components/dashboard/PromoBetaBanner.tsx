@@ -20,6 +20,7 @@ import { differenceInDays } from "date-fns";
 export function PromoBetaBanner() {
   const { organizationId } = useAuth();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const [planDialogOpen, setPlanDialogOpen] = useState(false);
 
   const dismissKey = `promo_banner_dismissed_${organizationId}`;
@@ -238,7 +239,6 @@ export function PromoBetaBanner() {
     }
 
     // Normal trial expired — redirect to subscription page
-    const navigateToSub = useNavigate();
     return (
       <Alert className="bg-gradient-to-r from-amber-50/80 to-amber-100/50 dark:from-amber-950/20 dark:to-amber-900/10">
         <Clock className="h-4 w-4 text-amber-600" />
