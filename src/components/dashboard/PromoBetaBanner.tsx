@@ -251,7 +251,7 @@ export function PromoBetaBanner() {
             variant="default"
             size="sm"
             className="ml-2 h-7 text-xs"
-            onClick={() => navigateToSub("/admin/assinatura")}
+            onClick={() => navigate("/admin/assinatura")}
           >
             <Gift className="h-3 w-3 mr-1" />
             Assinar Plano
