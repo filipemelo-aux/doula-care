@@ -15,10 +15,9 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Gift, Loader2, Crown, Trash2, Zap } from "lucide-react";
+import { Gift, Loader2, Crown, Zap } from "lucide-react";
 import { toast } from "sonner";
 import { addDays, format } from "date-fns";
 import { sendPushNotification } from "@/lib/pushNotifications";
@@ -29,8 +28,6 @@ interface PromoTriggerButtonProps {
   orgName: string;
 }
 
-type PromoType = "beta_tester" | "lifetime_premium";
-
 const statusLabels: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
   pending: { label: "Pendente", variant: "outline" },
   trial_active: { label: "Trial ativo", variant: "default" },
@@ -38,11 +35,8 @@ const statusLabels: Record<string, { label: string; variant: "default" | "second
   lifetime_active: { label: "Vitalício ∞", variant: "default" },
 };
 
-const planLabels: Record<string, string> = { free: "Free", pro: "Pro", premium: "Premium" };
-
 export function PromoTriggerButton({ orgId, orgName }: PromoTriggerButtonProps) {
   const queryClient = useQueryClient();
-  const [selectedPromo, setSelectedPromo] = useState<PromoType>("beta_tester");
   const [trialDays, setTrialDays] = useState<number>(7);
 
   const { data: promo } = useQuery({
@@ -68,7 +62,7 @@ export function PromoTriggerButton({ orgId, orgName }: PromoTriggerButtonProps) 
         .from("org_promotions" as any)
         .insert({
           organization_id: orgId,
-          promotion_type: selectedPromo,
+          promotion_type: "lifetime_premium",
           trial_started_at: now.toISOString(),
           trial_ends_at: trialEnds.toISOString(),
           status: "trial_active",
@@ -116,23 +110,6 @@ export function PromoTriggerButton({ orgId, orgName }: PromoTriggerButtonProps) 
     onError: (err: Error) => toast.error(`Erro: ${err.message}`),
   });
 
-  const removePromoMutation = useMutation({
-    mutationFn: async () => {
-      if (!promo) throw new Error("Sem promoção");
-      const { error: delError } = await supabase
-        .from("org_promotions" as any)
-        .delete()
-        .eq("id", promo.id);
-      if (delError) throw delError;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["org-promo", orgId] });
-      queryClient.invalidateQueries({ queryKey: ["super-admin-orgs"] });
-      toast.success(`Promoção removida de ${orgName}`);
-    },
-    onError: (err: Error) => toast.error(`Erro: ${err.message}`),
-  });
-
   const forceExpireMutation = useMutation({
     mutationFn: async () => {
       if (!promo) throw new Error("Sem promoção");
@@ -149,9 +126,44 @@ export function PromoTriggerButton({ orgId, orgName }: PromoTriggerButtonProps) 
     onError: (err: Error) => toast.error(`Erro: ${err.message}`),
   });
 
+  const makeLifetimeMutation = useMutation({
+    mutationFn: async () => {
+      if (!promo) throw new Error("Sem promoção");
+      const { error } = await supabase
+        .from("org_promotions" as any)
+        .update({
+          status: "lifetime_active",
+          promotion_type: "lifetime_premium",
+          trial_ends_at: null,
+        } as any)
+        .eq("id", promo.id);
+      if (error) throw error;
+
+      const { error: orgError } = await supabase
+        .from("organizations")
+        .update({ plan: "premium" as any })
+        .eq("id", orgId);
+      if (orgError) throw orgError;
+
+      // Notify the org
+      await supabase.from("org_notifications").insert({
+        organization_id: orgId,
+        title: "👑 Acesso Premium Vitalício!",
+        message: "Parabéns! Você recebeu acesso Premium vitalício. Todos os recursos estão liberados para sempre!",
+        type: "promotion",
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["org-promo", orgId] });
+      queryClient.invalidateQueries({ queryKey: ["super-admin-orgs"] });
+      toast.success(`${orgName} agora tem acesso vitalício!`);
+    },
+    onError: (err: Error) => toast.error(`Erro: ${err.message}`),
+  });
+
   if (promo) {
     const info = statusLabels[promo.status] || statusLabels.pending;
-    const isLifetime = promo.promotion_type === "lifetime_premium";
+    const isLifetime = promo.promotion_type === "lifetime_premium" && promo.status === "lifetime_active";
     return (
       <div className="flex items-center gap-1.5 flex-wrap">
         {isLifetime ? (
@@ -164,12 +176,7 @@ export function PromoTriggerButton({ orgId, orgName }: PromoTriggerButtonProps) 
         </Badge>
         {promo.chosen_plan && (
           <Badge variant="outline" className="text-[10px] h-5 bg-primary/5 text-primary">
-            Quer: {planLabels[promo.chosen_plan] || promo.chosen_plan}
-          </Badge>
-        )}
-        {isLifetime && promo.status === "trial_active" && (
-          <Badge variant="outline" className="text-[10px] h-5 text-amber-600">
-            surpresa ao final
+            Quer: {promo.chosen_plan}
           </Badge>
         )}
         {promo.trial_ends_at && promo.status === "trial_active" && (
@@ -178,47 +185,49 @@ export function PromoTriggerButton({ orgId, orgName }: PromoTriggerButtonProps) 
           </span>
         )}
         <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-5 w-5 p-0 text-destructive/60 hover:text-destructive hover:bg-destructive/10"
-                onClick={() => {
-                  if (confirm(`Remover promoção de ${orgName}? O plano atual será mantido.`)) {
-                    removePromoMutation.mutate();
-                  }
-                }}
-                disabled={removePromoMutation.isPending}
-              >
-                {removePromoMutation.isPending ? (
-                  <Loader2 className="h-3 w-3 animate-spin" />
-                ) : (
-                  <Trash2 className="h-3 w-3" />
-                )}
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent side="top" className="text-xs">Remover promoção</TooltipContent>
-          </Tooltip>
           {promo.status === "trial_active" && (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-5 w-5 p-0 text-amber-500/60 hover:text-amber-600 hover:bg-amber-500/10"
-                  onClick={() => forceExpireMutation.mutate()}
-                  disabled={forceExpireMutation.isPending}
-                >
-                  {forceExpireMutation.isPending ? (
-                    <Loader2 className="h-3 w-3 animate-spin" />
-                  ) : (
-                    <Zap className="h-3 w-3" />
-                  )}
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="top" className="text-xs">Expirar trial agora</TooltipContent>
-            </Tooltip>
+            <>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-5 w-5 p-0 text-amber-500/60 hover:text-amber-600 hover:bg-amber-500/10"
+                    onClick={() => forceExpireMutation.mutate()}
+                    disabled={forceExpireMutation.isPending}
+                  >
+                    {forceExpireMutation.isPending ? (
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                    ) : (
+                      <Zap className="h-3 w-3" />
+                    )}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="top" className="text-xs">Expirar trial agora</TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-5 w-5 p-0 text-amber-500/60 hover:text-amber-600 hover:bg-amber-500/10"
+                    onClick={() => {
+                      if (confirm(`Tornar ${orgName} Premium Vitalício?`)) {
+                        makeLifetimeMutation.mutate();
+                      }
+                    }}
+                    disabled={makeLifetimeMutation.isPending}
+                  >
+                    {makeLifetimeMutation.isPending ? (
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                    ) : (
+                      <Crown className="h-3 w-3" />
+                    )}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="top" className="text-xs">Tornar vitalício</TooltipContent>
+              </Tooltip>
+            </>
           )}
         </TooltipProvider>
       </div>
@@ -244,38 +253,9 @@ export function PromoTriggerButton({ orgId, orgName }: PromoTriggerButtonProps) 
           <AlertDialogDescription asChild>
             <div className="space-y-4">
               <p>Libere acesso completo ao plano Premium para <strong>{orgName}</strong> por um período de teste gratuito.</p>
-
-              <RadioGroup
-                value={selectedPromo}
-                onValueChange={(v) => setSelectedPromo(v as PromoType)}
-                className="space-y-3"
-              >
-                <div className="flex items-start gap-3 p-3 rounded-lg border border-border hover:border-primary/40 transition-colors">
-                  <RadioGroupItem value="beta_tester" id="beta_tester" className="mt-0.5" />
-                  <Label htmlFor="beta_tester" className="cursor-pointer flex-1 space-y-1">
-                    <div className="flex items-center gap-2">
-                      <Gift className="h-4 w-4 text-primary" />
-                      <span className="font-semibold text-sm text-foreground">Trial Premium</span>
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      {trialDays} dias grátis com todos os recursos Premium. Ao final, escolhe um plano.
-                    </p>
-                  </Label>
-                </div>
-
-                <div className="flex items-start gap-3 p-3 rounded-lg border border-border hover:border-amber-500/40 transition-colors">
-                  <RadioGroupItem value="lifetime_premium" id="lifetime_premium" className="mt-0.5" />
-                  <Label htmlFor="lifetime_premium" className="cursor-pointer flex-1 space-y-1">
-                    <div className="flex items-center gap-2">
-                      <Crown className="h-4 w-4 text-amber-500" />
-                      <span className="font-semibold text-sm text-foreground">Acesso Vitalício</span>
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      {trialDays} dias de experiência → ao final, revela acesso Premium <strong>vitalício</strong>.
-                    </p>
-                  </Label>
-                </div>
-              </RadioGroup>
+              <p className="text-xs text-muted-foreground">
+                Ao final do período, a doula será surpreendida com acesso Premium <strong>vitalício</strong>.
+              </p>
 
               <div className="space-y-2">
                 <Label htmlFor="trial-days" className="text-sm font-medium text-foreground">
@@ -302,10 +282,8 @@ export function PromoTriggerButton({ orgId, orgName }: PromoTriggerButtonProps) 
           <AlertDialogAction onClick={() => sendPromoMutation.mutate()}>
             {sendPromoMutation.isPending ? (
               <Loader2 className="h-4 w-4 animate-spin mr-1" />
-            ) : selectedPromo === "lifetime_premium" ? (
-              <Crown className="h-4 w-4 mr-1" />
             ) : (
-              <Gift className="h-4 w-4 mr-1" />
+              <Crown className="h-4 w-4 mr-1" />
             )}
             Liberar Acesso
           </AlertDialogAction>
