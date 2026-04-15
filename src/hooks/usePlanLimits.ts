@@ -102,7 +102,9 @@ export function usePlanLimits() {
         .from("org_promotions" as any)
         .select("id, status, trial_ends_at, promotion_type")
         .eq("organization_id", organizationId)
-        .in("status", ["trial_active", "lifetime_active", "bonus_active"])
+        .in("status", ["trial_active", "lifetime_active"])
+        .order("updated_at", { ascending: false })
+        .limit(1)
         .maybeSingle();
       if (error) return null;
       return data as any;

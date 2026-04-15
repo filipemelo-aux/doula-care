@@ -31,6 +31,8 @@ export function PromoBetaBanner() {
         .select("*")
         .eq("organization_id", organizationId)
         .in("status", ["trial_active", "lifetime_active"])
+        .order("updated_at", { ascending: false })
+        .limit(1)
         .maybeSingle();
       if (error) throw error;
       return data as any;

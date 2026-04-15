@@ -32,6 +32,7 @@ const statusLabels: Record<string, { label: string; variant: "default" | "second
   pending: { label: "Pendente", variant: "outline" },
   trial_active: { label: "Trial ativo", variant: "default" },
   completed: { label: "Concluído", variant: "outline" },
+  expired: { label: "Expirado", variant: "destructive" },
   lifetime_active: { label: "Vitalício ∞", variant: "default" },
 };
 
@@ -47,13 +48,20 @@ export function PromoTriggerButton({ orgId, orgName }: PromoTriggerButtonProps) 
         .select("*")
         .eq("organization_id", orgId)
         .in("status", ["trial_active", "lifetime_active", "pending"])
+        .order("updated_at", { ascending: false })
+        .limit(1)
         .maybeSingle();
       if (error) throw error;
       return data as any;
     },
   });
 
-  const sendPromoMutation = useMutation({
+  const invalidateOrgPromo = () => {
+    queryClient.invalidateQueries({ queryKey: ["org-promo", orgId] });
+    queryClient.invalidateQueries({ queryKey: ["super-admin-orgs"] });
+  };
+
+  const sendTrialMutation = useMutation({
     mutationFn: async () => {
       const now = new Date();
       const trialEnds = addDays(now, trialDays);
@@ -79,8 +87,8 @@ export function PromoTriggerButton({ orgId, orgName }: PromoTriggerButtonProps) 
         .from("org_notifications")
         .insert({
           organization_id: orgId,
-          title: "🎉 Experiência Premium ativada!",
-          message: `Parabéns! Você ganhou ${trialDays} dias gratuitos para experimentar todos os recursos do plano Premium completo. Aproveite ao máximo!`,
+          title: "🎉 Teste Premium ativado!",
+          message: `Você recebeu ${trialDays} dias de teste para usar todos os recursos do plano Premium.`,
           type: "promotion",
         });
       if (notifError) throw notifError;
@@ -91,11 +99,11 @@ export function PromoTriggerButton({ orgId, orgName }: PromoTriggerButtonProps) 
         .eq("organization_id", orgId);
 
       if (orgProfiles && orgProfiles.length > 0) {
-        const adminUserIds = orgProfiles.map(p => p.user_id);
+        const adminUserIds = orgProfiles.map((p) => p.user_id);
         await sendPushNotification({
           user_ids: adminUserIds,
-          title: "🎁 Experiência Premium liberada!",
-          message: `Você ganhou ${trialDays} dias para experimentar todos os recursos Premium. Confira!`,
+          title: "🎁 Teste Premium liberado!",
+          message: `Seu teste de ${trialDays} dias do Premium já está ativo.`,
           url: "/admin",
           type: "general",
           tag: "promo-trial",
@@ -103,25 +111,30 @@ export function PromoTriggerButton({ orgId, orgName }: PromoTriggerButtonProps) 
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["org-promo", orgId] });
-      queryClient.invalidateQueries({ queryKey: ["super-admin-orgs"] });
-      toast.success(`Promoção enviada para ${orgName}!`);
+      invalidateOrgPromo();
+      toast.success(`Trial liberado para ${orgName}!`);
     },
     onError: (err: Error) => toast.error(`Erro: ${err.message}`),
   });
 
   const forceExpireMutation = useMutation({
     mutationFn: async () => {
-      if (!promo) throw new Error("Sem promoção");
-      const { error } = await supabase
+      if (!promo) throw new Error("Sem trial ativo");
+      const { error: promoError } = await supabase
         .from("org_promotions" as any)
-        .update({ trial_ends_at: new Date().toISOString() } as any)
+        .update({ status: "expired", trial_ends_at: new Date().toISOString() } as any)
         .eq("id", promo.id);
-      if (error) throw error;
+      if (promoError) throw promoError;
+
+      const { error: orgError } = await supabase
+        .from("organizations")
+        .update({ plan: "free" as any })
+        .eq("id", orgId);
+      if (orgError) throw orgError;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["org-promo", orgId] });
-      toast.success(`Trial expirado manualmente para ${orgName}`);
+      invalidateOrgPromo();
+      toast.success(`Trial encerrado para ${orgName}`);
     },
     onError: (err: Error) => toast.error(`Erro: ${err.message}`),
   });
@@ -129,24 +142,28 @@ export function PromoTriggerButton({ orgId, orgName }: PromoTriggerButtonProps) 
   const makeLifetimeMutation = useMutation({
     mutationFn: async () => {
       if (promo) {
-        // Update existing promo to lifetime
         const { error } = await supabase
           .from("org_promotions" as any)
           .update({
             status: "lifetime_active",
             promotion_type: "lifetime_premium",
             trial_ends_at: null,
+            chosen_plan: null,
+            bonus_choice: null,
+            bonus_chosen_at: null,
+            bonus_started_at: null,
+            bonus_ends_at: null,
           } as any)
           .eq("id", promo.id);
         if (error) throw error;
       } else {
-        // Create new lifetime promo
         const { error } = await supabase
           .from("org_promotions" as any)
           .insert({
             organization_id: orgId,
             promotion_type: "lifetime_premium",
             status: "lifetime_active",
+            trial_ends_at: null,
           } as any);
         if (error) throw error;
       }
@@ -160,13 +177,12 @@ export function PromoTriggerButton({ orgId, orgName }: PromoTriggerButtonProps) 
       await supabase.from("org_notifications").insert({
         organization_id: orgId,
         title: "👑 Acesso Premium Vitalício!",
-        message: "Parabéns! Você recebeu acesso Premium vitalício. Todos os recursos estão liberados para sempre!",
+        message: "Acesso Premium vitalício concedido para esta organização.",
         type: "promotion",
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["org-promo", orgId] });
-      queryClient.invalidateQueries({ queryKey: ["super-admin-orgs"] });
+      invalidateOrgPromo();
       toast.success(`${orgName} agora tem acesso vitalício!`);
     },
     onError: (err: Error) => toast.error(`Erro: ${err.message}`),
@@ -174,7 +190,8 @@ export function PromoTriggerButton({ orgId, orgName }: PromoTriggerButtonProps) 
 
   if (promo) {
     const info = statusLabels[promo.status] || statusLabels.pending;
-    const isLifetime = promo.promotion_type === "lifetime_premium" && promo.status === "lifetime_active";
+    const isLifetime = promo.status === "lifetime_active";
+
     return (
       <div className="flex items-center gap-1.5 flex-wrap">
         {isLifetime ? (
@@ -185,11 +202,6 @@ export function PromoTriggerButton({ orgId, orgName }: PromoTriggerButtonProps) 
         <Badge variant={info.variant} className="text-[10px] h-5">
           {info.label}
         </Badge>
-        {promo.chosen_plan && (
-          <Badge variant="outline" className="text-[10px] h-5 bg-primary/5 text-primary">
-            Quer: {promo.chosen_plan}
-          </Badge>
-        )}
         {promo.trial_ends_at && promo.status === "trial_active" && (
           <span className="text-[10px] text-muted-foreground">
             até {format(new Date(promo.trial_ends_at), "dd/MM", { locale: ptBR })}
@@ -215,7 +227,7 @@ export function PromoTriggerButton({ orgId, orgName }: PromoTriggerButtonProps) 
                     Expirar
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent side="top" className="text-xs">Expirar trial agora</TooltipContent>
+                <TooltipContent side="top" className="text-xs">Encerrar trial agora</TooltipContent>
               </Tooltip>
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -238,7 +250,7 @@ export function PromoTriggerButton({ orgId, orgName }: PromoTriggerButtonProps) 
                     Vitalício
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent side="top" className="text-xs">Tornar vitalício</TooltipContent>
+                <TooltipContent side="top" className="text-xs">Conceder acesso vitalício</TooltipContent>
               </Tooltip>
             </div>
           )}
@@ -255,7 +267,7 @@ export function PromoTriggerButton({ orgId, orgName }: PromoTriggerButtonProps) 
             variant="outline"
             size="sm"
             className="h-7 text-[11px] gap-1 text-primary hover:bg-primary/5"
-            disabled={sendPromoMutation.isPending}
+            disabled={sendTrialMutation.isPending}
           >
             <Gift className="h-3 w-3" />
             Liberar Trial
@@ -270,7 +282,6 @@ export function PromoTriggerButton({ orgId, orgName }: PromoTriggerButtonProps) 
                 <p className="text-xs text-muted-foreground">
                   Ao final do período, a doula será direcionada para escolher e assinar um plano.
                 </p>
-
                 <div className="space-y-2">
                   <Label htmlFor="trial-days" className="text-sm font-medium text-foreground">
                     Duração do período gratuito
@@ -293,8 +304,8 @@ export function PromoTriggerButton({ orgId, orgName }: PromoTriggerButtonProps) 
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={() => sendPromoMutation.mutate()}>
-              {sendPromoMutation.isPending ? (
+            <AlertDialogAction onClick={() => sendTrialMutation.mutate()}>
+              {sendTrialMutation.isPending ? (
                 <Loader2 className="h-4 w-4 animate-spin mr-1" />
               ) : (
                 <Gift className="h-4 w-4 mr-1" />

@@ -404,12 +404,9 @@ async function completeActiveTrials(
   if (!activePromos || activePromos.length === 0) return;
 
   for (const promo of activePromos) {
-    // Don't auto-complete lifetime promotions — they have their own flow
-    if (promo.promotion_type === "lifetime_premium") continue;
-
     await supabase
       .from("org_promotions")
-      .update({ status: "completed" })
+      .update({ status: "completed", chosen_plan: null, bonus_choice: null, bonus_chosen_at: null, bonus_started_at: null, bonus_ends_at: null })
       .eq("id", promo.id);
 
     logStep("Trial marked as completed (user subscribed)", {
