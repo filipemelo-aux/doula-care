@@ -1,7 +1,8 @@
+import { useEffect } from "react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { AlertTriangle, Ban } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { AlertTriangle, Ban, Clock } from "lucide-react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { usePlanLimits } from "@/hooks/usePlanLimits";
 
 export function ExpiredPlanBanner() {
@@ -10,12 +11,54 @@ export function ExpiredPlanBanner() {
     isSubscriptionPending,
     isBlocked,
     isGracePeriod,
+    isTrialExpired,
+    hasActiveSubscription,
     daysOverdue,
     originalPlan,
   } = usePlanLimits();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Auto-redirect to subscription page when trial expired without subscription
+  // (only if not already on subscription or plans page)
+  const shouldForceRedirect =
+    isTrialExpired &&
+    !hasActiveSubscription &&
+    !location.pathname.includes("/admin/assinatura") &&
+    !location.pathname.includes("/admin/planos");
+
+  useEffect(() => {
+    if (shouldForceRedirect) {
+      navigate("/admin/assinatura", { replace: true });
+    }
+  }, [shouldForceRedirect, navigate]);
 
   // Super admins never see this banner (already handled by usePlanLimits, but double-safe)
+
+  // Trial expired banner (takes priority)
+  if (isTrialExpired && !hasActiveSubscription) {
+    return (
+      <Alert className="bg-amber-500/10 border-amber-500/30 text-amber-900 dark:text-amber-200">
+        <Clock className="h-4 w-4 text-amber-500" />
+        <AlertTitle className="text-sm font-semibold">
+          Seu período de teste expirou!
+        </AlertTitle>
+        <AlertDescription className="text-xs flex items-center justify-between gap-4">
+          <span>
+            Seu trial Premium terminou. Assine um plano para continuar utilizando todos os recursos.
+            Enquanto isso, os limites do plano Free estão sendo aplicados.
+          </span>
+          <Button
+            size="sm"
+            className="shrink-0 text-xs h-7 bg-amber-600 hover:bg-amber-700 text-white"
+            onClick={() => navigate("/admin/assinatura")}
+          >
+            Assinar agora
+          </Button>
+        </AlertDescription>
+      </Alert>
+    );
+  }
 
   if (!isSubscriptionExpired && !isBlocked) return null;
 
