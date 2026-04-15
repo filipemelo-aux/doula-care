@@ -40,7 +40,6 @@ export function PromoTriggerButton({ orgId, orgName }: PromoTriggerButtonProps) 
   const queryClient = useQueryClient();
   const [trialDays, setTrialDays] = useState<number>(7);
 
-  // Check if org has an active subscription
   const { data: subscription } = useQuery({
     queryKey: ["org-subscription-sa", orgId],
     queryFn: async () => {
@@ -50,6 +49,7 @@ export function PromoTriggerButton({ orgId, orgName }: PromoTriggerButtonProps) 
         .eq("organization_id", orgId)
         .limit(1)
         .maybeSingle();
+
       if (!profile?.user_id) return null;
 
       const { data, error } = await supabase
@@ -60,6 +60,7 @@ export function PromoTriggerButton({ orgId, orgName }: PromoTriggerButtonProps) 
         .order("created_at", { ascending: false })
         .limit(1)
         .maybeSingle();
+
       if (error) return null;
       return data;
     },
@@ -76,6 +77,7 @@ export function PromoTriggerButton({ orgId, orgName }: PromoTriggerButtonProps) 
         .order("updated_at", { ascending: false })
         .limit(1)
         .maybeSingle();
+
       if (error) throw error;
       return data as any;
     },
@@ -142,10 +144,12 @@ export function PromoTriggerButton({ orgId, orgName }: PromoTriggerButtonProps) 
   const forceExpireMutation = useMutation({
     mutationFn: async () => {
       if (!promo) throw new Error("Sem trial ativo");
+
       await supabase
         .from("org_promotions" as any)
         .update({ status: "expired", trial_ends_at: new Date().toISOString() } as any)
         .eq("id", promo.id);
+
       await supabase
         .from("organizations")
         .update({ plan: "free" as any })
@@ -184,10 +188,12 @@ export function PromoTriggerButton({ orgId, orgName }: PromoTriggerButtonProps) 
             trial_ends_at: null,
           } as any);
       }
+
       await supabase
         .from("organizations")
         .update({ plan: "premium" as any })
         .eq("id", orgId);
+
       await supabase.from("org_notifications").insert({
         organization_id: orgId,
         title: "👑 Acesso Premium Vitalício!",
@@ -202,57 +208,58 @@ export function PromoTriggerButton({ orgId, orgName }: PromoTriggerButtonProps) 
     onError: (err: Error) => toast.error(`Erro: ${err.message}`),
   });
 
-  const hasActiveSub = subscription && subscription.status === "active";
+  const hasActiveSub = subscription?.status === "active";
   const isLifetime = promo?.status === "lifetime_active";
+  const renewalDate = subscription?.current_period_end
+    ? format(new Date(subscription.current_period_end), "dd/MM/yyyy", { locale: ptBR })
+    : null;
+  const daysLeft = subscription?.current_period_end
+    ? Math.max(0, differenceInDays(new Date(subscription.current_period_end), new Date()))
+    : null;
 
-  // ── Org has active Stripe subscription → show renewal info, no trial button ──
+  const lifetimeButton = !isLifetime ? (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-6 px-1.5 gap-1 text-[10px] text-amber-600 hover:bg-amber-500/10 border-amber-500/30"
+          onClick={() => {
+            if (confirm(`Tornar ${orgName} vitalício?`)) {
+              makeLifetimeMutation.mutate();
+            }
+          }}
+          disabled={makeLifetimeMutation.isPending}
+        >
+          {makeLifetimeMutation.isPending ? (
+            <Loader2 className="h-3 w-3 animate-spin" />
+          ) : (
+            <Crown className="h-3 w-3" />
+          )}
+          Tornar vitalício
+        </Button>
+      </TooltipTrigger>
+      <TooltipContent side="top" className="text-xs">Conceder acesso Premium vitalício</TooltipContent>
+    </Tooltip>
+  ) : null;
+
   if (hasActiveSub) {
-    const daysLeft = subscription.current_period_end
-      ? differenceInDays(new Date(subscription.current_period_end), new Date())
-      : null;
-    const renewalDate = subscription.current_period_end
-      ? format(new Date(subscription.current_period_end), "dd/MM/yyyy", { locale: ptBR })
-      : "—";
-
     return (
       <div className="flex items-center gap-1.5 flex-wrap">
         <CreditCard className="h-3.5 w-3.5 text-green-600" />
         <Badge variant="default" className="text-[10px] h-5 bg-green-600/10 text-green-700 border-green-600/20">
           Assinante
         </Badge>
-        <span className="text-[10px] text-muted-foreground">
-          renova {renewalDate} ({daysLeft != null && daysLeft >= 0 ? `${daysLeft}d` : "vencido"})
-        </span>
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-6 px-1.5 gap-1 text-[10px] text-amber-600 hover:bg-amber-500/10 border-amber-500/30"
-                onClick={() => {
-                  if (confirm(`Tornar ${orgName} Premium Vitalício?`)) {
-                    makeLifetimeMutation.mutate();
-                  }
-                }}
-                disabled={makeLifetimeMutation.isPending}
-              >
-                {makeLifetimeMutation.isPending ? (
-                  <Loader2 className="h-3 w-3 animate-spin" />
-                ) : (
-                  <Crown className="h-3 w-3" />
-                )}
-                Vitalício
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent side="top" className="text-xs">Conceder acesso vitalício</TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
+        {renewalDate && (
+          <span className="text-[10px] text-muted-foreground">
+            renova {renewalDate} ({daysLeft}d)
+          </span>
+        )}
+        <TooltipProvider>{lifetimeButton}</TooltipProvider>
       </div>
     );
   }
 
-  // ── Lifetime or active trial ──
   if (promo) {
     const info = statusLabels[promo.status] || statusLabels.pending;
 
@@ -273,57 +280,32 @@ export function PromoTriggerButton({ orgId, orgName }: PromoTriggerButtonProps) 
         )}
         <TooltipProvider>
           {promo.status === "trial_active" && (
-            <div className="flex items-center gap-1">
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-6 px-1.5 gap-1 text-[10px] text-destructive hover:bg-destructive/10 border-destructive/30"
-                    onClick={() => forceExpireMutation.mutate()}
-                    disabled={forceExpireMutation.isPending}
-                  >
-                    {forceExpireMutation.isPending ? (
-                      <Loader2 className="h-3 w-3 animate-spin" />
-                    ) : (
-                      <Zap className="h-3 w-3" />
-                    )}
-                    Expirar
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent side="top" className="text-xs">Encerrar trial agora</TooltipContent>
-              </Tooltip>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-6 px-1.5 gap-1 text-[10px] text-amber-600 hover:bg-amber-500/10 border-amber-500/30"
-                    onClick={() => {
-                      if (confirm(`Tornar ${orgName} Premium Vitalício?`)) {
-                        makeLifetimeMutation.mutate();
-                      }
-                    }}
-                    disabled={makeLifetimeMutation.isPending}
-                  >
-                    {makeLifetimeMutation.isPending ? (
-                      <Loader2 className="h-3 w-3 animate-spin" />
-                    ) : (
-                      <Crown className="h-3 w-3" />
-                    )}
-                    Vitalício
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent side="top" className="text-xs">Conceder acesso vitalício</TooltipContent>
-              </Tooltip>
-            </div>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-6 px-1.5 gap-1 text-[10px] text-destructive hover:bg-destructive/10 border-destructive/30"
+                  onClick={() => forceExpireMutation.mutate()}
+                  disabled={forceExpireMutation.isPending}
+                >
+                  {forceExpireMutation.isPending ? (
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                  ) : (
+                    <Zap className="h-3 w-3" />
+                  )}
+                  Expirar
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="top" className="text-xs">Encerrar trial agora</TooltipContent>
+            </Tooltip>
           )}
+          {lifetimeButton}
         </TooltipProvider>
       </div>
     );
   }
 
-  // ── No promo, no subscription → show trial + lifetime buttons ──
   return (
     <div className="flex items-center gap-1.5 flex-wrap">
       <AlertDialog>
@@ -343,7 +325,9 @@ export function PromoTriggerButton({ orgId, orgName }: PromoTriggerButtonProps) 
             <AlertDialogTitle>Liberar Teste Premium</AlertDialogTitle>
             <AlertDialogDescription asChild>
               <div className="space-y-4">
-                <p>Libere acesso completo ao plano Premium para <strong>{orgName}</strong> por um período de teste gratuito.</p>
+                <p>
+                  Libere acesso completo ao plano Premium para <strong>{orgName}</strong> por um período de teste gratuito.
+                </p>
                 <p className="text-xs text-muted-foreground">
                   Ao final do período, a doula será direcionada para escolher e assinar um plano.
                 </p>
@@ -381,31 +365,7 @@ export function PromoTriggerButton({ orgId, orgName }: PromoTriggerButtonProps) 
         </AlertDialogContent>
       </AlertDialog>
 
-      <TooltipProvider>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-7 text-[11px] gap-1 text-amber-600 hover:bg-amber-500/10 border-amber-500/30"
-              onClick={() => {
-                if (confirm(`Tornar ${orgName} Premium Vitalício?`)) {
-                  makeLifetimeMutation.mutate();
-                }
-              }}
-              disabled={makeLifetimeMutation.isPending}
-            >
-              {makeLifetimeMutation.isPending ? (
-                <Loader2 className="h-3 w-3 animate-spin" />
-              ) : (
-                <Crown className="h-3 w-3" />
-              )}
-              Vitalício
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent side="top" className="text-xs">Conceder acesso Premium vitalício</TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
+      <TooltipProvider>{lifetimeButton}</TooltipProvider>
     </div>
   );
 }
