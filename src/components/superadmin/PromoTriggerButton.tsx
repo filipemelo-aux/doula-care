@@ -248,60 +248,88 @@ export function PromoTriggerButton({ orgId, orgName }: PromoTriggerButtonProps) 
   }
 
   return (
-    <AlertDialog>
-      <AlertDialogTrigger asChild>
-        <Button
-          variant="outline"
-          size="sm"
-          className="h-7 text-[11px] gap-1 text-primary hover:bg-primary/5"
-          disabled={sendPromoMutation.isPending}
-        >
-          <Gift className="h-3 w-3" />
-          Liberar Trial
-        </Button>
-      </AlertDialogTrigger>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>Liberar Experiência Premium</AlertDialogTitle>
-          <AlertDialogDescription asChild>
-            <div className="space-y-4">
-              <p>Libere acesso completo ao plano Premium para <strong>{orgName}</strong> por um período de teste gratuito.</p>
-              <p className="text-xs text-muted-foreground">
-                Ao final do período, a doula será surpreendida com acesso Premium <strong>vitalício</strong>.
-              </p>
-
-              <div className="space-y-2">
-                <Label htmlFor="trial-days" className="text-sm font-medium text-foreground">
-                  Duração do período gratuito
-                </Label>
-                <Input
-                  id="trial-days"
-                  type="number"
-                  min={1}
-                  max={365}
-                  value={trialDays}
-                  onChange={(e) => setTrialDays(Math.max(1, Math.min(365, Number(e.target.value) || 1)))}
-                  className="w-32"
-                />
+    <div className="flex items-center gap-1.5 flex-wrap">
+      <AlertDialog>
+        <AlertDialogTrigger asChild>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-7 text-[11px] gap-1 text-primary hover:bg-primary/5"
+            disabled={sendPromoMutation.isPending}
+          >
+            <Gift className="h-3 w-3" />
+            Liberar Trial
+          </Button>
+        </AlertDialogTrigger>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Liberar Teste Premium</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-4">
+                <p>Libere acesso completo ao plano Premium para <strong>{orgName}</strong> por um período de teste gratuito.</p>
                 <p className="text-xs text-muted-foreground">
-                  A doula terá <strong>{trialDays} dias</strong> para experimentar todos os recursos do Premium.
+                  Ao final do período, a doula será direcionada para escolher e assinar um plano.
                 </p>
+
+                <div className="space-y-2">
+                  <Label htmlFor="trial-days" className="text-sm font-medium text-foreground">
+                    Duração do período gratuito
+                  </Label>
+                  <Input
+                    id="trial-days"
+                    type="number"
+                    min={1}
+                    max={365}
+                    value={trialDays}
+                    onChange={(e) => setTrialDays(Math.max(1, Math.min(365, Number(e.target.value) || 1)))}
+                    className="w-32"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    A doula terá <strong>{trialDays} dias</strong> para experimentar todos os recursos do Premium.
+                  </p>
+                </div>
               </div>
-            </div>
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel>Cancelar</AlertDialogCancel>
-          <AlertDialogAction onClick={() => sendPromoMutation.mutate()}>
-            {sendPromoMutation.isPending ? (
-              <Loader2 className="h-4 w-4 animate-spin mr-1" />
-            ) : (
-              <Crown className="h-4 w-4 mr-1" />
-            )}
-            Liberar Acesso
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={() => sendPromoMutation.mutate()}>
+              {sendPromoMutation.isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin mr-1" />
+              ) : (
+                <Gift className="h-4 w-4 mr-1" />
+              )}
+              Liberar Trial
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-7 text-[11px] gap-1 text-amber-600 hover:bg-amber-500/10 border-amber-500/30"
+              onClick={() => {
+                if (confirm(`Tornar ${orgName} Premium Vitalício?`)) {
+                  makeLifetimeMutation.mutate();
+                }
+              }}
+              disabled={makeLifetimeMutation.isPending}
+            >
+              {makeLifetimeMutation.isPending ? (
+                <Loader2 className="h-3 w-3 animate-spin" />
+              ) : (
+                <Crown className="h-3 w-3" />
+              )}
+              Vitalício
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="top" className="text-xs">Conceder acesso Premium vitalício</TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    </div>
   );
 }
