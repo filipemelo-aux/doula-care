@@ -7,13 +7,15 @@ const corsHeaders = {
 };
 
 /**
- * Cron job — checks org_promotions for expired trials.
+ * Cron job — checks org_promotions for expired trials and stale trial_active statuses.
  *
- * 1. Finds trials with status "trial_active" whose trial_ends_at < now
- * 2. Skips lifetime_premium promotions (they get lifetime_active, not downgraded)
- * 3. Downgrades org plan to "free"
- * 4. Updates promo status to "expired"
- * 5. Notifies the doula and sends push notification
+ * Phase A: Orgs with trial_active that already have an active Stripe subscription
+ *          → mark promo as "completed" (no downgrade needed)
+ *
+ * Phase B: Expired trials (trial_ends_at < now) without active subscription
+ *          → downgrade org to free, mark as "expired", notify doula
+ *
+ * Skips lifetime_premium promotions (they have their own reveal flow).
  */
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -26,36 +28,36 @@ Deno.serve(async (req) => {
     const supabase = createClient(supabaseUrl, serviceRoleKey);
 
     const nowISO = new Date().toISOString();
-    let processed = 0;
+    let completedCount = 0;
+    let expiredCount = 0;
 
-    // Find expired trials (excluding lifetime_premium which should reveal surprise)
-    const { data: expiredTrials, error } = await supabase
+    // Fetch ALL trial_active promotions (excluding lifetime)
+    const { data: activeTrials, error } = await supabase
       .from("org_promotions")
       .select("id, organization_id, promotion_type, trial_ends_at")
       .eq("status", "trial_active")
-      .neq("promotion_type", "lifetime_premium")
-      .lt("trial_ends_at", nowISO);
+      .neq("promotion_type", "lifetime_premium");
 
     if (error) {
-      console.error("Error fetching expired trials:", error);
+      console.error("Error fetching active trials:", error);
       return new Response(
-        JSON.stringify({ error: "Failed to fetch expired trials" }),
+        JSON.stringify({ error: "Failed to fetch trials" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    if (!expiredTrials || expiredTrials.length === 0) {
-      console.log("No expired trials found");
+    if (!activeTrials || activeTrials.length === 0) {
+      console.log("No active trials found");
       return new Response(
-        JSON.stringify({ ok: true, processed: 0 }),
+        JSON.stringify({ ok: true, completed: 0, expired: 0 }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    console.log(`Found ${expiredTrials.length} expired trial(s)`);
+    console.log(`Found ${activeTrials.length} active trial(s) to check`);
 
-    for (const trial of expiredTrials) {
-      // Check if org has an active Stripe subscription (don't downgrade if they subscribed)
+    for (const trial of activeTrials) {
+      // Get org's admin user
       const { data: profile } = await supabase
         .from("profiles")
         .select("user_id")
@@ -63,6 +65,8 @@ Deno.serve(async (req) => {
         .limit(1)
         .maybeSingle();
 
+      // Check if org has active Stripe subscription
+      let hasActiveSub = false;
       if (profile?.user_id) {
         const { data: activeSub } = await supabase
           .from("subscriptions")
@@ -71,15 +75,25 @@ Deno.serve(async (req) => {
           .eq("status", "active")
           .limit(1)
           .maybeSingle();
+        hasActiveSub = !!activeSub;
+      }
 
-        if (activeSub) {
-          console.log(`Org ${trial.organization_id} has active subscription, marking trial completed`);
-          await supabase
-            .from("org_promotions")
-            .update({ status: "completed" })
-            .eq("id", trial.id);
-          continue;
-        }
+      // ── Phase A: Has active subscription → mark trial completed ──
+      if (hasActiveSub) {
+        console.log(`Org ${trial.organization_id} has active subscription, marking trial completed`);
+        await supabase
+          .from("org_promotions")
+          .update({ status: "completed" })
+          .eq("id", trial.id);
+        completedCount++;
+        continue;
+      }
+
+      // ── Phase B: Trial expired without subscription → downgrade ──
+      const isExpired = trial.trial_ends_at && new Date(trial.trial_ends_at) < new Date();
+      if (!isExpired) {
+        console.log(`Org ${trial.organization_id} trial still active, skipping`);
+        continue;
       }
 
       // Downgrade org to free
@@ -94,14 +108,10 @@ Deno.serve(async (req) => {
       }
 
       // Mark promotion as expired
-      const { error: promoError } = await supabase
+      await supabase
         .from("org_promotions")
         .update({ status: "expired" })
         .eq("id", trial.id);
-
-      if (promoError) {
-        console.error(`Error updating promo ${trial.id}:`, promoError);
-      }
 
       // Notify the doula
       await supabase.from("org_notifications").insert({
@@ -124,8 +134,7 @@ Deno.serve(async (req) => {
             body: JSON.stringify({
               user_id: profile.user_id,
               title: "Período de teste expirado",
-              message:
-                "Seu trial Premium terminou. Assine um plano para continuar usando todos os recursos.",
+              message: "Seu trial Premium terminou. Assine um plano para continuar usando todos os recursos.",
             }),
           });
         } catch (_) {
@@ -134,13 +143,13 @@ Deno.serve(async (req) => {
       }
 
       console.log(`Org ${trial.organization_id} downgraded to free (trial expired)`);
-      processed++;
+      expiredCount++;
     }
 
-    console.log(`Done: ${processed} trial(s) expired and downgraded`);
+    console.log(`Done: ${completedCount} completed (subscribed), ${expiredCount} expired and downgraded`);
 
     return new Response(
-      JSON.stringify({ ok: true, processed }),
+      JSON.stringify({ ok: true, completed: completedCount, expired: expiredCount }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (err) {

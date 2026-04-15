@@ -196,6 +196,9 @@ async function handleCheckoutCompleted(
   // Update organization plan
   await updateOrgPlan(supabase, userId, planId, billingType, periodEnd);
 
+  // Mark any active trial/promo as completed (user subscribed)
+  await completeActiveTrials(supabase, userId);
+
   logStep("Subscription activated for user", { userId, planId });
 }
 
@@ -373,6 +376,45 @@ async function updateOrgPlan(
       orgId: profile.organization_id,
       plan: planData.plan,
       status: "ativo",
+    });
+  }
+}
+
+/**
+ * When a user subscribes, mark any active trial as completed
+ */
+async function completeActiveTrials(
+  supabase: ReturnType<typeof createClient>,
+  userId: string
+) {
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("organization_id")
+    .eq("user_id", userId)
+    .single();
+
+  if (!profile?.organization_id) return;
+
+  const { data: activePromos } = await supabase
+    .from("org_promotions")
+    .select("id, promotion_type")
+    .eq("organization_id", profile.organization_id)
+    .eq("status", "trial_active");
+
+  if (!activePromos || activePromos.length === 0) return;
+
+  for (const promo of activePromos) {
+    // Don't auto-complete lifetime promotions — they have their own flow
+    if (promo.promotion_type === "lifetime_premium") continue;
+
+    await supabase
+      .from("org_promotions")
+      .update({ status: "completed" })
+      .eq("id", promo.id);
+
+    logStep("Trial marked as completed (user subscribed)", {
+      orgId: profile.organization_id,
+      promoId: promo.id,
     });
   }
 }
