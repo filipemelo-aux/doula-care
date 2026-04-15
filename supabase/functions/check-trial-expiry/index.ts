@@ -7,7 +7,7 @@ const corsHeaders = {
 };
 
 /**
- * Cron job — checks org_promotions for expired trials and stale trial_active statuses.
+ * Cron job — checks org_promotions for expired trials.
  *
  * Phase A: Orgs with trial_active that already have an active Stripe subscription
  *          → mark promo as "completed" (no downgrade needed)
@@ -15,7 +15,7 @@ const corsHeaders = {
  * Phase B: Expired trials (trial_ends_at < now) without active subscription
  *          → downgrade org to free, mark as "expired", notify doula
  *
- * Skips lifetime_premium promotions (they have their own reveal flow).
+ * Skips lifetime_active promotions (permanent access).
  */
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -27,16 +27,14 @@ Deno.serve(async (req) => {
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, serviceRoleKey);
 
-    const nowISO = new Date().toISOString();
     let completedCount = 0;
     let expiredCount = 0;
 
-    // Fetch ALL trial_active promotions (excluding lifetime)
+    // Fetch ALL trial_active promotions
     const { data: activeTrials, error } = await supabase
       .from("org_promotions")
       .select("id, organization_id, promotion_type, trial_ends_at")
-      .eq("status", "trial_active")
-      .neq("promotion_type", "lifetime_premium");
+      .eq("status", "trial_active");
 
     if (error) {
       console.error("Error fetching active trials:", error);
@@ -78,7 +76,7 @@ Deno.serve(async (req) => {
         hasActiveSub = !!activeSub;
       }
 
-      // ── Phase A: Has active subscription → mark trial completed ──
+      // Phase A: Has active subscription → mark trial completed
       if (hasActiveSub) {
         console.log(`Org ${trial.organization_id} has active subscription, marking trial completed`);
         await supabase
@@ -89,7 +87,7 @@ Deno.serve(async (req) => {
         continue;
       }
 
-      // ── Phase B: Trial expired without subscription → downgrade ──
+      // Phase B: Trial expired without subscription → downgrade
       const isExpired = trial.trial_ends_at && new Date(trial.trial_ends_at) < new Date();
       if (!isExpired) {
         console.log(`Org ${trial.organization_id} trial still active, skipping`);
