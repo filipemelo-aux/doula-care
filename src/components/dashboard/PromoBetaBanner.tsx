@@ -150,11 +150,6 @@ export function PromoBetaBanner() {
   // Don't allow dismiss if trial is expired (force visibility)
   if (dismissed && !isTrialExpired) return null;
 
-  const isLifetime = promo.promotion_type === "lifetime_premium";
-  const trialEndsAt = promo.trial_ends_at ? new Date(promo.trial_ends_at) : null;
-  const now = new Date();
-  const daysLeft = trialEndsAt ? Math.max(0, differenceInDays(trialEndsAt, now)) : 0;
-  const isTrialExpired = trialEndsAt && now >= trialEndsAt;
   const showChoiceButton = promo.status === "trial_active" || promo.status === "awaiting_choice";
 
   // Lifetime active — permanent banner
