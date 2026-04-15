@@ -17,9 +17,9 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Gift, Loader2, Crown, Zap } from "lucide-react";
+import { Gift, Loader2, Crown, Zap, CreditCard } from "lucide-react";
 import { toast } from "sonner";
-import { addDays, format } from "date-fns";
+import { addDays, format, differenceInDays } from "date-fns";
 import { sendPushNotification } from "@/lib/pushNotifications";
 import { ptBR } from "date-fns/locale";
 
@@ -40,6 +40,31 @@ export function PromoTriggerButton({ orgId, orgName }: PromoTriggerButtonProps) 
   const queryClient = useQueryClient();
   const [trialDays, setTrialDays] = useState<number>(7);
 
+  // Check if org has an active subscription
+  const { data: subscription } = useQuery({
+    queryKey: ["org-subscription-sa", orgId],
+    queryFn: async () => {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("user_id")
+        .eq("organization_id", orgId)
+        .limit(1)
+        .maybeSingle();
+      if (!profile?.user_id) return null;
+
+      const { data, error } = await supabase
+        .from("subscriptions")
+        .select("id, status, current_period_end, plan_id")
+        .eq("user_id", profile.user_id)
+        .in("status", ["active", "pending"])
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (error) return null;
+      return data;
+    },
+  });
+
   const { data: promo } = useQuery({
     queryKey: ["org-promo", orgId],
     queryFn: async () => {
@@ -56,8 +81,9 @@ export function PromoTriggerButton({ orgId, orgName }: PromoTriggerButtonProps) 
     },
   });
 
-  const invalidateOrgPromo = () => {
+  const invalidateAll = () => {
     queryClient.invalidateQueries({ queryKey: ["org-promo", orgId] });
+    queryClient.invalidateQueries({ queryKey: ["org-subscription-sa", orgId] });
     queryClient.invalidateQueries({ queryKey: ["super-admin-orgs"] });
   };
 
@@ -83,15 +109,12 @@ export function PromoTriggerButton({ orgId, orgName }: PromoTriggerButtonProps) 
         .eq("id", orgId);
       if (orgError) throw orgError;
 
-      const { error: notifError } = await supabase
-        .from("org_notifications")
-        .insert({
-          organization_id: orgId,
-          title: "🎉 Teste Premium ativado!",
-          message: `Você recebeu ${trialDays} dias de teste para usar todos os recursos do plano Premium.`,
-          type: "promotion",
-        });
-      if (notifError) throw notifError;
+      await supabase.from("org_notifications").insert({
+        organization_id: orgId,
+        title: "🎉 Teste Premium ativado!",
+        message: `Você recebeu ${trialDays} dias de teste para usar todos os recursos do plano Premium.`,
+        type: "promotion",
+      });
 
       const { data: orgProfiles } = await supabase
         .from("profiles")
@@ -99,9 +122,8 @@ export function PromoTriggerButton({ orgId, orgName }: PromoTriggerButtonProps) 
         .eq("organization_id", orgId);
 
       if (orgProfiles && orgProfiles.length > 0) {
-        const adminUserIds = orgProfiles.map((p) => p.user_id);
         await sendPushNotification({
-          user_ids: adminUserIds,
+          user_ids: orgProfiles.map((p) => p.user_id),
           title: "🎁 Teste Premium liberado!",
           message: `Seu teste de ${trialDays} dias do Premium já está ativo.`,
           url: "/admin",
@@ -111,7 +133,7 @@ export function PromoTriggerButton({ orgId, orgName }: PromoTriggerButtonProps) 
       }
     },
     onSuccess: () => {
-      invalidateOrgPromo();
+      invalidateAll();
       toast.success(`Trial liberado para ${orgName}!`);
     },
     onError: (err: Error) => toast.error(`Erro: ${err.message}`),
@@ -120,20 +142,17 @@ export function PromoTriggerButton({ orgId, orgName }: PromoTriggerButtonProps) 
   const forceExpireMutation = useMutation({
     mutationFn: async () => {
       if (!promo) throw new Error("Sem trial ativo");
-      const { error: promoError } = await supabase
+      await supabase
         .from("org_promotions" as any)
         .update({ status: "expired", trial_ends_at: new Date().toISOString() } as any)
         .eq("id", promo.id);
-      if (promoError) throw promoError;
-
-      const { error: orgError } = await supabase
+      await supabase
         .from("organizations")
         .update({ plan: "free" as any })
         .eq("id", orgId);
-      if (orgError) throw orgError;
     },
     onSuccess: () => {
-      invalidateOrgPromo();
+      invalidateAll();
       toast.success(`Trial encerrado para ${orgName}`);
     },
     onError: (err: Error) => toast.error(`Erro: ${err.message}`),
@@ -142,7 +161,7 @@ export function PromoTriggerButton({ orgId, orgName }: PromoTriggerButtonProps) 
   const makeLifetimeMutation = useMutation({
     mutationFn: async () => {
       if (promo) {
-        const { error } = await supabase
+        await supabase
           .from("org_promotions" as any)
           .update({
             status: "lifetime_active",
@@ -155,9 +174,8 @@ export function PromoTriggerButton({ orgId, orgName }: PromoTriggerButtonProps) 
             bonus_ends_at: null,
           } as any)
           .eq("id", promo.id);
-        if (error) throw error;
       } else {
-        const { error } = await supabase
+        await supabase
           .from("org_promotions" as any)
           .insert({
             organization_id: orgId,
@@ -165,15 +183,11 @@ export function PromoTriggerButton({ orgId, orgName }: PromoTriggerButtonProps) 
             status: "lifetime_active",
             trial_ends_at: null,
           } as any);
-        if (error) throw error;
       }
-
-      const { error: orgError } = await supabase
+      await supabase
         .from("organizations")
         .update({ plan: "premium" as any })
         .eq("id", orgId);
-      if (orgError) throw orgError;
-
       await supabase.from("org_notifications").insert({
         organization_id: orgId,
         title: "👑 Acesso Premium Vitalício!",
@@ -182,15 +196,65 @@ export function PromoTriggerButton({ orgId, orgName }: PromoTriggerButtonProps) 
       });
     },
     onSuccess: () => {
-      invalidateOrgPromo();
+      invalidateAll();
       toast.success(`${orgName} agora tem acesso vitalício!`);
     },
     onError: (err: Error) => toast.error(`Erro: ${err.message}`),
   });
 
+  const hasActiveSub = subscription && subscription.status === "active";
+  const isLifetime = promo?.status === "lifetime_active";
+
+  // ── Org has active Stripe subscription → show renewal info, no trial button ──
+  if (hasActiveSub) {
+    const daysLeft = subscription.current_period_end
+      ? differenceInDays(new Date(subscription.current_period_end), new Date())
+      : null;
+    const renewalDate = subscription.current_period_end
+      ? format(new Date(subscription.current_period_end), "dd/MM/yyyy", { locale: ptBR })
+      : "—";
+
+    return (
+      <div className="flex items-center gap-1.5 flex-wrap">
+        <CreditCard className="h-3.5 w-3.5 text-green-600" />
+        <Badge variant="default" className="text-[10px] h-5 bg-green-600/10 text-green-700 border-green-600/20">
+          Assinante
+        </Badge>
+        <span className="text-[10px] text-muted-foreground">
+          renova {renewalDate} ({daysLeft != null && daysLeft >= 0 ? `${daysLeft}d` : "vencido"})
+        </span>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-6 px-1.5 gap-1 text-[10px] text-amber-600 hover:bg-amber-500/10 border-amber-500/30"
+                onClick={() => {
+                  if (confirm(`Tornar ${orgName} Premium Vitalício?`)) {
+                    makeLifetimeMutation.mutate();
+                  }
+                }}
+                disabled={makeLifetimeMutation.isPending}
+              >
+                {makeLifetimeMutation.isPending ? (
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                ) : (
+                  <Crown className="h-3 w-3" />
+                )}
+                Vitalício
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="top" className="text-xs">Conceder acesso vitalício</TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      </div>
+    );
+  }
+
+  // ── Lifetime or active trial ──
   if (promo) {
     const info = statusLabels[promo.status] || statusLabels.pending;
-    const isLifetime = promo.status === "lifetime_active";
 
     return (
       <div className="flex items-center gap-1.5 flex-wrap">
@@ -259,6 +323,7 @@ export function PromoTriggerButton({ orgId, orgName }: PromoTriggerButtonProps) 
     );
   }
 
+  // ── No promo, no subscription → show trial + lifetime buttons ──
   return (
     <div className="flex items-center gap-1.5 flex-wrap">
       <AlertDialog>
