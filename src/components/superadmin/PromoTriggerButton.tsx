@@ -46,7 +46,7 @@ export function PromoTriggerButton({ orgId, orgName }: PromoTriggerButtonProps) 
         .from("org_promotions" as any)
         .select("*")
         .eq("organization_id", orgId)
-        .eq("promotion_type", "lifetime_premium")
+        .in("status", ["trial_active", "lifetime_active", "pending"])
         .maybeSingle();
       if (error) throw error;
       return data as any;
@@ -62,7 +62,7 @@ export function PromoTriggerButton({ orgId, orgName }: PromoTriggerButtonProps) 
         .from("org_promotions" as any)
         .insert({
           organization_id: orgId,
-          promotion_type: "lifetime_premium",
+          promotion_type: "trial",
           trial_started_at: now.toISOString(),
           trial_ends_at: trialEnds.toISOString(),
           status: "trial_active",
