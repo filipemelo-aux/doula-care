@@ -211,7 +211,7 @@ Deno.serve(async (req) => {
 
     await supabase.from("org_promotions").insert({
       organization_id: org.id,
-      promotion_type: "lifetime_premium",
+      promotion_type: "trial",
       trial_started_at: now.toISOString(),
       trial_ends_at: trialEnds.toISOString(),
       status: "trial_active",
