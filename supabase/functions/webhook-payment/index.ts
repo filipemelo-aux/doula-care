@@ -196,6 +196,9 @@ async function handleCheckoutCompleted(
   // Update organization plan
   await updateOrgPlan(supabase, userId, planId, billingType, periodEnd);
 
+  // Mark any active trial/promo as completed (user subscribed)
+  await completeActiveTrials(supabase, userId);
+
   logStep("Subscription activated for user", { userId, planId });
 }
 
