@@ -46,7 +46,7 @@ export function PromoTriggerButton({ orgId, orgName }: PromoTriggerButtonProps) 
         .from("org_promotions" as any)
         .select("*")
         .eq("organization_id", orgId)
-        .in("promotion_type", ["beta_tester", "lifetime_premium"])
+        .eq("promotion_type", "lifetime_premium")
         .maybeSingle();
       if (error) throw error;
       return data as any;
