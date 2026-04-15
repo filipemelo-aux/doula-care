@@ -120,11 +120,17 @@ export function PromoTriggerButton({ orgId, orgName }: PromoTriggerButtonProps) 
   const forceExpireMutation = useMutation({
     mutationFn: async () => {
       if (!promo) throw new Error("Sem trial ativo");
-      const { error } = await supabase
+      const { error: promoError } = await supabase
         .from("org_promotions" as any)
-        .update({ trial_ends_at: new Date().toISOString() } as any)
+        .update({ status: "expired", trial_ends_at: new Date().toISOString() } as any)
         .eq("id", promo.id);
-      if (error) throw error;
+      if (promoError) throw promoError;
+
+      const { error: orgError } = await supabase
+        .from("organizations")
+        .update({ plan: "free" as any })
+        .eq("id", orgId);
+      if (orgError) throw orgError;
     },
     onSuccess: () => {
       invalidateOrgPromo();

@@ -321,8 +321,6 @@ export function Sidebar({ isOpen, onToggle, onNavigate }: SidebarProps) {
               )}
             </div>
           )}
-            </div>
-          )}
         </div>
       </div>
     </aside>

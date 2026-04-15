@@ -81,7 +81,7 @@ Deno.serve(async (req) => {
         console.log(`Org ${trial.organization_id} has active subscription, marking trial completed`);
         await supabase
           .from("org_promotions")
-          .update({ status: "completed" })
+          .update({ status: "completed", chosen_plan: null, bonus_choice: null, bonus_chosen_at: null, bonus_started_at: null, bonus_ends_at: null })
           .eq("id", trial.id);
         completedCount++;
         continue;
@@ -108,7 +108,7 @@ Deno.serve(async (req) => {
       // Mark promotion as expired
       await supabase
         .from("org_promotions")
-        .update({ status: "expired" })
+        .update({ status: "expired", chosen_plan: null, bonus_choice: null, bonus_chosen_at: null, bonus_started_at: null, bonus_ends_at: null })
         .eq("id", trial.id);
 
       // Notify the doula
