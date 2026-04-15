@@ -186,13 +186,13 @@ export function PromoTriggerButton({ orgId, orgName }: PromoTriggerButtonProps) 
         )}
         <TooltipProvider>
           {promo.status === "trial_active" && (
-            <>
+            <div className="flex items-center gap-1">
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button
-                    variant="ghost"
+                    variant="outline"
                     size="sm"
-                    className="h-5 w-5 p-0 text-amber-500/60 hover:text-amber-600 hover:bg-amber-500/10"
+                    className="h-6 px-1.5 gap-1 text-[10px] text-destructive hover:bg-destructive/10 border-destructive/30"
                     onClick={() => forceExpireMutation.mutate()}
                     disabled={forceExpireMutation.isPending}
                   >
@@ -201,6 +201,7 @@ export function PromoTriggerButton({ orgId, orgName }: PromoTriggerButtonProps) 
                     ) : (
                       <Zap className="h-3 w-3" />
                     )}
+                    Expirar
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent side="top" className="text-xs">Expirar trial agora</TooltipContent>
@@ -208,9 +209,9 @@ export function PromoTriggerButton({ orgId, orgName }: PromoTriggerButtonProps) 
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button
-                    variant="ghost"
+                    variant="outline"
                     size="sm"
-                    className="h-5 w-5 p-0 text-amber-500/60 hover:text-amber-600 hover:bg-amber-500/10"
+                    className="h-6 px-1.5 gap-1 text-[10px] text-amber-600 hover:bg-amber-500/10 border-amber-500/30"
                     onClick={() => {
                       if (confirm(`Tornar ${orgName} Premium Vitalício?`)) {
                         makeLifetimeMutation.mutate();
@@ -223,11 +224,12 @@ export function PromoTriggerButton({ orgId, orgName }: PromoTriggerButtonProps) 
                     ) : (
                       <Crown className="h-3 w-3" />
                     )}
+                    Vitalício
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent side="top" className="text-xs">Tornar vitalício</TooltipContent>
               </Tooltip>
-            </>
+            </div>
           )}
         </TooltipProvider>
       </div>
