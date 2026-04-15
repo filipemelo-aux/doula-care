@@ -128,16 +128,28 @@ export function PromoTriggerButton({ orgId, orgName }: PromoTriggerButtonProps) 
 
   const makeLifetimeMutation = useMutation({
     mutationFn: async () => {
-      if (!promo) throw new Error("Sem promoção");
-      const { error } = await supabase
-        .from("org_promotions" as any)
-        .update({
-          status: "lifetime_active",
-          promotion_type: "lifetime_premium",
-          trial_ends_at: null,
-        } as any)
-        .eq("id", promo.id);
-      if (error) throw error;
+      if (promo) {
+        // Update existing promo to lifetime
+        const { error } = await supabase
+          .from("org_promotions" as any)
+          .update({
+            status: "lifetime_active",
+            promotion_type: "lifetime_premium",
+            trial_ends_at: null,
+          } as any)
+          .eq("id", promo.id);
+        if (error) throw error;
+      } else {
+        // Create new lifetime promo
+        const { error } = await supabase
+          .from("org_promotions" as any)
+          .insert({
+            organization_id: orgId,
+            promotion_type: "lifetime_premium",
+            status: "lifetime_active",
+          } as any);
+        if (error) throw error;
+      }
 
       const { error: orgError } = await supabase
         .from("organizations")
@@ -145,7 +157,6 @@ export function PromoTriggerButton({ orgId, orgName }: PromoTriggerButtonProps) 
         .eq("id", orgId);
       if (orgError) throw orgError;
 
-      // Notify the org
       await supabase.from("org_notifications").insert({
         organization_id: orgId,
         title: "👑 Acesso Premium Vitalício!",
