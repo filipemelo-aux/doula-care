@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -19,6 +20,7 @@ import { differenceInDays } from "date-fns";
 export function PromoBetaBanner() {
   const { organizationId } = useAuth();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const [planDialogOpen, setPlanDialogOpen] = useState(false);
 
   const dismissKey = `promo_banner_dismissed_${organizationId}`;
@@ -140,13 +142,16 @@ export function PromoBetaBanner() {
 
   if (!promo) return null;
   if (promo.status === "completed") return null;
-  if (dismissed) return null;
 
   const isLifetime = promo.promotion_type === "lifetime_premium";
   const trialEndsAt = promo.trial_ends_at ? new Date(promo.trial_ends_at) : null;
   const now = new Date();
   const daysLeft = trialEndsAt ? Math.max(0, differenceInDays(trialEndsAt, now)) : 0;
   const isTrialExpired = trialEndsAt && now >= trialEndsAt;
+
+  // Don't allow dismiss if trial is expired (force visibility)
+  if (dismissed && !isTrialExpired) return null;
+
   const showChoiceButton = promo.status === "trial_active" || promo.status === "awaiting_choice";
 
   // Lifetime active — permanent banner
@@ -233,36 +238,26 @@ export function PromoBetaBanner() {
       );
     }
 
-    // Normal trial expired — show plan selection
+    // Normal trial expired — redirect to subscription page
     return (
-      <>
-        <Alert className="bg-gradient-to-r from-amber-50/80 to-amber-100/50 dark:from-amber-950/20 dark:to-amber-900/10">
-          <Clock className="h-4 w-4 text-amber-600" />
-          <AlertTitle className="text-amber-700 dark:text-amber-400 text-sm font-semibold">
-            Seu teste Premium expirou!
-          </AlertTitle>
-          <AlertDescription className="text-xs text-amber-600 dark:text-amber-300">
-            Escolha um plano para continuar utilizando os recursos.
-            <Button
-              variant="default"
-              size="sm"
-              className="ml-2 h-7 text-xs"
-              onClick={() => setPlanDialogOpen(true)}
-            >
-              <Gift className="h-3 w-3 mr-1" />
-              Ver Planos
-            </Button>
-          </AlertDescription>
-        </Alert>
-        <PlanSelectionDialog
-          open={planDialogOpen}
-          onOpenChange={setPlanDialogOpen}
-          onChoose={(plan) => choosePlanMutation.mutate(plan)}
-          isPending={choosePlanMutation.isPending}
-          pricing={pricing || []}
-          planLimits={planLimits || []}
-        />
-      </>
+      <Alert className="bg-gradient-to-r from-amber-50/80 to-amber-100/50 dark:from-amber-950/20 dark:to-amber-900/10">
+        <Clock className="h-4 w-4 text-amber-600" />
+        <AlertTitle className="text-amber-700 dark:text-amber-400 text-sm font-semibold">
+          Seu teste Premium expirou!
+        </AlertTitle>
+        <AlertDescription className="text-xs text-amber-600 dark:text-amber-300">
+          Assine um plano para continuar utilizando os recursos premium.
+          <Button
+            variant="default"
+            size="sm"
+            className="ml-2 h-7 text-xs"
+            onClick={() => navigate("/admin/assinatura")}
+          >
+            <Gift className="h-3 w-3 mr-1" />
+            Assinar Plano
+          </Button>
+        </AlertDescription>
+      </Alert>
     );
   }
 

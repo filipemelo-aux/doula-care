@@ -93,6 +93,24 @@ export function usePlanLimits() {
     staleTime: 2 * 60 * 1000,
   });
 
+  // 2b. Promotion/trial record
+  const { data: promoData, isLoading: promoLoading } = useQuery({
+    queryKey: ["org-promo-limits", organizationId],
+    queryFn: async () => {
+      if (!organizationId) return null;
+      const { data, error } = await supabase
+        .from("org_promotions" as any)
+        .select("id, status, trial_ends_at, promotion_type")
+        .eq("organization_id", organizationId)
+        .in("status", ["trial_active", "lifetime_active", "bonus_active"])
+        .maybeSingle();
+      if (error) return null;
+      return data as any;
+    },
+    enabled: !!organizationId,
+    staleTime: 2 * 60 * 1000,
+  });
+
   // 3. Plan limits from DB — single source of truth (Super Admin config)
   const { data: dbLimits, isLoading: limitsLoading } = useQuery({
     queryKey: ["platform-plan-limits", plan],
@@ -123,15 +141,30 @@ export function usePlanLimits() {
     enabled: !!organizationId,
   });
 
+  // ── Trial expiry check ──
+  const isTrialExpired = (() => {
+    if (isSuperAdmin) return false;
+    if (!promoData) return false;
+    if (promoData.status === "lifetime_active") return false;
+    if (promoData.status === "trial_active" && promoData.trial_ends_at) {
+      return new Date(promoData.trial_ends_at) < new Date();
+    }
+    return false;
+  })();
+
+  const hasActiveSubscription = !!subscription && subscription.status === "active";
+
   // ── Subscription state ──
   // Super admins are NEVER considered expired or blocked
   const isSubscriptionExpired = (() => {
     if (isSuperAdmin) return false;
     if (plan === "free") return false;
-    // No subscription record → plan set by Super Admin, trust it
-    if (!subscription) return false;
-    if (subscription.status === "pending") return true;
-    if (subscription.current_period_end) {
+    // Trial expired without active subscription → expired
+    if (isTrialExpired && !hasActiveSubscription) return true;
+    // No subscription record and no trial → plan set by Super Admin, trust it
+    if (!subscription && !isTrialExpired) return false;
+    if (subscription?.status === "pending") return true;
+    if (subscription?.current_period_end) {
       return new Date(subscription.current_period_end) < new Date();
     }
     return false;
@@ -189,9 +222,11 @@ export function usePlanLimits() {
     isSubscriptionPending,
     isGracePeriod,
     isBlocked,
+    isTrialExpired,
+    hasActiveSubscription,
     daysOverdue,
     subscriptionEndDate: subscription?.current_period_end ?? null,
-    isLoading: orgLoading || countLoading || limitsLoading || subLoading,
+    isLoading: orgLoading || countLoading || limitsLoading || subLoading || promoLoading,
     planLabel: effectivePlan === "free" ? "Free" : effectivePlan === "pro" ? "Pro" : "Premium",
   };
 }
