@@ -58,8 +58,9 @@ export function PromoBetaBanner() {
   const isTrialExpired = trialEndsAt && now >= trialEndsAt;
 
   // Don't allow dismiss if trial is expired (payment-related, must reappear)
+  // Lifetime users can always permanently dismiss
   const isDismissed = dismissedIds.has(bannerId);
-  if (isDismissed && !isTrialExpired) return null;
+  if (isDismissed && (promo.status === "lifetime_active" || !isTrialExpired)) return null;
 
   const handleDismiss = async () => {
     if (!user?.id) return;
