@@ -265,9 +265,14 @@ export default function Subscription() {
             <div>
               <p className="text-sm text-muted-foreground">Plano atual</p>
               <p className="text-2xl font-bold text-foreground capitalize">
-                {currentPlanSlug}
+                {isLifetime ? "Premium Vitalício" : currentPlanSlug}
               </p>
-              {activeSubscription && (
+              {isLifetime ? (
+                <Badge className="bg-amber-500/10 text-amber-700 border-amber-500/30 mt-1">
+                  <Crown className="w-3 h-3 mr-1" />
+                  Acesso Vitalício
+                </Badge>
+              ) : activeSubscription ? (
                 <div className="flex items-center gap-2 mt-1">
                   <Badge
                     variant={activeSubscription.status === "active" ? "default" : "secondary"}
@@ -287,14 +292,14 @@ export default function Subscription() {
                     Válido até {formatDate(activeSubscription.current_period_end)}
                   </span>
                 </div>
-              )}
-              {isSubscriptionExpired && (
+              ) : null}
+              {isSubscriptionExpired && !isLifetime && (
                 <p className="text-sm text-destructive mt-1">
                   Sua assinatura expirou. Renove para reativar os recursos premium.
                 </p>
               )}
             </div>
-            {hasActiveSub && (
+            {hasActiveSub && !isLifetime && (
               <Button
                 variant="outline"
                 size="sm"
