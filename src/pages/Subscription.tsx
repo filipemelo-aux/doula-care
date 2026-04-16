@@ -393,7 +393,12 @@ export default function Subscription() {
 
                 {/* Buttons */}
                 <div className="space-y-2 pt-4 border-t border-border">
-                  {plan.is_free ? (
+                  {isLifetime ? (
+                    <Button variant="outline" className="w-full" disabled>
+                      <Crown className="w-4 h-4 mr-2" />
+                      Acesso Vitalício
+                    </Button>
+                  ) : plan.is_free ? (
                     <Button
                       variant="outline"
                       className="w-full"
