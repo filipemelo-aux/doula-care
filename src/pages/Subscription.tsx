@@ -74,7 +74,7 @@ function buildFeatureList(plan: PlatformPlan): string[] {
 }
 
 export default function Subscription() {
-  const { user } = useAuth();
+  const { user, organizationId } = useAuth();
   const queryClient = useQueryClient();
   const [searchParams, setSearchParams] = useSearchParams();
   const [checkoutDialog, setCheckoutDialog] = useState<{
@@ -95,6 +95,22 @@ export default function Subscription() {
     subscriptionEndDate,
     isLoading: planLoading,
   } = usePlanLimits();
+
+  // Check if user has lifetime access
+  const { data: isLifetime } = useQuery({
+    queryKey: ["lifetime-promo", organizationId],
+    queryFn: async () => {
+      if (!organizationId) return false;
+      const { data } = await supabase
+        .from("org_promotions" as any)
+        .select("id")
+        .eq("organization_id", organizationId)
+        .eq("status", "lifetime_active")
+        .limit(1);
+      return (data as any[])?.length > 0;
+    },
+    enabled: !!organizationId,
+  });
 
   // Handle Stripe redirect success
   useEffect(() => {
