@@ -1,26 +1,35 @@
 import { useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Gift, Clock, Sparkles, X, Crown } from "lucide-react";
 import { differenceInDays } from "date-fns";
-import { useState } from "react";
+import { markNotificationSeen } from "@/lib/notificationSeen";
+
+const BANNER_STORAGE_KEY = "promo-banner-dismiss";
 
 export function PromoBetaBanner() {
-  const { organizationId } = useAuth();
+  const { organizationId, user } = useAuth();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
-  const dismissKey = `promo_banner_dismissed_${organizationId}`;
-  const [dismissed, setDismissed] = useState(() => {
-    try { return localStorage.getItem(dismissKey) === "true"; } catch { return false; }
+  // Fetch permanently dismissed IDs from DB
+  const { data: dismissedIds = new Set<string>() } = useQuery({
+    queryKey: ["promo-banner-dismissed", user?.id],
+    queryFn: async () => {
+      if (!user?.id) return new Set<string>();
+      const { data } = await supabase
+        .from("notification_seen")
+        .select("section")
+        .eq("user_id", user.id)
+        .eq("storage_key", BANNER_STORAGE_KEY);
+      return new Set((data || []).map((r) => r.section));
+    },
+    enabled: !!user?.id,
+    staleTime: 60000,
   });
-
-  const handleDismiss = () => {
-    setDismissed(true);
-    try { localStorage.setItem(dismissKey, "true"); } catch {}
-  };
 
   const { data: promo } = useQuery({
     queryKey: ["my-org-promo", organizationId],
@@ -42,15 +51,23 @@ export function PromoBetaBanner() {
 
   if (!promo) return null;
 
+  const bannerId = `promo-${promo.id}`;
   const trialEndsAt = promo.trial_ends_at ? new Date(promo.trial_ends_at) : null;
   const now = new Date();
   const daysLeft = trialEndsAt ? Math.max(0, differenceInDays(trialEndsAt, now)) : 0;
   const isTrialExpired = trialEndsAt && now >= trialEndsAt;
 
-  // Don't allow dismiss if trial is expired
-  if (dismissed && !isTrialExpired) return null;
+  // Don't allow dismiss if trial is expired (payment-related, must reappear)
+  const isDismissed = dismissedIds.has(bannerId);
+  if (isDismissed && !isTrialExpired) return null;
 
-  // Lifetime active — permanent banner
+  const handleDismiss = async () => {
+    if (!user?.id) return;
+    await markNotificationSeen(BANNER_STORAGE_KEY, bannerId, user.id);
+    queryClient.invalidateQueries({ queryKey: ["promo-banner-dismissed"] });
+  };
+
+  // Lifetime active — permanent banner, dismissable permanently
   if (promo.status === "lifetime_active") {
     return (
       <Alert className="bg-gradient-to-r from-amber-50/80 to-amber-100/50 dark:from-amber-950/20 dark:to-amber-900/10 relative pr-8">
@@ -99,7 +116,7 @@ export function PromoBetaBanner() {
     );
   }
 
-  // Trial expired — redirect to subscription page
+  // Trial expired — redirect to subscription page (payment-related, no dismiss)
   if (promo.status === "trial_active" && isTrialExpired) {
     return (
       <Alert className="bg-gradient-to-r from-amber-50/80 to-amber-100/50 dark:from-amber-950/20 dark:to-amber-900/10">
