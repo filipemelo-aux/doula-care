@@ -36,10 +36,10 @@ Deno.serve(async (req) => {
       throw new Error("Nenhuma assinatura encontrada");
     }
 
-    const origin = req.headers.get("origin") || "https://doula-care.lovable.app";
+    const origin = req.headers.get("origin") || "https://doulacare.app.br";
     const portalSession = await stripe.billingPortal.sessions.create({
       customer: customers.data[0].id,
-      return_url: `${origin}/assinatura`,
+      return_url: `${origin}/admin/assinatura`,
     });
 
     return new Response(JSON.stringify({ url: portalSession.url }), {

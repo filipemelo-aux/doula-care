@@ -74,7 +74,7 @@ function buildFeatureList(plan: PlatformPlan): string[] {
 }
 
 export default function Subscription() {
-  const { user } = useAuth();
+  const { user, organizationId } = useAuth();
   const queryClient = useQueryClient();
   const [searchParams, setSearchParams] = useSearchParams();
   const [checkoutDialog, setCheckoutDialog] = useState<{
@@ -95,6 +95,22 @@ export default function Subscription() {
     subscriptionEndDate,
     isLoading: planLoading,
   } = usePlanLimits();
+
+  // Check if user has lifetime access
+  const { data: isLifetime } = useQuery({
+    queryKey: ["lifetime-promo", organizationId],
+    queryFn: async () => {
+      if (!organizationId) return false;
+      const { data } = await supabase
+        .from("org_promotions" as any)
+        .select("id")
+        .eq("organization_id", organizationId)
+        .eq("status", "lifetime_active")
+        .limit(1);
+      return (data as any[])?.length > 0;
+    },
+    enabled: !!organizationId,
+  });
 
   // Handle Stripe redirect success
   useEffect(() => {
@@ -249,9 +265,14 @@ export default function Subscription() {
             <div>
               <p className="text-sm text-muted-foreground">Plano atual</p>
               <p className="text-2xl font-bold text-foreground capitalize">
-                {currentPlanSlug}
+                {isLifetime ? "Premium Vitalício" : currentPlanSlug}
               </p>
-              {activeSubscription && (
+              {isLifetime ? (
+                <Badge className="bg-amber-500/10 text-amber-700 border-amber-500/30 mt-1">
+                  <Crown className="w-3 h-3 mr-1" />
+                  Acesso Vitalício
+                </Badge>
+              ) : activeSubscription ? (
                 <div className="flex items-center gap-2 mt-1">
                   <Badge
                     variant={activeSubscription.status === "active" ? "default" : "secondary"}
@@ -271,14 +292,14 @@ export default function Subscription() {
                     Válido até {formatDate(activeSubscription.current_period_end)}
                   </span>
                 </div>
-              )}
-              {isSubscriptionExpired && (
+              ) : null}
+              {isSubscriptionExpired && !isLifetime && (
                 <p className="text-sm text-destructive mt-1">
                   Sua assinatura expirou. Renove para reativar os recursos premium.
                 </p>
               )}
             </div>
-            {hasActiveSub && (
+            {hasActiveSub && !isLifetime && (
               <Button
                 variant="outline"
                 size="sm"
@@ -372,7 +393,12 @@ export default function Subscription() {
 
                 {/* Buttons */}
                 <div className="space-y-2 pt-4 border-t border-border">
-                  {plan.is_free ? (
+                  {isLifetime ? (
+                    <Button variant="outline" className="w-full" disabled>
+                      <Crown className="w-4 h-4 mr-2" />
+                      Acesso Vitalício
+                    </Button>
+                  ) : plan.is_free ? (
                     <Button
                       variant="outline"
                       className="w-full"
