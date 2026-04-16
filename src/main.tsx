@@ -4,6 +4,7 @@ import "./index.css";
 import { isCapacitorNative, setupNativePushListeners } from "@/lib/capacitorPush";
 import { configureNativeBars } from "@/lib/capacitorNativeUI";
 import { getCachedBranding } from "@/hooks/useOrgBranding";
+import { stripAppRefreshParams } from "@/lib/appUpdate";
 
 const normalizeInitialGestanteRoute = () => {
   const { pathname, search, hash } = window.location;
@@ -24,6 +25,7 @@ const normalizeInitialGestanteRoute = () => {
   }
 };
 
+stripAppRefreshParams();
 normalizeInitialGestanteRoute();
 
 // Suppress Chrome's PWA install mini-infobar on mobile devices

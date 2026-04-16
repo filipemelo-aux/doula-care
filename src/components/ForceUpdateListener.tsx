@@ -1,26 +1,11 @@
 import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { hardRefreshApp } from "@/lib/appUpdate";
 
 const LAST_FORCE_UPDATE_KEY = "last_force_update_at";
 
-async function clearCacheAndReload() {
-  try {
-    // Clear all caches
-    const keys = await caches.keys();
-    await Promise.all(keys.map((k) => caches.delete(k)));
-
-    // Update service workers
-    const regs = await navigator.serviceWorker?.getRegistrations();
-    if (regs) {
-      for (const reg of regs) {
-        await reg.update();
-        reg.waiting?.postMessage({ type: "SKIP_WAITING" });
-      }
-    }
-  } catch (e) {
-    console.error("[ForceUpdate] cache clear error:", e);
-  }
-  setTimeout(() => window.location.reload(), 500);
+function clearCacheAndReload() {
+  void hardRefreshApp();
 }
 
 function checkAndApply(forceUpdateAt: string) {

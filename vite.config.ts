@@ -30,7 +30,7 @@ const swPushPath = path.resolve(__dirname, "public/sw-push.js");
 const swPushSource = fs.readFileSync(swPushPath, "utf-8");
 const updatedSw = swPushSource.replace(
   /const CACHE_VERSION = "v[^"]*";/,
-  `const CACHE_VERSION = "v${APP_VERSION}";`
+  `const CACHE_VERSION = "v${FULL_VERSION}";`
 );
 if (updatedSw !== swPushSource) {
   fs.writeFileSync(swPushPath, updatedSw);
@@ -52,10 +52,10 @@ export default defineConfig(({ mode }) => ({
       registerType: "autoUpdate",
       includeAssets: ["favicon.ico", "pwa-icon-192.png", "pwa-icon-512.png"],
       manifest: {
-        id: `/?v=${APP_VERSION}`,
+        id: `/?v=${FULL_VERSION}`,
         name: "Doula Care",
         short_name: "Doula Care",
-        start_url: `/?v=${APP_VERSION}`,
+        start_url: `/?v=${FULL_VERSION}`,
         display: "standalone",
         background_color: "#ffffff",
         theme_color: "#c34a1c",
@@ -99,7 +99,7 @@ export default defineConfig(({ mode }) => ({
             urlPattern: /^https:\/\/gjnvxzsforfrxjanxqnq\.supabase\.co\/.*/i,
             handler: "NetworkFirst",
             options: {
-              cacheName: `supabase-api-v${APP_VERSION}`,
+              cacheName: `supabase-api-v${FULL_VERSION}`,
               expiration: {
                 maxEntries: 50,
                 maxAgeSeconds: 300,

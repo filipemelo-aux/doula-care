@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { RefreshCw, X } from "lucide-react";
 import { APP_VERSION } from "@/lib/appVersion";
+import { hardRefreshApp } from "@/lib/appUpdate";
 
 export default function UpdatePrompt() {
   const [showUpdate, setShowUpdate] = useState(false);
@@ -9,15 +10,8 @@ export default function UpdatePrompt() {
 
   const handleUpdate = useCallback(() => {
     setShowUpdate(false);
-    if (waitingWorker) {
-      waitingWorker.postMessage({ type: "SKIP_WAITING" });
-    }
-    // Listen for the new SW to take control, then reload
-    navigator.serviceWorker.addEventListener("controllerchange", () => {
-      window.location.reload();
-    }, { once: true });
-    // Fallback reload if controllerchange doesn't fire
-    setTimeout(() => window.location.reload(), 2000);
+    waitingWorker?.postMessage({ type: "SKIP_WAITING" });
+    void hardRefreshApp();
   }, [waitingWorker]);
 
   useEffect(() => {
