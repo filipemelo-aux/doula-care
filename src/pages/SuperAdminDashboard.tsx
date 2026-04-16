@@ -15,6 +15,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Loader2, Building2, Users, Ban, CheckCircle, LogOut, BarChart3, Clock, ShieldCheck, Mail, CalendarDays, Baby, Trash2, RefreshCw, Bell, CreditCard, Menu, Users2, Zap, Home, UserCog, Eye, EyeOff, ArrowLeft, Shield } from "lucide-react";
 import Forum from "@/pages/Forum";
 import { APP_VERSION } from "@/lib/appVersion";
+import { hardRefreshApp } from "@/lib/appUpdate";
 import { PlanPricingCard } from "@/components/superadmin/PlanPricingCard";
 import { PlanLimitsCard } from "@/components/superadmin/PlanLimitsCard";
 import { OrgBillingCard } from "@/components/superadmin/OrgBillingCard";
@@ -701,66 +702,9 @@ export default function SuperAdminDashboard() {
             variant="ghost"
             size="sm"
             className="text-muted-foreground gap-1.5"
-            onClick={async () => {
-               try {
-                toast.loading("Limpando cache e atualizando...", { id: "sa-update" });
-
-                // Clear all caches
-                if ("caches" in window) {
-                  const keys = await caches.keys();
-                  await Promise.all(keys.map(k => caches.delete(k)));
-                }
-
-                if ("serviceWorker" in navigator) {
-                  const reg = await navigator.serviceWorker.getRegistration();
-                  if (reg) {
-                    await reg.update();
-
-                    const waitForSW = (sw: ServiceWorker): Promise<void> =>
-                      new Promise((resolve) => {
-                        if (sw.state === "installed") { resolve(); return; }
-                        sw.addEventListener("statechange", () => {
-                          if (sw.state === "installed") resolve();
-                        });
-                        setTimeout(resolve, 5000);
-                      });
-
-                    if (reg.waiting) {
-                      reg.waiting.postMessage({ type: "SKIP_WAITING" });
-                    } else if (reg.installing) {
-                      await waitForSW(reg.installing);
-                      reg.waiting?.postMessage({ type: "SKIP_WAITING" });
-                    } else {
-                      await new Promise<void>((resolve) => {
-                        const onUpdate = () => {
-                          reg.removeEventListener("updatefound", onUpdate);
-                          const newSW = reg.installing;
-                          if (newSW) {
-                            waitForSW(newSW).then(() => {
-                              reg.waiting?.postMessage({ type: "SKIP_WAITING" });
-                              resolve();
-                            });
-                          } else {
-                            resolve();
-                          }
-                        };
-                        reg.addEventListener("updatefound", onUpdate);
-                        setTimeout(() => {
-                          reg.removeEventListener("updatefound", onUpdate);
-                          resolve();
-                        }, 3000);
-                      });
-                    }
-                  }
-                }
-
-                toast.success("Atualizado! Recarregando...", { id: "sa-update" });
-                setTimeout(() => window.location.reload(), 600);
-              } catch (err) {
-                console.error(err);
-                toast.error("Erro ao atualizar", { id: "sa-update" });
-                window.location.reload();
-              }
+            onClick={() => {
+              toast.loading("Limpando cache e atualizando...", { id: "sa-update" });
+              void hardRefreshApp();
             }}
           >
             <RefreshCw className="h-4 w-4" />
