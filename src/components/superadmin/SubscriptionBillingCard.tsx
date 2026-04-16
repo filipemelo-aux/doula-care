@@ -7,10 +7,10 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
-import { format } from "date-fns";
+import { format, differenceInDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import {
-  CreditCard, CheckCircle, Clock, RefreshCw, Users, DollarSign, Loader2,
+  CreditCard, CheckCircle, Clock, RefreshCw, Users, DollarSign, Loader2, CalendarClock,
 } from "lucide-react";
 
 interface PlanPaymentRow {
@@ -30,6 +30,8 @@ interface SubscriptionRow {
   plan_id: string;
   status: string;
   current_period_end: string | null;
+  current_period_start: string | null;
+  stripe_subscription_id: string | null;
 }
 
 interface ProfileInfo {
@@ -60,7 +62,6 @@ export function SubscriptionBillingCard() {
   const [planFilter, setPlanFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
 
-  // Fetch plan_payments
   const { data: payments = [], isLoading: paymentsLoading } = useQuery({
     queryKey: ["sa-plan-payments"],
     queryFn: async () => {
@@ -73,20 +74,18 @@ export function SubscriptionBillingCard() {
     },
   });
 
-  // Fetch active subscriptions
   const { data: subscriptions = [] } = useQuery({
     queryKey: ["sa-subscriptions"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("subscriptions")
-        .select("id, user_id, plan_id, status, current_period_end")
+        .select("id, user_id, plan_id, status, current_period_end, current_period_start, stripe_subscription_id")
         .order("created_at", { ascending: false });
       if (error) throw error;
       return data as SubscriptionRow[];
     },
   });
 
-  // Fetch profiles for user names
   const { data: profiles = [] } = useQuery({
     queryKey: ["sa-profiles-billing"],
     queryFn: async () => {
@@ -98,7 +97,6 @@ export function SubscriptionBillingCard() {
     },
   });
 
-  // Fetch plans
   const { data: plans = [] } = useQuery({
     queryKey: ["sa-platform-plans"],
     queryFn: async () => {
@@ -110,19 +108,11 @@ export function SubscriptionBillingCard() {
     },
   });
 
-  // Resend charge mutation
   const resendMutation = useMutation({
     mutationFn: async (payment: PlanPaymentRow) => {
       const { data, error } = await supabase.functions.invoke(
         "create-checkout-session",
-        {
-          body: { plan_id: payment.plan_id, billing_type: payment.billing_type },
-          headers: {
-            // Use service role to act on behalf of the user
-            // We pass user_id in body but the function uses auth header
-            // For super admin, we just regenerate a new payment
-          },
-        }
+        { body: { plan_id: payment.plan_id, billing_type: payment.billing_type } }
       );
       if (error) throw error;
       return data;
@@ -151,7 +141,6 @@ export function SubscriptionBillingCard() {
     return p?.plan || "";
   };
 
-  // Metrics
   const totalReceived = payments
     .filter((p) => p.status === "paid")
     .reduce((sum, p) => sum + p.amount, 0);
@@ -160,11 +149,9 @@ export function SubscriptionBillingCard() {
     .filter((p) => p.status === "pending")
     .reduce((sum, p) => sum + p.amount, 0);
 
-  const activeSubscriptionCount = subscriptions.filter(
-    (s) => s.status === "active"
-  ).length;
+  const activeSubscriptions = subscriptions.filter((s) => s.status === "active");
+  const activeSubscriptionCount = activeSubscriptions.length;
 
-  // Filtered payments
   const filtered = payments.filter((p) => {
     if (statusFilter !== "all" && p.status !== statusFilter) return false;
     if (planFilter !== "all" && getPlanSlug(p.plan_id) !== planFilter) return false;
@@ -194,7 +181,7 @@ export function SubscriptionBillingCard() {
     <div className="space-y-3">
       <h2 className="text-sm font-semibold text-foreground flex items-center gap-2">
         <CreditCard className="h-4 w-4 text-primary" />
-        Assinaturas & Cobranças ({payments.length})
+        Assinaturas & Cobranças
       </h2>
 
       {/* Metric Cards */}
@@ -205,12 +192,8 @@ export function SubscriptionBillingCard() {
               <DollarSign className="h-5 w-5 text-emerald-600" />
             </div>
             <div>
-              <p className="text-lg font-bold text-foreground">
-                {formatCentavos(totalReceived)}
-              </p>
-              <p className="text-[11px] text-muted-foreground leading-tight">
-                Total recebido
-              </p>
+              <p className="text-lg font-bold text-foreground">{formatCentavos(totalReceived)}</p>
+              <p className="text-[11px] text-muted-foreground leading-tight">Total recebido</p>
             </div>
           </CardContent>
         </Card>
@@ -221,12 +204,8 @@ export function SubscriptionBillingCard() {
               <Clock className="h-5 w-5 text-amber-600" />
             </div>
             <div>
-              <p className="text-lg font-bold text-foreground">
-                {formatCentavos(totalPending)}
-              </p>
-              <p className="text-[11px] text-muted-foreground leading-tight">
-                Total pendente
-              </p>
+              <p className="text-lg font-bold text-foreground">{formatCentavos(totalPending)}</p>
+              <p className="text-[11px] text-muted-foreground leading-tight">Total pendente</p>
             </div>
           </CardContent>
         </Card>
@@ -237,133 +216,184 @@ export function SubscriptionBillingCard() {
               <Users className="h-5 w-5 text-primary" />
             </div>
             <div>
-              <p className="text-lg font-bold text-foreground">
-                {activeSubscriptionCount}
-              </p>
-              <p className="text-[11px] text-muted-foreground leading-tight">
-                Assinaturas ativas
-              </p>
+              <p className="text-lg font-bold text-foreground">{activeSubscriptionCount}</p>
+              <p className="text-[11px] text-muted-foreground leading-tight">Assinaturas ativas</p>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Filters */}
-      <div className="flex flex-wrap gap-2">
-        <Select value={planFilter} onValueChange={setPlanFilter}>
-          <SelectTrigger className="h-8 w-[140px] text-xs">
-            <SelectValue placeholder="Plano" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todos os planos</SelectItem>
-            {plans
-              .filter((p) => !(p as any).is_free)
-              .map((p) => (
-                <SelectItem key={p.id} value={p.plan}>
-                  {p.name}
-                </SelectItem>
-              ))}
-          </SelectContent>
-        </Select>
+      {/* Active Subscribers */}
+      {activeSubscriptions.length > 0 && (
+        <div className="space-y-2">
+          <h3 className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+            <CalendarClock className="h-3.5 w-3.5 text-primary" />
+            Assinantes Ativos ({activeSubscriptions.length})
+          </h3>
+          <div className="rounded-lg border border-border overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-border bg-muted/50">
+                  <th className="text-left p-2.5 text-xs font-medium text-muted-foreground">Doula</th>
+                  <th className="text-left p-2.5 text-xs font-medium text-muted-foreground">Plano</th>
+                  <th className="text-center p-2.5 text-xs font-medium text-muted-foreground">Status</th>
+                  <th className="text-left p-2.5 text-xs font-medium text-muted-foreground">Vencimento</th>
+                  <th className="text-right p-2.5 text-xs font-medium text-muted-foreground">Dias restantes</th>
+                </tr>
+              </thead>
+              <tbody>
+                {activeSubscriptions.map((sub) => {
+                  const daysLeft = sub.current_period_end
+                    ? differenceInDays(new Date(sub.current_period_end), new Date())
+                    : null;
+                  return (
+                    <tr key={sub.id} className="border-b border-border last:border-0 hover:bg-muted/30">
+                      <td className="p-2.5 text-foreground font-medium truncate max-w-[160px]">
+                        {getUserName(sub.user_id)}
+                      </td>
+                      <td className="p-2.5">
+                        <Badge variant="outline" className="text-[10px] capitalize">
+                          {getPlanName(sub.plan_id)}
+                        </Badge>
+                      </td>
+                      <td className="p-2.5 text-center">
+                        {getStatusBadge(sub.status)}
+                      </td>
+                      <td className="p-2.5 text-muted-foreground text-xs">
+                        {sub.current_period_end
+                          ? format(new Date(sub.current_period_end), "dd/MM/yyyy", { locale: ptBR })
+                          : "—"}
+                      </td>
+                      <td className="p-2.5 text-right">
+                        {daysLeft !== null ? (
+                          <span className={`text-xs font-medium ${daysLeft <= 3 ? "text-destructive" : daysLeft <= 7 ? "text-amber-600" : "text-emerald-600"}`}>
+                            {daysLeft}d
+                          </span>
+                        ) : "—"}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
 
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="h-8 w-[140px] text-xs">
-            <SelectValue placeholder="Status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todos</SelectItem>
-            <SelectItem value="paid">Pago</SelectItem>
-            <SelectItem value="pending">Pendente</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+      {/* Payment History Filters */}
+      {payments.length > 0 && (
+        <>
+          <h3 className="text-xs font-semibold text-foreground flex items-center gap-1.5 pt-2">
+            <CreditCard className="h-3.5 w-3.5 text-muted-foreground" />
+            Histórico de Cobranças ({payments.length})
+          </h3>
+          <div className="flex flex-wrap gap-2">
+            <Select value={planFilter} onValueChange={setPlanFilter}>
+              <SelectTrigger className="h-8 w-[140px] text-xs">
+                <SelectValue placeholder="Plano" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos os planos</SelectItem>
+                {plans
+                  .filter((p) => !(p as any).is_free)
+                  .map((p) => (
+                    <SelectItem key={p.id} value={p.plan}>
+                      {p.name}
+                    </SelectItem>
+                  ))}
+              </SelectContent>
+            </Select>
 
-      {/* Table */}
-      {filtered.length === 0 ? (
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="h-8 w-[140px] text-xs">
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos</SelectItem>
+                <SelectItem value="paid">Pago</SelectItem>
+                <SelectItem value="pending">Pendente</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {filtered.length === 0 ? (
+            <Card>
+              <CardContent className="p-6 text-center text-sm text-muted-foreground">
+                Nenhuma cobrança encontrada
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="rounded-lg border border-border overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-border bg-muted/50">
+                    <th className="text-left p-2.5 text-xs font-medium text-muted-foreground">Usuário</th>
+                    <th className="text-left p-2.5 text-xs font-medium text-muted-foreground">Plano</th>
+                    <th className="text-right p-2.5 text-xs font-medium text-muted-foreground">Valor</th>
+                    <th className="text-center p-2.5 text-xs font-medium text-muted-foreground">Status</th>
+                    <th className="text-left p-2.5 text-xs font-medium text-muted-foreground">Data</th>
+                    <th className="text-center p-2.5 text-xs font-medium text-muted-foreground">Ação</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filtered.map((payment) => (
+                    <tr key={payment.id} className="border-b border-border last:border-0 hover:bg-muted/30">
+                      <td className="p-2.5 text-foreground font-medium truncate max-w-[140px]">
+                        {getUserName(payment.user_id)}
+                      </td>
+                      <td className="p-2.5">
+                        <Badge variant="outline" className="text-[10px] capitalize">
+                          {getPlanName(payment.plan_id)}
+                        </Badge>
+                        <span className="text-[10px] text-muted-foreground ml-1">
+                          {payment.billing_type === "yearly" ? "anual" : "mensal"}
+                        </span>
+                      </td>
+                      <td className="p-2.5 text-right font-medium text-foreground">
+                        {formatCentavos(payment.amount)}
+                      </td>
+                      <td className="p-2.5 text-center">
+                        {getStatusBadge(payment.status)}
+                      </td>
+                      <td className="p-2.5 text-muted-foreground text-xs">
+                        {format(new Date(payment.created_at), "dd/MM/yy HH:mm", { locale: ptBR })}
+                      </td>
+                      <td className="p-2.5 text-center">
+                        {payment.status === "pending" && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 text-xs gap-1"
+                            disabled={resendMutation.isPending}
+                            onClick={() => resendMutation.mutate(payment)}
+                          >
+                            {resendMutation.isPending ? (
+                              <Loader2 className="h-3 w-3 animate-spin" />
+                            ) : (
+                              <RefreshCw className="h-3 w-3" />
+                            )}
+                            Reenviar
+                          </Button>
+                        )}
+                        {payment.status === "paid" && (
+                          <CheckCircle className="h-4 w-4 text-emerald-500 mx-auto" />
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </>
+      )}
+
+      {payments.length === 0 && activeSubscriptions.length === 0 && (
         <Card>
           <CardContent className="p-6 text-center text-sm text-muted-foreground">
-            Nenhuma cobrança encontrada
+            Nenhuma assinatura ou cobrança encontrada
           </CardContent>
         </Card>
-      ) : (
-        <div className="rounded-lg border border-border overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-border bg-muted/50">
-                <th className="text-left p-2.5 text-xs font-medium text-muted-foreground">
-                  Usuário
-                </th>
-                <th className="text-left p-2.5 text-xs font-medium text-muted-foreground">
-                  Plano
-                </th>
-                <th className="text-right p-2.5 text-xs font-medium text-muted-foreground">
-                  Valor
-                </th>
-                <th className="text-center p-2.5 text-xs font-medium text-muted-foreground">
-                  Status
-                </th>
-                <th className="text-left p-2.5 text-xs font-medium text-muted-foreground">
-                  Data
-                </th>
-                <th className="text-center p-2.5 text-xs font-medium text-muted-foreground">
-                  Ação
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map((payment) => (
-                <tr
-                  key={payment.id}
-                  className="border-b border-border last:border-0 hover:bg-muted/30"
-                >
-                  <td className="p-2.5 text-foreground font-medium truncate max-w-[140px]">
-                    {getUserName(payment.user_id)}
-                  </td>
-                  <td className="p-2.5">
-                    <Badge variant="outline" className="text-[10px] capitalize">
-                      {getPlanName(payment.plan_id)}
-                    </Badge>
-                    <span className="text-[10px] text-muted-foreground ml-1">
-                      {payment.billing_type === "yearly" ? "anual" : "mensal"}
-                    </span>
-                  </td>
-                  <td className="p-2.5 text-right font-medium text-foreground">
-                    {formatCentavos(payment.amount)}
-                  </td>
-                  <td className="p-2.5 text-center">
-                    {getStatusBadge(payment.status)}
-                  </td>
-                  <td className="p-2.5 text-muted-foreground text-xs">
-                    {format(new Date(payment.created_at), "dd/MM/yy HH:mm", {
-                      locale: ptBR,
-                    })}
-                  </td>
-                  <td className="p-2.5 text-center">
-                    {payment.status === "pending" && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-7 text-xs gap-1"
-                        disabled={resendMutation.isPending}
-                        onClick={() => resendMutation.mutate(payment)}
-                      >
-                        {resendMutation.isPending ? (
-                          <Loader2 className="h-3 w-3 animate-spin" />
-                        ) : (
-                          <RefreshCw className="h-3 w-3" />
-                        )}
-                        Reenviar
-                      </Button>
-                    )}
-                    {payment.status === "paid" && (
-                      <CheckCircle className="h-4 w-4 text-emerald-500 mx-auto" />
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
       )}
     </div>
   );
