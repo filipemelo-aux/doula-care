@@ -333,6 +333,14 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
           ? sortedPayments.map((p) => Number(p.amount) || 0)
           : []
       );
+      // Hydrate per-installment dates from existing payments
+      if (isParcelado && sortedPayments.length === txInstallments) {
+        setCustomInstallmentDates(sortedPayments.map((p) => (p.due_date as string) || ""));
+        setDatesManuallyEdited(Array(txInstallments).fill(false));
+      } else {
+        setCustomInstallmentDates([]);
+        setDatesManuallyEdited([]);
+      }
       const teamData = (client as any).prenatal_team;
       setPrenatalTeam(Array.isArray(teamData) ? teamData : []);
     } else {
