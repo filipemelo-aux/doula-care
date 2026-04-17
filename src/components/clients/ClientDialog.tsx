@@ -732,12 +732,17 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
           const frequency = data.installment_frequency || "mensal";
           const customDays = data.custom_interval_days || 30;
           for (let i = 0; i < installmentCount; i++) {
-            const dueDate = new Date(firstDueDate);
-            if (frequency === "semanal") dueDate.setDate(dueDate.getDate() + (7 * i));
-            else if (frequency === "quinzenal") dueDate.setDate(dueDate.getDate() + (15 * i));
-            else if (frequency === "manual") dueDate.setDate(dueDate.getDate() + (customDays * i));
-            else dueDate.setMonth(dueDate.getMonth() + i);
-            const dueDateStr = dueDate.toISOString().split("T")[0];
+            let dueDateStr: string;
+            if (customInstallmentDates.length === installmentCount && customInstallmentDates[i]) {
+              dueDateStr = customInstallmentDates[i];
+            } else {
+              const dueDate = new Date(firstDueDate);
+              if (frequency === "semanal") dueDate.setDate(dueDate.getDate() + (7 * i));
+              else if (frequency === "quinzenal") dueDate.setDate(dueDate.getDate() + (15 * i));
+              else if (frequency === "manual") dueDate.setDate(dueDate.getDate() + (customDays * i));
+              else dueDate.setMonth(dueDate.getMonth() + i);
+              dueDateStr = dueDate.toISOString().split("T")[0];
+            }
             const isPastDue = dueDateStr < todayStr;
             const thisInstVal = useCustomAmounts ? customInstallmentAmounts[i] : installmentVal;
             if (isPastDue || (entryAlreadyPaid && i === 0)) {
