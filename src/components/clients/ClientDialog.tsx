@@ -106,6 +106,8 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
   const [entryType, setEntryType] = useState<"equal" | "percentage">("equal");
   const [entryPercentage, setEntryPercentage] = useState<number>(0);
   const [customInstallmentAmounts, setCustomInstallmentAmounts] = useState<number[]>([]);
+  const [customInstallmentDates, setCustomInstallmentDates] = useState<string[]>([]);
+  const [datesManuallyEdited, setDatesManuallyEdited] = useState<boolean[]>([]);
   const lastEffectivePlanValueRef = useRef<number>(0);
   const [prenatalTeam, setPrenatalTeam] = useState<{name: string; role: string}[]>([]);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
