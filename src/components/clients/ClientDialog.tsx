@@ -1793,9 +1793,9 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
                                 <div className="space-y-1.5">
                                   {customInstallmentAmounts.map((amt, i) => (
                                     <div key={i} className="flex items-center gap-2">
-                                      <span className="text-xs text-muted-foreground w-8 text-right">{i + 1}ª</span>
+                                      <span className="text-xs text-muted-foreground w-8 text-right shrink-0">{i + 1}ª</span>
                                       <Input
-                                        className="h-7 text-xs flex-1"
+                                        className="h-7 text-xs flex-1 min-w-0"
                                         value={maskCurrency(String(Math.round(amt * 100)))}
                                         onChange={(e) => {
                                           const newAmounts = [...customInstallmentAmounts];
@@ -1820,6 +1820,21 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
                                           setCustomInstallmentAmounts(newAmounts);
                                         }}
                                         placeholder="R$ 0,00"
+                                      />
+                                      <Input
+                                        type="date"
+                                        className="h-7 text-xs flex-1 min-w-0"
+                                        value={customInstallmentDates[i] || ""}
+                                        onChange={(e) => {
+                                          const newDates = [...customInstallmentDates];
+                                          while (newDates.length < customInstallmentAmounts.length) newDates.push("");
+                                          newDates[i] = e.target.value;
+                                          setCustomInstallmentDates(newDates);
+                                          const edited = [...datesManuallyEdited];
+                                          while (edited.length < customInstallmentAmounts.length) edited.push(false);
+                                          edited[i] = true;
+                                          setDatesManuallyEdited(edited);
+                                        }}
                                       />
                                     </div>
                                   ))}
