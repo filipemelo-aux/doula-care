@@ -106,6 +106,8 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
   const [entryType, setEntryType] = useState<"equal" | "percentage">("equal");
   const [entryPercentage, setEntryPercentage] = useState<number>(0);
   const [customInstallmentAmounts, setCustomInstallmentAmounts] = useState<number[]>([]);
+  const [customInstallmentDates, setCustomInstallmentDates] = useState<string[]>([]);
+  const [datesManuallyEdited, setDatesManuallyEdited] = useState<boolean[]>([]);
   const lastEffectivePlanValueRef = useRef<number>(0);
   const [prenatalTeam, setPrenatalTeam] = useState<{name: string; role: string}[]>([]);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -331,6 +333,14 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
           ? sortedPayments.map((p) => Number(p.amount) || 0)
           : []
       );
+      // Hydrate per-installment dates from existing payments
+      if (isParcelado && sortedPayments.length === txInstallments) {
+        setCustomInstallmentDates(sortedPayments.map((p) => (p.due_date as string) || ""));
+        setDatesManuallyEdited(Array(txInstallments).fill(false));
+      } else {
+        setCustomInstallmentDates([]);
+        setDatesManuallyEdited([]);
+      }
       const teamData = (client as any).prenatal_team;
       setPrenatalTeam(Array.isArray(teamData) ? teamData : []);
     } else {
@@ -338,6 +348,8 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
       setEntryType("equal");
       setEntryPercentage(0);
       setCustomInstallmentAmounts([]);
+      setCustomInstallmentDates([]);
+      setDatesManuallyEdited([]);
       setPrenatalTeam([]);
       form.reset({
         full_name: "",
@@ -426,6 +438,61 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
     entryType,
     entryPercentage,
   ]);
+
+  // Helper: compute installment due dates from first date + frequency
+  const computeDueDates = (firstDateStr: string, count: number, frequency: string, customDays: number): string[] => {
+    if (!firstDateStr || count <= 0) return Array(count).fill("");
+    const base = new Date(firstDateStr + "T12:00:00");
+    if (isNaN(base.getTime())) return Array(count).fill("");
+    return Array.from({ length: count }, (_, i) => {
+      const d = new Date(base);
+      if (frequency === "semanal") d.setDate(d.getDate() + 7 * i);
+      else if (frequency === "quinzenal") d.setDate(d.getDate() + 15 * i);
+      else if (frequency === "manual") d.setDate(d.getDate() + customDays * i);
+      else d.setMonth(d.getMonth() + i);
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    });
+  };
+
+  const watchedCustomIntervalDays = form.watch("custom_interval_days") || 30;
+
+  // Recalculate installment dates when frequency / interval / first date / count changes.
+  // Preserve dates that the user manually edited.
+  useEffect(() => {
+    if (watchedPaymentType !== "parcelado") {
+      if (customInstallmentDates.length > 0) {
+        setCustomInstallmentDates([]);
+        setDatesManuallyEdited([]);
+      }
+      return;
+    }
+    const count = watchedInstallments;
+    if (count <= 0) return;
+    const computed = computeDueDates(
+      watchedFirstDueDate || "",
+      count,
+      watchedInstallmentFrequency,
+      watchedCustomIntervalDays
+    );
+    setCustomInstallmentDates((prev) => {
+      const edited = datesManuallyEdited;
+      const next = computed.map((d, i) => (edited[i] && prev[i] ? prev[i] : d));
+      // length sync
+      if (next.length !== count) return computed;
+      return next;
+    });
+    setDatesManuallyEdited((prev) => {
+      if (prev.length === count) return prev;
+      return Array(count).fill(false);
+    });
+  }, [
+    watchedPaymentType,
+    watchedInstallments,
+    watchedInstallmentFrequency,
+    watchedCustomIntervalDays,
+    watchedFirstDueDate,
+  ]);
+
 
   // Recalculate installments when entry percentage changes
   useEffect(() => {
@@ -566,12 +633,17 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
           const customDays = data.custom_interval_days || 30;
 
           const paymentRecords = Array.from({ length: installmentCount }, (_, i) => {
-            const dueDate = new Date(firstDueDate);
-            if (frequency === "semanal") dueDate.setDate(dueDate.getDate() + (7 * i));
-            else if (frequency === "quinzenal") dueDate.setDate(dueDate.getDate() + (15 * i));
-            else if (frequency === "manual") dueDate.setDate(dueDate.getDate() + (customDays * i));
-            else dueDate.setMonth(dueDate.getMonth() + i);
-            const dueDateStr = `${dueDate.getFullYear()}-${String(dueDate.getMonth() + 1).padStart(2, "0")}-${String(dueDate.getDate()).padStart(2, "0")}`;
+            let dueDateStr: string;
+            if (customInstallmentDates.length === installmentCount && customInstallmentDates[i]) {
+              dueDateStr = customInstallmentDates[i];
+            } else {
+              const dueDate = new Date(firstDueDate);
+              if (frequency === "semanal") dueDate.setDate(dueDate.getDate() + (7 * i));
+              else if (frequency === "quinzenal") dueDate.setDate(dueDate.getDate() + (15 * i));
+              else if (frequency === "manual") dueDate.setDate(dueDate.getDate() + (customDays * i));
+              else dueDate.setMonth(dueDate.getMonth() + i);
+              dueDateStr = `${dueDate.getFullYear()}-${String(dueDate.getMonth() + 1).padStart(2, "0")}-${String(dueDate.getDate()).padStart(2, "0")}`;
+            }
             const isPastDue = dueDateStr < todayStr;
             const thisAmt = useCustomAmts ? customInstallmentAmounts[i] : installmentAmount;
             return {
@@ -660,12 +732,17 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
           const frequency = data.installment_frequency || "mensal";
           const customDays = data.custom_interval_days || 30;
           for (let i = 0; i < installmentCount; i++) {
-            const dueDate = new Date(firstDueDate);
-            if (frequency === "semanal") dueDate.setDate(dueDate.getDate() + (7 * i));
-            else if (frequency === "quinzenal") dueDate.setDate(dueDate.getDate() + (15 * i));
-            else if (frequency === "manual") dueDate.setDate(dueDate.getDate() + (customDays * i));
-            else dueDate.setMonth(dueDate.getMonth() + i);
-            const dueDateStr = dueDate.toISOString().split("T")[0];
+            let dueDateStr: string;
+            if (customInstallmentDates.length === installmentCount && customInstallmentDates[i]) {
+              dueDateStr = customInstallmentDates[i];
+            } else {
+              const dueDate = new Date(firstDueDate);
+              if (frequency === "semanal") dueDate.setDate(dueDate.getDate() + (7 * i));
+              else if (frequency === "quinzenal") dueDate.setDate(dueDate.getDate() + (15 * i));
+              else if (frequency === "manual") dueDate.setDate(dueDate.getDate() + (customDays * i));
+              else dueDate.setMonth(dueDate.getMonth() + i);
+              dueDateStr = dueDate.toISOString().split("T")[0];
+            }
             const isPastDue = dueDateStr < todayStr;
             const thisInstVal = useCustomAmounts ? customInstallmentAmounts[i] : installmentVal;
             if (isPastDue || (entryAlreadyPaid && i === 0)) {
@@ -718,17 +795,22 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
           const customDays = data.custom_interval_days || 30;
           
           const paymentRecords = Array.from({ length: installmentCount }, (_, i) => {
-            const dueDate = new Date(firstDueDate);
-            if (frequency === "semanal") {
-              dueDate.setDate(dueDate.getDate() + (7 * i));
-            } else if (frequency === "quinzenal") {
-              dueDate.setDate(dueDate.getDate() + (15 * i));
-            } else if (frequency === "manual") {
-              dueDate.setDate(dueDate.getDate() + (customDays * i));
+            let dueDateStr: string;
+            if (customInstallmentDates.length === installmentCount && customInstallmentDates[i]) {
+              dueDateStr = customInstallmentDates[i];
             } else {
-              dueDate.setMonth(dueDate.getMonth() + i);
+              const dueDate = new Date(firstDueDate);
+              if (frequency === "semanal") {
+                dueDate.setDate(dueDate.getDate() + (7 * i));
+              } else if (frequency === "quinzenal") {
+                dueDate.setDate(dueDate.getDate() + (15 * i));
+              } else if (frequency === "manual") {
+                dueDate.setDate(dueDate.getDate() + (customDays * i));
+              } else {
+                dueDate.setMonth(dueDate.getMonth() + i);
+              }
+              dueDateStr = dueDate.toISOString().split("T")[0];
             }
-            const dueDateStr = dueDate.toISOString().split("T")[0];
             const isPastDue = dueDateStr < todayStr;
             const thisAmt = useCustomAmts ? customInstallmentAmounts[i] : installmentAmount;
             return {
@@ -1711,9 +1793,9 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
                                 <div className="space-y-1.5">
                                   {customInstallmentAmounts.map((amt, i) => (
                                     <div key={i} className="flex items-center gap-2">
-                                      <span className="text-xs text-muted-foreground w-8 text-right">{i + 1}ª</span>
+                                      <span className="text-xs text-muted-foreground w-8 text-right shrink-0">{i + 1}ª</span>
                                       <Input
-                                        className="h-7 text-xs flex-1"
+                                        className="h-7 text-xs flex-1 min-w-0"
                                         value={maskCurrency(String(Math.round(amt * 100)))}
                                         onChange={(e) => {
                                           const newAmounts = [...customInstallmentAmounts];
@@ -1738,6 +1820,21 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
                                           setCustomInstallmentAmounts(newAmounts);
                                         }}
                                         placeholder="R$ 0,00"
+                                      />
+                                      <Input
+                                        type="date"
+                                        className="h-7 text-xs flex-1 min-w-0"
+                                        value={customInstallmentDates[i] || ""}
+                                        onChange={(e) => {
+                                          const newDates = [...customInstallmentDates];
+                                          while (newDates.length < customInstallmentAmounts.length) newDates.push("");
+                                          newDates[i] = e.target.value;
+                                          setCustomInstallmentDates(newDates);
+                                          const edited = [...datesManuallyEdited];
+                                          while (edited.length < customInstallmentAmounts.length) edited.push(false);
+                                          edited[i] = true;
+                                          setDatesManuallyEdited(edited);
+                                        }}
                                       />
                                     </div>
                                   ))}
