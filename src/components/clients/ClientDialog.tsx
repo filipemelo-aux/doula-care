@@ -1769,85 +1769,6 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
                             )}
                           />
                         )}
-                        {form.watch("installment_frequency") === "manual" && (form.watch("installments") || 1) > 1 && (
-                          <div className="col-span-full space-y-2">
-                            <div className="flex items-center justify-between">
-                              <FormLabel className="text-xs font-medium">Valores por parcela</FormLabel>
-                              <button
-                                type="button"
-                                className="text-[10px] text-primary hover:underline"
-                                onClick={() => {
-                                  const count = form.watch("installments") || 1;
-                                  setCustomInstallmentAmounts(Array(count).fill(effectivePlanValue / count));
-                                }}
-                              >
-                                Dividir igualmente
-                              </button>
-                            </div>
-                            {(() => {
-                              const count = form.watch("installments") || 1;
-                              if (customInstallmentAmounts.length !== count) return null;
-                              const sumCustom = customInstallmentAmounts.reduce((a, b) => a + b, 0);
-                              const diff = Math.abs(sumCustom - effectivePlanValue);
-                              return (
-                                <div className="space-y-1.5">
-                                  {customInstallmentAmounts.map((amt, i) => (
-                                    <div key={i} className="flex items-center gap-2">
-                                      <span className="text-xs text-muted-foreground w-8 text-right shrink-0">{i + 1}ª</span>
-                                      <Input
-                                        className="h-7 text-xs flex-1 min-w-0"
-                                        value={maskCurrency(String(Math.round(amt * 100)))}
-                                        onChange={(e) => {
-                                          const newAmounts = [...customInstallmentAmounts];
-                                          const newVal = parseCurrency(e.target.value);
-                                          const oldVal = newAmounts[i];
-                                          newAmounts[i] = newVal;
-                                          const subsequentCount = newAmounts.length - i - 1;
-                                          if (subsequentCount > 0) {
-                                            const diff = oldVal - newVal;
-                                            const totalRemaining = newAmounts.slice(i + 1).reduce((a, b) => a + b, 0) + diff;
-                                            const perSubsequent = Math.round((totalRemaining / subsequentCount) * 100) / 100;
-                                            for (let j = i + 1; j < newAmounts.length; j++) {
-                                              newAmounts[j] = perSubsequent;
-                                            }
-                                            const sumSoFar = newAmounts.reduce((a, b) => a + b, 0);
-                                            const totalTarget = effectivePlanValue;
-                                            const roundingDiff = Math.round((totalTarget - sumSoFar) * 100) / 100;
-                                            if (Math.abs(roundingDiff) > 0.001) {
-                                              newAmounts[newAmounts.length - 1] = Math.round((newAmounts[newAmounts.length - 1] + roundingDiff) * 100) / 100;
-                                            }
-                                          }
-                                          setCustomInstallmentAmounts(newAmounts);
-                                        }}
-                                        placeholder="R$ 0,00"
-                                      />
-                                      <Input
-                                        type="date"
-                                        className="h-7 text-xs flex-1 min-w-0"
-                                        value={customInstallmentDates[i] || ""}
-                                        onChange={(e) => {
-                                          const newDates = [...customInstallmentDates];
-                                          while (newDates.length < customInstallmentAmounts.length) newDates.push("");
-                                          newDates[i] = e.target.value;
-                                          setCustomInstallmentDates(newDates);
-                                          const edited = [...datesManuallyEdited];
-                                          while (edited.length < customInstallmentAmounts.length) edited.push(false);
-                                          edited[i] = true;
-                                          setDatesManuallyEdited(edited);
-                                        }}
-                                      />
-                                    </div>
-                                  ))}
-                                  {diff > 0.01 && (
-                                    <p className="text-[10px] text-warning">
-                                      Soma das parcelas: {maskCurrency(String(Math.round(sumCustom * 100)))} (diferença de {maskCurrency(String(Math.round(diff * 100)))})
-                                    </p>
-                                  )}
-                                </div>
-                              );
-                            })()}
-                          </div>
-                        )}
                         <FormField
                           control={form.control}
                           name="first_due_date"
@@ -1870,7 +1791,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
                     )}
                   </div>
 
-                  {/* Entrada no parcelado */}
+                  {/* Entrada no parcelado — antes da lista de parcelas para refletir mudanças em tempo real */}
                   {watchedPaymentType === "parcelado" && (
                     <div className="rounded-lg p-3 space-y-3">
                       {watchedInstallments > 1 && (
@@ -1944,6 +1865,87 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
                           <span className="text-xs font-medium">Entrada já foi recebida?</span>
                         </label>
                       )}
+                    </div>
+                  )}
+
+                  {/* Lista de parcelas (Personalizado) — após a entrada para refletir mudanças em tempo real */}
+                  {watchedPaymentType === "parcelado" && form.watch("installment_frequency") === "manual" && (form.watch("installments") || 1) > 1 && (
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <FormLabel className="text-xs font-medium">Valores e datas por parcela</FormLabel>
+                        <button
+                          type="button"
+                          className="text-[10px] text-primary hover:underline"
+                          onClick={() => {
+                            const count = form.watch("installments") || 1;
+                            setCustomInstallmentAmounts(Array(count).fill(effectivePlanValue / count));
+                          }}
+                        >
+                          Dividir igualmente
+                        </button>
+                      </div>
+                      {(() => {
+                        const count = form.watch("installments") || 1;
+                        if (customInstallmentAmounts.length !== count) return null;
+                        const sumCustom = customInstallmentAmounts.reduce((a, b) => a + b, 0);
+                        const diff = Math.abs(sumCustom - effectivePlanValue);
+                        return (
+                          <div className="space-y-1.5">
+                            {customInstallmentAmounts.map((amt, i) => (
+                              <div key={i} className="flex items-center gap-2">
+                                <span className="text-xs text-muted-foreground w-8 text-right shrink-0">{i + 1}ª</span>
+                                <Input
+                                  className="h-7 text-xs flex-1 min-w-0"
+                                  value={maskCurrency(String(Math.round(amt * 100)))}
+                                  onChange={(e) => {
+                                    const newAmounts = [...customInstallmentAmounts];
+                                    const newVal = parseCurrency(e.target.value);
+                                    const oldVal = newAmounts[i];
+                                    newAmounts[i] = newVal;
+                                    const subsequentCount = newAmounts.length - i - 1;
+                                    if (subsequentCount > 0) {
+                                      const diff = oldVal - newVal;
+                                      const totalRemaining = newAmounts.slice(i + 1).reduce((a, b) => a + b, 0) + diff;
+                                      const perSubsequent = Math.round((totalRemaining / subsequentCount) * 100) / 100;
+                                      for (let j = i + 1; j < newAmounts.length; j++) {
+                                        newAmounts[j] = perSubsequent;
+                                      }
+                                      const sumSoFar = newAmounts.reduce((a, b) => a + b, 0);
+                                      const totalTarget = effectivePlanValue;
+                                      const roundingDiff = Math.round((totalTarget - sumSoFar) * 100) / 100;
+                                      if (Math.abs(roundingDiff) > 0.001) {
+                                        newAmounts[newAmounts.length - 1] = Math.round((newAmounts[newAmounts.length - 1] + roundingDiff) * 100) / 100;
+                                      }
+                                    }
+                                    setCustomInstallmentAmounts(newAmounts);
+                                  }}
+                                  placeholder="R$ 0,00"
+                                />
+                                <Input
+                                  type="date"
+                                  className="h-7 text-xs flex-1 min-w-0"
+                                  value={customInstallmentDates[i] || ""}
+                                  onChange={(e) => {
+                                    const newDates = [...customInstallmentDates];
+                                    while (newDates.length < customInstallmentAmounts.length) newDates.push("");
+                                    newDates[i] = e.target.value;
+                                    setCustomInstallmentDates(newDates);
+                                    const edited = [...datesManuallyEdited];
+                                    while (edited.length < customInstallmentAmounts.length) edited.push(false);
+                                    edited[i] = true;
+                                    setDatesManuallyEdited(edited);
+                                  }}
+                                />
+                              </div>
+                            ))}
+                            {diff > 0.01 && (
+                              <p className="text-[10px] text-warning">
+                                Soma das parcelas: {maskCurrency(String(Math.round(sumCustom * 100)))} (diferença de {maskCurrency(String(Math.round(diff * 100)))})
+                              </p>
+                            )}
+                          </div>
+                        );
+                      })()}
                     </div>
                   )}
 
