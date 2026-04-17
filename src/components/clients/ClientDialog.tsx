@@ -633,12 +633,17 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
           const customDays = data.custom_interval_days || 30;
 
           const paymentRecords = Array.from({ length: installmentCount }, (_, i) => {
-            const dueDate = new Date(firstDueDate);
-            if (frequency === "semanal") dueDate.setDate(dueDate.getDate() + (7 * i));
-            else if (frequency === "quinzenal") dueDate.setDate(dueDate.getDate() + (15 * i));
-            else if (frequency === "manual") dueDate.setDate(dueDate.getDate() + (customDays * i));
-            else dueDate.setMonth(dueDate.getMonth() + i);
-            const dueDateStr = `${dueDate.getFullYear()}-${String(dueDate.getMonth() + 1).padStart(2, "0")}-${String(dueDate.getDate()).padStart(2, "0")}`;
+            let dueDateStr: string;
+            if (customInstallmentDates.length === installmentCount && customInstallmentDates[i]) {
+              dueDateStr = customInstallmentDates[i];
+            } else {
+              const dueDate = new Date(firstDueDate);
+              if (frequency === "semanal") dueDate.setDate(dueDate.getDate() + (7 * i));
+              else if (frequency === "quinzenal") dueDate.setDate(dueDate.getDate() + (15 * i));
+              else if (frequency === "manual") dueDate.setDate(dueDate.getDate() + (customDays * i));
+              else dueDate.setMonth(dueDate.getMonth() + i);
+              dueDateStr = `${dueDate.getFullYear()}-${String(dueDate.getMonth() + 1).padStart(2, "0")}-${String(dueDate.getDate()).padStart(2, "0")}`;
+            }
             const isPastDue = dueDateStr < todayStr;
             const thisAmt = useCustomAmts ? customInstallmentAmounts[i] : installmentAmount;
             return {
