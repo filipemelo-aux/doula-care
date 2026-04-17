@@ -348,6 +348,8 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
       setEntryType("equal");
       setEntryPercentage(0);
       setCustomInstallmentAmounts([]);
+      setCustomInstallmentDates([]);
+      setDatesManuallyEdited([]);
       setPrenatalTeam([]);
       form.reset({
         full_name: "",
