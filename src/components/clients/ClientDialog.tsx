@@ -429,6 +429,61 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
     entryPercentage,
   ]);
 
+  // Helper: compute installment due dates from first date + frequency
+  const computeDueDates = (firstDateStr: string, count: number, frequency: string, customDays: number): string[] => {
+    if (!firstDateStr || count <= 0) return Array(count).fill("");
+    const base = new Date(firstDateStr + "T12:00:00");
+    if (isNaN(base.getTime())) return Array(count).fill("");
+    return Array.from({ length: count }, (_, i) => {
+      const d = new Date(base);
+      if (frequency === "semanal") d.setDate(d.getDate() + 7 * i);
+      else if (frequency === "quinzenal") d.setDate(d.getDate() + 15 * i);
+      else if (frequency === "manual") d.setDate(d.getDate() + customDays * i);
+      else d.setMonth(d.getMonth() + i);
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    });
+  };
+
+  const watchedCustomIntervalDays = form.watch("custom_interval_days") || 30;
+
+  // Recalculate installment dates when frequency / interval / first date / count changes.
+  // Preserve dates that the user manually edited.
+  useEffect(() => {
+    if (watchedPaymentType !== "parcelado") {
+      if (customInstallmentDates.length > 0) {
+        setCustomInstallmentDates([]);
+        setDatesManuallyEdited([]);
+      }
+      return;
+    }
+    const count = watchedInstallments;
+    if (count <= 0) return;
+    const computed = computeDueDates(
+      watchedFirstDueDate || "",
+      count,
+      watchedInstallmentFrequency,
+      watchedCustomIntervalDays
+    );
+    setCustomInstallmentDates((prev) => {
+      const edited = datesManuallyEdited;
+      const next = computed.map((d, i) => (edited[i] && prev[i] ? prev[i] : d));
+      // length sync
+      if (next.length !== count) return computed;
+      return next;
+    });
+    setDatesManuallyEdited((prev) => {
+      if (prev.length === count) return prev;
+      return Array(count).fill(false);
+    });
+  }, [
+    watchedPaymentType,
+    watchedInstallments,
+    watchedInstallmentFrequency,
+    watchedCustomIntervalDays,
+    watchedFirstDueDate,
+  ]);
+
+
   // Recalculate installments when entry percentage changes
   useEffect(() => {
     if (watchedPaymentType !== "parcelado") return;
