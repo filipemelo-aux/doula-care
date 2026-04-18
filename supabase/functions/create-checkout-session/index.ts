@@ -18,7 +18,6 @@ Deno.serve(async (req) => {
   }
 
   try {
-    // 1. Auth
     const authHeader = req.headers.get("Authorization");
     if (!authHeader?.startsWith("Bearer ")) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
@@ -47,19 +46,18 @@ Deno.serve(async (req) => {
     const user = userData.user;
     logStep("User authenticated", { userId: user.id, email: user.email });
 
-    // 2. Parse body
     const body = await req.json();
     const { plan_id, billing_type } = body ?? {};
 
-    const VALID_BILLING = ["monthly", "yearly", "one_time_monthly", "one_time_yearly"];
+    // APENAS recorrentes (Pix avulso é tratado fora do Stripe)
+    const VALID_BILLING = ["monthly", "yearly"];
     if (!plan_id || !VALID_BILLING.includes(billing_type)) {
       return new Response(
-        JSON.stringify({ error: "plan_id e billing_type são obrigatórios" }),
+        JSON.stringify({ error: "plan_id e billing_type (monthly|yearly) são obrigatórios" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // 3. Fetch plan from database (service role to bypass RLS)
     const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey, {
       auth: { persistSession: false },
     });
@@ -87,11 +85,11 @@ Deno.serve(async (req) => {
       );
     }
 
-    // 4. Determine price
-    const isYearlyPeriod = billing_type === "yearly" || billing_type === "one_time_yearly";
-    const isOneTime = billing_type === "one_time_monthly" || billing_type === "one_time_yearly";
-    const unitAmount = isYearlyPeriod ? plan.price_yearly : plan.price_monthly;
-    const recurringInterval = isYearlyPeriod ? "year" : "month";
+    const isYearly = billing_type === "yearly";
+    const unitAmount = isYearly
+      ? (plan.price_yearly > 0 ? plan.price_yearly : plan.price_monthly * 12)
+      : plan.price_monthly;
+    const recurringInterval: "year" | "month" = isYearly ? "year" : "month";
 
     if (!unitAmount || unitAmount <= 0) {
       return new Response(
@@ -102,12 +100,10 @@ Deno.serve(async (req) => {
 
     logStep("Plan resolved", { name: plan.name, unitAmount, recurringInterval });
 
-    // 5. Initialize Stripe
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
       apiVersion: "2025-08-27.basil",
     });
 
-    // 6. Check if Stripe customer exists
     const customers = await stripe.customers.list({ email: user.email!, limit: 1 });
     let customerId: string | undefined;
     if (customers.data.length > 0) {
@@ -117,17 +113,24 @@ Deno.serve(async (req) => {
 
     const origin = req.headers.get("origin") || body?.return_url || "https://doulacare.app.br";
 
-    // 7. Create Stripe Checkout session
-    // - Subscription (monthly/yearly): cartão + boleto (Stripe não permite Pix recorrente)
-    // - One-time (one_time_monthly/one_time_yearly): cartão + boleto + Pix, sem renovação
-    const useOneTime = isOneTime || billing_type === "yearly"; // anual continua sendo cobrança única
-    const periodLabel = isYearlyPeriod ? "Anual" : "Mensal";
-    const oneTimeSuffix = isOneTime ? " — Avulso" : "";
-
-    const sessionParams: any = {
+    // Sempre subscription recorrente (mensal ou anual)
+    const session = await stripe.checkout.sessions.create({
+      mode: "subscription",
       customer: customerId,
       customer_email: customerId ? undefined : user.email!,
       locale: "pt-BR",
+      automatic_payment_methods: { enabled: true },
+      line_items: [
+        {
+          price_data: {
+            currency: "brl",
+            product_data: { name: `Plano ${plan.name} (${isYearly ? "Anual" : "Mensal"})` },
+            unit_amount: unitAmount,
+            recurring: { interval: recurringInterval },
+          },
+          quantity: 1,
+        },
+      ],
       success_url: `${origin}/admin/assinatura?session_id={CHECKOUT_SESSION_ID}&success=true`,
       cancel_url: `${origin}/admin/assinatura?canceled=true`,
       metadata: {
@@ -135,52 +138,17 @@ Deno.serve(async (req) => {
         plan_id: plan_id,
         billing_type: billing_type,
       },
-    };
-
-    if (useOneTime) {
-      // Cobrança única (anual padrão ou avulso 1 mês/1 ano) — cartão + boleto
-      // (Pix exige ativação manual no dashboard Stripe; deixe automatic_payment_methods cuidar disso)
-      sessionParams.mode = "payment";
-      sessionParams.automatic_payment_methods = { enabled: true };
-      sessionParams.line_items = [
-        {
-          price_data: {
-            currency: "brl",
-            product_data: { name: `Plano ${plan.name} (${periodLabel}${oneTimeSuffix})` },
-            unit_amount: unitAmount,
-          },
-          quantity: 1,
-        },
-      ];
-      sessionParams.payment_intent_data = {
+      subscription_data: {
         metadata: {
           user_id: user.id,
           plan_id: plan_id,
           billing_type: billing_type,
         },
-      };
-    } else {
-      // Mensal recorrente — cartão + boleto (Stripe não suporta Pix recorrente)
-      sessionParams.mode = "subscription";
-      sessionParams.automatic_payment_methods = { enabled: true };
-      sessionParams.line_items = [
-        {
-          price_data: {
-            currency: "brl",
-            product_data: { name: `Plano ${plan.name}` },
-            unit_amount: unitAmount,
-            recurring: { interval: recurringInterval },
-          },
-          quantity: 1,
-        },
-      ];
-    }
-
-    const session = await stripe.checkout.sessions.create(sessionParams);
+      },
+    });
 
     logStep("Stripe session created", { sessionId: session.id });
 
-    // 8. Save pending payment record
     const orderNsu = `STRIPE-${session.id}`;
     const { error: paymentError } = await supabaseAdmin
       .from("plan_payments")
@@ -197,8 +165,6 @@ Deno.serve(async (req) => {
 
     if (paymentError) {
       logStep("Warning: failed to save plan_payment", { paymentError });
-    } else {
-      logStep("Plan payment saved as pending");
     }
 
     return new Response(
