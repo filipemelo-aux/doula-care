@@ -51,7 +51,8 @@ Deno.serve(async (req) => {
     const body = await req.json();
     const { plan_id, billing_type } = body ?? {};
 
-    if (!plan_id || !["monthly", "yearly"].includes(billing_type)) {
+    const VALID_BILLING = ["monthly", "yearly", "one_time_monthly", "one_time_yearly"];
+    if (!plan_id || !VALID_BILLING.includes(billing_type)) {
       return new Response(
         JSON.stringify({ error: "plan_id e billing_type são obrigatórios" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -87,8 +88,10 @@ Deno.serve(async (req) => {
     }
 
     // 4. Determine price
-    const unitAmount = billing_type === "monthly" ? plan.price_monthly : plan.price_yearly;
-    const recurringInterval = billing_type === "monthly" ? "month" : "year";
+    const isYearlyPeriod = billing_type === "yearly" || billing_type === "one_time_yearly";
+    const isOneTime = billing_type === "one_time_monthly" || billing_type === "one_time_yearly";
+    const unitAmount = isYearlyPeriod ? plan.price_yearly : plan.price_monthly;
+    const recurringInterval = isYearlyPeriod ? "year" : "month";
 
     if (!unitAmount || unitAmount <= 0) {
       return new Response(
@@ -115,9 +118,11 @@ Deno.serve(async (req) => {
     const origin = req.headers.get("origin") || body?.return_url || "https://doulacare.app.br";
 
     // 7. Create Stripe Checkout session
-    // - Monthly: subscription mode with card + boleto (Pix não suporta recorrência no Stripe)
-    // - Yearly: cobrança única (mode=payment) permitindo card + boleto + pix
-    const isYearly = billing_type === "yearly";
+    // - Subscription (monthly/yearly): cartão + boleto (Stripe não permite Pix recorrente)
+    // - One-time (one_time_monthly/one_time_yearly): cartão + boleto + Pix, sem renovação
+    const useOneTime = isOneTime || billing_type === "yearly"; // anual continua sendo cobrança única
+    const periodLabel = isYearlyPeriod ? "Anual" : "Mensal";
+    const oneTimeSuffix = isOneTime ? " — Avulso" : "";
 
     const sessionParams: any = {
       customer: customerId,
@@ -132,30 +137,29 @@ Deno.serve(async (req) => {
       },
     };
 
-    if (isYearly) {
-      // Cobrança única anual — habilita Pix, cartão e boleto
+    if (useOneTime) {
+      // Cobrança única (anual padrão ou avulso 1 mês/1 ano) — habilita Pix, cartão e boleto
       sessionParams.mode = "payment";
       sessionParams.payment_method_types = ["card", "boleto", "pix"];
       sessionParams.line_items = [
         {
           price_data: {
             currency: "brl",
-            product_data: { name: `Plano ${plan.name} (Anual)` },
+            product_data: { name: `Plano ${plan.name} (${periodLabel}${oneTimeSuffix})` },
             unit_amount: unitAmount,
           },
           quantity: 1,
         },
       ];
-      // Pix expira em até 24h por padrão; boleto pode levar dias
       sessionParams.payment_intent_data = {
         metadata: {
           user_id: user.id,
           plan_id: plan_id,
-          billing_type: "yearly",
+          billing_type: billing_type,
         },
       };
     } else {
-      // Mensal — assinatura recorrente (cartão + boleto)
+      // Mensal recorrente — cartão + boleto (Stripe não suporta Pix recorrente)
       sessionParams.mode = "subscription";
       sessionParams.payment_method_types = ["card", "boleto"];
       sessionParams.line_items = [
