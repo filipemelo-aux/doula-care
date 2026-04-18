@@ -115,9 +115,16 @@ Deno.serve(async (req) => {
     const origin = req.headers.get("origin") || body?.return_url || "https://doulacare.app.br";
 
     // 7. Create Stripe Checkout session with price_data
+    // Boleto only supports monthly billing for subscriptions on Stripe BR
+    const paymentMethodTypes: string[] = ["card"];
+    if (billing_type === "monthly") {
+      paymentMethodTypes.push("boleto");
+    }
+
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       customer_email: customerId ? undefined : user.email!,
+      payment_method_types: paymentMethodTypes as any,
       line_items: [
         {
           price_data: {
@@ -134,6 +141,7 @@ Deno.serve(async (req) => {
         },
       ],
       mode: "subscription",
+      locale: "pt-BR",
       success_url: `${origin}/admin/assinatura?session_id={CHECKOUT_SESSION_ID}&success=true`,
       cancel_url: `${origin}/admin/assinatura?canceled=true`,
       metadata: {
