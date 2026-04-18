@@ -102,15 +102,18 @@ Deno.serve(async (req) => {
     const doulaName = profile?.full_name || user.email || "Doula";
 
     if (ids.length > 0) {
-      await admin.functions.invoke("send-push-notification", {
+      const pushRes = await admin.functions.invoke("send-push-notification", {
         body: {
           user_ids: ids,
           title: "🚨 Pagamento Pix declarado",
-          body: `${doulaName} declarou pagamento de ${valor} (Plano ${plan.name}). Confirme no painel.`,
+          message: `${doulaName} declarou pagamento de ${valor} (Plano ${plan.name}). Confirme no painel.`,
           url: "/superadmin?section=billing",
           tag: `pix-${inserted.id}`,
+          priority: "critica",
+          require_interaction: true,
         },
-      }).catch((e) => log("Push failed (non-fatal)", e));
+      }).catch((e) => ({ error: e }));
+      log("Push invoke result", pushRes);
     }
 
     log("Pix payment declared", { id: inserted.id, amount, doulaName });
