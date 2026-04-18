@@ -9,11 +9,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Check, Crown, ExternalLink, Loader2, Settings, Sparkles, Star } from "lucide-react";
+import { Check, Crown, ExternalLink, Loader2, Settings, Sparkles, Star, QrCode } from "lucide-react";
 import { toast } from "sonner";
 import { CheckoutTransitionDialog } from "@/components/subscription/CheckoutTransitionDialog";
+import { PixPaymentDialog } from "@/components/subscription/PixPaymentDialog";
 
-type BillingType = "monthly" | "yearly" | "one_time_monthly" | "one_time_yearly";
+type BillingType = "monthly" | "yearly";
 
 interface PlatformPlan {
   id: string;
@@ -86,6 +87,14 @@ export default function Subscription() {
     pendingPlanId: string | null;
     pendingBillingType: BillingType | null;
   }>({ open: false, planName: "", planPrice: "", checkoutUrl: null, error: null, pendingPlanId: null, pendingBillingType: null });
+
+  const [pixDialog, setPixDialog] = useState<{
+    open: boolean;
+    planId: string | null;
+    planName: string;
+    amount: number;
+    billingType: BillingType;
+  }>({ open: false, planId: null, planName: "", amount: 0, billingType: "monthly" });
 
   const {
     plan: effectivePlan,
@@ -184,19 +193,17 @@ export default function Subscription() {
   });
 
   const handleSubscribe = async (plan: PlatformPlan, billingType: BillingType) => {
-    const isYearlyPeriod = billingType === "yearly" || billingType === "one_time_yearly";
-    const isOneTime = billingType === "one_time_monthly" || billingType === "one_time_yearly";
+    const isYearlyPeriod = billingType === "yearly";
     const price = isYearlyPeriod
       ? (plan.price_yearly > 0 ? plan.price_yearly : plan.price_monthly * 12)
       : plan.price_monthly;
 
     const periodSuffix = isYearlyPeriod ? "/ano" : "/mês";
-    const oneTimeLabel = isOneTime ? " (avulso)" : "";
 
     setCheckoutDialog({
       open: true,
-      planName: plan.name + oneTimeLabel,
-      planPrice: formatCentavos(price) + periodSuffix + oneTimeLabel,
+      planName: plan.name,
+      planPrice: formatCentavos(price) + periodSuffix,
       checkoutUrl: null,
       error: null,
       pendingPlanId: plan.id,
@@ -437,25 +444,37 @@ export default function Subscription() {
 
                       <div className="pt-2 mt-2 border-t border-dashed border-border space-y-2">
                         <p className="text-[11px] text-muted-foreground text-center font-medium uppercase tracking-wide">
-                          Avulso (sem renovação) — aceita Pix
+                          Prefere pagar via Pix?
                         </p>
                         <Button
                           variant="secondary"
                           size="sm"
                           className="w-full"
-                          onClick={() => handleSubscribe(plan, "one_time_monthly")}
-                          disabled={checkoutDialog.open}
+                          onClick={() => setPixDialog({
+                            open: true,
+                            planId: plan.id,
+                            planName: plan.name,
+                            amount: plan.price_monthly,
+                            billingType: "monthly",
+                          })}
                         >
-                          Avulso 1 mês — {formatCentavos(plan.price_monthly)}
+                          <QrCode className="w-4 h-4 mr-2" />
+                          Pix mensal — {formatCentavos(plan.price_monthly)}
                         </Button>
                         <Button
                           variant="secondary"
                           size="sm"
                           className="w-full"
-                          onClick={() => handleSubscribe(plan, "one_time_yearly")}
-                          disabled={checkoutDialog.open}
+                          onClick={() => setPixDialog({
+                            open: true,
+                            planId: plan.id,
+                            planName: plan.name,
+                            amount: plan.price_yearly > 0 ? plan.price_yearly : plan.price_monthly * 12,
+                            billingType: "yearly",
+                          })}
                         >
-                          Avulso 1 ano — {formatCentavos(plan.price_yearly > 0 ? plan.price_yearly : plan.price_monthly * 12)}
+                          <QrCode className="w-4 h-4 mr-2" />
+                          Pix anual — {formatCentavos(plan.price_yearly > 0 ? plan.price_yearly : plan.price_monthly * 12)}
                         </Button>
                       </div>
                     </>
@@ -475,6 +494,15 @@ export default function Subscription() {
         checkoutUrl={checkoutDialog.checkoutUrl}
         error={checkoutDialog.error}
         onRetry={handleRetryCheckout}
+      />
+
+      <PixPaymentDialog
+        open={pixDialog.open}
+        onOpenChange={(o) => setPixDialog((p) => ({ ...p, open: o }))}
+        planId={pixDialog.planId}
+        planName={pixDialog.planName}
+        amount={pixDialog.amount}
+        billingType={pixDialog.billingType}
       />
     </div>
   );
