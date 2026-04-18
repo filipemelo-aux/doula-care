@@ -13,7 +13,7 @@ import { Check, Crown, ExternalLink, Loader2, Settings, Sparkles, Star } from "l
 import { toast } from "sonner";
 import { CheckoutTransitionDialog } from "@/components/subscription/CheckoutTransitionDialog";
 
-type BillingType = "monthly" | "yearly";
+type BillingType = "monthly" | "yearly" | "one_time_monthly" | "one_time_yearly";
 
 interface PlatformPlan {
   id: string;
@@ -184,14 +184,19 @@ export default function Subscription() {
   });
 
   const handleSubscribe = async (plan: PlatformPlan, billingType: BillingType) => {
-    const price = billingType === "yearly"
+    const isYearlyPeriod = billingType === "yearly" || billingType === "one_time_yearly";
+    const isOneTime = billingType === "one_time_monthly" || billingType === "one_time_yearly";
+    const price = isYearlyPeriod
       ? (plan.price_yearly > 0 ? plan.price_yearly : plan.price_monthly * 12)
       : plan.price_monthly;
 
+    const periodSuffix = isYearlyPeriod ? "/ano" : "/mês";
+    const oneTimeLabel = isOneTime ? " (avulso)" : "";
+
     setCheckoutDialog({
       open: true,
-      planName: plan.name,
-      planPrice: formatCentavos(price) + (billingType === "yearly" ? "/ano" : "/mês"),
+      planName: plan.name + oneTimeLabel,
+      planPrice: formatCentavos(price) + periodSuffix + oneTimeLabel,
       checkoutUrl: null,
       error: null,
       pendingPlanId: plan.id,
@@ -429,6 +434,30 @@ export default function Subscription() {
                       >
                         Assinar anual — {formatCentavos(plan.price_yearly > 0 ? plan.price_yearly : plan.price_monthly * 12)}
                       </Button>
+
+                      <div className="pt-2 mt-2 border-t border-dashed border-border space-y-2">
+                        <p className="text-[11px] text-muted-foreground text-center font-medium uppercase tracking-wide">
+                          Avulso (sem renovação) — aceita Pix
+                        </p>
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          className="w-full"
+                          onClick={() => handleSubscribe(plan, "one_time_monthly")}
+                          disabled={checkoutDialog.open}
+                        >
+                          Avulso 1 mês — {formatCentavos(plan.price_monthly)}
+                        </Button>
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          className="w-full"
+                          onClick={() => handleSubscribe(plan, "one_time_yearly")}
+                          disabled={checkoutDialog.open}
+                        >
+                          Avulso 1 ano — {formatCentavos(plan.price_yearly > 0 ? plan.price_yearly : plan.price_monthly * 12)}
+                        </Button>
+                      </div>
                     </>
                   )}
                 </div>
