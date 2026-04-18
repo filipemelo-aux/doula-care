@@ -162,7 +162,7 @@ Deno.serve(async (req) => {
     } else {
       // Mensal recorrente — cartão + boleto (Stripe não suporta Pix recorrente)
       sessionParams.mode = "subscription";
-      sessionParams.payment_method_types = ["card", "boleto"];
+      sessionParams.automatic_payment_methods = { enabled: true };
       sessionParams.line_items = [
         {
           price_data: {
