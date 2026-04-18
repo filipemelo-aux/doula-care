@@ -114,33 +114,14 @@ Deno.serve(async (req) => {
 
     const origin = req.headers.get("origin") || body?.return_url || "https://doulacare.app.br";
 
-    // 7. Create Stripe Checkout session with price_data
-    // Boleto only supports monthly billing for subscriptions on Stripe BR
-    const paymentMethodTypes: string[] = ["card"];
-    if (billing_type === "monthly") {
-      paymentMethodTypes.push("boleto");
-    }
+    // 7. Create Stripe Checkout session
+    // - Monthly: subscription mode with card + boleto (Pix não suporta recorrência no Stripe)
+    // - Yearly: cobrança única (mode=payment) permitindo card + boleto + pix
+    const isYearly = billing_type === "yearly";
 
-    const session = await stripe.checkout.sessions.create({
+    const sessionParams: any = {
       customer: customerId,
       customer_email: customerId ? undefined : user.email!,
-      payment_method_types: paymentMethodTypes as any,
-      line_items: [
-        {
-          price_data: {
-            currency: "brl",
-            product_data: {
-              name: `Plano ${plan.name}`,
-            },
-            unit_amount: unitAmount,
-            recurring: {
-              interval: recurringInterval,
-            },
-          },
-          quantity: 1,
-        },
-      ],
-      mode: "subscription",
       locale: "pt-BR",
       success_url: `${origin}/admin/assinatura?session_id={CHECKOUT_SESSION_ID}&success=true`,
       cancel_url: `${origin}/admin/assinatura?canceled=true`,
@@ -149,7 +130,48 @@ Deno.serve(async (req) => {
         plan_id: plan_id,
         billing_type: billing_type,
       },
-    });
+    };
+
+    if (isYearly) {
+      // Cobrança única anual — habilita Pix, cartão e boleto
+      sessionParams.mode = "payment";
+      sessionParams.payment_method_types = ["card", "boleto", "pix"];
+      sessionParams.line_items = [
+        {
+          price_data: {
+            currency: "brl",
+            product_data: { name: `Plano ${plan.name} (Anual)` },
+            unit_amount: unitAmount,
+          },
+          quantity: 1,
+        },
+      ];
+      // Pix expira em até 24h por padrão; boleto pode levar dias
+      sessionParams.payment_intent_data = {
+        metadata: {
+          user_id: user.id,
+          plan_id: plan_id,
+          billing_type: "yearly",
+        },
+      };
+    } else {
+      // Mensal — assinatura recorrente (cartão + boleto)
+      sessionParams.mode = "subscription";
+      sessionParams.payment_method_types = ["card", "boleto"];
+      sessionParams.line_items = [
+        {
+          price_data: {
+            currency: "brl",
+            product_data: { name: `Plano ${plan.name}` },
+            unit_amount: unitAmount,
+            recurring: { interval: recurringInterval },
+          },
+          quantity: 1,
+        },
+      ];
+    }
+
+    const session = await stripe.checkout.sessions.create(sessionParams);
 
     logStep("Stripe session created", { sessionId: session.id });
 
