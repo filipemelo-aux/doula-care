@@ -26,24 +26,32 @@ export function CheckoutTransitionDialog({
   error,
   onRetry,
 }: CheckoutTransitionDialogProps) {
-  const [redirecting, setRedirecting] = useState(false);
+  const [redirected, setRedirected] = useState(false);
 
   useEffect(() => {
-    if (!open || !checkoutUrl || error) return;
+    if (!open || !checkoutUrl || error || redirected) return;
     const timer = setTimeout(() => {
-      setRedirecting(true);
-      window.location.href = checkoutUrl;
-    }, 1000);
+      setRedirected(true);
+      // Abre em nova aba para que o cancelamento no Stripe não trave o app
+      const win = window.open(checkoutUrl, "_blank");
+      if (!win) {
+        // Fallback se popup foi bloqueado
+        window.location.href = checkoutUrl;
+        return;
+      }
+      // Fecha o modal após abrir o checkout — usuário pode cancelar e voltar livremente
+      setTimeout(() => onOpenChange(false), 500);
+    }, 800);
     return () => clearTimeout(timer);
-  }, [open, checkoutUrl, error]);
+  }, [open, checkoutUrl, error, redirected, onOpenChange]);
 
   useEffect(() => {
-    if (!open) setRedirecting(false);
+    if (!open) setRedirected(false);
   }, [open]);
 
   return (
-    <Dialog open={open} onOpenChange={error ? onOpenChange : undefined}>
-      <DialogContent className="max-w-[340px] text-center [&>button.absolute]:hidden">
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-[340px] text-center">
         <DialogTitle className="sr-only">Redirecionando para pagamento</DialogTitle>
         <div className="flex flex-col items-center gap-4 py-4">
           {error ? (
