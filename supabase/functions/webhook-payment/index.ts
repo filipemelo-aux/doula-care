@@ -156,9 +156,10 @@ async function handleCheckoutCompleted(
 
   const now = new Date();
   const periodEnd = new Date(now);
-  if (billingType === "yearly") {
+  if (billingType === "yearly" || billingType === "one_time_yearly") {
     periodEnd.setDate(periodEnd.getDate() + 365);
   } else {
+    // monthly ou one_time_monthly
     periodEnd.setDate(periodEnd.getDate() + 30);
   }
 
@@ -366,7 +367,7 @@ async function updateOrgPlan(
       .from("organizations")
       .update({
         plan: planData.plan as "free" | "pro" | "premium",
-        billing_cycle: billingType === "yearly" ? "yearly" : "monthly",
+        billing_cycle: (billingType === "yearly" || billingType === "one_time_yearly") ? "yearly" : "monthly",
         next_billing_date: periodEnd.toISOString().split("T")[0],
         status: "ativo" as "ativo",
       })
