@@ -1165,6 +1165,69 @@ export type Database = {
           },
         ]
       }
+      plan_pix_payments: {
+        Row: {
+          amount: number
+          billing_type: string
+          created_at: string
+          declared_at: string
+          id: string
+          organization_id: string | null
+          plan_id: string
+          review_notes: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          billing_type: string
+          created_at?: string
+          declared_at?: string
+          id?: string
+          organization_id?: string | null
+          plan_id: string
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          billing_type?: string
+          created_at?: string
+          declared_at?: string
+          id?: string
+          organization_id?: string | null
+          plan_id?: string
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "plan_pix_payments_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "plan_pix_payments_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "platform_plan_limits"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       plan_settings: {
         Row: {
           created_at: string
