@@ -97,7 +97,7 @@ export function PixPaymentDialog({ open, onOpenChange, planId, planName, amount,
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-md overflow-hidden">
         <DialogHeader>
           <DialogTitle>Pagar com Pix</DialogTitle>
           <DialogDescription>
@@ -149,14 +149,28 @@ export function PixPaymentDialog({ open, onOpenChange, planId, planName, amount,
               <p className="text-xs font-medium text-muted-foreground">
                 Ou copie o código Pix:
               </p>
-              <div className="flex gap-2">
-                <code className="flex-1 text-[11px] bg-muted/50 rounded-lg px-3 py-2 truncate font-mono">
+              <div className="relative bg-muted/50 rounded-lg p-3 pr-12 max-h-24 overflow-y-auto">
+                <code className="block text-[11px] font-mono text-foreground break-all whitespace-pre-wrap leading-relaxed">
                   {payload}
                 </code>
-                <Button size="sm" variant="outline" onClick={handleCopy}>
-                  {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={handleCopy}
+                  className="absolute top-2 right-2 h-7 w-7 p-0 shrink-0"
+                >
+                  {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
                 </Button>
               </div>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={handleCopy}
+                className="w-full"
+              >
+                {copied ? <Check className="w-4 h-4 mr-2" /> : <Copy className="w-4 h-4 mr-2" />}
+                {copied ? "Copiado!" : "Copiar código Pix"}
+              </Button>
               <p className="text-[11px] text-muted-foreground">
                 Beneficiário: <span className="font-medium">{beneficiary}</span>
               </p>
