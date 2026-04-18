@@ -28,23 +28,41 @@ export function CheckoutTransitionDialog({
   onRetry,
 }: CheckoutTransitionDialogProps) {
   const [redirected, setRedirected] = useState(false);
+  const [checkoutWindow, setCheckoutWindow] = useState<Window | null>(null);
 
   useEffect(() => {
     if (!open || !checkoutUrl || error || redirected) return;
     const timer = setTimeout(() => {
       setRedirected(true);
-      // Abre em nova aba para que o cancelamento no Stripe não trave o app
       const win = window.open(checkoutUrl, "_blank");
       if (!win) {
-        // Fallback se popup foi bloqueado
         window.location.href = checkoutUrl;
         return;
       }
-      // Fecha o modal após abrir o checkout — usuário pode cancelar e voltar livremente
+      setCheckoutWindow(win);
       setTimeout(() => onOpenChange(false), 500);
     }, 800);
     return () => clearTimeout(timer);
   }, [open, checkoutUrl, error, redirected, onOpenChange]);
+
+  // Detecta quando a aba do checkout é fechada sem completar o pagamento
+  useEffect(() => {
+    if (!checkoutWindow) return;
+    const interval = setInterval(() => {
+      if (checkoutWindow.closed) {
+        clearInterval(interval);
+        setCheckoutWindow(null);
+        // Pequeno delay para não conflitar com redirect de sucesso
+        setTimeout(() => {
+          const url = new URL(window.location.href);
+          if (!url.searchParams.get("success") && !url.searchParams.get("session_id")) {
+            toast.info("Compra cancelada. Você pode tentar novamente quando quiser.");
+          }
+        }, 800);
+      }
+    }, 800);
+    return () => clearInterval(interval);
+  }, [checkoutWindow]);
 
   useEffect(() => {
     if (!open) setRedirected(false);
