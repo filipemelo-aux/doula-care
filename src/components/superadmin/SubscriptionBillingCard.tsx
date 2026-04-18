@@ -117,7 +117,13 @@ export function SubscriptionBillingCard() {
     return p?.name || "—";
   };
 
-  const activeSubscriptions = subscriptions.filter((s) => s.status === "active");
+  // Filter out orphan subscriptions (user has no profile/organization anymore)
+  const validUserIds = new Set(
+    profiles.filter((p) => !!p.organization_id).map((p) => p.user_id)
+  );
+  const activeSubscriptions = subscriptions.filter(
+    (s) => s.status === "active" && validUserIds.has(s.user_id)
+  );
   const activeSubscriptionCount = activeSubscriptions.length;
 
   // Sort by nearest expiration first
