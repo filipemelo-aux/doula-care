@@ -138,9 +138,10 @@ Deno.serve(async (req) => {
     };
 
     if (useOneTime) {
-      // Cobrança única (anual padrão ou avulso 1 mês/1 ano) — habilita Pix, cartão e boleto
+      // Cobrança única (anual padrão ou avulso 1 mês/1 ano) — cartão + boleto
+      // (Pix exige ativação manual no dashboard Stripe; deixe automatic_payment_methods cuidar disso)
       sessionParams.mode = "payment";
-      sessionParams.payment_method_types = ["card", "boleto", "pix"];
+      sessionParams.automatic_payment_methods = { enabled: true };
       sessionParams.line_items = [
         {
           price_data: {
