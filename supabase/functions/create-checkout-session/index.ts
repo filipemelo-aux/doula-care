@@ -119,7 +119,6 @@ Deno.serve(async (req) => {
       customer: customerId,
       customer_email: customerId ? undefined : user.email!,
       locale: "pt-BR",
-      automatic_payment_methods: { enabled: true },
       line_items: [
         {
           price_data: {
