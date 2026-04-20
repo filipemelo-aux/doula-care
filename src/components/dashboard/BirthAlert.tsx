@@ -10,6 +10,7 @@ import { Bell, Baby, CheckCircle, AlertTriangle, Calendar } from "lucide-react";
 import { abbreviateName, formatBrazilDate } from "@/lib/utils";
 import { calculateCurrentPregnancyWeeks, calculateCurrentPregnancyDays, isPostTerm } from "@/lib/pregnancy";
 import { BirthRegistrationDialog } from "@/components/clients/BirthRegistrationDialog";
+import { DoulaContractionTimer } from "@/components/dashboard/DoulaContractionTimer";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Client = Tables<"clients">;
