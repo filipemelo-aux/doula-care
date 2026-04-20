@@ -275,7 +275,7 @@ function AlertCard({
               event.stopPropagation();
               onRegisterBirth(client as Client);
             }}
-            className="w-9 h-9 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 flex items-center justify-center transition-all active:scale-95"
+            className="w-9 h-9 rounded-xl bg-success/10 hover:bg-success/20 text-success flex items-center justify-center transition-all active:scale-95"
           >
             <Baby className="h-4 w-4" />
           </button>
