@@ -222,7 +222,7 @@ export function BirthAlert() {
                           size="sm"
                           variant="outline"
                           className="h-5 px-2 text-[10px] border-dashed text-primary hover:bg-primary hover:text-primary-foreground hover:border-solid flex-shrink-0 transition-all"
-                          onClick={() => handleRegisterBirth(client as Client)}
+                          onClick={(e) => { e.stopPropagation(); handleRegisterBirth(client as Client); }}
                         >
                           <CheckCircle className="h-2.5 w-2.5 mr-0.5" />
                           Registrar Nascimento
