@@ -123,8 +123,8 @@ export function DoulaContractionTimer({ clientId, organizationId, compact }: Dou
   const isActive = activeId !== null;
 
   return (
-    <div className={`flex items-center gap-2 ${compact ? "" : "w-full"}`}>
-      <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-background/60 border border-destructive/30">
+    <div className={`flex items-center gap-3 ${compact ? "" : "w-full"}`}>
+      <div className="flex items-center gap-1.5 px-2 py-1.5 rounded-md bg-background/60 border border-destructive/30">
         <Timer className={`h-3 w-3 ${isActive ? "text-destructive animate-pulse" : "text-muted-foreground"}`} />
         <span className={`text-[11px] font-mono font-semibold tabular-nums ${isActive ? "text-destructive" : "text-muted-foreground"}`}>
           {formatTime(elapsed)}
@@ -135,18 +135,18 @@ export function DoulaContractionTimer({ clientId, organizationId, compact }: Dou
           size="sm"
           onClick={handleStop}
           disabled={loading}
-          className="h-6 px-2 text-[10px] bg-destructive hover:bg-destructive/90 text-destructive-foreground"
+          className="h-7 px-3 text-[10px] bg-destructive hover:bg-destructive/90 text-destructive-foreground font-semibold shadow-sm"
         >
-          {loading ? <Loader2 className="h-3 w-3 animate-spin" /> : <><Square className="h-2.5 w-2.5 mr-1 fill-current" />Parar</>}
+          {loading ? <Loader2 className="h-3 w-3 animate-spin" /> : <><Square className="h-2.5 w-2.5 mr-1 fill-current" />Finalizar</>}
         </Button>
       ) : (
         <Button
           size="sm"
           onClick={handleStart}
           disabled={loading}
-          className="h-6 px-2 text-[10px] bg-destructive hover:bg-destructive/90 text-destructive-foreground"
+          className="h-7 px-3 text-[10px] bg-destructive hover:bg-destructive/90 text-destructive-foreground font-semibold shadow-sm border border-destructive/50"
         >
-          {loading ? <Loader2 className="h-3 w-3 animate-spin" /> : <><Play className="h-2.5 w-2.5 mr-1 fill-current" />Cronometrar</>}
+          {loading ? <Loader2 className="h-3 w-3 animate-spin" /> : <><Play className="h-2.5 w-2.5 mr-1 fill-current" />Iniciar Contração</>}
         </Button>
       )}
     </div>

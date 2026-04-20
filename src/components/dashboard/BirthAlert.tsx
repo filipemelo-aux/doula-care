@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Bell, Baby, CheckCircle, AlertTriangle, Calendar } from "lucide-react";
+import { Bell, Baby, CheckCircle, AlertTriangle, Calendar, Timer } from "lucide-react";
 import { abbreviateName, formatBrazilDate } from "@/lib/utils";
 import { calculateCurrentPregnancyWeeks, calculateCurrentPregnancyDays, isPostTerm } from "@/lib/pregnancy";
 import { BirthRegistrationDialog } from "@/components/clients/BirthRegistrationDialog";
@@ -145,7 +145,7 @@ export function BirthAlert() {
                         setContractionsOpen(true);
                       }
                     }}
-                    className={`px-2 py-2 transition-colors hover:bg-muted/30 overflow-hidden ${
+                    className={`px-2 py-2 transition-colors hover:bg-muted/30 overflow-hidden relative ${
                       client.is_in_labor
                         ? "bg-destructive/10 animate-pulse cursor-pointer"
                         : client.is_post_term
@@ -153,6 +153,13 @@ export function BirthAlert() {
                         : ""
                     }`}
                   >
+                    {/* Timer indicator - shows when in labor */}
+                    {client.is_in_labor && (
+                      <div className="absolute top-2 right-2 flex items-center gap-1 bg-destructive/20 px-1.5 py-0.5 rounded-md border border-destructive/20">
+                        <Timer className="h-3 w-3 text-destructive animate-pulse" />
+                        <span className="text-[9px] font-semibold text-destructive">Histórico</span>
+                      </div>
+                    )}
                     {/* Row 1: Icon + Name */}
                     <div className="flex items-center gap-2">
                       <div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 ${
