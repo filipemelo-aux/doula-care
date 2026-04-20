@@ -10,6 +10,7 @@ import { Bell, Baby, CheckCircle, AlertTriangle, Calendar } from "lucide-react";
 import { abbreviateName, formatBrazilDate } from "@/lib/utils";
 import { calculateCurrentPregnancyWeeks, calculateCurrentPregnancyDays, isPostTerm } from "@/lib/pregnancy";
 import { BirthRegistrationDialog } from "@/components/clients/BirthRegistrationDialog";
+import { DoulaContractionTimer } from "@/components/dashboard/DoulaContractionTimer";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Client = Tables<"clients">;
@@ -201,7 +202,7 @@ export function BirthAlert() {
 
                     {/* Row 3 Desktop: Labor badge + Button sharing full width */}
                     {!isMobile && (
-                      <div className="mt-1.5 pl-8 flex items-center justify-between gap-2">
+                      <div className="mt-1.5 pl-8 flex items-center justify-between gap-2 flex-wrap">
                         {client.is_in_labor ? (
                           <Badge className="bg-destructive text-destructive-foreground text-[9px] px-1.5 h-5 animate-pulse">
                             🚨 EM TRABALHO DE PARTO
@@ -227,6 +228,16 @@ export function BirthAlert() {
                         <Badge className="bg-destructive text-destructive-foreground text-[9px] px-1.5 h-4 animate-pulse">
                           🚨 EM TRABALHO DE PARTO
                         </Badge>
+                      </div>
+                    )}
+
+                    {/* Doula contraction timer - only when in labor */}
+                    {client.is_in_labor && (
+                      <div className="mt-2 pl-8">
+                        <DoulaContractionTimer
+                          clientId={client.id}
+                          organizationId={client.organization_id}
+                        />
                       </div>
                     )}
 
