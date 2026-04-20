@@ -1,12 +1,13 @@
-import { useState } from "react";
+import { KeyboardEvent, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Baby, AlertTriangle, CheckCircle, Calendar, Activity, Clock } from "lucide-react";
 import { formatBrazilDate } from "@/lib/utils";
 import { fetchBirthAlertClients, type BirthAlertClient } from "@/lib/birthAlerts";
 import { BirthRegistrationDialog } from "@/components/clients/BirthRegistrationDialog";
+import { ClientContractionsDialog } from "@/components/dashboard/ClientContractionsDialog";
 import { cn } from "@/lib/utils";
 import type { Tables } from "@/integrations/supabase/types";
 
@@ -20,6 +21,8 @@ interface BirthAlertDialogProps {
 export function BirthAlertDialog({ open, onOpenChange }: BirthAlertDialogProps) {
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [birthDialogOpen, setBirthDialogOpen] = useState(false);
+  const [contractionsClient, setContractionsClient] = useState<Client | null>(null);
+  const [contractionsDialogOpen, setContractionsDialogOpen] = useState(false);
 
   const { data: clients, isLoading } = useQuery({
     queryKey: ["birth-alert-clients"],
@@ -32,6 +35,12 @@ export function BirthAlertDialog({ open, onOpenChange }: BirthAlertDialogProps) 
     setBirthDialogOpen(true);
   };
 
+  const handleOpenContractions = (client: BirthAlertClient) => {
+    if (!client.is_in_labor) return;
+    setContractionsClient(client as Client);
+    setContractionsDialogOpen(true);
+  };
+
   const laborClients = clients?.filter((c) => c.is_in_labor) ?? [];
   const watchClients = clients?.filter((c) => !c.is_in_labor) ?? [];
 
@@ -39,7 +48,6 @@ export function BirthAlertDialog({ open, onOpenChange }: BirthAlertDialogProps) 
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="max-w-[420px] max-h-[80vh] overflow-hidden flex flex-col gap-0 p-0 rounded-[18px]">
-          {/* Header */}
           <div className="flex items-center gap-3 px-5 pt-5 pb-3">
             <div className="w-9 h-9 rounded-2xl bg-primary/10 flex items-center justify-center">
               <Baby className="h-[18px] w-[18px] text-primary" />
@@ -54,7 +62,6 @@ export function BirthAlertDialog({ open, onOpenChange }: BirthAlertDialogProps) 
             </div>
           </div>
 
-          {/* Content */}
           <div className="flex-1 overflow-y-auto px-4 pb-4">
             {isLoading ? (
               <div className="space-y-3 py-2">
@@ -76,7 +83,6 @@ export function BirthAlertDialog({ open, onOpenChange }: BirthAlertDialogProps) 
               </div>
             ) : (
               <div className="space-y-2">
-                {/* Active labor section */}
                 {laborClients.length > 0 && (
                   <div className="space-y-2">
                     {laborClients.map((client) => (
@@ -84,12 +90,12 @@ export function BirthAlertDialog({ open, onOpenChange }: BirthAlertDialogProps) 
                         key={client.id}
                         client={client}
                         onRegisterBirth={handleRegisterBirth}
+                        onOpenContractions={handleOpenContractions}
                       />
                     ))}
                   </div>
                 )}
 
-                {/* Watching section */}
                 {watchClients.length > 0 && (
                   <>
                     {laborClients.length > 0 && (
@@ -105,6 +111,7 @@ export function BirthAlertDialog({ open, onOpenChange }: BirthAlertDialogProps) 
                           key={client.id}
                           client={client}
                           onRegisterBirth={handleRegisterBirth}
+                          onOpenContractions={handleOpenContractions}
                         />
                       ))}
                     </div>
@@ -121,18 +128,24 @@ export function BirthAlertDialog({ open, onOpenChange }: BirthAlertDialogProps) 
         onOpenChange={setBirthDialogOpen}
         client={selectedClient}
       />
+
+      <ClientContractionsDialog
+        open={contractionsDialogOpen}
+        onOpenChange={setContractionsDialogOpen}
+        client={contractionsClient}
+      />
     </>
   );
 }
 
-/* ─── Card component ─── */
-
 function AlertCard({
   client,
   onRegisterBirth,
+  onOpenContractions,
 }: {
   client: BirthAlertClient;
   onRegisterBirth: (c: Client) => void;
+  onOpenContractions: (c: BirthAlertClient) => void;
 }) {
   const isLabor = client.is_in_labor;
   const isHighPriority = isLabor || client.is_post_term || (client.current_weeks !== null && client.current_weeks >= 39);
@@ -152,33 +165,44 @@ function AlertCard({
         weeksBg: "bg-destructive/10 text-destructive",
       }
     : client.is_post_term
-    ? {
-        label: "Gestação pós-data",
-        badge: null,
-        cardBg: "bg-warning/[0.04]",
-        iconBg: "bg-warning/15",
-        iconColor: "text-warning",
-        weeksBg: "bg-destructive/10 text-destructive",
-      }
-    : {
-        label: "Parto se aproximando",
-        badge: null,
-        cardBg: "hover:bg-muted/30",
-        iconBg: isHighPriority ? "bg-warning/12" : "bg-primary/8",
-        iconColor: isHighPriority ? "text-warning" : "text-primary/70",
-        weeksBg: isHighPriority ? "bg-warning/10 text-warning" : "bg-primary/8 text-primary/70",
-      };
+      ? {
+          label: "Gestação pós-data",
+          badge: null,
+          cardBg: "bg-warning/[0.04]",
+          iconBg: "bg-warning/15",
+          iconColor: "text-warning",
+          weeksBg: "bg-destructive/10 text-destructive",
+        }
+      : {
+          label: "Parto se aproximando",
+          badge: null,
+          cardBg: "hover:bg-muted/30",
+          iconBg: isHighPriority ? "bg-warning/12" : "bg-primary/8",
+          iconColor: isHighPriority ? "text-warning" : "text-primary/70",
+          weeksBg: isHighPriority ? "bg-warning/10 text-warning" : "bg-primary/8 text-primary/70",
+        };
+
+  const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    if (!isLabor) return;
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      onOpenContractions(client);
+    }
+  };
 
   return (
     <div
+      role={isLabor ? "button" : undefined}
+      tabIndex={isLabor ? 0 : undefined}
+      onClick={() => onOpenContractions(client)}
+      onKeyDown={handleKeyDown}
       className={cn(
         "rounded-2xl p-3 transition-all duration-200",
         statusConfig.cardBg,
-        isLabor && "ring-1 ring-destructive/15"
+        isLabor && "ring-1 ring-destructive/15 cursor-pointer hover:bg-destructive/[0.07]"
       )}
     >
       <div className="flex items-start gap-3">
-        {/* Icon */}
         <div
           className={cn(
             "w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5",
@@ -194,7 +218,6 @@ function AlertCard({
           )}
         </div>
 
-        {/* Content */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between gap-2">
             <p className="text-[13px] font-semibold text-foreground truncate">{client.full_name}</p>
@@ -224,7 +247,6 @@ function AlertCard({
             )}
           </div>
 
-          {/* Labor active badge */}
           {isLabor && statusConfig.badge && (
             <div className="mt-1.5">
               <Badge className="bg-destructive/90 text-destructive-foreground text-[9px] px-2 h-[18px] font-bold tracking-wide animate-pulse rounded-md">
@@ -234,7 +256,6 @@ function AlertCard({
             </div>
           )}
 
-          {/* Contraction info */}
           {client.recent_contractions_10m > 0 && (
             <div className="flex items-center gap-1 mt-1.5">
               <Clock className="h-2.5 w-2.5 text-muted-foreground/50" />
@@ -244,11 +265,13 @@ function AlertCard({
             </div>
           )}
 
-          {/* Register birth button */}
           <Button
             size="sm"
             className="h-8 w-full mt-2.5 text-[11px] font-semibold bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl active:scale-[0.97] transition-all"
-            onClick={() => onRegisterBirth(client as Client)}
+            onClick={(event) => {
+              event.stopPropagation();
+              onRegisterBirth(client as Client);
+            }}
           >
             <CheckCircle className="h-3.5 w-3.5 mr-1.5" />
             Registrar Nascimento
