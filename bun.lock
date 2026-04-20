@@ -297,9 +297,9 @@
 
     "@capacitor/status-bar": ["@capacitor/status-bar@8.0.2", "https://europe-west4-npm.pkg.dev/lovable-core-prod/sandbox-npm-cache/@capacitor/status-bar/-/status-bar-8.0.2.tgz", { "peerDependencies": { "@capacitor/core": ">=8.0.0" } }, "sha512-WXs8YB8B9eEaPZz+bcdY6t2nForF1FLoj/JU0Dl9RRgQnddnS98FEEyDooQhaY7wivr000j4+SC1FyeJkrFO7A=="],
 
-    "@capgo/capacitor-autofill-save-password": ["@capgo/capacitor-autofill-save-password@8.0.23", "https://europe-west4-npm.pkg.dev/lovable-core-prod/sandbox-npm-cache/@capgo/capacitor-autofill-save-password/-/capacitor-autofill-save-password-8.0.23.tgz", { "peerDependencies": { "@capacitor/core": ">=8.0.0" } }, "sha512-T7N6BdMTpR7I4AIPaiwRB/uXL8wR8otVkky+3Gnp41IWKmpMoiSnSGRqQYE+AoRgUd6iLlmOfOhTDesH2am2GA=="],
+    "@capgo/capacitor-autofill-save-password": ["@capgo/capacitor-autofill-save-password@8.0.25", "https://europe-west4-npm.pkg.dev/lovable-core-prod/sandbox-npm-cache/@capgo/capacitor-autofill-save-password/-/capacitor-autofill-save-password-8.0.25.tgz", { "peerDependencies": { "@capacitor/core": ">=8.0.0" } }, "sha512-c7jJvi2cJ1Zgkfa5yMs7hnAdxTmLbkusVj8Q/xr7b1qsO3Hz0d/+cOSzrpGnTD31EIuo4Z966OEjcrdP7YYzJQ=="],
 
-    "@capgo/capacitor-navigation-bar": ["@capgo/capacitor-navigation-bar@8.1.3", "https://europe-west4-npm.pkg.dev/lovable-core-prod/sandbox-npm-cache/@capgo/capacitor-navigation-bar/-/capacitor-navigation-bar-8.1.3.tgz", { "peerDependencies": { "@capacitor/core": ">=8.0.0" } }, "sha512-MlfQWa8jxBNC/XMm1U/1CMXUvcrV/xUJ0X945RNVk68R8wSJHRdkwWFHmaEAD2egABqyRk4bibtklGDeLTNR7g=="],
+    "@capgo/capacitor-navigation-bar": ["@capgo/capacitor-navigation-bar@8.1.4", "https://europe-west4-npm.pkg.dev/lovable-core-prod/sandbox-npm-cache/@capgo/capacitor-navigation-bar/-/capacitor-navigation-bar-8.1.4.tgz", { "peerDependencies": { "@capacitor/core": ">=8.0.0" } }, "sha512-zjVQYf2psZnAd3JsjQTljJRLG6P4uywqBpgzBpM6uI6EQc4poYpQlz6WfwgQCP1XSSMVrkdNCcOKBGpuC+OzCQ=="],
 
     "@esbuild/aix-ppc64": ["@esbuild/aix-ppc64@0.25.0", "", { "os": "aix", "cpu": "ppc64" }, "sha512-O7vun9Sf8DFjH2UtqK8Ku3LkquL9SZL8OLY1T5NZkA34+wG3OQF7cl4Ql8vdNzM6fzBbYfLaiRLIOZ+2FOCgBQ=="],
 
