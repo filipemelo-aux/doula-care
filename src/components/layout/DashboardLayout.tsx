@@ -11,6 +11,8 @@ import { usePresenceBroadcast } from "@/hooks/usePresence";
 import { useAdminUnreadCounts } from "@/hooks/useAdminUnreadCounts";
 import { useActiveLaborCount } from "@/hooks/useActiveLaborCount";
 import { BirthAlertDialog } from "@/components/dashboard/BirthAlertDialog";
+import { ClientContractionsDialog } from "@/components/dashboard/ClientContractionsDialog";
+import type { Tables } from "@/integrations/supabase/types";
 import { NotificationTopBanner } from "@/components/dashboard/NotificationTopBanner";
 import { ExpiredPlanBanner } from "@/components/dashboard/ExpiredPlanBanner";
 import { cn } from "@/lib/utils";
@@ -18,6 +20,8 @@ import { cn } from "@/lib/utils";
 export function DashboardLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [birthAlertOpen, setBirthAlertOpen] = useState(false);
+  const [contractionsOpen, setContractionsOpen] = useState(false);
+  const [contractionsClient, setContractionsClient] = useState<Tables<"clients"> | null>(null);
   const { signOut } = useAuth();
   const { logoUrl: orgLogo, displayName, brandingReady } = useOrgBranding();
   const { unreadMessages } = useAdminUnreadCounts();
@@ -225,7 +229,20 @@ export function DashboardLayout() {
       </div>
 
       {/* Birth Alert Dialog */}
-      <BirthAlertDialog open={birthAlertOpen} onOpenChange={setBirthAlertOpen} />
+      <BirthAlertDialog
+        open={birthAlertOpen}
+        onOpenChange={setBirthAlertOpen}
+        onOpenContractions={(client) => {
+          setContractionsClient(client);
+          setContractionsOpen(true);
+        }}
+      />
+
+      <ClientContractionsDialog
+        open={contractionsOpen}
+        onOpenChange={setContractionsOpen}
+        client={contractionsClient}
+      />
 
       {sidebarOpen && (
         <div
