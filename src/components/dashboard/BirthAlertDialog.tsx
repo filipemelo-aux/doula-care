@@ -7,7 +7,6 @@ import { Baby, AlertTriangle, CheckCircle, Calendar, Activity, Clock } from "luc
 import { formatBrazilDate } from "@/lib/utils";
 import { fetchBirthAlertClients, type BirthAlertClient } from "@/lib/birthAlerts";
 import { BirthRegistrationDialog } from "@/components/clients/BirthRegistrationDialog";
-import { ClientContractionsDialog } from "@/components/dashboard/ClientContractionsDialog";
 import { cn } from "@/lib/utils";
 import type { Tables } from "@/integrations/supabase/types";
 
@@ -16,13 +15,12 @@ type Client = Tables<"clients">;
 interface BirthAlertDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onOpenContractions: (client: Client) => void;
 }
 
-export function BirthAlertDialog({ open, onOpenChange }: BirthAlertDialogProps) {
+export function BirthAlertDialog({ open, onOpenChange, onOpenContractions }: BirthAlertDialogProps) {
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [birthDialogOpen, setBirthDialogOpen] = useState(false);
-  const [contractionsClient, setContractionsClient] = useState<Client | null>(null);
-  const [contractionsDialogOpen, setContractionsDialogOpen] = useState(false);
 
   const { data: clients, isLoading } = useQuery({
     queryKey: ["birth-alert-clients"],
@@ -37,9 +35,8 @@ export function BirthAlertDialog({ open, onOpenChange }: BirthAlertDialogProps) 
 
   const handleOpenContractions = (client: BirthAlertClient) => {
     if (!client.is_in_labor) return;
-    setContractionsClient(client as Client);
     onOpenChange(false);
-    window.setTimeout(() => setContractionsDialogOpen(true), 120);
+    window.setTimeout(() => onOpenContractions(client as Client), 120);
   };
 
   const laborClients = clients?.filter((c) => c.is_in_labor) ?? [];
@@ -128,12 +125,6 @@ export function BirthAlertDialog({ open, onOpenChange }: BirthAlertDialogProps) 
         open={birthDialogOpen}
         onOpenChange={setBirthDialogOpen}
         client={selectedClient}
-      />
-
-      <ClientContractionsDialog
-        open={contractionsDialogOpen}
-        onOpenChange={setContractionsDialogOpen}
-        client={contractionsClient}
       />
     </>
   );
