@@ -15,6 +15,7 @@ import { Timer, Clock, Calendar, Loader2, TrendingDown } from "lucide-react";
 import { differenceInMinutes, differenceInSeconds } from "date-fns";
 import { formatBrazilDate, formatBrazilTime } from "@/lib/utils";
 import { Tables } from "@/integrations/supabase/types";
+import { DoulaContractionTimer } from "@/components/dashboard/DoulaContractionTimer";
 
 type Client = Tables<"clients">;
 type Contraction = Tables<"contractions">;
@@ -148,6 +149,16 @@ export function ClientContractionsDialog({
             {client?.full_name}
           </DialogDescription>
         </DialogHeader>
+
+        {/* Doula Live Timer - only when client is in labor */}
+        {client?.labor_started_at && client?.id && (
+          <div className="mb-3">
+            <DoulaContractionTimer
+              clientId={client.id}
+              organizationId={client.organization_id}
+            />
+          </div>
+        )}
 
         {/* Stats Summary */}
         {stats && (
