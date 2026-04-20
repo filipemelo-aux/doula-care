@@ -254,18 +254,32 @@ function AlertCard({
               </span>
             </div>
           )}
+        </div>
 
-          <Button
-            size="sm"
-            className="h-8 w-full mt-2.5 text-[11px] font-semibold bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl active:scale-[0.97] transition-all"
+        {/* Action icons column */}
+        <div className="flex flex-col items-center gap-1.5 flex-shrink-0 ml-1">
+          <button
+            type="button"
+            aria-label="Ver histórico de contrações"
+            onClick={(event) => {
+              event.stopPropagation();
+              onOpenContractions(client);
+            }}
+            className="w-9 h-9 rounded-xl bg-primary/10 hover:bg-primary/20 text-primary flex items-center justify-center transition-all active:scale-95"
+          >
+            <Activity className={cn("h-4 w-4", isLabor && "animate-pulse")} />
+          </button>
+          <button
+            type="button"
+            aria-label="Registrar nascimento"
             onClick={(event) => {
               event.stopPropagation();
               onRegisterBirth(client as Client);
             }}
+            className="w-9 h-9 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 flex items-center justify-center transition-all active:scale-95"
           >
-            <CheckCircle className="h-3.5 w-3.5 mr-1.5" />
-            Registrar Nascimento
-          </Button>
+            <Baby className="h-4 w-4" />
+          </button>
         </div>
       </div>
     </div>
