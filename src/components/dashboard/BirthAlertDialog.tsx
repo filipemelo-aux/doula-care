@@ -38,7 +38,8 @@ export function BirthAlertDialog({ open, onOpenChange }: BirthAlertDialogProps) 
   const handleOpenContractions = (client: BirthAlertClient) => {
     if (!client.is_in_labor) return;
     setContractionsClient(client as Client);
-    setContractionsDialogOpen(true);
+    onOpenChange(false);
+    window.setTimeout(() => setContractionsDialogOpen(true), 120);
   };
 
   const laborClients = clients?.filter((c) => c.is_in_labor) ?? [];
