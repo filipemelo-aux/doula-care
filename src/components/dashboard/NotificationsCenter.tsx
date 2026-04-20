@@ -413,12 +413,26 @@ export function NotificationsCenter({ fullPage = false }: NotificationsCenterPro
                           <div className="flex flex-wrap gap-1.5 mt-2">
                             {/* Birth alerts: Register birth */}
                             {(n.type === "labor" || n.type === "post_term" || n.type === "birth_approaching") && n.client && (
-                              <Button size="sm" variant="outline"
-                                className="h-7 px-2.5 text-[11px] border-dashed hover:bg-destructive/10"
-                                onClick={() => handleRegisterBirth(n.client!)}>
-                                <Baby className="h-3 w-3 mr-1 text-destructive" />
-                                <span className="text-destructive">Registrar Nascimento</span>
-                              </Button>
+                              <>
+                                {n.type === "labor" && n.clientId && (
+                                  <Button size="sm" variant="outline"
+                                    className="h-7 px-2.5 text-[11px] border-dashed border-orange-300 hover:bg-orange-500/10"
+                                    onClick={() => {
+                                      const c = clientsMap.get(n.clientId!) ?? n.client!;
+                                      setContractionsClient(c);
+                                      setContractionsDialogOpen(true);
+                                    }}>
+                                    <History className="h-3 w-3 mr-1 text-orange-500" />
+                                    <span className="text-orange-600">Ver Contrações</span>
+                                  </Button>
+                                )}
+                                <Button size="sm" variant="outline"
+                                  className="h-7 px-2.5 text-[11px] border-dashed hover:bg-destructive/10"
+                                  onClick={() => handleRegisterBirth(n.client!)}>
+                                  <Baby className="h-3 w-3 mr-1 text-destructive" />
+                                  <span className="text-destructive">Registrar Nascimento</span>
+                                </Button>
+                              </>
                             )}
 
                             {/* Contractions */}
