@@ -11,7 +11,7 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { Timer, Clock, Calendar, Loader2, TrendingDown } from "lucide-react";
+import { Timer, Calendar, Loader2, TrendingDown } from "lucide-react";
 import { differenceInMinutes, differenceInSeconds } from "date-fns";
 import { formatBrazilDate, formatBrazilTime } from "@/lib/utils";
 import { Tables } from "@/integrations/supabase/types";
@@ -150,8 +150,8 @@ export function ClientContractionsDialog({
           </DialogDescription>
         </DialogHeader>
 
-        {/* Doula Live Timer - only when client is in labor */}
-        {client?.labor_started_at && client?.id && (
+        {/* Doula Live Timer - available when there is active labor context or existing contraction history */}
+        {client?.id && (client.labor_started_at || (contractions?.length ?? 0) > 0) && (
           <div className="mb-3">
             <DoulaContractionTimer
               clientId={client.id}
