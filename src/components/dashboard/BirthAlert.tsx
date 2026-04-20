@@ -269,6 +269,12 @@ export function BirthAlert() {
         onOpenChange={setBirthDialogOpen}
         client={selectedClient}
       />
+
+      <ClientContractionsDialog
+        open={contractionsOpen}
+        onOpenChange={setContractionsOpen}
+        client={contractionsClient}
+      />
     </>
   );
 }
