@@ -10,7 +10,7 @@ import { Bell, Baby, CheckCircle, AlertTriangle, Calendar } from "lucide-react";
 import { abbreviateName, formatBrazilDate } from "@/lib/utils";
 import { calculateCurrentPregnancyWeeks, calculateCurrentPregnancyDays, isPostTerm } from "@/lib/pregnancy";
 import { BirthRegistrationDialog } from "@/components/clients/BirthRegistrationDialog";
-import { DoulaContractionTimer } from "@/components/dashboard/DoulaContractionTimer";
+import { ClientContractionsDialog } from "@/components/dashboard/ClientContractionsDialog";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Client = Tables<"clients">;
@@ -18,6 +18,8 @@ type Client = Tables<"clients">;
 export function BirthAlert() {
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [birthDialogOpen, setBirthDialogOpen] = useState(false);
+  const [contractionsClient, setContractionsClient] = useState<Client | null>(null);
+  const [contractionsOpen, setContractionsOpen] = useState(false);
   const isMobile = useIsMobile();
   const { data: clients, isLoading } = useQuery({
     queryKey: ["birth-alert-clients"],
@@ -137,11 +139,17 @@ export function BirthAlert() {
                 return (
                   <div
                     key={client.id}
+                    onClick={() => {
+                      if (client.is_in_labor) {
+                        setContractionsClient(client as Client);
+                        setContractionsOpen(true);
+                      }
+                    }}
                     className={`px-2 py-2 transition-colors hover:bg-muted/30 overflow-hidden ${
-                      client.is_in_labor 
-                        ? "bg-destructive/10 animate-pulse" 
-                        : client.is_post_term 
-                        ? "bg-destructive/5" 
+                      client.is_in_labor
+                        ? "bg-destructive/10 animate-pulse cursor-pointer"
+                        : client.is_post_term
+                        ? "bg-destructive/5"
                         : ""
                     }`}
                   >
@@ -231,16 +239,6 @@ export function BirthAlert() {
                       </div>
                     )}
 
-                    {/* Doula contraction timer - only when in labor */}
-                    {client.is_in_labor && (
-                      <div className="mt-2 pl-8">
-                        <DoulaContractionTimer
-                          clientId={client.id}
-                          organizationId={client.organization_id}
-                        />
-                      </div>
-                    )}
-
                     {/* Row 4: Button - mobile only (below everything) */}
                     {isMobile && (
                       <div className="mt-2 pl-8">
@@ -248,7 +246,10 @@ export function BirthAlert() {
                           size="sm"
                           variant="outline"
                           className="h-5 px-2 text-[10px] border-dashed text-primary hover:bg-primary hover:text-primary-foreground hover:border-solid transition-all w-full"
-                          onClick={() => handleRegisterBirth(client as Client)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleRegisterBirth(client as Client);
+                          }}
                         >
                           <CheckCircle className="h-2.5 w-2.5 mr-0.5" />
                           Registrar Nascimento
