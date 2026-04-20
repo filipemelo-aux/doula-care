@@ -254,32 +254,32 @@ function AlertCard({
             </div>
           )}
         </div>
+      </div>
 
-        {/* Action icons column */}
-        <div className="flex flex-col items-center gap-1.5 flex-shrink-0 ml-1">
-          <button
-            type="button"
-            aria-label="Ver histórico de contrações"
-            onClick={(event) => {
-              event.stopPropagation();
-              onOpenContractions(client);
-            }}
-            className="w-9 h-9 rounded-xl bg-primary/10 hover:bg-primary/20 text-primary flex items-center justify-center transition-all active:scale-95"
-          >
-            <Activity className={cn("h-4 w-4", isLabor && "animate-pulse")} />
-          </button>
-          <button
-            type="button"
-            aria-label="Registrar nascimento"
-            onClick={(event) => {
-              event.stopPropagation();
-              onRegisterBirth(client as Client);
-            }}
-            className="w-9 h-9 rounded-xl bg-success/10 hover:bg-success/20 text-success flex items-center justify-center transition-all active:scale-95"
-          >
-            <Baby className="h-4 w-4" />
-          </button>
-        </div>
+      {/* Action icons row - bottom */}
+      <div className="flex items-center justify-end gap-2 mt-2.5 pl-12">
+        <button
+          type="button"
+          aria-label="Ver histórico de contrações"
+          onClick={(event) => {
+            event.stopPropagation();
+            onOpenContractions(client);
+          }}
+          className="w-9 h-9 rounded-xl bg-primary/10 hover:bg-primary/20 text-primary flex items-center justify-center transition-all active:scale-95"
+        >
+          <Activity className={cn("h-4 w-4", isLabor && "animate-pulse")} />
+        </button>
+        <button
+          type="button"
+          aria-label="Registrar nascimento"
+          onClick={(event) => {
+            event.stopPropagation();
+            onRegisterBirth(client as Client);
+          }}
+          className="w-9 h-9 rounded-xl bg-success/10 hover:bg-success/20 text-success flex items-center justify-center transition-all active:scale-95"
+        >
+          <Baby className="h-4 w-4" />
+        </button>
       </div>
     </div>
   );
