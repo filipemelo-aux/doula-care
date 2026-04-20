@@ -34,9 +34,7 @@ export function BirthAlertDialog({ open, onOpenChange, onOpenContractions }: Bir
   };
 
   const handleOpenContractions = (client: BirthAlertClient) => {
-    if (!client.is_in_labor) return;
-    onOpenChange(false);
-    window.setTimeout(() => onOpenContractions(client as Client), 120);
+    onOpenContractions(client as Client);
   };
 
   const laborClients = clients?.filter((c) => c.is_in_labor) ?? [];
@@ -175,7 +173,6 @@ function AlertCard({
         };
 
   const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
-    if (!isLabor) return;
     if (event.key === "Enter" || event.key === " ") {
       event.preventDefault();
       onOpenContractions(client);
@@ -184,14 +181,15 @@ function AlertCard({
 
   return (
     <div
-      role={isLabor ? "button" : undefined}
-      tabIndex={isLabor ? 0 : undefined}
+      role="button"
+      tabIndex={0}
       onClick={() => onOpenContractions(client)}
       onKeyDown={handleKeyDown}
       className={cn(
         "rounded-2xl p-3 transition-all duration-200",
         statusConfig.cardBg,
-        isLabor && "ring-1 ring-destructive/15 cursor-pointer hover:bg-destructive/[0.07]"
+        "cursor-pointer",
+        isLabor ? "ring-1 ring-destructive/15 hover:bg-destructive/[0.07]" : "hover:bg-muted/40"
       )}
     >
       <div className="flex items-start gap-3">

@@ -22,6 +22,7 @@ export function DashboardLayout() {
   const [birthAlertOpen, setBirthAlertOpen] = useState(false);
   const [contractionsOpen, setContractionsOpen] = useState(false);
   const [contractionsClient, setContractionsClient] = useState<Tables<"clients"> | null>(null);
+  const [pendingContractionsClient, setPendingContractionsClient] = useState<Tables<"clients"> | null>(null);
   const { signOut } = useAuth();
   const { logoUrl: orgLogo, displayName, brandingReady } = useOrgBranding();
   const { unreadMessages } = useAdminUnreadCounts();
@@ -29,6 +30,15 @@ export function DashboardLayout() {
   const location = useLocation();
   const navigate = useNavigate();
   usePresenceBroadcast();
+
+  useEffect(() => {
+    if (birthAlertOpen || !pendingContractionsClient) return;
+
+    setContractionsClient(pendingContractionsClient);
+    setContractionsOpen(true);
+    setPendingContractionsClient(null);
+  }, [birthAlertOpen, pendingContractionsClient]);
+
   const headerLogo = orgLogo || logo;
   const headerName = displayName || "Doula Care";
 
@@ -233,8 +243,8 @@ export function DashboardLayout() {
         open={birthAlertOpen}
         onOpenChange={setBirthAlertOpen}
         onOpenContractions={(client) => {
-          setContractionsClient(client);
-          setContractionsOpen(true);
+          setPendingContractionsClient(client);
+          setBirthAlertOpen(false);
         }}
       />
 
