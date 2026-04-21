@@ -474,10 +474,10 @@ export function NotificationsCenter({ fullPage = false }: NotificationsCenterPro
                                 </Button>
                                 {!clientsMap.get(n.clientId!)?.labor_started_at && (
                                   <Button size="sm" variant="outline"
-                                    className="h-7 px-2.5 text-[11px] border-dashed hover:bg-destructive/10"
+                                    className="h-7 px-2.5 text-[11px] border-dashed border-success/40 hover:bg-success/10"
                                     onClick={() => handleStartLabor(n.clientId!)}>
-                                    <Activity className="h-3 w-3 mr-1 text-destructive" />
-                                    <span className="text-destructive">Registrar Parto</span>
+                                    <Baby className="h-3 w-3 mr-1 text-success" />
+                                    <span className="text-success">Registrar Parto</span>
                                   </Button>
                                 )}
                                 {!n.isRead && (
