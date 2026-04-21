@@ -49,6 +49,24 @@ export function NotificationsCenter({ fullPage = false }: NotificationsCenterPro
   } | null>(null);
   const queryClient = useQueryClient();
 
+  // Last seen timestamp for birth alerts (set when user opens notifications page)
+  const { data: birthAlertLastSeen } = useQuery({
+    queryKey: ["birth-alert-last-seen"],
+    queryFn: async () => {
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData?.user?.id) return null;
+      const { data } = await supabase
+        .from("notification_seen")
+        .select("seen_at")
+        .eq("user_id", userData.user.id)
+        .eq("storage_key", "birth-alert-seen")
+        .eq("section", "last_viewed")
+        .maybeSingle();
+      return data?.seen_at ?? null;
+    },
+    staleTime: 10000,
+  });
+
   const { data: allClients } = useQuery({
     queryKey: ["all-clients-lookup"],
     queryFn: async () => {
@@ -164,7 +182,11 @@ export function NotificationsCenter({ fullPage = false }: NotificationsCenterPro
   // Build flat notification list
   const notifications: FlatNotification[] = [];
 
-  // 1. Labor / Birth alerts
+  // 1. Labor / Birth alerts (marked as read once user has visited the notifications page)
+  const isBirthRead = (ts: string) => {
+    if (!birthAlertLastSeen) return false;
+    return new Date(ts).getTime() <= new Date(birthAlertLastSeen).getTime();
+  };
   birthAlertClients?.forEach(client => {
     const weekStr = `${client.current_weeks}s${client.current_days > 0 ? `${client.current_days}d` : ""}`;
     if (client.labor_started_at) {
@@ -175,24 +197,29 @@ export function NotificationsCenter({ fullPage = false }: NotificationsCenterPro
         detail: `Iniciado ${formatBrazilDateTime(client.labor_started_at, "dd/MM 'às' HH:mm")}`,
         timestamp: client.labor_started_at, priority: "high",
         clientId: client.id, client: client as Client, weeksBadge: weekStr,
+        isRead: isBirthRead(client.labor_started_at),
       });
     } else if (client.is_post_term) {
+      const ts = client.dpp || client.created_at;
       notifications.push({
         id: `postterm-${client.id}`, type: "post_term",
         title: "⚠️ Gestação Pós-Data",
         subtitle: client.full_name,
         detail: client.dpp ? `DPP: ${formatBrazilDate(client.dpp)}` : undefined,
-        timestamp: client.dpp || client.created_at, priority: "high",
+        timestamp: ts, priority: "high",
         clientId: client.id, client: client as Client, weeksBadge: weekStr,
+        isRead: isBirthRead(ts),
       });
     } else {
+      const ts = client.dpp || client.created_at;
       notifications.push({
         id: `approaching-${client.id}`, type: "birth_approaching",
         title: "Parto se Aproximando",
         subtitle: client.full_name,
         detail: client.dpp ? `DPP: ${formatBrazilDate(client.dpp)}` : undefined,
-        timestamp: client.dpp || client.created_at, priority: "medium",
+        timestamp: ts, priority: "medium",
         clientId: client.id, client: client as Client, weeksBadge: weekStr,
+        isRead: isBirthRead(ts),
       });
     }
   });
@@ -411,21 +438,19 @@ export function NotificationsCenter({ fullPage = false }: NotificationsCenterPro
 
                           {/* Actions */}
                           <div className="flex flex-wrap gap-1.5 mt-2">
-                            {/* Birth alerts: Register birth */}
-                            {(n.type === "labor" || n.type === "post_term" || n.type === "birth_approaching") && n.client && (
+                            {/* Birth alerts: only labor shows actions (Ver Contrações + Registrar Nascimento) */}
+                            {n.type === "labor" && n.client && n.clientId && (
                               <>
-                                {n.type === "labor" && n.clientId && (
-                                  <Button size="sm" variant="outline"
-                                    className="h-7 px-2.5 text-[11px] border-dashed border-orange-300 hover:bg-orange-500/10"
-                                    onClick={() => {
-                                      const c = clientsMap.get(n.clientId!) ?? n.client!;
-                                      setContractionsClient(c);
-                                      setContractionsDialogOpen(true);
-                                    }}>
-                                    <History className="h-3 w-3 mr-1 text-orange-500" />
-                                    <span className="text-orange-600">Ver Contrações</span>
-                                  </Button>
-                                )}
+                                <Button size="sm" variant="outline"
+                                  className="h-7 px-2.5 text-[11px] border-dashed border-orange-300 hover:bg-orange-500/10"
+                                  onClick={() => {
+                                    const c = clientsMap.get(n.clientId!) ?? n.client!;
+                                    setContractionsClient(c);
+                                    setContractionsDialogOpen(true);
+                                  }}>
+                                  <History className="h-3 w-3 mr-1 text-orange-500" />
+                                  <span className="text-orange-600">Ver Contrações</span>
+                                </Button>
                                 <Button size="sm" variant="outline"
                                   className="h-7 px-2.5 text-[11px] border-dashed hover:bg-destructive/10"
                                   onClick={() => handleRegisterBirth(n.client!)}>
