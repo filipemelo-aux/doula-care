@@ -51,7 +51,7 @@ export function NotificationsCenter({ fullPage = false }: NotificationsCenterPro
 
   // Last seen timestamp for birth alerts (set when user opens notifications page)
   const { data: birthAlertLastSeen } = useQuery({
-    queryKey: ["birth-alert-last-seen-center"],
+    queryKey: ["birth-alert-last-seen"],
     queryFn: async () => {
       const { data: userData } = await supabase.auth.getUser();
       if (!userData?.user?.id) return null;
