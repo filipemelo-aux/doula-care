@@ -182,7 +182,11 @@ export function NotificationsCenter({ fullPage = false }: NotificationsCenterPro
   // Build flat notification list
   const notifications: FlatNotification[] = [];
 
-  // 1. Labor / Birth alerts
+  // 1. Labor / Birth alerts (marked as read once user has visited the notifications page)
+  const isBirthRead = (ts: string) => {
+    if (!birthAlertLastSeen) return false;
+    return new Date(ts).getTime() <= new Date(birthAlertLastSeen).getTime();
+  };
   birthAlertClients?.forEach(client => {
     const weekStr = `${client.current_weeks}s${client.current_days > 0 ? `${client.current_days}d` : ""}`;
     if (client.labor_started_at) {
@@ -193,24 +197,29 @@ export function NotificationsCenter({ fullPage = false }: NotificationsCenterPro
         detail: `Iniciado ${formatBrazilDateTime(client.labor_started_at, "dd/MM 'às' HH:mm")}`,
         timestamp: client.labor_started_at, priority: "high",
         clientId: client.id, client: client as Client, weeksBadge: weekStr,
+        isRead: isBirthRead(client.labor_started_at),
       });
     } else if (client.is_post_term) {
+      const ts = client.dpp || client.created_at;
       notifications.push({
         id: `postterm-${client.id}`, type: "post_term",
         title: "⚠️ Gestação Pós-Data",
         subtitle: client.full_name,
         detail: client.dpp ? `DPP: ${formatBrazilDate(client.dpp)}` : undefined,
-        timestamp: client.dpp || client.created_at, priority: "high",
+        timestamp: ts, priority: "high",
         clientId: client.id, client: client as Client, weeksBadge: weekStr,
+        isRead: isBirthRead(ts),
       });
     } else {
+      const ts = client.dpp || client.created_at;
       notifications.push({
         id: `approaching-${client.id}`, type: "birth_approaching",
         title: "Parto se Aproximando",
         subtitle: client.full_name,
         detail: client.dpp ? `DPP: ${formatBrazilDate(client.dpp)}` : undefined,
-        timestamp: client.dpp || client.created_at, priority: "medium",
+        timestamp: ts, priority: "medium",
         clientId: client.id, client: client as Client, weeksBadge: weekStr,
+        isRead: isBirthRead(ts),
       });
     }
   });
