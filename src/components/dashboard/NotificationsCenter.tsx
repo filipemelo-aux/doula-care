@@ -49,6 +49,24 @@ export function NotificationsCenter({ fullPage = false }: NotificationsCenterPro
   } | null>(null);
   const queryClient = useQueryClient();
 
+  // Last seen timestamp for birth alerts (set when user opens notifications page)
+  const { data: birthAlertLastSeen } = useQuery({
+    queryKey: ["birth-alert-last-seen-center"],
+    queryFn: async () => {
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData?.user?.id) return null;
+      const { data } = await supabase
+        .from("notification_seen")
+        .select("seen_at")
+        .eq("user_id", userData.user.id)
+        .eq("storage_key", "birth-alert-seen")
+        .eq("section", "last_viewed")
+        .maybeSingle();
+      return data?.seen_at ?? null;
+    },
+    staleTime: 10000,
+  });
+
   const { data: allClients } = useQuery({
     queryKey: ["all-clients-lookup"],
     queryFn: async () => {
