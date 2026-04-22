@@ -27,6 +27,7 @@ import SuperAdminDashboard from "./pages/SuperAdminDashboard";
 import AdminNotifications from "./pages/AdminNotifications";
 import AdminMessages from "./pages/AdminMessages";
 import Subscription from "./pages/Subscription";
+import LocationCoverage from "./pages/LocationCoverage";
 import RegisterVisitor from "./pages/RegisterVisitor";
 import VisitorDashboard from "./pages/visitante/VisitorDashboard";
 import VisitorSearch from "./pages/visitante/VisitorSearch";
@@ -248,6 +249,7 @@ const App = () => (
               <Route path="/relatorios" element={<Reports />} />
               <Route path="/comunidade" element={<Forum />} />
               <Route path="/configuracoes" element={<Settings />} />
+              <Route path="/localizacao" element={<LocationCoverage />} />
               <Route path="/admin/assinatura" element={<Subscription />} />
             </Route>
 

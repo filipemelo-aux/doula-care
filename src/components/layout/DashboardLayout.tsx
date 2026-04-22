@@ -2,13 +2,13 @@ import { useState, useEffect } from "react";
 import logo from "@/assets/logo.png";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { Sidebar } from "./Sidebar";
-import { Menu, LogOut, ChevronLeft, LayoutDashboard, Users, CalendarDays, MessageCircle, Baby } from "lucide-react";
+import { Menu, LogOut, ChevronLeft, LayoutDashboard, Users, CalendarDays, MapPin, Baby } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { PushNotificationToggle } from "@/components/pwa/PushNotificationToggle";
 import { useOrgBranding } from "@/hooks/useOrgBranding";
 import { usePresenceBroadcast } from "@/hooks/usePresence";
-import { useAdminUnreadCounts } from "@/hooks/useAdminUnreadCounts";
+
 import { useActiveLaborCount } from "@/hooks/useActiveLaborCount";
 import { BirthAlertDialog } from "@/components/dashboard/BirthAlertDialog";
 import { ClientContractionsDialog } from "@/components/dashboard/ClientContractionsDialog";
@@ -23,13 +23,30 @@ export function DashboardLayout() {
   const [contractionsOpen, setContractionsOpen] = useState(false);
   const [contractionsClient, setContractionsClient] = useState<Tables<"clients"> | null>(null);
   const [pendingContractionsClient, setPendingContractionsClient] = useState<Tables<"clients"> | null>(null);
-  const { signOut } = useAuth();
+  const { signOut, organizationId } = useAuth();
   const { logoUrl: orgLogo, displayName, brandingReady } = useOrgBranding();
-  const { unreadMessages } = useAdminUnreadCounts();
+  
   const { laborCount, alertCount, markAsSeen } = useActiveLaborCount();
   const location = useLocation();
   const navigate = useNavigate();
   usePresenceBroadcast();
+
+  // Localização e Atendimento — pulse hint, persistente por org
+  const locationHintKey = organizationId ? `location-hint-seen:${organizationId}` : null;
+  const [locationHintSeen, setLocationHintSeen] = useState<boolean>(() => {
+    if (typeof window === "undefined" || !locationHintKey) return true;
+    return localStorage.getItem(locationHintKey) === "1";
+  });
+  useEffect(() => {
+    if (!locationHintKey) return;
+    setLocationHintSeen(localStorage.getItem(locationHintKey) === "1");
+  }, [locationHintKey]);
+  const markLocationHintSeen = () => {
+    if (locationHintKey) {
+      try { localStorage.setItem(locationHintKey, "1"); } catch {}
+    }
+    setLocationHintSeen(true);
+  };
 
   useEffect(() => {
     if (birthAlertOpen || !pendingContractionsClient) return;
@@ -210,28 +227,35 @@ export function DashboardLayout() {
             );
           })()}
 
-          {/* Mensagens */}
+          {/* Localização e Atendimento — pulsa até ser clicado */}
           {(() => {
-            const isActive = location.pathname === "/mensagens";
+            const isActive = location.pathname === "/localizacao";
+            const shouldPulse = !locationHintSeen && !isActive;
             return (
               <button
-                onClick={() => navigate("/mensagens")}
+                onClick={() => { markLocationHintSeen(); navigate("/localizacao"); }}
                 className={cn(
                   "flex flex-col items-center justify-center gap-1 px-3 py-2 rounded-[14px] transition-all duration-200 active:scale-[0.97]",
                   isActive
                     ? "bg-primary/10 text-primary font-semibold"
-                    : "text-sidebar-foreground/50 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground/85"
+                    : shouldPulse
+                      ? "bg-warning/15 animate-pulse"
+                      : "text-sidebar-foreground/50 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground/85"
                 )}
+                title="Localização e Atendimento"
               >
                 <div className="relative">
-                  <MessageCircle className="h-[18px] w-[18px]" strokeWidth={isActive ? 2 : 1.6} />
-                  {unreadMessages > 0 && (
-                    <span className="absolute -top-1 -right-1.5 h-3.5 w-3.5 rounded-full bg-destructive text-destructive-foreground text-[8px] flex items-center justify-center font-bold">
-                      {unreadMessages}
-                    </span>
+                  <MapPin
+                    className={cn("h-[18px] w-[18px]", shouldPulse && "text-warning")}
+                    strokeWidth={isActive || shouldPulse ? 2 : 1.6}
+                  />
+                  {shouldPulse && (
+                    <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-warning ring-2 ring-[hsl(var(--background))]" />
                   )}
                 </div>
-                <span className="text-[9px] font-medium leading-none">Mensagens</span>
+                <span className={cn("text-[9px] font-medium leading-none", shouldPulse && "text-warning")}>
+                  Localização
+                </span>
               </button>
             );
           })()}
