@@ -71,12 +71,29 @@ export default function VisitorDashboard() {
     },
   });
 
+  const dismissKey = activeRequest?.id ? `match-banner-dismissed-${activeRequest.id}` : null;
+  const [bannerDismissed, setBannerDismissed] = useState(false);
   useEffect(() => {
-    if (activeRequest?.status === "approved") {
-      toast.success("Sua doula aprovou seu vínculo!", { description: "Entrando na sua área..." });
-      setTimeout(() => window.location.reload(), 1500);
+    if (!dismissKey) { setBannerDismissed(false); return; }
+    setBannerDismissed(localStorage.getItem(dismissKey) === "1");
+  }, [dismissKey]);
+
+  const dismissBanner = () => {
+    if (dismissKey) localStorage.setItem(dismissKey, "1");
+    setBannerDismissed(true);
+  };
+
+  useEffect(() => {
+    if (activeRequest?.status === "approved" && !bannerDismissed) {
+      // Reload only once per approved request to refresh user role; respect dismissal
+      const reloadKey = `match-approved-reloaded-${activeRequest.id}`;
+      if (!localStorage.getItem(reloadKey)) {
+        localStorage.setItem(reloadKey, "1");
+        toast.success("Sua doula aprovou seu vínculo!", { description: "Atualizando sua área..." });
+        setTimeout(() => window.location.reload(), 1500);
+      }
     }
-  }, [activeRequest?.status]);
+  }, [activeRequest?.status, activeRequest?.id, bannerDismissed]);
 
   const calculateGestationalAge = () => {
     if (!clientData?.dpp) return null;
