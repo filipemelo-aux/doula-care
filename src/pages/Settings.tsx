@@ -191,6 +191,7 @@ export default function Settings() {
       const { data, error } = await supabase
         .from("plan_settings")
         .select("*")
+        .order("sort_order", { ascending: true })
         .order("default_value", { ascending: true });
       if (error) throw error;
       return data;
