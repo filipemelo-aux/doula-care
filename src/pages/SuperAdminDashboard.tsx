@@ -455,7 +455,7 @@ export default function SuperAdminDashboard() {
                   </Tooltip>
                 </TooltipProvider>
               )}
-              <PromoTriggerButton orgId={org.id} orgName={org.name} mode="actions" />
+              <PromoTriggerButton orgId={org.id} orgName={displayName} mode="actions" />
             </div>
             <AlertDialog>
               <AlertDialogTrigger asChild>
