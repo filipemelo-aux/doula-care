@@ -19,7 +19,7 @@ export function ModerationSection() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("organizations")
-        .select("id, name, status")
+        .select("id, name, nome_exibicao, status")
         .order("name");
       if (error) throw error;
       return data || [];
