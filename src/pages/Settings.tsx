@@ -66,6 +66,7 @@ import {
 } from "lucide-react";
 import { PixSettingsCard } from "@/components/settings/PixSettingsCard";
 import { BrandingSettingsCard } from "@/components/settings/BrandingSettingsCard";
+import { LocationSettingsCard } from "@/components/settings/LocationSettingsCard";
 import { PushNotificationStatusCard } from "@/components/settings/PushNotificationStatusCard";
 import { toast } from "sonner";
 // formatBrazilDate removed — no longer needed in list layout
@@ -562,6 +563,7 @@ export default function Settings() {
         {/* ─── BRANDING TAB ─── */}
         <TabsContent value="branding" className="space-y-6">
           <BrandingSettingsCard />
+          <LocationSettingsCard />
         </TabsContent>
         {/* ─── PIX TAB ─── */}
         <TabsContent value="pix" className="space-y-6">
