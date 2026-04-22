@@ -54,6 +54,7 @@ interface BillingRow {
 interface OrgBasic {
   id: string;
   name: string;
+  nome_exibicao: string | null;
   plan: string;
   billing_cycle: string | null;
 }
