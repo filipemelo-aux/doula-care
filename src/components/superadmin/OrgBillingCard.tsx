@@ -356,7 +356,11 @@ export function OrgBillingCard() {
     }
   };
 
-  const getOrgName = (orgId: string) => orgs.find((o) => o.id === orgId)?.name || orgId.slice(0, 8);
+  const getOrgName = (orgId: string) => {
+    const o = orgs.find((o) => o.id === orgId);
+    if (!o) return orgId.slice(0, 8);
+    return (o.nome_exibicao && o.nome_exibicao.trim()) || o.name;
+  };
 
   const formatCurrency = (v: number) =>
     v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
