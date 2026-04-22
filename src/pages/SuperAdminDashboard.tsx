@@ -485,7 +485,9 @@ export default function SuperAdminDashboard() {
     );
   };
 
-  const PendingOrgCard = ({ org }: { org: OrgWithCounts }) => (
+  const PendingOrgCard = ({ org }: { org: OrgWithCounts }) => {
+    const displayName = (org.nome_exibicao && org.nome_exibicao.trim()) || org.name;
+    return (
     <Card className="bg-amber-50/30 dark:bg-amber-950/10">
       <CardContent className="p-4">
         <div className="flex items-start gap-3">
@@ -493,7 +495,7 @@ export default function SuperAdminDashboard() {
             <Clock className="h-5 w-5 text-amber-600" />
           </div>
           <div className="flex-1 min-w-0 space-y-1">
-            <h3 className="font-semibold text-sm text-foreground">{org.name}</h3>
+            <h3 className="font-semibold text-sm text-foreground">{displayName}</h3>
             <p className="text-xs text-muted-foreground truncate">{org.responsible_email}</p>
             <p className="text-[11px] text-muted-foreground">
               {format(new Date(org.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
