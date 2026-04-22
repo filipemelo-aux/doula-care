@@ -33,7 +33,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Check, Edit2, Plus, Power, PowerOff, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowUp, Check, Edit2, Plus, Power, PowerOff, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { useForm } from "react-hook-form";
@@ -77,6 +77,7 @@ export default function Plans() {
       const { data, error } = await supabase
         .from("plan_settings")
         .select("*")
+        .order("sort_order", { ascending: true })
         .order("default_value", { ascending: true });
       if (error) throw error;
       return data;
@@ -202,6 +203,46 @@ export default function Plans() {
       toast.error("Erro ao atualizar status");
     },
   });
+
+  const reorderMutation = useMutation({
+    mutationFn: async ({ a, b }: { a: PlanSetting; b: PlanSetting }) => {
+      const aOrder = (a as any).sort_order ?? 0;
+      const bOrder = (b as any).sort_order ?? 0;
+      const { error: e1 } = await supabase.from("plan_settings").update({ sort_order: bOrder } as any).eq("id", a.id);
+      if (e1) throw e1;
+      const { error: e2 } = await supabase.from("plan_settings").update({ sort_order: aOrder } as any).eq("id", b.id);
+      if (e2) throw e2;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["plan-settings"] });
+    },
+    onError: () => toast.error("Erro ao reordenar plano"),
+  });
+
+  const handleMove = (index: number, direction: -1 | 1) => {
+    if (!plans) return;
+    const target = index + direction;
+    if (target < 0 || target >= plans.length) return;
+    const a = plans[index];
+    const b = plans[target];
+    // If sort_order is identical (e.g. all zero), seed sequential values first
+    const aOrder = (a as any).sort_order ?? 0;
+    const bOrder = (b as any).sort_order ?? 0;
+    if (aOrder === bOrder) {
+      // assign sequential sort_orders based on current displayed order
+      Promise.all(
+        plans.map((p, i) =>
+          supabase.from("plan_settings").update({ sort_order: i } as any).eq("id", p.id)
+        )
+      ).then(() => {
+        const newA = { ...a, sort_order: index } as any;
+        const newB = { ...b, sort_order: target } as any;
+        reorderMutation.mutate({ a: newA, b: newB });
+      });
+      return;
+    }
+    reorderMutation.mutate({ a, b });
+  };
 
   const handleCreate = () => {
     setSelectedPlan(null);
@@ -332,7 +373,7 @@ export default function Plans() {
 
       {/* Plans Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {plans?.map((plan) => {
+        {plans?.map((plan, planIndex) => {
           const isActive = plan.is_active !== false;
           const clientsInPlan = clientCounts?.[plan.id] || 0;
 
@@ -343,8 +384,28 @@ export default function Plans() {
                 !isActive ? "opacity-60" : ""
               } card-glass`}
             >
-              {/* Status Badge */}
-              <div className="absolute top-3 right-3 flex items-center gap-2">
+              {/* Status Badge + Reorder */}
+              <div className="absolute top-3 right-3 flex items-center gap-1">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7"
+                  onClick={() => handleMove(planIndex, -1)}
+                  disabled={planIndex === 0 || reorderMutation.isPending}
+                  title="Mover para cima"
+                >
+                  <ArrowUp className="w-3.5 h-3.5" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7"
+                  onClick={() => handleMove(planIndex, 1)}
+                  disabled={planIndex === (plans?.length ?? 0) - 1 || reorderMutation.isPending}
+                  title="Mover para baixo"
+                >
+                  <ArrowDown className="w-3.5 h-3.5" />
+                </Button>
                 <Badge
                   variant="outline"
                   className={isActive ? "bg-success/10 text-success" : "bg-muted text-muted-foreground"}

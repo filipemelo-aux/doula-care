@@ -1352,6 +1352,7 @@ export type Database = {
           organization_id: string | null
           owner_id: string | null
           plan_type: Database["public"]["Enums"]["plan_type"]
+          sort_order: number
           updated_at: string
         }
         Insert: {
@@ -1365,6 +1366,7 @@ export type Database = {
           organization_id?: string | null
           owner_id?: string | null
           plan_type: Database["public"]["Enums"]["plan_type"]
+          sort_order?: number
           updated_at?: string
         }
         Update: {
@@ -1378,6 +1380,7 @@ export type Database = {
           organization_id?: string | null
           owner_id?: string | null
           plan_type?: Database["public"]["Enums"]["plan_type"]
+          sort_order?: number
           updated_at?: string
         }
         Relationships: [
