@@ -356,16 +356,25 @@ export function PromoTriggerButton({ orgId, orgName, mode = "badge" }: PromoTrig
       <Badge className="h-5 px-2 text-[10px] font-medium rounded-full inline-flex items-center gap-1 bg-green-600/15 text-green-700">
         <CreditCard className="h-3 w-3" />
         Assinante
+        {renewalDate && (
+          <span className="opacity-80 font-normal">· renova {renewalDate}</span>
+        )}
       </Badge>
     );
   }
 
   if (promo) {
     const info = statusLabels[promo.status] || statusLabels.pending;
+    const trialEndsAt = promo.trial_ends_at
+      ? format(new Date(promo.trial_ends_at), "dd/MM/yyyy", { locale: ptBR })
+      : null;
     return (
       <Badge className={cn("h-5 px-2 text-[10px] font-medium rounded-full inline-flex items-center gap-1", info.className)}>
         {isLifetime ? <Crown className="h-3 w-3" /> : <Gift className="h-3 w-3" />}
         {info.label}
+        {!isLifetime && trialEndsAt && (
+          <span className="opacity-80 font-normal">· até {trialEndsAt}</span>
+        )}
       </Badge>
     );
   }
