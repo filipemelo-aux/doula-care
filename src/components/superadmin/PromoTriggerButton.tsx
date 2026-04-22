@@ -22,6 +22,7 @@ import { toast } from "sonner";
 import { addDays, format, differenceInDays } from "date-fns";
 import { sendPushNotification } from "@/lib/pushNotifications";
 import { ptBR } from "date-fns/locale";
+import { cn } from "@/lib/utils";
 
 interface PromoTriggerButtonProps {
   orgId: string;
