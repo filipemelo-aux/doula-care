@@ -467,7 +467,7 @@ export default function SuperAdminDashboard() {
                 <AlertDialogHeader>
                   <AlertDialogTitle>Excluir organização</AlertDialogTitle>
                   <AlertDialogDescription>
-                    Tem certeza que deseja excluir <strong>{org.name}</strong>? Esta ação é irreversível e apagará todos os dados.
+                    Tem certeza que deseja excluir <strong>{displayName}</strong>? Esta ação é irreversível e apagará todos os dados.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
