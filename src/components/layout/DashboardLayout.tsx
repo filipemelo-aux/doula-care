@@ -25,7 +25,7 @@ export function DashboardLayout() {
   const [pendingContractionsClient, setPendingContractionsClient] = useState<Tables<"clients"> | null>(null);
   const { signOut, organizationId } = useAuth();
   const { logoUrl: orgLogo, displayName, brandingReady } = useOrgBranding();
-  const { unreadMessages } = useAdminUnreadCounts();
+  
   const { laborCount, alertCount, markAsSeen } = useActiveLaborCount();
   const location = useLocation();
   const navigate = useNavigate();
