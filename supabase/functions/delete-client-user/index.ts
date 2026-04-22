@@ -169,18 +169,6 @@ Deno.serve(async (req) => {
       );
     }
 
-    const { error: deleteClientError } = await supabaseAdmin
-      .from("clients")
-      .delete()
-      .eq("id", clientId);
-
-    if (deleteClientError) {
-      return new Response(
-        JSON.stringify({ error: "Failed to delete client", details: deleteClientError.message }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
     if (userId) {
       // Best-effort: also delete profile row (FK-free, but cleans up data)
       try {
