@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { LogOut, Heart, LayoutDashboard, BookHeart, Timer, CircleUserRound, Search } from "lucide-react";
+import { LogOut, Heart, LayoutDashboard, BookHeart, Timer, CircleUserRound, Search, UserPlus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import logo from "@/assets/logo.png";
 
@@ -17,7 +17,8 @@ interface VisitorLayoutProps {
 export function VisitorLayout({ children, avatarUrl, greetingTop, greetingName }: VisitorLayoutProps) {
   const navigate = useNavigate();
   const location = useLocation();
-  const { signOut, client } = useAuth();
+  const { signOut, client, user } = useAuth();
+  const isGuest = !user;
 
   const displayName =
     greetingName ||
@@ -43,15 +44,28 @@ export function VisitorLayout({ children, avatarUrl, greetingTop, greetingName }
             </p>
           </div>
         </div>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={signOut}
-          title="Sair"
-          className="text-muted-foreground hover:text-destructive"
-        >
-          <LogOut className="h-5 w-5" />
-        </Button>
+        {isGuest ? (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate("/cadastro-visitante")}
+            title="Criar conta"
+            className="text-primary hover:text-primary gap-1.5 px-2"
+          >
+            <UserPlus className="h-4 w-4" />
+            <span className="text-xs font-medium">Criar conta</span>
+          </Button>
+        ) : (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={signOut}
+            title="Sair"
+            className="text-muted-foreground hover:text-destructive"
+          >
+            <LogOut className="h-5 w-5" />
+          </Button>
+        )}
       </header>
 
       {/* Main */}
