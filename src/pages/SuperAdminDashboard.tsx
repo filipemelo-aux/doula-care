@@ -335,7 +335,7 @@ export default function SuperAdminDashboard() {
       .toUpperCase();
 
     return (
-      <Card className="group hover:shadow-md transition-all duration-200">
+      <Card className="group">
         <CardContent className="p-4">
           <div className="flex items-start gap-3">
             <div className="relative flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
@@ -373,7 +373,7 @@ export default function SuperAdminDashboard() {
           <div className="mt-2">
             <PromoTriggerButton orgId={org.id} orgName={org.name} />
           </div>
-          <div className="flex items-center gap-2 mt-3 pt-3 border-t">
+          <div className="flex items-center gap-2 mt-3 pt-3">
             <Select
               value={org.plan}
               onValueChange={(value) =>
@@ -390,19 +390,19 @@ export default function SuperAdminDashboard() {
               </SelectContent>
             </Select>
             {org.status === "ativo" ? (
-              <Button variant="outline" size="sm" className="h-8 text-xs" onClick={() => statusMutation.mutate({ orgId: org.id, status: "suspenso" })} disabled={statusMutation.isPending}>
+              <Button variant="ghost" size="sm" className="h-8 text-xs bg-muted/50 hover:bg-muted" onClick={() => statusMutation.mutate({ orgId: org.id, status: "suspenso" })} disabled={statusMutation.isPending}>
                 <Ban className="h-3.5 w-3.5 mr-1" />
                 Suspender
               </Button>
             ) : (
-              <Button variant="outline" size="sm" className="h-8 text-xs" onClick={() => statusMutation.mutate({ orgId: org.id, status: "ativo" })} disabled={statusMutation.isPending}>
+              <Button variant="ghost" size="sm" className="h-8 text-xs bg-muted/50 hover:bg-muted" onClick={() => statusMutation.mutate({ orgId: org.id, status: "ativo" })} disabled={statusMutation.isPending}>
                 <CheckCircle className="h-3.5 w-3.5 mr-1" />
                 Ativar
               </Button>
             )}
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <Button variant="outline" size="sm" className="h-8 text-xs text-destructive hover:bg-destructive/10" disabled={deleteMutation.isPending}>
+                <Button variant="ghost" size="sm" className="h-8 text-xs text-destructive bg-destructive/5 hover:bg-destructive/10" disabled={deleteMutation.isPending}>
                   <Trash2 className="h-3.5 w-3.5" />
                 </Button>
               </AlertDialogTrigger>
@@ -443,7 +443,7 @@ export default function SuperAdminDashboard() {
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-2 mt-3 pt-3 border-t dark:border-amber-800/30">
+        <div className="flex items-center gap-2 mt-3 pt-3">
           <Select
             value={approvalPlans[org.id] || "free"}
             onValueChange={(value) =>
@@ -558,7 +558,7 @@ export default function SuperAdminDashboard() {
 
   const renderSidebarNav = (onNavigate?: () => void) => (
     <div className="flex flex-col flex-1">
-      <div className="h-20 flex items-center gap-3 px-6 border-b border-sidebar-border shrink-0">
+      <div className="h-20 flex items-center gap-3 px-6 shrink-0">
         <div className="w-9 h-9 rounded-[40%] bg-[#FFF5EE] overflow-hidden">
           <img src={logo} alt="Doula Care" className="w-full h-full object-cover mix-blend-multiply scale-[1.15]" />
         </div>
@@ -665,7 +665,7 @@ export default function SuperAdminDashboard() {
 
   return (
     <div className="app-shell h-[100dvh] min-h-0 bg-background flex flex-col overflow-hidden">
-      <header className="h-14 shrink-0 z-20 border-b bg-card/95 backdrop-blur-sm px-4 sm:px-6 flex items-center justify-between">
+      <header className="h-14 shrink-0 z-20 bg-card/95 backdrop-blur-sm shadow-sm px-4 sm:px-6 flex items-center justify-between">
         <div className="flex items-center gap-2.5">
           {isMobile && (
             <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setSidebarOpen(true)}>
@@ -723,7 +723,7 @@ export default function SuperAdminDashboard() {
 
       <div className="flex flex-1 min-h-0 overflow-hidden">
         {!isMobile && (
-          <aside className="bg-card border-r border-border flex flex-col shrink-0 w-56 relative">
+          <aside className="bg-card flex flex-col shrink-0 w-56 relative shadow-sm">
             {renderSidebarNav()}
           </aside>
         )}
