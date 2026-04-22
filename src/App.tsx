@@ -29,6 +29,10 @@ import AdminMessages from "./pages/AdminMessages";
 import Subscription from "./pages/Subscription";
 import RegisterVisitor from "./pages/RegisterVisitor";
 import VisitorDashboard from "./pages/visitante/VisitorDashboard";
+import VisitorSearch from "./pages/visitante/VisitorSearch";
+import VisitorDiary from "./pages/visitante/VisitorDiary";
+import VisitorContractions from "./pages/visitante/VisitorContractions";
+import VisitorProfile from "./pages/visitante/VisitorProfile";
 
 import UpdatePrompt from "./components/pwa/UpdatePrompt";
 import { NotificationListenerProvider } from "./components/notifications/NotificationListenerProvider";
