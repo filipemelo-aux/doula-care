@@ -373,6 +373,35 @@ function DoulaPlansDialog({
           )}
         </DialogHeader>
 
+        {(doula?.whatsapp || doula?.instagram) && (
+          <div className="flex flex-wrap gap-2 -mt-1">
+            {doula?.whatsapp && (
+              <Button
+                size="sm"
+                variant="outline"
+                className="flex-1 min-w-[140px] gap-1.5 bg-[hsl(142_71%_45%/0.08)] hover:bg-[hsl(142_71%_45%/0.16)] border-[hsl(142_71%_45%/0.3)] text-[hsl(142_71%_30%)]"
+                onClick={() =>
+                  window.open(buildWhatsAppUrl(doula.whatsapp!, doula.nome_exibicao || doula.name), "_blank")
+                }
+              >
+                <MessageCircle className="h-3.5 w-3.5" />
+                WhatsApp
+              </Button>
+            )}
+            {doula?.instagram && (
+              <Button
+                size="sm"
+                variant="outline"
+                className="flex-1 min-w-[140px] gap-1.5 bg-pink-500/10 hover:bg-pink-500/20 border-pink-500/30 text-pink-600 dark:text-pink-400"
+                onClick={() => window.open(buildInstagramUrl(doula.instagram!), "_blank")}
+              >
+                <Instagram className="h-3.5 w-3.5" />
+                @{doula.instagram.replace(/^@/, "")}
+              </Button>
+            )}
+          </div>
+        )}
+
         <div className="space-y-2 max-h-[55vh] overflow-y-auto pr-1">
           {isLoading ? (
             <div className="flex justify-center py-6">
