@@ -26,17 +26,19 @@ import { ptBR } from "date-fns/locale";
 interface PromoTriggerButtonProps {
   orgId: string;
   orgName: string;
+  /** When 'badge' (default): renders only the status badge. When 'actions': renders only the action buttons (lifetime, expire trial, liberate trial). */
+  mode?: "badge" | "actions";
 }
 
-const statusLabels: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
-  pending: { label: "Pendente", variant: "outline" },
-  trial_active: { label: "Trial ativo", variant: "default" },
-  completed: { label: "Concluído", variant: "outline" },
-  expired: { label: "Expirado", variant: "destructive" },
-  lifetime_active: { label: "Vitalício ∞", variant: "default" },
+const statusLabels: Record<string, { label: string; className: string }> = {
+  pending: { label: "Pendente", className: "bg-muted text-muted-foreground" },
+  trial_active: { label: "Trial ativo", className: "bg-primary/15 text-primary" },
+  completed: { label: "Concluído", className: "bg-muted text-muted-foreground" },
+  expired: { label: "Expirado", className: "bg-destructive/15 text-destructive" },
+  lifetime_active: { label: "Vitalício ∞", className: "bg-amber-500/15 text-amber-600" },
 };
 
-export function PromoTriggerButton({ orgId, orgName }: PromoTriggerButtonProps) {
+export function PromoTriggerButton({ orgId, orgName, mode = "badge" }: PromoTriggerButtonProps) {
   const queryClient = useQueryClient();
   const [trialDays, setTrialDays] = useState<number>(7);
 
