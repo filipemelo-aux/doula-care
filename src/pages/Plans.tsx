@@ -204,7 +204,46 @@ export default function Plans() {
     },
   });
 
-  const handleCreate = () => {
+  const reorderMutation = useMutation({
+    mutationFn: async ({ a, b }: { a: PlanSetting; b: PlanSetting }) => {
+      const aOrder = (a as any).sort_order ?? 0;
+      const bOrder = (b as any).sort_order ?? 0;
+      const { error: e1 } = await supabase.from("plan_settings").update({ sort_order: bOrder } as any).eq("id", a.id);
+      if (e1) throw e1;
+      const { error: e2 } = await supabase.from("plan_settings").update({ sort_order: aOrder } as any).eq("id", b.id);
+      if (e2) throw e2;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["plan-settings"] });
+    },
+    onError: () => toast.error("Erro ao reordenar plano"),
+  });
+
+  const handleMove = (index: number, direction: -1 | 1) => {
+    if (!plans) return;
+    const target = index + direction;
+    if (target < 0 || target >= plans.length) return;
+    const a = plans[index];
+    const b = plans[target];
+    // If sort_order is identical (e.g. all zero), seed sequential values first
+    const aOrder = (a as any).sort_order ?? 0;
+    const bOrder = (b as any).sort_order ?? 0;
+    if (aOrder === bOrder) {
+      // assign sequential sort_orders based on current displayed order
+      Promise.all(
+        plans.map((p, i) =>
+          supabase.from("plan_settings").update({ sort_order: i } as any).eq("id", p.id)
+        )
+      ).then(() => {
+        const newA = { ...a, sort_order: index } as any;
+        const newB = { ...b, sort_order: target } as any;
+        reorderMutation.mutate({ a: newA, b: newB });
+      });
+      return;
+    }
+    reorderMutation.mutate({ a, b });
+  };
+
     setSelectedPlan(null);
     form.reset({
       name: "",
