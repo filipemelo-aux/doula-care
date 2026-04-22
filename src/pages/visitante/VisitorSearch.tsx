@@ -323,16 +323,19 @@ function DoulaPlansDialog({
   doula,
   onClose,
   canRequest,
+  isGuest,
   onRequested,
 }: {
   doula: PublicDoula | null;
   onClose: () => void;
   canRequest: boolean;
+  isGuest: boolean;
   onRequested: () => void;
 }) {
   const [submitting, setSubmitting] = useState<string | null>(null);
   const [confirmPlan, setConfirmPlan] = useState<DoulaPlan | null>(null);
   const [successOpen, setSuccessOpen] = useState(false);
+  const [signupPromptOpen, setSignupPromptOpen] = useState(false);
   const open = !!doula;
 
   const { data: plans = [], isLoading } = useQuery({
