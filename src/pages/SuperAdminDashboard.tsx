@@ -13,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Loader2, Building2, Users, Ban, CheckCircle, LogOut, BarChart3, Clock, ShieldCheck, Mail, CalendarDays, Baby, Trash2, RefreshCw, Bell, CreditCard, Menu, Users2, Zap, Home, UserCog, Eye, EyeOff, ArrowLeft, Shield } from "lucide-react";
+import { Loader2, Building2, Users, Ban, CheckCircle, LogOut, BarChart3, Clock, ShieldCheck, Mail, CalendarDays, Baby, Trash2, RefreshCw, Bell, CreditCard, Menu, Users2, Zap, Home, UserCog, Eye, EyeOff, ArrowLeft, Shield, Smartphone, Apple } from "lucide-react";
 import Forum from "@/pages/Forum";
 import { APP_VERSION } from "@/lib/appVersion";
 import { hardRefreshApp } from "@/lib/appUpdate";
@@ -243,6 +243,28 @@ export default function SuperAdminDashboard() {
         ...org,
         client_count: countMap.get(org.id) || 0,
       })) as OrgWithCounts[];
+    },
+  });
+
+  const { data: platformCounts = { android: 0, ios: 0 } } = useQuery({
+    queryKey: ["super-admin-platform-counts"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("push_subscriptions")
+        .select("user_id, device_type");
+      if (error) throw error;
+
+      const androidUsers = new Set<string>();
+      const iosUsers = new Set<string>();
+      (data || []).forEach((row: any) => {
+        const dt = (row.device_type || "").toLowerCase();
+        if (!row.user_id) return;
+        if (dt.includes("android")) androidUsers.add(row.user_id);
+        else if (dt.includes("ios") || dt.includes("apple") || dt.includes("iphone") || dt.includes("ipad")) {
+          iosUsers.add(row.user_id);
+        }
+      });
+      return { android: androidUsers.size, ios: iosUsers.size };
     },
   });
 
@@ -547,14 +569,25 @@ export default function SuperAdminDashboard() {
           </div>
         </CardContent>
       </Card>
-      <Card className={pendingOrgs.length > 0 ? "bg-warning/5" : ""}>
+      <Card>
         <CardContent className="p-4 flex items-center gap-3">
-          <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center", pendingOrgs.length > 0 ? "bg-warning/15" : "bg-muted")}>
-            <Clock className={cn("h-5 w-5", pendingOrgs.length > 0 ? "text-warning animate-pulse" : "text-muted-foreground")} />
+          <div className="w-10 h-10 rounded-xl bg-emerald-500/15 flex items-center justify-center">
+            <Smartphone className="h-5 w-5 text-emerald-600" />
           </div>
           <div>
-            <p className="text-2xl font-bold text-foreground">{pendingOrgs.length}</p>
-            <p className="text-[11px] text-muted-foreground leading-tight">Pendentes</p>
+            <p className="text-2xl font-bold text-foreground">{platformCounts.android}</p>
+            <p className="text-[11px] text-muted-foreground leading-tight">Android</p>
+          </div>
+        </CardContent>
+      </Card>
+      <Card>
+        <CardContent className="p-4 flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-slate-500/15 flex items-center justify-center">
+            <Apple className="h-5 w-5 text-slate-600" />
+          </div>
+          <div>
+            <p className="text-2xl font-bold text-foreground">{platformCounts.ios}</p>
+            <p className="text-[11px] text-muted-foreground leading-tight">iOS</p>
           </div>
         </CardContent>
       </Card>
