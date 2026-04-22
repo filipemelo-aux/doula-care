@@ -108,16 +108,26 @@ Deno.serve(async (req) => {
 
     const userId = client.user_id;
 
-    // Delete related records first
-    await supabaseAdmin.from("contractions").delete().eq("client_id", clientId);
-    await supabaseAdmin.from("pregnancy_diary").delete().eq("client_id", clientId);
-    await supabaseAdmin.from("client_notifications").delete().eq("client_id", clientId);
-    await supabaseAdmin.from("service_requests").delete().eq("client_id", clientId);
-    await supabaseAdmin.from("appointments").delete().eq("client_id", clientId);
-    await supabaseAdmin.from("appointment_requests").delete().eq("client_id", clientId);
-    await supabaseAdmin.from("client_contracts").delete().eq("client_id", clientId);
-    await supabaseAdmin.from("payments").delete().eq("client_id", clientId);
-    await supabaseAdmin.from("doula_match_requests").delete().eq("visitor_client_id", clientId);
+    // Delete related records first. Log every step so failures surface in edge logs.
+    const cleanupSteps: Array<[string, () => Promise<{ error: any }>]> = [
+      ["contractions", () => supabaseAdmin.from("contractions").delete().eq("client_id", clientId)],
+      ["pregnancy_diary", () => supabaseAdmin.from("pregnancy_diary").delete().eq("client_id", clientId)],
+      ["client_notifications", () => supabaseAdmin.from("client_notifications").delete().eq("client_id", clientId)],
+      ["service_requests", () => supabaseAdmin.from("service_requests").delete().eq("client_id", clientId)],
+      ["appointments", () => supabaseAdmin.from("appointments").delete().eq("client_id", clientId)],
+      ["appointment_requests", () => supabaseAdmin.from("appointment_requests").delete().eq("client_id", clientId)],
+      ["client_contracts", () => supabaseAdmin.from("client_contracts").delete().eq("client_id", clientId)],
+      ["payments", () => supabaseAdmin.from("payments").delete().eq("client_id", clientId)],
+      ["transactions", () => supabaseAdmin.from("transactions").delete().eq("client_id", clientId)],
+      ["doula_match_requests", () => supabaseAdmin.from("doula_match_requests").delete().eq("visitor_client_id", clientId)],
+    ];
+
+    for (const [name, run] of cleanupSteps) {
+      const { error } = await run();
+      if (error) {
+        console.error(`[delete-client-user] Failed to clean ${name}:`, error);
+      }
+    }
 
     // CRITICAL: Revoke access BEFORE deleting client record.
     // Remove all roles and sign out all sessions so the user loses access immediately,
@@ -134,6 +144,11 @@ Deno.serve(async (req) => {
         console.error("Failed to remove push_subscriptions:", e);
       }
       try {
+        await supabaseAdmin.from("notification_seen").delete().eq("user_id", userId);
+      } catch (e) {
+        console.error("Failed to remove notification_seen:", e);
+      }
+      try {
         // Invalidate all active sessions for this user
         await supabaseAdmin.auth.admin.signOut(userId, "global");
       } catch (e) {
@@ -147,6 +162,7 @@ Deno.serve(async (req) => {
       .eq("id", clientId);
 
     if (deleteClientError) {
+      console.error("[delete-client-user] Failed to delete client row:", deleteClientError);
       return new Response(
         JSON.stringify({ error: "Failed to delete client", details: deleteClientError.message }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
