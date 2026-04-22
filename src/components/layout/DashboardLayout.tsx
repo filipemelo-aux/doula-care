@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import logo from "@/assets/logo.png";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { Sidebar } from "./Sidebar";
-import { Menu, LogOut, ChevronLeft, LayoutDashboard, Users, CalendarDays, MessageCircle, Baby } from "lucide-react";
+import { Menu, LogOut, ChevronLeft, LayoutDashboard, Users, CalendarDays, MapPin, Baby } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { PushNotificationToggle } from "@/components/pwa/PushNotificationToggle";
@@ -23,13 +23,30 @@ export function DashboardLayout() {
   const [contractionsOpen, setContractionsOpen] = useState(false);
   const [contractionsClient, setContractionsClient] = useState<Tables<"clients"> | null>(null);
   const [pendingContractionsClient, setPendingContractionsClient] = useState<Tables<"clients"> | null>(null);
-  const { signOut } = useAuth();
+  const { signOut, organizationId } = useAuth();
   const { logoUrl: orgLogo, displayName, brandingReady } = useOrgBranding();
   const { unreadMessages } = useAdminUnreadCounts();
   const { laborCount, alertCount, markAsSeen } = useActiveLaborCount();
   const location = useLocation();
   const navigate = useNavigate();
   usePresenceBroadcast();
+
+  // Localização e Atendimento — pulse hint, persistente por org
+  const locationHintKey = organizationId ? `location-hint-seen:${organizationId}` : null;
+  const [locationHintSeen, setLocationHintSeen] = useState<boolean>(() => {
+    if (typeof window === "undefined" || !locationHintKey) return true;
+    return localStorage.getItem(locationHintKey) === "1";
+  });
+  useEffect(() => {
+    if (!locationHintKey) return;
+    setLocationHintSeen(localStorage.getItem(locationHintKey) === "1");
+  }, [locationHintKey]);
+  const markLocationHintSeen = () => {
+    if (locationHintKey) {
+      try { localStorage.setItem(locationHintKey, "1"); } catch {}
+    }
+    setLocationHintSeen(true);
+  };
 
   useEffect(() => {
     if (birthAlertOpen || !pendingContractionsClient) return;
