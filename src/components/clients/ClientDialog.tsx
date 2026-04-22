@@ -87,6 +87,7 @@ interface ClientDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   client?: Client | null;
+  initialStep?: number;
 }
 
 const STEPS = [
@@ -98,7 +99,7 @@ const STEPS = [
   { id: 6, title: "Plano e Pagamento", shortTitle: "Plano" },
 ];
 
-export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) {
+export function ClientDialog({ open, onOpenChange, client, initialStep }: ClientDialogProps) {
   const queryClient = useQueryClient();
   const { user, organizationId } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
@@ -270,7 +271,7 @@ export function ClientDialog({ open, onOpenChange, client }: ClientDialogProps) 
   // Reset form when client changes or dialog opens fresh
   useEffect(() => {
     if (!open) return;
-    setCurrentStep(1);
+    setCurrentStep(initialStep && initialStep >= 1 && initialStep <= STEPS.length ? initialStep : 1);
     if (client) {
       const txInstallments = clientTransaction?.installments ? Number(clientTransaction.installments) : 1;
       const isParcelado = txInstallments > 1;
