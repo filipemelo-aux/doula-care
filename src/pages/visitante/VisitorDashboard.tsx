@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { VisitorLayout } from "@/components/visitante/VisitorLayout";
 import { GuestSignupPrompt } from "@/components/visitante/GuestSignupPrompt";
+import { GuestWelcomeDialog } from "@/components/visitante/GuestWelcomeDialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -41,6 +42,18 @@ export default function VisitorDashboard() {
   const [loading, setLoading] = useState(!isGuest);
   const [signupPromptOpen, setSignupPromptOpen] = useState(false);
   const [guestProfile, setGuestProfile] = useState<GuestProfile>(() => getGuestProfile());
+  const [welcomeOpen, setWelcomeOpen] = useState(false);
+
+  // Auto-open the welcome dialog on the first guest visit.
+  useEffect(() => {
+    if (!isGuest) return;
+    const g = getGuestProfile();
+    if (!g._welcomed && !g.full_name) {
+      // small delay so the dashboard renders behind it nicely
+      const t = setTimeout(() => setWelcomeOpen(true), 350);
+      return () => clearTimeout(t);
+    }
+  }, [isGuest]);
 
   useEffect(() => {
     if (!user) {
