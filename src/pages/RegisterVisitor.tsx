@@ -152,7 +152,7 @@ export default function RegisterVisitor() {
   );
 
   return (
-    <div className="min-h-[100dvh] safe-area-top safe-area-bottom flex items-start sm:items-center justify-center bg-gradient-to-br from-background via-background to-primary/5 p-4">
+    <div className="h-[100dvh] overflow-y-auto safe-area-top safe-area-bottom flex items-start justify-center bg-gradient-to-br from-background via-background to-primary/5 p-4">
       <Card className="w-full max-w-2xl card-glass">
         <CardHeader className="text-center space-y-2 pb-4">
           <div className="flex flex-col items-center gap-2">
