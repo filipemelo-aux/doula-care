@@ -267,17 +267,20 @@ export default function VisitorSearch() {
                 <Marker
                   key={d.id}
                   position={[Number(d.latitude), Number(d.longitude)]}
-                  eventHandlers={{ click: () => setSelectedDoula(d) }}
                 >
                   <Popup>
-                    <div className="text-sm">
-                      <strong>{d.nome_exibicao || d.name}</strong>
-                      <p className="text-xs text-muted-foreground">
-                        {[d.city, d.state].filter(Boolean).join(" - ")}
+                    <div className="text-sm space-y-1.5 min-w-[160px]">
+                      <strong className="block">{d.nome_exibicao || d.name}</strong>
+                      <p className="text-xs text-muted-foreground !m-0">
+                        <MapPin className="inline h-3 w-3 mr-0.5" />
+                        {[d.city, d.state].filter(Boolean).join(" - ") || "—"}
                       </p>
                       <button
-                        className="text-primary text-xs underline mt-1"
-                        onClick={() => setSelectedDoula(d)}
+                        className="w-full mt-1 px-2 py-1.5 rounded-md bg-primary text-primary-foreground text-xs font-medium hover:bg-primary/90 transition-colors"
+                        onClick={() => {
+                          setViewMode("list");
+                          setSelectedDoula(d);
+                        }}
                       >
                         Ver planos
                       </button>
