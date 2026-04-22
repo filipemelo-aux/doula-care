@@ -328,6 +328,8 @@ function DoulaPlansDialog({
   onRequested: () => void;
 }) {
   const [submitting, setSubmitting] = useState<string | null>(null);
+  const [confirmPlan, setConfirmPlan] = useState<DoulaPlan | null>(null);
+  const [successOpen, setSuccessOpen] = useState(false);
   const open = !!doula;
 
   const { data: plans = [], isLoading } = useQuery({
@@ -342,8 +344,9 @@ function DoulaPlansDialog({
     },
   });
 
-  const handleChoose = async (plan: DoulaPlan) => {
-    if (!doula) return;
+  const handleConfirmChoose = async () => {
+    if (!doula || !confirmPlan) return;
+    const plan = confirmPlan;
     setSubmitting(plan.id);
     const { data: reqId, error } = await supabase.rpc("create_doula_match_request" as any, {
       p_organization_id: doula.id,
@@ -354,13 +357,16 @@ function DoulaPlansDialog({
       supabase.functions.invoke("notify-match-request", { body: { request_id: reqId } }).catch(() => {});
     }
     setSubmitting(null);
+    setConfirmPlan(null);
     if (error) {
       toast.error("Não foi possível enviar a solicitação", { description: error.message });
       return;
     }
-    toast.success("Solicitação enviada!", {
-      description: "A doula receberá um aviso e responderá em breve.",
-    });
+    setSuccessOpen(true);
+  };
+
+  const handleSuccessClose = () => {
+    setSuccessOpen(false);
     onRequested();
   };
 
