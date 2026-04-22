@@ -46,9 +46,9 @@ export function PixPaymentRequestsCard() {
     queryKey: ["pix-orgs", orgIds],
     queryFn: async () => {
       if (orgIds.length === 0) return {};
-      const { data } = await supabase.from("organizations").select("id, name").in("id", orgIds);
+      const { data } = await supabase.from("organizations").select("id, name, nome_exibicao").in("id", orgIds);
       const m: Record<string, string> = {};
-      (data ?? []).forEach((o: any) => { m[o.id] = o.name; });
+      (data ?? []).forEach((o: any) => { m[o.id] = (o.nome_exibicao && o.nome_exibicao.trim()) || o.name; });
       return m;
     },
     enabled: orgIds.length > 0,

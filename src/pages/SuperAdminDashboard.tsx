@@ -52,6 +52,7 @@ const sidebarItems: { key: Section; label: string; icon: React.ElementType }[] =
 interface OrgWithCounts {
   id: string;
   name: string;
+  nome_exibicao: string | null;
   responsible_email: string;
   plan: "free" | "pro" | "premium";
   status: "ativo" | "suspenso" | "pendente";
@@ -350,7 +351,8 @@ export default function SuperAdminDashboard() {
   }
 
   const OrgCard = ({ org }: { org: OrgWithCounts }) => {
-    const initials = org.name
+    const displayName = (org.nome_exibicao && org.nome_exibicao.trim()) || org.name;
+    const initials = displayName
       .split(" ")
       .map((w) => w[0])
       .join("")
@@ -369,7 +371,7 @@ export default function SuperAdminDashboard() {
               )}
             </div>
             <div className="flex-1 min-w-0">
-              <h3 className="font-semibold text-sm text-foreground truncate leading-tight">{org.name}</h3>
+              <h3 className="font-semibold text-sm text-foreground truncate leading-tight">{displayName}</h3>
               <div className="flex items-center gap-1.5 mt-0.5 text-xs text-muted-foreground">
                 <Mail className="h-3 w-3 flex-shrink-0" />
                 <span className="truncate">{org.responsible_email}</span>
@@ -388,7 +390,7 @@ export default function SuperAdminDashboard() {
                 Suspenso
               </Badge>
             ) : (
-              <PromoTriggerButton orgId={org.id} orgName={org.name} />
+              <PromoTriggerButton orgId={org.id} orgName={displayName} />
             )}
           </div>
 
@@ -453,7 +455,7 @@ export default function SuperAdminDashboard() {
                   </Tooltip>
                 </TooltipProvider>
               )}
-              <PromoTriggerButton orgId={org.id} orgName={org.name} mode="actions" />
+              <PromoTriggerButton orgId={org.id} orgName={displayName} mode="actions" />
             </div>
             <AlertDialog>
               <AlertDialogTrigger asChild>
@@ -465,7 +467,7 @@ export default function SuperAdminDashboard() {
                 <AlertDialogHeader>
                   <AlertDialogTitle>Excluir organização</AlertDialogTitle>
                   <AlertDialogDescription>
-                    Tem certeza que deseja excluir <strong>{org.name}</strong>? Esta ação é irreversível e apagará todos os dados.
+                    Tem certeza que deseja excluir <strong>{displayName}</strong>? Esta ação é irreversível e apagará todos os dados.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
@@ -483,7 +485,9 @@ export default function SuperAdminDashboard() {
     );
   };
 
-  const PendingOrgCard = ({ org }: { org: OrgWithCounts }) => (
+  const PendingOrgCard = ({ org }: { org: OrgWithCounts }) => {
+    const displayName = (org.nome_exibicao && org.nome_exibicao.trim()) || org.name;
+    return (
     <Card className="bg-amber-50/30 dark:bg-amber-950/10">
       <CardContent className="p-4">
         <div className="flex items-start gap-3">
@@ -491,7 +495,7 @@ export default function SuperAdminDashboard() {
             <Clock className="h-5 w-5 text-amber-600" />
           </div>
           <div className="flex-1 min-w-0 space-y-1">
-            <h3 className="font-semibold text-sm text-foreground">{org.name}</h3>
+            <h3 className="font-semibold text-sm text-foreground">{displayName}</h3>
             <p className="text-xs text-muted-foreground truncate">{org.responsible_email}</p>
             <p className="text-[11px] text-muted-foreground">
               {format(new Date(org.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
@@ -526,7 +530,8 @@ export default function SuperAdminDashboard() {
         </div>
       </CardContent>
     </Card>
-  );
+    );
+  };
 
   const MetricsCards = () => (
     <div className="grid grid-cols-2 lg:grid-cols-6 gap-3">

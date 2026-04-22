@@ -54,6 +54,7 @@ interface BillingRow {
 interface OrgBasic {
   id: string;
   name: string;
+  nome_exibicao: string | null;
   plan: string;
   billing_cycle: string | null;
 }
@@ -100,7 +101,7 @@ export function OrgBillingCard() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("organizations")
-        .select("id, name, plan, billing_cycle")
+        .select("id, name, nome_exibicao, plan, billing_cycle")
         .neq("plan", "free")
         .eq("status", "ativo")
         .order("name");
@@ -355,7 +356,11 @@ export function OrgBillingCard() {
     }
   };
 
-  const getOrgName = (orgId: string) => orgs.find((o) => o.id === orgId)?.name || orgId.slice(0, 8);
+  const getOrgName = (orgId: string) => {
+    const o = orgs.find((o) => o.id === orgId);
+    if (!o) return orgId.slice(0, 8);
+    return (o.nome_exibicao && o.nome_exibicao.trim()) || o.name;
+  };
 
   const formatCurrency = (v: number) =>
     v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -382,7 +387,7 @@ export function OrgBillingCard() {
             <SelectContent>
               {orgs.map((org) => (
                 <SelectItem key={org.id} value={org.id}>
-                  {org.name} ({org.plan})
+                  {getOrgName(org.id)} ({org.plan})
                 </SelectItem>
               ))}
             </SelectContent>
