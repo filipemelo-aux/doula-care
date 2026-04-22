@@ -156,16 +156,18 @@ export default function VisitorProfile() {
               <Label className="text-xs flex items-center gap-1"><Phone className="h-3 w-3" /> WhatsApp</Label>
               <Input value={phone} onChange={(e) => setPhone(e.target.value)} mask="phone" placeholder="(11) 91234-5678" className="input-field" />
             </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <Label className="text-xs flex items-center gap-1"><MapPin className="h-3 w-3" /> Cidade</Label>
-                <Input value={city} onChange={(e) => setCity(e.target.value)} className="input-field" />
+            {!isGuest && (
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label className="text-xs flex items-center gap-1"><MapPin className="h-3 w-3" /> Cidade</Label>
+                  <Input value={city} onChange={(e) => setCity(e.target.value)} className="input-field" />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs">UF</Label>
+                  <Input value={state} onChange={(e) => setState(e.target.value.toUpperCase())} maxLength={2} className="input-field" />
+                </div>
               </div>
-              <div className="space-y-1.5">
-                <Label className="text-xs">UF</Label>
-                <Input value={state} onChange={(e) => setState(e.target.value.toUpperCase())} maxLength={2} className="input-field" />
-              </div>
-            </div>
+            )}
             {isGuest && (
               <div className="space-y-1.5">
                 <Label className="text-xs flex items-center gap-1"><Calendar className="h-3 w-3" /> DPP (data provável do parto)</Label>
