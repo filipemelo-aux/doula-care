@@ -33,7 +33,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Check, Edit2, Plus, Power, PowerOff, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowUp, Check, Edit2, Plus, Power, PowerOff, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { useForm } from "react-hook-form";
