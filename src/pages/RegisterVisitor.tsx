@@ -205,7 +205,7 @@ export default function RegisterVisitor() {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-2">
-                  <Label>Telefone *</Label>
+                  <Label>WhatsApp *</Label>
                   <Input value={phone} onChange={e => setPhone(e.target.value)} placeholder="(11) 91234-5678" mask="phone" className="input-field" required />
                 </div>
                 <div className="space-y-2">
@@ -325,7 +325,7 @@ export default function RegisterVisitor() {
                   <Input value={companionName} onChange={e => setCompanionName(e.target.value)} mask="name" className="input-field" />
                 </div>
                 <div className="space-y-2">
-                  <Label>Telefone</Label>
+                  <Label>WhatsApp</Label>
                   <Input value={companionPhone} onChange={e => setCompanionPhone(e.target.value)} mask="phone" className="input-field" />
                 </div>
               </div>
@@ -340,7 +340,7 @@ export default function RegisterVisitor() {
                     <Input value={fotografaName} onChange={e => setFotografaName(e.target.value)} mask="name" className="input-field" />
                   </div>
                   <div className="space-y-2">
-                    <Label>Telefone</Label>
+                    <Label>WhatsApp</Label>
                     <Input value={fotografaPhone} onChange={e => setFotografaPhone(e.target.value)} mask="phone" className="input-field" />
                   </div>
                 </div>
