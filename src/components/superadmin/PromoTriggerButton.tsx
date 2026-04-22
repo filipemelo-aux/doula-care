@@ -221,9 +221,9 @@ export function PromoTriggerButton({ orgId, orgName }: PromoTriggerButtonProps) 
     <Tooltip>
       <TooltipTrigger asChild>
         <Button
-          variant="outline"
+          variant="ghost"
           size="sm"
-          className="h-6 px-1.5 gap-1 text-[10px] text-amber-600 hover:bg-amber-500/10 border-amber-500/30"
+          className="h-6 px-1.5 gap-1 text-[10px] text-amber-600 bg-amber-500/10 hover:bg-amber-500/20"
           onClick={() => {
             if (confirm(`Tornar ${orgName} vitalício?`)) {
               makeLifetimeMutation.mutate();
@@ -247,7 +247,7 @@ export function PromoTriggerButton({ orgId, orgName }: PromoTriggerButtonProps) 
     return (
       <div className="flex items-center gap-1.5 flex-wrap">
         <CreditCard className="h-3.5 w-3.5 text-green-600" />
-        <Badge variant="default" className="text-[10px] h-5 bg-green-600/10 text-green-700 border-green-600/20">
+        <Badge variant="default" className="text-[10px] h-5 bg-green-600/10 text-green-700">
           Assinante
         </Badge>
         {renewalDate && (
@@ -283,9 +283,9 @@ export function PromoTriggerButton({ orgId, orgName }: PromoTriggerButtonProps) 
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
-                  variant="outline"
+                  variant="ghost"
                   size="sm"
-                  className="h-6 px-1.5 gap-1 text-[10px] text-destructive hover:bg-destructive/10 border-destructive/30"
+                  className="h-6 px-1.5 gap-1 text-[10px] text-destructive bg-destructive/5 hover:bg-destructive/10"
                   onClick={() => forceExpireMutation.mutate()}
                   disabled={forceExpireMutation.isPending}
                 >
