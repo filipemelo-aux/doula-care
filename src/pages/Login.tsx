@@ -210,8 +210,8 @@ export default function Login() {
             </div>
             <div>
               Procurando uma doula?{" "}
-              <Link to="/cadastro-visitante" className="text-primary hover:underline font-medium">
-                Cadastro de visitante
+              <Link to="/visitante" className="text-primary hover:underline font-medium">
+                Explorar sem cadastro
               </Link>
             </div>
             <div>
