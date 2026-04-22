@@ -52,6 +52,7 @@ const sidebarItems: { key: Section; label: string; icon: React.ElementType }[] =
 interface OrgWithCounts {
   id: string;
   name: string;
+  nome_exibicao: string | null;
   responsible_email: string;
   plan: "free" | "pro" | "premium";
   status: "ativo" | "suspenso" | "pendente";
