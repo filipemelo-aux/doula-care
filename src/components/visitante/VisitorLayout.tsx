@@ -82,7 +82,7 @@ export function VisitorLayout({ children, avatarUrl, greetingTop, greetingName }
                 onClick={() => navigate("/visitante/buscar")}
                 className={cn(
                   "w-[48px] h-[48px] rounded-full flex items-center justify-center shadow-xl transition-all active:scale-90 ring-4 ring-[hsl(var(--background))]",
-                  "bg-gradient-to-br from-primary to-accent text-primary-foreground shadow-primary/25"
+                  "bg-gradient-to-br from-warning to-warning/80 text-warning-foreground shadow-warning/25"
                 )}
                 title="Buscar doula"
               >
