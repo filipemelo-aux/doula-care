@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -15,6 +16,7 @@ import { toast } from "sonner";
 export function LocationSettingsCard() {
   const { organizationId } = useAuth();
   const qc = useQueryClient();
+  const navigate = useNavigate();
 
   const { data: org, isLoading } = useQuery({
     queryKey: ["org-location", organizationId],
@@ -107,9 +109,15 @@ export function LocationSettingsCard() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["org-location"] });
-      toast.success("Localização atualizada!");
+      toast.success("Localização salva com sucesso! 💗", {
+        description: "Suas informações já estão visíveis para gestantes próximas.",
+        position: "top-center",
+        duration: 3500,
+        className: "text-base font-medium",
+      });
+      setTimeout(() => navigate("/admin"), 1200);
     },
-    onError: (e: any) => toast.error("Erro ao salvar", { description: e.message }),
+    onError: (e: any) => toast.error("Erro ao salvar", { description: e.message, position: "top-center" }),
   });
 
   if (isLoading) {
