@@ -101,6 +101,7 @@ function FlyToVisitor({ lat, lng }: { lat: number | null; lng: number | null }) 
 
 export default function VisitorSearch() {
   const { user, client } = useAuth();
+  const isGuest = !user;
   const queryClient = useQueryClient();
   const [selectedDoula, setSelectedDoula] = useState<PublicDoula | null>(null);
   const [search, setSearch] = useState("");
