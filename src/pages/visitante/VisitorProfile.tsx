@@ -7,39 +7,79 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2, User, Phone, MapPin, LogOut, Calendar } from "lucide-react";
+import { Loader2, User, Phone, MapPin, LogOut, Calendar, UserPlus, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { getLocalDate } from "@/lib/utils";
+import {
+  getGuestProfile,
+  setGuestProfile,
+  type GuestProfile,
+} from "@/lib/guestVisitor";
 
 export default function VisitorProfile() {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(true);
+  const isGuest = !user;
+  const [loading, setLoading] = useState(!isGuest);
   const [saving, setSaving] = useState(false);
   const [data, setData] = useState<any>(null);
   const [preferredName, setPreferredName] = useState("");
+  const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
   const [city, setCity] = useState("");
   const [state, setState] = useState("");
+  const [dpp, setDpp] = useState("");
 
   useEffect(() => {
+    if (isGuest) {
+      const g = getGuestProfile();
+      setFullName(g.full_name || "");
+      setPreferredName(g.preferred_name || "");
+      setPhone(g.phone || "");
+      setCity(g.city || "");
+      setState(g.state || "");
+      setDpp(g.dpp || "");
+      setLoading(false);
+      return;
+    }
     if (!user) return;
     (async () => {
       const { data: c } = await supabase.from("clients").select("*").eq("user_id", user.id).maybeSingle();
       if (c) {
         setData(c);
         setPreferredName((c as any).preferred_name || "");
+        setFullName(c.full_name || "");
         setPhone(c.phone || "");
         setCity(c.city || "");
         setState(c.state || "");
+        setDpp(c.dpp || "");
       }
       setLoading(false);
     })();
-  }, [user]);
+  }, [user, isGuest]);
 
   const save = async () => {
+    if (isGuest) {
+      const profile: GuestProfile = {
+        full_name: fullName || null,
+        preferred_name: preferredName || null,
+        phone: phone || null,
+        city: city || null,
+        state: state || null,
+        dpp: dpp || null,
+      };
+      setGuestProfile(profile);
+      toast.success("Perfil salvo no dispositivo 💗", {
+        description: "Crie sua conta para sincronizar.",
+        position: "top-center",
+        duration: 2500,
+      });
+      setTimeout(() => navigate("/visitante"), 800);
+      return;
+    }
+
     if (!data) return;
     setSaving(true);
     const { error } = await supabase
@@ -74,8 +114,22 @@ export default function VisitorProfile() {
       <div className="space-y-4">
         <div className="page-header">
           <h1 className="page-title">Meu perfil</h1>
-          <p className="page-description">Suas informações pessoais</p>
+          <p className="page-description">
+            {isGuest ? "Salvo apenas no seu dispositivo" : "Suas informações pessoais"}
+          </p>
         </div>
+
+        {isGuest && (
+          <Card className="border-primary/20 bg-primary/5">
+            <CardContent className="p-3 flex items-start gap-2">
+              <Sparkles className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+              <p className="text-xs text-muted-foreground">
+                Crie sua conta gratuita para sincronizar seus dados em todos os dispositivos e se
+                conectar com uma doula.
+              </p>
+            </CardContent>
+          </Card>
+        )}
 
         <Card>
           <CardHeader className="py-3">
@@ -86,7 +140,13 @@ export default function VisitorProfile() {
           <CardContent className="space-y-3">
             <div className="space-y-1.5">
               <Label className="text-xs">Nome completo</Label>
-              <Input value={data?.full_name || ""} disabled className="input-field" />
+              <Input
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                disabled={!isGuest}
+                mask="name"
+                className="input-field"
+              />
             </div>
             <div className="space-y-1.5">
               <Label className="text-xs">Como prefere ser chamada</Label>
@@ -106,10 +166,16 @@ export default function VisitorProfile() {
                 <Input value={state} onChange={(e) => setState(e.target.value.toUpperCase())} maxLength={2} className="input-field" />
               </div>
             </div>
+            {isGuest && (
+              <div className="space-y-1.5">
+                <Label className="text-xs flex items-center gap-1"><Calendar className="h-3 w-3" /> DPP (data provável do parto)</Label>
+                <Input type="date" value={dpp} onChange={(e) => setDpp(e.target.value)} className="input-field" />
+              </div>
+            )}
           </CardContent>
         </Card>
 
-        {data?.dpp && (
+        {!isGuest && data?.dpp && (
           <Card>
             <CardContent className="p-4 flex items-center gap-3">
               <Calendar className="h-5 w-5 text-primary" />
@@ -127,9 +193,19 @@ export default function VisitorProfile() {
           {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Salvar alterações"}
         </Button>
 
-        <Button variant="outline" className="w-full h-11 text-destructive hover:text-destructive" onClick={signOut}>
-          <LogOut className="h-4 w-4 mr-2" /> Sair da conta
-        </Button>
+        {isGuest ? (
+          <Button
+            variant="outline"
+            className="w-full h-11 text-primary hover:text-primary border-primary/30"
+            onClick={() => navigate("/cadastro-visitante")}
+          >
+            <UserPlus className="h-4 w-4 mr-2" /> Criar minha conta
+          </Button>
+        ) : (
+          <Button variant="outline" className="w-full h-11 text-destructive hover:text-destructive" onClick={signOut}>
+            <LogOut className="h-4 w-4 mr-2" /> Sair da conta
+          </Button>
+        )}
       </div>
     </VisitorLayout>
   );

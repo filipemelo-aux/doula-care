@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { VisitorLayout } from "@/components/visitante/VisitorLayout";
@@ -8,6 +8,11 @@ import { Timer, Play, Square, Trash2, Clock, Loader2, History } from "lucide-rea
 import { toast } from "sonner";
 import { differenceInSeconds, differenceInMinutes } from "date-fns";
 import { cn, formatBrazilTime } from "@/lib/utils";
+import {
+  getGuestContractions,
+  setGuestContractions,
+  type GuestContraction,
+} from "@/lib/guestVisitor";
 
 interface Contraction {
   id: string;
@@ -18,6 +23,7 @@ interface Contraction {
 
 export default function VisitorContractions() {
   const { user } = useAuth();
+  const isGuest = !user;
   const [clientId, setClientId] = useState<string | null>(null);
   const [contractions, setContractions] = useState<Contraction[]>([]);
   const [active, setActive] = useState<Contraction | null>(null);
@@ -25,8 +31,12 @@ export default function VisitorContractions() {
   const [loading, setLoading] = useState(true);
   const [starting, setStarting] = useState(false);
 
+  // Resolve client id (only when authenticated)
   useEffect(() => {
-    if (!user) return;
+    if (!user) {
+      setClientId(null);
+      return;
+    }
     (async () => {
       const { data } = await supabase.from("clients").select("id").eq("user_id", user.id).maybeSingle();
       setClientId(data?.id || null);
@@ -34,6 +44,17 @@ export default function VisitorContractions() {
   }, [user]);
 
   const fetchContractions = useCallback(async () => {
+    if (isGuest) {
+      const list = getGuestContractions();
+      setContractions(list);
+      const a = list.find((c) => !c.ended_at) || null;
+      if (a) {
+        setActive(a);
+        setElapsed(differenceInSeconds(new Date(), new Date(a.started_at)));
+      }
+      setLoading(false);
+      return;
+    }
     if (!clientId) return;
     const { data } = await supabase
       .from("contractions")
@@ -48,7 +69,7 @@ export default function VisitorContractions() {
       setElapsed(differenceInSeconds(new Date(), new Date(a.started_at)));
     }
     setLoading(false);
-  }, [clientId]);
+  }, [clientId, isGuest]);
 
   useEffect(() => {
     fetchContractions();
@@ -62,8 +83,30 @@ export default function VisitorContractions() {
     return () => clearInterval(i);
   }, [active]);
 
+  const persistGuest = (list: Contraction[]) => {
+    setGuestContractions(list as GuestContraction[]);
+  };
+
   const start = async () => {
-    if (!clientId || starting) return;
+    if (starting) return;
+
+    if (isGuest) {
+      const newC: Contraction = {
+        id: `local-${Date.now()}`,
+        started_at: new Date().toISOString(),
+        ended_at: null,
+        duration_seconds: null,
+      };
+      const updated = [newC, ...contractions];
+      setContractions(updated);
+      persistGuest(updated);
+      setActive(newC);
+      setElapsed(0);
+      toast.success("Contração iniciada");
+      return;
+    }
+
+    if (!clientId) return;
     setStarting(true);
     const { data, error } = await supabase
       .from("contractions")
@@ -85,6 +128,19 @@ export default function VisitorContractions() {
     if (!active) return;
     const end = new Date();
     const dur = differenceInSeconds(end, new Date(active.started_at));
+
+    if (isGuest) {
+      const updated = contractions.map((c) =>
+        c.id === active.id ? { ...c, ended_at: end.toISOString(), duration_seconds: dur } : c
+      );
+      setContractions(updated);
+      persistGuest(updated);
+      setActive(null);
+      setElapsed(0);
+      toast.success(`Contração finalizada: ${fmt(dur)}`);
+      return;
+    }
+
     const { error } = await supabase
       .from("contractions")
       .update({ ended_at: end.toISOString(), duration_seconds: dur })
@@ -102,6 +158,12 @@ export default function VisitorContractions() {
   };
 
   const remove = async (id: string) => {
+    if (isGuest) {
+      const updated = contractions.filter((c) => c.id !== id);
+      setContractions(updated);
+      persistGuest(updated);
+      return;
+    }
     await supabase.from("contractions").delete().eq("id", id);
     setContractions((prev) => prev.filter((c) => c.id !== id));
   };
@@ -136,7 +198,11 @@ export default function VisitorContractions() {
       <div className="space-y-6">
         <div className="page-header">
           <h1 className="page-title">Contrações</h1>
-          <p className="page-description">Registre e cronometre suas contrações</p>
+          <p className="page-description">
+            {isGuest
+              ? "Registre suas contrações — os dados ficam no seu dispositivo"
+              : "Registre e cronometre suas contrações"}
+          </p>
         </div>
 
         <Card
