@@ -324,6 +324,7 @@ export type Database = {
           id: string
           instagram_acompanhante: string | null
           instagram_gestante: string | null
+          is_visitor: boolean
           labor_started_at: string | null
           neighborhood: string | null
           notes: string | null
@@ -348,6 +349,8 @@ export type Database = {
           street: string | null
           updated_at: string
           user_id: string | null
+          visitor_latitude: number | null
+          visitor_longitude: number | null
           zip_code: string | null
         }
         Insert: {
@@ -375,6 +378,7 @@ export type Database = {
           id?: string
           instagram_acompanhante?: string | null
           instagram_gestante?: string | null
+          is_visitor?: boolean
           labor_started_at?: string | null
           neighborhood?: string | null
           notes?: string | null
@@ -399,6 +403,8 @@ export type Database = {
           street?: string | null
           updated_at?: string
           user_id?: string | null
+          visitor_latitude?: number | null
+          visitor_longitude?: number | null
           zip_code?: string | null
         }
         Update: {
@@ -426,6 +432,7 @@ export type Database = {
           id?: string
           instagram_acompanhante?: string | null
           instagram_gestante?: string | null
+          is_visitor?: boolean
           labor_started_at?: string | null
           neighborhood?: string | null
           notes?: string | null
@@ -450,6 +457,8 @@ export type Database = {
           street?: string | null
           updated_at?: string
           user_id?: string | null
+          visitor_latitude?: number | null
+          visitor_longitude?: number | null
           zip_code?: string | null
         }
         Relationships: [
@@ -583,6 +592,79 @@ export type Database = {
             columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      doula_match_requests: {
+        Row: {
+          created_at: string
+          id: string
+          message: string | null
+          organization_id: string
+          plan_name: string | null
+          plan_setting_id: string | null
+          plan_value: number | null
+          responded_at: string | null
+          responded_by: string | null
+          response_notes: string | null
+          status: string
+          updated_at: string
+          visitor_client_id: string
+          visitor_user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message?: string | null
+          organization_id: string
+          plan_name?: string | null
+          plan_setting_id?: string | null
+          plan_value?: number | null
+          responded_at?: string | null
+          responded_by?: string | null
+          response_notes?: string | null
+          status?: string
+          updated_at?: string
+          visitor_client_id: string
+          visitor_user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message?: string | null
+          organization_id?: string
+          plan_name?: string | null
+          plan_setting_id?: string | null
+          plan_value?: number | null
+          responded_at?: string | null
+          responded_by?: string | null
+          response_notes?: string | null
+          status?: string
+          updated_at?: string
+          visitor_client_id?: string
+          visitor_user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "doula_match_requests_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "doula_match_requests_plan_setting_id_fkey"
+            columns: ["plan_setting_id"]
+            isOneToOne: false
+            referencedRelation: "plan_settings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "doula_match_requests_visitor_client_id_fkey"
+            columns: ["visitor_client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
             referencedColumns: ["id"]
           },
         ]
@@ -990,47 +1072,71 @@ export type Database = {
       }
       organizations: {
         Row: {
+          accepts_new_clients: boolean
           billing_cycle: string | null
+          bio: string | null
+          city: string | null
           created_at: string
           id: string
+          latitude: number | null
           logo_url: string | null
+          longitude: number | null
           name: string
+          neighborhood: string | null
           next_billing_date: string | null
           nome_exibicao: string | null
           plan: Database["public"]["Enums"]["org_plan"]
           primary_color: string | null
           responsible_email: string
           secondary_color: string | null
+          service_areas: string[] | null
+          state: string | null
           status: Database["public"]["Enums"]["org_status"]
           updated_at: string
         }
         Insert: {
+          accepts_new_clients?: boolean
           billing_cycle?: string | null
+          bio?: string | null
+          city?: string | null
           created_at?: string
           id?: string
+          latitude?: number | null
           logo_url?: string | null
+          longitude?: number | null
           name: string
+          neighborhood?: string | null
           next_billing_date?: string | null
           nome_exibicao?: string | null
           plan?: Database["public"]["Enums"]["org_plan"]
           primary_color?: string | null
           responsible_email: string
           secondary_color?: string | null
+          service_areas?: string[] | null
+          state?: string | null
           status?: Database["public"]["Enums"]["org_status"]
           updated_at?: string
         }
         Update: {
+          accepts_new_clients?: boolean
           billing_cycle?: string | null
+          bio?: string | null
+          city?: string | null
           created_at?: string
           id?: string
+          latitude?: number | null
           logo_url?: string | null
+          longitude?: number | null
           name?: string
+          neighborhood?: string | null
           next_billing_date?: string | null
           nome_exibicao?: string | null
           plan?: Database["public"]["Enums"]["org_plan"]
           primary_color?: string | null
           responsible_email?: string
           secondary_color?: string | null
+          service_areas?: string[] | null
+          state?: string | null
           status?: Database["public"]["Enums"]["org_status"]
           updated_at?: string
         }
@@ -1774,6 +1880,18 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      approve_doula_match_request: {
+        Args: { p_notes?: string; p_request_id: string }
+        Returns: undefined
+      }
+      create_doula_match_request: {
+        Args: {
+          p_message?: string
+          p_organization_id: string
+          p_plan_setting_id: string
+        }
+        Returns: string
+      }
       get_forum_author_name: {
         Args: { p_author_id: string; p_is_anonymous: boolean }
         Returns: string
@@ -1871,6 +1989,35 @@ export type Database = {
           price_yearly: number
         }[]
       }
+      get_public_doula_plans: {
+        Args: { p_organization_id: string }
+        Returns: {
+          default_value: number
+          description: string
+          features: string[]
+          id: string
+          name: string
+          plan_type: Database["public"]["Enums"]["plan_type"]
+        }[]
+      }
+      get_public_doulas: {
+        Args: never
+        Returns: {
+          bio: string
+          city: string
+          id: string
+          latitude: number
+          logo_url: string
+          longitude: number
+          name: string
+          neighborhood: string
+          nome_exibicao: string
+          primary_color: string
+          secondary_color: string
+          service_areas: string[]
+          state: string
+        }[]
+      }
       get_user_organization_id: { Args: never; Returns: string }
       has_role: {
         Args: {
@@ -1881,9 +2028,19 @@ export type Database = {
       }
       is_org_member: { Args: never; Returns: boolean }
       is_super_admin: { Args: never; Returns: boolean }
+      reject_doula_match_request: {
+        Args: { p_notes?: string; p_request_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
-      app_role: "admin" | "moderator" | "user" | "client" | "super_admin"
+      app_role:
+        | "admin"
+        | "moderator"
+        | "user"
+        | "client"
+        | "super_admin"
+        | "visitor"
       client_status: "tentante" | "gestante" | "lactante" | "outro"
       expense_category:
         | "social_media"
@@ -2036,7 +2193,14 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "moderator", "user", "client", "super_admin"],
+      app_role: [
+        "admin",
+        "moderator",
+        "user",
+        "client",
+        "super_admin",
+        "visitor",
+      ],
       client_status: ["tentante", "gestante", "lactante", "outro"],
       expense_category: [
         "social_media",

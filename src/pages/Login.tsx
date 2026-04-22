@@ -53,6 +53,8 @@ export default function Login() {
         } else {
           navigate("/gestante", { replace: true });
         }
+      } else if (role === "visitor") {
+        navigate("/visitante", { replace: true });
       }
     }
   }, [loading, user, role, roleChecked, isFirstLogin, navigate, submitting]);
@@ -204,6 +206,12 @@ export default function Login() {
               É doula?{" "}
               <Link to="/cadastro" className="text-primary hover:underline font-medium">
                 Crie sua conta
+              </Link>
+            </div>
+            <div>
+              Procurando uma doula?{" "}
+              <Link to="/cadastro-visitante" className="text-primary hover:underline font-medium">
+                Cadastro de visitante
               </Link>
             </div>
             <div>

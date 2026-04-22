@@ -27,6 +27,8 @@ import SuperAdminDashboard from "./pages/SuperAdminDashboard";
 import AdminNotifications from "./pages/AdminNotifications";
 import AdminMessages from "./pages/AdminMessages";
 import Subscription from "./pages/Subscription";
+import RegisterVisitor from "./pages/RegisterVisitor";
+import VisitorDashboard from "./pages/visitante/VisitorDashboard";
 
 import UpdatePrompt from "./components/pwa/UpdatePrompt";
 import { NotificationListenerProvider } from "./components/notifications/NotificationListenerProvider";
@@ -68,6 +70,7 @@ const App = () => (
             {/* Single login page */}
             <Route path="/login" element={<Login />} />
             <Route path="/cadastro" element={<Register />} />
+            <Route path="/cadastro-visitante" element={<RegisterVisitor />} />
             <Route path="/recuperar-acesso" element={<RecoverCredentials />} />
             <Route path="/politica-de-privacidade" element={<PrivacyPolicy />} />
             <Route path="/excluir-conta" element={<DeleteAccount />} />
@@ -87,6 +90,16 @@ const App = () => (
               element={
                 <ProtectedRoute allowedRoles={["super_admin"]}>
                   <SuperAdminDashboard />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Visitor */}
+            <Route
+              path="/visitante"
+              element={
+                <ProtectedRoute allowedRoles={["visitor"]}>
+                  <VisitorDashboard />
                 </ProtectedRoute>
               }
             />
