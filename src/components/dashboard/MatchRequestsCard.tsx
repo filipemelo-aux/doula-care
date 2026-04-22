@@ -8,6 +8,8 @@ import { UserPlus, Check, X, MessageCircle, Lock } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { ClientDialog } from "@/components/clients/ClientDialog";
+import type { Tables } from "@/integrations/supabase/types";
 
 function getDisplayName(c: any): string {
   const full = (c?.full_name || "").trim();
@@ -38,6 +40,9 @@ function buildWhatsAppUrl(phone: string, name: string, planName: string): string
 export function MatchRequestsCard() {
   const qc = useQueryClient();
   const [contactedIds, setContactedIds] = useState<Set<string>>(new Set());
+  const [approvingId, setApprovingId] = useState<string | null>(null);
+  const [editClient, setEditClient] = useState<Tables<"clients"> | null>(null);
+  const [editOpen, setEditOpen] = useState(false);
 
   const { data: requests = [], isLoading } = useQuery({
     queryKey: ["org-match-requests"],
@@ -53,18 +58,36 @@ export function MatchRequestsCard() {
     refetchInterval: 15000,
   });
 
-  const handleApprove = async (id: string) => {
-    if (!contactedIds.has(id)) {
+  const handleApprove = async (req: any) => {
+    if (!contactedIds.has(req.id)) {
       toast.warning("Converse pelo WhatsApp antes de aprovar", {
         description: "Clique no botão do WhatsApp para iniciar a conversa com a gestante.",
       });
       return;
     }
-    const { error } = await supabase.rpc("approve_doula_match_request" as any, { p_request_id: id });
-    if (error) return toast.error("Erro ao aprovar", { description: error.message });
-    toast.success("Vínculo aprovado! A gestante já tem acesso completo.");
+    setApprovingId(req.id);
+    const { error } = await supabase.rpc("approve_doula_match_request" as any, { p_request_id: req.id });
+    if (error) {
+      setApprovingId(null);
+      return toast.error("Erro ao aprovar", { description: error.message });
+    }
+    // Buscar a cliente recém-vinculada
+    const { data: clientData, error: fetchErr } = await supabase
+      .from("clients")
+      .select("*")
+      .eq("id", req.visitor_client_id)
+      .maybeSingle();
+    setApprovingId(null);
     qc.invalidateQueries({ queryKey: ["org-match-requests"] });
     qc.invalidateQueries({ queryKey: ["clients"] });
+
+    if (fetchErr || !clientData) {
+      toast.success("Vínculo aprovado!", { description: "Edite a cliente para finalizar o plano e pagamento." });
+      return;
+    }
+    toast.success("Vínculo aprovado! 💗", { description: "Confirme o plano e a forma de pagamento." });
+    setEditClient(clientData as any);
+    setEditOpen(true);
   };
 
   const handleReject = async (id: string) => {
@@ -80,78 +103,93 @@ export function MatchRequestsCard() {
   };
 
   if (isLoading) return null;
-  if (requests.length === 0) return null;
+  if (requests.length === 0 && !editOpen) return null;
 
   return (
-    <Card className="border-primary/30 bg-primary/5">
-      <CardHeader className="pb-3">
-        <CardTitle className="flex items-center gap-2 text-base">
-          <UserPlus className="h-4 w-4 text-primary" />
-          Novas solicitações de vínculo
-          <Badge variant="secondary">{requests.length}</Badge>
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-2">
-        {requests.map((r) => {
-          const name = getDisplayName(r.clients);
-          const phone = r.clients?.phone || "";
-          const hasContacted = contactedIds.has(r.id);
-          const planName = r.plan_name || "selecionado";
-          return (
-            <div key={r.id} className="rounded-lg bg-background p-3 border border-border/50">
-              <div className="space-y-1">
-                <p className="font-semibold text-sm">{name}</p>
-                <p className="text-[11px] text-muted-foreground">
-                  {[r.clients?.city, r.clients?.state].filter(Boolean).join(" - ")}
-                  {phone ? ` · ${phone}` : ""}
-                </p>
-                <p className="text-xs">
-                  Plano escolhido: <strong>{planName}</strong>
-                  {r.plan_value ? (
-                    <> · {Number(r.plan_value).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</>
-                  ) : null}
-                </p>
-                <p className="text-[10px] text-muted-foreground">
-                  Solicitado {format(new Date(r.created_at), "dd 'de' MMM 'às' HH:mm", { locale: ptBR })}
-                </p>
-              </div>
+    <>
+      {requests.length > 0 && (
+        <Card className="border-primary/30 bg-primary/5">
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <UserPlus className="h-4 w-4 text-primary" />
+              Novas solicitações de vínculo
+              <Badge variant="secondary">{requests.length}</Badge>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {requests.map((r) => {
+              const name = getDisplayName(r.clients);
+              const phone = r.clients?.phone || "";
+              const hasContacted = contactedIds.has(r.id);
+              const planName = r.plan_name || "selecionado";
+              const isApproving = approvingId === r.id;
+              return (
+                <div key={r.id} className="rounded-lg bg-background p-3 border border-border/50">
+                  <div className="space-y-1">
+                    <p className="font-semibold text-sm">{name}</p>
+                    <p className="text-[11px] text-muted-foreground">
+                      {[r.clients?.city, r.clients?.state].filter(Boolean).join(" - ")}
+                      {phone ? ` · ${phone}` : ""}
+                    </p>
+                    <p className="text-xs">
+                      Plano escolhido: <strong>{planName}</strong>
+                      {r.plan_value ? (
+                        <> · {Number(r.plan_value).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</>
+                      ) : null}
+                    </p>
+                    <p className="text-[10px] text-muted-foreground">
+                      Solicitado {format(new Date(r.created_at), "dd 'de' MMM 'às' HH:mm", { locale: ptBR })}
+                    </p>
+                  </div>
 
-              {phone && (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="mt-2 w-full h-9 text-xs gap-1.5 bg-[#25D366]/10 hover:bg-[#25D366]/20 border-[#25D366]/30 text-[#128C7E] font-medium"
-                  onClick={() => handleWhatsAppClick(r.id, buildWhatsAppUrl(phone, name, planName))}
-                >
-                  <MessageCircle className="h-3.5 w-3.5" />
-                  {hasContacted ? "Conversar novamente no WhatsApp" : "Conversar no WhatsApp primeiro"}
-                </Button>
-              )}
+                  {phone && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="mt-2 w-full h-9 text-xs gap-1.5 bg-[#25D366]/10 hover:bg-[#25D366]/20 border-[#25D366]/30 text-[#128C7E] font-medium"
+                      onClick={() => handleWhatsAppClick(r.id, buildWhatsAppUrl(phone, name, planName))}
+                    >
+                      <MessageCircle className="h-3.5 w-3.5" />
+                      {hasContacted ? "Conversar novamente no WhatsApp" : "Conversar no WhatsApp primeiro"}
+                    </Button>
+                  )}
 
-              {!hasContacted && (
-                <p className="mt-2 text-[10.5px] text-muted-foreground flex items-center gap-1">
-                  <Lock className="h-3 w-3" />
-                  Converse pelo WhatsApp antes de aprovar o vínculo.
-                </p>
-              )}
+                  {!hasContacted && (
+                    <p className="mt-2 text-[10.5px] text-muted-foreground flex items-center gap-1">
+                      <Lock className="h-3 w-3" />
+                      Converse pelo WhatsApp antes de aprovar o vínculo.
+                    </p>
+                  )}
 
-              <div className="flex gap-1.5 mt-2">
-                <Button size="sm" variant="outline" className="flex-1" onClick={() => handleReject(r.id)}>
-                  <X className="h-3.5 w-3.5 mr-1" /> Recusar
-                </Button>
-                <Button
-                  size="sm"
-                  className="flex-1"
-                  onClick={() => handleApprove(r.id)}
-                  disabled={!hasContacted}
-                >
-                  <Check className="h-3.5 w-3.5 mr-1" /> Aprovar
-                </Button>
-              </div>
-            </div>
-          );
-        })}
-      </CardContent>
-    </Card>
+                  <div className="flex gap-1.5 mt-2">
+                    <Button size="sm" variant="outline" className="flex-1" onClick={() => handleReject(r.id)} disabled={isApproving}>
+                      <X className="h-3.5 w-3.5 mr-1" /> Recusar
+                    </Button>
+                    <Button
+                      size="sm"
+                      className="flex-1"
+                      onClick={() => handleApprove(r)}
+                      disabled={!hasContacted || isApproving}
+                    >
+                      <Check className="h-3.5 w-3.5 mr-1" /> {isApproving ? "Aprovando..." : "Aprovar"}
+                    </Button>
+                  </div>
+                </div>
+              );
+            })}
+          </CardContent>
+        </Card>
+      )}
+
+      <ClientDialog
+        open={editOpen}
+        onOpenChange={(o) => {
+          setEditOpen(o);
+          if (!o) setEditClient(null);
+        }}
+        client={editClient}
+        initialStep={6}
+      />
+    </>
   );
 }
