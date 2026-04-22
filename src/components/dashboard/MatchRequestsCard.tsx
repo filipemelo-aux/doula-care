@@ -31,7 +31,7 @@ function buildWhatsAppUrl(phone: string, name: string, planName: string): string
   const intl = digits.startsWith("55") ? digits : `55${digits}`;
   const greeting = getFirstAndLast(name);
   const msg = encodeURIComponent(
-    `Olá ${greeting}! 💗 Sou sua doula no Doula Care e vi que você se interessou pelo plano *${planName}*. ` +
+    `Olá ${greeting}! 💗 Sou sua doula no Doula Care e vi que você se interessou pelo plano *${planName.trim()}*. ` +
     `Que alegria poder te acompanhar nesse momento tão especial! Podemos conversar para eu te passar mais informações e tirar suas dúvidas?`
   );
   return `https://wa.me/${intl}?text=${msg}`;
