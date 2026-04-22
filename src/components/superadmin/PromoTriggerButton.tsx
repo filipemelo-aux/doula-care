@@ -219,13 +219,13 @@ export function PromoTriggerButton({ orgId, orgName, mode = "badge" }: PromoTrig
     ? Math.max(0, differenceInDays(new Date(subscription.current_period_end), new Date()))
     : null;
 
-  const lifetimeButton = !isLifetime ? (
+  const lifetimeIconButton = !isLifetime ? (
     <Tooltip>
       <TooltipTrigger asChild>
         <Button
           variant="ghost"
-          size="sm"
-          className="h-6 px-1.5 gap-1 text-[10px] text-amber-600 bg-amber-500/10 hover:bg-amber-500/20"
+          size="icon"
+          className="h-7 w-7 text-amber-600 bg-amber-500/10 hover:bg-amber-500/20"
           onClick={() => {
             if (confirm(`Tornar ${orgName} vitalício?`)) {
               makeLifetimeMutation.mutate();
@@ -234,140 +234,140 @@ export function PromoTriggerButton({ orgId, orgName, mode = "badge" }: PromoTrig
           disabled={makeLifetimeMutation.isPending}
         >
           {makeLifetimeMutation.isPending ? (
-            <Loader2 className="h-3 w-3 animate-spin" />
+            <Loader2 className="h-3.5 w-3.5 animate-spin" />
           ) : (
-            <Crown className="h-3 w-3" />
+            <Crown className="h-3.5 w-3.5" />
           )}
-          Tornar vitalício
         </Button>
       </TooltipTrigger>
-      <TooltipContent side="top" className="text-xs">Conceder acesso Premium vitalício</TooltipContent>
+      <TooltipContent side="top" className="text-xs">Tornar vitalício</TooltipContent>
     </Tooltip>
   ) : null;
 
+  const expireIconButton = promo?.status === "trial_active" ? (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-7 w-7 text-destructive bg-destructive/5 hover:bg-destructive/10"
+          onClick={() => forceExpireMutation.mutate()}
+          disabled={forceExpireMutation.isPending}
+        >
+          {forceExpireMutation.isPending ? (
+            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+          ) : (
+            <Zap className="h-3.5 w-3.5" />
+          )}
+        </Button>
+      </TooltipTrigger>
+      <TooltipContent side="top" className="text-xs">Encerrar trial agora</TooltipContent>
+    </Tooltip>
+  ) : null;
+
+  // ===== MODE: actions =====
+  if (mode === "actions") {
+    if (hasActiveSub) {
+      return <TooltipProvider>{lifetimeIconButton}</TooltipProvider>;
+    }
+    if (promo) {
+      return (
+        <TooltipProvider>
+          <div className="flex items-center gap-1">
+            {expireIconButton}
+            {lifetimeIconButton}
+          </div>
+        </TooltipProvider>
+      );
+    }
+    return (
+      <TooltipProvider>
+        <div className="flex items-center gap-1">
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7 text-primary bg-primary/10 hover:bg-primary/15"
+                    disabled={sendTrialMutation.isPending}
+                  >
+                    <Gift className="h-3.5 w-3.5" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="top" className="text-xs">Liberar Trial</TooltipContent>
+              </Tooltip>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Liberar Teste Premium</AlertDialogTitle>
+                <AlertDialogDescription asChild>
+                  <div className="space-y-4">
+                    <p>
+                      Libere acesso completo ao plano Premium para <strong>{orgName}</strong> por um período de teste gratuito.
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Ao final do período, a doula será direcionada para escolher e assinar um plano.
+                    </p>
+                    <div className="space-y-2">
+                      <Label htmlFor="trial-days" className="text-sm font-medium text-foreground">
+                        Duração do período gratuito
+                      </Label>
+                      <Input
+                        id="trial-days"
+                        type="number"
+                        min={1}
+                        max={365}
+                        value={trialDays}
+                        onChange={(e) => setTrialDays(Math.max(1, Math.min(365, Number(e.target.value) || 1)))}
+                        className="w-32"
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        A doula terá <strong>{trialDays} dias</strong> para experimentar todos os recursos do Premium.
+                      </p>
+                    </div>
+                  </div>
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                <AlertDialogAction onClick={() => sendTrialMutation.mutate()}>
+                  {sendTrialMutation.isPending ? (
+                    <Loader2 className="h-4 w-4 animate-spin mr-1" />
+                  ) : (
+                    <Gift className="h-4 w-4 mr-1" />
+                  )}
+                  Liberar Trial
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+          {lifetimeIconButton}
+        </div>
+      </TooltipProvider>
+    );
+  }
+
+  // ===== MODE: badge (default) =====
   if (hasActiveSub) {
     return (
-      <div className="flex items-center gap-1.5 flex-wrap">
-        <CreditCard className="h-3.5 w-3.5 text-green-600" />
-        <Badge variant="default" className="text-[10px] h-5 bg-green-600/10 text-green-700">
-          Assinante
-        </Badge>
-        {renewalDate && (
-          <span className="text-[10px] text-muted-foreground">
-            renova {renewalDate} ({daysLeft}d)
-          </span>
-        )}
-        <TooltipProvider>{lifetimeButton}</TooltipProvider>
-      </div>
+      <Badge className="h-5 px-2 text-[10px] font-medium rounded-full inline-flex items-center gap-1 bg-green-600/15 text-green-700">
+        <CreditCard className="h-3 w-3" />
+        Assinante
+      </Badge>
     );
   }
 
   if (promo) {
     const info = statusLabels[promo.status] || statusLabels.pending;
-
     return (
-      <div className="flex items-center gap-1.5 flex-wrap">
-        {isLifetime ? (
-          <Crown className="h-3.5 w-3.5 text-amber-500" />
-        ) : (
-          <Gift className="h-3.5 w-3.5 text-primary" />
-        )}
-        <Badge variant={info.variant} className="text-[10px] h-5">
-          {info.label}
-        </Badge>
-        {promo.trial_ends_at && promo.status === "trial_active" && (
-          <span className="text-[10px] text-muted-foreground">
-            até {format(new Date(promo.trial_ends_at), "dd/MM", { locale: ptBR })}
-          </span>
-        )}
-        <TooltipProvider>
-          {promo.status === "trial_active" && (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-6 px-1.5 gap-1 text-[10px] text-destructive bg-destructive/5 hover:bg-destructive/10"
-                  onClick={() => forceExpireMutation.mutate()}
-                  disabled={forceExpireMutation.isPending}
-                >
-                  {forceExpireMutation.isPending ? (
-                    <Loader2 className="h-3 w-3 animate-spin" />
-                  ) : (
-                    <Zap className="h-3 w-3" />
-                  )}
-                  Expirar
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="top" className="text-xs">Encerrar trial agora</TooltipContent>
-            </Tooltip>
-          )}
-          {lifetimeButton}
-        </TooltipProvider>
-      </div>
+      <Badge className={cn("h-5 px-2 text-[10px] font-medium rounded-full inline-flex items-center gap-1", info.className)}>
+        {isLifetime ? <Crown className="h-3 w-3" /> : <Gift className="h-3 w-3" />}
+        {info.label}
+      </Badge>
     );
   }
 
-  return (
-    <div className="flex items-center gap-1.5 flex-wrap">
-      <AlertDialog>
-        <AlertDialogTrigger asChild>
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-7 text-[11px] gap-1 text-primary hover:bg-primary/5"
-            disabled={sendTrialMutation.isPending}
-          >
-            <Gift className="h-3 w-3" />
-            Liberar Trial
-          </Button>
-        </AlertDialogTrigger>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Liberar Teste Premium</AlertDialogTitle>
-            <AlertDialogDescription asChild>
-              <div className="space-y-4">
-                <p>
-                  Libere acesso completo ao plano Premium para <strong>{orgName}</strong> por um período de teste gratuito.
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  Ao final do período, a doula será direcionada para escolher e assinar um plano.
-                </p>
-                <div className="space-y-2">
-                  <Label htmlFor="trial-days" className="text-sm font-medium text-foreground">
-                    Duração do período gratuito
-                  </Label>
-                  <Input
-                    id="trial-days"
-                    type="number"
-                    min={1}
-                    max={365}
-                    value={trialDays}
-                    onChange={(e) => setTrialDays(Math.max(1, Math.min(365, Number(e.target.value) || 1)))}
-                    className="w-32"
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    A doula terá <strong>{trialDays} dias</strong> para experimentar todos os recursos do Premium.
-                  </p>
-                </div>
-              </div>
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={() => sendTrialMutation.mutate()}>
-              {sendTrialMutation.isPending ? (
-                <Loader2 className="h-4 w-4 animate-spin mr-1" />
-              ) : (
-                <Gift className="h-4 w-4 mr-1" />
-              )}
-              Liberar Trial
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      <TooltipProvider>{lifetimeButton}</TooltipProvider>
-    </div>
-  );
+  return null;
 }
