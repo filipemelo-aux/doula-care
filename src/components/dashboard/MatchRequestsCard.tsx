@@ -47,13 +47,22 @@ export function MatchRequestsCard() {
   const { data: requests = [], isLoading } = useQuery({
     queryKey: ["org-match-requests"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("doula_match_requests" as any)
-        .select("*, clients!visitor_client_id(full_name, preferred_name, phone, city, state, dpp, pregnancy_weeks, status)")
-        .eq("status", "pending")
-        .order("created_at", { ascending: false });
+      const { data, error } = await supabase.rpc("get_org_match_requests" as any);
       if (error) throw error;
-      return (data || []) as any[];
+      // Normalizar para o shape esperado (compat com `r.clients`)
+      return ((data || []) as any[]).map((r: any) => ({
+        ...r,
+        clients: {
+          full_name: r.client_full_name,
+          preferred_name: r.client_preferred_name,
+          phone: r.client_phone,
+          city: r.client_city,
+          state: r.client_state,
+          dpp: r.client_dpp,
+          pregnancy_weeks: r.client_pregnancy_weeks,
+          status: r.client_status,
+        },
+      }));
     },
     refetchInterval: 15000,
   });
