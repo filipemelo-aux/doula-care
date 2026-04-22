@@ -390,7 +390,7 @@ export default function SuperAdminDashboard() {
                 Suspenso
               </Badge>
             ) : (
-              <PromoTriggerButton orgId={org.id} orgName={org.name} />
+              <PromoTriggerButton orgId={org.id} orgName={displayName} />
             )}
           </div>
 
