@@ -26,8 +26,8 @@ export function VisitorLayout({ children, avatarUrl, greetingTop, greetingName }
     "visitante";
 
   return (
-    <div className="h-[100dvh] flex flex-col safe-area-top safe-area-bottom bg-gradient-to-br from-background via-background to-primary/5 overflow-hidden">
-      {/* Top header (padronizado h-14) */}
+    <div className="app-shell h-[100dvh] flex flex-col bg-gradient-to-br from-background via-background to-primary/5 overflow-hidden">
+      {/* Top header (padronizado h-14 — igual admin/gestante) */}
       <header className="h-14 shrink-0 flex items-center justify-between px-4 bg-card/95 backdrop-blur-sm z-40 border-b border-border/30">
         <div
           className="flex items-center gap-2 min-w-0 cursor-pointer"
@@ -39,7 +39,7 @@ export function VisitorLayout({ children, avatarUrl, greetingTop, greetingName }
           <div className="min-w-0">
             <p className="font-display font-semibold text-sm leading-tight truncate">Doula Care</p>
             <p className="text-[10px] text-muted-foreground leading-tight truncate">
-              {greetingTop || "Olá,"} {displayName} 💗
+              Sua jornada, com cuidado 💗
             </p>
           </div>
         </div>
