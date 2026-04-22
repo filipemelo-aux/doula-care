@@ -19,6 +19,8 @@ import {
   ChevronRight,
   BookHeart,
   CircleUserRound,
+  X,
+  CheckCircle2,
 } from "lucide-react";
 import { format, differenceInDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -69,12 +71,29 @@ export default function VisitorDashboard() {
     },
   });
 
+  const dismissKey = activeRequest?.id ? `match-banner-dismissed-${activeRequest.id}` : null;
+  const [bannerDismissed, setBannerDismissed] = useState(false);
   useEffect(() => {
-    if (activeRequest?.status === "approved") {
-      toast.success("Sua doula aprovou seu vínculo!", { description: "Entrando na sua área..." });
-      setTimeout(() => window.location.reload(), 1500);
+    if (!dismissKey) { setBannerDismissed(false); return; }
+    setBannerDismissed(localStorage.getItem(dismissKey) === "1");
+  }, [dismissKey]);
+
+  const dismissBanner = () => {
+    if (dismissKey) localStorage.setItem(dismissKey, "1");
+    setBannerDismissed(true);
+  };
+
+  useEffect(() => {
+    if (activeRequest?.status === "approved" && !bannerDismissed) {
+      // Reload only once per approved request to refresh user role; respect dismissal
+      const reloadKey = `match-approved-reloaded-${activeRequest.id}`;
+      if (!localStorage.getItem(reloadKey)) {
+        localStorage.setItem(reloadKey, "1");
+        toast.success("Sua doula aprovou seu vínculo!", { description: "Atualizando sua área..." });
+        setTimeout(() => window.location.reload(), 1500);
+      }
     }
-  }, [activeRequest?.status]);
+  }, [activeRequest?.status, activeRequest?.id, bannerDismissed]);
 
   const calculateGestationalAge = () => {
     if (!clientData?.dpp) return null;
@@ -122,7 +141,7 @@ export default function VisitorDashboard() {
         </div>
 
         {/* Match request banners */}
-        {activeRequest?.status === "pending" && (
+        {activeRequest?.status === "pending" && !bannerDismissed && (
           <Card className="border-amber-300/40 bg-amber-50/40 dark:bg-amber-950/20">
             <CardContent className="p-4 flex items-start gap-3">
               <Clock className="h-5 w-5 text-amber-600 mt-0.5 shrink-0" />
@@ -136,10 +155,37 @@ export default function VisitorDashboard() {
                   . Você será notificada assim que ela responder.
                 </p>
               </div>
+              <button
+                onClick={dismissBanner}
+                aria-label="Fechar aviso"
+                className="shrink-0 -mr-1 -mt-1 h-7 w-7 rounded-full inline-flex items-center justify-center text-muted-foreground hover:bg-muted/60"
+              >
+                <X className="h-4 w-4" />
+              </button>
             </CardContent>
           </Card>
         )}
-        {activeRequest?.status === "rejected" && (
+        {activeRequest?.status === "approved" && !bannerDismissed && (
+          <Card className="border-emerald-300/40 bg-emerald-50/40 dark:bg-emerald-950/20">
+            <CardContent className="p-4 flex items-start gap-3">
+              <CheckCircle2 className="h-5 w-5 text-emerald-600 mt-0.5 shrink-0" />
+              <div className="flex-1 min-w-0">
+                <p className="font-medium text-sm">Vínculo aprovado! 💗</p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Sua doula <strong>{activeRequest.organizations?.nome_exibicao || activeRequest.organizations?.name}</strong> aprovou seu vínculo.
+                </p>
+              </div>
+              <button
+                onClick={dismissBanner}
+                aria-label="Fechar aviso"
+                className="shrink-0 -mr-1 -mt-1 h-7 w-7 rounded-full inline-flex items-center justify-center text-muted-foreground hover:bg-muted/60"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </CardContent>
+          </Card>
+        )}
+        {activeRequest?.status === "rejected" && !bannerDismissed && (
           <Card className="border-destructive/40 bg-destructive/5">
             <CardContent className="p-4 flex items-start gap-3">
               <XCircle className="h-5 w-5 text-destructive mt-0.5 shrink-0" />
@@ -149,6 +195,13 @@ export default function VisitorDashboard() {
                   Toque em "Buscar" abaixo para escolher outra doula.
                 </p>
               </div>
+              <button
+                onClick={dismissBanner}
+                aria-label="Fechar aviso"
+                className="shrink-0 -mr-1 -mt-1 h-7 w-7 rounded-full inline-flex items-center justify-center text-muted-foreground hover:bg-muted/60"
+              >
+                <X className="h-4 w-4" />
+              </button>
             </CardContent>
           </Card>
         )}

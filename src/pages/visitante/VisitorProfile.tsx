@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { VisitorLayout } from "@/components/visitante/VisitorLayout";
@@ -14,6 +15,7 @@ import { getLocalDate } from "@/lib/utils";
 
 export default function VisitorProfile() {
   const { user, signOut } = useAuth();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [data, setData] = useState<any>(null);
@@ -49,7 +51,12 @@ export default function VisitorProfile() {
       toast.error("Erro ao salvar");
       return;
     }
-    toast.success("Perfil atualizado!");
+    toast.success("Perfil atualizado! 💗", {
+      description: "Suas informações foram salvas.",
+      position: "top-center",
+      duration: 2500,
+    });
+    setTimeout(() => navigate("/visitante"), 1000);
   };
 
   if (loading) {
