@@ -126,11 +126,7 @@ export default function VisitorDashboard() {
     "visitante";
 
   const handleSearchDoula = () => {
-    if (isGuest) {
-      setSignupPromptOpen(true);
-      return;
-    }
-    if (activeRequest?.status === "pending") return;
+    if (!isGuest && activeRequest?.status === "pending") return;
     navigate("/visitante/buscar");
   };
 
