@@ -227,28 +227,35 @@ export function DashboardLayout() {
             );
           })()}
 
-          {/* Mensagens */}
+          {/* Localização e Atendimento — pulsa até ser clicado */}
           {(() => {
-            const isActive = location.pathname === "/mensagens";
+            const isActive = location.pathname === "/localizacao";
+            const shouldPulse = !locationHintSeen && !isActive;
             return (
               <button
-                onClick={() => navigate("/mensagens")}
+                onClick={() => { markLocationHintSeen(); navigate("/localizacao"); }}
                 className={cn(
                   "flex flex-col items-center justify-center gap-1 px-3 py-2 rounded-[14px] transition-all duration-200 active:scale-[0.97]",
                   isActive
                     ? "bg-primary/10 text-primary font-semibold"
-                    : "text-sidebar-foreground/50 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground/85"
+                    : shouldPulse
+                      ? "bg-warning/15 animate-pulse"
+                      : "text-sidebar-foreground/50 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground/85"
                 )}
+                title="Localização e Atendimento"
               >
                 <div className="relative">
-                  <MessageCircle className="h-[18px] w-[18px]" strokeWidth={isActive ? 2 : 1.6} />
-                  {unreadMessages > 0 && (
-                    <span className="absolute -top-1 -right-1.5 h-3.5 w-3.5 rounded-full bg-destructive text-destructive-foreground text-[8px] flex items-center justify-center font-bold">
-                      {unreadMessages}
-                    </span>
+                  <MapPin
+                    className={cn("h-[18px] w-[18px]", shouldPulse && "text-warning")}
+                    strokeWidth={isActive || shouldPulse ? 2 : 1.6}
+                  />
+                  {shouldPulse && (
+                    <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-warning ring-2 ring-[hsl(var(--background))]" />
                   )}
                 </div>
-                <span className="text-[9px] font-medium leading-none">Mensagens</span>
+                <span className={cn("text-[9px] font-medium leading-none", shouldPulse && "text-warning")}>
+                  Localização
+                </span>
               </button>
             );
           })()}
