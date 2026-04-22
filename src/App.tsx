@@ -99,47 +99,12 @@ const App = () => (
               }
             />
 
-            {/* Visitor */}
-            <Route
-              path="/visitante"
-              element={
-                <ProtectedRoute allowedRoles={["visitor"]}>
-                  <VisitorDashboard />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/visitante/buscar"
-              element={
-                <ProtectedRoute allowedRoles={["visitor"]}>
-                  <VisitorSearch />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/visitante/diario"
-              element={
-                <ProtectedRoute allowedRoles={["visitor"]}>
-                  <VisitorDiary />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/visitante/contracoes"
-              element={
-                <ProtectedRoute allowedRoles={["visitor"]}>
-                  <VisitorContractions />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/visitante/perfil"
-              element={
-                <ProtectedRoute allowedRoles={["visitor"]}>
-                  <VisitorProfile />
-                </ProtectedRoute>
-              }
-            />
+            {/* Visitor — public access (no login required) */}
+            <Route path="/visitante" element={<VisitorDashboard />} />
+            <Route path="/visitante/buscar" element={<VisitorSearch />} />
+            <Route path="/visitante/diario" element={<VisitorDiary />} />
+            <Route path="/visitante/contracoes" element={<VisitorContractions />} />
+            <Route path="/visitante/perfil" element={<VisitorProfile />} />
 
             {/* Client (Gestante) routes */}
             <Route
