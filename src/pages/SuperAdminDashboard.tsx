@@ -371,7 +371,7 @@ export default function SuperAdminDashboard() {
               )}
             </div>
             <div className="flex-1 min-w-0">
-              <h3 className="font-semibold text-sm text-foreground truncate leading-tight">{org.name}</h3>
+              <h3 className="font-semibold text-sm text-foreground truncate leading-tight">{displayName}</h3>
               <div className="flex items-center gap-1.5 mt-0.5 text-xs text-muted-foreground">
                 <Mail className="h-3 w-3 flex-shrink-0" />
                 <span className="truncate">{org.responsible_email}</span>
