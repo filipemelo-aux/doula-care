@@ -13,6 +13,8 @@ export interface GuestProfile {
   city?: string | null;
   state?: string | null;
   dpp?: string | null;
+  /** True once the welcome dialog has been shown/answered. */
+  _welcomed?: boolean;
 }
 
 export interface GuestContraction {
