@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
-import { MapPin, Loader2, Plus, X, Locate } from "lucide-react";
+import { MapPin, Loader2, Plus, X, Locate, MessageCircle, Instagram } from "lucide-react";
 import { toast } from "sonner";
 
 export function LocationSettingsCard() {
@@ -24,7 +24,7 @@ export function LocationSettingsCard() {
       if (!organizationId) return null;
       const { data, error } = await supabase
         .from("organizations")
-        .select("city,state,neighborhood,bio,service_areas,latitude,longitude,accepts_new_clients")
+        .select("city,state,neighborhood,bio,service_areas,latitude,longitude,accepts_new_clients,whatsapp,instagram")
         .eq("id", organizationId)
         .maybeSingle();
       if (error) throw error;
@@ -42,6 +42,8 @@ export function LocationSettingsCard() {
   const [latitude, setLatitude] = useState<number | null>(null);
   const [longitude, setLongitude] = useState<number | null>(null);
   const [acceptsNew, setAcceptsNew] = useState(true);
+  const [whatsapp, setWhatsapp] = useState("");
+  const [instagram, setInstagram] = useState("");
   const [geocoding, setGeocoding] = useState(false);
 
   useEffect(() => {
@@ -54,6 +56,8 @@ export function LocationSettingsCard() {
     setLatitude(org.latitude ?? null);
     setLongitude(org.longitude ?? null);
     setAcceptsNew(org.accepts_new_clients ?? true);
+    setWhatsapp(org.whatsapp || "");
+    setInstagram(org.instagram || "");
   }, [org]);
 
   const geocode = async () => {
@@ -103,6 +107,8 @@ export function LocationSettingsCard() {
           latitude,
           longitude,
           accepts_new_clients: acceptsNew,
+          whatsapp: whatsapp || null,
+          instagram: instagram ? instagram.replace(/^@/, "") : null,
         } as any)
         .eq("id", organizationId);
       if (error) throw error;
@@ -178,6 +184,32 @@ export function LocationSettingsCard() {
         <div className="space-y-2">
           <Label>Bairro (opcional)</Label>
           <Input value={neighborhood} onChange={(e) => setNeighborhood(e.target.value)} placeholder="Ex: Pinheiros" />
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="space-y-2">
+            <Label className="flex items-center gap-1.5">
+              <MessageCircle className="h-3.5 w-3.5 text-[#25D366]" /> WhatsApp
+            </Label>
+            <Input
+              value={whatsapp}
+              onChange={(e) => setWhatsapp(e.target.value)}
+              mask="phone"
+              placeholder="(11) 91234-5678"
+            />
+            <p className="text-[11px] text-muted-foreground">Visível no perfil público para gestantes</p>
+          </div>
+          <div className="space-y-2">
+            <Label className="flex items-center gap-1.5">
+              <Instagram className="h-3.5 w-3.5 text-pink-500" /> Instagram
+            </Label>
+            <Input
+              value={instagram}
+              onChange={(e) => setInstagram(e.target.value.replace(/\s/g, ""))}
+              placeholder="seu_usuario"
+            />
+            <p className="text-[11px] text-muted-foreground">Sem o @ — só o nome de usuário</p>
+          </div>
         </div>
 
         <div className="space-y-2">

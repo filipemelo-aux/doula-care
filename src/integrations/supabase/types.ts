@@ -1078,6 +1078,7 @@ export type Database = {
           city: string | null
           created_at: string
           id: string
+          instagram: string | null
           latitude: number | null
           logo_url: string | null
           longitude: number | null
@@ -1093,6 +1094,7 @@ export type Database = {
           state: string | null
           status: Database["public"]["Enums"]["org_status"]
           updated_at: string
+          whatsapp: string | null
         }
         Insert: {
           accepts_new_clients?: boolean
@@ -1101,6 +1103,7 @@ export type Database = {
           city?: string | null
           created_at?: string
           id?: string
+          instagram?: string | null
           latitude?: number | null
           logo_url?: string | null
           longitude?: number | null
@@ -1116,6 +1119,7 @@ export type Database = {
           state?: string | null
           status?: Database["public"]["Enums"]["org_status"]
           updated_at?: string
+          whatsapp?: string | null
         }
         Update: {
           accepts_new_clients?: boolean
@@ -1124,6 +1128,7 @@ export type Database = {
           city?: string | null
           created_at?: string
           id?: string
+          instagram?: string | null
           latitude?: number | null
           logo_url?: string | null
           longitude?: number | null
@@ -1139,6 +1144,7 @@ export type Database = {
           state?: string | null
           status?: Database["public"]["Enums"]["org_status"]
           updated_at?: string
+          whatsapp?: string | null
         }
         Relationships: []
       }
@@ -2006,6 +2012,7 @@ export type Database = {
           bio: string
           city: string
           id: string
+          instagram: string
           latitude: number
           logo_url: string
           longitude: number
@@ -2016,6 +2023,7 @@ export type Database = {
           secondary_color: string
           service_areas: string[]
           state: string
+          whatsapp: string
         }[]
       }
       get_user_organization_id: { Args: never; Returns: string }

@@ -26,6 +26,7 @@ import {
   Search,
   Clock,
   MessageCircle,
+  Instagram,
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -51,6 +52,22 @@ interface PublicDoula {
   longitude: number | null;
   primary_color: string | null;
   secondary_color: string | null;
+  whatsapp: string | null;
+  instagram: string | null;
+}
+
+function buildWhatsAppUrl(phone: string, doulaName: string) {
+  const digits = (phone || "").replace(/\D/g, "");
+  const withCountry = digits.startsWith("55") ? digits : `55${digits}`;
+  const msg = encodeURIComponent(
+    `Olá ${doulaName}! Encontrei seu perfil no Doula Care e gostaria de saber mais sobre seu trabalho. 💗`
+  );
+  return `https://wa.me/${withCountry}?text=${msg}`;
+}
+
+function buildInstagramUrl(handle: string) {
+  const clean = handle.replace(/^@/, "").trim();
+  return `https://instagram.com/${clean}`;
 }
 
 interface DoulaPlan {
@@ -355,6 +372,35 @@ function DoulaPlansDialog({
             <DialogDescription className="text-xs leading-relaxed pt-1">{doula.bio}</DialogDescription>
           )}
         </DialogHeader>
+
+        {(doula?.whatsapp || doula?.instagram) && (
+          <div className="flex flex-wrap gap-2 -mt-1">
+            {doula?.whatsapp && (
+              <Button
+                size="sm"
+                variant="outline"
+                className="flex-1 min-w-[140px] gap-1.5 bg-[hsl(142_71%_45%/0.08)] hover:bg-[hsl(142_71%_45%/0.16)] border-[hsl(142_71%_45%/0.3)] text-[hsl(142_71%_30%)]"
+                onClick={() =>
+                  window.open(buildWhatsAppUrl(doula.whatsapp!, doula.nome_exibicao || doula.name), "_blank")
+                }
+              >
+                <MessageCircle className="h-3.5 w-3.5" />
+                WhatsApp
+              </Button>
+            )}
+            {doula?.instagram && (
+              <Button
+                size="sm"
+                variant="outline"
+                className="flex-1 min-w-[140px] gap-1.5 bg-pink-500/10 hover:bg-pink-500/20 border-pink-500/30 text-pink-600 dark:text-pink-400"
+                onClick={() => window.open(buildInstagramUrl(doula.instagram!), "_blank")}
+              >
+                <Instagram className="h-3.5 w-3.5" />
+                @{doula.instagram.replace(/^@/, "")}
+              </Button>
+            )}
+          </div>
+        )}
 
         <div className="space-y-2 max-h-[55vh] overflow-y-auto pr-1">
           {isLoading ? (
