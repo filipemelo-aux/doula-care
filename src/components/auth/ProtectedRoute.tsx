@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
-  allowedRoles: ("admin" | "moderator" | "client" | "user" | "super_admin")[];
+  allowedRoles: ("admin" | "moderator" | "client" | "user" | "super_admin" | "visitor")[];
 }
 
 export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) {
@@ -36,6 +36,7 @@ export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) 
     if (roles.includes("super_admin")) return <Navigate to="/super-admin" replace />;
     if (role === "admin" || role === "moderator") return <Navigate to="/admin" replace />;
     if (role === "client") return <Navigate to="/gestante" replace />;
+    if (role === "visitor") return <Navigate to="/visitante" replace />;
     return <Navigate to="/login" replace />;
   }
 

@@ -3,7 +3,7 @@ import { User, Session } from "@supabase/supabase-js";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 
-type AppRole = "admin" | "moderator" | "client" | "user" | "super_admin";
+type AppRole = "admin" | "moderator" | "client" | "user" | "super_admin" | "visitor";
 type AppRoles = AppRole[];
 
 interface ClientData {
@@ -27,6 +27,7 @@ interface AuthContextType {
   isAdmin: boolean;
   isClient: boolean;
   isSuperAdmin: boolean;
+  isVisitor: boolean;
   client: ClientData | null;
   isFirstLogin: boolean;
   profileName: string | null;
@@ -119,12 +120,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       let primaryRole: AppRole | null = null;
       if (userRoles.length > 0) {
-        const priority: AppRole[] = ["super_admin", "admin", "moderator", "client", "user"];
+        const priority: AppRole[] = ["super_admin", "admin", "moderator", "client", "visitor", "user"];
         primaryRole = priority.find(r => userRoles.includes(r)) || userRoles[0];
       }
       setRole(primaryRole);
 
-      if (primaryRole === "client") {
+      if (primaryRole === "client" || primaryRole === "visitor") {
         const clientData = await fetchClientData(currentSession.user.id);
         setClient(clientData);
         setProfileName(clientData?.full_name || null);
@@ -381,6 +382,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const isAdmin = role === "admin" || role === "moderator";
   const isClient = role === "client";
   const isSuperAdmin = roles.includes("super_admin");
+  const isVisitor = role === "visitor";
 
   return (
     <AuthContext.Provider
@@ -394,6 +396,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isAdmin,
         isClient,
         isSuperAdmin,
+        isVisitor,
         client,
         isFirstLogin: client?.first_login ?? false,
         profileName,
