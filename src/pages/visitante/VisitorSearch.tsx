@@ -486,6 +486,59 @@ function DoulaPlansDialog({
           </div>
         )}
       </DialogContent>
+
+      <AlertDialog open={!!confirmPlan} onOpenChange={(o) => !o && !submitting && setConfirmPlan(null)}>
+        <AlertDialogContent className="max-w-sm">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar escolha do plano</AlertDialogTitle>
+            <AlertDialogDescription className="text-sm">
+              Você está escolhendo o plano <strong>{confirmPlan?.name}</strong> com{" "}
+              <strong>{doula?.nome_exibicao || doula?.name}</strong>. Ao confirmar, ela receberá sua
+              solicitação e entrará em contato em breve.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={!!submitting}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmChoose} disabled={!!submitting}>
+              {submitting ? (
+                <>
+                  <Loader2 className="h-3.5 w-3.5 mr-2 animate-spin" /> Enviando...
+                </>
+              ) : (
+                "Confirmar"
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <Dialog open={successOpen} onOpenChange={(o) => !o && handleSuccessClose()}>
+        <DialogContent className="max-w-sm p-0 overflow-hidden border-0 bg-gradient-to-br from-primary/95 via-primary to-primary/90 text-primary-foreground shadow-2xl">
+          <div className="p-6 text-center space-y-4">
+            <div className="mx-auto w-20 h-20 rounded-full bg-primary-foreground/15 flex items-center justify-center animate-in zoom-in-50 duration-500">
+              <div className="w-16 h-16 rounded-full bg-primary-foreground/20 flex items-center justify-center">
+                <CheckCircle className="h-10 w-10 text-primary-foreground animate-in zoom-in-75 duration-700" strokeWidth={2.5} />
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <DialogTitle className="text-xl font-bold text-primary-foreground">
+                Solicitação enviada! 💗
+              </DialogTitle>
+              <DialogDescription className="text-sm text-primary-foreground/90 leading-relaxed">
+                <strong className="text-primary-foreground">{doula?.nome_exibicao || doula?.name}</strong>{" "}
+                recebeu sua solicitação e entrará em contato com você em breve.
+              </DialogDescription>
+            </div>
+            <Button
+              variant="secondary"
+              className="w-full bg-primary-foreground text-primary hover:bg-primary-foreground/90 font-medium"
+              onClick={handleSuccessClose}
+            >
+              Entendi
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </Dialog>
   );
 }
