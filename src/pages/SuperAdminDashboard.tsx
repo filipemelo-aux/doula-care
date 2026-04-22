@@ -335,52 +335,73 @@ export default function SuperAdminDashboard() {
       .toUpperCase();
 
     return (
-      <Card className="group">
-        <CardContent className="p-4">
-          <div className="flex items-start gap-3">
-            <div className="relative flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
+      <Card className="group overflow-hidden">
+        <CardContent className="p-4 space-y-3.5">
+          {/* Header: avatar + nome + status dot */}
+          <div className="flex items-center gap-3">
+            <div className="relative flex-shrink-0 w-11 h-11 rounded-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
               <span className="text-sm font-bold text-primary">{initials}</span>
               {onlineOrgIds.has(org.id) && (
-                <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-emerald-500 border-2 border-card" title="Online agora" />
+                <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-emerald-500 ring-2 ring-card" title="Online agora" />
               )}
             </div>
-            <div className="flex-1 min-w-0 space-y-1.5">
-              <div className="flex items-center gap-2 flex-wrap">
-                <h3 className="font-semibold text-sm text-foreground truncate">{org.name}</h3>
-                <Badge variant="outline" className={`text-[10px] h-5 ${planBadgeStyles[org.plan]}`}>
-                  {org.plan.charAt(0).toUpperCase() + org.plan.slice(1)}
-                </Badge>
-                <Badge variant={org.status === "ativo" ? "default" : "destructive"} className="text-[10px] h-5">
-                  {org.status === "ativo" ? "Ativo" : "Suspenso"}
-                </Badge>
-              </div>
-              <div className="flex items-center gap-1 text-xs text-muted-foreground">
+            <div className="flex-1 min-w-0">
+              <h3 className="font-semibold text-sm text-foreground truncate leading-tight">{org.name}</h3>
+              <div className="flex items-center gap-1.5 mt-0.5 text-xs text-muted-foreground">
                 <Mail className="h-3 w-3 flex-shrink-0" />
                 <span className="truncate">{org.responsible_email}</span>
               </div>
-              <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                <span className="flex items-center gap-1">
-                  <Baby className="h-3 w-3" />
-                  {org.client_count} gestante{org.client_count !== 1 ? "s" : ""}
-                </span>
-                <span className="flex items-center gap-1">
-                  <CalendarDays className="h-3 w-3" />
+            </div>
+          </div>
+
+          {/* Badges padronizados */}
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <Badge className={cn("h-5 px-2 text-[10px] font-medium rounded-full", planBadgeStyles[org.plan])}>
+              {org.plan.charAt(0).toUpperCase() + org.plan.slice(1)}
+            </Badge>
+            <Badge
+              className={cn(
+                "h-5 px-2 text-[10px] font-medium rounded-full inline-flex items-center gap-1",
+                org.status === "ativo"
+                  ? "bg-success/15 text-success"
+                  : "bg-destructive/15 text-destructive"
+              )}
+            >
+              <span className={cn("h-1.5 w-1.5 rounded-full", org.status === "ativo" ? "bg-success" : "bg-destructive")} />
+              {org.status === "ativo" ? "Ativo" : "Suspenso"}
+            </Badge>
+            <PromoTriggerButton orgId={org.id} orgName={org.name} />
+          </div>
+
+          {/* Métricas em pills uniformes */}
+          <div className="grid grid-cols-2 gap-2">
+            <div className="flex items-center gap-2 rounded-lg bg-muted/40 px-2.5 py-1.5">
+              <Baby className="h-3.5 w-3.5 text-primary flex-shrink-0" />
+              <div className="min-w-0">
+                <p className="text-[10px] text-muted-foreground leading-none">Gestantes</p>
+                <p className="text-xs font-semibold text-foreground leading-tight mt-0.5">{org.client_count}</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 rounded-lg bg-muted/40 px-2.5 py-1.5">
+              <CalendarDays className="h-3.5 w-3.5 text-primary flex-shrink-0" />
+              <div className="min-w-0">
+                <p className="text-[10px] text-muted-foreground leading-none">Desde</p>
+                <p className="text-xs font-semibold text-foreground leading-tight mt-0.5 truncate">
                   {format(new Date(org.created_at), "dd/MM/yyyy", { locale: ptBR })}
-                </span>
+                </p>
               </div>
             </div>
           </div>
-          <div className="mt-2">
-            <PromoTriggerButton orgId={org.id} orgName={org.name} />
-          </div>
-          <div className="flex items-center gap-2 mt-3 pt-3">
+
+          {/* Ações */}
+          <div className="flex items-center gap-1.5">
             <Select
               value={org.plan}
               onValueChange={(value) =>
                 planMutation.mutate({ orgId: org.id, plan: value as "free" | "pro" | "premium" })
               }
             >
-              <SelectTrigger className="h-8 text-xs flex-1">
+              <SelectTrigger className="h-8 text-xs flex-1 bg-muted/40 border-0">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -395,14 +416,14 @@ export default function SuperAdminDashboard() {
                 Suspender
               </Button>
             ) : (
-              <Button variant="ghost" size="sm" className="h-8 text-xs bg-muted/50 hover:bg-muted" onClick={() => statusMutation.mutate({ orgId: org.id, status: "ativo" })} disabled={statusMutation.isPending}>
+              <Button variant="ghost" size="sm" className="h-8 text-xs bg-success/10 text-success hover:bg-success/15" onClick={() => statusMutation.mutate({ orgId: org.id, status: "ativo" })} disabled={statusMutation.isPending}>
                 <CheckCircle className="h-3.5 w-3.5 mr-1" />
                 Ativar
               </Button>
             )}
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <Button variant="ghost" size="sm" className="h-8 text-xs text-destructive bg-destructive/5 hover:bg-destructive/10" disabled={deleteMutation.isPending}>
+                <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive bg-destructive/5 hover:bg-destructive/10 flex-shrink-0" disabled={deleteMutation.isPending}>
                   <Trash2 className="h-3.5 w-3.5" />
                 </Button>
               </AlertDialogTrigger>
