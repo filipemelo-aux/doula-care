@@ -244,6 +244,7 @@ export default function Plans() {
     reorderMutation.mutate({ a, b });
   };
 
+  const handleCreate = () => {
     setSelectedPlan(null);
     form.reset({
       name: "",
