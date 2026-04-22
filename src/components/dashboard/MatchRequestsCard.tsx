@@ -1,9 +1,10 @@
+import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { UserPlus, Check, X, Loader2, MessageCircle } from "lucide-react";
+import { UserPlus, Check, X, MessageCircle, Lock } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -11,23 +12,32 @@ import { ptBR } from "date-fns/locale";
 function getDisplayName(c: any): string {
   const full = (c?.full_name || "").trim();
   const pref = (c?.preferred_name || "").trim();
-  // Use full_name as primary; fall back to preferred only if full is empty
   if (full.length >= 2) return full;
   if (pref.length >= 2) return pref;
   return full || pref || "Visitante";
 }
 
-function buildWhatsAppUrl(phone: string, name: string): string {
+function getFirstAndLast(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return "";
+  if (parts.length === 1) return parts[0];
+  return `${parts[0]} ${parts[parts.length - 1]}`;
+}
+
+function buildWhatsAppUrl(phone: string, name: string, planName: string): string {
   const digits = (phone || "").replace(/\D/g, "");
   const intl = digits.startsWith("55") ? digits : `55${digits}`;
+  const greeting = getFirstAndLast(name);
   const msg = encodeURIComponent(
-    `Olá ${name.split(" ")[0] || ""}! 💗 Sou sua doula no Doula Care. Recebi sua solicitação de vínculo e gostaria de conversar com você.`
+    `Olá ${greeting}! 💗 Sou sua doula no Doula Care e vi que você se interessou pelo plano *${planName}*. ` +
+    `Que alegria poder te acompanhar nesse momento tão especial! Podemos conversar para eu te passar mais informações e tirar suas dúvidas?`
   );
   return `https://wa.me/${intl}?text=${msg}`;
 }
 
 export function MatchRequestsCard() {
   const qc = useQueryClient();
+  const [contactedIds, setContactedIds] = useState<Set<string>>(new Set());
 
   const { data: requests = [], isLoading } = useQuery({
     queryKey: ["org-match-requests"],
@@ -44,6 +54,12 @@ export function MatchRequestsCard() {
   });
 
   const handleApprove = async (id: string) => {
+    if (!contactedIds.has(id)) {
+      toast.warning("Converse pelo WhatsApp antes de aprovar", {
+        description: "Clique no botão do WhatsApp para iniciar a conversa com a gestante.",
+      });
+      return;
+    }
     const { error } = await supabase.rpc("approve_doula_match_request" as any, { p_request_id: id });
     if (error) return toast.error("Erro ao aprovar", { description: error.message });
     toast.success("Vínculo aprovado! A gestante já tem acesso completo.");
@@ -56,6 +72,11 @@ export function MatchRequestsCard() {
     if (error) return toast.error("Erro ao recusar", { description: error.message });
     toast.success("Solicitação recusada");
     qc.invalidateQueries({ queryKey: ["org-match-requests"] });
+  };
+
+  const handleWhatsAppClick = (id: string, url: string) => {
+    setContactedIds((prev) => new Set(prev).add(id));
+    window.open(url, "_blank");
   };
 
   if (isLoading) return null;
@@ -74,43 +95,59 @@ export function MatchRequestsCard() {
         {requests.map((r) => {
           const name = getDisplayName(r.clients);
           const phone = r.clients?.phone || "";
+          const hasContacted = contactedIds.has(r.id);
+          const planName = r.plan_name || "selecionado";
           return (
             <div key={r.id} className="rounded-lg bg-background p-3 border border-border/50">
-              <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0 flex-1">
-                  <p className="font-medium text-sm">{name}</p>
-                  <p className="text-[11px] text-muted-foreground">
-                    {[r.clients?.city, r.clients?.state].filter(Boolean).join(" - ")}
-                    {phone ? ` · ${phone}` : ""}
-                  </p>
-                  <p className="text-xs mt-1">
-                    Plano: <strong>{r.plan_name}</strong> ·{" "}
-                    {Number(r.plan_value || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
-                  </p>
-                  <p className="text-[10px] text-muted-foreground mt-0.5">
-                    Solicitado {format(new Date(r.created_at), "dd 'de' MMM 'às' HH:mm", { locale: ptBR })}
-                  </p>
-                </div>
-                <div className="flex gap-1.5 shrink-0">
-                  <Button size="sm" variant="outline" onClick={() => handleReject(r.id)}>
-                    <X className="h-3.5 w-3.5" />
-                  </Button>
-                  <Button size="sm" onClick={() => handleApprove(r.id)}>
-                    <Check className="h-3.5 w-3.5 mr-1" /> Aprovar
-                  </Button>
-                </div>
+              <div className="space-y-1">
+                <p className="font-semibold text-sm">{name}</p>
+                <p className="text-[11px] text-muted-foreground">
+                  {[r.clients?.city, r.clients?.state].filter(Boolean).join(" - ")}
+                  {phone ? ` · ${phone}` : ""}
+                </p>
+                <p className="text-xs">
+                  Plano escolhido: <strong>{planName}</strong>
+                  {r.plan_value ? (
+                    <> · {Number(r.plan_value).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</>
+                  ) : null}
+                </p>
+                <p className="text-[10px] text-muted-foreground">
+                  Solicitado {format(new Date(r.created_at), "dd 'de' MMM 'às' HH:mm", { locale: ptBR })}
+                </p>
               </div>
+
               {phone && (
                 <Button
                   size="sm"
                   variant="outline"
-                  className="mt-2 w-full h-8 text-xs gap-1.5 bg-[#25D366]/10 hover:bg-[#25D366]/20 border-[#25D366]/30 text-[#128C7E]"
-                  onClick={() => window.open(buildWhatsAppUrl(phone, name), "_blank")}
+                  className="mt-2 w-full h-9 text-xs gap-1.5 bg-[#25D366]/10 hover:bg-[#25D366]/20 border-[#25D366]/30 text-[#128C7E] font-medium"
+                  onClick={() => handleWhatsAppClick(r.id, buildWhatsAppUrl(phone, name, planName))}
                 >
                   <MessageCircle className="h-3.5 w-3.5" />
-                  Conversar no WhatsApp
+                  {hasContacted ? "Conversar novamente no WhatsApp" : "Conversar no WhatsApp primeiro"}
                 </Button>
               )}
+
+              {!hasContacted && (
+                <p className="mt-2 text-[10.5px] text-muted-foreground flex items-center gap-1">
+                  <Lock className="h-3 w-3" />
+                  Converse pelo WhatsApp antes de aprovar o vínculo.
+                </p>
+              )}
+
+              <div className="flex gap-1.5 mt-2">
+                <Button size="sm" variant="outline" className="flex-1" onClick={() => handleReject(r.id)}>
+                  <X className="h-3.5 w-3.5 mr-1" /> Recusar
+                </Button>
+                <Button
+                  size="sm"
+                  className="flex-1"
+                  onClick={() => handleApprove(r.id)}
+                  disabled={!hasContacted}
+                >
+                  <Check className="h-3.5 w-3.5 mr-1" /> Aprovar
+                </Button>
+              </div>
             </div>
           );
         })}
