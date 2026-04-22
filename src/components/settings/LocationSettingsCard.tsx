@@ -12,6 +12,7 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { MapPin, Loader2, Plus, X, Locate, MessageCircle, Instagram } from "lucide-react";
 import { toast } from "sonner";
+import { CityAutocomplete } from "@/components/ui/city-autocomplete";
 
 export function LocationSettingsCard() {
   const { organizationId } = useAuth();
