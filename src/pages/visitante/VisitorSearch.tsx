@@ -545,6 +545,12 @@ function DoulaPlansDialog({
           </div>
         </DialogContent>
       </Dialog>
+
+      <GuestSignupPrompt
+        open={signupPromptOpen}
+        onOpenChange={setSignupPromptOpen}
+        reason="Para enviar sua solicitação de plano e iniciar o vínculo com a doula, precisamos de um cadastro rapidinho. Assim ela consegue te conhecer e responder com carinho."
+      />
     </Dialog>
   );
 }
