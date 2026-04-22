@@ -11,13 +11,18 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Activity } from "lucide-react";
+import { Activity, TrendingUp } from "lucide-react";
 
 interface OrgActivity {
   id: string;
   name: string;
   plan: string;
   actions: number;
+  clients: number;
+  appointments: number;
+  messages: number;
+  diary: number;
+  payments: number;
 }
 
 type OrgCountRow = { organization_id: string | null };
@@ -34,7 +39,7 @@ const countByOrg = (rows: OrgCountRow[] | null | undefined) => {
 function useOrgActivity() {
   return useQuery({
     queryKey: ["org-activity-actions-30d"],
-    queryFn: async () => {
+    queryFn: async (): Promise<OrgActivity[]> => {
       const since = new Date();
       since.setMonth(since.getMonth() - 1);
       const s = since.toISOString();
@@ -50,20 +55,36 @@ function useOrgActivity() {
         supabase.from("service_requests").select("organization_id").gte("updated_at", s),
       ]);
 
-      const totals = [cliR, appR, notR, diaR, conR, payR, srvR]
-        .map((r) => countByOrg(r.data))
-        .reduce((acc, cur) => {
-          cur.forEach((v, k) => acc.set(k, (acc.get(k) || 0) + v));
-          return acc;
-        }, new Map<string, number>());
+      const cli = countByOrg(cliR.data);
+      const app = countByOrg(appR.data);
+      const not = countByOrg(notR.data);
+      const dia = countByOrg(diaR.data);
+      const con = countByOrg(conR.data);
+      const pay = countByOrg(payR.data);
+      const srv = countByOrg(srvR.data);
 
       return (orgsR.data || [])
-        .map((o) => ({
-          id: o.id,
-          name: o.nome_exibicao || o.name,
-          plan: o.plan,
-          actions: totals.get(o.id) || 0,
-        }))
+        .map((o) => {
+          const clients = cli.get(o.id) || 0;
+          const appointments = app.get(o.id) || 0;
+          const messages = not.get(o.id) || 0;
+          const diary = dia.get(o.id) || 0;
+          const contracts = con.get(o.id) || 0;
+          const payments = pay.get(o.id) || 0;
+          const services = srv.get(o.id) || 0;
+          return {
+            id: o.id,
+            name: o.nome_exibicao || o.name,
+            plan: o.plan,
+            clients,
+            appointments,
+            messages,
+            diary,
+            payments,
+            actions:
+              clients + appointments + messages + diary + contracts + payments + services,
+          };
+        })
         .sort((a, b) => b.actions - a.actions || a.name.localeCompare(b.name));
     },
     staleTime: 10_000,
@@ -94,13 +115,43 @@ function ActionBar({ actions, max }: { actions: number; max: number }) {
   );
 }
 
+function MetricRow({
+  name,
+  value,
+  max,
+  colorClass,
+}: {
+  name: string;
+  value: number;
+  max: number;
+  colorClass: string;
+}) {
+  const pct = max > 0 ? Math.max((value / max) * 100, value > 0 ? 6 : 0) : 0;
+  return (
+    <div>
+      <p className="mb-1 truncate text-[11px] text-muted-foreground">{name}</p>
+      <div className="flex items-center gap-2">
+        <div className="h-2 flex-1 overflow-hidden rounded-full bg-muted">
+          <div
+            className={`h-full rounded-full transition-[width] duration-700 ease-out ${colorClass}`}
+            style={{ width: `${pct}%` }}
+          />
+        </div>
+        <span className="w-8 text-right text-[10px] font-semibold tabular-nums text-foreground">
+          {value}
+        </span>
+      </div>
+    </div>
+  );
+}
+
 export function TopActiveOrgsCard() {
   const { data: allOrgs, isLoading } = useOrgActivity();
   const [open, setOpen] = useState(false);
 
   if (isLoading) {
     return (
-      <Card>
+      <Card className="col-span-2 lg:col-span-2">
         <CardContent className="p-4">
           <Skeleton className="mb-3 h-4 w-24" />
           <Skeleton className="mt-2 h-2 w-full" />
@@ -111,47 +162,85 @@ export function TopActiveOrgsCard() {
     );
   }
 
-  const top3 = (allOrgs || []).slice(0, 3);
-  const max = Math.max(...(allOrgs || []).map((o) => o.actions), 1);
+  const orgs = allOrgs || [];
+  const top3 = orgs.slice(0, 3);
+  const max = Math.max(...orgs.map((o) => o.actions), 1);
+
+  // Top organização por métrica específica
+  const topByAppointments = [...orgs].sort((a, b) => b.appointments - a.appointments).slice(0, 3);
+  const maxApp = Math.max(...orgs.map((o) => o.appointments), 1);
 
   return (
     <>
-      <Card className="cursor-pointer transition-shadow hover:shadow-md" onClick={() => setOpen(true)}>
+      <Card
+        className="col-span-2 lg:col-span-2 cursor-pointer transition-shadow hover:shadow-md"
+        onClick={() => setOpen(true)}
+      >
         <CardContent className="p-4">
-          <div className="mb-3 flex items-center gap-2">
-            <Activity className="h-4 w-4 text-primary" />
-            <p className="text-[11px] font-medium text-muted-foreground">Atividade (30d)</p>
-          </div>
-          {top3.length > 0 ? (
-            <div className="space-y-2.5">
-              {top3.map((org) => (
-                <div key={org.id}>
-                  <p className="mb-1 truncate text-[11px] text-muted-foreground">{org.name}</p>
-                  <ActionBar actions={org.actions} max={max} />
+          <div className="grid grid-cols-2 gap-4">
+            {/* Coluna 1: Atividade total */}
+            <div>
+              <div className="mb-3 flex items-center gap-2">
+                <Activity className="h-4 w-4 text-primary" />
+                <p className="text-[11px] font-medium text-muted-foreground">Atividade (30d)</p>
+              </div>
+              {top3.length > 0 ? (
+                <div className="space-y-2.5">
+                  {top3.map((org) => (
+                    <div key={org.id}>
+                      <p className="mb-1 truncate text-[11px] text-muted-foreground">{org.name}</p>
+                      <ActionBar actions={org.actions} max={max} />
+                    </div>
+                  ))}
                 </div>
-              ))}
+              ) : (
+                <p className="text-xs text-muted-foreground">Sem atividade</p>
+              )}
             </div>
-          ) : (
-            <p className="text-xs text-muted-foreground">Sem atividade</p>
-          )}
+
+            {/* Coluna 2: Top consultas */}
+            <div>
+              <div className="mb-3 flex items-center gap-2">
+                <TrendingUp className="h-4 w-4 text-success" />
+                <p className="text-[11px] font-medium text-muted-foreground">Top consultas</p>
+              </div>
+              {topByAppointments.length > 0 ? (
+                <div className="space-y-2.5">
+                  {topByAppointments.map((org) => (
+                    <div key={org.id}>
+                      <p className="mb-1 truncate text-[11px] text-muted-foreground">{org.name}</p>
+                      <MetricRow
+                        name=""
+                        value={org.appointments}
+                        max={maxApp}
+                        colorClass="bg-success"
+                      />
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-xs text-muted-foreground">Sem consultas</p>
+              )}
+            </div>
+          </div>
         </CardContent>
       </Card>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="flex max-h-[80vh] max-w-lg flex-col">
+        <DialogContent className="flex max-h-[80vh] max-w-2xl flex-col">
           <DialogHeader className="shrink-0">
             <DialogTitle className="flex items-center gap-2 text-base">
               <Activity className="h-4 w-4 text-primary" />
-              Ações Reais (últimos 30 dias)
+              Atividade das Doulas (últimos 30 dias)
             </DialogTitle>
             <DialogDescription>
-              Gestantes, consultas, pagamentos, notificações, contratos e serviços movimentados.
+              Detalhamento por organização: gestantes, consultas, mensagens, diário e pagamentos.
             </DialogDescription>
           </DialogHeader>
 
-          <div className="mt-3 flex-1 space-y-1 overflow-y-auto pr-1">
-            {(allOrgs || []).map((org, i) => (
-              <div key={org.id} className="space-y-1.5 rounded-lg bg-muted/30 p-3">
+          <div className="mt-3 flex-1 space-y-2 overflow-y-auto pr-1">
+            {orgs.map((org, i) => (
+              <div key={org.id} className="space-y-2 rounded-lg bg-muted/30 p-3">
                 <div className="flex items-center gap-2">
                   <span className="w-5 shrink-0 text-center text-[11px] font-bold text-muted-foreground">
                     {i + 1}
@@ -165,9 +254,31 @@ export function TopActiveOrgsCard() {
                   </Badge>
                 </div>
                 <ActionBar actions={org.actions} max={max} />
+                <div className="grid grid-cols-2 gap-x-4 gap-y-1 pt-1 text-[10px] text-muted-foreground">
+                  <div className="flex justify-between">
+                    <span>Gestantes</span>
+                    <span className="font-semibold text-foreground">{org.clients}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Consultas</span>
+                    <span className="font-semibold text-foreground">{org.appointments}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Mensagens</span>
+                    <span className="font-semibold text-foreground">{org.messages}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Diário</span>
+                    <span className="font-semibold text-foreground">{org.diary}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Pagamentos</span>
+                    <span className="font-semibold text-foreground">{org.payments}</span>
+                  </div>
+                </div>
               </div>
             ))}
-            {(!allOrgs || allOrgs.length === 0) && (
+            {orgs.length === 0 && (
               <p className="py-6 text-center text-sm text-muted-foreground">Nenhuma organização cadastrada</p>
             )}
           </div>
