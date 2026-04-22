@@ -387,7 +387,7 @@ export function OrgBillingCard() {
             <SelectContent>
               {orgs.map((org) => (
                 <SelectItem key={org.id} value={org.id}>
-                  {org.name} ({org.plan})
+                  {getOrgName(org.id)} ({org.plan})
                 </SelectItem>
               ))}
             </SelectContent>
