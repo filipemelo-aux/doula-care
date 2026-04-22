@@ -425,6 +425,15 @@ export default function VisitorDashboard() {
         open={signupPromptOpen}
         onOpenChange={setSignupPromptOpen}
       />
+
+      {isGuest && (
+        <GuestWelcomeDialog
+          open={welcomeOpen}
+          onOpenChange={setWelcomeOpen}
+          initial={guestProfile}
+          onSaved={(next) => setGuestProfile(next)}
+        />
+      )}
     </VisitorLayout>
   );
 }
