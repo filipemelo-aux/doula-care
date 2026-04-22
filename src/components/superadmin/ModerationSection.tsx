@@ -125,7 +125,7 @@ export function ModerationSection() {
               {filteredOrgs.map((org) => (
                 <SelectItem key={org.id} value={org.id}>
                   <span className="flex items-center gap-2">
-                    {org.name}
+                    {orgDisplay(org)}
                     <Badge variant="outline" className="text-[10px] h-4">
                       {org.status}
                     </Badge>
