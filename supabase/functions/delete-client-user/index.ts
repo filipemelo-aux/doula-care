@@ -114,6 +114,32 @@ Deno.serve(async (req) => {
     await supabaseAdmin.from("client_notifications").delete().eq("client_id", clientId);
     await supabaseAdmin.from("service_requests").delete().eq("client_id", clientId);
     await supabaseAdmin.from("appointments").delete().eq("client_id", clientId);
+    await supabaseAdmin.from("appointment_requests").delete().eq("client_id", clientId);
+    await supabaseAdmin.from("client_contracts").delete().eq("client_id", clientId);
+    await supabaseAdmin.from("payments").delete().eq("client_id", clientId);
+    await supabaseAdmin.from("doula_match_requests").delete().eq("visitor_client_id", clientId);
+
+    // CRITICAL: Revoke access BEFORE deleting client record.
+    // Remove all roles and sign out all sessions so the user loses access immediately,
+    // even if auth.admin.deleteUser fails later.
+    if (userId) {
+      try {
+        await supabaseAdmin.from("user_roles").delete().eq("user_id", userId);
+      } catch (e) {
+        console.error("Failed to remove user_roles:", e);
+      }
+      try {
+        await supabaseAdmin.from("push_subscriptions").delete().eq("user_id", userId);
+      } catch (e) {
+        console.error("Failed to remove push_subscriptions:", e);
+      }
+      try {
+        // Invalidate all active sessions for this user
+        await supabaseAdmin.auth.admin.signOut(userId, "global");
+      } catch (e) {
+        console.error("Failed to sign out user sessions:", e);
+      }
+    }
 
     const { error: deleteClientError } = await supabaseAdmin
       .from("clients")
@@ -128,13 +154,21 @@ Deno.serve(async (req) => {
     }
 
     if (userId) {
+      // Best-effort: also delete profile row (FK-free, but cleans up data)
+      try {
+        await supabaseAdmin.from("profiles").delete().eq("user_id", userId);
+      } catch (e) {
+        console.error("Failed to remove profile:", e);
+      }
+
       const { error: deleteUserError } = await supabaseAdmin.auth.admin.deleteUser(userId);
       
       if (deleteUserError) {
+        console.error("Failed to delete auth user:", deleteUserError);
         return new Response(
           JSON.stringify({ 
             success: true, 
-            warning: "Client deleted but failed to remove auth user",
+            warning: "Cliente excluído e acesso revogado, mas falha ao remover conta de autenticação",
             clientName: client.full_name 
           }),
           { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
