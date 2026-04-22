@@ -233,7 +233,7 @@ export default function VisitorSearch() {
                 <button
                   key={d.id}
                   onClick={() => setSelectedDoula(d)}
-                  disabled={activeRequest?.status === "pending"}
+                  disabled={!isGuest && activeRequest?.status === "pending"}
                   className="w-full flex items-center gap-3 p-3 rounded-2xl bg-card shadow-card hover:shadow-[var(--shadow-card-hover)] transition-all text-left disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <div className="h-11 w-11 rounded-full bg-muted overflow-hidden flex items-center justify-center shrink-0">
