@@ -325,11 +325,15 @@ function DoulaPlansDialog({
   const handleChoose = async (plan: DoulaPlan) => {
     if (!doula) return;
     setSubmitting(plan.id);
-    const { error } = await supabase.rpc("create_doula_match_request" as any, {
+    const { data: reqId, error } = await supabase.rpc("create_doula_match_request" as any, {
       p_organization_id: doula.id,
       p_plan_setting_id: plan.id,
       p_message: null,
     });
+    if (!error && reqId) {
+      // fire-and-forget push to the doula
+      supabase.functions.invoke("notify-match-request", { body: { request_id: reqId } }).catch(() => {});
+    }
     setSubmitting(null);
     if (error) {
       toast.error("Não foi possível enviar a solicitação", { description: error.message });

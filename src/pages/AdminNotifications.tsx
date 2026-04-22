@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { NotificationsCenter } from "@/components/dashboard/NotificationsCenter";
+import { MatchRequestsCard } from "@/components/dashboard/MatchRequestsCard";
 import { useActiveLaborCount } from "@/hooks/useActiveLaborCount";
 
 export default function AdminNotifications() {
@@ -19,6 +20,7 @@ export default function AdminNotifications() {
         </p>
       </div>
 
+      <MatchRequestsCard />
       <NotificationsCenter fullPage />
     </div>
   );
