@@ -458,7 +458,7 @@ function DoulaPlansDialog({
                     size="sm"
                     className="w-full"
                     disabled={!canRequest || submitting === p.id}
-                    onClick={() => handleChoose(p)}
+                    onClick={() => setConfirmPlan(p)}
                   >
                     {submitting === p.id ? (
                       <>
