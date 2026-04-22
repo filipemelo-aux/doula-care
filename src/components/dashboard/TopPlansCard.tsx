@@ -8,28 +8,29 @@ export function TopPlansCard() {
     queryKey: ["top-plans"],
     queryFn: async () => {
       const [clientsResult, plansResult] = await Promise.all([
-        supabase.from("clients").select("plan, plan_value, plan_setting_id"),
-        supabase.from("plan_settings").select("*").eq("is_active", true),
+        supabase.from("clients").select("id, plan, plan_value, plan_setting_id"),
+        // Fetch ALL plan_settings (incluindo inativos) para nomear corretamente
+        // clientes vinculados a planos que foram desativados depois.
+        supabase.from("plan_settings").select("id, name, plan_type"),
       ]);
 
       const clients = clientsResult.data || [];
       const plans = plansResult.data || [];
 
-      // Build a map of plan_setting_id -> plan info
       const planById: Record<string, { name: string; planType: string }> = {};
       plans.forEach((plan) => {
         planById[plan.id] = { name: plan.name, planType: plan.plan_type };
       });
 
-      // Group clients by their specific plan_setting_id, or by plan enum for unlinked clients
       const planData: Record<string, { count: number; revenue: number; name: string }> = {};
-
-      // Always include "avulso"
       planData["_avulso"] = { count: 0, revenue: 0, name: "Avulso" };
 
+      // Coletar IDs de clientes "avulso" para somar suas receitas reais via transactions
+      const avulsoClientIds: string[] = [];
+
       clients.forEach((client) => {
-        // If client has a specific plan_setting_id that exists, group by it
         if (client.plan_setting_id && planById[client.plan_setting_id]) {
+          // Cliente vinculado a um plano cadastrado (ativo ou não)
           const key = client.plan_setting_id;
           if (!planData[key]) {
             planData[key] = {
@@ -40,33 +41,35 @@ export function TopPlansCard() {
           }
           planData[key].count++;
           planData[key].revenue += Number(client.plan_value) || 0;
-        } else if (client.plan === "avulso") {
+        } else {
+          // Sem plano vinculado válido => avulso (ignora resquícios de basico/intermediario/completo)
           planData["_avulso"].count++;
           planData["_avulso"].revenue += Number(client.plan_value) || 0;
-        } else {
-          // Fallback: group by plan enum for clients without plan_setting_id
-          const key = `_enum_${client.plan}`;
-          if (!planData[key]) {
-            planData[key] = {
-              count: 0,
-              revenue: 0,
-              name: client.plan.charAt(0).toUpperCase() + client.plan.slice(1),
-            };
-          }
-          planData[key].count++;
-          planData[key].revenue += Number(client.plan_value) || 0;
+          avulsoClientIds.push(client.id);
         }
       });
 
+      // Somar receitas reais (transactions) dos clientes avulsos
+      if (avulsoClientIds.length > 0) {
+        const { data: txs } = await supabase
+          .from("transactions")
+          .select("amount, client_id")
+          .eq("type", "receita")
+          .in("client_id", avulsoClientIds);
+        const txTotal = (txs || []).reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
+        // Usa o maior valor entre plan_value somado e transactions (caso já tenha plan_value preenchido)
+        if (txTotal > planData["_avulso"].revenue) {
+          planData["_avulso"].revenue = txTotal;
+        }
+      }
+
       return Object.entries(planData)
-        .map(([key, data]) => ({
-          type: key,
-          ...data,
-        }))
+        .map(([key, data]) => ({ type: key, ...data }))
         .filter((p) => p.count > 0 || p.type === "_avulso")
         .sort((a, b) => b.count - a.count);
     },
   });
+
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("pt-BR", {
