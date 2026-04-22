@@ -30,6 +30,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { normalize } from "@/lib/ibgeCities";
 
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -123,21 +124,23 @@ export default function VisitorSearch() {
 
   const filteredDoulas = useMemo(() => {
     if (!search.trim()) return doulas;
-    const s = search.toLowerCase();
+    const s = normalize(search);
     return doulas.filter(
       (d) =>
-        (d.nome_exibicao || d.name).toLowerCase().includes(s) ||
-        (d.city || "").toLowerCase().includes(s) ||
-        (d.state || "").toLowerCase().includes(s)
+        normalize(d.nome_exibicao || d.name).includes(s) ||
+        normalize(d.city || "").includes(s) ||
+        normalize(d.state || "").includes(s) ||
+        normalize(d.neighborhood || "").includes(s) ||
+        (d.service_areas || []).some((a) => normalize(a).includes(s))
     );
   }, [doulas, search]);
 
   const sortedDoulas = useMemo(() => {
-    const cityNorm = (client as any)?.city?.toLowerCase() || "";
-    const stateNorm = (client as any)?.state?.toUpperCase() || "";
+    const cityNorm = normalize((client as any)?.city || "");
+    const stateNorm = ((client as any)?.state || "").toUpperCase();
     return [...filteredDoulas].sort((a, b) => {
-      const aSameCity = (a.city || "").toLowerCase() === cityNorm ? 0 : 1;
-      const bSameCity = (b.city || "").toLowerCase() === cityNorm ? 0 : 1;
+      const aSameCity = normalize(a.city || "") === cityNorm ? 0 : 1;
+      const bSameCity = normalize(b.city || "") === cityNorm ? 0 : 1;
       if (aSameCity !== bSameCity) return aSameCity - bSameCity;
       const aSameState = (a.state || "").toUpperCase() === stateNorm ? 0 : 1;
       const bSameState = (b.state || "").toUpperCase() === stateNorm ? 0 : 1;

@@ -12,6 +12,7 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { MapPin, Loader2, Plus, X, Locate, MessageCircle, Instagram } from "lucide-react";
 import { toast } from "sonner";
+import { CityAutocomplete } from "@/components/ui/city-autocomplete";
 
 export function LocationSettingsCard() {
   const { organizationId } = useAuth();
@@ -173,7 +174,12 @@ export function LocationSettingsCard() {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div className="space-y-2 sm:col-span-2">
             <Label>Cidade</Label>
-            <Input value={city} onChange={(e) => setCity(e.target.value)} placeholder="Ex: São Paulo" />
+            <CityAutocomplete
+              value={city}
+              state={state}
+              onChange={(c, s) => { setCity(c); if (s) setState(s); }}
+              placeholder="Digite para buscar (ex: São Paulo)"
+            />
           </div>
           <div className="space-y-2">
             <Label>UF</Label>
