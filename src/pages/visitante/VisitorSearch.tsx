@@ -175,7 +175,7 @@ export default function VisitorSearch() {
           </p>
         </div>
 
-        {activeRequest?.status === "pending" && (
+        {!isGuest && activeRequest?.status === "pending" && (
           <Card className="border-amber-300/40 bg-amber-50/40 dark:bg-amber-950/20">
             <CardContent className="p-3 flex items-start gap-2">
               <Clock className="h-4 w-4 text-amber-600 mt-0.5 shrink-0" />
