@@ -308,7 +308,8 @@ export default function VisitorSearch() {
       <DoulaPlansDialog
         doula={selectedDoula}
         onClose={() => setSelectedDoula(null)}
-        canRequest={activeRequest?.status !== "pending"}
+        canRequest={isGuest || activeRequest?.status !== "pending"}
+        isGuest={isGuest}
         onRequested={() => {
           setSelectedDoula(null);
           queryClient.invalidateQueries({ queryKey: ["my-match-request"] });
