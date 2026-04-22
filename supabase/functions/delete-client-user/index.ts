@@ -144,11 +144,29 @@ Deno.serve(async (req) => {
         console.error("Failed to remove push_subscriptions:", e);
       }
       try {
+        await supabaseAdmin.from("notification_seen").delete().eq("user_id", userId);
+      } catch (e) {
+        console.error("Failed to remove notification_seen:", e);
+      }
+      try {
         // Invalidate all active sessions for this user
         await supabaseAdmin.auth.admin.signOut(userId, "global");
       } catch (e) {
         console.error("Failed to sign out user sessions:", e);
       }
+    }
+
+    const { error: deleteClientError } = await supabaseAdmin
+      .from("clients")
+      .delete()
+      .eq("id", clientId);
+
+    if (deleteClientError) {
+      console.error("[delete-client-user] Failed to delete client row:", deleteClientError);
+      return new Response(
+        JSON.stringify({ error: "Failed to delete client", details: deleteClientError.message }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
     const { error: deleteClientError } = await supabaseAdmin
