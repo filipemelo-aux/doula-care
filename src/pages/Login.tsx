@@ -209,7 +209,7 @@ export default function Login() {
               </Link>
             </div>
             <div>
-              Procurando uma doula?{" "}
+              Venha conhecer{" "}
               <Link to="/visitante" className="text-primary hover:underline font-medium">
                 Explorar sem cadastro
               </Link>
