@@ -373,7 +373,7 @@ export default function Plans() {
 
       {/* Plans Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {plans?.map((plan) => {
+        {plans?.map((plan, planIndex) => {
           const isActive = plan.is_active !== false;
           const clientsInPlan = clientCounts?.[plan.id] || 0;
 
