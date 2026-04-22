@@ -101,7 +101,7 @@ export function OrgBillingCard() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("organizations")
-        .select("id, name, plan, billing_cycle")
+        .select("id, name, nome_exibicao, plan, billing_cycle")
         .neq("plan", "free")
         .eq("status", "ativo")
         .order("name");
