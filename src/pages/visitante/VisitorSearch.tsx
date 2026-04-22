@@ -26,6 +26,7 @@ import {
   Search,
   Clock,
   MessageCircle,
+  Instagram,
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -51,6 +52,22 @@ interface PublicDoula {
   longitude: number | null;
   primary_color: string | null;
   secondary_color: string | null;
+  whatsapp: string | null;
+  instagram: string | null;
+}
+
+function buildWhatsAppUrl(phone: string, doulaName: string) {
+  const digits = (phone || "").replace(/\D/g, "");
+  const withCountry = digits.startsWith("55") ? digits : `55${digits}`;
+  const msg = encodeURIComponent(
+    `Olá ${doulaName}! Encontrei seu perfil no Doula Care e gostaria de saber mais sobre seu trabalho. 💗`
+  );
+  return `https://wa.me/${withCountry}?text=${msg}`;
+}
+
+function buildInstagramUrl(handle: string) {
+  const clean = handle.replace(/^@/, "").trim();
+  return `https://instagram.com/${clean}`;
 }
 
 interface DoulaPlan {
