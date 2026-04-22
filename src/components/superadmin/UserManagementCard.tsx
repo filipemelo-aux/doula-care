@@ -45,9 +45,9 @@ export function UserManagementCard() {
 
       const { data: orgs } = await supabase
         .from("organizations")
-        .select("id, name");
+        .select("id, name, nome_exibicao");
 
-      const orgMap = new Map((orgs || []).map(o => [o.id, o.name]));
+      const orgMap = new Map((orgs || []).map(o => [o.id, (o.nome_exibicao && o.nome_exibicao.trim()) || o.name]));
 
       const adminUserIds = new Set(
         (roles || [])
