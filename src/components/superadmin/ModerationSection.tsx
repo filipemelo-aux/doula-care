@@ -26,8 +26,9 @@ export function ModerationSection() {
     },
   });
 
+  const orgDisplay = (o: any) => (o.nome_exibicao && o.nome_exibicao.trim()) || o.name;
   const filteredOrgs = searchTerm
-    ? organizations.filter((o) => o.name.toLowerCase().includes(searchTerm.toLowerCase()))
+    ? organizations.filter((o) => orgDisplay(o).toLowerCase().includes(searchTerm.toLowerCase()))
     : organizations;
 
   const { data: messages = [], isLoading: loadingMessages } = useQuery({
