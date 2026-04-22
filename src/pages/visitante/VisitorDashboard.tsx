@@ -28,7 +28,9 @@ import { ptBR } from "date-fns/locale";
 import { getLocalDate } from "@/lib/utils";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { getGuestProfile, type GuestProfile } from "@/lib/guestVisitor";
+import { getGuestProfile, setGuestProfile as saveGuestProfile, type GuestProfile } from "@/lib/guestVisitor";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 export default function VisitorDashboard() {
   const { user, client } = useAuth();
