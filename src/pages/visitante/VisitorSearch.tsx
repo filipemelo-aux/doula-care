@@ -372,7 +372,7 @@ function DoulaPlansDialog({
             </div>
           </DialogTitle>
           {doula?.bio && (
-            <DialogDescription className="text-xs leading-relaxed pt-1">{doula.bio}</DialogDescription>
+            <DialogDescription className="text-xs leading-relaxed pt-1 text-justify hyphens-auto">{doula.bio}</DialogDescription>
           )}
         </DialogHeader>
 
