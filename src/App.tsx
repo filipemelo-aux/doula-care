@@ -107,6 +107,38 @@ const App = () => (
                 </ProtectedRoute>
               }
             />
+            <Route
+              path="/visitante/buscar"
+              element={
+                <ProtectedRoute allowedRoles={["visitor"]}>
+                  <VisitorSearch />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/visitante/diario"
+              element={
+                <ProtectedRoute allowedRoles={["visitor"]}>
+                  <VisitorDiary />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/visitante/contracoes"
+              element={
+                <ProtectedRoute allowedRoles={["visitor"]}>
+                  <VisitorContractions />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/visitante/perfil"
+              element={
+                <ProtectedRoute allowedRoles={["visitor"]}>
+                  <VisitorProfile />
+                </ProtectedRoute>
+              }
+            />
 
             {/* Client (Gestante) routes */}
             <Route
