@@ -1883,7 +1883,13 @@ export type Database = {
       is_super_admin: { Args: never; Returns: boolean }
     }
     Enums: {
-      app_role: "admin" | "moderator" | "user" | "client" | "super_admin"
+      app_role:
+        | "admin"
+        | "moderator"
+        | "user"
+        | "client"
+        | "super_admin"
+        | "visitor"
       client_status: "tentante" | "gestante" | "lactante" | "outro"
       expense_category:
         | "social_media"
@@ -2036,7 +2042,14 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "moderator", "user", "client", "super_admin"],
+      app_role: [
+        "admin",
+        "moderator",
+        "user",
+        "client",
+        "super_admin",
+        "visitor",
+      ],
       client_status: ["tentante", "gestante", "lactante", "outro"],
       expense_category: [
         "social_media",
