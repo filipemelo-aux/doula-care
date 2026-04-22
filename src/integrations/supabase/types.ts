@@ -1988,6 +1988,29 @@ export type Database = {
           organization_id: string
         }[]
       }
+      get_org_match_requests: {
+        Args: never
+        Returns: {
+          client_city: string
+          client_dpp: string
+          client_full_name: string
+          client_phone: string
+          client_preferred_name: string
+          client_pregnancy_weeks: number
+          client_state: string
+          client_status: string
+          created_at: string
+          id: string
+          message: string
+          organization_id: string
+          plan_name: string
+          plan_setting_id: string
+          plan_value: number
+          status: string
+          visitor_client_id: string
+          visitor_user_id: string
+        }[]
+      }
       get_plan_by_id: {
         Args: { p_plan_id: string }
         Returns: {
