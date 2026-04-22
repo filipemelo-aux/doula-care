@@ -571,28 +571,6 @@ export default function SuperAdminDashboard() {
       </Card>
       <Card>
         <CardContent className="p-4 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-emerald-500/15 flex items-center justify-center">
-            <Smartphone className="h-5 w-5 text-emerald-600" />
-          </div>
-          <div>
-            <p className="text-2xl font-bold text-foreground">{platformCounts.android}</p>
-            <p className="text-[11px] text-muted-foreground leading-tight">Android</p>
-          </div>
-        </CardContent>
-      </Card>
-      <Card>
-        <CardContent className="p-4 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-slate-500/15 flex items-center justify-center">
-            <Apple className="h-5 w-5 text-slate-600" />
-          </div>
-          <div>
-            <p className="text-2xl font-bold text-foreground">{platformCounts.ios}</p>
-            <p className="text-[11px] text-muted-foreground leading-tight">iOS</p>
-          </div>
-        </CardContent>
-      </Card>
-      <Card>
-        <CardContent className="p-4 flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-success/15 flex items-center justify-center">
             <Users className="h-5 w-5 text-success" />
           </div>
