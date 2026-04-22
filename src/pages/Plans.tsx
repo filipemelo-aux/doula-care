@@ -384,8 +384,28 @@ export default function Plans() {
                 !isActive ? "opacity-60" : ""
               } card-glass`}
             >
-              {/* Status Badge */}
-              <div className="absolute top-3 right-3 flex items-center gap-2">
+              {/* Status Badge + Reorder */}
+              <div className="absolute top-3 right-3 flex items-center gap-1">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7"
+                  onClick={() => handleMove(planIndex, -1)}
+                  disabled={planIndex === 0 || reorderMutation.isPending}
+                  title="Mover para cima"
+                >
+                  <ArrowUp className="w-3.5 h-3.5" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7"
+                  onClick={() => handleMove(planIndex, 1)}
+                  disabled={planIndex === (plans?.length ?? 0) - 1 || reorderMutation.isPending}
+                  title="Mover para baixo"
+                >
+                  <ArrowDown className="w-3.5 h-3.5" />
+                </Button>
                 <Badge
                   variant="outline"
                   className={isActive ? "bg-success/10 text-success" : "bg-muted text-muted-foreground"}
