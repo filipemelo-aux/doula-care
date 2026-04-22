@@ -60,6 +60,8 @@ export default function VisitorDashboard() {
   const queryClient = useQueryClient();
   const [selectedDoula, setSelectedDoula] = useState<PublicDoula | null>(null);
   const [search, setSearch] = useState("");
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [viewMode, setViewMode] = useState<"list" | "map">("list");
 
   // Visitor's stored coords
   const visitorLat = (client as any)?.visitor_latitude ?? null;
@@ -90,7 +92,6 @@ export default function VisitorDashboard() {
     },
   });
 
-  // If approved, the user role changed → reload to enter as client
   useEffect(() => {
     if (activeRequest?.status === "approved") {
       toast.success("Sua doula aprovou seu vínculo!", { description: "Entrando na sua área..." });
@@ -108,7 +109,6 @@ export default function VisitorDashboard() {
     );
   }, [doulas, search]);
 
-  // Sort: same city first, then same state, then rest
   const sortedDoulas = useMemo(() => {
     const cityNorm = (client as any)?.city?.toLowerCase() || "";
     const stateNorm = (client as any)?.state?.toUpperCase() || "";
@@ -125,91 +125,202 @@ export default function VisitorDashboard() {
   const doulasOnMap = sortedDoulas.filter(d => d.latitude && d.longitude);
   const defaultCenter: [number, number] = visitorLat && visitorLng
     ? [Number(visitorLat), Number(visitorLng)]
-    : [-14.235, -51.9253]; // Brasil
+    : [-14.235, -51.9253];
+
+  const sameCityCount = useMemo(() => {
+    const cityNorm = (client as any)?.city?.toLowerCase() || "";
+    if (!cityNorm) return 0;
+    return doulas.filter(d => (d.city || "").toLowerCase() === cityNorm).length;
+  }, [doulas, client]);
 
   return (
-    <div className="min-h-[100dvh] safe-area-top safe-area-bottom bg-gradient-to-br from-background via-background to-primary/5">
-      {/* Header */}
-      <header className="sticky top-0 z-20 bg-background/85 backdrop-blur-md border-b border-border/50 shrink-0">
-        <div className="container max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-9 h-9 rounded-[40%] bg-[#FFF5EE] overflow-hidden">
-              <img src={logo} alt="Doula Care" className="w-full h-full object-cover mix-blend-multiply scale-[1.15]" />
-            </div>
-            <div>
-              <p className="font-display font-semibold text-sm leading-tight">Doula Care</p>
-              <p className="text-[10px] text-muted-foreground leading-tight">Olá, {(client as any)?.preferred_name || (client as any)?.full_name?.split(" ")[0] || "visitante"} 💗</p>
-            </div>
+    <div className="h-[100dvh] flex flex-col safe-area-top safe-area-bottom bg-gradient-to-br from-background via-background to-primary/5 overflow-hidden">
+      {/* Header padronizado h-14 */}
+      <header className="h-14 shrink-0 flex items-center justify-between px-4 bg-card/95 backdrop-blur-sm z-40 border-b border-border/30">
+        <div className="flex items-center gap-2 min-w-0">
+          <div className="w-9 h-9 rounded-[40%] bg-[#FFF5EE] overflow-hidden shrink-0">
+            <img src={logo} alt="Doula Care" className="w-full h-full object-cover mix-blend-multiply scale-[1.15]" />
           </div>
-          <Button variant="ghost" size="sm" onClick={signOut}>
-            <LogOut className="h-4 w-4 mr-1" /> Sair
-          </Button>
+          <div className="min-w-0">
+            <p className="font-display font-semibold text-sm leading-tight truncate">Doula Care</p>
+            <p className="text-[10px] text-muted-foreground leading-tight truncate">
+              Olá, {(client as any)?.preferred_name || (client as any)?.full_name?.split(" ")[0] || "visitante"} 💗
+            </p>
+          </div>
         </div>
+        <Button variant="ghost" size="sm" onClick={signOut}>
+          <LogOut className="h-4 w-4 mr-1" /> Sair
+        </Button>
       </header>
 
-      <main className="container max-w-6xl mx-auto px-4 py-4 space-y-4">
-        {/* Pending request banner */}
-        {activeRequest?.status === "pending" && (
-          <Card className="border-amber-300/40 bg-amber-50/40 dark:bg-amber-950/20">
-            <CardContent className="p-4 flex items-start gap-3">
-              <Clock className="h-5 w-5 text-amber-600 mt-0.5 shrink-0" />
-              <div className="flex-1 min-w-0">
-                <p className="font-medium text-sm">Aguardando resposta da doula</p>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  Você solicitou o plano <strong>{activeRequest.plan_name}</strong> com{" "}
-                  <strong>{activeRequest.organizations?.nome_exibicao || activeRequest.organizations?.name}</strong>.
-                  Assim que ela responder, você será notificada.
-                </p>
+      <main className="flex-1 overflow-y-auto">
+        <div className="container max-w-6xl mx-auto px-4 py-4 space-y-4">
+          {activeRequest?.status === "pending" && (
+            <Card className="border-amber-300/40 bg-amber-50/40 dark:bg-amber-950/20">
+              <CardContent className="p-4 flex items-start gap-3">
+                <Clock className="h-5 w-5 text-amber-600 mt-0.5 shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-sm">Aguardando resposta da doula</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Você solicitou o plano <strong>{activeRequest.plan_name}</strong> com{" "}
+                    <strong>{activeRequest.organizations?.nome_exibicao || activeRequest.organizations?.name}</strong>.
+                    Assim que ela responder, você será notificada.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+          {activeRequest?.status === "rejected" && (
+            <Card className="border-destructive/40 bg-destructive/5">
+              <CardContent className="p-4 flex items-start gap-3">
+                <XCircle className="h-5 w-5 text-destructive mt-0.5 shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-sm">Solicitação anterior recusada</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Sem problemas — escolha outra doula abaixo para enviar uma nova solicitação.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Hero CTA — busca amigável */}
+          <Card className="border-primary/20 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent overflow-hidden">
+            <CardContent className="p-5 sm:p-6 space-y-4">
+              <div className="flex items-start gap-3">
+                <div className="h-11 w-11 rounded-full bg-primary/15 flex items-center justify-center shrink-0">
+                  <Heart className="h-5 w-5 text-primary" fill="currentColor" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-display text-base sm:text-lg font-semibold">Está precisando de uma doula?</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground mt-1">
+                    Encontre profissionais perto de você, conheça os planos e solicite o vínculo.
+                    {sameCityCount > 0 && <> Já temos <strong className="text-foreground">{sameCityCount}</strong> doula{sameCityCount > 1 ? "s" : ""} na sua cidade.</>}
+                  </p>
+                </div>
+              </div>
+              <div className="flex flex-col sm:flex-row gap-2">
+                <Button
+                  size="lg"
+                  className="flex-1 h-11"
+                  onClick={() => { setViewMode("list"); setSearchOpen(true); }}
+                  disabled={activeRequest?.status === "pending"}
+                >
+                  <Search className="h-4 w-4 mr-2" /> Encontrar uma doula
+                </Button>
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="h-11"
+                  onClick={() => { setViewMode("map"); setSearchOpen(true); }}
+                  disabled={activeRequest?.status === "pending"}
+                >
+                  <MapPin className="h-4 w-4 mr-2" /> Ver no mapa
+                </Button>
               </div>
             </CardContent>
           </Card>
-        )}
-        {activeRequest?.status === "rejected" && (
-          <Card className="border-destructive/40 bg-destructive/5">
-            <CardContent className="p-4 flex items-start gap-3">
-              <XCircle className="h-5 w-5 text-destructive mt-0.5 shrink-0" />
-              <div className="flex-1 min-w-0">
-                <p className="font-medium text-sm">Solicitação anterior recusada</p>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  Sem problemas — escolha outra doula abaixo para enviar uma nova solicitação.
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        )}
 
-        {/* CTA card */}
-        <Card className="border-primary/20 bg-gradient-to-br from-primary/8 via-primary/4 to-transparent">
-          <CardContent className="p-5 flex items-start gap-4">
-            <div className="h-11 w-11 rounded-full bg-primary/15 flex items-center justify-center shrink-0">
-              <Heart className="h-5 w-5 text-primary" fill="currentColor" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="font-display text-base font-semibold">Está precisando de uma doula?</p>
-              <p className="text-xs text-muted-foreground mt-1">
-                Encontre profissionais perto de você no mapa abaixo, conheça os planos e solicite o vínculo.
-                Após a aprovação, você passa a ter acompanhamento completo.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Map + list */}
-        <div className="grid grid-cols-1 lg:grid-cols-[1.2fr_1fr] gap-4">
-          <Card className="overflow-hidden">
+          {/* Como funciona */}
+          <Card>
             <CardHeader className="py-3">
-              <div className="flex items-center gap-2">
-                <MapPin className="h-4 w-4 text-primary" />
-                <CardTitle className="text-sm">Doulas no mapa</CardTitle>
-              </div>
+              <CardTitle className="text-sm flex items-center gap-2">
+                <Sparkles className="h-4 w-4 text-primary" /> Como funciona
+              </CardTitle>
             </CardHeader>
-            <CardContent className="p-0">
-              <div className="h-[360px] w-full">
+            <CardContent className="pt-0 pb-4 px-4">
+              <ol className="space-y-2 text-xs sm:text-sm text-muted-foreground">
+                <li className="flex gap-2"><span className="font-semibold text-primary">1.</span> Escolha uma doula próxima a você.</li>
+                <li className="flex gap-2"><span className="font-semibold text-primary">2.</span> Veja os planos oferecidos por ela.</li>
+                <li className="flex gap-2"><span className="font-semibold text-primary">3.</span> Solicite o vínculo — ela responde em breve.</li>
+                <li className="flex gap-2"><span className="font-semibold text-primary">4.</span> Aprovado? Você passa a ter acompanhamento completo. 💗</li>
+              </ol>
+            </CardContent>
+          </Card>
+        </div>
+      </main>
+
+      {/* Modal de busca: lista + mapa em abas */}
+      <Dialog open={searchOpen} onOpenChange={setSearchOpen}>
+        <DialogContent className="max-w-3xl p-0 overflow-hidden gap-0 max-h-[90dvh] flex flex-col">
+          <DialogHeader className="px-4 py-3 border-b border-border/40 shrink-0">
+            <DialogTitle className="text-base flex items-center gap-2">
+              <Search className="h-4 w-4 text-primary" /> Encontrar uma doula
+            </DialogTitle>
+            <DialogDescription className="text-xs">
+              {sortedDoulas.length} profissiona{sortedDoulas.length === 1 ? "l" : "is"} disponíve{sortedDoulas.length === 1 ? "l" : "is"}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="px-4 py-3 space-y-3 border-b border-border/40 shrink-0">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Buscar por nome ou cidade"
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                className="pl-9 input-field h-10"
+              />
+            </div>
+            <div className="flex gap-1 p-1 bg-muted/60 rounded-lg w-fit">
+              <button
+                onClick={() => setViewMode("list")}
+                className={cn(
+                  "px-3 py-1.5 text-xs font-medium rounded-md transition-colors",
+                  viewMode === "list" ? "bg-background shadow-sm" : "text-muted-foreground"
+                )}
+              >
+                Lista
+              </button>
+              <button
+                onClick={() => setViewMode("map")}
+                className={cn(
+                  "px-3 py-1.5 text-xs font-medium rounded-md transition-colors flex items-center gap-1",
+                  viewMode === "map" ? "bg-background shadow-sm" : "text-muted-foreground"
+                )}
+              >
+                <MapPin className="h-3 w-3" /> Mapa
+              </button>
+            </div>
+          </div>
+
+          <div className="flex-1 overflow-hidden min-h-[300px]">
+            {viewMode === "list" ? (
+              <div className="h-full overflow-y-auto p-3 space-y-2">
+                {loadingDoulas ? (
+                  <div className="flex justify-center py-10"><Loader2 className="h-5 w-5 animate-spin text-primary" /></div>
+                ) : sortedDoulas.length === 0 ? (
+                  <p className="text-sm text-muted-foreground text-center py-10">Nenhuma doula encontrada.</p>
+                ) : (
+                  sortedDoulas.map(d => (
+                    <button
+                      key={d.id}
+                      onClick={() => { setSelectedDoula(d); setSearchOpen(false); }}
+                      disabled={activeRequest?.status === "pending"}
+                      className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-muted/60 transition-colors text-left disabled:opacity-50 disabled:cursor-not-allowed border border-border/40"
+                    >
+                      <div className="h-11 w-11 rounded-full bg-muted overflow-hidden flex items-center justify-center shrink-0">
+                        {d.logo_url ? (
+                          <img src={d.logo_url} alt={d.name} className="w-full h-full object-cover" />
+                        ) : (
+                          <Sparkles className="h-4 w-4 text-muted-foreground" />
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">{d.nome_exibicao || d.name}</p>
+                        <p className="text-[11px] text-muted-foreground truncate">
+                          <MapPin className="inline h-3 w-3 mr-0.5" />
+                          {[d.city, d.state].filter(Boolean).join(" - ") || "Localização não informada"}
+                        </p>
+                      </div>
+                    </button>
+                  ))
+                )}
+              </div>
+            ) : (
+              <div className="h-full w-full">
                 <MapContainer center={defaultCenter} zoom={visitorLat ? 11 : 4} className="h-full w-full" style={{ background: "hsl(var(--muted))" }}>
-                  <TileLayer
-                    attribution='&copy; OpenStreetMap'
-                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                  />
+                  <TileLayer attribution='&copy; OpenStreetMap' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
                   <FlyToVisitor lat={visitorLat ? Number(visitorLat) : null} lng={visitorLng ? Number(visitorLng) : null} />
                   {visitorLat && visitorLng && (
                     <Marker position={[Number(visitorLat), Number(visitorLng)]}>
@@ -220,13 +331,13 @@ export default function VisitorDashboard() {
                     <Marker
                       key={d.id}
                       position={[Number(d.latitude), Number(d.longitude)]}
-                      eventHandlers={{ click: () => setSelectedDoula(d) }}
+                      eventHandlers={{ click: () => { setSelectedDoula(d); setSearchOpen(false); } }}
                     >
                       <Popup>
                         <div className="text-sm">
                           <strong>{d.nome_exibicao || d.name}</strong>
                           <p className="text-xs text-muted-foreground">{[d.city, d.state].filter(Boolean).join(" - ")}</p>
-                          <button className="text-primary text-xs underline mt-1" onClick={() => setSelectedDoula(d)}>
+                          <button className="text-primary text-xs underline mt-1" onClick={() => { setSelectedDoula(d); setSearchOpen(false); }}>
                             Ver planos
                           </button>
                         </div>
@@ -235,58 +346,10 @@ export default function VisitorDashboard() {
                   ))}
                 </MapContainer>
               </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="py-3 space-y-3">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-sm">Doulas disponíveis ({sortedDoulas.length})</CardTitle>
-              </div>
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Buscar por nome ou cidade"
-                  value={search}
-                  onChange={e => setSearch(e.target.value)}
-                  className="pl-9 input-field h-9"
-                />
-              </div>
-            </CardHeader>
-            <CardContent className="p-3 max-h-[320px] overflow-y-auto space-y-2">
-              {loadingDoulas ? (
-                <div className="flex justify-center py-6"><Loader2 className="h-5 w-5 animate-spin text-primary" /></div>
-              ) : sortedDoulas.length === 0 ? (
-                <p className="text-sm text-muted-foreground text-center py-6">Nenhuma doula encontrada.</p>
-              ) : (
-                sortedDoulas.map(d => (
-                  <button
-                    key={d.id}
-                    onClick={() => setSelectedDoula(d)}
-                    disabled={activeRequest?.status === "pending"}
-                    className="w-full flex items-center gap-3 p-2.5 rounded-lg hover:bg-muted/60 transition-colors text-left disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <div className="h-10 w-10 rounded-full bg-muted overflow-hidden flex items-center justify-center shrink-0">
-                      {d.logo_url ? (
-                        <img src={d.logo_url} alt={d.name} className="w-full h-full object-cover" />
-                      ) : (
-                        <Sparkles className="h-4 w-4 text-muted-foreground" />
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">{d.nome_exibicao || d.name}</p>
-                      <p className="text-[11px] text-muted-foreground truncate">
-                        <MapPin className="inline h-3 w-3 mr-0.5" />
-                        {[d.city, d.state].filter(Boolean).join(" - ") || "Localização não informada"}
-                      </p>
-                    </div>
-                  </button>
-                ))
-              )}
-            </CardContent>
-          </Card>
-        </div>
-      </main>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <DoulaPlansDialog
         doula={selectedDoula}
