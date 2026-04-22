@@ -359,18 +359,14 @@ export default function SuperAdminDashboard() {
             <Badge className={cn("h-5 px-2 text-[10px] font-medium rounded-full", planBadgeStyles[org.plan])}>
               {org.plan.charAt(0).toUpperCase() + org.plan.slice(1)}
             </Badge>
-            <Badge
-              className={cn(
-                "h-5 px-2 text-[10px] font-medium rounded-full inline-flex items-center gap-1",
-                org.status === "ativo"
-                  ? "bg-success/15 text-success"
-                  : "bg-destructive/15 text-destructive"
-              )}
-            >
-              <span className={cn("h-1.5 w-1.5 rounded-full", org.status === "ativo" ? "bg-success" : "bg-destructive")} />
-              {org.status === "ativo" ? "Ativo" : "Suspenso"}
-            </Badge>
-            <PromoTriggerButton orgId={org.id} orgName={org.name} />
+            {org.status === "suspenso" ? (
+              <Badge className="h-5 px-2 text-[10px] font-medium rounded-full inline-flex items-center gap-1 bg-destructive/15 text-destructive">
+                <span className="h-1.5 w-1.5 rounded-full bg-destructive" />
+                Suspenso
+              </Badge>
+            ) : (
+              <PromoTriggerButton orgId={org.id} orgName={org.name} />
+            )}
           </div>
 
           {/* Métricas em pills uniformes */}
