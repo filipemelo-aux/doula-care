@@ -406,17 +406,32 @@ export default function SuperAdminDashboard() {
                 <SelectItem value="premium">Premium</SelectItem>
               </SelectContent>
             </Select>
-            {org.status === "ativo" ? (
-              <Button variant="ghost" size="sm" className="h-8 text-xs bg-muted/50 hover:bg-muted" onClick={() => statusMutation.mutate({ orgId: org.id, status: "suspenso" })} disabled={statusMutation.isPending}>
-                <Ban className="h-3.5 w-3.5 mr-1" />
-                Suspender
-              </Button>
-            ) : (
-              <Button variant="ghost" size="sm" className="h-8 text-xs bg-success/10 text-success hover:bg-success/15" onClick={() => statusMutation.mutate({ orgId: org.id, status: "ativo" })} disabled={statusMutation.isPending}>
-                <CheckCircle className="h-3.5 w-3.5 mr-1" />
-                Ativar
-              </Button>
-            )}
+            <div className="flex items-center gap-1 rounded-lg bg-muted/30 p-0.5">
+              {org.status === "ativo" ? (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-foreground hover:bg-muted" onClick={() => statusMutation.mutate({ orgId: org.id, status: "suspenso" })} disabled={statusMutation.isPending}>
+                        <Ban className="h-3.5 w-3.5" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="top" className="text-xs">Suspender</TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              ) : (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button variant="ghost" size="icon" className="h-7 w-7 text-success hover:bg-success/15" onClick={() => statusMutation.mutate({ orgId: org.id, status: "ativo" })} disabled={statusMutation.isPending}>
+                        <CheckCircle className="h-3.5 w-3.5" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="top" className="text-xs">Ativar</TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
+              <PromoTriggerButton orgId={org.id} orgName={org.name} mode="actions" />
+            </div>
             <AlertDialog>
               <AlertDialogTrigger asChild>
                 <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive bg-destructive/5 hover:bg-destructive/10 flex-shrink-0" disabled={deleteMutation.isPending}>
