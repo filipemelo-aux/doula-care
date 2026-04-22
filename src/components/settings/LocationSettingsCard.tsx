@@ -186,6 +186,32 @@ export function LocationSettingsCard() {
           <Input value={neighborhood} onChange={(e) => setNeighborhood(e.target.value)} placeholder="Ex: Pinheiros" />
         </div>
 
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="space-y-2">
+            <Label className="flex items-center gap-1.5">
+              <MessageCircle className="h-3.5 w-3.5 text-[#25D366]" /> WhatsApp
+            </Label>
+            <Input
+              value={whatsapp}
+              onChange={(e) => setWhatsapp(e.target.value)}
+              mask="phone"
+              placeholder="(11) 91234-5678"
+            />
+            <p className="text-[11px] text-muted-foreground">Visível no perfil público para gestantes</p>
+          </div>
+          <div className="space-y-2">
+            <Label className="flex items-center gap-1.5">
+              <Instagram className="h-3.5 w-3.5 text-pink-500" /> Instagram
+            </Label>
+            <Input
+              value={instagram}
+              onChange={(e) => setInstagram(e.target.value.replace(/\s/g, ""))}
+              placeholder="seu_usuario"
+            />
+            <p className="text-[11px] text-muted-foreground">Sem o @ — só o nome de usuário</p>
+          </div>
+        </div>
+
         <div className="space-y-2">
           <Label>Regiões atendidas</Label>
           <div className="flex gap-2">
