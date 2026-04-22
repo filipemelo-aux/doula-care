@@ -350,7 +350,8 @@ export default function SuperAdminDashboard() {
   }
 
   const OrgCard = ({ org }: { org: OrgWithCounts }) => {
-    const initials = org.name
+    const displayName = (org.nome_exibicao && org.nome_exibicao.trim()) || org.name;
+    const initials = displayName
       .split(" ")
       .map((w) => w[0])
       .join("")
