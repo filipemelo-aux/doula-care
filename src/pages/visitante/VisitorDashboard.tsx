@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { VisitorLayout } from "@/components/visitante/VisitorLayout";
+import { GuestSignupPrompt } from "@/components/visitante/GuestSignupPrompt";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -27,16 +28,24 @@ import { ptBR } from "date-fns/locale";
 import { getLocalDate } from "@/lib/utils";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { getGuestProfile, type GuestProfile } from "@/lib/guestVisitor";
 
 export default function VisitorDashboard() {
   const { user, client } = useAuth();
   const navigate = useNavigate();
+  const isGuest = !user;
   const [clientData, setClientData] = useState<any>(null);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!isGuest);
+  const [signupPromptOpen, setSignupPromptOpen] = useState(false);
+  const [guestProfile, setGuestProfile] = useState<GuestProfile>(() => getGuestProfile());
 
   useEffect(() => {
-    if (!user) return;
+    if (!user) {
+      setGuestProfile(getGuestProfile());
+      setLoading(false);
+      return;
+    }
     (async () => {
       const { data } = await supabase
         .from("clients")
@@ -54,7 +63,7 @@ export default function VisitorDashboard() {
     })();
   }, [user]);
 
-  // Active match request (for status banners + reload on approval)
+  // Active match request (only for authenticated visitors)
   const { data: activeRequest } = useQuery({
     queryKey: ["my-match-request", user?.id],
     enabled: !!user?.id,
@@ -85,7 +94,6 @@ export default function VisitorDashboard() {
 
   useEffect(() => {
     if (activeRequest?.status === "approved" && !bannerDismissed) {
-      // Reload only once per approved request to refresh user role; respect dismissal
       const reloadKey = `match-approved-reloaded-${activeRequest.id}`;
       if (!localStorage.getItem(reloadKey)) {
         localStorage.setItem(reloadKey, "1");
@@ -95,9 +103,11 @@ export default function VisitorDashboard() {
     }
   }, [activeRequest?.status, activeRequest?.id, bannerDismissed]);
 
+  const effectiveData = isGuest ? guestProfile : clientData;
+
   const calculateGestationalAge = () => {
-    if (!clientData?.dpp) return null;
-    const dppDate = getLocalDate(clientData.dpp);
+    if (!effectiveData?.dpp) return null;
+    const dppDate = getLocalDate(effectiveData.dpp);
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const daysUntilDpp = differenceInDays(dppDate, today);
@@ -111,7 +121,18 @@ export default function VisitorDashboard() {
 
   const gestationalAge = calculateGestationalAge();
   const displayName =
-    (clientData as any)?.preferred_name || clientData?.full_name?.split(" ")[0] || "visitante";
+    (effectiveData as any)?.preferred_name ||
+    (effectiveData as any)?.full_name?.split(" ")[0] ||
+    "visitante";
+
+  const handleSearchDoula = () => {
+    if (isGuest) {
+      setSignupPromptOpen(true);
+      return;
+    }
+    if (activeRequest?.status === "pending") return;
+    navigate("/visitante/buscar");
+  };
 
   if (loading) {
     return (
@@ -126,7 +147,7 @@ export default function VisitorDashboard() {
   return (
     <VisitorLayout avatarUrl={avatarUrl} greetingName={displayName}>
       <div className="space-y-4 overflow-x-hidden">
-        {/* Greeting (estilo gestante) */}
+        {/* Greeting */}
         <div className="flex items-center gap-3">
           <Avatar className="w-10 h-10 shadow-md">
             <AvatarImage src={avatarUrl || undefined} alt="Perfil" className="object-cover" />
@@ -140,8 +161,24 @@ export default function VisitorDashboard() {
           </div>
         </div>
 
-        {/* Match request banners */}
-        {activeRequest?.status === "pending" && !bannerDismissed && (
+        {/* Guest welcome banner */}
+        {isGuest && (
+          <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-accent/5">
+            <CardContent className="p-4 flex items-start gap-3">
+              <Sparkles className="h-5 w-5 text-primary mt-0.5 shrink-0" />
+              <div className="flex-1 min-w-0">
+                <p className="font-medium text-sm">Bem-vinda à Doula Care 💗</p>
+                <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
+                  Você pode explorar livremente. Quando quiser encontrar uma doula perto de você,
+                  é só criar sua conta gratuita.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Match request banners (auth only) */}
+        {!isGuest && activeRequest?.status === "pending" && !bannerDismissed && (
           <Card className="border-amber-300/40 bg-amber-50/40 dark:bg-amber-950/20">
             <CardContent className="p-4 flex items-start gap-3">
               <Clock className="h-5 w-5 text-amber-600 mt-0.5 shrink-0" />
@@ -165,7 +202,7 @@ export default function VisitorDashboard() {
             </CardContent>
           </Card>
         )}
-        {activeRequest?.status === "approved" && !bannerDismissed && (
+        {!isGuest && activeRequest?.status === "approved" && !bannerDismissed && (
           <Card className="border-emerald-300/40 bg-emerald-50/40 dark:bg-emerald-950/20">
             <CardContent className="p-4 flex items-start gap-3">
               <CheckCircle2 className="h-5 w-5 text-emerald-600 mt-0.5 shrink-0" />
@@ -185,7 +222,7 @@ export default function VisitorDashboard() {
             </CardContent>
           </Card>
         )}
-        {activeRequest?.status === "rejected" && !bannerDismissed && (
+        {!isGuest && activeRequest?.status === "rejected" && !bannerDismissed && (
           <Card className="border-destructive/40 bg-destructive/5">
             <CardContent className="p-4 flex items-start gap-3">
               <XCircle className="h-5 w-5 text-destructive mt-0.5 shrink-0" />
@@ -228,7 +265,7 @@ export default function VisitorDashboard() {
                   <span className="text-muted-foreground">DPP:</span>
                 </div>
                 <span className="font-semibold">
-                  {clientData?.dpp && format(getLocalDate(clientData.dpp), "dd/MM/yyyy", { locale: ptBR })}
+                  {effectiveData?.dpp && format(getLocalDate(effectiveData.dpp), "dd/MM/yyyy", { locale: ptBR })}
                 </span>
               </div>
               {gestationalAge.daysUntilDpp > 0 && gestationalAge.daysUntilDpp <= 60 && (
@@ -242,7 +279,9 @@ export default function VisitorDashboard() {
         ) : (
           <Card>
             <CardContent className="p-4 text-sm text-muted-foreground">
-              Atualize sua DPP no perfil para ver o progresso da sua gestação.
+              {isGuest
+                ? "Preencha sua DPP no perfil para ver o progresso da sua gestação."
+                : "Atualize sua DPP no perfil para ver o progresso da sua gestação."}
             </CardContent>
           </Card>
         )}
@@ -283,8 +322,8 @@ export default function VisitorDashboard() {
             <Button
               size="lg"
               className="w-full h-11"
-              onClick={() => navigate("/visitante/buscar")}
-              disabled={activeRequest?.status === "pending"}
+              onClick={handleSearchDoula}
+              disabled={!isGuest && activeRequest?.status === "pending"}
             >
               <Search className="h-4 w-4 mr-2" /> Buscar uma doula
             </Button>
@@ -332,6 +371,11 @@ export default function VisitorDashboard() {
           </CardContent>
         </Card>
       </div>
+
+      <GuestSignupPrompt
+        open={signupPromptOpen}
+        onOpenChange={setSignupPromptOpen}
+      />
     </VisitorLayout>
   );
 }
