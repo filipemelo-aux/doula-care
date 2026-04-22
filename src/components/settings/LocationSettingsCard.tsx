@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
-import { MapPin, Loader2, Plus, X, Locate } from "lucide-react";
+import { MapPin, Loader2, Plus, X, Locate, MessageCircle, Instagram } from "lucide-react";
 import { toast } from "sonner";
 
 export function LocationSettingsCard() {
@@ -24,7 +24,7 @@ export function LocationSettingsCard() {
       if (!organizationId) return null;
       const { data, error } = await supabase
         .from("organizations")
-        .select("city,state,neighborhood,bio,service_areas,latitude,longitude,accepts_new_clients")
+        .select("city,state,neighborhood,bio,service_areas,latitude,longitude,accepts_new_clients,whatsapp,instagram")
         .eq("id", organizationId)
         .maybeSingle();
       if (error) throw error;
@@ -42,6 +42,8 @@ export function LocationSettingsCard() {
   const [latitude, setLatitude] = useState<number | null>(null);
   const [longitude, setLongitude] = useState<number | null>(null);
   const [acceptsNew, setAcceptsNew] = useState(true);
+  const [whatsapp, setWhatsapp] = useState("");
+  const [instagram, setInstagram] = useState("");
   const [geocoding, setGeocoding] = useState(false);
 
   useEffect(() => {
@@ -54,6 +56,8 @@ export function LocationSettingsCard() {
     setLatitude(org.latitude ?? null);
     setLongitude(org.longitude ?? null);
     setAcceptsNew(org.accepts_new_clients ?? true);
+    setWhatsapp(org.whatsapp || "");
+    setInstagram(org.instagram || "");
   }, [org]);
 
   const geocode = async () => {
@@ -103,6 +107,8 @@ export function LocationSettingsCard() {
           latitude,
           longitude,
           accepts_new_clients: acceptsNew,
+          whatsapp: whatsapp || null,
+          instagram: instagram ? instagram.replace(/^@/, "") : null,
         } as any)
         .eq("id", organizationId);
       if (error) throw error;
