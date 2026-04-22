@@ -19,6 +19,8 @@ import {
   ChevronRight,
   BookHeart,
   CircleUserRound,
+  X,
+  CheckCircle2,
 } from "lucide-react";
 import { format, differenceInDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
