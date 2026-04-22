@@ -71,33 +71,49 @@ export function MatchRequestsCard() {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-2">
-        {requests.map((r) => (
-          <div key={r.id} className="rounded-lg bg-background p-3 border border-border/50">
-            <div className="flex items-start justify-between gap-3">
-              <div className="min-w-0 flex-1">
-                <p className="font-medium text-sm">{r.clients?.preferred_name || r.clients?.full_name}</p>
-                <p className="text-[11px] text-muted-foreground">
-                  {[r.clients?.city, r.clients?.state].filter(Boolean).join(" - ")} · {r.clients?.phone}
-                </p>
-                <p className="text-xs mt-1">
-                  Plano: <strong>{r.plan_name}</strong> ·{" "}
-                  {Number(r.plan_value || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
-                </p>
-                <p className="text-[10px] text-muted-foreground mt-0.5">
-                  Solicitado {format(new Date(r.created_at), "dd 'de' MMM 'às' HH:mm", { locale: ptBR })}
-                </p>
+        {requests.map((r) => {
+          const name = getDisplayName(r.clients);
+          const phone = r.clients?.phone || "";
+          return (
+            <div key={r.id} className="rounded-lg bg-background p-3 border border-border/50">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0 flex-1">
+                  <p className="font-medium text-sm">{name}</p>
+                  <p className="text-[11px] text-muted-foreground">
+                    {[r.clients?.city, r.clients?.state].filter(Boolean).join(" - ")}
+                    {phone ? ` · ${phone}` : ""}
+                  </p>
+                  <p className="text-xs mt-1">
+                    Plano: <strong>{r.plan_name}</strong> ·{" "}
+                    {Number(r.plan_value || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+                  </p>
+                  <p className="text-[10px] text-muted-foreground mt-0.5">
+                    Solicitado {format(new Date(r.created_at), "dd 'de' MMM 'às' HH:mm", { locale: ptBR })}
+                  </p>
+                </div>
+                <div className="flex gap-1.5 shrink-0">
+                  <Button size="sm" variant="outline" onClick={() => handleReject(r.id)}>
+                    <X className="h-3.5 w-3.5" />
+                  </Button>
+                  <Button size="sm" onClick={() => handleApprove(r.id)}>
+                    <Check className="h-3.5 w-3.5 mr-1" /> Aprovar
+                  </Button>
+                </div>
               </div>
-              <div className="flex gap-1.5 shrink-0">
-                <Button size="sm" variant="outline" onClick={() => handleReject(r.id)}>
-                  <X className="h-3.5 w-3.5" />
+              {phone && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="mt-2 w-full h-8 text-xs gap-1.5 bg-[#25D366]/10 hover:bg-[#25D366]/20 border-[#25D366]/30 text-[#128C7E]"
+                  onClick={() => window.open(buildWhatsAppUrl(phone, name), "_blank")}
+                >
+                  <MessageCircle className="h-3.5 w-3.5" />
+                  Conversar no WhatsApp
                 </Button>
-                <Button size="sm" onClick={() => handleApprove(r.id)}>
-                  <Check className="h-3.5 w-3.5 mr-1" /> Aprovar
-                </Button>
-              </div>
+              )}
             </div>
-          </div>
-        ))}
+          );
+        })}
       </CardContent>
     </Card>
   );
