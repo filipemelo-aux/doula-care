@@ -3,10 +3,28 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { UserPlus, Check, X, Loader2 } from "lucide-react";
+import { UserPlus, Check, X, Loader2, MessageCircle } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+
+function getDisplayName(c: any): string {
+  const full = (c?.full_name || "").trim();
+  const pref = (c?.preferred_name || "").trim();
+  // Use full_name as primary; fall back to preferred only if full is empty
+  if (full.length >= 2) return full;
+  if (pref.length >= 2) return pref;
+  return full || pref || "Visitante";
+}
+
+function buildWhatsAppUrl(phone: string, name: string): string {
+  const digits = (phone || "").replace(/\D/g, "");
+  const intl = digits.startsWith("55") ? digits : `55${digits}`;
+  const msg = encodeURIComponent(
+    `Olá ${name.split(" ")[0] || ""}! 💗 Sou sua doula no Doula Care. Recebi sua solicitação de vínculo e gostaria de conversar com você.`
+  );
+  return `https://wa.me/${intl}?text=${msg}`;
+}
 
 export function MatchRequestsCard() {
   const qc = useQueryClient();
