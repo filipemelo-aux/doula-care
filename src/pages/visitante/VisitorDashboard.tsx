@@ -13,6 +13,7 @@ import { MapPin, Heart, Loader2, LogOut, Sparkles, Clock, CheckCircle, XCircle, 
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import logo from "@/assets/logo.png";
+import { cn } from "@/lib/utils";
 
 // Fix default marker icons (Leaflet+Vite)
 delete (L.Icon.Default.prototype as any)._getIconUrl;
