@@ -274,12 +274,50 @@ export default function VisitorDashboard() {
               )}
             </div>
           </div>
+        ) : isGuest ? (
+          <Card className="border-primary/20 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent overflow-hidden">
+            <CardContent className="p-5 space-y-4">
+              <div className="flex items-start gap-3">
+                <div className="h-11 w-11 rounded-full bg-primary/15 flex items-center justify-center shrink-0">
+                  <Baby className="h-5 w-5 text-primary" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-display font-semibold text-base">Quando seu bebê vai chegar? 💗</p>
+                  <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+                    Conta pra gente sua DPP (data provável do parto) e a gente acompanha cada semaninha com você.
+                  </p>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="guest-dpp" className="text-xs">Data provável do parto</Label>
+                <Input
+                  id="guest-dpp"
+                  type="date"
+                  value={guestProfile.dpp || ""}
+                  onChange={(e) => {
+                    const next = { ...guestProfile, dpp: e.target.value || null };
+                    setGuestProfile(next);
+                    saveGuestProfile(next);
+                    if (e.target.value) {
+                      toast.success("DPP salva! 💗", {
+                        description: "Agora você verá o progresso da sua gestação.",
+                        position: "top-center",
+                        duration: 2200,
+                      });
+                    }
+                  }}
+                  className="input-field h-11"
+                />
+                <p className="text-[11px] text-muted-foreground">
+                  Não sabe ao certo? Sem problemas, você pode ajustar depois no seu perfil.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
         ) : (
           <Card>
             <CardContent className="p-4 text-sm text-muted-foreground">
-              {isGuest
-                ? "Preencha sua DPP no perfil para ver o progresso da sua gestação."
-                : "Atualize sua DPP no perfil para ver o progresso da sua gestação."}
+              Atualize sua DPP no perfil para ver o progresso da sua gestação.
             </CardContent>
           </Card>
         )}
