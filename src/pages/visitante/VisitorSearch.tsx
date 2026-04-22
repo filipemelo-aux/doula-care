@@ -41,6 +41,7 @@ import {
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { normalize } from "@/lib/ibgeCities";
+import { GuestSignupPrompt } from "@/components/visitante/GuestSignupPrompt";
 
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -100,6 +101,7 @@ function FlyToVisitor({ lat, lng }: { lat: number | null; lng: number | null }) 
 
 export default function VisitorSearch() {
   const { user, client } = useAuth();
+  const isGuest = !user;
   const queryClient = useQueryClient();
   const [selectedDoula, setSelectedDoula] = useState<PublicDoula | null>(null);
   const [search, setSearch] = useState("");
@@ -173,7 +175,7 @@ export default function VisitorSearch() {
           </p>
         </div>
 
-        {activeRequest?.status === "pending" && (
+        {!isGuest && activeRequest?.status === "pending" && (
           <Card className="border-amber-300/40 bg-amber-50/40 dark:bg-amber-950/20">
             <CardContent className="p-3 flex items-start gap-2">
               <Clock className="h-4 w-4 text-amber-600 mt-0.5 shrink-0" />
@@ -231,7 +233,7 @@ export default function VisitorSearch() {
                 <button
                   key={d.id}
                   onClick={() => setSelectedDoula(d)}
-                  disabled={activeRequest?.status === "pending"}
+                  disabled={!isGuest && activeRequest?.status === "pending"}
                   className="w-full flex items-center gap-3 p-3 rounded-2xl bg-card shadow-card hover:shadow-[var(--shadow-card-hover)] transition-all text-left disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <div className="h-11 w-11 rounded-full bg-muted overflow-hidden flex items-center justify-center shrink-0">
@@ -306,7 +308,8 @@ export default function VisitorSearch() {
       <DoulaPlansDialog
         doula={selectedDoula}
         onClose={() => setSelectedDoula(null)}
-        canRequest={activeRequest?.status !== "pending"}
+        canRequest={isGuest || activeRequest?.status !== "pending"}
+        isGuest={isGuest}
         onRequested={() => {
           setSelectedDoula(null);
           queryClient.invalidateQueries({ queryKey: ["my-match-request"] });
@@ -320,16 +323,19 @@ function DoulaPlansDialog({
   doula,
   onClose,
   canRequest,
+  isGuest,
   onRequested,
 }: {
   doula: PublicDoula | null;
   onClose: () => void;
   canRequest: boolean;
+  isGuest: boolean;
   onRequested: () => void;
 }) {
   const [submitting, setSubmitting] = useState<string | null>(null);
   const [confirmPlan, setConfirmPlan] = useState<DoulaPlan | null>(null);
   const [successOpen, setSuccessOpen] = useState(false);
+  const [signupPromptOpen, setSignupPromptOpen] = useState(false);
   const open = !!doula;
 
   const { data: plans = [], isLoading } = useQuery({
@@ -458,7 +464,7 @@ function DoulaPlansDialog({
                     size="sm"
                     className="w-full"
                     disabled={!canRequest || submitting === p.id}
-                    onClick={() => setConfirmPlan(p)}
+                    onClick={() => (isGuest ? setSignupPromptOpen(true) : setConfirmPlan(p))}
                   >
                     {submitting === p.id ? (
                       <>
@@ -539,6 +545,12 @@ function DoulaPlansDialog({
           </div>
         </DialogContent>
       </Dialog>
+
+      <GuestSignupPrompt
+        open={signupPromptOpen}
+        onOpenChange={setSignupPromptOpen}
+        reason="Para enviar sua solicitação de plano e iniciar o vínculo com a doula, precisamos de um cadastro rapidinho. Assim ela consegue te conhecer e responder com carinho."
+      />
     </Dialog>
   );
 }
