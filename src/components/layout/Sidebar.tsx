@@ -21,6 +21,7 @@ import {
   Sparkles,
   Crown,
   Wallet,
+  MapPin,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -50,8 +51,9 @@ const navItems = [
       { to: "/relatorios", icon: FileText, label: "Relatórios" },
     ],
   },
-  { to: "/mensagens", icon: MessageCircle, label: "Mensagens", badgeKey: "messages" as const, bottomNav: true },
+  { to: "/localizacao", icon: MapPin, label: "Localização e Atendimento", bottomNav: true },
   { to: "/comunidade", icon: Users2, label: "Comunidade" },
+  { to: "/mensagens", icon: MessageCircle, label: "Mensagens", badgeKey: "messages" as const },
   { to: "/admin/assinatura", icon: Crown, label: "Assinatura" },
   { to: "/configuracoes", icon: Settings, label: "Configurações" },
 ];
