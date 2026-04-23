@@ -166,5 +166,6 @@ export default function VisitorWeekDetail() {
         }
       `}</style>
     </div>
+    </VisitorLayout>
   );
 }
