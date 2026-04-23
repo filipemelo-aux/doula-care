@@ -152,7 +152,7 @@ export function PregnancyHeroCarousel({ currentWeek }: PregnancyHeroCarouselProp
                 >
                   <button
                     onClick={() => {
-                      if (isActive) navigate("/visitante/gestacao");
+                      if (isActive) navigate(`/visitante/gestacao/semana/${w.week}`);
                       else emblaApi?.scrollTo(w.week - 1);
                     }}
                     className={cn(
@@ -160,7 +160,7 @@ export function PregnancyHeroCarousel({ currentWeek }: PregnancyHeroCarouselProp
                       "bg-gradient-to-br from-[hsl(20_60%_96%)] via-[hsl(15_70%_93%)] to-[hsl(10_60%_90%)]",
                       "dark:from-primary/15 dark:via-primary/10 dark:to-accent/10",
                       "shadow-[0_10px_30px_-12px_hsl(var(--primary)/0.35)]",
-                      "p-5 min-h-[260px] flex flex-col",
+                      "p-5 min-h-[320px] flex flex-col",
                     )}
                   >
                     {/* Top row: badge + fruit name */}
@@ -175,31 +175,38 @@ export function PregnancyHeroCarousel({ currentWeek }: PregnancyHeroCarouselProp
                       </div>
                       <div className="text-right max-w-[55%]">
                         <p className="text-[11px] text-foreground/70 leading-tight">
-                          Seu bebê está do tamanho de um
+                          Tamanho de um
                         </p>
-                        <p className="font-display font-bold text-2xl text-primary capitalize leading-tight mt-0.5 break-words">
+                        <p className="font-display font-bold text-xl text-primary capitalize leading-tight mt-0.5 break-words">
                           {w.fruit_name.split(" ")[0]}
                         </p>
                       </div>
                     </div>
 
-                    {/* Hero visual */}
-                    <div className="relative flex-1 flex items-center justify-center my-3 min-h-[110px]">
-                      <div
-                        className={cn(
-                          "text-[88px] leading-none select-none",
-                          isActive && "animate-[heroFloat_3s_ease-in-out_infinite]",
-                        )}
-                        aria-hidden
-                      >
-                        {w.fruit_emoji}
-                      </div>
+                    {/* Hero baby image */}
+                    <div className="relative flex-1 flex items-center justify-center my-2 min-h-[150px]">
+                      {w.baby_image ? (
+                        <img
+                          src={w.baby_image}
+                          alt={`Ilustração do bebê na ${w.week}ª semana ao lado de ${w.fruit_name}`}
+                          loading={isActive ? "eager" : "lazy"}
+                          className={cn(
+                            "w-full h-[180px] object-contain select-none pointer-events-none drop-shadow-[0_8px_20px_hsl(var(--primary)/0.25)]",
+                            isActive && "animate-[heroBreath_3s_ease-in-out_infinite]",
+                          )}
+                          draggable={false}
+                        />
+                      ) : (
+                        <div className="text-[88px] leading-none select-none" aria-hidden>
+                          {w.fruit_emoji}
+                        </div>
+                      )}
                       {/* soft glow */}
                       <div className="absolute inset-0 -z-10 bg-gradient-radial from-primary/15 via-transparent to-transparent blur-2xl" />
                     </div>
 
                     {/* Metrics */}
-                    <div className="flex items-center justify-around bg-background/70 backdrop-blur rounded-2xl px-3 py-2 mb-3">
+                    <div className="flex items-center justify-around bg-background/70 backdrop-blur rounded-2xl px-3 py-2 mb-2">
                       <div className="text-center">
                         <p className="font-display font-bold text-sm text-foreground">
                           {w.baby_size_cm}
@@ -220,7 +227,7 @@ export function PregnancyHeroCarousel({ currentWeek }: PregnancyHeroCarouselProp
                     </div>
 
                     {/* Emotional text */}
-                    <p className="text-xs text-foreground/80 text-center leading-relaxed line-clamp-3">
+                    <p className="text-xs text-foreground/80 text-center leading-relaxed line-clamp-2">
                       {w.description}
                     </p>
                   </button>
