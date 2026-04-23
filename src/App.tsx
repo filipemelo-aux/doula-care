@@ -35,6 +35,7 @@ import VisitorDiary from "./pages/visitante/VisitorDiary";
 import VisitorContractions from "./pages/visitante/VisitorContractions";
 import VisitorProfile from "./pages/visitante/VisitorProfile";
 import VisitorPregnancy from "./pages/visitante/VisitorPregnancy";
+import VisitorWeekDetail from "./pages/visitante/VisitorWeekDetail";
 
 import UpdatePrompt from "./components/pwa/UpdatePrompt";
 import { NotificationListenerProvider } from "./components/notifications/NotificationListenerProvider";
@@ -107,6 +108,7 @@ const App = () => (
             <Route path="/visitante/contracoes" element={<VisitorContractions />} />
             <Route path="/visitante/perfil" element={<VisitorProfile />} />
             <Route path="/visitante/gestacao" element={<VisitorPregnancy />} />
+            <Route path="/visitante/gestacao/semana/:week" element={<VisitorWeekDetail />} />
 
             {/* Client (Gestante) routes */}
             <Route
