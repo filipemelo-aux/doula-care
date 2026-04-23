@@ -1,6 +1,17 @@
 // Dados semanais da gestação (1-40). Conteúdo educativo e emocional para a visitante.
 // Tamanhos e pesos são aproximações médicas amplamente aceitas.
 
+// Importação de imagens — Vite resolve em URLs otimizadas
+const imageModules = import.meta.glob("@/assets/pregnancy/week-*.webp", {
+  eager: true,
+  import: "default",
+}) as Record<string, string>;
+
+function imageFor(week: number): string {
+  const key = `/src/assets/pregnancy/week-${String(week).padStart(2, "0")}.webp`;
+  return imageModules[key] ?? "";
+}
+
 export interface WeekInfo {
   week: number;
   fruit_name: string;
@@ -9,6 +20,7 @@ export interface WeekInfo {
   baby_weight: string;
   description: string;
   tip: string;
+  baby_image: string;
 }
 
 export const PREGNANCY_WEEKS: WeekInfo[] = [
