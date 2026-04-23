@@ -3,6 +3,7 @@ import { ArrowLeft, ChevronLeft, ChevronRight, Lightbulb, Ruler, Scale, Search }
 import { getWeekInfo } from "@/lib/pregnancyWeeks";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { VisitorLayout } from "@/components/visitante/VisitorLayout";
 
 export default function VisitorWeekDetail() {
   const { week: weekParam } = useParams<{ week: string }>();
@@ -16,6 +17,7 @@ export default function VisitorWeekDetail() {
   const goNext = () => week < 40 && navigate(`/visitante/gestacao/semana/${week + 1}`);
 
   return (
+    <VisitorLayout>
     <div className="min-h-full pb-8">
       {/* Top bar */}
       <div className="sticky top-0 z-10 bg-background/85 backdrop-blur-md border-b border-border/40">
