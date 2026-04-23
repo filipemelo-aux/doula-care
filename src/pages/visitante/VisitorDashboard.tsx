@@ -32,6 +32,7 @@ import { toast } from "sonner";
 import { getGuestProfile, setGuestProfile as saveGuestProfile, type GuestProfile } from "@/lib/guestVisitor";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PregnancyHeroCarousel } from "@/components/visitante/PregnancyHeroCarousel";
 
 export default function VisitorDashboard() {
   const { user, client } = useAuth();
@@ -158,6 +159,9 @@ export default function VisitorDashboard() {
   return (
     <VisitorLayout avatarUrl={avatarUrl} greetingName={displayName}>
       <div className="space-y-4 overflow-x-hidden">
+        {/* Premium pregnancy carousel — top of home */}
+        <PregnancyHeroCarousel currentWeek={gestationalAge?.weeks ?? null} />
+
         {/* Greeting */}
         <div className="flex items-center gap-3">
           <Avatar className="w-10 h-10 shadow-md">
