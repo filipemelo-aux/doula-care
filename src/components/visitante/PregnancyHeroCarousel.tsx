@@ -253,9 +253,9 @@ export function PregnancyHeroCarousel({ currentWeek }: PregnancyHeroCarouselProp
 
       {/* Floating animation keyframes */}
       <style>{`
-        @keyframes heroFloat {
+        @keyframes heroBreath {
           0%, 100% { transform: translateY(0) scale(1); }
-          50% { transform: translateY(-6px) scale(1.05); }
+          50% { transform: translateY(-4px) scale(1.05); }
         }
       `}</style>
     </div>
