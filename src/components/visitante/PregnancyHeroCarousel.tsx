@@ -173,14 +173,15 @@ export function PregnancyHeroCarousel({ currentWeek }: PregnancyHeroCarouselProp
                           semana
                         </p>
                       </div>
-                      <div className="text-right max-w-[55%]">
-                        <p className="text-[11px] text-foreground/70 leading-tight">
-                          Tamanho de um
+                      <div className="text-right max-w-[58%]">
+                        <p className="text-[10px] text-foreground/70 leading-tight">
+                          Seu bebê é do tamanho de um
                         </p>
-                        <p className="font-display font-bold text-xl text-primary capitalize leading-tight mt-0.5 break-words">
-                          {w.fruit_name.split(" ")[0]}
+                        <p className="font-display font-bold text-lg text-primary capitalize leading-tight mt-0.5 break-words">
+                          {w.fruit_name}
                         </p>
                       </div>
+
                     </div>
 
                     {/* Hero baby image */}
