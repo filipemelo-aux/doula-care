@@ -64,9 +64,13 @@ export const PREGNANCY_WEEKS: WeekInfo[] = [
   { week: 38, fruit_name: "alho-poró", fruit_emoji: "🌿", baby_size_cm: "49,8 cm", baby_weight: "3,08 kg", description: "Os pulmões estão prontos. O bebê está terminando os últimos detalhes.", tip: "Caminhe bastante — ajuda o bebê a encaixar." },
   { week: 39, fruit_name: "melancia pequena", fruit_emoji: "🍉", baby_size_cm: "50,7 cm", baby_weight: "3,29 kg", description: "Bebê a termo completo! Pronto para chegar ao mundo a qualquer momento.", tip: "Confie no seu corpo. Você nasceu para isso." },
   { week: 40, fruit_name: "melancia", fruit_emoji: "🍉", baby_size_cm: "51,2 cm", baby_weight: "3,46 kg", description: "É chegada a hora! Seu bebê está prontinho para conhecer o mundo e os seus braços.", tip: "Respire, confie e se entregue. O encontro está pertinho! 💗" },
-];
+].map((w) => ({ ...w, baby_image: imageFor(w.week) }));
 
 export function getWeekInfo(week: number): WeekInfo {
   const w = Math.max(1, Math.min(40, Math.round(week)));
   return PREGNANCY_WEEKS[w - 1];
+}
+
+export function getBabyImage(week: number): string {
+  return imageFor(Math.max(1, Math.min(40, Math.round(week))));
 }
