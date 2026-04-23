@@ -335,6 +335,25 @@ export default function VisitorDashboard() {
           </Card>
         )}
 
+        {/* Minha Gestação - Timeline semanal */}
+        <button
+          onClick={() => navigate("/visitante/gestacao")}
+          className="w-full text-left rounded-2xl bg-card shadow-card overflow-hidden hover:shadow-[var(--shadow-card-hover)] transition-all active:scale-[0.99]"
+        >
+          <div className="bg-gradient-to-br from-primary/15 via-accent/10 to-primary/5 p-4 flex items-center gap-3">
+            <div className="h-12 w-12 rounded-2xl bg-primary/15 flex items-center justify-center shrink-0 text-2xl">
+              🍓
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="font-display font-semibold text-base">Minha Gestação</p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Acompanhe semana a semana o tamanho e desenvolvimento do bebê.
+              </p>
+            </div>
+            <ChevronRight className="h-4 w-4 text-muted-foreground/60 shrink-0" />
+          </div>
+        </button>
+
         {/* Contractions card */}
         <button
           onClick={() => navigate("/visitante/contracoes")}
