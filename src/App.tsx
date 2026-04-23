@@ -85,6 +85,8 @@ const App = () => (
             <Route path="/suporte" element={<Support />} />
             <Route path="/marketing" element={<Marketing />} />
             <Route path="/portal" element={<Portal />} />
+            {/* Legacy/public entry routes */}
+            <Route path="/index" element={<Navigate to="/visitante" replace />} />
             {/* Legacy routes redirect to unified login */}
             <Route path="/" element={<Navigate to="/login" replace />} />
             <Route path="/assinatura" element={<LegacySubscriptionRedirect />} />
