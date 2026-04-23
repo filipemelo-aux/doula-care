@@ -12,16 +12,89 @@ function imageFor(week: number): string {
   return imageModules[key] ?? "";
 }
 
+export type Trimester = "1º trimestre" | "2º trimestre" | "3º trimestre";
+
 export interface WeekInfo {
   week: number;
+  trimester: Trimester;
   fruit_name: string;
   fruit_emoji: string;
   baby_size_cm: string;
   baby_weight: string;
+  /** Texto curto/emocional para o carrossel */
   description: string;
+  /** Texto longo/educativo para a página de detalhes */
+  full_description: string;
+  /** Tópicos de desenvolvimento do bebê nessa fase */
+  development: string[];
+  /** Dica curta */
   tip: string;
   baby_image?: string;
 }
+
+function trimesterFor(week: number): Trimester {
+  if (week <= 13) return "1º trimestre";
+  if (week <= 27) return "2º trimestre";
+  return "3º trimestre";
+}
+
+const DEVELOPMENT_BY_WEEK: Record<number, string[]> = {
+  1: ["Corpo se prepara para a ovulação", "Endométrio começa a se espessar", "Hormônios em ajuste"],
+  2: ["Ovulação acontece nesta semana", "Óvulo desce pelas trompas", "Janela fértil aberta"],
+  3: ["Fecundação ocorre", "Células começam a se multiplicar", "Início da viagem até o útero"],
+  4: ["Implantação no útero", "Formação do saco gestacional", "Início da produção de hCG"],
+  5: ["Tubo neural se forma", "Coração primitivo começa a bater", "Brotos dos braços aparecem"],
+  6: ["Coração já bate (~110 bpm)", "Olhos e ouvidos se formam", "Pequenos brotos de membros"],
+  7: ["Bracinhos e perninhas brotam", "Cérebro se desenvolve rapidamente", "Rosto começa a se desenhar"],
+  8: ["Dedinhos começam a se formar", "Movimentos espontâneos iniciam", "Órgãos internos em formação"],
+  9: ["Traços faciais ganham forma", "Cauda embrionária desaparece", "Aparência mais humana"],
+  10: ["Órgãos vitais formados", "Fim do período embrionário", "Bebê agora é chamado de feto"],
+  11: ["Abre e fecha as mãos", "Cabelinho e unhas surgem", "Genitália começa a se diferenciar"],
+  12: ["Reflexos ativos", "Rins produzem urina", "Enjoos costumam diminuir"],
+  13: ["Início do 2º trimestre", "Cordas vocais se formam", "Energia volta para a mãe"],
+  14: ["Faz caretas e boceja", "Suga o dedo", "Pele ainda translúcida"],
+  15: ["Escuta sua voz", "Ossinhos endurecem", "Movimentos mais coordenados"],
+  16: ["Primeiros movimentos perceptíveis", "Sistema nervoso amadurece", "Pode ouvir sons externos"],
+  17: ["Esqueleto endurecendo", "Treina engolir líquido amniótico", "Acumula primeira gordura"],
+  18: ["Audição funcionando", "Bocejos e soluços", "Sexo visível no ultrassom"],
+  19: ["Vernix caseoso recobre a pele", "Ciclos de sono e vigília", "Sentidos se desenvolvem"],
+  20: ["Metade do caminho! 🎉", "Reconhece sua voz", "Movimentos bem perceptíveis"],
+  21: ["Movimentos mais fortes", "Pode até ver a barriga mexer", "Sistema digestivo treina"],
+  22: ["Sobrancelhas e cílios formados", "Pele enrugada e avermelhada", "Cara de neném!"],
+  23: ["Pulmões em maturação", "Ganho de peso acelera", "Movimentos rítmicos"],
+  24: ["Marco da viabilidade fetal", "Rosto bem definido", "Audição muito apurada"],
+  25: ["Responde à voz dos pais", "Mãos e dedos coordenados", "Pele menos enrugada"],
+  26: ["Olhinhos começam a abrir", "Reage a luzes brilhantes", "Padrões de respiração"],
+  27: ["Início do 3º trimestre", "Treina sucção e soluço", "Cérebro em desenvolvimento intenso"],
+  28: ["Pisca os olhos", "Cílios bem definidos", "Movimentos mais visíveis"],
+  29: ["Músculos e pulmões amadurecem", "Acumula gordura corporal", "Cabeça cresce rapidamente"],
+  30: ["Já tem cabelinho", "Ganho de peso acelerado", "Líquido amniótico atinge o pico"],
+  31: ["Cinco sentidos ativos", "Enxerga, ouve, sente, prova e cheira", "Rotina de sono mais regular"],
+  32: ["Geralmente já está cabeça para baixo", "Unhas chegam à ponta dos dedos", "Pele mais lisa e rosada"],
+  33: ["Ossos endurecendo", "Crânio ainda flexível para nascer", "Sistema imune em ativação"],
+  34: ["Pulmões quase prontos", "Treino respiratório intenso", "Pesa o suficiente para nascer com segurança"],
+  35: ["Pouco espaço no útero", "Movimentos menores e mais fortes", "Encaixe começa a acontecer"],
+  36: ["Quase a termo", "Ganho de ~28 g por dia", "Anticorpos da mãe são transferidos"],
+  37: ["A termo precoce", "Pronto para nascer", "Pulmões maduros"],
+  38: ["Lanugem desaparece", "Vernix se reduz", "Encaixe na pelve"],
+  39: ["A termo completo", "Pode nascer a qualquer momento", "Reflexos prontos para a vida fora"],
+  40: ["Bebê pronto para nascer 💗", "Posição final na pelve", "Encontro tão esperado se aproxima"],
+};
+
+function fullDescriptionFor(week: number, base: string): string {
+  if (week <= 4) {
+    return `${base} Nesta fase muito inicial, o seu corpo está realizando ajustes hormonais profundos para receber e nutrir uma nova vida. Mesmo que você ainda não sinta grandes mudanças, muita coisa está acontecendo internamente — desde a preparação do endométrio até a possível implantação do embrião na parede uterina.`;
+  }
+  if (week <= 12) {
+    return `${base} Esta é uma fase de formação intensa: estruturas fundamentais como o tubo neural, o coração e os primeiros órgãos estão se desenhando. Cuide bem da sua alimentação, descanse, e mantenha o pré-natal em dia. Cada semana traz uma evolução visível.`;
+  }
+  if (week <= 27) {
+    return `${base} O segundo trimestre costuma ser o mais leve da gestação: os enjoos diminuem, a energia volta e a barriga começa a aparecer. Seu bebê já interage com o ambiente, ouvindo sua voz e respondendo a estímulos. É um ótimo momento para fortalecer o vínculo afetivo.`;
+  }
+  return `${base} A reta final exige preparo físico e emocional. Seu bebê está acumulando reservas, amadurecendo pulmões e se posicionando para o nascimento. Confie no seu corpo, esteja perto da sua doula e do seu plano de parto. O encontro está cada vez mais próximo. 💗`;
+}
+
+
 
 export const PREGNANCY_WEEKS: WeekInfo[] = [
   { week: 1, fruit_name: "semente de papoula", fruit_emoji: "🌱", baby_size_cm: "—", baby_weight: "—", description: "A jornada começa! Seu corpo está se preparando para uma das experiências mais transformadoras da vida.", tip: "Comece a tomar ácido fólico se ainda não toma — ele é essencial nas primeiras semanas." },
@@ -64,7 +137,13 @@ export const PREGNANCY_WEEKS: WeekInfo[] = [
   { week: 38, fruit_name: "alho-poró", fruit_emoji: "🌿", baby_size_cm: "49,8 cm", baby_weight: "3,08 kg", description: "Os pulmões estão prontos. O bebê está terminando os últimos detalhes.", tip: "Caminhe bastante — ajuda o bebê a encaixar." },
   { week: 39, fruit_name: "melancia pequena", fruit_emoji: "🍉", baby_size_cm: "50,7 cm", baby_weight: "3,29 kg", description: "Bebê a termo completo! Pronto para chegar ao mundo a qualquer momento.", tip: "Confie no seu corpo. Você nasceu para isso." },
   { week: 40, fruit_name: "melancia", fruit_emoji: "🍉", baby_size_cm: "51,2 cm", baby_weight: "3,46 kg", description: "É chegada a hora! Seu bebê está prontinho para conhecer o mundo e os seus braços.", tip: "Respire, confie e se entregue. O encontro está pertinho! 💗" },
-].map((w) => ({ ...w, baby_image: imageFor(w.week) }));
+].map((w) => ({
+  ...w,
+  trimester: trimesterFor(w.week),
+  full_description: fullDescriptionFor(w.week, w.description),
+  development: DEVELOPMENT_BY_WEEK[w.week] ?? [],
+  baby_image: imageFor(w.week),
+}));
 
 export function getWeekInfo(week: number): WeekInfo {
   const w = Math.max(1, Math.min(40, Math.round(week)));
