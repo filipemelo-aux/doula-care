@@ -20,7 +20,7 @@ export interface WeekInfo {
   baby_weight: string;
   description: string;
   tip: string;
-  baby_image: string;
+  baby_image?: string;
 }
 
 export const PREGNANCY_WEEKS: WeekInfo[] = [
