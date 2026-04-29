@@ -2,7 +2,7 @@
 
 // --- Cache versioning & cleanup ---
 const CACHE_PREFIX = "doula-care-";
-const CACHE_VERSION = "v1.2.2.2504.4";
+const CACHE_VERSION = "v1.2.2.2904.1";
 const CURRENT_CACHE = CACHE_PREFIX + CACHE_VERSION;
 
 self.addEventListener("activate", (event) => {
