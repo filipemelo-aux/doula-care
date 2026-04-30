@@ -144,6 +144,10 @@ export function LocationSettingsCard() {
   const save = useMutation({
     mutationFn: async () => {
       if (!organizationId) throw new Error("Organização não encontrada");
+      // Auto re-geocode if address changed since last lat/lng or coords missing
+      if (street && city && state && (!latitude || !longitude)) {
+        await geocodeFullAddress(true);
+      }
       const { error } = await supabase
         .from("organizations")
         .update({
@@ -157,6 +161,9 @@ export function LocationSettingsCard() {
           accepts_new_clients: acceptsNew,
           whatsapp: whatsapp || null,
           instagram: instagram ? instagram.replace(/^@/, "") : null,
+          postal_code: unmask(postalCode) || null,
+          street: street || null,
+          street_number: streetNumber || null,
         } as any)
         .eq("id", organizationId);
       if (error) throw error;
