@@ -16,6 +16,23 @@ export async function fetchAddressByCep(cep: string) {
   }
 }
 
+export async function fetchCoordinatesByCep(cep: string) {
+  const clean = cep.replace(/\D/g, "");
+  if (clean.length !== 8) return null;
+  try {
+    const res = await fetch(`https://brasilapi.com.br/api/cep/v2/${clean}`);
+    if (!res.ok) return null;
+    const data = await res.json();
+    const coordinates = data?.location?.coordinates;
+    const latitude = Number(coordinates?.latitude);
+    const longitude = Number(coordinates?.longitude);
+    if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) return null;
+    return { latitude, longitude };
+  } catch {
+    return null;
+  }
+}
+
 export function formatAddressWithNumber(
   data: { street: string; neighborhood: string; city: string; state: string },
   number: string
