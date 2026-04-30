@@ -157,7 +157,7 @@ export function PregnancyHeroCarousel({ currentWeek }: PregnancyHeroCarouselProp
                     }}
                     className={cn(
                       "w-full text-left rounded-3xl overflow-hidden relative",
-                      "bg-gradient-to-br from-[hsl(20_60%_96%)] via-[hsl(15_70%_93%)] to-[hsl(10_60%_90%)]",
+                      "bg-gradient-to-br from-secondary via-secondary/70 to-primary/15",
                       "dark:from-primary/15 dark:via-primary/10 dark:to-accent/10",
                       "shadow-[0_10px_30px_-12px_hsl(var(--primary)/0.35)]",
                       "p-5 min-h-[320px] flex flex-col",
