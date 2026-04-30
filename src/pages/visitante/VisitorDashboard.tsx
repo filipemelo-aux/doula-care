@@ -33,6 +33,9 @@ import { getGuestProfile, setGuestProfile as saveGuestProfile, type GuestProfile
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PregnancyHeroCarousel } from "@/components/visitante/PregnancyHeroCarousel";
+import { GuestIntroDialog } from "@/components/visitante/GuestIntroDialog";
+
+const GUEST_INTRO_KEY = "guest_intro_seen_v1";
 
 export default function VisitorDashboard() {
   const { user, client } = useAuth();
@@ -44,17 +47,26 @@ export default function VisitorDashboard() {
   const [signupPromptOpen, setSignupPromptOpen] = useState(false);
   const [guestProfile, setGuestProfile] = useState<GuestProfile>(() => getGuestProfile());
   const [welcomeOpen, setWelcomeOpen] = useState(false);
+  const [introOpen, setIntroOpen] = useState(false);
 
-  // Auto-open the welcome dialog on the first guest visit.
+  // Auto-open the interactive welcome on the first guest visit.
   useEffect(() => {
     if (!isGuest) return;
-    const g = getGuestProfile();
-    if (!g._welcomed && !g.full_name) {
-      // small delay so the dashboard renders behind it nicely
-      const t = setTimeout(() => setWelcomeOpen(true), 350);
-      return () => clearTimeout(t);
-    }
+    try {
+      const seen = localStorage.getItem(GUEST_INTRO_KEY);
+      if (!seen) {
+        const t = setTimeout(() => setIntroOpen(true), 400);
+        return () => clearTimeout(t);
+      }
+    } catch { /* noop */ }
   }, [isGuest]);
+
+  const handleCloseIntro = (open: boolean) => {
+    setIntroOpen(open);
+    if (!open) {
+      try { localStorage.setItem(GUEST_INTRO_KEY, "1"); } catch { /* noop */ }
+    }
+  };
 
   useEffect(() => {
     if (!user) {
@@ -159,10 +171,7 @@ export default function VisitorDashboard() {
   return (
     <VisitorLayout avatarUrl={avatarUrl} greetingName={displayName}>
       <div className="space-y-4 overflow-x-hidden">
-        {/* Premium pregnancy carousel — top of home */}
-        <PregnancyHeroCarousel currentWeek={gestationalAge?.weeks ?? null} />
-
-        {/* Greeting */}
+        {/* Greeting — top of body */}
         <div className="flex items-center gap-3">
           <Avatar className="w-10 h-10 shadow-md">
             <AvatarImage src={avatarUrl || undefined} alt="Perfil" className="object-cover" />
@@ -176,21 +185,8 @@ export default function VisitorDashboard() {
           </div>
         </div>
 
-        {/* Guest welcome banner */}
-        {isGuest && (
-          <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-accent/5">
-            <CardContent className="p-4 flex items-start gap-3">
-              <Sparkles className="h-5 w-5 text-primary mt-0.5 shrink-0" />
-              <div className="flex-1 min-w-0">
-                <p className="font-medium text-sm">Bem-vinda à Doula Care 💗</p>
-                <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
-                  Você pode explorar livremente. Quando quiser encontrar uma doula perto de você,
-                  é só criar sua conta gratuita.
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        )}
+        {/* Premium pregnancy carousel — pregnancy phase tracking */}
+        <PregnancyHeroCarousel currentWeek={gestationalAge?.weeks ?? null} />
 
         {/* Match request banners (auth only) */}
         {!isGuest && activeRequest?.status === "pending" && !bannerDismissed && (
@@ -339,47 +335,9 @@ export default function VisitorDashboard() {
           </Card>
         )}
 
-        {/* Minha Gestação - Timeline semanal */}
-        <button
-          onClick={() => navigate("/visitante/gestacao")}
-          className="w-full text-left rounded-2xl bg-card shadow-card overflow-hidden hover:shadow-[var(--shadow-card-hover)] transition-all active:scale-[0.99]"
-        >
-          <div className="bg-gradient-to-br from-primary/15 via-accent/10 to-primary/5 p-4 flex items-center gap-3">
-            <div className="h-12 w-12 rounded-2xl bg-primary/15 flex items-center justify-center shrink-0 text-2xl">
-              🍓
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="font-display font-semibold text-base">Minha Gestação</p>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                Acompanhe semana a semana o tamanho e desenvolvimento do bebê.
-              </p>
-            </div>
-            <ChevronRight className="h-4 w-4 text-muted-foreground/60 shrink-0" />
-          </div>
-        </button>
-
-        {/* Contractions card */}
-        <button
-          onClick={() => navigate("/visitante/contracoes")}
-          className="w-full text-left rounded-2xl bg-card shadow-card overflow-hidden hover:shadow-[var(--shadow-card-hover)] transition-all active:scale-[0.99]"
-        >
-          <div className="bg-gradient-to-br from-warning/10 to-warning/5 p-4 flex items-center gap-3">
-            <div className="h-12 w-12 rounded-2xl bg-warning/15 flex items-center justify-center shrink-0">
-              <Timer className="h-6 w-6 text-warning" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="font-display font-semibold text-base">Cronômetro de contrações</p>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                Comece a registrar e acompanhar suas contrações.
-              </p>
-            </div>
-            <ChevronRight className="h-4 w-4 text-muted-foreground/60 shrink-0" />
-          </div>
-        </button>
-
-        {/* CTA buscar doula */}
+        {/* CTA buscar doula + Como funciona (unificado) */}
         <Card className="border-primary/20 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent overflow-hidden">
-          <CardContent className="p-5 space-y-3">
+          <CardContent className="p-5 space-y-4">
             <div className="flex items-start gap-3">
               <div className="h-11 w-11 rounded-full bg-primary/15 flex items-center justify-center shrink-0">
                 <Heart className="h-5 w-5 text-primary" fill="currentColor" />
@@ -399,49 +357,49 @@ export default function VisitorDashboard() {
             >
               <Search className="h-4 w-4 mr-2" /> Buscar uma doula
             </Button>
+            <div className="flex items-start gap-2.5 rounded-xl bg-background/60 p-3 border border-border/40">
+              <Sparkles className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+              <div>
+                <p className="font-medium text-xs mb-0.5">Como funciona</p>
+                <p className="text-[11px] text-muted-foreground leading-relaxed">
+                  Encontre uma doula, escolha um plano e solicite o vínculo. Após aprovado, você passa
+                  a ter acompanhamento completo. 💗
+                </p>
+              </div>
+            </div>
           </CardContent>
         </Card>
 
-        {/* Quick links */}
-        <div className="grid grid-cols-2 gap-2">
+        {/* Quick links — unificados em uma linha */}
+        <div className="grid grid-cols-3 gap-2">
+          <button
+            onClick={() => navigate("/visitante/contracoes")}
+            className="rounded-2xl bg-card p-3 shadow-card flex flex-col items-center gap-1.5 text-center hover:shadow-[var(--shadow-card-hover)] transition-all active:scale-[0.97]"
+          >
+            <div className="w-10 h-10 rounded-xl bg-warning/10 flex items-center justify-center shrink-0">
+              <Timer className="h-5 w-5 text-warning" />
+            </div>
+            <p className="font-medium text-xs leading-tight">Contrações</p>
+          </button>
           <button
             onClick={() => navigate("/visitante/diario")}
-            className="rounded-2xl bg-card p-4 shadow-card flex items-center gap-3 text-left hover:shadow-[var(--shadow-card-hover)] transition-all active:scale-[0.98]"
+            className="rounded-2xl bg-card p-3 shadow-card flex flex-col items-center gap-1.5 text-center hover:shadow-[var(--shadow-card-hover)] transition-all active:scale-[0.97]"
           >
             <div className="w-10 h-10 rounded-xl bg-info/10 flex items-center justify-center shrink-0">
               <BookHeart className="h-5 w-5 text-info" />
             </div>
-            <div className="flex-1 min-w-0">
-              <p className="font-medium text-sm">Diário</p>
-              <p className="text-xs text-muted-foreground truncate">Seus momentos</p>
-            </div>
+            <p className="font-medium text-xs leading-tight">Diário</p>
           </button>
           <button
             onClick={() => navigate("/visitante/perfil")}
-            className="rounded-2xl bg-card p-4 shadow-card flex items-center gap-3 text-left hover:shadow-[var(--shadow-card-hover)] transition-all active:scale-[0.98]"
+            className="rounded-2xl bg-card p-3 shadow-card flex flex-col items-center gap-1.5 text-center hover:shadow-[var(--shadow-card-hover)] transition-all active:scale-[0.97]"
           >
             <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
               <CircleUserRound className="h-5 w-5 text-primary" />
             </div>
-            <div className="flex-1 min-w-0">
-              <p className="font-medium text-sm">Meu perfil</p>
-              <p className="text-xs text-muted-foreground truncate">Dados pessoais</p>
-            </div>
+            <p className="font-medium text-xs leading-tight">Meu perfil</p>
           </button>
         </div>
-
-        <Card>
-          <CardContent className="p-4 flex items-start gap-3">
-            <Sparkles className="h-5 w-5 text-primary mt-0.5 shrink-0" />
-            <div>
-              <p className="font-medium text-sm mb-1">Como funciona</p>
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                Encontre uma doula, escolha um plano e solicite o vínculo. Após aprovado, você passa a ter
-                acompanhamento completo. 💗
-              </p>
-            </div>
-          </CardContent>
-        </Card>
       </div>
 
       <GuestSignupPrompt
@@ -450,12 +408,22 @@ export default function VisitorDashboard() {
       />
 
       {isGuest && (
-        <GuestWelcomeDialog
-          open={welcomeOpen}
-          onOpenChange={setWelcomeOpen}
-          initial={guestProfile}
-          onSaved={(next) => setGuestProfile(next)}
-        />
+        <>
+          <GuestIntroDialog
+            open={introOpen}
+            onOpenChange={handleCloseIntro}
+            onFindDoula={() => {
+              handleCloseIntro(false);
+              navigate("/visitante/buscar");
+            }}
+          />
+          <GuestWelcomeDialog
+            open={welcomeOpen}
+            onOpenChange={setWelcomeOpen}
+            initial={guestProfile}
+            onSaved={(next) => setGuestProfile(next)}
+          />
+        </>
       )}
     </VisitorLayout>
   );
