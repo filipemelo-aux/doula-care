@@ -69,8 +69,8 @@ export function MatchRequestsCard() {
 
   const handleApprove = async (req: any) => {
     if (!contactedIds.has(req.id)) {
-      toast.warning("Converse pelo WhatsApp antes de aprovar", {
-        description: "Clique no botão do WhatsApp para iniciar a conversa com a gestante.",
+      toast.warning("Confirme primeiro o contato no WhatsApp", {
+        description: "Toque no botão do WhatsApp para abrir a conversa antes de fechar o vínculo.",
       });
       return;
     }
@@ -78,7 +78,7 @@ export function MatchRequestsCard() {
     const { error } = await supabase.rpc("approve_doula_match_request" as any, { p_request_id: req.id });
     if (error) {
       setApprovingId(null);
-      return toast.error("Erro ao aprovar", { description: error.message });
+      return toast.error("Erro ao fechar vínculo", { description: error.message });
     }
     // Buscar a cliente recém-vinculada
     const { data: clientData, error: fetchErr } = await supabase
@@ -91,10 +91,10 @@ export function MatchRequestsCard() {
     qc.invalidateQueries({ queryKey: ["clients"] });
 
     if (fetchErr || !clientData) {
-      toast.success("Vínculo aprovado!", { description: "Edite a cliente para finalizar o plano e pagamento." });
+      toast.success("Negócio fechado! 💗", { description: "Edite a cliente para finalizar o plano e pagamento." });
       return;
     }
-    toast.success("Vínculo aprovado! 💗", { description: "Confirme o plano e a forma de pagamento." });
+    toast.success("Negócio fechado! 💗", { description: "Agora confirme o plano e a forma de pagamento." });
     setEditClient(clientData as any);
     setEditOpen(true);
   };
@@ -121,7 +121,7 @@ export function MatchRequestsCard() {
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-base">
               <UserPlus className="h-4 w-4 text-primary" />
-              Novas solicitações de vínculo
+              Gestantes interessadas
               <Badge variant="secondary">{requests.length}</Badge>
             </CardTitle>
           </CardHeader>
@@ -159,20 +159,25 @@ export function MatchRequestsCard() {
                       onClick={() => handleWhatsAppClick(r.id, buildWhatsAppUrl(phone, name, planName))}
                     >
                       <MessageCircle className="h-3.5 w-3.5" />
-                      {hasContacted ? "Conversar novamente no WhatsApp" : "Conversar no WhatsApp primeiro"}
+                      {hasContacted ? "Conversar novamente no WhatsApp" : "Abrir conversa no WhatsApp"}
                     </Button>
                   )}
 
-                  {!hasContacted && (
+                  {hasContacted ? (
+                    <p className="mt-2 text-[11px] text-foreground/80 leading-relaxed bg-primary/5 rounded-md px-2 py-1.5">
+                      Fechou negócio com <strong>{name}</strong>? Toque em <strong>"Sim, fechei"</strong> para
+                      transformá-la em cliente e definir plano e pagamento.
+                    </p>
+                  ) : (
                     <p className="mt-2 text-[10.5px] text-muted-foreground flex items-center gap-1">
                       <Lock className="h-3 w-3" />
-                      Converse pelo WhatsApp antes de aprovar o vínculo.
+                      Converse pelo WhatsApp antes de confirmar o vínculo.
                     </p>
                   )}
 
                   <div className="flex gap-1.5 mt-2">
                     <Button size="sm" variant="outline" className="flex-1" onClick={() => handleReject(r.id)} disabled={isApproving}>
-                      <X className="h-3.5 w-3.5 mr-1" /> Recusar
+                      <X className="h-3.5 w-3.5 mr-1" /> Não fechei
                     </Button>
                     <Button
                       size="sm"
@@ -180,7 +185,7 @@ export function MatchRequestsCard() {
                       onClick={() => handleApprove(r)}
                       disabled={!hasContacted || isApproving}
                     >
-                      <Check className="h-3.5 w-3.5 mr-1" /> {isApproving ? "Aprovando..." : "Aprovar"}
+                      <Check className="h-3.5 w-3.5 mr-1" /> {isApproving ? "Vinculando..." : "Sim, fechei"}
                     </Button>
                   </div>
                 </div>

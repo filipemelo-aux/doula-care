@@ -388,6 +388,12 @@ function DoulaPlansDialog({
       return;
     }
     setSuccessOpen(true);
+
+    // Abre WhatsApp automaticamente com mensagem mencionando o plano
+    if (doula.whatsapp) {
+      const url = buildWhatsAppUrl(doula.whatsapp, doula.nome_exibicao || doula.name, plan.name);
+      setTimeout(() => window.open(url, "_blank"), 600);
+    }
   };
 
   const handleSuccessClose = () => {
@@ -518,8 +524,8 @@ function DoulaPlansDialog({
             <AlertDialogTitle>Confirmar escolha do plano</AlertDialogTitle>
             <AlertDialogDescription className="text-sm">
               Você está escolhendo o plano <strong>{confirmPlan?.name}</strong> com{" "}
-              <strong>{doula?.nome_exibicao || doula?.name}</strong>. Ao confirmar, ela receberá sua
-              solicitação e entrará em contato em breve.
+              <strong>{doula?.nome_exibicao || doula?.name}</strong>. Ao confirmar, abriremos o
+              <strong> WhatsApp</strong> para você iniciar a conversa com ela sobre este plano. 💗
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -547,11 +553,12 @@ function DoulaPlansDialog({
             </div>
             <div className="space-y-1.5">
               <DialogTitle className="text-xl font-bold text-primary-foreground">
-                Solicitação enviada! 💗
+                Tudo certo! 💗
               </DialogTitle>
               <DialogDescription className="text-sm text-primary-foreground/90 leading-relaxed">
+                Estamos abrindo o WhatsApp para você conversar com{" "}
                 <strong className="text-primary-foreground">{doula?.nome_exibicao || doula?.name}</strong>{" "}
-                recebeu sua solicitação e entrará em contato com você em breve.
+                sobre o plano escolhido. Se não abrir automaticamente, toque no botão do WhatsApp no perfil dela.
               </DialogDescription>
             </div>
             <Button
