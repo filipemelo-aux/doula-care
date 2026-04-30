@@ -121,7 +121,7 @@ export function MatchRequestsCard() {
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-base">
               <UserPlus className="h-4 w-4 text-primary" />
-              Novas solicitações de vínculo
+              Gestantes interessadas
               <Badge variant="secondary">{requests.length}</Badge>
             </CardTitle>
           </CardHeader>
