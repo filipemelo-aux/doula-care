@@ -27,7 +27,7 @@ export function LocationSettingsCard() {
       if (!organizationId) return null;
       const { data, error } = await supabase
         .from("organizations")
-        .select("city,state,neighborhood,bio,service_areas,latitude,longitude,accepts_new_clients,whatsapp,instagram")
+        .select("city,state,neighborhood,bio,service_areas,latitude,longitude,accepts_new_clients,whatsapp,instagram,postal_code,street,street_number")
         .eq("id", organizationId)
         .maybeSingle();
       if (error) throw error;
@@ -40,6 +40,17 @@ export function LocationSettingsCard() {
   const [state, setState] = useState("");
   const [neighborhood, setNeighborhood] = useState("");
   const [bio, setBio] = useState("");
+  const [areas, setAreas] = useState<string[]>([]);
+  const [newArea, setNewArea] = useState("");
+  const [latitude, setLatitude] = useState<number | null>(null);
+  const [longitude, setLongitude] = useState<number | null>(null);
+  const [acceptsNew, setAcceptsNew] = useState(true);
+  const [whatsapp, setWhatsapp] = useState("");
+  const [instagram, setInstagram] = useState("");
+  const [postalCode, setPostalCode] = useState("");
+  const [street, setStreet] = useState("");
+  const [streetNumber, setStreetNumber] = useState("");
+  const [cepLoading, setCepLoading] = useState(false);
   const [areas, setAreas] = useState<string[]>([]);
   const [newArea, setNewArea] = useState("");
   const [latitude, setLatitude] = useState<number | null>(null);
