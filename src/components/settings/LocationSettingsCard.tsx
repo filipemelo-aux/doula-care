@@ -295,11 +295,20 @@ export function LocationSettingsCard() {
         return;
       }
 
-      navigator.geolocation.getCurrentPosition(
+      const webPermission = await navigator.permissions?.query?.({ name: "geolocation" as PermissionName });
+      if (webPermission?.state === "denied") {
+        toast.error("Permissão de localização bloqueada", {
+          description: "Toque no cadeado do navegador e permita localização para este site.",
+        });
+        return;
+      }
+
+      await new Promise<void>((resolve) => navigator.geolocation.getCurrentPosition(
         (position) => {
           setLatitude(position.coords.latitude);
           setLongitude(position.coords.longitude);
           toast.success("Localização do dispositivo definida com sucesso!");
+          resolve();
         },
         (error) => {
           const blocked = error.code === error.PERMISSION_DENIED;
@@ -308,9 +317,10 @@ export function LocationSettingsCard() {
               ? "Toque no cadeado do navegador e permita localização para este site."
               : "Verifique se o GPS está ativo e tente novamente.",
           });
+          resolve();
         },
         { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 },
-      );
+      ));
     } catch {
       toast.error("Não foi possível solicitar a localização", {
         description: "Verifique se a permissão de localização está liberada no dispositivo.",
