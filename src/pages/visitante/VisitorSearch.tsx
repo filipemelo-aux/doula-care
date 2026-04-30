@@ -310,10 +310,10 @@ export default function VisitorSearch() {
                   <Popup>Você está aqui</Popup>
                 </Marker>
               )}
-              {doulasOnMap.map((d) => (
+              {mapMarkers.map(({ doula: d, lat, lng }) => (
                 <Marker
                   key={d.id}
-                  position={[Number(d.latitude), Number(d.longitude)]}
+                  position={[lat, lng]}
                 >
                   <Popup>
                     <div className="text-sm space-y-1.5 min-w-[160px]">
