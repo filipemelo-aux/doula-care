@@ -244,18 +244,8 @@ export function LocationSettingsCard() {
         return true;
       }
 
-      // 5) Aceita o melhor resultado disponível, mesmo que só tenha cidade+UF
-      // (evita aceitar um match completamente errado de outra cidade).
-      const fallback = best1 || best3;
-      if (fallback) {
-        setLatitude(parseFloat(fallback.hit.lat));
-        setLongitude(parseFloat(fallback.hit.lon));
-        if (!silent)
-          toast.success("Localização aproximada definida (CEP não georreferenciado).");
-        return true;
-      }
-
-      // 6) Último recurso: centro da cidade
+      // 5) Último recurso: centro da cidade. Não aceitamos resultado fraco por
+      // nome de rua, porque ele pode cair em outro trecho/rua homônima.
       const res4 = await fetch(
         `https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(
           `${city}, ${state}, Brasil`,
@@ -267,7 +257,7 @@ export function LocationSettingsCard() {
         setLatitude(parseFloat(data4[0].lat));
         setLongitude(parseFloat(data4[0].lon));
         if (!silent)
-          toast.success("Localização aproximada (centro da cidade) definida");
+          toast.success("Localização aproximada pela cidade definida");
         return true;
       }
 
