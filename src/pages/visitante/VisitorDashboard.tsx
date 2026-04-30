@@ -47,17 +47,26 @@ export default function VisitorDashboard() {
   const [signupPromptOpen, setSignupPromptOpen] = useState(false);
   const [guestProfile, setGuestProfile] = useState<GuestProfile>(() => getGuestProfile());
   const [welcomeOpen, setWelcomeOpen] = useState(false);
+  const [introOpen, setIntroOpen] = useState(false);
 
-  // Auto-open the welcome dialog on the first guest visit.
+  // Auto-open the interactive welcome on the first guest visit.
   useEffect(() => {
     if (!isGuest) return;
-    const g = getGuestProfile();
-    if (!g._welcomed && !g.full_name) {
-      // small delay so the dashboard renders behind it nicely
-      const t = setTimeout(() => setWelcomeOpen(true), 350);
-      return () => clearTimeout(t);
-    }
+    try {
+      const seen = localStorage.getItem(GUEST_INTRO_KEY);
+      if (!seen) {
+        const t = setTimeout(() => setIntroOpen(true), 400);
+        return () => clearTimeout(t);
+      }
+    } catch { /* noop */ }
   }, [isGuest]);
+
+  const handleCloseIntro = (open: boolean) => {
+    setIntroOpen(open);
+    if (!open) {
+      try { localStorage.setItem(GUEST_INTRO_KEY, "1"); } catch { /* noop */ }
+    }
+  };
 
   useEffect(() => {
     if (!user) {
