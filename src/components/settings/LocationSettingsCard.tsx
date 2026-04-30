@@ -65,57 +65,70 @@ export function LocationSettingsCard() {
     setAcceptsNew(org.accepts_new_clients ?? true);
     setWhatsapp(org.whatsapp || "");
     setInstagram(org.instagram || "");
+    setPostalCode(org.postal_code ? maskCEP(org.postal_code) : "");
+    setStreet(org.street || "");
+    setStreetNumber(org.street_number || "");
   }, [org]);
 
-  const geocodeByCity = async () => {
-    if (!city || !state) {
-      toast.error("Preencha cidade e estado primeiro");
-      return;
+  const handleCepChange = async (raw: string) => {
+    const masked = maskCEP(raw);
+    setPostalCode(masked);
+    const digits = unmask(masked);
+    if (digits.length !== 8) return;
+    setCepLoading(true);
+    try {
+      const data = await fetchAddressByCep(digits);
+      if (!data) {
+        toast.error("CEP não encontrado");
+        return;
+      }
+      setStreet(data.street);
+      setNeighborhood(data.neighborhood);
+      setCity(data.city);
+      setState(data.state);
+      toast.success("Endereço preenchido — informe o número");
+    } finally {
+      setCepLoading(false);
+    }
+  };
+
+  const geocodeFullAddress = async (silent = false) => {
+    if (!street || !city || !state) {
+      if (!silent) toast.error("Preencha o CEP primeiro");
+      return false;
     }
     setGeocoding(true);
     try {
-      const q = encodeURIComponent(`${city}, ${state}, Brasil`);
+      const fullAddr = streetNumber
+        ? `${street}, ${streetNumber}, ${neighborhood}, ${city}, ${state}, Brasil`
+        : `${street}, ${neighborhood}, ${city}, ${state}, Brasil`;
+      const q = encodeURIComponent(fullAddr);
       const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${q}`);
       const data = await res.json();
       if (Array.isArray(data) && data[0]) {
         setLatitude(parseFloat(data[0].lat));
         setLongitude(parseFloat(data[0].lon));
-        toast.success("Localização aproximada (centro da cidade) definida");
-      } else {
-        toast.error("Não foi possível localizar este endereço");
+        if (!silent) toast.success("Localização exata definida pelo endereço!");
+        return true;
       }
+      // fallback to city center
+      const q2 = encodeURIComponent(`${city}, ${state}, Brasil`);
+      const res2 = await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${q2}`);
+      const data2 = await res2.json();
+      if (Array.isArray(data2) && data2[0]) {
+        setLatitude(parseFloat(data2[0].lat));
+        setLongitude(parseFloat(data2[0].lon));
+        if (!silent) toast.success("Localização aproximada (centro da cidade) definida");
+        return true;
+      }
+      if (!silent) toast.error("Não foi possível localizar este endereço");
+      return false;
     } catch {
-      toast.error("Erro ao buscar localização");
+      if (!silent) toast.error("Erro ao buscar localização");
+      return false;
     } finally {
       setGeocoding(false);
     }
-  };
-
-  const useDeviceLocation = () => {
-    if (!("geolocation" in navigator)) {
-      toast.error("Seu dispositivo não suporta geolocalização");
-      return;
-    }
-    setGeocoding(true);
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        setLatitude(pos.coords.latitude);
-        setLongitude(pos.coords.longitude);
-        toast.success("Localização exata capturada do seu dispositivo!");
-        setGeocoding(false);
-      },
-      (err) => {
-        setGeocoding(false);
-        if (err.code === err.PERMISSION_DENIED) {
-          toast.error("Permissão de localização negada. Habilite nas configurações do navegador/app.");
-        } else if (err.code === err.POSITION_UNAVAILABLE) {
-          toast.error("Localização indisponível. Tente novamente em área aberta.");
-        } else {
-          toast.error("Não foi possível obter sua localização");
-        }
-      },
-      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 },
-    );
   };
 
 
