@@ -159,20 +159,25 @@ export function MatchRequestsCard() {
                       onClick={() => handleWhatsAppClick(r.id, buildWhatsAppUrl(phone, name, planName))}
                     >
                       <MessageCircle className="h-3.5 w-3.5" />
-                      {hasContacted ? "Conversar novamente no WhatsApp" : "Conversar no WhatsApp primeiro"}
+                      {hasContacted ? "Conversar novamente no WhatsApp" : "Abrir conversa no WhatsApp"}
                     </Button>
                   )}
 
-                  {!hasContacted && (
+                  {hasContacted ? (
+                    <p className="mt-2 text-[11px] text-foreground/80 leading-relaxed bg-primary/5 rounded-md px-2 py-1.5">
+                      Fechou negócio com <strong>{name}</strong>? Toque em <strong>"Sim, fechei"</strong> para
+                      transformá-la em cliente e definir plano e pagamento.
+                    </p>
+                  ) : (
                     <p className="mt-2 text-[10.5px] text-muted-foreground flex items-center gap-1">
                       <Lock className="h-3 w-3" />
-                      Converse pelo WhatsApp antes de aprovar o vínculo.
+                      Converse pelo WhatsApp antes de confirmar o vínculo.
                     </p>
                   )}
 
                   <div className="flex gap-1.5 mt-2">
                     <Button size="sm" variant="outline" className="flex-1" onClick={() => handleReject(r.id)} disabled={isApproving}>
-                      <X className="h-3.5 w-3.5 mr-1" /> Recusar
+                      <X className="h-3.5 w-3.5 mr-1" /> Não fechei
                     </Button>
                     <Button
                       size="sm"
@@ -180,7 +185,7 @@ export function MatchRequestsCard() {
                       onClick={() => handleApprove(r)}
                       disabled={!hasContacted || isApproving}
                     >
-                      <Check className="h-3.5 w-3.5 mr-1" /> {isApproving ? "Aprovando..." : "Aprovar"}
+                      <Check className="h-3.5 w-3.5 mr-1" /> {isApproving ? "Vinculando..." : "Sim, fechei"}
                     </Button>
                   </div>
                 </div>
