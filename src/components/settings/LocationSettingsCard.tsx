@@ -61,7 +61,7 @@ export function LocationSettingsCard() {
     setInstagram(org.instagram || "");
   }, [org]);
 
-  const geocode = async () => {
+  const geocodeByCity = async () => {
     if (!city || !state) {
       toast.error("Preencha cidade e estado primeiro");
       return;
@@ -74,7 +74,7 @@ export function LocationSettingsCard() {
       if (Array.isArray(data) && data[0]) {
         setLatitude(parseFloat(data[0].lat));
         setLongitude(parseFloat(data[0].lon));
-        toast.success("Localização encontrada!");
+        toast.success("Localização aproximada (centro da cidade) definida");
       } else {
         toast.error("Não foi possível localizar este endereço");
       }
@@ -84,6 +84,34 @@ export function LocationSettingsCard() {
       setGeocoding(false);
     }
   };
+
+  const useDeviceLocation = () => {
+    if (!("geolocation" in navigator)) {
+      toast.error("Seu dispositivo não suporta geolocalização");
+      return;
+    }
+    setGeocoding(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setLatitude(pos.coords.latitude);
+        setLongitude(pos.coords.longitude);
+        toast.success("Localização exata capturada do seu dispositivo!");
+        setGeocoding(false);
+      },
+      (err) => {
+        setGeocoding(false);
+        if (err.code === err.PERMISSION_DENIED) {
+          toast.error("Permissão de localização negada. Habilite nas configurações do navegador/app.");
+        } else if (err.code === err.POSITION_UNAVAILABLE) {
+          toast.error("Localização indisponível. Tente novamente em área aberta.");
+        } else {
+          toast.error("Não foi possível obter sua localização");
+        }
+      },
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 },
+    );
+  };
+
 
   const addArea = () => {
     const v = newArea.trim();
