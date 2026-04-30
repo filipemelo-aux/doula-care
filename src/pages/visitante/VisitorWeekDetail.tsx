@@ -27,9 +27,9 @@ export default function VisitorWeekDetail() {
 
   return (
     <VisitorLayout>
-      <div className="min-h-full pb-10">
+      <div className="min-h-full pb-10 -m-3 mb-0">
         {/* Top bar */}
-        <div className="sticky top-0 z-10 bg-background/85 backdrop-blur-md border-b border-border/40">
+        <div className="sticky -top-3 z-10 bg-background/85 backdrop-blur-md border-b border-border/40">
           <div className="flex items-center justify-between px-3 py-2.5">
             <Button
               variant="ghost"
