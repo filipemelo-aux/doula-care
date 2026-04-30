@@ -33,6 +33,9 @@ import { getGuestProfile, setGuestProfile as saveGuestProfile, type GuestProfile
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PregnancyHeroCarousel } from "@/components/visitante/PregnancyHeroCarousel";
+import { GuestIntroDialog } from "@/components/visitante/GuestIntroDialog";
+
+const GUEST_INTRO_KEY = "guest_intro_seen_v1";
 
 export default function VisitorDashboard() {
   const { user, client } = useAuth();
