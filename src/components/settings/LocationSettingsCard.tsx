@@ -225,25 +225,58 @@ export function LocationSettingsCard() {
           <p className="text-[11px] text-muted-foreground">{bio.length}/300</p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <div className="space-y-2 sm:col-span-2">
-            <Label>Cidade</Label>
-            <CityAutocomplete
-              value={city}
-              state={state}
-              onChange={(c, s) => { setCity(c); if (s) setState(s); }}
-              placeholder="Digite para buscar (ex: São Paulo)"
-            />
-          </div>
+        <div className="space-y-3 p-3 rounded-lg bg-muted/30 border border-border/40">
           <div className="space-y-2">
-            <Label>UF</Label>
-            <Input value={state} onChange={(e) => setState(e.target.value.toUpperCase().slice(0, 2))} placeholder="SP" maxLength={2} />
+            <Label className="flex items-center gap-1.5">
+              <MapPin className="h-3.5 w-3.5 text-primary" /> CEP
+            </Label>
+            <div className="relative">
+              <Input
+                value={postalCode}
+                onChange={(e) => handleCepChange(e.target.value)}
+                placeholder="00000-000"
+                inputMode="numeric"
+                maxLength={9}
+              />
+              {cepLoading && (
+                <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />
+              )}
+            </div>
+            <p className="text-[11px] text-muted-foreground">
+              Preencheremos endereço, bairro, cidade e estado automaticamente.
+            </p>
           </div>
-        </div>
 
-        <div className="space-y-2">
-          <Label>Bairro (opcional)</Label>
-          <Input value={neighborhood} onChange={(e) => setNeighborhood(e.target.value)} placeholder="Ex: Pinheiros" />
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="space-y-2 sm:col-span-2">
+              <Label>Endereço</Label>
+              <Input value={street} onChange={(e) => setStreet(e.target.value)} placeholder="Rua / Avenida" />
+            </div>
+            <div className="space-y-2">
+              <Label>Número</Label>
+              <Input
+                value={streetNumber}
+                onChange={(e) => setStreetNumber(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                placeholder="123"
+                inputMode="numeric"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="space-y-2">
+              <Label>Bairro</Label>
+              <Input value={neighborhood} onChange={(e) => setNeighborhood(e.target.value)} placeholder="Bairro" />
+            </div>
+            <div className="space-y-2">
+              <Label>Cidade</Label>
+              <Input value={city} onChange={(e) => setCity(e.target.value)} placeholder="Cidade" />
+            </div>
+            <div className="space-y-2">
+              <Label>UF</Label>
+              <Input value={state} onChange={(e) => setState(e.target.value.toUpperCase().slice(0, 2))} placeholder="SP" maxLength={2} />
+            </div>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
