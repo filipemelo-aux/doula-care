@@ -12,7 +12,7 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { MapPin, Loader2, Plus, X, MessageCircle, Instagram, Search } from "lucide-react";
 import { toast } from "sonner";
-import { CityAutocomplete } from "@/components/ui/city-autocomplete";
+
 import { fetchAddressByCep } from "@/lib/address";
 import { maskCEP, unmask } from "@/lib/masks";
 
