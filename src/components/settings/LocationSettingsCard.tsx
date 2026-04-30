@@ -14,7 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { MapPin, Loader2, Plus, X, MessageCircle, Instagram, Search } from "lucide-react";
 import { toast } from "sonner";
 
-import { fetchAddressByCep } from "@/lib/address";
+import { fetchAddressByCep, fetchCoordinatesByCep } from "@/lib/address";
 import { maskCEP, unmask } from "@/lib/masks";
 import { isCapacitorNative } from "@/lib/capacitorPush";
 
@@ -89,6 +89,11 @@ export function LocationSettingsCard() {
       setNeighborhood(data.neighborhood);
       setCity(data.city);
       setState(data.state);
+      const coordinates = await fetchCoordinatesByCep(digits);
+      if (coordinates) {
+        setLatitude(coordinates.latitude);
+        setLongitude(coordinates.longitude);
+      }
       toast.success("Endereço preenchido — informe o número");
     } finally {
       setCepLoading(false);
@@ -155,7 +160,19 @@ export function LocationSettingsCard() {
       const cepDigits = unmask(postalCode);
       const ua = "doulacare-app/1.0 (contato@doulacare.app.br)";
 
-      // 1) Nominatim estruturado: número + rua + cidade + UF + CEP. Pegamos
+      // 1) Primeiro tenta a coordenada oficial do CEP. Para o Brasil, isso é
+      // mais confiável que procurar pelo nome da rua em avenidas longas ou ruas homônimas.
+      if (cepDigits.length === 8) {
+        const cepCoordinates = await fetchCoordinatesByCep(cepDigits);
+        if (cepCoordinates) {
+          setLatitude(cepCoordinates.latitude);
+          setLongitude(cepCoordinates.longitude);
+          if (!silent) toast.success("Localização definida pelo CEP!");
+          return true;
+        }
+      }
+
+      // 2) Nominatim estruturado: número + rua + cidade + UF + CEP. Pegamos
       // ATÉ 10 candidatos e escolhemos o de maior score (CEP exato > bairro).
       const params1 = new URLSearchParams({
         format: "json",
@@ -180,7 +197,7 @@ export function LocationSettingsCard() {
         return true;
       }
 
-      // 2) Nominatim só com CEP — quando há CEP, geralmente devolve o trecho certo.
+      // 3) Nominatim só com CEP — quando há CEP, geralmente devolve o trecho certo.
       if (cepDigits.length === 8) {
         const cepMasked = `${cepDigits.slice(0, 5)}-${cepDigits.slice(5)}`;
         const params2 = new URLSearchParams({
@@ -203,7 +220,7 @@ export function LocationSettingsCard() {
         }
       }
 
-      // 3) Endereço completo (Q-string) com seleção por bairro — útil quando a rua
+      // 4) Endereço completo (Q-string) com seleção por bairro — útil quando a rua
       // homônima atravessa vários bairros (ex.: Av. Castelo Branco em Araguaína).
       const fullQ = streetNumber
         ? `${street}, ${streetNumber} - ${neighborhood}, ${city} - ${state}, Brasil`
@@ -227,7 +244,7 @@ export function LocationSettingsCard() {
         return true;
       }
 
-      // 4) Aceita o melhor resultado disponível, mesmo que só tenha cidade+UF
+      // 5) Aceita o melhor resultado disponível, mesmo que só tenha cidade+UF
       // (evita aceitar um match completamente errado de outra cidade).
       const fallback = best1 || best3;
       if (fallback) {
@@ -238,7 +255,7 @@ export function LocationSettingsCard() {
         return true;
       }
 
-      // 5) Último recurso: centro da cidade
+      // 6) Último recurso: centro da cidade
       const res4 = await fetch(
         `https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(
           `${city}, ${state}, Brasil`,
