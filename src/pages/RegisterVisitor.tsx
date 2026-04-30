@@ -135,7 +135,22 @@ export default function RegisterVisitor() {
       if (error) throw error;
       if ((data as any)?.error) throw new Error((data as any).error);
 
-      toast.success("Cadastro concluído!", { description: "Faça login para encontrar sua doula." });
+      // Gerar username no padrão nome.sobrenome (igual ao cadastro feito pelo admin)
+      const parts = fullName
+        .trim()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase()
+        .split(/\s+/)
+        .filter(Boolean);
+      const username = parts.length >= 2 ? `${parts[0]}.${parts[parts.length - 1]}` : parts[0] || "";
+
+      toast.success("Cadastro concluído!", {
+        description: username
+          ? `Seu usuário de acesso é "${username}". Use ele ou seu email para entrar.`
+          : "Faça login para encontrar sua doula.",
+        duration: 7000,
+      });
       navigate("/login");
     } catch (err: any) {
       toast.error("Erro ao cadastrar", { description: err?.message || "Tente novamente" });
