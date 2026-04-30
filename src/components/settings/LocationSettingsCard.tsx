@@ -93,6 +93,9 @@ export function LocationSettingsCard() {
       if (coordinates) {
         setLatitude(coordinates.latitude);
         setLongitude(coordinates.longitude);
+      } else {
+        setLatitude(null);
+        setLongitude(null);
       }
       toast.success("Endereço preenchido — informe o número");
     } finally {
@@ -161,8 +164,6 @@ export function LocationSettingsCard() {
     setGeocoding(true);
     try {
       const cepDigits = unmask(postalCode);
-      const ua = "doulacare-app/1.0 (contato@doulacare.app.br)";
-
       // 1) Primeiro tenta a coordenada oficial do CEP. Para o Brasil, isso é
       // mais confiável que procurar pelo nome da rua em avenidas longas ou ruas homônimas.
       if (cepDigits.length === 8) {
