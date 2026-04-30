@@ -1087,12 +1087,15 @@ export type Database = {
           next_billing_date: string | null
           nome_exibicao: string | null
           plan: Database["public"]["Enums"]["org_plan"]
+          postal_code: string | null
           primary_color: string | null
           responsible_email: string
           secondary_color: string | null
           service_areas: string[] | null
           state: string | null
           status: Database["public"]["Enums"]["org_status"]
+          street: string | null
+          street_number: string | null
           updated_at: string
           whatsapp: string | null
         }
@@ -1112,12 +1115,15 @@ export type Database = {
           next_billing_date?: string | null
           nome_exibicao?: string | null
           plan?: Database["public"]["Enums"]["org_plan"]
+          postal_code?: string | null
           primary_color?: string | null
           responsible_email: string
           secondary_color?: string | null
           service_areas?: string[] | null
           state?: string | null
           status?: Database["public"]["Enums"]["org_status"]
+          street?: string | null
+          street_number?: string | null
           updated_at?: string
           whatsapp?: string | null
         }
@@ -1137,12 +1143,15 @@ export type Database = {
           next_billing_date?: string | null
           nome_exibicao?: string | null
           plan?: Database["public"]["Enums"]["org_plan"]
+          postal_code?: string | null
           primary_color?: string | null
           responsible_email?: string
           secondary_color?: string | null
           service_areas?: string[] | null
           state?: string | null
           status?: Database["public"]["Enums"]["org_status"]
+          street?: string | null
+          street_number?: string | null
           updated_at?: string
           whatsapp?: string | null
         }

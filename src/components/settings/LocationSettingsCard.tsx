@@ -10,9 +10,11 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
-import { MapPin, Loader2, Plus, X, Locate, MessageCircle, Instagram } from "lucide-react";
+import { MapPin, Loader2, Plus, X, MessageCircle, Instagram, Search } from "lucide-react";
 import { toast } from "sonner";
-import { CityAutocomplete } from "@/components/ui/city-autocomplete";
+
+import { fetchAddressByCep } from "@/lib/address";
+import { maskCEP, unmask } from "@/lib/masks";
 
 export function LocationSettingsCard() {
   const { organizationId } = useAuth();
@@ -25,7 +27,7 @@ export function LocationSettingsCard() {
       if (!organizationId) return null;
       const { data, error } = await supabase
         .from("organizations")
-        .select("city,state,neighborhood,bio,service_areas,latitude,longitude,accepts_new_clients,whatsapp,instagram")
+        .select("city,state,neighborhood,bio,service_areas,latitude,longitude,accepts_new_clients,whatsapp,instagram,postal_code,street,street_number")
         .eq("id", organizationId)
         .maybeSingle();
       if (error) throw error;
@@ -45,6 +47,10 @@ export function LocationSettingsCard() {
   const [acceptsNew, setAcceptsNew] = useState(true);
   const [whatsapp, setWhatsapp] = useState("");
   const [instagram, setInstagram] = useState("");
+  const [postalCode, setPostalCode] = useState("");
+  const [street, setStreet] = useState("");
+  const [streetNumber, setStreetNumber] = useState("");
+  const [cepLoading, setCepLoading] = useState(false);
   const [geocoding, setGeocoding] = useState(false);
 
   useEffect(() => {
@@ -59,57 +65,70 @@ export function LocationSettingsCard() {
     setAcceptsNew(org.accepts_new_clients ?? true);
     setWhatsapp(org.whatsapp || "");
     setInstagram(org.instagram || "");
+    setPostalCode(org.postal_code ? maskCEP(org.postal_code) : "");
+    setStreet(org.street || "");
+    setStreetNumber(org.street_number || "");
   }, [org]);
 
-  const geocodeByCity = async () => {
-    if (!city || !state) {
-      toast.error("Preencha cidade e estado primeiro");
-      return;
+  const handleCepChange = async (raw: string) => {
+    const masked = maskCEP(raw);
+    setPostalCode(masked);
+    const digits = unmask(masked);
+    if (digits.length !== 8) return;
+    setCepLoading(true);
+    try {
+      const data = await fetchAddressByCep(digits);
+      if (!data) {
+        toast.error("CEP não encontrado");
+        return;
+      }
+      setStreet(data.street);
+      setNeighborhood(data.neighborhood);
+      setCity(data.city);
+      setState(data.state);
+      toast.success("Endereço preenchido — informe o número");
+    } finally {
+      setCepLoading(false);
+    }
+  };
+
+  const geocodeFullAddress = async (silent = false) => {
+    if (!street || !city || !state) {
+      if (!silent) toast.error("Preencha o CEP primeiro");
+      return false;
     }
     setGeocoding(true);
     try {
-      const q = encodeURIComponent(`${city}, ${state}, Brasil`);
+      const fullAddr = streetNumber
+        ? `${street}, ${streetNumber}, ${neighborhood}, ${city}, ${state}, Brasil`
+        : `${street}, ${neighborhood}, ${city}, ${state}, Brasil`;
+      const q = encodeURIComponent(fullAddr);
       const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${q}`);
       const data = await res.json();
       if (Array.isArray(data) && data[0]) {
         setLatitude(parseFloat(data[0].lat));
         setLongitude(parseFloat(data[0].lon));
-        toast.success("Localização aproximada (centro da cidade) definida");
-      } else {
-        toast.error("Não foi possível localizar este endereço");
+        if (!silent) toast.success("Localização exata definida pelo endereço!");
+        return true;
       }
+      // fallback to city center
+      const q2 = encodeURIComponent(`${city}, ${state}, Brasil`);
+      const res2 = await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${q2}`);
+      const data2 = await res2.json();
+      if (Array.isArray(data2) && data2[0]) {
+        setLatitude(parseFloat(data2[0].lat));
+        setLongitude(parseFloat(data2[0].lon));
+        if (!silent) toast.success("Localização aproximada (centro da cidade) definida");
+        return true;
+      }
+      if (!silent) toast.error("Não foi possível localizar este endereço");
+      return false;
     } catch {
-      toast.error("Erro ao buscar localização");
+      if (!silent) toast.error("Erro ao buscar localização");
+      return false;
     } finally {
       setGeocoding(false);
     }
-  };
-
-  const useDeviceLocation = () => {
-    if (!("geolocation" in navigator)) {
-      toast.error("Seu dispositivo não suporta geolocalização");
-      return;
-    }
-    setGeocoding(true);
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        setLatitude(pos.coords.latitude);
-        setLongitude(pos.coords.longitude);
-        toast.success("Localização exata capturada do seu dispositivo!");
-        setGeocoding(false);
-      },
-      (err) => {
-        setGeocoding(false);
-        if (err.code === err.PERMISSION_DENIED) {
-          toast.error("Permissão de localização negada. Habilite nas configurações do navegador/app.");
-        } else if (err.code === err.POSITION_UNAVAILABLE) {
-          toast.error("Localização indisponível. Tente novamente em área aberta.");
-        } else {
-          toast.error("Não foi possível obter sua localização");
-        }
-      },
-      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 },
-    );
   };
 
 
@@ -125,6 +144,10 @@ export function LocationSettingsCard() {
   const save = useMutation({
     mutationFn: async () => {
       if (!organizationId) throw new Error("Organização não encontrada");
+      // Auto re-geocode if address changed since last lat/lng or coords missing
+      if (street && city && state && (!latitude || !longitude)) {
+        await geocodeFullAddress(true);
+      }
       const { error } = await supabase
         .from("organizations")
         .update({
@@ -138,6 +161,9 @@ export function LocationSettingsCard() {
           accepts_new_clients: acceptsNew,
           whatsapp: whatsapp || null,
           instagram: instagram ? instagram.replace(/^@/, "") : null,
+          postal_code: unmask(postalCode) || null,
+          street: street || null,
+          street_number: streetNumber || null,
         } as any)
         .eq("id", organizationId);
       if (error) throw error;
@@ -199,25 +225,58 @@ export function LocationSettingsCard() {
           <p className="text-[11px] text-muted-foreground">{bio.length}/300</p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <div className="space-y-2 sm:col-span-2">
-            <Label>Cidade</Label>
-            <CityAutocomplete
-              value={city}
-              state={state}
-              onChange={(c, s) => { setCity(c); if (s) setState(s); }}
-              placeholder="Digite para buscar (ex: São Paulo)"
-            />
-          </div>
+        <div className="space-y-3 p-3 rounded-lg bg-muted/30 border border-border/40">
           <div className="space-y-2">
-            <Label>UF</Label>
-            <Input value={state} onChange={(e) => setState(e.target.value.toUpperCase().slice(0, 2))} placeholder="SP" maxLength={2} />
+            <Label className="flex items-center gap-1.5">
+              <MapPin className="h-3.5 w-3.5 text-primary" /> CEP
+            </Label>
+            <div className="relative">
+              <Input
+                value={postalCode}
+                onChange={(e) => handleCepChange(e.target.value)}
+                placeholder="00000-000"
+                inputMode="numeric"
+                maxLength={9}
+              />
+              {cepLoading && (
+                <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />
+              )}
+            </div>
+            <p className="text-[11px] text-muted-foreground">
+              Preencheremos endereço, bairro, cidade e estado automaticamente.
+            </p>
           </div>
-        </div>
 
-        <div className="space-y-2">
-          <Label>Bairro (opcional)</Label>
-          <Input value={neighborhood} onChange={(e) => setNeighborhood(e.target.value)} placeholder="Ex: Pinheiros" />
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="space-y-2 sm:col-span-2">
+              <Label>Endereço</Label>
+              <Input value={street} onChange={(e) => setStreet(e.target.value)} placeholder="Rua / Avenida" />
+            </div>
+            <div className="space-y-2">
+              <Label>Número</Label>
+              <Input
+                value={streetNumber}
+                onChange={(e) => setStreetNumber(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                placeholder="123"
+                inputMode="numeric"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="space-y-2">
+              <Label>Bairro</Label>
+              <Input value={neighborhood} onChange={(e) => setNeighborhood(e.target.value)} placeholder="Bairro" />
+            </div>
+            <div className="space-y-2">
+              <Label>Cidade</Label>
+              <Input value={city} onChange={(e) => setCity(e.target.value)} placeholder="Cidade" />
+            </div>
+            <div className="space-y-2">
+              <Label>UF</Label>
+              <Input value={state} onChange={(e) => setState(e.target.value.toUpperCase().slice(0, 2))} placeholder="SP" maxLength={2} />
+            </div>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -268,21 +327,22 @@ export function LocationSettingsCard() {
         </div>
 
         <div className="space-y-2 p-3 rounded-lg bg-muted/30">
-          <Label className="text-xs">Coordenadas no mapa</Label>
-          <div className="flex flex-wrap gap-2">
-            <Button type="button" size="sm" variant="default" onClick={useDeviceLocation} disabled={geocoding} className="gap-1.5">
-              {geocoding ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Locate className="h-3.5 w-3.5" />}
-              Usar minha localização atual
-            </Button>
-            <Button type="button" size="sm" variant="outline" onClick={geocodeByCity} disabled={geocoding} className="gap-1.5">
-              <MapPin className="h-3.5 w-3.5" />
-              Usar centro da cidade
-            </Button>
-          </div>
+          <Label className="text-xs">Localização no mapa</Label>
+          <Button
+            type="button"
+            size="sm"
+            variant="default"
+            onClick={() => geocodeFullAddress(false)}
+            disabled={geocoding || !street || !city}
+            className="gap-1.5"
+          >
+            {geocoding ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Search className="h-3.5 w-3.5" />}
+            Localizar pelo endereço
+          </Button>
           <p className="text-[11px] text-muted-foreground">
             {latitude && longitude
               ? `📍 ${latitude.toFixed(6)}, ${longitude.toFixed(6)}`
-              : "Nenhuma coordenada definida — recomendamos usar sua localização atual para que clientes te encontrem com precisão no mapa."}
+              : "Preencha o CEP acima e clique para definir sua localização exata no mapa."}
           </p>
         </div>
 
