@@ -68,13 +68,13 @@ interface PublicDoula {
   instagram: string | null;
 }
 
-function buildWhatsAppUrl(phone: string, doulaName: string) {
+function buildWhatsAppUrl(phone: string, doulaName: string, planName?: string) {
   const digits = (phone || "").replace(/\D/g, "");
   const withCountry = digits.startsWith("55") ? digits : `55${digits}`;
-  const msg = encodeURIComponent(
-    `Olá ${doulaName}! Encontrei seu perfil no Doula Care e gostaria de saber mais sobre seu trabalho. 💗`
-  );
-  return `https://wa.me/${withCountry}?text=${msg}`;
+  const text = planName
+    ? `Olá ${doulaName}! Vim através do Doula Care e gostaria de saber mais sobre o plano "${planName}" que você oferece. 💗`
+    : `Olá ${doulaName}! Encontrei seu perfil no Doula Care e gostaria de saber mais sobre seu trabalho. 💗`;
+  return `https://wa.me/${withCountry}?text=${encodeURIComponent(text)}`;
 }
 
 function buildInstagramUrl(handle: string) {
