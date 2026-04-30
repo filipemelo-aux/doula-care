@@ -388,6 +388,12 @@ function DoulaPlansDialog({
       return;
     }
     setSuccessOpen(true);
+
+    // Abre WhatsApp automaticamente com mensagem mencionando o plano
+    if (doula.whatsapp) {
+      const url = buildWhatsAppUrl(doula.whatsapp, doula.nome_exibicao || doula.name, plan.name);
+      setTimeout(() => window.open(url, "_blank"), 600);
+    }
   };
 
   const handleSuccessClose = () => {
