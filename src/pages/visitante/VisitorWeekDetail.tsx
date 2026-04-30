@@ -46,8 +46,8 @@ export default function VisitorWeekDetail() {
 
         {/* Hero */}
         <div className="px-4 pt-4">
-          <div className="rounded-3xl overflow-hidden bg-gradient-to-br from-[hsl(20_60%_96%)] via-[hsl(15_70%_93%)] to-[hsl(10_60%_90%)] dark:from-primary/15 dark:via-primary/10 dark:to-accent/10 shadow-[0_12px_40px_-16px_hsl(var(--primary)/0.4)] p-5 relative">
-            <div className="flex items-start justify-between mb-2">
+          <div className="rounded-3xl overflow-hidden bg-gradient-to-br from-[hsl(20_60%_96%)] via-[hsl(15_70%_93%)] to-[hsl(10_60%_90%)] dark:from-primary/15 dark:via-primary/10 dark:to-accent/10 shadow-[0_12px_40px_-16px_hsl(var(--primary)/0.4)] p-4 relative">
+            <div className="flex items-start justify-between mb-1">
               <div>
                 <p className="text-[11px] uppercase tracking-wider text-primary/80 font-semibold">
                   Sua gestação
@@ -64,16 +64,16 @@ export default function VisitorWeekDetail() {
               </div>
             </div>
 
-            <div className="relative flex items-center justify-center my-2 min-h-[260px]">
+            <div className="relative flex items-center justify-center my-1 min-h-[180px]">
               {info.baby_image ? (
                 <img
                   src={info.baby_image}
                   alt={`Ilustração do bebê na ${week}ª semana ao lado de ${info.fruit_name}`}
-                  className="w-full max-w-[360px] h-[280px] object-contain animate-[heroBreath_3s_ease-in-out_infinite] drop-shadow-[0_10px_28px_hsl(var(--primary)/0.3)]"
+                  className="w-full max-w-[320px] h-[200px] object-contain animate-[heroBreath_3s_ease-in-out_infinite] drop-shadow-[0_10px_28px_hsl(var(--primary)/0.3)]"
                   draggable={false}
                 />
               ) : (
-                <div className="text-[140px]" aria-hidden>
+                <div className="text-[110px]" aria-hidden>
                   {info.fruit_emoji}
                 </div>
               )}
@@ -81,7 +81,7 @@ export default function VisitorWeekDetail() {
             </div>
 
             {/* Metrics */}
-            <div className="flex items-center justify-around bg-background/75 backdrop-blur rounded-2xl px-4 py-3">
+            <div className="flex items-center justify-around bg-background/75 backdrop-blur rounded-2xl px-3 py-2">
               <div className="flex items-center gap-2.5">
                 <div className="rounded-full bg-primary/10 p-2">
                   <Ruler className="h-4 w-4 text-primary" />
