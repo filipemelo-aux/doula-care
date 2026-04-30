@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Geolocation } from "@capacitor/geolocation";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -15,6 +16,7 @@ import { toast } from "sonner";
 
 import { fetchAddressByCep } from "@/lib/address";
 import { maskCEP, unmask } from "@/lib/masks";
+import { isCapacitorNative } from "@/lib/capacitorPush";
 
 export function LocationSettingsCard() {
   const { organizationId } = useAuth();
@@ -52,6 +54,7 @@ export function LocationSettingsCard() {
   const [streetNumber, setStreetNumber] = useState("");
   const [cepLoading, setCepLoading] = useState(false);
   const [geocoding, setGeocoding] = useState(false);
+  const [locatingDevice, setLocatingDevice] = useState(false);
 
   useEffect(() => {
     if (!org) return;
@@ -258,6 +261,62 @@ export function LocationSettingsCard() {
       return false;
     } finally {
       setGeocoding(false);
+    }
+  };
+
+  const useDeviceLocation = async () => {
+    setLocatingDevice(true);
+    try {
+      if (isCapacitorNative()) {
+        let permission = await Geolocation.checkPermissions();
+        if (permission.location === "prompt" || permission.location === "prompt-with-rationale") {
+          permission = await Geolocation.requestPermissions({ permissions: ["location"] });
+        }
+        if (permission.location !== "granted") {
+          toast.error("Permissão de localização bloqueada", {
+            description: "Abra as configurações do celular e permita localização para o Doula Care.",
+          });
+          return;
+        }
+
+        const position = await Geolocation.getCurrentPosition({
+          enableHighAccuracy: true,
+          timeout: 15000,
+          maximumAge: 0,
+        });
+        setLatitude(position.coords.latitude);
+        setLongitude(position.coords.longitude);
+        toast.success("Localização do celular definida com sucesso!");
+        return;
+      }
+
+      if (!navigator.geolocation) {
+        toast.error("Localização indisponível neste dispositivo");
+        return;
+      }
+
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setLatitude(position.coords.latitude);
+          setLongitude(position.coords.longitude);
+          toast.success("Localização do dispositivo definida com sucesso!");
+        },
+        (error) => {
+          const blocked = error.code === error.PERMISSION_DENIED;
+          toast.error(blocked ? "Permissão de localização bloqueada" : "Não foi possível obter a localização", {
+            description: blocked
+              ? "Toque no cadeado do navegador e permita localização para este site."
+              : "Verifique se o GPS está ativo e tente novamente.",
+          });
+        },
+        { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 },
+      );
+    } catch {
+      toast.error("Não foi possível solicitar a localização", {
+        description: "Verifique se a permissão de localização está liberada no dispositivo.",
+      });
+    } finally {
+      setLocatingDevice(false);
     }
   };
 
