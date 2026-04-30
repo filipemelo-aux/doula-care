@@ -46,8 +46,8 @@ export default function VisitorWeekDetail() {
 
         {/* Hero */}
         <div className="px-4 pt-4">
-          <div className="rounded-3xl overflow-hidden bg-gradient-to-br from-[hsl(20_60%_96%)] via-[hsl(15_70%_93%)] to-[hsl(10_60%_90%)] dark:from-primary/15 dark:via-primary/10 dark:to-accent/10 shadow-[0_12px_40px_-16px_hsl(var(--primary)/0.4)] p-5 relative">
-            <div className="flex items-start justify-between mb-2">
+          <div className="rounded-3xl overflow-hidden bg-gradient-to-br from-[hsl(20_60%_96%)] via-[hsl(15_70%_93%)] to-[hsl(10_60%_90%)] dark:from-primary/15 dark:via-primary/10 dark:to-accent/10 shadow-[0_12px_40px_-16px_hsl(var(--primary)/0.4)] p-4 relative">
+            <div className="flex items-start justify-between mb-1">
               <div>
                 <p className="text-[11px] uppercase tracking-wider text-primary/80 font-semibold">
                   Sua gestação
