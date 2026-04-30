@@ -171,10 +171,7 @@ export default function VisitorDashboard() {
   return (
     <VisitorLayout avatarUrl={avatarUrl} greetingName={displayName}>
       <div className="space-y-4 overflow-x-hidden">
-        {/* Premium pregnancy carousel — top of home */}
-        <PregnancyHeroCarousel currentWeek={gestationalAge?.weeks ?? null} />
-
-        {/* Greeting */}
+        {/* Greeting — top of body */}
         <div className="flex items-center gap-3">
           <Avatar className="w-10 h-10 shadow-md">
             <AvatarImage src={avatarUrl || undefined} alt="Perfil" className="object-cover" />
@@ -188,21 +185,8 @@ export default function VisitorDashboard() {
           </div>
         </div>
 
-        {/* Guest welcome banner */}
-        {isGuest && (
-          <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-accent/5">
-            <CardContent className="p-4 flex items-start gap-3">
-              <Sparkles className="h-5 w-5 text-primary mt-0.5 shrink-0" />
-              <div className="flex-1 min-w-0">
-                <p className="font-medium text-sm">Bem-vinda à Doula Care 💗</p>
-                <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
-                  Você pode explorar livremente. Quando quiser encontrar uma doula perto de você,
-                  é só criar sua conta gratuita.
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        )}
+        {/* Premium pregnancy carousel — pregnancy phase tracking */}
+        <PregnancyHeroCarousel currentWeek={gestationalAge?.weeks ?? null} />
 
         {/* Match request banners (auth only) */}
         {!isGuest && activeRequest?.status === "pending" && !bannerDismissed && (
