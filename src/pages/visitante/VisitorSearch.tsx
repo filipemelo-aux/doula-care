@@ -135,9 +135,11 @@ export default function VisitorSearch() {
   });
 
   const filteredDoulas = useMemo(() => {
-    if (!search.trim()) return doulas;
+    // Apenas doulas com localização configurada (lat/lng) aparecem na listagem.
+    const withLocation = doulas.filter((d) => d.latitude != null && d.longitude != null);
+    if (!search.trim()) return withLocation;
     const s = normalize(search);
-    return doulas.filter(
+    return withLocation.filter(
       (d) =>
         normalize(d.nome_exibicao || d.name).includes(s) ||
         normalize(d.city || "").includes(s) ||
