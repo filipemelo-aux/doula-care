@@ -92,13 +92,54 @@ export function LocationSettingsCard() {
     }
   };
 
+  /** Normaliza para comparação tolerante a acento/caixa. */
+  const norm = (s: string) =>
+    (s || "")
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .trim();
+
+  /** Cidade/UF deve bater para considerarmos um resultado válido. */
+  const matchesCityState = (addr: any) => {
+    const cityHit = norm(
+      addr?.city || addr?.town || addr?.municipality || addr?.village || "",
+    );
+    const stateHit = norm(addr?.state || addr?.["ISO3166-2-lvl4"] || "");
+    return cityHit.includes(norm(city)) && (stateHit.includes(norm(state)) || stateHit.endsWith(`-${norm(state)}`));
+  };
+
   /**
-   * Verifica se um resultado bate com a cidade/UF informada — evita o Nominatim
-   * "fugir" para uma rua de mesmo nome em outra parte do município ou cidade.
+   * Avalia o "match" de um resultado do Nominatim contra o endereço da doula.
+   * Pontuação: CEP exato (10) > CEP com mesmos 5 dígitos (5) > bairro (3) > cidade/UF (1).
+   * Isso evita pegar um trecho aleatório de avenida homônima que atravessa vários bairros.
    */
-  const matchesCity = (display: string) => {
-    const d = display.toLowerCase();
-    return d.includes(city.toLowerCase()) && d.toLowerCase().includes(state.toLowerCase());
+  const scoreNominatimResult = (r: any, cepDigits: string) => {
+    const addr = r?.address || {};
+    if (!matchesCityState(addr)) return -1;
+    const rPostcode = (addr.postcode || "").replace(/\D/g, "");
+    const rNeighborhood = norm(
+      addr.neighbourhood || addr.suburb || addr.quarter || "",
+    );
+    let score = 1;
+    if (cepDigits.length === 8 && rPostcode === cepDigits) score += 10;
+    else if (cepDigits.length >= 5 && rPostcode.startsWith(cepDigits.slice(0, 5))) score += 5;
+    if (neighborhood && rNeighborhood && rNeighborhood.includes(norm(neighborhood))) score += 3;
+    return score;
+  };
+
+  const pickBestNominatim = (arr: any[], cepDigits: string) => {
+    if (!Array.isArray(arr) || arr.length === 0) return null;
+    let best: any = null;
+    let bestScore = 0;
+    for (const r of arr) {
+      const s = scoreNominatimResult(r, cepDigits);
+      if (s > bestScore) {
+        best = r;
+        bestScore = s;
+      }
+    }
+    return best ? { hit: best, score: bestScore } : null;
   };
 
   const geocodeFullAddress = async (silent = false) => {
@@ -109,83 +150,102 @@ export function LocationSettingsCard() {
     setGeocoding(true);
     try {
       const cepDigits = unmask(postalCode);
+      const ua = "doulacare-app/1.0 (contato@doulacare.app.br)";
 
-      // 1) Nominatim estruturado com número + rua + bairro + CEP — máxima precisão
+      // 1) Nominatim estruturado: número + rua + cidade + UF + CEP. Pegamos
+      // ATÉ 10 candidatos e escolhemos o de maior score (CEP exato > bairro).
       const params1 = new URLSearchParams({
         format: "json",
         addressdetails: "1",
-        limit: "5",
+        limit: "10",
         country: "Brasil",
         state,
         city,
         street: streetNumber ? `${streetNumber} ${street}` : street,
       });
       if (cepDigits.length === 8) params1.set("postalcode", cepDigits);
-      const res1 = await fetch(`https://nominatim.openstreetmap.org/search?${params1}`);
+      const res1 = await fetch(`https://nominatim.openstreetmap.org/search?${params1}`, {
+        headers: { "Accept-Language": "pt-BR" },
+      });
       const data1 = await res1.json();
-      const hit1 = Array.isArray(data1)
-        ? data1.find((r: any) => matchesCity(r.display_name || ""))
-        : null;
-      if (hit1) {
-        setLatitude(parseFloat(hit1.lat));
-        setLongitude(parseFloat(hit1.lon));
+      const best1 = pickBestNominatim(data1, cepDigits);
+      if (best1 && best1.score >= 4) {
+        // CEP exato (11) ou prefixo + bairro (8) → confiável
+        setLatitude(parseFloat(best1.hit.lat));
+        setLongitude(parseFloat(best1.hit.lon));
         if (!silent) toast.success("Localização exata definida pelo endereço!");
         return true;
       }
 
-      // 2) Photon (Komoot) — costuma ser mais preciso para CEPs/endereços brasileiros
-      const photonQ = streetNumber
-        ? `${street} ${streetNumber}, ${neighborhood}, ${city}, ${state}, Brasil`
-        : `${street}, ${neighborhood}, ${city}, ${state}, Brasil`;
-      const resP = await fetch(
-        `https://photon.komoot.io/api/?lang=pt&limit=5&q=${encodeURIComponent(photonQ)}`,
-      );
-      const dataP = await resP.json();
-      const featP = (dataP?.features || []).find((f: any) => {
-        const p = f.properties || {};
-        return (
-          (p.city || p.county || "").toLowerCase().includes(city.toLowerCase()) &&
-          (p.state || "").toLowerCase().includes(state.toLowerCase())
-        );
-      });
-      if (featP?.geometry?.coordinates) {
-        const [lon, lat] = featP.geometry.coordinates;
-        setLatitude(lat);
-        setLongitude(lon);
-        if (!silent) toast.success("Localização definida pelo endereço!");
-        return true;
-      }
-
-      // 3) Photon pelo CEP — retorna o polígono do CEP (bairro), bem mais preciso que centro da cidade
+      // 2) Nominatim só com CEP — quando há CEP, geralmente devolve o trecho certo.
       if (cepDigits.length === 8) {
         const cepMasked = `${cepDigits.slice(0, 5)}-${cepDigits.slice(5)}`;
-        const resC = await fetch(
-          `https://photon.komoot.io/api/?lang=pt&limit=5&q=${encodeURIComponent(`${cepMasked} ${city} Brasil`)}`,
-        );
-        const dataC = await resC.json();
-        const featC = (dataC?.features || []).find((f: any) => {
-          const name = (f.properties?.name || "").toString();
-          return name.startsWith(cepDigits.slice(0, 5));
+        const params2 = new URLSearchParams({
+          format: "json",
+          addressdetails: "1",
+          limit: "10",
+          countrycodes: "br",
+          q: `${cepMasked} ${city} ${state}`,
         });
-        if (featC?.geometry?.coordinates) {
-          const [lon, lat] = featC.geometry.coordinates;
-          setLatitude(lat);
-          setLongitude(lon);
-          if (!silent)
-            toast.success("Localização definida pelo CEP (região aproximada)");
+        const res2 = await fetch(`https://nominatim.openstreetmap.org/search?${params2}`, {
+          headers: { "Accept-Language": "pt-BR" },
+        });
+        const data2 = await res2.json();
+        const best2 = pickBestNominatim(data2, cepDigits);
+        if (best2 && best2.score >= 4) {
+          setLatitude(parseFloat(best2.hit.lat));
+          setLongitude(parseFloat(best2.hit.lon));
+          if (!silent) toast.success("Localização definida pelo CEP!");
           return true;
         }
       }
 
-      // 4) Último fallback: centro da cidade
-      const q2 = encodeURIComponent(`${city}, ${state}, Brasil`);
-      const res2 = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${q2}`,
+      // 3) Endereço completo (Q-string) com seleção por bairro — útil quando a rua
+      // homônima atravessa vários bairros (ex.: Av. Castelo Branco em Araguaína).
+      const fullQ = streetNumber
+        ? `${street}, ${streetNumber} - ${neighborhood}, ${city} - ${state}, Brasil`
+        : `${street} - ${neighborhood}, ${city} - ${state}, Brasil`;
+      const params3 = new URLSearchParams({
+        format: "json",
+        addressdetails: "1",
+        limit: "10",
+        countrycodes: "br",
+        q: fullQ,
+      });
+      const res3 = await fetch(`https://nominatim.openstreetmap.org/search?${params3}`, {
+        headers: { "Accept-Language": "pt-BR" },
+      });
+      const data3 = await res3.json();
+      const best3 = pickBestNominatim(data3, cepDigits);
+      if (best3 && best3.score >= 4) {
+        setLatitude(parseFloat(best3.hit.lat));
+        setLongitude(parseFloat(best3.hit.lon));
+        if (!silent) toast.success("Localização definida pelo endereço!");
+        return true;
+      }
+
+      // 4) Aceita o melhor resultado disponível, mesmo que só tenha cidade+UF
+      // (evita aceitar um match completamente errado de outra cidade).
+      const fallback = best1 || best3;
+      if (fallback) {
+        setLatitude(parseFloat(fallback.hit.lat));
+        setLongitude(parseFloat(fallback.hit.lon));
+        if (!silent)
+          toast.success("Localização aproximada definida (CEP não georreferenciado).");
+        return true;
+      }
+
+      // 5) Último recurso: centro da cidade
+      const res4 = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(
+          `${city}, ${state}, Brasil`,
+        )}`,
+        { headers: { "Accept-Language": "pt-BR" } },
       );
-      const data2 = await res2.json();
-      if (Array.isArray(data2) && data2[0]) {
-        setLatitude(parseFloat(data2[0].lat));
-        setLongitude(parseFloat(data2[0].lon));
+      const data4 = await res4.json();
+      if (Array.isArray(data4) && data4[0]) {
+        setLatitude(parseFloat(data4[0].lat));
+        setLongitude(parseFloat(data4[0].lon));
         if (!silent)
           toast.success("Localização aproximada (centro da cidade) definida");
         return true;
