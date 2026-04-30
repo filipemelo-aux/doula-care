@@ -169,34 +169,16 @@ export default function VisitorSearch() {
    * the exact same coordinates (e.g. geocoded to city centroid). Without this,
    * Leaflet stacks them and only the top-most marker is visible/clickable.
    */
-  const mapMarkers = useMemo(() => {
-    const groups = new Map<string, PublicDoula[]>();
-    for (const d of doulasOnMap) {
-      // round to ~11m precision so near-identical coords also get spread
-      const key = `${Number(d.latitude).toFixed(4)},${Number(d.longitude).toFixed(4)}`;
-      const list = groups.get(key) || [];
-      list.push(d);
-      groups.set(key, list);
-    }
-    const out: { doula: PublicDoula; lat: number; lng: number }[] = [];
-    groups.forEach((list) => {
-      if (list.length === 1) {
-        out.push({ doula: list[0], lat: Number(list[0].latitude), lng: Number(list[0].longitude) });
-        return;
-      }
-      // ~80m radius — enough to be distinct at city zoom, still nearby
-      const radius = 0.0008;
-      list.forEach((d, i) => {
-        const angle = (2 * Math.PI * i) / list.length;
-        out.push({
-          doula: d,
-          lat: Number(d.latitude) + radius * Math.cos(angle),
-          lng: Number(d.longitude) + radius * Math.sin(angle),
-        });
-      });
-    });
-    return out;
-  }, [doulasOnMap]);
+  // Marcadores nas coordenadas exatas cadastradas — sem espalhamento.
+  const mapMarkers = useMemo(
+    () =>
+      doulasOnMap.map((d) => ({
+        doula: d,
+        lat: Number(d.latitude),
+        lng: Number(d.longitude),
+      })),
+    [doulasOnMap],
+  );
 
   const defaultCenter: [number, number] =
     visitorLat && visitorLng ? [Number(visitorLat), Number(visitorLng)] : [-14.235, -51.9253];
