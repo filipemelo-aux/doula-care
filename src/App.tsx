@@ -109,7 +109,7 @@ const App = () => (
             <Route path="/visitante/diario" element={<VisitorDiary />} />
             <Route path="/visitante/contracoes" element={<VisitorContractions />} />
             <Route path="/visitante/perfil" element={<VisitorProfile />} />
-            <Route path="/visitante/gestacao" element={<VisitorPregnancy />} />
+            <Route path="/visitante/gestacao" element={<Navigate to="/visitante" replace />} />
             <Route path="/visitante/gestacao/semana/:week" element={<VisitorWeekDetail />} />
 
             {/* Client (Gestante) routes */}
