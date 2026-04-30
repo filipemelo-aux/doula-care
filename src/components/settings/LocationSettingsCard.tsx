@@ -327,21 +327,22 @@ export function LocationSettingsCard() {
         </div>
 
         <div className="space-y-2 p-3 rounded-lg bg-muted/30">
-          <Label className="text-xs">Coordenadas no mapa</Label>
-          <div className="flex flex-wrap gap-2">
-            <Button type="button" size="sm" variant="default" onClick={useDeviceLocation} disabled={geocoding} className="gap-1.5">
-              {geocoding ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Locate className="h-3.5 w-3.5" />}
-              Usar minha localização atual
-            </Button>
-            <Button type="button" size="sm" variant="outline" onClick={geocodeByCity} disabled={geocoding} className="gap-1.5">
-              <MapPin className="h-3.5 w-3.5" />
-              Usar centro da cidade
-            </Button>
-          </div>
+          <Label className="text-xs">Localização no mapa</Label>
+          <Button
+            type="button"
+            size="sm"
+            variant="default"
+            onClick={() => geocodeFullAddress(false)}
+            disabled={geocoding || !street || !city}
+            className="gap-1.5"
+          >
+            {geocoding ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Search className="h-3.5 w-3.5" />}
+            Localizar pelo endereço
+          </Button>
           <p className="text-[11px] text-muted-foreground">
             {latitude && longitude
               ? `📍 ${latitude.toFixed(6)}, ${longitude.toFixed(6)}`
-              : "Nenhuma coordenada definida — recomendamos usar sua localização atual para que clientes te encontrem com precisão no mapa."}
+              : "Preencha o CEP acima e clique para definir sua localização exata no mapa."}
           </p>
         </div>
 
