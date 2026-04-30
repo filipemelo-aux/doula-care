@@ -21,11 +21,23 @@ export async function fetchCoordinatesByCep(cep: string) {
   if (clean.length !== 8) return null;
   try {
     const res = await fetch(`https://brasilapi.com.br/api/cep/v2/${clean}`);
+    if (res.ok) {
+      const data = await res.json();
+      const coordinates = data?.location?.coordinates;
+      const latitude = Number(coordinates?.latitude);
+      const longitude = Number(coordinates?.longitude);
+      if (Number.isFinite(latitude) && Number.isFinite(longitude)) return { latitude, longitude };
+    }
+  } catch {
+    // Fallback abaixo
+  }
+
+  try {
+    const res = await fetch(`https://cep.awesomeapi.com.br/json/${clean}`);
     if (!res.ok) return null;
     const data = await res.json();
-    const coordinates = data?.location?.coordinates;
-    const latitude = Number(coordinates?.latitude);
-    const longitude = Number(coordinates?.longitude);
+    const latitude = Number(data?.lat);
+    const longitude = Number(data?.lng);
     if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) return null;
     return { latitude, longitude };
   } catch {
