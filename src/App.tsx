@@ -34,7 +34,7 @@ import VisitorSearch from "./pages/visitante/VisitorSearch";
 import VisitorDiary from "./pages/visitante/VisitorDiary";
 import VisitorContractions from "./pages/visitante/VisitorContractions";
 import VisitorProfile from "./pages/visitante/VisitorProfile";
-import VisitorPregnancy from "./pages/visitante/VisitorPregnancy";
+
 import VisitorWeekDetail from "./pages/visitante/VisitorWeekDetail";
 
 import UpdatePrompt from "./components/pwa/UpdatePrompt";
