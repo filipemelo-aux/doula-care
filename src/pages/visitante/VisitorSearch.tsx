@@ -524,8 +524,8 @@ function DoulaPlansDialog({
             <AlertDialogTitle>Confirmar escolha do plano</AlertDialogTitle>
             <AlertDialogDescription className="text-sm">
               Você está escolhendo o plano <strong>{confirmPlan?.name}</strong> com{" "}
-              <strong>{doula?.nome_exibicao || doula?.name}</strong>. Ao confirmar, ela receberá sua
-              solicitação e entrará em contato em breve.
+              <strong>{doula?.nome_exibicao || doula?.name}</strong>. Ao confirmar, abriremos o
+              <strong> WhatsApp</strong> para você iniciar a conversa com ela sobre este plano. 💗
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
