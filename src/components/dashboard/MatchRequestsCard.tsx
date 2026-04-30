@@ -69,8 +69,8 @@ export function MatchRequestsCard() {
 
   const handleApprove = async (req: any) => {
     if (!contactedIds.has(req.id)) {
-      toast.warning("Converse pelo WhatsApp antes de aprovar", {
-        description: "Clique no botão do WhatsApp para iniciar a conversa com a gestante.",
+      toast.warning("Confirme primeiro o contato no WhatsApp", {
+        description: "Toque no botão do WhatsApp para abrir a conversa antes de fechar o vínculo.",
       });
       return;
     }
@@ -78,7 +78,7 @@ export function MatchRequestsCard() {
     const { error } = await supabase.rpc("approve_doula_match_request" as any, { p_request_id: req.id });
     if (error) {
       setApprovingId(null);
-      return toast.error("Erro ao aprovar", { description: error.message });
+      return toast.error("Erro ao fechar vínculo", { description: error.message });
     }
     // Buscar a cliente recém-vinculada
     const { data: clientData, error: fetchErr } = await supabase
@@ -91,10 +91,10 @@ export function MatchRequestsCard() {
     qc.invalidateQueries({ queryKey: ["clients"] });
 
     if (fetchErr || !clientData) {
-      toast.success("Vínculo aprovado!", { description: "Edite a cliente para finalizar o plano e pagamento." });
+      toast.success("Negócio fechado! 💗", { description: "Edite a cliente para finalizar o plano e pagamento." });
       return;
     }
-    toast.success("Vínculo aprovado! 💗", { description: "Confirme o plano e a forma de pagamento." });
+    toast.success("Negócio fechado! 💗", { description: "Agora confirme o plano e a forma de pagamento." });
     setEditClient(clientData as any);
     setEditOpen(true);
   };
