@@ -61,7 +61,7 @@ export function LocationSettingsCard() {
     setInstagram(org.instagram || "");
   }, [org]);
 
-  const geocode = async () => {
+  const geocodeByCity = async () => {
     if (!city || !state) {
       toast.error("Preencha cidade e estado primeiro");
       return;
@@ -74,7 +74,7 @@ export function LocationSettingsCard() {
       if (Array.isArray(data) && data[0]) {
         setLatitude(parseFloat(data[0].lat));
         setLongitude(parseFloat(data[0].lon));
-        toast.success("Localização encontrada!");
+        toast.success("Localização aproximada (centro da cidade) definida");
       } else {
         toast.error("Não foi possível localizar este endereço");
       }
@@ -84,6 +84,34 @@ export function LocationSettingsCard() {
       setGeocoding(false);
     }
   };
+
+  const useDeviceLocation = () => {
+    if (!("geolocation" in navigator)) {
+      toast.error("Seu dispositivo não suporta geolocalização");
+      return;
+    }
+    setGeocoding(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setLatitude(pos.coords.latitude);
+        setLongitude(pos.coords.longitude);
+        toast.success("Localização exata capturada do seu dispositivo!");
+        setGeocoding(false);
+      },
+      (err) => {
+        setGeocoding(false);
+        if (err.code === err.PERMISSION_DENIED) {
+          toast.error("Permissão de localização negada. Habilite nas configurações do navegador/app.");
+        } else if (err.code === err.POSITION_UNAVAILABLE) {
+          toast.error("Localização indisponível. Tente novamente em área aberta.");
+        } else {
+          toast.error("Não foi possível obter sua localização");
+        }
+      },
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 },
+    );
+  };
+
 
   const addArea = () => {
     const v = newArea.trim();
@@ -240,17 +268,24 @@ export function LocationSettingsCard() {
         </div>
 
         <div className="space-y-2 p-3 rounded-lg bg-muted/30">
-          <div className="flex items-center justify-between">
-            <Label className="text-xs">Coordenadas no mapa</Label>
-            <Button type="button" size="sm" variant="outline" onClick={geocode} disabled={geocoding} className="gap-1.5">
+          <Label className="text-xs">Coordenadas no mapa</Label>
+          <div className="flex flex-wrap gap-2">
+            <Button type="button" size="sm" variant="default" onClick={useDeviceLocation} disabled={geocoding} className="gap-1.5">
               {geocoding ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Locate className="h-3.5 w-3.5" />}
-              Localizar pelo endereço
+              Usar minha localização atual
+            </Button>
+            <Button type="button" size="sm" variant="outline" onClick={geocodeByCity} disabled={geocoding} className="gap-1.5">
+              <MapPin className="h-3.5 w-3.5" />
+              Usar centro da cidade
             </Button>
           </div>
           <p className="text-[11px] text-muted-foreground">
-            {latitude && longitude ? `📍 ${latitude.toFixed(4)}, ${longitude.toFixed(4)}` : "Nenhuma coordenada definida — use o botão acima"}
+            {latitude && longitude
+              ? `📍 ${latitude.toFixed(6)}, ${longitude.toFixed(6)}`
+              : "Nenhuma coordenada definida — recomendamos usar sua localização atual para que clientes te encontrem com precisão no mapa."}
           </p>
         </div>
+
 
         <div className="flex justify-end pt-2 border-t">
           <Button onClick={() => save.mutate()} disabled={save.isPending} className="gap-2">
