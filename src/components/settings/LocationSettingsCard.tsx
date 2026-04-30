@@ -517,21 +517,34 @@ export function LocationSettingsCard() {
 
         <div className="space-y-2 p-3 rounded-lg bg-muted/30">
           <Label className="text-xs">Localização no mapa</Label>
-          <Button
-            type="button"
-            size="sm"
-            variant="default"
-            onClick={() => geocodeFullAddress(false)}
-            disabled={geocoding || !street || !city}
-            className="gap-1.5"
-          >
-            {geocoding ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Search className="h-3.5 w-3.5" />}
-            Localizar pelo endereço
-          </Button>
+          <div className="flex flex-col sm:flex-row gap-2">
+            <Button
+              type="button"
+              size="sm"
+              variant="default"
+              onClick={() => geocodeFullAddress(false)}
+              disabled={geocoding || !street || !city}
+              className="gap-1.5"
+            >
+              {geocoding ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Search className="h-3.5 w-3.5" />}
+              Localizar pelo endereço
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              onClick={useDeviceLocation}
+              disabled={locatingDevice}
+              className="gap-1.5"
+            >
+              {locatingDevice ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <MapPin className="h-3.5 w-3.5" />}
+              Usar localização atual
+            </Button>
+          </div>
           <p className="text-[11px] text-muted-foreground">
             {latitude && longitude
               ? `📍 ${latitude.toFixed(6)}, ${longitude.toFixed(6)}`
-              : "Preencha o CEP acima e clique para definir sua localização exata no mapa."}
+              : "Prefira o endereço; se ele cair no local errado, use a localização atual no celular."}
           </p>
         </div>
 
