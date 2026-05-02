@@ -209,12 +209,6 @@ export default function Login() {
               </Link>
             </div>
             <div>
-              Procurando uma doula?{" "}
-              <Link to="/visitante" className="text-primary hover:underline font-medium">
-                Venha conhecer
-              </Link>
-            </div>
-            <div>
               Já tem a sua doula?{" "}
               <Link to="/recuperar-acesso" className="text-primary hover:underline font-medium">
                 Clique aqui
