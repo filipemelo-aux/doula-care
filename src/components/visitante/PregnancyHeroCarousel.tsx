@@ -24,10 +24,10 @@ export function PregnancyHeroCarousel({ currentWeek }: PregnancyHeroCarouselProp
 
   const [emblaRef, emblaApi] = useEmblaCarousel({
     align: "center",
-    containScroll: "trimSnaps",
     startIndex: initialIndex,
     skipSnaps: false,
-    dragFree: false,
+    dragFree: true,
+    loop: true,
   });
 
   const [selected, setSelected] = useState(initialIndex);
