@@ -695,9 +695,8 @@ export default function SuperAdminDashboard() {
       case "billing":
         return (
           <div className="space-y-6">
-            <PixPaymentRequestsCard />
-            <PlatformPixSettingsCard />
             <SubscriptionBillingCard />
+
             <PlanLimitsCard />
             <PlanPricingCard />
             <OrgBillingCard />
