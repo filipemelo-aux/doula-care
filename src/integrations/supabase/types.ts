@@ -1402,6 +1402,47 @@ export type Database = {
           },
         ]
       }
+      plan_store_products: {
+        Row: {
+          active: boolean
+          billing_period: string
+          created_at: string
+          id: string
+          plan_id: string
+          platform: string
+          product_id: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          billing_period: string
+          created_at?: string
+          id?: string
+          plan_id: string
+          platform: string
+          product_id: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          billing_period?: string
+          created_at?: string
+          id?: string
+          plan_id?: string
+          platform?: string
+          product_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "plan_store_products_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "platform_plan_limits"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       platform_plan_limits: {
         Row: {
           agenda: boolean
@@ -1704,14 +1745,60 @@ export type Database = {
           },
         ]
       }
+      subscription_events: {
+        Row: {
+          created_at: string
+          event_type: string
+          id: string
+          platform: string
+          product_id: string | null
+          raw_payload: Json | null
+          subscription_id: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          event_type: string
+          id?: string
+          platform: string
+          product_id?: string | null
+          raw_payload?: Json | null
+          subscription_id?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          event_type?: string
+          id?: string
+          platform?: string
+          product_id?: string | null
+          raw_payload?: Json | null
+          subscription_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscription_events_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       subscriptions: {
         Row: {
           created_at: string
           current_period_end: string | null
           current_period_start: string | null
           id: string
+          original_transaction_id: string | null
           plan_id: string
+          platform: string | null
+          product_id: string | null
+          purchase_token: string | null
           status: string
+          store_subscription_id: string | null
           stripe_customer_id: string | null
           stripe_subscription_id: string | null
           updated_at: string
@@ -1722,8 +1809,13 @@ export type Database = {
           current_period_end?: string | null
           current_period_start?: string | null
           id?: string
+          original_transaction_id?: string | null
           plan_id: string
+          platform?: string | null
+          product_id?: string | null
+          purchase_token?: string | null
           status?: string
+          store_subscription_id?: string | null
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
           updated_at?: string
@@ -1734,8 +1826,13 @@ export type Database = {
           current_period_end?: string | null
           current_period_start?: string | null
           id?: string
+          original_transaction_id?: string | null
           plan_id?: string
+          platform?: string | null
+          product_id?: string | null
+          purchase_token?: string | null
           status?: string
+          store_subscription_id?: string | null
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
           updated_at?: string
