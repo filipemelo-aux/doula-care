@@ -345,7 +345,7 @@ export const AppStoreSubscriptionService = {
       [];
     const productId = Array.isArray(entitlements)
       ? entitlements[0]
-      : Object.values(entitlements)[0]?.productIdentifier;
+      : (Object.values(entitlements)[0] as any)?.productIdentifier;
 
     if (productId) {
       await this.validateReceiptOrPurchase({
