@@ -14,6 +14,7 @@
         "@capacitor/status-bar": "^8.0.1",
         "@capgo/capacitor-autofill-save-password": "^8.0.20",
         "@capgo/capacitor-navigation-bar": "^8.0.0",
+        "@capgo/capacitor-purchases": "^5.0.8",
         "@hookform/resolvers": "^3.10.0",
         "@radix-ui/react-accordion": "^1.2.11",
         "@radix-ui/react-alert-dialog": "^1.1.14",
@@ -308,6 +309,8 @@
     "@capgo/capacitor-autofill-save-password": ["@capgo/capacitor-autofill-save-password@8.0.25", "https://europe-west4-npm.pkg.dev/lovable-core-prod/sandbox-npm-cache/@capgo/capacitor-autofill-save-password/-/capacitor-autofill-save-password-8.0.25.tgz", { "peerDependencies": { "@capacitor/core": ">=8.0.0" } }, "sha512-c7jJvi2cJ1Zgkfa5yMs7hnAdxTmLbkusVj8Q/xr7b1qsO3Hz0d/+cOSzrpGnTD31EIuo4Z966OEjcrdP7YYzJQ=="],
 
     "@capgo/capacitor-navigation-bar": ["@capgo/capacitor-navigation-bar@8.1.4", "https://europe-west4-npm.pkg.dev/lovable-core-prod/sandbox-npm-cache/@capgo/capacitor-navigation-bar/-/capacitor-navigation-bar-8.1.4.tgz", { "peerDependencies": { "@capacitor/core": ">=8.0.0" } }, "sha512-zjVQYf2psZnAd3JsjQTljJRLG6P4uywqBpgzBpM6uI6EQc4poYpQlz6WfwgQCP1XSSMVrkdNCcOKBGpuC+OzCQ=="],
+
+    "@capgo/capacitor-purchases": ["@capgo/capacitor-purchases@5.0.8", "https://europe-west4-npm.pkg.dev/lovable-core-prod/sandbox-npm-cache/@capgo/capacitor-purchases/-/capacitor-purchases-5.0.8.tgz", { "peerDependencies": { "@capacitor/core": "^5.0.0" } }, "sha512-/2XA7UNakOekNm9j6e9wSh77qKrUoXtOW0Oz6pe8QWa7YWqhBeoxWEB227lCguooyZ6iFcL9X4BTJhcywZwpzA=="],
 
     "@esbuild/aix-ppc64": ["@esbuild/aix-ppc64@0.25.0", "", { "os": "aix", "cpu": "ppc64" }, "sha512-O7vun9Sf8DFjH2UtqK8Ku3LkquL9SZL8OLY1T5NZkA34+wG3OQF7cl4Ql8vdNzM6fzBbYfLaiRLIOZ+2FOCgBQ=="],
 
