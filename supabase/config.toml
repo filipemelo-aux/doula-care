@@ -44,3 +44,9 @@ verify_jwt = false
 
 [functions.manage-admin-user]
 verify_jwt = false
+
+[functions.webhook-apple-subscriptions]
+verify_jwt = false
+
+[functions.webhook-google-play]
+verify_jwt = false
