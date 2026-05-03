@@ -20,8 +20,6 @@ import { hardRefreshApp } from "@/lib/appUpdate";
 import { PlanPricingCard } from "@/components/superadmin/PlanPricingCard";
 import { PlanLimitsCard } from "@/components/superadmin/PlanLimitsCard";
 import { OrgBillingCard } from "@/components/superadmin/OrgBillingCard";
-import { PlatformPixSettingsCard } from "@/components/superadmin/PlatformPixSettingsCard";
-import { PixPaymentRequestsCard } from "@/components/superadmin/PixPaymentRequestsCard";
 import { UserManagementCard } from "@/components/superadmin/UserManagementCard";
 import { SubscriptionBillingCard } from "@/components/superadmin/SubscriptionBillingCard";
 import { BroadcastNotificationCard } from "@/components/superadmin/BroadcastNotificationCard";
