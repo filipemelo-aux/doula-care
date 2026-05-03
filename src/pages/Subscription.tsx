@@ -1,7 +1,6 @@
-import { useState, useEffect } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useState, useEffect, useMemo } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useSearchParams } from "react-router-dom";
 
 import { useAuth } from "@/contexts/AuthContext";
 import { usePlanLimits } from "@/hooks/usePlanLimits";
@@ -9,12 +8,24 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Check, Crown, ExternalLink, Loader2, Settings, Sparkles, Star, QrCode } from "lucide-react";
+import {
+  Apple,
+  Check,
+  Crown,
+  Loader2,
+  RefreshCcw,
+  Smartphone,
+  Sparkles,
+  Star,
+} from "lucide-react";
 import { toast } from "sonner";
-import { CheckoutTransitionDialog } from "@/components/subscription/CheckoutTransitionDialog";
-import { PixPaymentDialog } from "@/components/subscription/PixPaymentDialog";
-
-type BillingType = "monthly" | "yearly";
+import {
+  AppStoreSubscriptionService,
+  type StoreProduct,
+  type BillingPeriod,
+  getCurrentPlatform,
+  isDevEnvironment,
+} from "@/lib/subscriptions/AppStoreSubscriptionService";
 
 interface PlatformPlan {
   id: string;
@@ -56,11 +67,8 @@ function formatCentavos(centavos: number): string {
 
 function buildFeatureList(plan: PlatformPlan): string[] {
   const features: string[] = [];
-  if (plan.max_clients === null) {
-    features.push("Clientes ilimitados");
-  } else {
-    features.push(`Até ${plan.max_clients} clientes`);
-  }
+  if (plan.max_clients === null) features.push("Clientes ilimitados");
+  else features.push(`Até ${plan.max_clients} clientes`);
   if (plan.agenda) features.push("Agenda");
   if (plan.financial) features.push("Financeiro");
   if (plan.expenses) features.push("Controle de despesas");
@@ -77,35 +85,21 @@ function buildFeatureList(plan: PlatformPlan): string[] {
 export default function Subscription() {
   const { user, organizationId } = useAuth();
   const queryClient = useQueryClient();
-  const [searchParams, setSearchParams] = useSearchParams();
-  const [checkoutDialog, setCheckoutDialog] = useState<{
-    open: boolean;
-    planName: string;
-    planPrice: string;
-    checkoutUrl: string | null;
-    error: string | null;
-    pendingPlanId: string | null;
-    pendingBillingType: BillingType | null;
-  }>({ open: false, planName: "", planPrice: "", checkoutUrl: null, error: null, pendingPlanId: null, pendingBillingType: null });
 
-  const [pixDialog, setPixDialog] = useState<{
-    open: boolean;
-    planId: string | null;
-    planName: string;
-    amount: number;
-    billingType: BillingType;
-  }>({ open: false, planId: null, planName: "", amount: 0, billingType: "monthly" });
+  const platform = getCurrentPlatform();
+  const isWeb = platform === "web";
+  const isDev = isDevEnvironment();
+
+  const [purchasing, setPurchasing] = useState<string | null>(null);
+  const [restoring, setRestoring] = useState(false);
 
   const {
     plan: effectivePlan,
     originalPlan,
     isSubscriptionExpired,
-    isSubscriptionPending,
-    subscriptionEndDate,
     isLoading: planLoading,
   } = usePlanLimits();
 
-  // Check if user has lifetime access
   const { data: isLifetime } = useQuery({
     queryKey: ["lifetime-promo", organizationId],
     queryFn: async () => {
@@ -121,30 +115,6 @@ export default function Subscription() {
     enabled: !!organizationId,
   });
 
-  // Handle Stripe redirect success
-  useEffect(() => {
-    const success = searchParams.get("success");
-    const sessionId = searchParams.get("session_id");
-    if (success === "true" && sessionId) {
-      toast.success("Pagamento confirmado! Seu plano foi ativado.");
-      supabase.functions.invoke("check-subscription").then(({ data }) => {
-        if (data?.subscribed) {
-          queryClient.invalidateQueries({ queryKey: ["my-subscription"] });
-          queryClient.invalidateQueries({ queryKey: ["current-subscription"] });
-          queryClient.invalidateQueries({ queryKey: ["org-plan"] });
-          queryClient.invalidateQueries({ queryKey: ["active-subscription"] });
-          queryClient.invalidateQueries({ queryKey: ["platform-plan-limits"] });
-        }
-      });
-      setSearchParams({}, { replace: true });
-    }
-    const canceled = searchParams.get("canceled");
-    if (canceled === "true") {
-      toast.info("Pagamento cancelado.");
-      setSearchParams({}, { replace: true });
-    }
-  }, [searchParams, setSearchParams, queryClient]);
-
   const { data: plans, isLoading } = useQuery({
     queryKey: ["platform-plans-subscription"],
     queryFn: async () => {
@@ -157,15 +127,22 @@ export default function Subscription() {
     },
   });
 
+  const { data: storeProducts } = useQuery({
+    queryKey: ["store-products", platform],
+    queryFn: () => AppStoreSubscriptionService.getProducts(),
+  });
+
   const { data: activeSubscription } = useQuery({
     queryKey: ["my-subscription", user?.id],
     queryFn: async () => {
       if (!user?.id) return null;
       const { data, error } = await supabase
         .from("subscriptions")
-        .select("id, status, current_period_start, current_period_end, plan_id")
+        .select(
+          "id, status, current_period_start, current_period_end, plan_id, platform, product_id"
+        )
         .eq("user_id", user.id)
-        .in("status", ["active", "pending"])
+        .in("status", ["active", "grace_period", "billing_issue"])
         .order("created_at", { ascending: false })
         .limit(1)
         .maybeSingle();
@@ -175,64 +152,84 @@ export default function Subscription() {
     enabled: !!user?.id,
   });
 
-  const portalMutation = useMutation({
-    mutationFn: async () => {
-      const { data, error } = await supabase.functions.invoke("customer-portal");
-      if (error) throw error;
-      if (data?.error) throw new Error(data.error);
-      return data as { url: string };
-    },
-    onSuccess: (data) => {
-      if (data.url) {
-        window.open(data.url, "_blank");
-      }
-    },
-    onError: (err: any) => {
-      toast.error(err?.message || "Erro ao abrir portal");
-    },
-  });
-
-  const handleSubscribe = async (plan: PlatformPlan, billingType: BillingType) => {
-    const isYearlyPeriod = billingType === "yearly";
-    const price = isYearlyPeriod
-      ? (plan.price_yearly > 0 ? plan.price_yearly : plan.price_monthly * 12)
-      : plan.price_monthly;
-
-    const periodSuffix = isYearlyPeriod ? "/ano" : "/mês";
-
-    setCheckoutDialog({
-      open: true,
-      planName: plan.name,
-      planPrice: formatCentavos(price) + periodSuffix,
-      checkoutUrl: null,
-      error: null,
-      pendingPlanId: plan.id,
-      pendingBillingType: billingType,
+  // index store products by plan_id+billing_period for quick lookup
+  const productByPlan = useMemo(() => {
+    const map = new Map<string, StoreProduct>();
+    (storeProducts || []).forEach((p) => {
+      // prefer current platform when web shows both
+      const key = `${p.planId}:${p.billingPeriod}`;
+      const existing = map.get(key);
+      if (!existing) map.set(key, p);
     });
+    return map;
+  }, [storeProducts]);
 
+  const invalidatePlanCaches = () => {
+    queryClient.invalidateQueries({ queryKey: ["my-subscription"] });
+    queryClient.invalidateQueries({ queryKey: ["current-subscription"] });
+    queryClient.invalidateQueries({ queryKey: ["org-plan"] });
+    queryClient.invalidateQueries({ queryKey: ["active-subscription"] });
+    queryClient.invalidateQueries({ queryKey: ["platform-plan-limits"] });
+  };
+
+  const handleSubscribe = async (plan: PlatformPlan, billingType: BillingPeriod) => {
+    const product = productByPlan.get(`${plan.id}:${billingType}`);
+    if (!product) {
+      toast.error("Este plano ainda não está disponível na loja.");
+      return;
+    }
+
+    if (isWeb && !isDev) {
+      toast.info(
+        "Assinaturas são processadas pela loja oficial quando o app estiver instalado no iOS ou Android."
+      );
+      return;
+    }
+
+    setPurchasing(product.productId);
     try {
-      const { data, error } = await supabase.functions.invoke("create-checkout-session", {
-        body: { plan_id: plan.id, billing_type: billingType },
-      });
-      if (error) throw error;
-      if (data?.error) throw new Error(data.error);
-      setCheckoutDialog((prev) => ({ ...prev, checkoutUrl: data.url }));
+      toast.loading("Processando assinatura...", { id: "iap" });
+      const result = await AppStoreSubscriptionService.purchaseSubscription(
+        product.productId
+      );
+      toast.dismiss("iap");
+
+      if (result.status === "purchased") {
+        toast.success("Assinatura ativada com sucesso");
+        invalidatePlanCaches();
+      } else if (result.status === "cancelled") {
+        toast.info("Compra cancelada");
+      } else if (result.status === "pending") {
+        toast.info("Pagamento em processamento. Confirmaremos em instantes.");
+      } else {
+        toast.error(result.message || "Não foi possível concluir a assinatura");
+      }
     } catch (err: any) {
-      setCheckoutDialog((prev) => ({
-        ...prev,
-        error: err?.message || "Erro ao iniciar pagamento",
-      }));
+      toast.dismiss("iap");
+      toast.error(err?.message || "Erro inesperado");
+    } finally {
+      setPurchasing(null);
     }
   };
 
-  const handleRetryCheckout = () => {
-    const plan = plans?.find((p) => p.id === checkoutDialog.pendingPlanId);
-    if (plan && checkoutDialog.pendingBillingType) {
-      handleSubscribe(plan, checkoutDialog.pendingBillingType);
+  const handleRestore = async () => {
+    setRestoring(true);
+    try {
+      toast.loading("Restaurando compras...", { id: "restore" });
+      const r = await AppStoreSubscriptionService.restorePurchases();
+      toast.dismiss("restore");
+      if (r.restored) {
+        toast.success(r.message);
+        invalidatePlanCaches();
+      } else {
+        toast.info(r.message);
+      }
+    } finally {
+      setRestoring(false);
     }
   };
 
-  const handleActivateFree = async () => {
+  const handleActivateFree = () => {
     toast.success("Plano gratuito ativado!");
   };
 
@@ -258,11 +255,10 @@ export default function Subscription() {
   }
 
   const currentPlanSlug = originalPlan;
-  const hasActiveSub = activeSubscription?.status === "active" && !isSubscriptionExpired;
+  const hasActiveSub = !!activeSubscription && !isSubscriptionExpired;
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="page-header">
         <h1 className="page-title">Assinatura</h1>
         <p className="page-description">
@@ -270,7 +266,26 @@ export default function Subscription() {
         </p>
       </div>
 
-      {/* Current Plan Status */}
+      {isWeb && (
+        <Card className="card-glass border-amber-400/30 bg-amber-50/50 dark:bg-amber-500/5">
+          <CardContent className="pt-6">
+            <div className="flex items-start gap-3">
+              <Smartphone className="w-5 h-5 text-amber-600 mt-0.5 shrink-0" />
+              <div>
+                <p className="text-sm font-medium text-foreground">
+                  Assinaturas são feitas dentro do aplicativo oficial
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  As assinaturas são processadas pela loja oficial quando o app
+                  estiver instalado no iOS (App Store) ou Android (Google Play).
+                  {isDev && " Em modo desenvolvimento você pode simular compras."}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       <Card className="card-glass">
         <CardContent className="pt-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -285,24 +300,35 @@ export default function Subscription() {
                   Acesso Vitalício
                 </Badge>
               ) : activeSubscription ? (
-                <div className="flex items-center gap-2 mt-1">
+                <div className="flex items-center gap-2 mt-1 flex-wrap">
                   <Badge
-                    variant={activeSubscription.status === "active" ? "default" : "secondary"}
                     className={
                       activeSubscription.status === "active"
                         ? "bg-emerald-500/10 text-emerald-700 border-emerald-500/30"
-                        : ""
+                        : activeSubscription.status === "grace_period"
+                          ? "bg-amber-500/10 text-amber-700 border-amber-500/30"
+                          : "bg-destructive/10 text-destructive border-destructive/30"
                     }
                   >
                     {activeSubscription.status === "active"
                       ? "Ativo"
-                      : activeSubscription.status === "pending"
-                        ? "Pendente"
-                        : "Cancelado"}
+                      : activeSubscription.status === "grace_period"
+                        ? "Período de tolerância"
+                        : "Problema de pagamento"}
                   </Badge>
                   <span className="text-xs text-muted-foreground">
                     Válido até {formatDate(activeSubscription.current_period_end)}
                   </span>
+                  {(activeSubscription as any).platform === "ios" && (
+                    <Badge variant="outline" className="text-xs">
+                      <Apple className="w-3 h-3 mr-1" /> App Store
+                    </Badge>
+                  )}
+                  {(activeSubscription as any).platform === "android" && (
+                    <Badge variant="outline" className="text-xs">
+                      Google Play
+                    </Badge>
+                  )}
                 </div>
               ) : null}
               {isSubscriptionExpired && !isLifetime && (
@@ -311,30 +337,36 @@ export default function Subscription() {
                 </p>
               )}
             </div>
-            {hasActiveSub && !isLifetime && (
+
+            {!isWeb && !isLifetime && (
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => portalMutation.mutate()}
-                disabled={portalMutation.isPending}
+                onClick={handleRestore}
+                disabled={restoring}
               >
-                {portalMutation.isPending ? (
+                {restoring ? (
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                 ) : (
-                  <Settings className="w-4 h-4 mr-2" />
+                  <RefreshCcw className="w-4 h-4 mr-2" />
                 )}
-                Gerenciar assinatura
+                Restaurar compras
               </Button>
             )}
           </div>
         </CardContent>
       </Card>
 
-      {/* Plan Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {plans?.map((plan) => {
           const isCurrentPlan = plan.plan === currentPlanSlug && !isSubscriptionExpired;
           const features = buildFeatureList(plan);
+          const monthlyProduct = productByPlan.get(`${plan.id}:monthly`);
+          const yearlyProduct = productByPlan.get(`${plan.id}:yearly`);
+          const purchasingThis =
+            !!purchasing &&
+            (purchasing === monthlyProduct?.productId ||
+              purchasing === yearlyProduct?.productId);
 
           return (
             <Card
@@ -359,7 +391,6 @@ export default function Subscription() {
               </CardHeader>
 
               <CardContent className="space-y-6">
-                {/* Pricing */}
                 {plan.is_free ? (
                   <div>
                     <p className="text-3xl font-bold text-foreground">Grátis</p>
@@ -367,7 +398,10 @@ export default function Subscription() {
                   </div>
                 ) : (
                   (() => {
-                    const yearly = plan.price_yearly > 0 ? plan.price_yearly : plan.price_monthly * 12;
+                    const yearly =
+                      plan.price_yearly > 0
+                        ? plan.price_yearly
+                        : plan.price_monthly * 12;
                     const hasDiscount = yearly < plan.price_monthly * 12;
                     return (
                       <div className="space-y-1">
@@ -384,7 +418,10 @@ export default function Subscription() {
                           <span className="text-xs text-muted-foreground">/ano</span>
                           {hasDiscount && (
                             <Badge variant="secondary" className="ml-2 text-xs">
-                              {Math.round((1 - yearly / (plan.price_monthly * 12)) * 100)}% off
+                              {Math.round(
+                                (1 - yearly / (plan.price_monthly * 12)) * 100
+                              )}
+                              % off
                             </Badge>
                           )}
                         </div>
@@ -393,7 +430,6 @@ export default function Subscription() {
                   })()
                 )}
 
-                {/* Features */}
                 <div className="space-y-2 min-h-[140px]">
                   {features.map((feature, i) => (
                     <div key={i} className="flex items-start gap-2">
@@ -403,7 +439,6 @@ export default function Subscription() {
                   ))}
                 </div>
 
-                {/* Buttons */}
                 <div className="space-y-2 pt-4 border-t border-border">
                   {isLifetime ? (
                     <Button variant="outline" className="w-full" disabled>
@@ -428,55 +463,34 @@ export default function Subscription() {
                       <Button
                         className="w-full"
                         onClick={() => handleSubscribe(plan, "monthly")}
-                        disabled={checkoutDialog.open}
+                        disabled={purchasingThis || !monthlyProduct}
                       >
-                        <ExternalLink className="w-4 h-4 mr-2" />
+                        {purchasing === monthlyProduct?.productId ? (
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        ) : null}
                         Assinar mensal — {formatCentavos(plan.price_monthly)}
                       </Button>
                       <Button
                         variant="outline"
                         className="w-full"
                         onClick={() => handleSubscribe(plan, "yearly")}
-                        disabled={checkoutDialog.open}
+                        disabled={purchasingThis || !yearlyProduct}
                       >
-                        Assinar anual — {formatCentavos(plan.price_yearly > 0 ? plan.price_yearly : plan.price_monthly * 12)}
+                        {purchasing === yearlyProduct?.productId ? (
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        ) : null}
+                        Assinar anual —{" "}
+                        {formatCentavos(
+                          plan.price_yearly > 0
+                            ? plan.price_yearly
+                            : plan.price_monthly * 12
+                        )}
                       </Button>
-
-                      <div className="pt-2 mt-2 border-t border-dashed border-border space-y-2">
-                        <p className="text-[11px] text-muted-foreground text-center font-medium uppercase tracking-wide">
-                          Prefere pagar via Pix?
+                      {!monthlyProduct && !yearlyProduct && (
+                        <p className="text-[11px] text-muted-foreground text-center">
+                          Produto não mapeado para esta plataforma.
                         </p>
-                        <Button
-                          variant="secondary"
-                          size="sm"
-                          className="w-full"
-                          onClick={() => setPixDialog({
-                            open: true,
-                            planId: plan.id,
-                            planName: plan.name,
-                            amount: plan.price_monthly,
-                            billingType: "monthly",
-                          })}
-                        >
-                          <QrCode className="w-4 h-4 mr-2" />
-                          Pix mensal — {formatCentavos(plan.price_monthly)}
-                        </Button>
-                        <Button
-                          variant="secondary"
-                          size="sm"
-                          className="w-full"
-                          onClick={() => setPixDialog({
-                            open: true,
-                            planId: plan.id,
-                            planName: plan.name,
-                            amount: plan.price_yearly > 0 ? plan.price_yearly : plan.price_monthly * 12,
-                            billingType: "yearly",
-                          })}
-                        >
-                          <QrCode className="w-4 h-4 mr-2" />
-                          Pix anual — {formatCentavos(plan.price_yearly > 0 ? plan.price_yearly : plan.price_monthly * 12)}
-                        </Button>
-                      </div>
+                      )}
                     </>
                   )}
                 </div>
@@ -486,24 +500,18 @@ export default function Subscription() {
         })}
       </div>
 
-      <CheckoutTransitionDialog
-        open={checkoutDialog.open}
-        onOpenChange={(o) => setCheckoutDialog((prev) => ({ ...prev, open: o }))}
-        planName={checkoutDialog.planName}
-        planPrice={checkoutDialog.planPrice}
-        checkoutUrl={checkoutDialog.checkoutUrl}
-        error={checkoutDialog.error}
-        onRetry={handleRetryCheckout}
-      />
-
-      <PixPaymentDialog
-        open={pixDialog.open}
-        onOpenChange={(o) => setPixDialog((p) => ({ ...p, open: o }))}
-        planId={pixDialog.planId}
-        planName={pixDialog.planName}
-        amount={pixDialog.amount}
-        billingType={pixDialog.billingType}
-      />
+      {hasActiveSub && (
+        <Card className="card-glass">
+          <CardContent className="pt-6 text-xs text-muted-foreground">
+            Para alterar forma de pagamento, cancelar ou ver histórico de cobranças,
+            acesse:
+            <ul className="list-disc list-inside mt-2 space-y-1">
+              <li>iOS: Ajustes &gt; Apple ID &gt; Assinaturas</li>
+              <li>Android: Google Play &gt; Pagamentos e assinaturas</li>
+            </ul>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
