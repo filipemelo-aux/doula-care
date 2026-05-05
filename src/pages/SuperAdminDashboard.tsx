@@ -13,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Loader2, Building2, Users, Ban, CheckCircle, LogOut, BarChart3, Clock, ShieldCheck, Mail, CalendarDays, Baby, Trash2, RefreshCw, Bell, CreditCard, Menu, Users2, Zap, Home, UserCog, Eye, EyeOff, ArrowLeft, Shield, Smartphone, Apple } from "lucide-react";
+import { Loader2, Building2, Users, Ban, CheckCircle, LogOut, BarChart3, Clock, ShieldCheck, Mail, CalendarDays, Baby, Trash2, RefreshCw, Bell, CreditCard, Menu, Users2, Zap, Home, UserCog, Eye, EyeOff, ArrowLeft, Shield, Smartphone, Apple, Map as MapIcon } from "lucide-react";
 import Forum from "@/pages/Forum";
 import { APP_VERSION } from "@/lib/appVersion";
 import { hardRefreshApp } from "@/lib/appUpdate";
@@ -26,6 +26,7 @@ import { BroadcastNotificationCard } from "@/components/superadmin/BroadcastNoti
 import { PromoTriggerButton } from "@/components/superadmin/PromoTriggerButton";
 import { ModerationSection } from "@/components/superadmin/ModerationSection";
 import { TopActiveOrgsCard } from "@/components/superadmin/TopActiveOrgsCard";
+import { AppPagesDirectory } from "@/components/superadmin/AppPagesDirectory";
 import { useOnlineOrgs } from "@/hooks/useOnlineOrgs";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
@@ -35,7 +36,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { promptToSaveUpdatedPassword } from "@/lib/passwordManager";
 
-type Section = "dashboard" | "moderation" | "users" | "billing" | "notifications" | "community" | "profile";
+type Section = "dashboard" | "moderation" | "users" | "billing" | "notifications" | "community" | "pages" | "profile";
 
 const sidebarItems: { key: Section; label: string; icon: React.ElementType }[] = [
   { key: "dashboard", label: "Painel", icon: Home },
@@ -43,6 +44,7 @@ const sidebarItems: { key: Section; label: string; icon: React.ElementType }[] =
   { key: "billing", label: "Planos & Cobranças", icon: CreditCard },
   { key: "notifications", label: "Notificações", icon: Bell },
   { key: "community", label: "Comunidade", icon: Users2 },
+  { key: "pages", label: "Mapa de Páginas", icon: MapIcon },
   { key: "profile", label: "Meu Perfil", icon: UserCog },
   { key: "moderation", label: "Moderação", icon: Shield },
 ];
@@ -704,6 +706,8 @@ export default function SuperAdminDashboard() {
         return <BroadcastNotificationCard />;
       case "community":
         return <Forum />;
+      case "pages":
+        return <AppPagesDirectory />;
       case "profile":
         return <ProfileSection />;
     }
