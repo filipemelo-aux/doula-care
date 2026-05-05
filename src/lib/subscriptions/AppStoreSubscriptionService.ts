@@ -263,11 +263,14 @@ export const AppStoreSubscriptionService = {
       };
     }
 
+    const ready = await setupNativePlugin();
     const Purchases = await loadNativePurchases();
-    if (!Purchases) {
+    if (!Purchases || !ready) {
       return {
         status: "error",
-        message: "Plugin de compras não disponível neste dispositivo.",
+        message: ready
+          ? "Plugin de compras não disponível neste dispositivo."
+          : "Loja não inicializada. Verifique sua conexão e tente novamente.",
       };
     }
 
