@@ -309,8 +309,9 @@ export const AppStoreSubscriptionService = {
         message: "Restauração só está disponível no app instalado.",
       };
     }
+    const ready = await setupNativePlugin();
     const Purchases = await loadNativePurchases();
-    if (!Purchases) {
+    if (!Purchases || !ready) {
       return { restored: false, message: "Plugin de compras indisponível." };
     }
     try {
