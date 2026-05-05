@@ -706,6 +706,8 @@ export default function SuperAdminDashboard() {
         return <BroadcastNotificationCard />;
       case "community":
         return <Forum />;
+      case "pages":
+        return <AppPagesDirectory />;
       case "profile":
         return <ProfileSection />;
     }
