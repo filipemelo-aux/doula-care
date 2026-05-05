@@ -5,6 +5,8 @@ import { isCapacitorNative, setupNativePushListeners } from "@/lib/capacitorPush
 import { configureNativeBars } from "@/lib/capacitorNativeUI";
 import { getCachedBranding } from "@/hooks/useOrgBranding";
 import { stripAppRefreshParams } from "@/lib/appUpdate";
+import { AppStoreSubscriptionService } from "@/lib/subscriptions/AppStoreSubscriptionService";
+import { supabase } from "@/integrations/supabase/client";
 
 const normalizeInitialGestanteRoute = () => {
   const { pathname, search, hash } = window.location;
