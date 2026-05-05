@@ -222,6 +222,17 @@ export const AppStoreSubscriptionService = {
   isNativeMobile,
   isDevEnvironment,
 
+  /** Inicializa o plugin nativo de IAP (idempotente). Seguro chamar no boot. */
+  async initialize(): Promise<boolean> {
+    return setupNativePlugin();
+  },
+
+  /** Atualiza appUserID após login/logout. */
+  async identifyUser(userId: string | null): Promise<void> {
+    await setupNativePlugin();
+    return identifyNativeUser(userId);
+  },
+
   /**
    * Lista os produtos disponíveis para a plataforma atual (mapeados no Supabase).
    * No web devolve produtos das duas lojas para preview/mock.
