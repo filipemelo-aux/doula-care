@@ -5,6 +5,8 @@ import { isCapacitorNative, setupNativePushListeners } from "@/lib/capacitorPush
 import { configureNativeBars } from "@/lib/capacitorNativeUI";
 import { getCachedBranding } from "@/hooks/useOrgBranding";
 import { stripAppRefreshParams } from "@/lib/appUpdate";
+import { AppStoreSubscriptionService } from "@/lib/subscriptions/AppStoreSubscriptionService";
+import { supabase } from "@/integrations/supabase/client";
 
 const normalizeInitialGestanteRoute = () => {
   const { pathname, search, hash } = window.location;
@@ -50,6 +52,17 @@ const bootstrapNativeFeatures = () => {
 
   setupNativePushListeners();
   reapplyNativeBars();
+
+  // Inicializa o plugin de IAP (RevenueCat). Idempotente; ignora silenciosamente
+  // se as chaves não estiverem configuradas (evita travar o boot).
+  void AppStoreSubscriptionService.initialize().catch((err) =>
+    console.warn("[IAP] initialize falhou:", err)
+  );
+
+  // Mantém o appUserID do RevenueCat sincronizado com o usuário logado.
+  supabase.auth.onAuthStateChange((_event, session) => {
+    void AppStoreSubscriptionService.identifyUser(session?.user?.id ?? null);
+  });
 
   window.addEventListener("focus", reapplyNativeBars);
   document.addEventListener("resume", reapplyNativeBars);

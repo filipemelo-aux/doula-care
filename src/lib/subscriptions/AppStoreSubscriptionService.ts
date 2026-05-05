@@ -117,10 +117,99 @@ async function loadNativePurchases() {
   if (!isNativeMobile()) return null;
   try {
     const mod = await import("@capgo/capacitor-purchases");
-    return mod.CapacitorPurchases ?? mod;
+    return (mod as any).CapacitorPurchases ?? mod;
   } catch (err) {
     console.warn("[IAP] Plugin not available:", err);
     return null;
+  }
+}
+
+/**
+ * Lê a chave pública (publishable) da RevenueCat para a plataforma atual.
+ * Aceita tanto variáveis Vite quanto um override em window (útil em runtime
+ * remoto via Capacitor).  Sem chave => setup é ignorado silenciosamente.
+ */
+function getRevenueCatApiKey(): string | null {
+  const platform = getCurrentPlatform();
+  const w = (typeof window !== "undefined" ? (window as any) : {}) || {};
+  const overrides = w.__REVENUECAT_KEYS__ ?? {};
+  if (platform === "ios") {
+    return (
+      overrides.ios ||
+      (import.meta.env.VITE_REVENUECAT_IOS_KEY as string | undefined) ||
+      null
+    );
+  }
+  if (platform === "android") {
+    return (
+      overrides.android ||
+      (import.meta.env.VITE_REVENUECAT_ANDROID_KEY as string | undefined) ||
+      null
+    );
+  }
+  return null;
+}
+
+let _setupPromise: Promise<boolean> | null = null;
+
+/**
+ * Inicializa o plugin nativo (RevenueCat). Idempotente.
+ * Retorna true quando o plugin foi configurado com sucesso.
+ */
+async function setupNativePlugin(): Promise<boolean> {
+  if (!isNativeMobile()) return false;
+  if (_setupPromise) return _setupPromise;
+
+  _setupPromise = (async () => {
+    const Purchases: any = await loadNativePurchases();
+    if (!Purchases) return false;
+
+    const apiKey = getRevenueCatApiKey();
+    if (!apiKey) {
+      console.warn(
+        "[IAP] RevenueCat API key ausente para",
+        getCurrentPlatform(),
+        "- defina VITE_REVENUECAT_IOS_KEY / VITE_REVENUECAT_ANDROID_KEY ou window.__REVENUECAT_KEYS__"
+      );
+      return false;
+    }
+
+    try {
+      // Identifica usuário (se logado) para casar entitlements ao app user.
+      const { data: userRes } = await supabase.auth.getUser();
+      const appUserID = userRes.user?.id;
+
+      // capgo/capacitor-purchases expõe setup({ apiKey, appUserID? })
+      await Purchases.setup({ apiKey, appUserID });
+      console.log("[IAP] Plugin inicializado para", getCurrentPlatform());
+      return true;
+    } catch (err) {
+      console.error("[IAP] Falha no setup do plugin:", err);
+      _setupPromise = null; // permite retry
+      return false;
+    }
+  })();
+
+  return _setupPromise;
+}
+
+/** Atualiza o appUserID no plugin (chamar após login/logout). */
+async function identifyNativeUser(userId: string | null) {
+  if (!isNativeMobile()) return;
+  const Purchases: any = await loadNativePurchases();
+  if (!Purchases) return;
+  try {
+    if (userId) {
+      if (typeof Purchases.logIn === "function") {
+        await Purchases.logIn({ appUserID: userId });
+      } else if (typeof Purchases.identify === "function") {
+        await Purchases.identify({ appUserID: userId });
+      }
+    } else {
+      if (typeof Purchases.logOut === "function") await Purchases.logOut();
+    }
+  } catch (err) {
+    console.warn("[IAP] identify falhou:", err);
   }
 }
 
@@ -132,6 +221,17 @@ export const AppStoreSubscriptionService = {
   getPlatform: getCurrentPlatform,
   isNativeMobile,
   isDevEnvironment,
+
+  /** Inicializa o plugin nativo de IAP (idempotente). Seguro chamar no boot. */
+  async initialize(): Promise<boolean> {
+    return setupNativePlugin();
+  },
+
+  /** Atualiza appUserID após login/logout. */
+  async identifyUser(userId: string | null): Promise<void> {
+    await setupNativePlugin();
+    return identifyNativeUser(userId);
+  },
 
   /**
    * Lista os produtos disponíveis para a plataforma atual (mapeados no Supabase).
@@ -163,11 +263,14 @@ export const AppStoreSubscriptionService = {
       };
     }
 
+    const ready = await setupNativePlugin();
     const Purchases = await loadNativePurchases();
-    if (!Purchases) {
+    if (!Purchases || !ready) {
       return {
         status: "error",
-        message: "Plugin de compras não disponível neste dispositivo.",
+        message: ready
+          ? "Plugin de compras não disponível neste dispositivo."
+          : "Loja não inicializada. Verifique sua conexão e tente novamente.",
       };
     }
 
@@ -206,8 +309,9 @@ export const AppStoreSubscriptionService = {
         message: "Restauração só está disponível no app instalado.",
       };
     }
+    const ready = await setupNativePlugin();
     const Purchases = await loadNativePurchases();
-    if (!Purchases) {
+    if (!Purchases || !ready) {
       return { restored: false, message: "Plugin de compras indisponível." };
     }
     try {
