@@ -36,7 +36,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { promptToSaveUpdatedPassword } from "@/lib/passwordManager";
 
-type Section = "dashboard" | "moderation" | "users" | "billing" | "notifications" | "community" | "profile";
+type Section = "dashboard" | "moderation" | "users" | "billing" | "notifications" | "community" | "pages" | "profile";
 
 const sidebarItems: { key: Section; label: string; icon: React.ElementType }[] = [
   { key: "dashboard", label: "Painel", icon: Home },
@@ -44,6 +44,7 @@ const sidebarItems: { key: Section; label: string; icon: React.ElementType }[] =
   { key: "billing", label: "Planos & Cobranças", icon: CreditCard },
   { key: "notifications", label: "Notificações", icon: Bell },
   { key: "community", label: "Comunidade", icon: Users2 },
+  { key: "pages", label: "Mapa de Páginas", icon: MapIcon },
   { key: "profile", label: "Meu Perfil", icon: UserCog },
   { key: "moderation", label: "Moderação", icon: Shield },
 ];
