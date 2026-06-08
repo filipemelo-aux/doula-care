@@ -116,12 +116,15 @@ export default function Clients() {
     },
   });
 
-  const filteredClients = clients?.filter(
-    (client) =>
+  const filteredClients = clients?.filter((client) => {
+    const matchesSearch =
       client.full_name.toLowerCase().includes(search.toLowerCase()) ||
       client.phone.includes(search) ||
-      (client.cpf && client.cpf.includes(search))
-  );
+      (client.cpf && client.cpf.includes(search));
+    const matchesStatus =
+      statusFilter === "todas" ? true : client.status === statusFilter;
+    return matchesSearch && matchesStatus;
+  });
 
   // On free plan, mark clients beyond the limit as inactive
   const maxClients = limits.maxClients;
