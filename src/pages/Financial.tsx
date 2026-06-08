@@ -874,7 +874,7 @@ export default function Financial() {
               { value: "recebido", label: "Recebidos", count: countBy("recebido"), dot: "bg-emerald-500" },
             ];
             return (
-              <div className="mt-3 flex flex-wrap gap-1.5">
+              <div className="mt-3 flex flex-nowrap gap-1.5 overflow-x-auto [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: 'none' }}>
                 {statusOptions.map((opt) => {
                   const active = statusFilter === opt.value;
                   return (
@@ -882,7 +882,7 @@ export default function Financial() {
                       key={opt.value}
                       type="button"
                       onClick={() => setStatusFilter(opt.value)}
-                      className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-all active:scale-95 ${
+                      className={`inline-flex shrink-0 items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-medium transition-all active:scale-95 ${
                         active
                           ? "bg-primary text-primary-foreground shadow-sm"
                           : "bg-muted/50 text-muted-foreground hover:bg-muted"
