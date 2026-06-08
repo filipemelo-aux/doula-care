@@ -90,7 +90,7 @@ const transactionSchema = z.object({
   date: z.string().min(1, "Data obrigatória"),
   client_id: z.string().optional(),
   plan_id: z.string().optional(),
-  payment_method: z.enum(["pix", "cartao", "dinheiro", "transferencia", "boleto"]),
+  payment_method: z.enum(["pix", "cartao", "dinheiro", "transferencia", "boleto"]).optional(),
   payment_status: z.enum(["recebido", "a_receber", "parcial"]),
   notes: z.string().optional(),
   payment_type: z.enum(["a_vista", "parcelado"]).default("a_vista"),
