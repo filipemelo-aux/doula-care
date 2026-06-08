@@ -1126,7 +1126,7 @@ export default function Financial() {
                                   <Zap className="w-3 h-3 text-warning flex-shrink-0" />
                                 )}
                                 <span className="font-medium text-sm text-foreground truncate">
-                                  {transaction.clients?.full_name || "—"}
+                                  {transaction.clients?.full_name ? toTitleCase(transaction.clients.full_name) : "—"}
                                 </span>
                               </div>
                               <span className="text-xs text-muted-foreground truncate block max-w-[180px]" title={transaction.plan_settings?.name || transaction.description}>
