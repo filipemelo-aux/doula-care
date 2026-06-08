@@ -931,14 +931,28 @@ export default function Financial() {
                     ? `Contrato - ${firstName} - ${planName}`
                     : transaction.description;
 
+                  const receiptStatus = getReceiptStatus(transaction);
+                  const statusMeta: Record<string, { label: string; dot: string; text: string; bg: string }> = {
+                    a_receber: { label: "A receber", dot: "bg-destructive", text: "text-destructive", bg: "bg-destructive/10" },
+                    parcial: { label: "Parcial", dot: "bg-amber-500", text: "text-amber-700 dark:text-amber-400", bg: "bg-amber-500/10" },
+                    recebido: { label: "Recebido", dot: "bg-emerald-500", text: "text-emerald-700 dark:text-emerald-400", bg: "bg-emerald-500/10" },
+                  };
+                  const sm = statusMeta[receiptStatus];
+
                   return (
-                    <Card key={transaction.id} className="px-3 py-2.5 space-y-1.5 w-full box-border min-w-0 overflow-hidden">
-                      {/* Header: Description */}
-                      <div className="flex items-center gap-0.5 min-w-0">
-                        {transaction.is_auto_generated && (
-                          <Zap className="w-3 h-3 text-warning flex-shrink-0" />
-                        )}
-                        <p className="font-medium text-sm truncate min-w-0 max-w-[calc(100vw-120px)]" title={compactDesc}>{compactDesc}</p>
+                    <Card key={transaction.id} className="px-3 py-3 space-y-2 w-full box-border min-w-0 overflow-hidden rounded-2xl border-border/60 shadow-sm">
+                      {/* Header: Description + status pill */}
+                      <div className="flex items-start justify-between gap-2 min-w-0">
+                        <div className="flex items-center gap-1 min-w-0 flex-1">
+                          {transaction.is_auto_generated && (
+                            <Zap className="w-3 h-3 text-warning flex-shrink-0" />
+                          )}
+                          <p className="font-medium text-sm truncate min-w-0 leading-tight" title={compactDesc}>{compactDesc}</p>
+                        </div>
+                        <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[10px] font-medium flex-shrink-0 ${sm.bg} ${sm.text}`}>
+                          <span className={`h-1.5 w-1.5 rounded-full ${sm.dot}`} />
+                          {sm.label}
+                        </span>
                       </div>
 
                       {/* Info: Client + Date */}
@@ -946,16 +960,19 @@ export default function Financial() {
                         <span className="text-xs text-muted-foreground truncate min-w-0 flex-1">
                           {transaction.clients?.full_name ? abbreviateName(transaction.clients.full_name) : "—"}
                         </span>
-                        <span className="text-xs text-muted-foreground flex-shrink-0 ml-1">{formatBrazilDate(transaction.date, "dd/MM/yy")}</span>
+                        <span className="text-[11px] text-muted-foreground flex-shrink-0 ml-1">{formatBrazilDate(transaction.date, "dd/MM/yy")}</span>
                       </div>
 
+                      {/* Divider */}
+                      <div className="h-px bg-border/50" />
+
                       {/* Values: flex layout */}
-                      <div className="flex items-start pt-1.5 border-t w-full">
+                      <div className="flex items-start w-full">
                         <div className="text-center min-w-0 flex-1 flex-shrink px-1">
                           <span className="text-[10px] text-muted-foreground block">Total</span>
                           <span className="font-semibold text-sm truncate block">{formatCompact(totalAmount)}</span>
                         </div>
-                        <div className="text-center min-w-0 flex-shrink px-1" style={{flexBasis: '36px'}}>
+                        <div className="text-center min-w-0 flex-shrink px-1" style={{flexBasis: '40px'}}>
                           <span className="text-[10px] text-muted-foreground block">Parc.</span>
                           {isEditingInstallmentsMobile ? (
                             <Select
@@ -1004,43 +1021,49 @@ export default function Financial() {
                       </div>
 
                       {/* Payment method + actions row */}
-                      <div className="flex items-center justify-between pt-2 border-t border-border/60">
+                      <div className="flex items-center justify-between gap-2 pt-2 border-t border-border/50">
                         <PaymentMethodBadge
                           currentMethod={currentMethod}
                           onChangeMethod={(method) => handleChangePaymentMethod(transaction.id, method)}
                           compact
                         />
                         <div className="flex items-center gap-2">
-                          <Button
-                            size="sm"
-                            onClick={() => handleOpenPaymentDialog(transaction)}
-                            className="h-8 px-3 gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm hover:shadow transition-all text-xs font-medium"
-                          >
-                            <DollarSign className="h-3.5 w-3.5" />
-                            Registrar Pagamento
-                          </Button>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="outline" size="sm" className="h-10 w-10 p-0 text-muted-foreground flex-shrink-0 hover:bg-muted transition-colors">
-                                <MoreVertical className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-48 animate-fade-in">
-                              <DropdownMenuItem onClick={() => handleEditTransaction(transaction)} className="gap-2.5 text-xs py-2.5 cursor-pointer transition-colors">
-                                <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
-                                Editar receita
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => handleOpenDetailDialog(transaction.id)} className="gap-2.5 text-xs py-2.5 cursor-pointer transition-colors">
-                                <Eye className="h-3.5 w-3.5 text-muted-foreground" />
-                                Ver detalhes
-                              </DropdownMenuItem>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem onClick={() => handleDelete(transaction.id)} className="gap-2.5 text-xs py-2.5 cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/10 transition-colors">
-                                <Trash2 className="h-3.5 w-3.5" />
-                                Excluir
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
+                          {pendingAmount > 0 && (
+                            <Button
+                              size="sm"
+                              onClick={() => handleOpenPaymentDialog(transaction)}
+                              className="h-8 px-3 gap-1.5 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm transition-all active:scale-95 text-xs font-medium"
+                            >
+                              <DollarSign className="h-3.5 w-3.5" />
+                              Receber
+                            </Button>
+                          )}
+                          <div className="inline-flex items-center rounded-full bg-muted/40 p-0.5">
+                            <button
+                              type="button"
+                              onClick={() => handleOpenDetailDialog(transaction.id)}
+                              className="inline-flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-background transition-all active:scale-95"
+                              aria-label="Ver detalhes"
+                            >
+                              <Eye className="h-3.5 w-3.5" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleEditTransaction(transaction)}
+                              className="inline-flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-background transition-all active:scale-95"
+                              aria-label="Editar"
+                            >
+                              <Pencil className="h-3.5 w-3.5" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleDelete(transaction.id)}
+                              className="inline-flex h-8 w-8 items-center justify-center rounded-full text-destructive hover:bg-destructive/10 transition-all active:scale-95"
+                              aria-label="Excluir"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
                         </div>
                       </div>
                     </Card>
