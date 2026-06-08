@@ -50,7 +50,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
 import { format, parseISO } from "date-fns";
-import { formatBrazilDate, abbreviateName } from "@/lib/utils";
+import { formatBrazilDate, abbreviateName, toTitleCase } from "@/lib/utils";
 // maskCurrency and parseCurrency already imported above
 import { StatCard } from "@/components/dashboard/StatCard";
 import { Wallet, Calendar, Clock } from "lucide-react";
