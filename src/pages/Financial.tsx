@@ -854,20 +854,30 @@ export default function Financial() {
         <CardHeader className="px-3 py-3 lg:p-6">
           <Tabs value={revenueTab} onValueChange={setRevenueTab} className="w-full">
             <TabsList className="w-full">
-              <TabsTrigger value="todos" className="flex-1 gap-1.5">
-                <TrendingUp className="h-3.5 w-3.5" />
+              <TabsTrigger value="todos" className="flex-1">
                 Todos ({transactions?.length || 0})
               </TabsTrigger>
-              <TabsTrigger value="contratos" className="flex-1 gap-1.5">
-                <FileText className="h-3.5 w-3.5" />
+              <TabsTrigger value="contratos" className="flex-1">
                 Contratos ({clientTransactions.length})
               </TabsTrigger>
-              <TabsTrigger value="servicos" className="flex-1 gap-1.5">
-                <Wrench className="h-3.5 w-3.5" />
+              <TabsTrigger value="servicos" className="flex-1">
                 Serviços ({serviceTransactions.length})
               </TabsTrigger>
             </TabsList>
           </Tabs>
+          <div className="mt-3">
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-full lg:w-64">
+                <SelectValue placeholder="Filtrar por status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todos">Todos os status</SelectItem>
+                <SelectItem value="a_receber">A receber</SelectItem>
+                <SelectItem value="parcial">Recebido parcialmente</SelectItem>
+                <SelectItem value="recebido">Recebido</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </CardHeader>
         <CardContent className="p-0">
           {isLoading ? (
