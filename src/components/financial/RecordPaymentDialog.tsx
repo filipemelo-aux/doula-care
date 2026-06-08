@@ -197,9 +197,10 @@ export function RecordPaymentDialog({
 
         const { error: txError } = await supabase
           .from("transactions")
-          .update({ amount_received: totalReceived, payment_method: paymentMethod })
+          .update({ amount_received: totalReceived })
           .eq("id", transactionId);
         if (txError) throw txError;
+
       } else {
         // No payment records - update transaction directly
         const payAmount =
@@ -224,6 +225,8 @@ export function RecordPaymentDialog({
           .update({ amount_received: newReceived, payment_method: paymentMethod })
           .eq("id", transactionId);
         if (txError) throw txError;
+
+
       }
     },
     onSuccess: () => {
