@@ -1403,7 +1403,7 @@ export default function Financial() {
                             <SelectContent>
                               {clients?.map((client) => (
                                 <SelectItem key={client.id} value={client.id}>
-                                  {client.full_name}
+                                  {toTitleCase(client.full_name)}
                                 </SelectItem>
                               ))}
                             </SelectContent>
