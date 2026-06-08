@@ -11,6 +11,7 @@ import { Separator } from "@/components/ui/separator";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { CheckCircle, Clock, AlertCircle, Zap } from "lucide-react";
+import { toTitleCase } from "@/lib/utils";
 
 interface RevenueDetailDialogProps {
   open: boolean;
@@ -121,7 +122,7 @@ export function RevenueDetailDialog({ open, onOpenChange, transactionId }: Reven
             </p>
             {transaction.clients?.full_name && (
               <p className="text-xs text-muted-foreground mt-0.5">
-                Cliente: {transaction.clients.full_name}
+                Cliente: {toTitleCase(transaction.clients.full_name)}
               </p>
             )}
             {transaction.plan_settings?.name && (

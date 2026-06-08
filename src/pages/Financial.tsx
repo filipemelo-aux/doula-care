@@ -50,7 +50,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
 import { format, parseISO } from "date-fns";
-import { formatBrazilDate, abbreviateName } from "@/lib/utils";
+import { formatBrazilDate, abbreviateName, toTitleCase } from "@/lib/utils";
 // maskCurrency and parseCurrency already imported above
 import { StatCard } from "@/components/dashboard/StatCard";
 import { Wallet, Calendar, Clock } from "lucide-react";
@@ -927,13 +927,14 @@ export default function Financial() {
                   };
 
                   const fullName = transaction.clients?.full_name || "";
-                  const firstName = fullName.split(" ")[0]?.toUpperCase() || "";
+                  const normalizedFullName = toTitleCase(fullName);
+                  const firstName = normalizedFullName.split(" ")[0] || "";
                   const planName = transaction.plan_settings?.name || "";
                   const compactDesc = firstName && planName
                     ? `Contrato - ${firstName} - ${planName}`
                     : transaction.description;
-                  const initials = fullName
-                    ? fullName.split(" ").map(n => n[0]).slice(0, 2).join("").toUpperCase()
+                  const initials = normalizedFullName
+                    ? normalizedFullName.split(" ").map(n => n[0]).slice(0, 2).join("").toUpperCase()
                     : "—";
 
                   const receiptStatus = getReceiptStatus(transaction);
@@ -973,7 +974,7 @@ export default function Financial() {
                           </div>
                           <p className="text-[11px] text-muted-foreground mt-1 flex items-center gap-1.5 flex-wrap">
                             <span className="truncate">
-                              {fullName ? abbreviateName(fullName) : "—"}
+                              {normalizedFullName ? abbreviateName(normalizedFullName) : "—"}
                             </span>
                             <span>•</span>
                             <span>{formatBrazilDate(transaction.date, "dd/MM/yy")}</span>
@@ -1125,7 +1126,7 @@ export default function Financial() {
                                   <Zap className="w-3 h-3 text-warning flex-shrink-0" />
                                 )}
                                 <span className="font-medium text-sm text-foreground truncate">
-                                  {transaction.clients?.full_name || "—"}
+                                  {transaction.clients?.full_name ? toTitleCase(transaction.clients.full_name) : "—"}
                                 </span>
                               </div>
                               <span className="text-xs text-muted-foreground truncate block max-w-[180px]" title={transaction.plan_settings?.name || transaction.description}>
@@ -1263,7 +1264,7 @@ export default function Financial() {
                 <div className="bg-muted/50 rounded-md p-3 space-y-1 text-xs">
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Cliente:</span>
-                    <span className="font-medium">{selectedTransaction.clients?.full_name || "—"}</span>
+                    <span className="font-medium">{selectedTransaction.clients?.full_name ? toTitleCase(selectedTransaction.clients.full_name) : "—"}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Plano:</span>
@@ -1402,7 +1403,7 @@ export default function Financial() {
                             <SelectContent>
                               {clients?.map((client) => (
                                 <SelectItem key={client.id} value={client.id}>
-                                  {client.full_name}
+                                  {toTitleCase(client.full_name)}
                                 </SelectItem>
                               ))}
                             </SelectContent>

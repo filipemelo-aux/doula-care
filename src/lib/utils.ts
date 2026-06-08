@@ -121,3 +121,14 @@ export function abbreviateName(fullName: string): string {
 
   return result.join(" ");
 }
+
+/**
+ * Convert a string to Title Case (first letter of each word uppercase, rest lowercase).
+ * Useful for normalizing names that may come in all-caps or all-lowercase.
+ */
+export function toTitleCase(str: string): string {
+  if (!str) return "";
+  return str
+    .toLowerCase()
+    .replace(/(?:^|\s)\S/g, (char) => char.toUpperCase());
+}
