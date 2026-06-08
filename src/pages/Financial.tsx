@@ -182,6 +182,54 @@ export default function Financial() {
     },
   });
 
+  // Fetch all payment installments to compute due dates per transaction
+  const { data: allPayments } = useQuery({
+    queryKey: ["payments", "all-due-dates"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("payments")
+        .select("transaction_id, client_id, total_installments, due_date");
+      if (error) throw error;
+      return data || [];
+    },
+  });
+
+  // Build a map: transaction.id -> last installment due_date (ISO string)
+  const dueDateByTransaction = new Map<string, string>();
+  if (allPayments && transactions) {
+    const byTxId = new Map<string, string[]>();
+    const byClientKey = new Map<string, string[]>(); // `${client_id}|${total_installments}`
+    for (const p of allPayments) {
+      if (!p.due_date) continue;
+      if (p.transaction_id) {
+        const arr = byTxId.get(p.transaction_id) || [];
+        arr.push(p.due_date);
+        byTxId.set(p.transaction_id, arr);
+      } else if (p.client_id && p.total_installments != null) {
+        const key = `${p.client_id}|${p.total_installments}`;
+        const arr = byClientKey.get(key) || [];
+        arr.push(p.due_date);
+        byClientKey.set(key, arr);
+      }
+    }
+    const maxOf = (arr: string[]) => arr.reduce((a, b) => (a > b ? a : b));
+    for (const t of transactions) {
+      const direct = byTxId.get(t.id);
+      if (direct && direct.length > 0) {
+        dueDateByTransaction.set(t.id, maxOf(direct));
+        continue;
+      }
+      if (t.client_id) {
+        const key = `${t.client_id}|${Number(t.installments || 1)}`;
+        const fallback = byClientKey.get(key);
+        if (fallback && fallback.length > 0) {
+          dueDateByTransaction.set(t.id, maxOf(fallback));
+        }
+      }
+    }
+  }
+  const getDueDate = (t: Transaction): string => dueDateByTransaction.get(t.id) || t.date;
+
   const { data: clients } = useQuery({
     queryKey: ["clients-with-plans"],
     queryFn: async () => {
