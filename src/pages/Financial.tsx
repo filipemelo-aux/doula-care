@@ -868,7 +868,7 @@ export default function Financial() {
           {(() => {
             const countBy = (s: string) => activeTabTransactions.filter((t) => getReceiptStatus(t) === s).length;
             const statusOptions: { value: string; label: string; count: number; dot?: string }[] = [
-              { value: "todos", label: "Todos", count: activeTabTransactions.length },
+              { value: "todos", label: "Todos", count: undefined },
               { value: "a_receber", label: "A receber", count: countBy("a_receber"), dot: "bg-destructive" },
               { value: "parcial", label: "Parciais", count: countBy("parcial"), dot: "bg-amber-500" },
               { value: "recebido", label: "Recebidos", count: countBy("recebido"), dot: "bg-emerald-500" },
@@ -890,7 +890,7 @@ export default function Financial() {
                     >
                       {opt.dot && <span className={`h-1.5 w-1.5 rounded-full ${opt.dot}`} />}
                       <span>{opt.label}</span>
-                      <span className={`text-[10px] ${active ? "opacity-80" : "opacity-60"}`}>({opt.count})</span>
+                      {typeof opt.count === 'number' && <span className={`text-[10px] ${active ? "opacity-80" : "opacity-60"}`}>({opt.count})</span>}
                     </button>
                   );
                 })}
