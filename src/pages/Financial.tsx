@@ -1264,7 +1264,7 @@ export default function Financial() {
                 <div className="bg-muted/50 rounded-md p-3 space-y-1 text-xs">
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Cliente:</span>
-                    <span className="font-medium">{selectedTransaction.clients?.full_name || "—"}</span>
+                    <span className="font-medium">{selectedTransaction.clients?.full_name ? toTitleCase(selectedTransaction.clients.full_name) : "—"}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Plano:</span>
