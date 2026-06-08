@@ -251,50 +251,22 @@ export default function Clients() {
                           Inativa (limite do plano)
                         </Badge>
                       )}
-                      {/* Top row: Avatar + Info */}
+                      {/* Top row: Info */}
                       <div className="flex items-start gap-3">
-                        <Avatar className="w-11 h-11 flex-shrink-0 ring-2 ring-primary/10">
-                          <AvatarFallback className="bg-primary/10 text-primary text-sm font-semibold">
-                            {initials}
-                          </AvatarFallback>
-                        </Avatar>
                         <div className="flex-1 min-w-0">
                           <p className="font-semibold text-sm text-foreground truncate leading-tight">{client.full_name}</p>
-                          <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
-                            <Phone className="w-3 h-3" /> {client.phone}
-                          </p>
-                          {client.dpp && (
-                            <p className="text-[11px] text-muted-foreground mt-0.5 flex items-center gap-1.5 flex-wrap">
-                              <span className="flex items-center gap-1">
+                          <p className="text-[11px] text-muted-foreground mt-1 flex items-center gap-2 flex-wrap">
+                            <span className="inline-flex items-center gap-1">
+                              <Phone className="w-3 h-3" /> {client.phone}
+                            </span>
+                            {client.dpp && (
+                              <span className="inline-flex items-center gap-1">
                                 DPP: {format(parseISO(client.dpp), "dd/MM/yyyy")}
                               </span>
-                              <span
-                                className={cn(
-                                  "badge-status inline-flex items-center text-[9px] font-semibold px-1.5 h-4 rounded-full",
-                                  `badge-${client.status}`
-                                )}
-                              >
-                                {client.status === "outro" && (client as any).custom_status
-                                  ? (client as any).custom_status
-                                  : statusLabels[client.status as keyof typeof statusLabels]}
-                              </span>
-                              {client.status === "gestante" && !client.birth_occurred && (() => {
-                                const w = calculateCurrentPregnancyWeeks(client.pregnancy_weeks, client.pregnancy_weeks_set_at, client.dpp);
-                                const d = calculateCurrentPregnancyDays(client.dpp);
-                                const post = isPostTerm(client.dpp);
-                                if (w === null) return null;
-                                return (
-                                  <span className={cn("font-semibold", post ? "text-destructive" : "text-primary")}>
-                                    {post ? "Pós-Data " : ""}{w}s {d}d
-                                  </span>
-                                );
-                              })()}
-                            </p>
-                          )}
-                          {!client.dpp && (
+                            )}
                             <span
                               className={cn(
-                                "badge-status inline-flex items-center text-[9px] font-semibold px-1.5 h-4 rounded-full mt-0.5",
+                                "badge-status inline-flex items-center text-[9px] font-semibold px-1.5 h-4 rounded-full",
                                 `badge-${client.status}`
                               )}
                             >
@@ -302,9 +274,21 @@ export default function Clients() {
                                 ? (client as any).custom_status
                                 : statusLabels[client.status as keyof typeof statusLabels]}
                             </span>
-                          )}
+                            {client.status === "gestante" && !client.birth_occurred && client.dpp && (() => {
+                              const w = calculateCurrentPregnancyWeeks(client.pregnancy_weeks, client.pregnancy_weeks_set_at, client.dpp);
+                              const d = calculateCurrentPregnancyDays(client.dpp);
+                              const post = isPostTerm(client.dpp);
+                              if (w === null) return null;
+                              return (
+                                <span className={cn("font-semibold", post ? "text-destructive" : "text-primary")}>
+                                  {post ? "Pós-Data " : ""}{w}s {d}d
+                                </span>
+                              );
+                            })()}
+                          </p>
                         </div>
                       </div>
+
 
                       {/* Divider */}
                       <div className="mt-3 mb-3 h-px bg-border/50" />
