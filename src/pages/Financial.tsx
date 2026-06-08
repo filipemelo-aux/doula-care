@@ -38,7 +38,6 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Plus, TrendingUp, Search, Trash2, Zap, Check, X, CheckCircle, CreditCard, Banknote, Building2, QrCode, FileText, Users, Wrench, UserPlus, DollarSign, Eye, Loader2, Pencil, MoreVertical } from "lucide-react";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { RecordPaymentDialog } from "@/components/financial/RecordPaymentDialog";
 import { RevenueDetailDialog } from "@/components/financial/RevenueDetailDialog";
@@ -933,9 +932,6 @@ export default function Financial() {
                   const compactDesc = firstName && planName
                     ? `Contrato - ${firstName} - ${planName}`
                     : transaction.description;
-                  const initials = normalizedFullName
-                    ? normalizedFullName.split(" ").map(n => n[0]).slice(0, 2).join("").toUpperCase()
-                    : "—";
 
                   const receiptStatus = getReceiptStatus(transaction);
                   const statusMeta: Record<string, { label: string; dot: string; text: string; bg: string }> = {
@@ -950,13 +946,8 @@ export default function Financial() {
                       key={transaction.id}
                       className="relative rounded-2xl bg-card p-4 shadow-card transition-all active:scale-[0.99]"
                     >
-                      {/* Top row: Avatar + Info */}
+                      {/* Top row: Info */}
                       <div className="flex items-start gap-3">
-                        <Avatar className="w-11 h-11 flex-shrink-0 ring-2 ring-primary/10">
-                          <AvatarFallback className="bg-primary/10 text-primary text-sm font-semibold">
-                            {initials}
-                          </AvatarFallback>
-                        </Avatar>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-start justify-between gap-2 min-w-0">
                             <div className="flex items-center gap-1 min-w-0 flex-1">
