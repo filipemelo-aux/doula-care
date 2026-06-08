@@ -117,6 +117,7 @@ export default function Financial() {
   const [editingInstallmentsId, setEditingInstallmentsId] = useState<string | null>(null);
   const [editingInstallmentsValue, setEditingInstallmentsValue] = useState<string>("");
   const [revenueTab, setRevenueTab] = useState<string>("todos");
+  const [statusFilter, setStatusFilter] = useState<string>("todos");
   const [selectedServices, setSelectedServices] = useState<string[]>([]);
   const [customServiceName, setCustomServiceName] = useState<string>("");
   const [showCustomService, setShowCustomService] = useState(false);
@@ -738,17 +739,33 @@ export default function Financial() {
   // Serviços: everything else (manual entries, service requests)
   const isContractTransaction = (t: Transaction) =>
     t.is_auto_generated === true && (t.plan_id != null || t.description?.startsWith("Contrato"));
-  const clientTransactions = transactions?.filter(isContractTransaction) || [];
-  const serviceTransactions = (transactions?.filter((t) => !isContractTransaction(t)) || [])
-    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
-  const allTransactions = [...(transactions || [])].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  // Receipt status helpers — prioritize ordering: a receber → parcial → recebido
+  const getReceiptStatus = (t: Transaction): "a_receber" | "parcial" | "recebido" => {
+    const total = Number(t.amount) || 0;
+    const received = Number(t.amount_received) || 0;
+    if (received <= 0) return "a_receber";
+    if (received < total) return "parcial";
+    return "recebido";
+  };
+  const receiptOrder: Record<string, number> = { a_receber: 0, parcial: 1, recebido: 2 };
+  const sortByReceiptStatus = (a: Transaction, b: Transaction) => {
+    const diff = receiptOrder[getReceiptStatus(a)] - receiptOrder[getReceiptStatus(b)];
+    if (diff !== 0) return diff;
+    return new Date(b.date).getTime() - new Date(a.date).getTime();
+  };
+
+  const clientTransactions = (transactions?.filter(isContractTransaction) || []).sort(sortByReceiptStatus);
+  const serviceTransactions = (transactions?.filter((t) => !isContractTransaction(t)) || []).sort(sortByReceiptStatus);
+
+  const allTransactions = [...(transactions || [])].sort(sortByReceiptStatus);
   const activeTabTransactions = revenueTab === "todos" ? allTransactions : revenueTab === "contratos" ? clientTransactions : serviceTransactions;
 
   const filteredTransactions = activeTabTransactions.filter(
     (t) =>
-      t.description.toLowerCase().includes(search.toLowerCase()) ||
-      t.clients?.full_name?.toLowerCase().includes(search.toLowerCase())
+      (statusFilter === "todos" || getReceiptStatus(t) === statusFilter) &&
+      (t.description.toLowerCase().includes(search.toLowerCase()) ||
+        t.clients?.full_name?.toLowerCase().includes(search.toLowerCase()))
   );
 
   const totalIncome = transactions?.reduce((sum, t) => sum + Number(t.amount), 0) || 0;
@@ -837,20 +854,30 @@ export default function Financial() {
         <CardHeader className="px-3 py-3 lg:p-6">
           <Tabs value={revenueTab} onValueChange={setRevenueTab} className="w-full">
             <TabsList className="w-full">
-              <TabsTrigger value="todos" className="flex-1 gap-1.5">
-                <TrendingUp className="h-3.5 w-3.5" />
+              <TabsTrigger value="todos" className="flex-1">
                 Todos ({transactions?.length || 0})
               </TabsTrigger>
-              <TabsTrigger value="contratos" className="flex-1 gap-1.5">
-                <FileText className="h-3.5 w-3.5" />
+              <TabsTrigger value="contratos" className="flex-1">
                 Contratos ({clientTransactions.length})
               </TabsTrigger>
-              <TabsTrigger value="servicos" className="flex-1 gap-1.5">
-                <Wrench className="h-3.5 w-3.5" />
+              <TabsTrigger value="servicos" className="flex-1">
                 Serviços ({serviceTransactions.length})
               </TabsTrigger>
             </TabsList>
           </Tabs>
+          <div className="mt-3">
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-full lg:w-64">
+                <SelectValue placeholder="Filtrar por status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todos">Todos os status</SelectItem>
+                <SelectItem value="a_receber">A receber</SelectItem>
+                <SelectItem value="parcial">Recebido parcialmente</SelectItem>
+                <SelectItem value="recebido">Recebido</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </CardHeader>
         <CardContent className="p-0">
           {isLoading ? (

@@ -86,7 +86,13 @@ export default function Clients() {
         .order("dpp", { ascending: true, nullsFirst: false });
 
       if (error) throw error;
-      return data;
+      // Prioritize payment status order: pendente (a receber) → parcial → pago
+      const paymentOrder: Record<string, number> = { pendente: 0, parcial: 1, pago: 2 };
+      return [...(data || [])].sort((a, b) => {
+        const ao = paymentOrder[a.payment_status as string] ?? 3;
+        const bo = paymentOrder[b.payment_status as string] ?? 3;
+        return ao - bo;
+      });
     },
   });
 
