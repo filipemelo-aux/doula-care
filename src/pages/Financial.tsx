@@ -927,8 +927,11 @@ export default function Financial() {
 
                   const fullName = transaction.clients?.full_name || "";
                   const normalizedFullName = toTitleCase(fullName);
+                  const firstName = normalizedFullName.split(" ")[0] || "";
                   const planName = transaction.plan_settings?.name || "";
-                  const compactDesc = planName || transaction.description;
+                  const compactDesc = firstName && planName
+                    ? `${firstName} - ${planName}`
+                    : transaction.description;
 
                   const receiptStatus = getReceiptStatus(transaction);
                   const statusMeta: Record<string, { label: string; dot: string; text: string; bg: string }> = {
@@ -948,9 +951,6 @@ export default function Financial() {
                         <div className="flex-1 min-w-0">
                           <div className="flex items-start justify-between gap-2 min-w-0">
                             <div className="flex items-center gap-1 min-w-0 flex-1">
-                              {transaction.is_auto_generated && (
-                                <Zap className="w-3 h-3 text-warning flex-shrink-0" />
-                              )}
                               <p className="font-semibold text-sm text-foreground truncate leading-tight" title={compactDesc}>
                                 {compactDesc}
                               </p>
