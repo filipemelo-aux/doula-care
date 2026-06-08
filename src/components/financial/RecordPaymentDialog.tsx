@@ -129,6 +129,7 @@ export function RecordPaymentDialog({
       setPaymentType("total");
       setPartialValue("");
       setPaymentDate(new Date());
+      setPaymentMethod("pix");
     }
   }, [open]);
 
