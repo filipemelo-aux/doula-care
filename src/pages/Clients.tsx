@@ -61,6 +61,7 @@ const formatClientName = (fullName: string, maxLength = 28) => {
 
 export default function Clients() {
   const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"todas" | "gestante" | "lactante">("todas");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
