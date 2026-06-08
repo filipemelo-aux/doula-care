@@ -217,12 +217,23 @@ export default function Clients() {
           ) : filteredClients && filteredClients.length > 0 ? (
             <>
               {/* Mobile Cards */}
-              <div className="block lg:hidden space-y-3 p-3">
+              <div className="block lg:hidden space-y-2.5 p-3">
                 {filteredClients.map((client, index) => {
                   const inactive = isClientInactive(index);
                   const initials = client.full_name.split(" ").map(n => n[0]).slice(0, 2).join("").toUpperCase();
+                  const paymentDot: Record<string, string> = {
+                    pendente: "bg-destructive",
+                    parcial: "bg-amber-500",
+                    pago: "bg-emerald-500",
+                  };
                   return (
-                    <div key={client.id} className={cn("rounded-2xl bg-card p-4 shadow-card space-y-3", inactive && "opacity-50 pointer-events-none relative")}>
+                    <div
+                      key={client.id}
+                      className={cn(
+                        "relative rounded-2xl bg-card p-4 shadow-card transition-all active:scale-[0.99]",
+                        inactive && "opacity-50 pointer-events-none"
+                      )}
+                    >
                       {inactive && (
                         <Badge variant="destructive" className="absolute top-2 right-2 text-[8px] px-1.5 h-4 z-10">
                           Inativa (limite do plano)
@@ -230,18 +241,18 @@ export default function Clients() {
                       )}
                       {/* Top row: Avatar + Info */}
                       <div className="flex items-start gap-3">
-                        <Avatar className="w-10 h-10 flex-shrink-0">
+                        <Avatar className="w-11 h-11 flex-shrink-0 ring-2 ring-primary/10">
                           <AvatarFallback className="bg-primary/10 text-primary text-sm font-semibold">
                             {initials}
                           </AvatarFallback>
                         </Avatar>
                         <div className="flex-1 min-w-0">
-                          <p className="font-semibold text-sm text-foreground truncate">{client.full_name}</p>
-                          <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
+                          <p className="font-semibold text-sm text-foreground truncate leading-tight">{client.full_name}</p>
+                          <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
                             <Phone className="w-3 h-3" /> {client.phone}
                           </p>
                           {client.dpp && (
-                            <p className="text-xs text-muted-foreground mt-0.5">
+                            <p className="text-[11px] text-muted-foreground mt-0.5">
                               DPP: {format(parseISO(client.dpp), "dd/MM/yyyy")}
                               {client.status === "gestante" && !client.birth_occurred && (() => {
                                 const w = calculateCurrentPregnancyWeeks(client.pregnancy_weeks, client.pregnancy_weeks_set_at, client.dpp);
@@ -249,8 +260,8 @@ export default function Clients() {
                                 const post = isPostTerm(client.dpp);
                                 if (w === null) return null;
                                 return (
-                                  <span className={cn("ml-2 font-semibold", post ? "text-destructive" : "text-primary")}>
-                                    {post ? "Pós-Data • " : ""}{w}s {d}d
+                                  <span className={cn("ml-1.5 font-semibold", post ? "text-destructive" : "text-primary")}>
+                                    • {post ? "Pós-Data " : ""}{w}s {d}d
                                   </span>
                                 );
                               })()}
@@ -258,51 +269,64 @@ export default function Clients() {
                           )}
                         </div>
                       </div>
+
+                      {/* Divider */}
+                      <div className="mt-3 mb-3 h-px bg-border/50" />
+
                       {/* Badges row + Action icons */}
-                      <div className="flex items-center gap-1.5 flex-wrap">
-                        <Badge
-                          className={cn("badge-status text-[10px] px-2 h-5", `badge-${client.status}`)}
-                        >
-                          {client.status === "outro" && (client as any).custom_status
-                            ? (client as any).custom_status
-                            : statusLabels[client.status as keyof typeof statusLabels]}
-                        </Badge>
-                        <Badge variant="secondary" className="text-[10px] px-2 h-5">
-                          {getPlanName(client.plan_setting_id, client.plan)}
-                        </Badge>
-                        <Badge
-                          className={cn("badge-status text-[10px] px-2 h-5", `badge-${client.payment_status}`)}
-                        >
-                          {paymentStatusLabels[client.payment_status as keyof typeof paymentStatusLabels]}
-                        </Badge>
-                        <div className="flex items-center gap-0.5 ml-auto">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-7 w-7 text-muted-foreground hover:text-primary"
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-1.5 flex-wrap min-w-0">
+                          <span
+                            className={cn(
+                              "badge-status inline-flex items-center text-[10px] font-semibold px-2 h-5 rounded-full",
+                              `badge-${client.status}`
+                            )}
+                          >
+                            {client.status === "outro" && (client as any).custom_status
+                              ? (client as any).custom_status
+                              : statusLabels[client.status as keyof typeof statusLabels]}
+                          </span>
+                          <span className="inline-flex items-center text-[10px] font-semibold px-2 h-5 rounded-full bg-muted text-muted-foreground">
+                            {getPlanName(client.plan_setting_id, client.plan)}
+                          </span>
+                          <span
+                            className={cn(
+                              "inline-flex items-center gap-1 text-[10px] font-semibold px-2 h-5 rounded-full",
+                              `badge-${client.payment_status}`
+                            )}
+                          >
+                            <span className={cn("w-1.5 h-1.5 rounded-full", paymentDot[client.payment_status] || "bg-muted-foreground")} />
+                            {paymentStatusLabels[client.payment_status as keyof typeof paymentStatusLabels]}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1 flex-shrink-0 rounded-full bg-muted/40 p-0.5">
+                          <button
+                            type="button"
+                            aria-label="Ver detalhes"
+                            className="h-7 w-7 inline-flex items-center justify-center rounded-full text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors active:scale-95"
                             onClick={() => handleView(client)}
                             disabled={inactive}
                           >
                             <Eye className="h-3.5 w-3.5" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-7 w-7 text-muted-foreground hover:text-primary"
+                          </button>
+                          <button
+                            type="button"
+                            aria-label="Editar"
+                            className="h-7 w-7 inline-flex items-center justify-center rounded-full text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors active:scale-95"
                             onClick={() => handleEdit(client)}
                             disabled={inactive}
                           >
                             <Edit2 className="h-3.5 w-3.5" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                          </button>
+                          <button
+                            type="button"
+                            aria-label="Excluir"
+                            className="h-7 w-7 inline-flex items-center justify-center rounded-full text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors active:scale-95"
                             onClick={() => handleDelete(client)}
                             disabled={inactive}
                           >
                             <Trash2 className="h-3.5 w-3.5" />
-                          </Button>
+                          </button>
                         </div>
                       </div>
                     </div>
