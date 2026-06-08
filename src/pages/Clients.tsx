@@ -35,6 +35,7 @@ import type { Tables } from "@/integrations/supabase/types";
 import { usePlanLimits } from "@/hooks/usePlanLimits";
 import { usePlanNames } from "@/hooks/usePlanNames";
 import { ClientLimitBanner } from "@/components/plan/UpgradeBanner";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 type Client = Tables<"clients">;
 
@@ -60,6 +61,7 @@ const formatClientName = (fullName: string, maxLength = 28) => {
 
 export default function Clients() {
   const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"todas" | "gestante" | "lactante">("todas");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
@@ -114,12 +116,15 @@ export default function Clients() {
     },
   });
 
-  const filteredClients = clients?.filter(
-    (client) =>
+  const filteredClients = clients?.filter((client) => {
+    const matchesSearch =
       client.full_name.toLowerCase().includes(search.toLowerCase()) ||
       client.phone.includes(search) ||
-      (client.cpf && client.cpf.includes(search))
-  );
+      (client.cpf && client.cpf.includes(search));
+    const matchesStatus =
+      statusFilter === "todas" ? true : client.status === statusFilter;
+    return matchesSearch && matchesStatus;
+  });
 
   // On free plan, mark clients beyond the limit as inactive
   const maxClients = limits.maxClients;
@@ -204,10 +209,17 @@ export default function Clients() {
 
       {/* Clients List */}
       <Card className="card-glass">
-        <CardHeader className="p-4 lg:p-6">
+        <CardHeader className="p-4 lg:p-6 space-y-3">
           <CardTitle className="text-lg font-semibold text-foreground">
             Lista de Clientes ({filteredClients?.length || 0})
           </CardTitle>
+          <Tabs value={statusFilter} onValueChange={(v) => setStatusFilter(v as typeof statusFilter)}>
+            <TabsList className="grid w-full grid-cols-3 sm:w-auto sm:inline-grid">
+              <TabsTrigger value="todas">Todas</TabsTrigger>
+              <TabsTrigger value="gestante">Gestantes</TabsTrigger>
+              <TabsTrigger value="lactante">Puérperas</TabsTrigger>
+            </TabsList>
+          </Tabs>
         </CardHeader>
         <CardContent className="p-0">
           {isLoading ? (
