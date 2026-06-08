@@ -140,7 +140,8 @@ export default function Financial() {
       description: "",
       amount: 0,
       date: format(new Date(), "yyyy-MM-dd"),
-      payment_method: "pix",
+      payment_method: undefined,
+
       payment_status: "a_receber",
       notes: "",
       installments: 1,
@@ -589,7 +590,8 @@ export default function Financial() {
       description: "",
       amount: 0,
       date: format(new Date(), "yyyy-MM-dd"),
-      payment_method: "pix",
+      payment_method: undefined,
+
       payment_status: "a_receber",
       notes: "",
       payment_type: "a_vista",
@@ -1019,47 +1021,48 @@ export default function Financial() {
                         </div>
                       </div>
 
-                      {/* Actions: full-width receive button + icon row */}
-                      <div className="space-y-2 pt-2 border-t border-border/50">
-                        {pendingAmount > 0 && (
+                      {/* Actions: receive button + icons all on same line, justified */}
+                      <div className="flex items-center justify-between gap-2 pt-2 border-t border-border/50">
+                        {pendingAmount > 0 ? (
                           <Button
                             size="sm"
                             onClick={() => handleOpenPaymentDialog(transaction)}
-                            className="w-full h-9 gap-1.5 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm transition-all active:scale-95 text-xs font-medium"
+                            className="flex-1 h-9 gap-1.5 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm transition-all active:scale-95 text-xs font-medium"
                           >
                             <DollarSign className="h-3.5 w-3.5" />
                             Receber Pagamento
                           </Button>
+                        ) : (
+                          <div className="flex-1" />
                         )}
-                        <div className="flex items-center justify-end">
-                          <div className="inline-flex items-center rounded-full bg-muted/40 p-0.5">
-                            <button
-                              type="button"
-                              onClick={() => handleOpenDetailDialog(transaction.id)}
-                              className="inline-flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-background transition-all active:scale-95"
-                              aria-label="Ver detalhes"
-                            >
-                              <Eye className="h-3.5 w-3.5" />
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => handleEditTransaction(transaction)}
-                              className="inline-flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-background transition-all active:scale-95"
-                              aria-label="Editar"
-                            >
-                              <Pencil className="h-3.5 w-3.5" />
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => handleDelete(transaction.id)}
-                              className="inline-flex h-8 w-8 items-center justify-center rounded-full text-destructive hover:bg-destructive/10 transition-all active:scale-95"
-                              aria-label="Excluir"
-                            >
-                              <Trash2 className="h-3.5 w-3.5" />
-                            </button>
-                          </div>
+                        <div className="inline-flex items-center rounded-full bg-muted/40 p-0.5 shrink-0">
+                          <button
+                            type="button"
+                            onClick={() => handleOpenDetailDialog(transaction.id)}
+                            className="inline-flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-background transition-all active:scale-95"
+                            aria-label="Ver detalhes"
+                          >
+                            <Eye className="h-3.5 w-3.5" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleEditTransaction(transaction)}
+                            className="inline-flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-background transition-all active:scale-95"
+                            aria-label="Editar"
+                          >
+                            <Pencil className="h-3.5 w-3.5" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDelete(transaction.id)}
+                            className="inline-flex h-8 w-8 items-center justify-center rounded-full text-destructive hover:bg-destructive/10 transition-all active:scale-95"
+                            aria-label="Excluir"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
                         </div>
                       </div>
+
                     </Card>
                   );
                 })}
