@@ -614,6 +614,52 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
 
         // Recreate payment records if parcelado with installments > 1
         if (data.payment_type === "parcelado" && installmentCount > 1) {
+          // CRITICAL: Preserve previously registered payments so editing the
+          // client (name, phone, etc.) doesn't wipe paid installments.
+          // We match preserved data by installment_number.
+          type PreservedPayment = {
+            amount_paid: number;
+            paid_at: string | null;
+            payment_method: string | null;
+          };
+          const preservedByInstallment = new Map<number, PreservedPayment>();
+
+          const existingQueries = transactionId
+            ? [
+                supabase
+                  .from("payments")
+                  .select("installment_number, amount_paid, paid_at, payment_method")
+                  .eq("transaction_id", transactionId),
+                supabase
+                  .from("payments")
+                  .select("installment_number, amount_paid, paid_at, payment_method")
+                  .eq("client_id", client.id)
+                  .is("transaction_id", null),
+              ]
+            : [
+                supabase
+                  .from("payments")
+                  .select("installment_number, amount_paid, paid_at, payment_method")
+                  .eq("client_id", client.id)
+                  .is("transaction_id", null),
+              ];
+
+          const existingResults = await Promise.all(existingQueries);
+          existingResults.forEach((res) => {
+            (res.data || []).forEach((p: any) => {
+              const paid = Number(p.amount_paid || 0);
+              if (paid <= 0) return;
+              const prev = preservedByInstallment.get(p.installment_number);
+              if (!prev || paid > prev.amount_paid) {
+                preservedByInstallment.set(p.installment_number, {
+                  amount_paid: paid,
+                  paid_at: p.paid_at,
+                  payment_method: p.payment_method,
+                });
+              }
+            });
+          });
+
           // Delete old contract-related payments (current and legacy)
           const deleteOps = transactionId
             ? [
@@ -645,18 +691,26 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
               else dueDate.setMonth(dueDate.getMonth() + i);
               dueDateStr = `${dueDate.getFullYear()}-${String(dueDate.getMonth() + 1).padStart(2, "0")}-${String(dueDate.getDate()).padStart(2, "0")}`;
             }
-            const isPastDue = dueDateStr < todayStr;
             const thisAmt = useCustomAmts ? customInstallmentAmounts[i] : installmentAmount;
+            const preserved = preservedByInstallment.get(i + 1);
+            // Preserve previously registered payment, capped to the (possibly new) installment amount
+            const paidAmt = preserved ? Math.min(preserved.amount_paid, thisAmt) : 0;
+            const computedStatus = paidAmt >= thisAmt && thisAmt > 0
+              ? "pago"
+              : paidAmt > 0
+                ? "parcial"
+                : "pendente";
             return {
               client_id: client.id,
               transaction_id: transactionId,
               installment_number: i + 1,
               total_installments: installmentCount,
               amount: thisAmt,
-              amount_paid: isPastDue ? thisAmt : 0,
+              amount_paid: paidAmt,
               due_date: dueDateStr,
-              status: isPastDue ? "pago" : "pendente",
-              paid_at: isPastDue ? `${dueDateStr}T12:00:00` : null,
+              status: computedStatus,
+              paid_at: preserved?.paid_at ?? (computedStatus === "pago" ? `${dueDateStr}T12:00:00` : null),
+              payment_method: (preserved?.payment_method as any) ?? null,
               owner_id: user?.id || null,
               organization_id: organizationId || null,
             };
