@@ -927,13 +927,14 @@ export default function Financial() {
                   };
 
                   const fullName = transaction.clients?.full_name || "";
-                  const firstName = fullName.split(" ")[0]?.toUpperCase() || "";
+                  const normalizedFullName = toTitleCase(fullName);
+                  const firstName = normalizedFullName.split(" ")[0] || "";
                   const planName = transaction.plan_settings?.name || "";
                   const compactDesc = firstName && planName
                     ? `Contrato - ${firstName} - ${planName}`
                     : transaction.description;
-                  const initials = fullName
-                    ? fullName.split(" ").map(n => n[0]).slice(0, 2).join("").toUpperCase()
+                  const initials = normalizedFullName
+                    ? normalizedFullName.split(" ").map(n => n[0]).slice(0, 2).join("").toUpperCase()
                     : "—";
 
                   const receiptStatus = getReceiptStatus(transaction);
