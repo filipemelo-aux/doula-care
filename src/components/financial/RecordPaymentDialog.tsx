@@ -164,7 +164,11 @@ export function RecordPaymentDialog({
 
         const { error: paymentError } = await supabase
           .from("payments")
-          .update({ amount_paid: newAmountPaid, paid_at: newAmountPaid >= Number(payment.amount) ? paymentDate.toISOString() : null })
+          .update({
+            amount_paid: newAmountPaid,
+            paid_at: newAmountPaid >= Number(payment.amount) ? paymentDate.toISOString() : null,
+            payment_method: paymentMethod,
+          })
           .eq("id", selectedInstallment);
         if (paymentError) throw paymentError;
 
@@ -193,7 +197,7 @@ export function RecordPaymentDialog({
 
         const { error: txError } = await supabase
           .from("transactions")
-          .update({ amount_received: totalReceived })
+          .update({ amount_received: totalReceived, payment_method: paymentMethod })
           .eq("id", transactionId);
         if (txError) throw txError;
       } else {
