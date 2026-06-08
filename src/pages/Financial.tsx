@@ -933,9 +933,6 @@ export default function Financial() {
                   const compactDesc = firstName && planName
                     ? `Contrato - ${firstName} - ${planName}`
                     : transaction.description;
-                  const initials = normalizedFullName
-                    ? normalizedFullName.split(" ").map(n => n[0]).slice(0, 2).join("").toUpperCase()
-                    : "—";
 
                   const receiptStatus = getReceiptStatus(transaction);
                   const statusMeta: Record<string, { label: string; dot: string; text: string; bg: string }> = {
