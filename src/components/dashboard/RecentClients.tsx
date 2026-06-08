@@ -83,28 +83,13 @@ export function RecentClients() {
                 key={client.id}
                 className="flex flex-col gap-2 p-3 rounded-lg hover:bg-muted/50 transition-colors"
               >
-                <div className="flex items-center gap-4">
-                  <Avatar className="h-10 w-10">
-                    <AvatarFallback className="bg-primary/10 text-primary font-medium">
-                      {client.full_name
-                        .split(" ")
-                        .map((n) => n[0])
-                        .join("")
-                        .slice(0, 2)
-                        .toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-foreground truncate">{client.full_name}</p>
-                    <p className="text-sm text-muted-foreground">{client.phone}</p>
-                    {client.dpp && (
-                      <p className="text-xs text-muted-foreground">DPP: {format(parseISO(client.dpp), "dd/MM/yyyy")}</p>
-                    )}
-                  </div>
-                  <Button
+                <div className="flex items-center justify-between gap-2">
+                  <p className="font-medium text-foreground truncate">{client.full_name}</p>
+                  <div className="flex items-center gap-1 flex-shrink-0">
+                    <Button
                       variant="ghost"
                       size="icon"
-                      className="h-8 w-8 flex-shrink-0 text-muted-foreground hover:text-primary hover:bg-primary/10"
+                      className="h-8 w-8 text-muted-foreground hover:text-primary hover:bg-primary/10"
                       title={`Enviar notificação para ${client.full_name}`}
                       onClick={() => {
                         setNotifClient(client);
@@ -113,28 +98,39 @@ export function RecentClients() {
                     >
                       <Send className="h-4 w-4" />
                     </Button>
-                  {(client.status === "gestante" || client.status === "lactante") && (
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 flex-shrink-0 text-primary hover:bg-primary/10"
-                      title={client.status === "lactante" ? "Diário do Puerpério" : "Diário da Gestação"}
-                      onClick={() => {
-                        setDiaryClient(client);
-                        setDiaryDialogOpen(true);
-                      }}
-                    >
-                      <BookHeart className="h-4 w-4" />
-                    </Button>
-                  )}
+                    {(client.status === "gestante" || client.status === "lactante") && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-primary hover:bg-primary/10"
+                        title={client.status === "lactante" ? "Diário do Puerpério" : "Diário da Gestação"}
+                        onClick={() => {
+                          setDiaryClient(client);
+                          setDiaryDialogOpen(true);
+                        }}
+                      >
+                        <BookHeart className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
                 </div>
-                <div className="flex items-center gap-1 flex-wrap pl-14">
+                <div className="flex items-center gap-2 flex-wrap text-sm">
+                  <span className="text-muted-foreground">{client.phone}</span>
+                  {client.dpp && (
+                    <>
+                      <span className="text-muted-foreground">·</span>
+                      <span className="text-muted-foreground">DPP: {format(parseISO(client.dpp), "dd/MM/yyyy")}</span>
+                    </>
+                  )}
+                  <span className="text-muted-foreground">·</span>
                   <Badge
                     variant="outline"
                     className={cn("badge-status border-0 text-[10px] px-1.5 h-5", `badge-${client.status}`)}
                   >
                     {statusLabels[client.status as keyof typeof statusLabels]}
                   </Badge>
+                </div>
+                <div className="flex items-center gap-1 flex-wrap">
                   <Badge variant="outline" className="text-[10px] px-1.5 h-5">
                     {getPlanName(client.plan_setting_id, client.plan)}
                   </Badge>
