@@ -803,7 +803,10 @@ export default function Financial() {
   const sortByReceiptStatus = (a: Transaction, b: Transaction) => {
     const diff = receiptOrder[getReceiptStatus(a)] - receiptOrder[getReceiptStatus(b)];
     if (diff !== 0) return diff;
-    return new Date(b.date).getTime() - new Date(a.date).getTime();
+    // Then by due date ascending (earliest first)
+    const da = getDueDate(a);
+    const db = getDueDate(b);
+    return new Date(da).getTime() - new Date(db).getTime();
   };
 
   const clientTransactions = (transactions?.filter(isContractTransaction) || []).sort(sortByReceiptStatus);
