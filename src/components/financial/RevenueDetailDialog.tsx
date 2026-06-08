@@ -122,7 +122,7 @@ export function RevenueDetailDialog({ open, onOpenChange, transactionId }: Reven
             </p>
             {transaction.clients?.full_name && (
               <p className="text-xs text-muted-foreground mt-0.5">
-                Cliente: {transaction.clients.full_name}
+                Cliente: {toTitleCase(transaction.clients.full_name)}
               </p>
             )}
             {transaction.plan_settings?.name && (
