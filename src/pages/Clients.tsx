@@ -252,20 +252,44 @@ export default function Clients() {
                             <Phone className="w-3 h-3" /> {client.phone}
                           </p>
                           {client.dpp && (
-                            <p className="text-[11px] text-muted-foreground mt-0.5">
-                              DPP: {format(parseISO(client.dpp), "dd/MM/yyyy")}
+                            <p className="text-[11px] text-muted-foreground mt-0.5 flex items-center gap-1.5 flex-wrap">
+                              <span className="flex items-center gap-1">
+                                DPP: {format(parseISO(client.dpp), "dd/MM/yyyy")}
+                              </span>
+                              <span
+                                className={cn(
+                                  "badge-status inline-flex items-center text-[9px] font-semibold px-1.5 h-4 rounded-full",
+                                  `badge-${client.status}`
+                                )}
+                              >
+                                {client.status === "outro" && (client as any).custom_status
+                                  ? (client as any).custom_status
+                                  : statusLabels[client.status as keyof typeof statusLabels]}
+                              </span>
                               {client.status === "gestante" && !client.birth_occurred && (() => {
                                 const w = calculateCurrentPregnancyWeeks(client.pregnancy_weeks, client.pregnancy_weeks_set_at, client.dpp);
                                 const d = calculateCurrentPregnancyDays(client.dpp);
                                 const post = isPostTerm(client.dpp);
                                 if (w === null) return null;
                                 return (
-                                  <span className={cn("ml-1.5 font-semibold", post ? "text-destructive" : "text-primary")}>
-                                    • {post ? "Pós-Data " : ""}{w}s {d}d
+                                  <span className={cn("font-semibold", post ? "text-destructive" : "text-primary")}>
+                                    {post ? "Pós-Data " : ""}{w}s {d}d
                                   </span>
                                 );
                               })()}
                             </p>
+                          )}
+                          {!client.dpp && (
+                            <span
+                              className={cn(
+                                "badge-status inline-flex items-center text-[9px] font-semibold px-1.5 h-4 rounded-full mt-0.5",
+                                `badge-${client.status}`
+                              )}
+                            >
+                              {client.status === "outro" && (client as any).custom_status
+                                ? (client as any).custom_status
+                                : statusLabels[client.status as keyof typeof statusLabels]}
+                            </span>
                           )}
                         </div>
                       </div>
@@ -273,18 +297,22 @@ export default function Clients() {
                       {/* Divider */}
                       <div className="mt-3 mb-3 h-px bg-border/50" />
 
-                      {/* Linha 1: Status gestação + Ações */}
+                      {/* Linha única: Plano + Pagamento + Ações */}
                       <div className="flex items-center justify-between gap-2">
-                        <span
-                          className={cn(
-                            "badge-status inline-flex items-center text-[10px] font-semibold px-2 h-5 rounded-full",
-                            `badge-${client.status}`
-                          )}
-                        >
-                          {client.status === "outro" && (client as any).custom_status
-                            ? (client as any).custom_status
-                            : statusLabels[client.status as keyof typeof statusLabels]}
-                        </span>
+                        <div className="flex items-center gap-1.5 min-w-0">
+                          <span className="inline-flex items-center text-[10px] font-semibold px-2 h-5 rounded-full bg-muted text-muted-foreground truncate">
+                            {getPlanName(client.plan_setting_id, client.plan)}
+                          </span>
+                          <span
+                            className={cn(
+                              "inline-flex items-center gap-1 text-[10px] font-semibold px-2 h-5 rounded-full shrink-0",
+                              `badge-${client.payment_status}`
+                            )}
+                          >
+                            <span className={cn("w-1.5 h-1.5 rounded-full", paymentDot[client.payment_status] || "bg-muted-foreground")} />
+                            {paymentStatusLabels[client.payment_status as keyof typeof paymentStatusLabels]}
+                          </span>
+                        </div>
                         <div className="flex items-center gap-1 flex-shrink-0 rounded-full bg-muted/40 p-0.5">
                           <button
                             type="button"
@@ -314,22 +342,6 @@ export default function Clients() {
                             <Trash2 className="h-3.5 w-3.5" />
                           </button>
                         </div>
-                      </div>
-
-                      {/* Linha 2: Plano + Status pagamento */}
-                      <div className="flex items-center gap-1.5 mt-2">
-                        <span className="inline-flex items-center text-[10px] font-semibold px-2 h-5 rounded-full bg-muted text-muted-foreground">
-                          {getPlanName(client.plan_setting_id, client.plan)}
-                        </span>
-                        <span
-                          className={cn(
-                            "inline-flex items-center gap-1 text-[10px] font-semibold px-2 h-5 rounded-full",
-                            `badge-${client.payment_status}`
-                          )}
-                        >
-                          <span className={cn("w-1.5 h-1.5 rounded-full", paymentDot[client.payment_status] || "bg-muted-foreground")} />
-                          {paymentStatusLabels[client.payment_status as keyof typeof paymentStatusLabels]}
-                        </span>
                       </div>
                     </div>
                   );
