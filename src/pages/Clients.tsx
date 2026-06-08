@@ -273,32 +273,18 @@ export default function Clients() {
                       {/* Divider */}
                       <div className="mt-3 mb-3 h-px bg-border/50" />
 
-                      {/* Badges row + Action icons */}
+                      {/* Linha 1: Status gestação + Ações */}
                       <div className="flex items-center justify-between gap-2">
-                        <div className="flex items-center gap-1.5 flex-wrap min-w-0">
-                          <span
-                            className={cn(
-                              "badge-status inline-flex items-center text-[10px] font-semibold px-2 h-5 rounded-full",
-                              `badge-${client.status}`
-                            )}
-                          >
-                            {client.status === "outro" && (client as any).custom_status
-                              ? (client as any).custom_status
-                              : statusLabels[client.status as keyof typeof statusLabels]}
-                          </span>
-                          <span className="inline-flex items-center text-[10px] font-semibold px-2 h-5 rounded-full bg-muted text-muted-foreground">
-                            {getPlanName(client.plan_setting_id, client.plan)}
-                          </span>
-                          <span
-                            className={cn(
-                              "inline-flex items-center gap-1 text-[10px] font-semibold px-2 h-5 rounded-full",
-                              `badge-${client.payment_status}`
-                            )}
-                          >
-                            <span className={cn("w-1.5 h-1.5 rounded-full", paymentDot[client.payment_status] || "bg-muted-foreground")} />
-                            {paymentStatusLabels[client.payment_status as keyof typeof paymentStatusLabels]}
-                          </span>
-                        </div>
+                        <span
+                          className={cn(
+                            "badge-status inline-flex items-center text-[10px] font-semibold px-2 h-5 rounded-full",
+                            `badge-${client.status}`
+                          )}
+                        >
+                          {client.status === "outro" && (client as any).custom_status
+                            ? (client as any).custom_status
+                            : statusLabels[client.status as keyof typeof statusLabels]}
+                        </span>
                         <div className="flex items-center gap-1 flex-shrink-0 rounded-full bg-muted/40 p-0.5">
                           <button
                             type="button"
@@ -328,6 +314,22 @@ export default function Clients() {
                             <Trash2 className="h-3.5 w-3.5" />
                           </button>
                         </div>
+                      </div>
+
+                      {/* Linha 2: Plano + Status pagamento */}
+                      <div className="flex items-center gap-1.5 mt-2">
+                        <span className="inline-flex items-center text-[10px] font-semibold px-2 h-5 rounded-full bg-muted text-muted-foreground">
+                          {getPlanName(client.plan_setting_id, client.plan)}
+                        </span>
+                        <span
+                          className={cn(
+                            "inline-flex items-center gap-1 text-[10px] font-semibold px-2 h-5 rounded-full",
+                            `badge-${client.payment_status}`
+                          )}
+                        >
+                          <span className={cn("w-1.5 h-1.5 rounded-full", paymentDot[client.payment_status] || "bg-muted-foreground")} />
+                          {paymentStatusLabels[client.payment_status as keyof typeof paymentStatusLabels]}
+                        </span>
                       </div>
                     </div>
                   );
