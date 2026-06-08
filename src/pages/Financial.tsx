@@ -140,7 +140,8 @@ export default function Financial() {
       description: "",
       amount: 0,
       date: format(new Date(), "yyyy-MM-dd"),
-      payment_method: "pix",
+      payment_method: undefined,
+
       payment_status: "a_receber",
       notes: "",
       installments: 1,
@@ -589,7 +590,8 @@ export default function Financial() {
       description: "",
       amount: 0,
       date: format(new Date(), "yyyy-MM-dd"),
-      payment_method: "pix",
+      payment_method: undefined,
+
       payment_status: "a_receber",
       notes: "",
       payment_type: "a_vista",
