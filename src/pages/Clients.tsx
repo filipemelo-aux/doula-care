@@ -209,10 +209,17 @@ export default function Clients() {
 
       {/* Clients List */}
       <Card className="card-glass">
-        <CardHeader className="p-4 lg:p-6">
+        <CardHeader className="p-4 lg:p-6 space-y-3">
           <CardTitle className="text-lg font-semibold text-foreground">
             Lista de Clientes ({filteredClients?.length || 0})
           </CardTitle>
+          <Tabs value={statusFilter} onValueChange={(v) => setStatusFilter(v as typeof statusFilter)}>
+            <TabsList className="grid w-full grid-cols-3 sm:w-auto sm:inline-grid">
+              <TabsTrigger value="todas">Todas</TabsTrigger>
+              <TabsTrigger value="gestante">Gestantes</TabsTrigger>
+              <TabsTrigger value="lactante">Puérperas</TabsTrigger>
+            </TabsList>
+          </Tabs>
         </CardHeader>
         <CardContent className="p-0">
           {isLoading ? (
