@@ -49,6 +49,15 @@ export function RecordPaymentDialog({
   const [paymentType, setPaymentType] = useState<"total" | "parcial">("total");
   const [partialValue, setPartialValue] = useState("");
   const [paymentDate, setPaymentDate] = useState<Date>(new Date());
+  const [paymentMethod, setPaymentMethod] = useState<"pix" | "cartao" | "dinheiro" | "transferencia" | "boleto">("pix");
+
+  const paymentMethodLabels = {
+    pix: "Pix",
+    cartao: "Cartão",
+    dinheiro: "Dinheiro",
+    transferencia: "Transferência",
+    boleto: "Boleto",
+  } as const;
 
   // Fetch payments for this transaction (by transaction_id first, fallback to client_id)
   const { data: payments, isLoading } = useQuery({
