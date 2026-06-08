@@ -383,6 +383,26 @@ export function RecordPaymentDialog({
               </div>
             )}
 
+            {/* Payment method */}
+            <div className="space-y-2">
+              <Label className="text-xs font-medium">Forma de Pagamento</Label>
+              <Select
+                value={paymentMethod}
+                onValueChange={(v) => setPaymentMethod(v as typeof paymentMethod)}
+              >
+                <SelectTrigger className="h-9 text-sm">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.entries(paymentMethodLabels).map(([value, label]) => (
+                    <SelectItem key={value} value={value}>
+                      {label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
             {/* Payment date */}
             <div className="space-y-2">
               <Label className="text-xs font-medium">Data do Pagamento</Label>
