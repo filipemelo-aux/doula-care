@@ -228,7 +228,7 @@ export default function Financial() {
       }
     }
   }
-  const getDueDate = (t: Transaction): string => dueDateByTransaction.get(t.id) || t.date;
+  const getDueDate = (t: Transaction): string => (t as any).clients?.dpp || dueDateByTransaction.get(t.id) || t.date;
 
   const { data: clients } = useQuery({
     queryKey: ["clients-with-plans"],
