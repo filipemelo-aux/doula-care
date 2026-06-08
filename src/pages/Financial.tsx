@@ -890,7 +890,6 @@ export default function Financial() {
                     >
                       {opt.dot && <span className={`h-1.5 w-1.5 rounded-full ${opt.dot}`} />}
                       <span>{opt.label}</span>
-                      {typeof opt.count === 'number' && <span className={`text-[10px] ${active ? "opacity-80" : "opacity-60"}`}>({opt.count})</span>}
                     </button>
                   );
                 })}
