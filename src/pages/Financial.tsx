@@ -974,7 +974,7 @@ export default function Financial() {
                           </div>
                           <p className="text-[11px] text-muted-foreground mt-1 flex items-center gap-1.5 flex-wrap">
                             <span className="truncate">
-                              {fullName ? abbreviateName(fullName) : "—"}
+                              {normalizedFullName ? abbreviateName(normalizedFullName) : "—"}
                             </span>
                             <span>•</span>
                             <span>{formatBrazilDate(transaction.date, "dd/MM/yy")}</span>
