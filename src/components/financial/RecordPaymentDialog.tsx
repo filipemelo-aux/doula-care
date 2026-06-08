@@ -221,7 +221,7 @@ export function RecordPaymentDialog({
 
         const { error: txError } = await supabase
           .from("transactions")
-          .update({ amount_received: newReceived })
+          .update({ amount_received: newReceived, payment_method: paymentMethod })
           .eq("id", transactionId);
         if (txError) throw txError;
       }
