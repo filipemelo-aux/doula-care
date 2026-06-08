@@ -1019,24 +1019,19 @@ export default function Financial() {
                         </div>
                       </div>
 
-                      {/* Payment method + actions row */}
-                      <div className="flex items-center justify-between gap-2 pt-2 border-t border-border/50">
-                        <PaymentMethodBadge
-                          currentMethod={currentMethod}
-                          onChangeMethod={(method) => handleChangePaymentMethod(transaction.id, method)}
-                          compact
-                        />
-                        <div className="flex items-center gap-2">
-                          {pendingAmount > 0 && (
-                            <Button
-                              size="sm"
-                              onClick={() => handleOpenPaymentDialog(transaction)}
-                              className="h-8 px-3 gap-1.5 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm transition-all active:scale-95 text-xs font-medium"
-                            >
-                              <DollarSign className="h-3.5 w-3.5" />
-                              Receber
-                            </Button>
-                          )}
+                      {/* Actions: full-width receive button + icon row */}
+                      <div className="space-y-2 pt-2 border-t border-border/50">
+                        {pendingAmount > 0 && (
+                          <Button
+                            size="sm"
+                            onClick={() => handleOpenPaymentDialog(transaction)}
+                            className="w-full h-9 gap-1.5 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm transition-all active:scale-95 text-xs font-medium"
+                          >
+                            <DollarSign className="h-3.5 w-3.5" />
+                            Receber Pagamento
+                          </Button>
+                        )}
+                        <div className="flex items-center justify-end">
                           <div className="inline-flex items-center rounded-full bg-muted/40 p-0.5">
                             <button
                               type="button"
