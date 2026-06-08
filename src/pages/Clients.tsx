@@ -15,15 +15,8 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, Search, Edit2, Trash2, Eye, Loader2, MoreVertical, Phone, Users } from "lucide-react";
+import { Plus, Search, Edit2, Trash2, Eye, Loader2, Phone, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { ClientDialog } from "@/components/clients/ClientDialog";
 import { ClientDetailsDialog } from "@/components/clients/ClientDetailsDialog";
@@ -235,7 +228,7 @@ export default function Clients() {
                           Inativa (limite do plano)
                         </Badge>
                       )}
-                      {/* Top row: Avatar + Info + Menu */}
+                      {/* Top row: Avatar + Info */}
                       <div className="flex items-start gap-3">
                         <Avatar className="w-10 h-10 flex-shrink-0">
                           <AvatarFallback className="bg-primary/10 text-primary text-sm font-semibold">
@@ -264,27 +257,8 @@ export default function Clients() {
                             </p>
                           )}
                         </div>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-8 w-8 flex-shrink-0 text-muted-foreground">
-                              <MoreVertical className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="w-44">
-                            <DropdownMenuItem onClick={() => handleView(client)} className="gap-2.5 py-2.5">
-                              <Eye className="h-4 w-4" /> Ver detalhes
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleEdit(client)} className="gap-2.5 py-2.5">
-                              <Edit2 className="h-4 w-4" /> Editar
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem onClick={() => handleDelete(client)} className="gap-2.5 py-2.5 text-destructive focus:text-destructive focus:bg-destructive/10">
-                              <Trash2 className="h-4 w-4" /> Excluir
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
                       </div>
-                      {/* Badges row */}
+                      {/* Badges row + Action icons */}
                       <div className="flex items-center gap-1.5 flex-wrap">
                         <Badge
                           className={cn("badge-status text-[10px] px-2 h-5", `badge-${client.status}`)}
@@ -301,6 +275,35 @@ export default function Clients() {
                         >
                           {paymentStatusLabels[client.payment_status as keyof typeof paymentStatusLabels]}
                         </Badge>
+                        <div className="flex items-center gap-0.5 ml-auto">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 text-muted-foreground hover:text-primary"
+                            onClick={() => handleView(client)}
+                            disabled={inactive}
+                          >
+                            <Eye className="h-3.5 w-3.5" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 text-muted-foreground hover:text-primary"
+                            onClick={() => handleEdit(client)}
+                            disabled={inactive}
+                          >
+                            <Edit2 className="h-3.5 w-3.5" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                            onClick={() => handleDelete(client)}
+                            disabled={inactive}
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   );
@@ -319,7 +322,6 @@ export default function Clients() {
                       <TableHead>Situação</TableHead>
                       <TableHead>Plano</TableHead>
                       <TableHead>Pagamento</TableHead>
-                      <TableHead className="text-right">Ações</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -364,33 +366,43 @@ export default function Clients() {
                           {getPlanName(client.plan_setting_id, client.plan)}
                         </TableCell>
                         <TableCell>
-                          <Badge
-                            variant="outline"
-                            className={cn("badge-status border-0", `badge-${client.payment_status}`)}
-                          >
-                            {paymentStatusLabels[client.payment_status as keyof typeof paymentStatusLabels]}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon" className="h-8 w-8" disabled={inactive}>
-                                <MoreVertical className="h-4 w-4" />
+                          <div className="flex items-center gap-2">
+                            <Badge
+                              variant="outline"
+                              className={cn("badge-status border-0", `badge-${client.payment_status}`)}
+                            >
+                              {paymentStatusLabels[client.payment_status as keyof typeof paymentStatusLabels]}
+                            </Badge>
+                            <div className="flex items-center gap-0.5">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-7 w-7 text-muted-foreground hover:text-primary"
+                                onClick={() => handleView(client)}
+                                disabled={inactive}
+                              >
+                                <Eye className="h-3.5 w-3.5" />
                               </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-44">
-                              <DropdownMenuItem onClick={() => handleView(client)} className="gap-2.5 py-2">
-                                <Eye className="h-4 w-4" /> Ver detalhes
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => handleEdit(client)} className="gap-2.5 py-2">
-                                <Edit2 className="h-4 w-4" /> Editar
-                              </DropdownMenuItem>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem onClick={() => handleDelete(client)} className="gap-2.5 py-2 text-destructive focus:text-destructive focus:bg-destructive/10">
-                                <Trash2 className="h-4 w-4" /> Excluir
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-7 w-7 text-muted-foreground hover:text-primary"
+                                onClick={() => handleEdit(client)}
+                                disabled={inactive}
+                              >
+                                <Edit2 className="h-3.5 w-3.5" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                                onClick={() => handleDelete(client)}
+                                disabled={inactive}
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </Button>
+                            </div>
+                          </div>
                         </TableCell>
                       </TableRow>
                       );
