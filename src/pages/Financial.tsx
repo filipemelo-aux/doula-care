@@ -927,8 +927,11 @@ export default function Financial() {
 
                   const fullName = transaction.clients?.full_name || "";
                   const normalizedFullName = toTitleCase(fullName);
+                  const firstName = normalizedFullName.split(" ")[0] || "";
                   const planName = transaction.plan_settings?.name || "";
-                  const compactDesc = planName || transaction.description;
+                  const compactDesc = firstName && planName
+                    ? `${firstName} - ${planName}`
+                    : transaction.description;
 
                   const receiptStatus = getReceiptStatus(transaction);
                   const statusMeta: Record<string, { label: string; dot: string; text: string; bg: string }> = {
