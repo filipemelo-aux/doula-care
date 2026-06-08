@@ -909,12 +909,11 @@ export default function Financial() {
           ) : filteredTransactions && filteredTransactions.length > 0 ? (
             <>
               {/* Mobile Cards */}
-              <div className="block lg:hidden space-y-2 px-2 py-1 w-full box-border min-w-0">
+              <div className="block lg:hidden space-y-2.5 p-3">
                 {filteredTransactions.map((transaction) => {
                   const totalAmount = Number(transaction.amount) || 0;
                   const receivedAmount = Number(transaction.amount_received) || 0;
                   const pendingAmount = Math.max(0, totalAmount - receivedAmount);
-                  const currentMethod = (transaction.payment_method as keyof typeof paymentMethodLabels) || "pix";
                   const installments = Number(transaction.installments) || 1;
                   const isEditingInstallmentsMobile = editingInstallmentsId === transaction.id;
 
@@ -927,12 +926,15 @@ export default function Financial() {
                     }).format(value);
                   };
 
-                  // Get first name only
-                  const firstName = transaction.clients?.full_name?.split(" ")[0]?.toUpperCase() || "";
+                  const fullName = transaction.clients?.full_name || "";
+                  const firstName = fullName.split(" ")[0]?.toUpperCase() || "";
                   const planName = transaction.plan_settings?.name || "";
-                  const compactDesc = firstName && planName 
+                  const compactDesc = firstName && planName
                     ? `Contrato - ${firstName} - ${planName}`
                     : transaction.description;
+                  const initials = fullName
+                    ? fullName.split(" ").map(n => n[0]).slice(0, 2).join("").toUpperCase()
+                    : "—";
 
                   const receiptStatus = getReceiptStatus(transaction);
                   const statusMeta: Record<string, { label: string; dot: string; text: string; bg: string }> = {
@@ -943,39 +945,52 @@ export default function Financial() {
                   const sm = statusMeta[receiptStatus];
 
                   return (
-                    <Card key={transaction.id} className="px-3 py-3 space-y-2 w-full box-border min-w-0 overflow-hidden rounded-2xl border-border/60 shadow-sm">
-                      {/* Header: Description + status pill */}
-                      <div className="flex items-start justify-between gap-2 min-w-0">
-                        <div className="flex items-center gap-1 min-w-0 flex-1">
-                          {transaction.is_auto_generated && (
-                            <Zap className="w-3 h-3 text-warning flex-shrink-0" />
-                          )}
-                          <p className="font-medium text-sm truncate min-w-0 leading-tight" title={compactDesc}>{compactDesc}</p>
+                    <div
+                      key={transaction.id}
+                      className="relative rounded-2xl bg-card p-4 shadow-card transition-all active:scale-[0.99]"
+                    >
+                      {/* Top row: Avatar + Info */}
+                      <div className="flex items-start gap-3">
+                        <Avatar className="w-11 h-11 flex-shrink-0 ring-2 ring-primary/10">
+                          <AvatarFallback className="bg-primary/10 text-primary text-sm font-semibold">
+                            {initials}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-start justify-between gap-2 min-w-0">
+                            <div className="flex items-center gap-1 min-w-0 flex-1">
+                              {transaction.is_auto_generated && (
+                                <Zap className="w-3 h-3 text-warning flex-shrink-0" />
+                              )}
+                              <p className="font-semibold text-sm text-foreground truncate leading-tight" title={compactDesc}>
+                                {compactDesc}
+                              </p>
+                            </div>
+                            <span className={`inline-flex items-center gap-1.5 rounded-full px-2 h-5 text-[10px] font-semibold flex-shrink-0 ${sm.bg} ${sm.text}`}>
+                              <span className={`h-1.5 w-1.5 rounded-full ${sm.dot}`} />
+                              {sm.label}
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-muted-foreground mt-1 flex items-center gap-1.5 flex-wrap">
+                            <span className="truncate">
+                              {fullName ? abbreviateName(fullName) : "—"}
+                            </span>
+                            <span>•</span>
+                            <span>{formatBrazilDate(transaction.date, "dd/MM/yy")}</span>
+                          </p>
                         </div>
-                        <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[10px] font-medium flex-shrink-0 ${sm.bg} ${sm.text}`}>
-                          <span className={`h-1.5 w-1.5 rounded-full ${sm.dot}`} />
-                          {sm.label}
-                        </span>
-                      </div>
-
-                      {/* Info: Client + Date */}
-                      <div className="flex items-center min-w-0 overflow-hidden">
-                        <span className="text-xs text-muted-foreground truncate min-w-0 flex-1">
-                          {transaction.clients?.full_name ? abbreviateName(transaction.clients.full_name) : "—"}
-                        </span>
-                        <span className="text-[11px] text-muted-foreground flex-shrink-0 ml-1">{formatBrazilDate(transaction.date, "dd/MM/yy")}</span>
                       </div>
 
                       {/* Divider */}
-                      <div className="h-px bg-border/50" />
+                      <div className="mt-3 mb-3 h-px bg-border/50" />
 
-                      {/* Values: flex layout */}
+                      {/* Values row */}
                       <div className="flex items-start w-full">
-                        <div className="text-center min-w-0 flex-1 flex-shrink px-1">
+                        <div className="text-center min-w-0 flex-1 px-1">
                           <span className="text-[10px] text-muted-foreground block">Total</span>
                           <span className="font-semibold text-sm truncate block">{formatCompact(totalAmount)}</span>
                         </div>
-                        <div className="text-center min-w-0 flex-shrink px-1" style={{flexBasis: '40px'}}>
+                        <div className="text-center min-w-0 px-1" style={{flexBasis: '44px'}}>
                           <span className="text-[10px] text-muted-foreground block">Parc.</span>
                           {isEditingInstallmentsMobile ? (
                             <Select
@@ -999,7 +1014,7 @@ export default function Financial() {
                               </SelectContent>
                             </Select>
                           ) : (
-                            <span 
+                            <span
                               className="text-sm font-medium cursor-pointer border-b border-dashed border-muted-foreground/40 hover:border-primary transition-colors"
                               onClick={() => handleStartEditInstallments(transaction)}
                             >
@@ -1007,13 +1022,13 @@ export default function Financial() {
                             </span>
                           )}
                         </div>
-                        <div className="text-center min-w-0 flex-1 flex-shrink px-1">
+                        <div className="text-center min-w-0 flex-1 px-1">
                           <span className="text-[10px] text-muted-foreground block">Receb.</span>
                           <span className="text-sm text-success font-medium">
                             {formatCompact(receivedAmount)}
                           </span>
                         </div>
-                        <div className="text-center min-w-0 flex-1 flex-shrink px-1">
+                        <div className="text-center min-w-0 flex-1 px-1">
                           <span className="text-[10px] text-muted-foreground block">Pend.</span>
                           {pendingAmount > 0 ? (
                             <span className="text-sm text-warning font-medium truncate block">{formatCompact(pendingAmount)}</span>
@@ -1023,8 +1038,8 @@ export default function Financial() {
                         </div>
                       </div>
 
-                      {/* Actions: receive button + icons all on same line, justified */}
-                      <div className="flex items-center justify-between gap-2 pt-2 border-t border-border/50">
+                      {/* Actions */}
+                      <div className="mt-3 flex items-center justify-between gap-2">
                         {pendingAmount > 0 ? (
                           <Button
                             size="sm"
@@ -1037,11 +1052,11 @@ export default function Financial() {
                         ) : (
                           <div className="flex-1" />
                         )}
-                        <div className="inline-flex items-center rounded-full bg-muted/40 p-0.5 shrink-0">
+                        <div className="flex items-center gap-1 flex-shrink-0 rounded-full bg-muted/40 p-0.5">
                           <button
                             type="button"
                             onClick={() => handleOpenDetailDialog(transaction.id)}
-                            className="inline-flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-background transition-all active:scale-95"
+                            className="h-7 w-7 inline-flex items-center justify-center rounded-full text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors active:scale-95"
                             aria-label="Ver detalhes"
                           >
                             <Eye className="h-3.5 w-3.5" />
@@ -1049,7 +1064,7 @@ export default function Financial() {
                           <button
                             type="button"
                             onClick={() => handleEditTransaction(transaction)}
-                            className="inline-flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-background transition-all active:scale-95"
+                            className="h-7 w-7 inline-flex items-center justify-center rounded-full text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors active:scale-95"
                             aria-label="Editar"
                           >
                             <Pencil className="h-3.5 w-3.5" />
@@ -1057,18 +1072,18 @@ export default function Financial() {
                           <button
                             type="button"
                             onClick={() => handleDelete(transaction.id)}
-                            className="inline-flex h-8 w-8 items-center justify-center rounded-full text-destructive hover:bg-destructive/10 transition-all active:scale-95"
+                            className="h-7 w-7 inline-flex items-center justify-center rounded-full text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors active:scale-95"
                             aria-label="Excluir"
                           >
                             <Trash2 className="h-3.5 w-3.5" />
                           </button>
                         </div>
                       </div>
-
-                    </Card>
+                    </div>
                   );
                 })}
               </div>
+
 
               {/* Desktop Table */}
               <div className="hidden lg:block p-4 pt-0">
