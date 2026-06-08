@@ -34,8 +34,8 @@ export function usePlanNames() {
       return planMap.get(planSettingId)!;
     }
     if (planEnum === "avulso") return "Avulso";
-    // Legacy enums (basico, intermediario, premium) sem plan_setting_id válido
-    return "Sem plano";
+    // Fallback: capitalize enum
+    return planEnum.charAt(0).toUpperCase() + planEnum.slice(1);
   };
 
   return { getPlanName, planSettings };
