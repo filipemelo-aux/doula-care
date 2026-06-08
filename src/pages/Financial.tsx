@@ -1016,7 +1016,7 @@ export default function Financial() {
                               {normalizedFullName ? abbreviateName(normalizedFullName) : "—"}
                             </span>
                             <span>•</span>
-                            <span>{formatBrazilDate(transaction.date, "dd/MM/yy")}</span>
+                            <span>{formatBrazilDate(getDueDate(transaction), "dd/MM/yy")}</span>
                           </p>
                         </div>
                       </div>
