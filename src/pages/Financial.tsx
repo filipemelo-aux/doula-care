@@ -426,7 +426,7 @@ export default function Financial() {
           description: data.description,
           amount: data.amount,
           date: data.date,
-          payment_method: data.payment_method,
+          payment_method: data.payment_method || null,
           notes: data.notes || null,
           installments: data.installments,
           installment_value: data.installment_value,
