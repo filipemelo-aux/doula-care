@@ -950,13 +950,8 @@ export default function Financial() {
                       key={transaction.id}
                       className="relative rounded-2xl bg-card p-4 shadow-card transition-all active:scale-[0.99]"
                     >
-                      {/* Top row: Avatar + Info */}
+                      {/* Top row: Info */}
                       <div className="flex items-start gap-3">
-                        <Avatar className="w-11 h-11 flex-shrink-0 ring-2 ring-primary/10">
-                          <AvatarFallback className="bg-primary/10 text-primary text-sm font-semibold">
-                            {initials}
-                          </AvatarFallback>
-                        </Avatar>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-start justify-between gap-2 min-w-0">
                             <div className="flex items-center gap-1 min-w-0 flex-1">
