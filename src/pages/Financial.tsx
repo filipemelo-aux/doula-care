@@ -874,7 +874,7 @@ export default function Financial() {
               { value: "recebido", label: "Recebidos", dot: "bg-emerald-500" },
             ];
             return (
-              <div className="mt-3 flex flex-nowrap gap-1.5 overflow-x-auto [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: 'none' }}>
+              <div className="mt-3 flex w-full flex-nowrap justify-between gap-1.5 overflow-x-auto [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: 'none' }}>
                 {statusOptions.map((opt) => {
                   const active = statusFilter === opt.value;
                   return (
