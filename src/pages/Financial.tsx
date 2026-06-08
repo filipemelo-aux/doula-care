@@ -319,7 +319,7 @@ export default function Financial() {
         date: data.date,
         client_id: data.client_id || null,
         plan_id: data.plan_id || null,
-        payment_method: data.payment_method,
+        payment_method: data.payment_method || null,
         notes: data.notes || null,
         installments,
         installment_value: installmentValue,
