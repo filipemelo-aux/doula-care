@@ -739,17 +739,33 @@ export default function Financial() {
   // Serviços: everything else (manual entries, service requests)
   const isContractTransaction = (t: Transaction) =>
     t.is_auto_generated === true && (t.plan_id != null || t.description?.startsWith("Contrato"));
-  const clientTransactions = transactions?.filter(isContractTransaction) || [];
-  const serviceTransactions = (transactions?.filter((t) => !isContractTransaction(t)) || [])
-    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
-  const allTransactions = [...(transactions || [])].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  // Receipt status helpers — prioritize ordering: a receber → parcial → recebido
+  const getReceiptStatus = (t: Transaction): "a_receber" | "parcial" | "recebido" => {
+    const total = Number(t.amount) || 0;
+    const received = Number(t.amount_received) || 0;
+    if (received <= 0) return "a_receber";
+    if (received < total) return "parcial";
+    return "recebido";
+  };
+  const receiptOrder: Record<string, number> = { a_receber: 0, parcial: 1, recebido: 2 };
+  const sortByReceiptStatus = (a: Transaction, b: Transaction) => {
+    const diff = receiptOrder[getReceiptStatus(a)] - receiptOrder[getReceiptStatus(b)];
+    if (diff !== 0) return diff;
+    return new Date(b.date).getTime() - new Date(a.date).getTime();
+  };
+
+  const clientTransactions = (transactions?.filter(isContractTransaction) || []).sort(sortByReceiptStatus);
+  const serviceTransactions = (transactions?.filter((t) => !isContractTransaction(t)) || []).sort(sortByReceiptStatus);
+
+  const allTransactions = [...(transactions || [])].sort(sortByReceiptStatus);
   const activeTabTransactions = revenueTab === "todos" ? allTransactions : revenueTab === "contratos" ? clientTransactions : serviceTransactions;
 
   const filteredTransactions = activeTabTransactions.filter(
     (t) =>
-      t.description.toLowerCase().includes(search.toLowerCase()) ||
-      t.clients?.full_name?.toLowerCase().includes(search.toLowerCase())
+      (statusFilter === "todos" || getReceiptStatus(t) === statusFilter) &&
+      (t.description.toLowerCase().includes(search.toLowerCase()) ||
+        t.clients?.full_name?.toLowerCase().includes(search.toLowerCase()))
   );
 
   const totalIncome = transactions?.reduce((sum, t) => sum + Number(t.amount), 0) || 0;
