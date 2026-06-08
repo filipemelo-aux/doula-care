@@ -182,6 +182,54 @@ export default function Financial() {
     },
   });
 
+  // Fetch all payment installments to compute due dates per transaction
+  const { data: allPayments } = useQuery({
+    queryKey: ["payments", "all-due-dates"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("payments")
+        .select("transaction_id, client_id, total_installments, due_date");
+      if (error) throw error;
+      return data || [];
+    },
+  });
+
+  // Build a map: transaction.id -> last installment due_date (ISO string)
+  const dueDateByTransaction = new Map<string, string>();
+  if (allPayments && transactions) {
+    const byTxId = new Map<string, string[]>();
+    const byClientKey = new Map<string, string[]>(); // `${client_id}|${total_installments}`
+    for (const p of allPayments) {
+      if (!p.due_date) continue;
+      if (p.transaction_id) {
+        const arr = byTxId.get(p.transaction_id) || [];
+        arr.push(p.due_date);
+        byTxId.set(p.transaction_id, arr);
+      } else if (p.client_id && p.total_installments != null) {
+        const key = `${p.client_id}|${p.total_installments}`;
+        const arr = byClientKey.get(key) || [];
+        arr.push(p.due_date);
+        byClientKey.set(key, arr);
+      }
+    }
+    const maxOf = (arr: string[]) => arr.reduce((a, b) => (a > b ? a : b));
+    for (const t of transactions) {
+      const direct = byTxId.get(t.id);
+      if (direct && direct.length > 0) {
+        dueDateByTransaction.set(t.id, maxOf(direct));
+        continue;
+      }
+      if (t.client_id) {
+        const key = `${t.client_id}|${Number(t.installments || 1)}`;
+        const fallback = byClientKey.get(key);
+        if (fallback && fallback.length > 0) {
+          dueDateByTransaction.set(t.id, maxOf(fallback));
+        }
+      }
+    }
+  }
+  const getDueDate = (t: Transaction): string => dueDateByTransaction.get(t.id) || t.date;
+
   const { data: clients } = useQuery({
     queryKey: ["clients-with-plans"],
     queryFn: async () => {
@@ -755,7 +803,10 @@ export default function Financial() {
   const sortByReceiptStatus = (a: Transaction, b: Transaction) => {
     const diff = receiptOrder[getReceiptStatus(a)] - receiptOrder[getReceiptStatus(b)];
     if (diff !== 0) return diff;
-    return new Date(b.date).getTime() - new Date(a.date).getTime();
+    // Then by due date ascending (earliest first)
+    const da = getDueDate(a);
+    const db = getDueDate(b);
+    return new Date(da).getTime() - new Date(db).getTime();
   };
 
   const clientTransactions = (transactions?.filter(isContractTransaction) || []).sort(sortByReceiptStatus);
@@ -965,7 +1016,7 @@ export default function Financial() {
                               {normalizedFullName ? abbreviateName(normalizedFullName) : "—"}
                             </span>
                             <span>•</span>
-                            <span>{formatBrazilDate(transaction.date, "dd/MM/yy")}</span>
+                            <span>{formatBrazilDate(getDueDate(transaction), "dd/MM/yy")}</span>
                           </p>
                         </div>
                       </div>
@@ -1105,7 +1156,7 @@ export default function Financial() {
                           className="group hover:bg-muted/30 border-b transition-colors"
                         >
                           <TableCell className="py-2.5 text-xs text-muted-foreground">
-                            {formatBrazilDate(transaction.date, "dd/MM/yy")}
+                            {formatBrazilDate(getDueDate(transaction), "dd/MM/yy")}
                           </TableCell>
                           <TableCell className="py-2.5 max-w-[200px]">
                             <div className="flex flex-col gap-0.5 min-w-0">
