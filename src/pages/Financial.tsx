@@ -90,7 +90,7 @@ const transactionSchema = z.object({
   date: z.string().min(1, "Data obrigatória"),
   client_id: z.string().optional(),
   plan_id: z.string().optional(),
-  payment_method: z.enum(["pix", "cartao", "dinheiro", "transferencia", "boleto"]),
+  payment_method: z.enum(["pix", "cartao", "dinheiro", "transferencia", "boleto"]).optional(),
   payment_status: z.enum(["recebido", "a_receber", "parcial"]),
   notes: z.string().optional(),
   payment_type: z.enum(["a_vista", "parcelado"]).default("a_vista"),
@@ -319,7 +319,7 @@ export default function Financial() {
         date: data.date,
         client_id: data.client_id || null,
         plan_id: data.plan_id || null,
-        payment_method: data.payment_method,
+        payment_method: data.payment_method || null,
         notes: data.notes || null,
         installments,
         installment_value: installmentValue,
@@ -426,7 +426,7 @@ export default function Financial() {
           description: data.description,
           amount: data.amount,
           date: data.date,
-          payment_method: data.payment_method,
+          payment_method: data.payment_method || null,
           notes: data.notes || null,
           installments: data.installments,
           installment_value: data.installment_value,
@@ -1019,24 +1019,19 @@ export default function Financial() {
                         </div>
                       </div>
 
-                      {/* Payment method + actions row */}
-                      <div className="flex items-center justify-between gap-2 pt-2 border-t border-border/50">
-                        <PaymentMethodBadge
-                          currentMethod={currentMethod}
-                          onChangeMethod={(method) => handleChangePaymentMethod(transaction.id, method)}
-                          compact
-                        />
-                        <div className="flex items-center gap-2">
-                          {pendingAmount > 0 && (
-                            <Button
-                              size="sm"
-                              onClick={() => handleOpenPaymentDialog(transaction)}
-                              className="h-8 px-3 gap-1.5 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm transition-all active:scale-95 text-xs font-medium"
-                            >
-                              <DollarSign className="h-3.5 w-3.5" />
-                              Receber
-                            </Button>
-                          )}
+                      {/* Actions: full-width receive button + icon row */}
+                      <div className="space-y-2 pt-2 border-t border-border/50">
+                        {pendingAmount > 0 && (
+                          <Button
+                            size="sm"
+                            onClick={() => handleOpenPaymentDialog(transaction)}
+                            className="w-full h-9 gap-1.5 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm transition-all active:scale-95 text-xs font-medium"
+                          >
+                            <DollarSign className="h-3.5 w-3.5" />
+                            Receber Pagamento
+                          </Button>
+                        )}
+                        <div className="flex items-center justify-end">
                           <div className="inline-flex items-center rounded-full bg-muted/40 p-0.5">
                             <button
                               type="button"
@@ -1082,7 +1077,6 @@ export default function Financial() {
                       <TableHead className="text-center w-[55px] text-xs font-medium text-muted-foreground py-2">Parc.</TableHead>
                       <TableHead className="text-right w-[90px] text-xs font-medium text-muted-foreground py-2">Recebido</TableHead>
                       <TableHead className="text-right w-[90px] text-xs font-medium text-muted-foreground py-2">Pendente</TableHead>
-                      <TableHead className="w-[130px] text-xs font-medium text-muted-foreground py-2 text-center">Pagamento</TableHead>
                       <TableHead className="w-[80px] py-2"></TableHead>
                     </TableRow>
                   </TableHeader>
@@ -1169,14 +1163,6 @@ export default function Financial() {
                             ) : (
                               <span className="text-xs text-success/70 font-medium">Quitado</span>
                             )}
-                          </TableCell>
-                          <TableCell className="py-2.5">
-                            <div className="flex items-center justify-center">
-                              <PaymentMethodBadge
-                                currentMethod={currentMethod}
-                                onChangeMethod={(method) => handleChangePaymentMethod(transaction.id, method)}
-                              />
-                            </div>
                           </TableCell>
                           <TableCell className="py-2.5">
                             <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -1521,53 +1507,27 @@ export default function Financial() {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-2">
-                <FormField
-                  control={form.control}
-                  name="payment_method"
-                  render={({ field }) => (
-                    <FormItem className="space-y-1">
-                      <FormLabel className="text-xs">Forma de Pagamento *</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
-                        <FormControl>
-                          <SelectTrigger className="input-field h-8 text-sm">
-                            <SelectValue />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {Object.entries(paymentMethodLabels).map(([value, label]) => (
-                            <SelectItem key={value} value={value}>
-                              {label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="payment_type"
-                  render={({ field }) => (
-                    <FormItem className="space-y-1">
-                      <FormLabel className="text-xs">Tipo de Pagamento</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
-                        <FormControl>
-                          <SelectTrigger className="input-field h-8 text-sm">
-                            <SelectValue />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="a_vista">À Vista</SelectItem>
-                          <SelectItem value="parcelado">Parcelado</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
+              <FormField
+                control={form.control}
+                name="payment_type"
+                render={({ field }) => (
+                  <FormItem className="space-y-1">
+                    <FormLabel className="text-xs">Tipo de Pagamento</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger className="input-field h-8 text-sm">
+                          <SelectValue />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="a_vista">À Vista</SelectItem>
+                        <SelectItem value="parcelado">Parcelado</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
               {form.watch("payment_type") === "parcelado" && (
                 <div className="grid grid-cols-2 gap-2">

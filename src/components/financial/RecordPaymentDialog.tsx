@@ -49,6 +49,15 @@ export function RecordPaymentDialog({
   const [paymentType, setPaymentType] = useState<"total" | "parcial">("total");
   const [partialValue, setPartialValue] = useState("");
   const [paymentDate, setPaymentDate] = useState<Date>(new Date());
+  const [paymentMethod, setPaymentMethod] = useState<"pix" | "cartao" | "dinheiro" | "transferencia" | "boleto">("pix");
+
+  const paymentMethodLabels = {
+    pix: "Pix",
+    cartao: "Cartão",
+    dinheiro: "Dinheiro",
+    transferencia: "Transferência",
+    boleto: "Boleto",
+  } as const;
 
   // Fetch payments for this transaction (by transaction_id first, fallback to client_id)
   const { data: payments, isLoading } = useQuery({
@@ -120,6 +129,7 @@ export function RecordPaymentDialog({
       setPaymentType("total");
       setPartialValue("");
       setPaymentDate(new Date());
+      setPaymentMethod("pix");
     }
   }, [open]);
 
@@ -154,7 +164,11 @@ export function RecordPaymentDialog({
 
         const { error: paymentError } = await supabase
           .from("payments")
-          .update({ amount_paid: newAmountPaid, paid_at: newAmountPaid >= Number(payment.amount) ? paymentDate.toISOString() : null })
+          .update({
+            amount_paid: newAmountPaid,
+            paid_at: newAmountPaid >= Number(payment.amount) ? paymentDate.toISOString() : null,
+            payment_method: paymentMethod,
+          })
           .eq("id", selectedInstallment);
         if (paymentError) throw paymentError;
 
@@ -183,7 +197,7 @@ export function RecordPaymentDialog({
 
         const { error: txError } = await supabase
           .from("transactions")
-          .update({ amount_received: totalReceived })
+          .update({ amount_received: totalReceived, payment_method: paymentMethod })
           .eq("id", transactionId);
         if (txError) throw txError;
       } else {
@@ -207,7 +221,7 @@ export function RecordPaymentDialog({
 
         const { error: txError } = await supabase
           .from("transactions")
-          .update({ amount_received: newReceived })
+          .update({ amount_received: newReceived, payment_method: paymentMethod })
           .eq("id", transactionId);
         if (txError) throw txError;
       }
@@ -368,6 +382,26 @@ export function RecordPaymentDialog({
                 </p>
               </div>
             )}
+
+            {/* Payment method */}
+            <div className="space-y-2">
+              <Label className="text-xs font-medium">Forma de Pagamento</Label>
+              <Select
+                value={paymentMethod}
+                onValueChange={(v) => setPaymentMethod(v as typeof paymentMethod)}
+              >
+                <SelectTrigger className="h-9 text-sm">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.entries(paymentMethodLabels).map(([value, label]) => (
+                    <SelectItem key={value} value={value}>
+                      {label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
             {/* Payment date */}
             <div className="space-y-2">
