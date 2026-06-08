@@ -865,19 +865,38 @@ export default function Financial() {
               </TabsTrigger>
             </TabsList>
           </Tabs>
-          <div className="mt-3">
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-full lg:w-64">
-                <SelectValue placeholder="Filtrar por status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="todos">Todos os status</SelectItem>
-                <SelectItem value="a_receber">A receber</SelectItem>
-                <SelectItem value="parcial">Recebido parcialmente</SelectItem>
-                <SelectItem value="recebido">Recebido</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          {(() => {
+            const countBy = (s: string) => activeTabTransactions.filter((t) => getReceiptStatus(t) === s).length;
+            const statusOptions: { value: string; label: string; count: number; dot?: string }[] = [
+              { value: "todos", label: "Todos", count: activeTabTransactions.length },
+              { value: "a_receber", label: "A receber", count: countBy("a_receber"), dot: "bg-destructive" },
+              { value: "parcial", label: "Parciais", count: countBy("parcial"), dot: "bg-amber-500" },
+              { value: "recebido", label: "Recebidos", count: countBy("recebido"), dot: "bg-emerald-500" },
+            ];
+            return (
+              <div className="mt-3 flex flex-wrap gap-1.5">
+                {statusOptions.map((opt) => {
+                  const active = statusFilter === opt.value;
+                  return (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      onClick={() => setStatusFilter(opt.value)}
+                      className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-all active:scale-95 ${
+                        active
+                          ? "bg-primary text-primary-foreground shadow-sm"
+                          : "bg-muted/50 text-muted-foreground hover:bg-muted"
+                      }`}
+                    >
+                      {opt.dot && <span className={`h-1.5 w-1.5 rounded-full ${opt.dot}`} />}
+                      <span>{opt.label}</span>
+                      <span className={`text-[10px] ${active ? "opacity-80" : "opacity-60"}`}>({opt.count})</span>
+                    </button>
+                  );
+                })}
+              </div>
+            );
+          })()}
         </CardHeader>
         <CardContent className="p-0">
           {isLoading ? (
