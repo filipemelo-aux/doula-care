@@ -868,7 +868,7 @@ export default function Financial() {
           {(() => {
             const countBy = (s: string) => activeTabTransactions.filter((t) => getReceiptStatus(t) === s).length;
             const statusOptions: { value: string; label: string; count: number; dot?: string }[] = [
-              { value: "todos", label: "Todos", count: activeTabTransactions.length },
+              { value: "todos", label: "Todos", count: undefined },
               { value: "a_receber", label: "A receber", count: countBy("a_receber"), dot: "bg-destructive" },
               { value: "parcial", label: "Parciais", count: countBy("parcial"), dot: "bg-amber-500" },
               { value: "recebido", label: "Recebidos", count: countBy("recebido"), dot: "bg-emerald-500" },
