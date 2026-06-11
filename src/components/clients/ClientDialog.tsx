@@ -588,6 +588,18 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
           ? (data.first_due_date || todayStr)
           : aVistaDate;
 
+        // CRITICAL: never overwrite an already-recorded amount_received downwards.
+        // Fetch the current value first so editing a client can't erase payment history.
+        let currentTxReceived = 0;
+        if (data.payment_type === "a_vista") {
+          let curTxQuery = supabase.from("transactions").select("amount_received");
+          curTxQuery = transactionId
+            ? curTxQuery.eq("id", transactionId)
+            : curTxQuery.eq("client_id", client.id).eq("is_auto_generated", true);
+          const { data: curTx } = await curTxQuery.limit(1).maybeSingle();
+          currentTxReceived = Number(curTx?.amount_received || 0);
+        }
+
         let transactionUpdateQuery = supabase
           .from("transactions")
           .update({
@@ -598,7 +610,7 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
             installment_value: finalPlanValue / installmentCount,
             date: transactionDate,
             ...(data.payment_type === "a_vista" ? {
-              amount_received: autoReceivedForAvista,
+              amount_received: Math.max(currentTxReceived, autoReceivedForAvista),
             } : {}),
           });
 
@@ -612,135 +624,186 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
           console.error("Error updating transaction:", transactionError);
         }
 
-        // Recreate payment records if parcelado with installments > 1
+        // ===== SAFE PAYMENT SCHEDULE SYNC =====
+        // Payments are NEVER deleted+recreated anymore. We update rows in place,
+        // insert missing installments and only delete surplus rows that have
+        // zero amount_paid. Paid history can never be erased by a client edit.
         if (data.payment_type === "parcelado" && installmentCount > 1) {
-          // CRITICAL: Preserve previously registered payments so editing the
-          // client (name, phone, etc.) doesn't wipe paid installments.
-          // We match preserved data by installment_number.
-          type PreservedPayment = {
-            amount_paid: number;
-            paid_at: string | null;
-            payment_method: string | null;
-          };
-          const preservedByInstallment = new Map<number, PreservedPayment>();
+          // 1) Load existing payment rows (current + legacy without transaction_id)
+          const [txRes, legacyRes] = await Promise.all([
+            transactionId
+              ? supabase
+                  .from("payments")
+                  .select("*")
+                  .eq("transaction_id", transactionId)
+                  .order("installment_number", { ascending: true })
+              : Promise.resolve({ data: [] as any[], error: null } as any),
+            supabase
+              .from("payments")
+              .select("*")
+              .eq("client_id", client.id)
+              .is("transaction_id", null)
+              .order("installment_number", { ascending: true }),
+          ]);
 
-          const existingQueries = transactionId
-            ? [
-                supabase
-                  .from("payments")
-                  .select("installment_number, amount_paid, paid_at, payment_method")
-                  .eq("transaction_id", transactionId),
-                supabase
-                  .from("payments")
-                  .select("installment_number, amount_paid, paid_at, payment_method")
-                  .eq("client_id", client.id)
-                  .is("transaction_id", null),
-              ]
-            : [
-                supabase
-                  .from("payments")
-                  .select("installment_number, amount_paid, paid_at, payment_method")
-                  .eq("client_id", client.id)
-                  .is("transaction_id", null),
-              ];
+          if (txRes.error || legacyRes.error) {
+            // If we cannot read the existing schedule, DO NOT touch payments at all.
+            console.error("Error reading existing payments — skipping payment sync:", txRes.error || legacyRes.error);
+          } else {
+            const txRows: any[] = txRes.data || [];
+            const legacyRows: any[] = legacyRes.data || [];
 
-          const existingResults = await Promise.all(existingQueries);
-          existingResults.forEach((res) => {
-            (res.data || []).forEach((p: any) => {
-              const paid = Number(p.amount_paid || 0);
-              if (paid <= 0) return;
-              const prev = preservedByInstallment.get(p.installment_number);
-              if (!prev || paid > prev.amount_paid) {
-                preservedByInstallment.set(p.installment_number, {
-                  amount_paid: paid,
-                  paid_at: p.paid_at,
-                  payment_method: p.payment_method,
-                });
+            // 2) Merge paid info from legacy duplicates into the current rows, then drop legacy duplicates
+            if (txRows.length > 0 && legacyRows.length > 0) {
+              for (const leg of legacyRows) {
+                const paid = Number(leg.amount_paid || 0);
+                const match = txRows.find((p) => p.installment_number === leg.installment_number);
+                if (match && paid > Number(match.amount_paid || 0)) {
+                  await supabase
+                    .from("payments")
+                    .update({
+                      amount_paid: paid,
+                      paid_at: leg.paid_at,
+                      payment_method: leg.payment_method,
+                    })
+                    .eq("id", match.id);
+                  match.amount_paid = paid;
+                  match.paid_at = leg.paid_at;
+                }
               }
-            });
-          });
-
-          // Delete old contract-related payments (current and legacy)
-          const deleteOps = transactionId
-            ? [
-                supabase.from("payments").delete().eq("transaction_id", transactionId),
-                supabase.from("payments").delete().eq("client_id", client.id).is("transaction_id", null),
-              ]
-            : [
-                supabase.from("payments").delete().eq("client_id", client.id).is("transaction_id", null),
-              ];
-
-          const deleteResults = await Promise.all(deleteOps);
-          const deleteErr = deleteResults.find((res) => res.error)?.error;
-          if (deleteErr) console.error("Error deleting old payments:", deleteErr);
-
-          const installmentAmount = finalPlanValue / installmentCount;
-          const firstDueDate = data.first_due_date ? new Date(data.first_due_date + "T12:00:00") : new Date();
-          const frequency = data.installment_frequency || "mensal";
-          const customDays = data.custom_interval_days || 30;
-
-          const paymentRecords = Array.from({ length: installmentCount }, (_, i) => {
-            let dueDateStr: string;
-            if (customInstallmentDates.length === installmentCount && customInstallmentDates[i]) {
-              dueDateStr = customInstallmentDates[i];
-            } else {
-              const dueDate = new Date(firstDueDate);
-              if (frequency === "semanal") dueDate.setDate(dueDate.getDate() + (7 * i));
-              else if (frequency === "quinzenal") dueDate.setDate(dueDate.getDate() + (15 * i));
-              else if (frequency === "manual") dueDate.setDate(dueDate.getDate() + (customDays * i));
-              else dueDate.setMonth(dueDate.getMonth() + i);
-              dueDateStr = `${dueDate.getFullYear()}-${String(dueDate.getMonth() + 1).padStart(2, "0")}-${String(dueDate.getDate()).padStart(2, "0")}`;
+              await supabase
+                .from("payments")
+                .delete()
+                .eq("client_id", client.id)
+                .is("transaction_id", null)
+                .lte("amount_paid", 0);
             }
-            const thisAmt = useCustomAmts ? customInstallmentAmounts[i] : installmentAmount;
-            const preserved = preservedByInstallment.get(i + 1);
-            // Preserve previously registered payment, capped to the (possibly new) installment amount
-            const paidAmt = preserved ? Math.min(preserved.amount_paid, thisAmt) : 0;
-            const computedStatus = paidAmt >= thisAmt && thisAmt > 0
-              ? "pago"
-              : paidAmt > 0
-                ? "parcial"
-                : "pendente";
-            return {
-              client_id: client.id,
-              transaction_id: transactionId,
-              installment_number: i + 1,
-              total_installments: installmentCount,
-              amount: thisAmt,
-              amount_paid: paidAmt,
-              due_date: dueDateStr,
-              status: computedStatus,
-              paid_at: preserved?.paid_at ?? (computedStatus === "pago" ? `${dueDateStr}T12:00:00` : null),
-              payment_method: (preserved?.payment_method as any) ?? null,
-              owner_id: user?.id || null,
-              organization_id: organizationId || null,
-            };
-          });
 
-          const { error: paymentError } = await supabase
-            .from("payments")
-            .insert(paymentRecords);
-          if (paymentError) console.error("Error creating payments:", paymentError);
+            const primary: any[] = txRows.length > 0 ? txRows : legacyRows;
+            const usingLegacyAsPrimary = txRows.length === 0 && legacyRows.length > 0;
 
-          const autoReceivedParcelado = paymentRecords.reduce((sum, p) => sum + Number(p.amount_paid || 0), 0);
-          let txAmountUpdateQuery = supabase
-            .from("transactions")
-            .update({ amount_received: autoReceivedParcelado });
+            // 3) Build the desired schedule
+            const installmentAmount = finalPlanValue / installmentCount;
+            const firstDueDate = data.first_due_date ? new Date(data.first_due_date + "T12:00:00") : new Date();
+            const frequency = data.installment_frequency || "mensal";
+            const customDays = data.custom_interval_days || 30;
 
-          txAmountUpdateQuery = transactionId
-            ? txAmountUpdateQuery.eq("id", transactionId)
-            : txAmountUpdateQuery.eq("client_id", client.id).eq("is_auto_generated", true);
+            const desired = Array.from({ length: installmentCount }, (_, i) => {
+              let dueDateStr: string;
+              if (customInstallmentDates.length === installmentCount && customInstallmentDates[i]) {
+                dueDateStr = customInstallmentDates[i];
+              } else {
+                const dueDate = new Date(firstDueDate);
+                if (frequency === "semanal") dueDate.setDate(dueDate.getDate() + (7 * i));
+                else if (frequency === "quinzenal") dueDate.setDate(dueDate.getDate() + (15 * i));
+                else if (frequency === "manual") dueDate.setDate(dueDate.getDate() + (customDays * i));
+                else dueDate.setMonth(dueDate.getMonth() + i);
+                dueDateStr = `${dueDate.getFullYear()}-${String(dueDate.getMonth() + 1).padStart(2, "0")}-${String(dueDate.getDate()).padStart(2, "0")}`;
+              }
+              const thisAmt = useCustomAmts ? customInstallmentAmounts[i] : installmentAmount;
+              return { installment_number: i + 1, amount: thisAmt, due_date: dueDateStr };
+            });
 
-          const { error: txAmountError } = await txAmountUpdateQuery;
-          if (txAmountError) console.error("Error updating transaction amount_received:", txAmountError);
+            // 4) Detect whether the schedule actually changed
+            const scheduleChanged =
+              primary.length !== installmentCount ||
+              desired.some((d) => {
+                const ex = primary.find((p) => p.installment_number === d.installment_number);
+                return (
+                  !ex ||
+                  Math.abs(Number(ex.amount || 0) - d.amount) > 0.01 ||
+                  (ex.due_date || "") !== d.due_date
+                );
+              });
+
+            if (scheduleChanged) {
+              for (const d of desired) {
+                const ex = primary.find((p) => p.installment_number === d.installment_number);
+                if (ex) {
+                  // Update in place — amount_paid / paid_at are untouched
+                  const { error: upErr } = await supabase
+                    .from("payments")
+                    .update({
+                      amount: d.amount,
+                      due_date: d.due_date,
+                      total_installments: installmentCount,
+                      transaction_id: transactionId ?? ex.transaction_id ?? null,
+                    })
+                    .eq("id", ex.id);
+                  if (upErr) console.error("Error updating payment:", upErr);
+                } else {
+                  const { error: insErr } = await supabase.from("payments").insert({
+                    client_id: client.id,
+                    transaction_id: transactionId,
+                    installment_number: d.installment_number,
+                    total_installments: installmentCount,
+                    amount: d.amount,
+                    amount_paid: 0,
+                    due_date: d.due_date,
+                    status: "pendente",
+                    owner_id: user?.id || null,
+                    organization_id: organizationId || null,
+                  });
+                  if (insErr) console.error("Error inserting payment:", insErr);
+                }
+              }
+              // Surplus installments beyond the new count: delete ONLY if nothing was paid
+              for (const p of primary) {
+                if (Number(p.installment_number) > installmentCount) {
+                  if (Number(p.amount_paid || 0) <= 0) {
+                    await supabase.from("payments").delete().eq("id", p.id);
+                  } else {
+                    await supabase
+                      .from("payments")
+                      .update({
+                        total_installments: installmentCount,
+                        transaction_id: transactionId ?? p.transaction_id ?? null,
+                      })
+                      .eq("id", p.id);
+                  }
+                }
+              }
+            } else if (usingLegacyAsPrimary && transactionId) {
+              // Schedule unchanged — just link legacy rows to the transaction
+              await supabase
+                .from("payments")
+                .update({ transaction_id: transactionId })
+                .eq("client_id", client.id)
+                .is("transaction_id", null);
+            }
+
+            // 5) Recompute amount_received from what is ACTUALLY stored in the database
+            let sumQuery = supabase.from("payments").select("amount_paid");
+            sumQuery = transactionId
+              ? sumQuery.eq("transaction_id", transactionId)
+              : sumQuery.eq("client_id", client.id).is("transaction_id", null);
+            const { data: finalRows, error: sumErr } = await sumQuery;
+
+            if (!sumErr) {
+              const totalReceived = (finalRows || []).reduce(
+                (sum, p: any) => sum + Number(p.amount_paid || 0),
+                0
+              );
+              let txAmountUpdateQuery = supabase
+                .from("transactions")
+                .update({ amount_received: totalReceived });
+              txAmountUpdateQuery = transactionId
+                ? txAmountUpdateQuery.eq("id", transactionId)
+                : txAmountUpdateQuery.eq("client_id", client.id).eq("is_auto_generated", true);
+              const { error: txAmountError } = await txAmountUpdateQuery;
+              if (txAmountError) console.error("Error updating transaction amount_received:", txAmountError);
+            }
+          }
         } else {
-          // If switched to à vista, delete contract-related payment records
+          // Switched to à vista: remove ONLY unpaid parcel records.
+          // Rows with any amount_paid are kept so payment history is never lost.
           const deleteOps = transactionId
             ? [
-                supabase.from("payments").delete().eq("transaction_id", transactionId),
-                supabase.from("payments").delete().eq("client_id", client.id).is("transaction_id", null),
+                supabase.from("payments").delete().eq("transaction_id", transactionId).lte("amount_paid", 0),
+                supabase.from("payments").delete().eq("client_id", client.id).is("transaction_id", null).lte("amount_paid", 0),
               ]
             : [
-                supabase.from("payments").delete().eq("client_id", client.id).is("transaction_id", null),
+                supabase.from("payments").delete().eq("client_id", client.id).is("transaction_id", null).lte("amount_paid", 0),
               ];
 
           const deleteResults = await Promise.all(deleteOps);

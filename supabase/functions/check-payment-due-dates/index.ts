@@ -25,25 +25,57 @@ Deno.serve(async (req) => {
     const twoDaysStr = twoDaysLater.toISOString().split("T")[0];
 
     // Find payments due today
-    const { data: dueToday } = await supabase
+    const { data: dueTodayRaw } = await supabase
       .from("payments")
       .select("*, clients(id, full_name, user_id, organization_id)")
       .eq("due_date", todayStr)
       .neq("status", "pago");
 
     // Find payments due in 2 days
-    const { data: dueSoon } = await supabase
+    const { data: dueSoonRaw } = await supabase
       .from("payments")
       .select("*, clients(id, full_name, user_id, organization_id)")
       .eq("due_date", twoDaysStr)
       .neq("status", "pago");
 
     // Find overdue payments (due_date < today, not paid) - send once per day
-    const { data: overdue } = await supabase
+    const { data: overdueRaw } = await supabase
       .from("payments")
       .select("*, clients(id, full_name, user_id, organization_id)")
       .lt("due_date", todayStr)
       .neq("status", "pago");
+
+    // === SAFETY GUARD ===
+    // Never send a charge for an installment that is actually paid, or whose
+    // parent transaction is already fully received (protects against any
+    // status inconsistency in the payments table).
+    const candidates = [
+      ...(dueTodayRaw || []),
+      ...(dueSoonRaw || []),
+      ...(overdueRaw || []),
+    ];
+    const txIds = [
+      ...new Set(candidates.map((p) => p.transaction_id).filter(Boolean)),
+    ];
+    const fullyReceivedTx = new Set<string>();
+    if (txIds.length > 0) {
+      const { data: txs } = await supabase
+        .from("transactions")
+        .select("id, amount, amount_received")
+        .in("id", txIds);
+      for (const t of txs || []) {
+        if (Number(t.amount || 0) > 0 && Number(t.amount_received || 0) >= Number(t.amount || 0)) {
+          fullyReceivedTx.add(t.id);
+        }
+      }
+    }
+    const isActuallyUnpaid = (p: any) =>
+      Number(p.amount_paid || 0) < Number(p.amount || 0) &&
+      !(p.transaction_id && fullyReceivedTx.has(p.transaction_id));
+
+    const dueToday = (dueTodayRaw || []).filter(isActuallyUnpaid);
+    const dueSoon = (dueSoonRaw || []).filter(isActuallyUnpaid);
+    const overdue = (overdueRaw || []).filter(isActuallyUnpaid);
 
     const clientNotifications: Array<{
       client_id: string;
