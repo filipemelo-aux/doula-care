@@ -588,6 +588,18 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
           ? (data.first_due_date || todayStr)
           : aVistaDate;
 
+        // CRITICAL: never overwrite an already-recorded amount_received downwards.
+        // Fetch the current value first so editing a client can't erase payment history.
+        let currentTxReceived = 0;
+        if (data.payment_type === "a_vista") {
+          let curTxQuery = supabase.from("transactions").select("amount_received");
+          curTxQuery = transactionId
+            ? curTxQuery.eq("id", transactionId)
+            : curTxQuery.eq("client_id", client.id).eq("is_auto_generated", true);
+          const { data: curTx } = await curTxQuery.limit(1).maybeSingle();
+          currentTxReceived = Number(curTx?.amount_received || 0);
+        }
+
         let transactionUpdateQuery = supabase
           .from("transactions")
           .update({
@@ -598,7 +610,7 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
             installment_value: finalPlanValue / installmentCount,
             date: transactionDate,
             ...(data.payment_type === "a_vista" ? {
-              amount_received: autoReceivedForAvista,
+              amount_received: Math.max(currentTxReceived, autoReceivedForAvista),
             } : {}),
           });
 
