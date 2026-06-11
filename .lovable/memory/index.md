@@ -1,0 +1,1 @@
+- [Payments integrity](mem://technical-decisions/payment-records-integrity) — In-place installment sync, no delete+recreate, cobrança double-check rules
