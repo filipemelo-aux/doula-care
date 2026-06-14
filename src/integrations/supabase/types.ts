@@ -2168,6 +2168,10 @@ export type Database = {
       }
       is_org_member: { Args: never; Returns: boolean }
       is_super_admin: { Args: never; Returns: boolean }
+      recompute_client_payment_status: {
+        Args: { p_client_id: string }
+        Returns: undefined
+      }
       reject_doula_match_request: {
         Args: { p_notes?: string; p_request_id: string }
         Returns: undefined
