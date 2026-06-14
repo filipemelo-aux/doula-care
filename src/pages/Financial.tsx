@@ -1908,6 +1908,7 @@ export default function Financial() {
         onOpenChange={setPaymentDialogOpen}
         transactionId={paymentTransaction?.id || null}
         transactionAmount={Number(paymentTransaction?.amount) || 0}
+        transactionReceived={Number(paymentTransaction?.amount_received) || 0}
         transactionInstallments={Number(paymentTransaction?.installments) || 1}
         clientId={paymentTransaction?.client_id || null}
       />

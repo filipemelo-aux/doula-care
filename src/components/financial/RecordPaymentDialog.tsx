@@ -32,6 +32,7 @@ interface RecordPaymentDialogProps {
   onOpenChange: (open: boolean) => void;
   transactionId: string | null;
   transactionAmount: number;
+  transactionReceived: number;
   transactionInstallments: number;
   clientId: string | null;
 }
@@ -41,6 +42,7 @@ export function RecordPaymentDialog({
   onOpenChange,
   transactionId,
   transactionAmount,
+  transactionReceived,
   transactionInstallments,
   clientId,
 }: RecordPaymentDialogProps) {
@@ -100,15 +102,21 @@ export function RecordPaymentDialog({
     mutationFn: async () => {
       if (!transactionId || !clientId || transactionInstallments <= 1) return;
       const installmentValue = transactionAmount / transactionInstallments;
-      const records = Array.from({ length: transactionInstallments }, (_, i) => ({
-        client_id: clientId,
-        transaction_id: transactionId,
-        installment_number: i + 1,
-        total_installments: transactionInstallments,
-        amount: installmentValue,
-        amount_paid: 0,
-        status: "pendente",
-      }));
+      let remainingReceived = Math.min(Math.max(Number(transactionReceived) || 0, 0), transactionAmount);
+      const records = Array.from({ length: transactionInstallments }, (_, i) => {
+        const amountPaid = Math.min(installmentValue, remainingReceived);
+        remainingReceived = Math.max(0, remainingReceived - amountPaid);
+        return {
+          client_id: clientId,
+          transaction_id: transactionId,
+          installment_number: i + 1,
+          total_installments: transactionInstallments,
+          amount: installmentValue,
+          amount_paid: amountPaid,
+          status: amountPaid >= installmentValue ? "pago" : amountPaid > 0 ? "parcial" : "pendente",
+          paid_at: amountPaid >= installmentValue ? new Date().toISOString() : null,
+        };
+      });
       const { error } = await supabase.from("payments").insert(records);
       if (error) throw error;
     },
@@ -121,7 +129,7 @@ export function RecordPaymentDialog({
     if (open && payments !== undefined && !hasPaymentRecords && transactionInstallments > 1 && clientId && !provisionMutation.isPending) {
       provisionMutation.mutate();
     }
-  }, [open, payments, hasPaymentRecords, transactionInstallments, clientId]);
+  }, [open, payments, hasPaymentRecords, transactionInstallments, clientId, transactionReceived]);
 
   useEffect(() => {
     if (open) {
