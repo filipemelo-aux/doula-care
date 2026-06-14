@@ -27,21 +27,21 @@ Deno.serve(async (req) => {
     // Find payments due today
     const { data: dueTodayRaw } = await supabase
       .from("payments")
-      .select("*, clients(id, full_name, user_id, organization_id)")
+      .select("*, clients(id, full_name, user_id, organization_id, payment_status)")
       .eq("due_date", todayStr)
       .neq("status", "pago");
 
     // Find payments due in 2 days
     const { data: dueSoonRaw } = await supabase
       .from("payments")
-      .select("*, clients(id, full_name, user_id, organization_id)")
+      .select("*, clients(id, full_name, user_id, organization_id, payment_status)")
       .eq("due_date", twoDaysStr)
       .neq("status", "pago");
 
     // Find overdue payments (due_date < today, not paid) - send once per day
     const { data: overdueRaw } = await supabase
       .from("payments")
-      .select("*, clients(id, full_name, user_id, organization_id)")
+      .select("*, clients(id, full_name, user_id, organization_id, payment_status)")
       .lt("due_date", todayStr)
       .neq("status", "pago");
 
@@ -71,6 +71,7 @@ Deno.serve(async (req) => {
     }
     const isActuallyUnpaid = (p: any) =>
       Number(p.amount_paid || 0) < Number(p.amount || 0) &&
+      p.clients?.payment_status !== "pago" &&
       !(p.transaction_id && fullyReceivedTx.has(p.transaction_id));
 
     const dueToday = (dueTodayRaw || []).filter(isActuallyUnpaid);
