@@ -118,6 +118,30 @@ export default function Clients() {
     const matchesStatus =
       statusFilter === "todas" ? true : client.status === statusFilter;
     return matchesSearch && matchesStatus;
+  }).sort((a: any, b: any) => {
+    if (statusFilter === "lactante") {
+      // Recém-puérperas primeiro (birth_date mais recente no topo)
+      const ad = a.birth_date ? new Date(a.birth_date).getTime() : 0;
+      const bd = b.birth_date ? new Date(b.birth_date).getTime() : 0;
+      return bd - ad;
+    }
+    if (statusFilter === "todas") {
+      // Prioridade: gestante > outro/tentante > lactante
+      const rank = (s: string) => (s === "gestante" ? 0 : s === "lactante" ? 2 : 1);
+      const ra = rank(a.status);
+      const rb = rank(b.status);
+      if (ra !== rb) return ra - rb;
+      if (a.status === "lactante" && b.status === "lactante") {
+        const ad = a.birth_date ? new Date(a.birth_date).getTime() : 0;
+        const bd = b.birth_date ? new Date(b.birth_date).getTime() : 0;
+        return bd - ad;
+      }
+      // dpp asc (mais próxima no topo)
+      const ad = a.dpp ? new Date(a.dpp).getTime() : Infinity;
+      const bd = b.dpp ? new Date(b.dpp).getTime() : Infinity;
+      return ad - bd;
+    }
+    return 0;
   });
 
   // On free plan, mark clients beyond the limit as inactive
