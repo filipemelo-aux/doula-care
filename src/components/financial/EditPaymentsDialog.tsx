@@ -100,7 +100,7 @@ export function EditPaymentsDialog({
       if (!transactionId || !clientId) return;
       const { data: tx, error: txErr } = await supabase
         .from("transactions")
-        .select("amount, amount_received, installments, due_date, date, organization_id")
+        .select("amount, amount_received, installments, date, organization_id")
         .eq("id", transactionId)
         .maybeSingle();
       if (txErr) throw txErr;
@@ -109,7 +109,7 @@ export function EditPaymentsDialog({
       const total = Number(tx.amount) || 0;
       const installmentValue = total / totalInstallments;
       let remaining = Math.min(Math.max(Number(tx.amount_received) || 0, 0), total);
-      const baseDate = (tx as any).due_date || tx.date || new Date().toISOString().slice(0, 10);
+      const baseDate = tx.date || new Date().toISOString().slice(0, 10);
       const records = Array.from({ length: totalInstallments }, (_, i) => {
         const amountPaid = Math.min(installmentValue, remaining);
         remaining = Math.max(0, remaining - amountPaid);
