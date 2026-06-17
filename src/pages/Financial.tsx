@@ -1240,11 +1240,11 @@ export default function Financial() {
                               </Tooltip>
                               <Tooltip>
                                 <TooltipTrigger asChild>
-                                  <Button variant="ghost" size="sm" onClick={() => handleEditTransaction(transaction)} className="h-7 px-1.5 text-muted-foreground hover:text-foreground hover:bg-muted hover:shadow-sm transition-all">
+                                  <Button variant="ghost" size="sm" onClick={() => { setEditPaymentsTransaction(transaction); setEditPaymentsOpen(true); }} className="h-7 px-1.5 text-muted-foreground hover:text-foreground hover:bg-muted hover:shadow-sm transition-all">
                                     <Pencil className="h-3.5 w-3.5" />
                                   </Button>
                                 </TooltipTrigger>
-                                <TooltipContent>Editar receita</TooltipContent>
+                                <TooltipContent>Editar pagamentos</TooltipContent>
                               </Tooltip>
                               <Tooltip>
                                 <TooltipTrigger asChild>
