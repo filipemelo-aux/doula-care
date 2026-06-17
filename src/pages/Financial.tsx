@@ -803,11 +803,11 @@ export default function Financial() {
     if (received < total) return "parcial";
     return "recebido";
   };
-  // Sort revenues by due date ascending (closest at the top)
+  // Sort revenues by due date descending (future dates at the top)
   const sortByReceiptStatus = (a: Transaction, b: Transaction) => {
     const da = getDueDate(a);
     const db = getDueDate(b);
-    return new Date(da).getTime() - new Date(db).getTime();
+    return new Date(db).getTime() - new Date(da).getTime();
   };
 
   const clientTransactions = (transactions?.filter(isContractTransaction) || []).sort(sortByReceiptStatus);
@@ -959,176 +959,9 @@ export default function Financial() {
             </div>
           ) : filteredTransactions && filteredTransactions.length > 0 ? (
             <>
-              {/* Mobile Cards */}
-              <div className="block lg:hidden space-y-2.5 p-3">
-                {filteredTransactions.map((transaction) => {
-                  const totalAmount = Number(transaction.amount) || 0;
-                  const receivedAmount = Number(transaction.amount_received) || 0;
-                  const pendingAmount = Math.max(0, totalAmount - receivedAmount);
-                  const installments = Number(transaction.installments) || 1;
-                  const isEditingInstallmentsMobile = editingInstallmentsId === transaction.id;
-
-                  const formatCompact = (value: number) => {
-                    return new Intl.NumberFormat("pt-BR", {
-                      style: "currency",
-                      currency: "BRL",
-                      minimumFractionDigits: 0,
-                      maximumFractionDigits: 0,
-                    }).format(value);
-                  };
-
-                  const fullName = transaction.clients?.full_name || "";
-                  const normalizedFullName = toTitleCase(fullName);
-                  const firstName = normalizedFullName.split(" ")[0] || "";
-                  const planName = transaction.plan_settings?.name || "";
-                  const compactDesc = firstName && planName
-                    ? `${firstName} - ${planName}`
-                    : transaction.description;
-
-                  const receiptStatus = getReceiptStatus(transaction);
-                  const statusMeta: Record<string, { label: string; dot: string; text: string; bg: string }> = {
-                    a_receber: { label: "A receber", dot: "bg-destructive", text: "text-destructive", bg: "bg-destructive/10" },
-                    parcial: { label: "Parcial", dot: "bg-amber-500", text: "text-amber-700 dark:text-amber-400", bg: "bg-amber-500/10" },
-                    recebido: { label: "Recebido", dot: "bg-emerald-500", text: "text-emerald-700 dark:text-emerald-400", bg: "bg-emerald-500/10" },
-                  };
-                  const sm = statusMeta[receiptStatus];
-
-                  return (
-                    <div
-                      key={transaction.id}
-                      className="relative rounded-2xl bg-card p-4 shadow-card transition-all active:scale-[0.99]"
-                    >
-                      {/* Top row: Info */}
-                      <div className="flex items-start gap-3">
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-start justify-between gap-2 min-w-0">
-                            <div className="flex items-center gap-1 min-w-0 flex-1">
-                              <p className="font-semibold text-sm text-foreground truncate leading-tight" title={compactDesc}>
-                                {compactDesc}
-                              </p>
-                            </div>
-                            <span className={`inline-flex items-center gap-1.5 rounded-full px-2 h-5 text-[10px] font-semibold flex-shrink-0 ${sm.bg} ${sm.text}`}>
-                              <span className={`h-1.5 w-1.5 rounded-full ${sm.dot}`} />
-                              {sm.label}
-                            </span>
-                          </div>
-                          <p className="text-[11px] text-muted-foreground mt-1 flex items-center gap-1.5 flex-wrap">
-                            <span className="truncate">
-                              {normalizedFullName ? abbreviateName(normalizedFullName) : "—"}
-                            </span>
-                            <span>•</span>
-                            <span>{formatBrazilDate(getDueDate(transaction), "dd/MM/yy")}</span>
-                          </p>
-                        </div>
-                      </div>
-
-                      {/* Divider */}
-                      <div className="mt-3 mb-3 h-px bg-border/50" />
-
-                      {/* Values row */}
-                      <div className="flex items-start w-full">
-                        <div className="text-center min-w-0 flex-1 px-1">
-                          <span className="text-[10px] text-muted-foreground block">Total</span>
-                          <span className="font-semibold text-sm truncate block">{formatCompact(totalAmount)}</span>
-                        </div>
-                        <div className="text-center min-w-0 px-1" style={{flexBasis: '44px'}}>
-                          <span className="text-[10px] text-muted-foreground block">Parc.</span>
-                          {isEditingInstallmentsMobile ? (
-                            <Select
-                              value={editingInstallmentsValue}
-                              onValueChange={(value) => {
-                                setEditingInstallmentsValue(value);
-                                const installments = parseInt(value);
-                                const installmentValue = totalAmount / installments;
-                                updateInstallmentsMutation.mutate({ id: transaction.id, installments, installmentValue });
-                              }}
-                            >
-                              <SelectTrigger className="w-10 h-6 text-xs px-1">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {Array.from({ length: 24 }, (_, i) => i + 1).map((num) => (
-                                  <SelectItem key={num} value={String(num)}>
-                                    {num}x
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          ) : (
-                            <span
-                              className="text-sm font-medium cursor-pointer border-b border-dashed border-muted-foreground/40 hover:border-primary transition-colors"
-                              onClick={() => handleStartEditInstallments(transaction)}
-                            >
-                              {installments}x
-                            </span>
-                          )}
-                        </div>
-                        <div className="text-center min-w-0 flex-1 px-1">
-                          <span className="text-[10px] text-muted-foreground block">Receb.</span>
-                          <span className="text-sm text-success font-medium">
-                            {formatCompact(receivedAmount)}
-                          </span>
-                        </div>
-                        <div className="text-center min-w-0 flex-1 px-1">
-                          <span className="text-[10px] text-muted-foreground block">Pend.</span>
-                          {pendingAmount > 0 ? (
-                            <span className="text-sm text-warning font-medium truncate block">{formatCompact(pendingAmount)}</span>
-                          ) : (
-                            <span className="text-sm text-success font-medium">OK</span>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Actions */}
-                      <div className="mt-3 flex items-center justify-between gap-2">
-                        {pendingAmount > 0 ? (
-                          <Button
-                            size="sm"
-                            onClick={() => handleOpenPaymentDialog(transaction)}
-                            className="flex-1 h-9 gap-1.5 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm transition-all active:scale-95 text-xs font-medium"
-                          >
-                            <DollarSign className="h-3.5 w-3.5" />
-                            Receber Pagamento
-                          </Button>
-                        ) : (
-                          <div className="flex-1" />
-                        )}
-                        <div className="flex items-center gap-1 flex-shrink-0 rounded-full bg-muted/40 p-0.5">
-                          <button
-                            type="button"
-                            onClick={() => handleOpenDetailDialog(transaction.id)}
-                            className="h-7 w-7 inline-flex items-center justify-center rounded-full text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors active:scale-95"
-                            aria-label="Ver detalhes"
-                          >
-                            <Eye className="h-3.5 w-3.5" />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => { setEditPaymentsTransaction(transaction); setEditPaymentsOpen(true); }}
-                            className="h-7 w-7 inline-flex items-center justify-center rounded-full text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors active:scale-95"
-                            aria-label="Editar"
-                          >
-                            <Pencil className="h-3.5 w-3.5" />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleDelete(transaction.id)}
-                            className="h-7 w-7 inline-flex items-center justify-center rounded-full text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors active:scale-95"
-                            aria-label="Excluir"
-                          >
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-
-
-              {/* Desktop Table */}
-              <div className="hidden lg:block p-4 pt-0">
-                <Table>
+              {/* Responsive Table (same layout on mobile and desktop, horizontal scroll on narrow screens) */}
+              <div className="p-2 sm:p-4 pt-0 overflow-x-auto">
+                <Table className="min-w-[640px]">
                   <TableHeader>
                     <TableRow className="hover:bg-transparent border-b">
                       <TableHead className="w-[80px] text-xs font-medium text-muted-foreground py-2">Data</TableHead>
@@ -1222,7 +1055,7 @@ export default function Financial() {
                             )}
                           </TableCell>
                           <TableCell className="py-2.5">
-                            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <div className="flex items-center gap-1 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">
                               <Tooltip>
                                 <TooltipTrigger asChild>
                                   <Button
@@ -1231,7 +1064,8 @@ export default function Financial() {
                                     className="h-7 px-2 gap-1 bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm hover:shadow transition-all text-xs font-medium"
                                   >
                                     <DollarSign className="h-3.5 w-3.5" />
-                                    Registrar Pagamento
+                                    <span className="hidden xl:inline">Registrar Pagamento</span>
+                                    <span className="xl:hidden">Receber</span>
                                   </Button>
                                 </TooltipTrigger>
                                 <TooltipContent>Registrar pagamento</TooltipContent>
