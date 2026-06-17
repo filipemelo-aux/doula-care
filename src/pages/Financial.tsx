@@ -803,11 +803,11 @@ export default function Financial() {
     if (received < total) return "parcial";
     return "recebido";
   };
-  // Sort revenues by due date ascending (closest at the top)
+  // Sort revenues by due date descending (future dates at the top)
   const sortByReceiptStatus = (a: Transaction, b: Transaction) => {
     const da = getDueDate(a);
     const db = getDueDate(b);
-    return new Date(da).getTime() - new Date(db).getTime();
+    return new Date(db).getTime() - new Date(da).getTime();
   };
 
   const clientTransactions = (transactions?.filter(isContractTransaction) || []).sort(sortByReceiptStatus);
