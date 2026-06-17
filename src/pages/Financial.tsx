@@ -132,6 +132,8 @@ export default function Financial() {
   const [avistaPartialValue, setAvistaPartialValue] = useState<string>("");
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const [detailTransactionId, setDetailTransactionId] = useState<string | null>(null);
+  const [editPaymentsOpen, setEditPaymentsOpen] = useState(false);
+  const [editPaymentsTransaction, setEditPaymentsTransaction] = useState<Transaction | null>(null);
 
   const queryClient = useQueryClient();
 
