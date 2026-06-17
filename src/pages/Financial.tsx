@@ -803,11 +803,8 @@ export default function Financial() {
     if (received < total) return "parcial";
     return "recebido";
   };
-  const receiptOrder: Record<string, number> = { a_receber: 0, parcial: 1, recebido: 2 };
+  // Sort revenues by due date ascending (closest at the top)
   const sortByReceiptStatus = (a: Transaction, b: Transaction) => {
-    const diff = receiptOrder[getReceiptStatus(a)] - receiptOrder[getReceiptStatus(b)];
-    if (diff !== 0) return diff;
-    // Then by due date ascending (earliest first)
     const da = getDueDate(a);
     const db = getDueDate(b);
     return new Date(da).getTime() - new Date(db).getTime();
