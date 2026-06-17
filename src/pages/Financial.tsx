@@ -1106,7 +1106,7 @@ export default function Financial() {
                           </button>
                           <button
                             type="button"
-                            onClick={() => handleEditTransaction(transaction)}
+                            onClick={() => { setEditPaymentsTransaction(transaction); setEditPaymentsOpen(true); }}
                             className="h-7 w-7 inline-flex items-center justify-center rounded-full text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors active:scale-95"
                             aria-label="Editar"
                           >
