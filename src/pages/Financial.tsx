@@ -40,6 +40,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Plus, TrendingUp, Search, Trash2, Zap, Check, X, CheckCircle, CreditCard, Banknote, Building2, QrCode, FileText, Users, Wrench, UserPlus, DollarSign, Eye, Loader2, Pencil, MoreVertical } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { RecordPaymentDialog } from "@/components/financial/RecordPaymentDialog";
+import { EditPaymentsDialog } from "@/components/financial/EditPaymentsDialog";
 import { RevenueDetailDialog } from "@/components/financial/RevenueDetailDialog";
 import { PaymentMethodBadge } from "@/components/financial/PaymentMethodBadge";
 import { maskCurrency, parseCurrency, maskPhone } from "@/lib/masks";
@@ -131,6 +132,8 @@ export default function Financial() {
   const [avistaPartialValue, setAvistaPartialValue] = useState<string>("");
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const [detailTransactionId, setDetailTransactionId] = useState<string | null>(null);
+  const [editPaymentsOpen, setEditPaymentsOpen] = useState(false);
+  const [editPaymentsTransaction, setEditPaymentsTransaction] = useState<Transaction | null>(null);
 
   const queryClient = useQueryClient();
 
@@ -1103,7 +1106,7 @@ export default function Financial() {
                           </button>
                           <button
                             type="button"
-                            onClick={() => handleEditTransaction(transaction)}
+                            onClick={() => { setEditPaymentsTransaction(transaction); setEditPaymentsOpen(true); }}
                             className="h-7 w-7 inline-flex items-center justify-center rounded-full text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors active:scale-95"
                             aria-label="Editar"
                           >
@@ -1130,7 +1133,6 @@ export default function Financial() {
                 <Table>
                   <TableHeader>
                     <TableRow className="hover:bg-transparent border-b">
-                      <TableHead className="w-[75px] text-xs font-medium text-muted-foreground py-2">Data</TableHead>
                       <TableHead className="text-xs font-medium text-muted-foreground py-2">Cliente / Descrição</TableHead>
                       <TableHead className="w-[75px] text-xs font-medium text-muted-foreground py-2">DPP</TableHead>
                       <TableHead className="text-right w-[90px] text-xs font-medium text-muted-foreground py-2">Valor</TableHead>
@@ -1155,9 +1157,6 @@ export default function Financial() {
                           key={transaction.id} 
                           className="group hover:bg-muted/30 border-b transition-colors"
                         >
-                          <TableCell className="py-2.5 text-xs text-muted-foreground">
-                            {formatBrazilDate(getDueDate(transaction), "dd/MM/yy")}
-                          </TableCell>
                           <TableCell className="py-2.5 max-w-[200px]">
                             <div className="flex flex-col gap-0.5 min-w-0">
                               <div className="flex items-center gap-1.5 min-w-0">
@@ -1241,11 +1240,11 @@ export default function Financial() {
                               </Tooltip>
                               <Tooltip>
                                 <TooltipTrigger asChild>
-                                  <Button variant="ghost" size="sm" onClick={() => handleEditTransaction(transaction)} className="h-7 px-1.5 text-muted-foreground hover:text-foreground hover:bg-muted hover:shadow-sm transition-all">
+                                  <Button variant="ghost" size="sm" onClick={() => { setEditPaymentsTransaction(transaction); setEditPaymentsOpen(true); }} className="h-7 px-1.5 text-muted-foreground hover:text-foreground hover:bg-muted hover:shadow-sm transition-all">
                                     <Pencil className="h-3.5 w-3.5" />
                                   </Button>
                                 </TooltipTrigger>
-                                <TooltipContent>Editar receita</TooltipContent>
+                                <TooltipContent>Editar pagamentos</TooltipContent>
                               </Tooltip>
                               <Tooltip>
                                 <TooltipTrigger asChild>
@@ -1918,6 +1917,14 @@ export default function Financial() {
         open={detailDialogOpen}
         onOpenChange={setDetailDialogOpen}
         transactionId={detailTransactionId}
+      />
+
+      {/* Edit Payments Dialog */}
+      <EditPaymentsDialog
+        open={editPaymentsOpen}
+        onOpenChange={setEditPaymentsOpen}
+        transactionId={editPaymentsTransaction?.id || null}
+        clientId={editPaymentsTransaction?.client_id || null}
       />
     </div>
   );
