@@ -94,6 +94,53 @@ export function EditPaymentsDialog({
     enabled: !!transactionId && open,
   });
 
+  // Auto-provision payment records for transactions that have none (e.g. à vista or legacy)
+  const provisionMutation = useMutation({
+    mutationFn: async () => {
+      if (!transactionId || !clientId) return;
+      const { data: tx, error: txErr } = await supabase
+        .from("transactions")
+        .select("amount, amount_received, installments, due_date, date, organization_id")
+        .eq("id", transactionId)
+        .maybeSingle();
+      if (txErr) throw txErr;
+      if (!tx) return;
+      const totalInstallments = Math.max(1, Number((tx as any).installments) || 1);
+      const total = Number(tx.amount) || 0;
+      const installmentValue = total / totalInstallments;
+      let remaining = Math.min(Math.max(Number(tx.amount_received) || 0, 0), total);
+      const baseDate = (tx as any).due_date || tx.date || new Date().toISOString().slice(0, 10);
+      const records = Array.from({ length: totalInstallments }, (_, i) => {
+        const amountPaid = Math.min(installmentValue, remaining);
+        remaining = Math.max(0, remaining - amountPaid);
+        return {
+          client_id: clientId,
+          transaction_id: transactionId,
+          organization_id: (tx as any).organization_id,
+          installment_number: i + 1,
+          total_installments: totalInstallments,
+          amount: Number(installmentValue.toFixed(2)),
+          amount_paid: Number(amountPaid.toFixed(2)),
+          due_date: baseDate,
+          status: amountPaid >= installmentValue ? "pago" : amountPaid > 0 ? "parcial" : "pendente",
+          paid_at: amountPaid >= installmentValue ? new Date().toISOString() : null,
+        };
+      });
+      const { error } = await supabase.from("payments").insert(records as any);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["edit-payments", transactionId, clientId] });
+    },
+  });
+
+  useEffect(() => {
+    if (open && payments && payments.length === 0 && transactionId && clientId && !provisionMutation.isPending) {
+      provisionMutation.mutate();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, payments, transactionId, clientId]);
+
   // Auto-select first pending installment when payments load
   useEffect(() => {
     if (!open) return;
