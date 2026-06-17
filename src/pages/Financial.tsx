@@ -1922,6 +1922,14 @@ export default function Financial() {
         onOpenChange={setDetailDialogOpen}
         transactionId={detailTransactionId}
       />
+
+      {/* Edit Payments Dialog */}
+      <EditPaymentsDialog
+        open={editPaymentsOpen}
+        onOpenChange={setEditPaymentsOpen}
+        transactionId={editPaymentsTransaction?.id || null}
+        clientId={editPaymentsTransaction?.client_id || null}
+      />
     </div>
   );
 }
