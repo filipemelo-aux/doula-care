@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -6,8 +6,14 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogDescription,
 } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -18,31 +24,33 @@ import { toast } from "sonner";
 import { maskCurrency, parseCurrency } from "@/lib/masks";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { CheckCircle2, Clock, AlertTriangle, Loader2, CalendarIcon, Trash2, Save } from "lucide-react";
+import {
+  CheckCircle2,
+  Clock,
+  AlertTriangle,
+  Loader2,
+  CalendarIcon,
+  Trash2,
+  RotateCcw,
+  Save,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface EditPaymentsDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   transactionId: string | null;
   clientId: string | null;
-}
-
-interface DraftPayment {
-  id: string;
-  installment_number: number;
-  total_installments: number;
-  amount: string; // masked currency
-  amount_paid: string; // masked currency
-  due_date: string | null; // yyyy-MM-dd
-  paid_at: string | null; // ISO
-  status: string;
-  _original: {
-    amount: number;
-    amount_paid: number;
-    due_date: string | null;
-    paid_at: string | null;
-  };
 }
 
 const formatCurrency = (v: number) =>
@@ -55,7 +63,10 @@ export function EditPaymentsDialog({
   clientId,
 }: EditPaymentsDialogProps) {
   const queryClient = useQueryClient();
-  const [drafts, setDrafts] = useState<DraftPayment[]>([]);
+  const [selectedId, setSelectedId] = useState<string>("");
+  const [amount, setAmount] = useState<string>("");
+  const [dueDate, setDueDate] = useState<string>("");
+  const [confirmEstorno, setConfirmEstorno] = useState(false);
 
   const { data: payments, isLoading } = useQuery({
     queryKey: ["edit-payments", transactionId, clientId],
@@ -83,271 +94,334 @@ export function EditPaymentsDialog({
     enabled: !!transactionId && open,
   });
 
+  // Auto-select first pending installment when payments load
   useEffect(() => {
-    if (payments) {
-      setDrafts(
-        payments.map((p: any) => ({
-          id: p.id,
-          installment_number: p.installment_number,
-          total_installments: p.total_installments,
-          amount: maskCurrency(String(Math.round(Number(p.amount) * 100))),
-          amount_paid: maskCurrency(String(Math.round(Number(p.amount_paid) * 100))),
-          due_date: p.due_date,
-          paid_at: p.paid_at,
-          status: p.status,
-          _original: {
-            amount: Number(p.amount),
-            amount_paid: Number(p.amount_paid),
-            due_date: p.due_date,
-            paid_at: p.paid_at,
-          },
-        }))
-      );
-    }
-  }, [payments]);
+    if (!open) return;
+    if (!payments || payments.length === 0) return;
+    if (selectedId && payments.find((p: any) => p.id === selectedId)) return;
+    const firstPending = payments.find((p: any) => Number(p.amount_paid) < Number(p.amount));
+    setSelectedId((firstPending || payments[0]).id);
+  }, [payments, open]);
 
-  const updateDraft = (id: string, patch: Partial<DraftPayment>) => {
-    setDrafts((arr) => arr.map((d) => (d.id === id ? { ...d, ...patch } : d)));
+  const selected = useMemo(
+    () => payments?.find((p: any) => p.id === selectedId) || null,
+    [payments, selectedId]
+  );
+
+  // Sync form when selection changes
+  useEffect(() => {
+    if (!selected) {
+      setAmount("");
+      setDueDate("");
+      return;
+    }
+    setAmount(maskCurrency(String(Math.round(Number(selected.amount) * 100))));
+    setDueDate(selected.due_date || "");
+  }, [selected?.id]);
+
+  useEffect(() => {
+    if (!open) {
+      setSelectedId("");
+      setConfirmEstorno(false);
+    }
+  }, [open]);
+
+  const invalidate = () => {
+    queryClient.invalidateQueries({ queryKey: ["transactions"] });
+    queryClient.invalidateQueries({ queryKey: ["edit-payments"] });
+    queryClient.invalidateQueries({ queryKey: ["transaction-payments"] });
+    queryClient.invalidateQueries({ queryKey: ["payments"] });
+    queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
+    queryClient.invalidateQueries({ queryKey: ["clients"] });
   };
 
+  const isPaid = selected ? Number(selected.amount_paid) >= Number(selected.amount) && Number(selected.amount) > 0 : false;
+  const isPartial = selected ? Number(selected.amount_paid) > 0 && Number(selected.amount_paid) < Number(selected.amount) : false;
+  const hasAnyPayment = selected ? Number(selected.amount_paid) > 0 : false;
+
+  // Save: update selected parcel + redistribute change across remaining UNPAID parcels (keeping total stable)
   const saveMutation = useMutation({
     mutationFn: async () => {
-      for (const d of drafts) {
-        const newAmount = parseCurrency(d.amount) || 0;
-        const newPaid = parseCurrency(d.amount_paid) || 0;
-        const patch: any = {};
-        if (newAmount !== d._original.amount) patch.amount = newAmount;
-        if (newPaid !== d._original.amount_paid) patch.amount_paid = newPaid;
-        if (d.due_date !== d._original.due_date) patch.due_date = d.due_date;
-        if (d.paid_at !== d._original.paid_at) patch.paid_at = d.paid_at;
-        if (Object.keys(patch).length === 0) continue;
+      if (!selected || !payments) return;
+      const newAmount = parseCurrency(amount) || 0;
+      const oldAmount = Number(selected.amount);
+      const delta = newAmount - oldAmount; // positive = need to reduce others; negative = increase others
 
-        // If marking as fully paid and no paid_at yet, set it
-        if (
-          patch.amount_paid !== undefined &&
-          patch.amount_paid >= (patch.amount ?? d._original.amount) &&
-          !d.paid_at
-        ) {
-          patch.paid_at = new Date().toISOString();
-        }
-        // If clearing payment, also clear paid_at
-        if (patch.amount_paid === 0) {
-          patch.paid_at = null;
-        }
+      // Update selected parcel (only amount + due_date editable for unpaid)
+      const patchSelected: any = {};
+      if (newAmount !== oldAmount) patchSelected.amount = newAmount;
+      if (dueDate !== selected.due_date) patchSelected.due_date = dueDate;
 
+      if (Object.keys(patchSelected).length > 0) {
         const { error } = await supabase
           .from("payments")
-          .update(patch)
-          .eq("id", d.id);
+          .update(patchSelected)
+          .eq("id", selected.id);
         if (error) throw error;
+      }
+
+      // Redistribute delta across remaining unpaid parcels (other than this one)
+      if (Math.abs(delta) > 0.001) {
+        const others = payments.filter(
+          (p: any) => p.id !== selected.id && Number(p.amount_paid) === 0
+        );
+        if (others.length > 0) {
+          const adjust = -delta / others.length; // each gets a slice of the inverse delta
+          for (const o of others) {
+            const newVal = Math.max(0, Number(o.amount) + adjust);
+            const { error } = await supabase
+              .from("payments")
+              .update({ amount: Number(newVal.toFixed(2)) })
+              .eq("id", o.id);
+            if (error) throw error;
+          }
+        }
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["transactions"] });
-      queryClient.invalidateQueries({ queryKey: ["edit-payments"] });
-      queryClient.invalidateQueries({ queryKey: ["transaction-payments"] });
-      queryClient.invalidateQueries({ queryKey: ["payments"] });
-      queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
-      queryClient.invalidateQueries({ queryKey: ["clients"] });
-      toast.success("Pagamentos atualizados");
-      onOpenChange(false);
+      invalidate();
+      toast.success("Parcela atualizada");
     },
     onError: (e: any) => {
-      toast.error(e?.message || "Erro ao atualizar pagamentos");
+      toast.error(e?.message || "Erro ao atualizar parcela");
     },
   });
 
   const deleteMutation = useMutation({
-    mutationFn: async (paymentId: string) => {
-      const { error } = await supabase.from("payments").delete().eq("id", paymentId);
+    mutationFn: async () => {
+      if (!selected) return;
+      const { error } = await supabase.from("payments").delete().eq("id", selected.id);
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["edit-payments"] });
-      queryClient.invalidateQueries({ queryKey: ["transactions"] });
-      queryClient.invalidateQueries({ queryKey: ["payments"] });
+      invalidate();
       toast.success("Parcela removida");
+      setSelectedId("");
     },
     onError: (e: any) => {
-      toast.error(e?.message || "Não é possível remover parcela com pagamento recebido");
+      toast.error(e?.message || "Não é possível remover parcela com pagamento");
     },
   });
 
-  const getStatusInfo = (status: string) => {
-    if (status === "pago")
+  const estornoMutation = useMutation({
+    mutationFn: async () => {
+      if (!selected) return;
+      const { error } = await supabase.rpc("revert_installment_payment", {
+        p_payment_id: selected.id,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      invalidate();
+      toast.success("Pagamento estornado");
+      setConfirmEstorno(false);
+    },
+    onError: (e: any) => {
+      toast.error(e?.message || "Erro ao estornar pagamento");
+      setConfirmEstorno(false);
+    },
+  });
+
+  const getStatusInfo = (p: any) => {
+    const paid = Number(p.amount_paid);
+    const total = Number(p.amount);
+    if (paid >= total && total > 0)
       return { icon: CheckCircle2, color: "text-emerald-600", label: "Pago" };
-    if (status === "parcial")
+    if (paid > 0)
       return { icon: Clock, color: "text-amber-600", label: "Parcial" };
     return { icon: AlertTriangle, color: "text-destructive", label: "Pendente" };
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="text-base">Editar Pagamentos</DialogTitle>
-          <DialogDescription className="text-xs">
-            Ajuste valores, datas ou remova parcelas. Para alterar plano, forma de pagamento ou número de parcelas, edite no cadastro da cliente (aba Plano).
-          </DialogDescription>
-        </DialogHeader>
+    <>
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="text-base">Editar Parcela</DialogTitle>
+          </DialogHeader>
 
-        {isLoading ? (
-          <div className="flex justify-center py-6">
-            <Loader2 className="h-5 w-5 animate-spin text-primary" />
-          </div>
-        ) : drafts.length === 0 ? (
-          <p className="text-sm text-muted-foreground py-6 text-center">
-            Esta receita não possui parcelas cadastradas.
-          </p>
-        ) : (
-          <div className="space-y-3">
-            {drafts.map((d) => {
-              const status = getStatusInfo(d.status);
-              const StatusIcon = status.icon;
-              const hasPaid = d._original.amount_paid > 0;
-              return (
-                <div
-                  key={d.id}
-                  className="rounded-xl border border-border/60 p-3 space-y-3 bg-card"
-                >
-                  <div className="flex items-center justify-between">
+          {isLoading ? (
+            <div className="flex justify-center py-6">
+              <Loader2 className="h-5 w-5 animate-spin text-primary" />
+            </div>
+          ) : !payments || payments.length === 0 ? (
+            <p className="text-sm text-muted-foreground py-6 text-center">
+              Esta receita não possui parcelas cadastradas.
+            </p>
+          ) : (
+            <div className="space-y-4">
+              {/* Installment selection */}
+              <div className="space-y-2">
+                <Label className="text-xs font-medium">Parcela</Label>
+                <Select value={selectedId} onValueChange={setSelectedId}>
+                  <SelectTrigger className="h-9 text-sm">
+                    <SelectValue placeholder="Selecione a parcela" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {payments.map((p: any) => {
+                      const s = getStatusInfo(p);
+                      const Icon = s.icon;
+                      return (
+                        <SelectItem key={p.id} value={p.id}>
+                          <div className="flex items-center gap-2">
+                            <Icon className={`h-3 w-3 ${s.color}`} />
+                            <span>
+                              {p.installment_number}/{p.total_installments}
+                            </span>
+                            <span className="text-muted-foreground">
+                              {formatCurrency(Number(p.amount))}
+                            </span>
+                            {p.due_date && (
+                              <span className="text-muted-foreground text-xs">
+                                • {format(parseISO(p.due_date), "dd/MM/yy", { locale: ptBR })}
+                              </span>
+                            )}
+                          </div>
+                        </SelectItem>
+                      );
+                    })}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {selected && (
+                <>
+                  {/* Status info */}
+                  <div className="rounded-lg bg-muted/40 p-2.5 flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <StatusIcon className={`h-4 w-4 ${status.color}`} />
-                      <span className="text-sm font-medium">
-                        Parcela {d.installment_number}/{d.total_installments}
-                      </span>
-                      <Badge variant="outline" className="text-[10px]">
-                        {status.label}
+                      <Badge
+                        variant="outline"
+                        className={cn(
+                          "text-[10px]",
+                          isPaid && "border-emerald-500/40 text-emerald-700",
+                          isPartial && "border-amber-500/40 text-amber-700"
+                        )}
+                      >
+                        {getStatusInfo(selected).label}
                       </Badge>
+                      <span className="text-xs text-muted-foreground">
+                        Recebido: {formatCurrency(Number(selected.amount_paid))}
+                      </span>
                     </div>
+                    {hasAnyPayment && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setConfirmEstorno(true)}
+                        className="h-7 px-2 text-xs gap-1 text-amber-700 hover:text-amber-800 hover:bg-amber-500/10"
+                      >
+                        <RotateCcw className="h-3 w-3" />
+                        Estornar
+                      </Button>
+                    )}
+                  </div>
+
+                  {/* Amount */}
+                  <div className="space-y-2">
+                    <Label className="text-xs font-medium">Valor da parcela</Label>
+                    <Input
+                      value={amount}
+                      onChange={(e) => setAmount(maskCurrency(e.target.value))}
+                      disabled={hasAnyPayment}
+                      className="h-9 text-sm"
+                    />
+                    {!hasAnyPayment && (
+                      <p className="text-[11px] text-muted-foreground">
+                        Alterações serão redistribuídas entre as demais parcelas pendentes.
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Due date */}
+                  <div className="space-y-2">
+                    <Label className="text-xs font-medium">Data de vencimento</Label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          disabled={hasAnyPayment}
+                          className={cn(
+                            "w-full h-9 text-sm justify-start text-left font-normal",
+                            !dueDate && "text-muted-foreground"
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {dueDate
+                            ? format(parseISO(dueDate), "dd/MM/yyyy", { locale: ptBR })
+                            : "Selecione"}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent
+                        className="w-auto p-0 z-[9999] pointer-events-auto"
+                        align="start"
+                      >
+                        <Calendar
+                          mode="single"
+                          selected={dueDate ? parseISO(dueDate) : undefined}
+                          onSelect={(d) => d && setDueDate(format(d, "yyyy-MM-dd"))}
+                          initialFocus
+                          locale={ptBR}
+                          className="p-3 pointer-events-auto"
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex items-center justify-between gap-2 pt-1">
                     <Button
                       variant="ghost"
                       size="sm"
-                      disabled={hasPaid || deleteMutation.isPending}
-                      onClick={() => deleteMutation.mutate(d.id)}
-                      className="h-7 px-2 text-destructive hover:text-destructive hover:bg-destructive/10"
-                      title={hasPaid ? "Parcela com pagamento não pode ser removida" : "Remover parcela"}
+                      disabled={hasAnyPayment || deleteMutation.isPending}
+                      onClick={() => deleteMutation.mutate()}
+                      className="h-8 gap-1 text-destructive hover:text-destructive hover:bg-destructive/10"
                     >
                       <Trash2 className="h-3.5 w-3.5" />
+                      Remover
+                    </Button>
+                    <Button
+                      onClick={() => saveMutation.mutate()}
+                      disabled={saveMutation.isPending || hasAnyPayment}
+                      className="h-8 gap-1"
+                    >
+                      {saveMutation.isPending ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Save className="h-3.5 w-3.5" />
+                      )}
+                      Salvar
                     </Button>
                   </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div className="space-y-1.5">
-                      <Label className="text-xs">Valor da parcela</Label>
-                      <Input
-                        value={d.amount}
-                        onChange={(e) => updateDraft(d.id, { amount: maskCurrency(e.target.value) })}
-                        disabled={hasPaid}
-                        className="h-9 text-sm"
-                      />
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label className="text-xs">Valor recebido</Label>
-                      <Input
-                        value={d.amount_paid}
-                        onChange={(e) => updateDraft(d.id, { amount_paid: maskCurrency(e.target.value) })}
-                        className="h-9 text-sm"
-                      />
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label className="text-xs">Data de vencimento</Label>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <Button
-                            variant="outline"
-                            disabled={hasPaid}
-                            className={cn(
-                              "w-full h-9 text-sm justify-start text-left font-normal",
-                              !d.due_date && "text-muted-foreground"
-                            )}
-                          >
-                            <CalendarIcon className="mr-2 h-4 w-4" />
-                            {d.due_date
-                              ? format(parseISO(d.due_date), "dd/MM/yyyy", { locale: ptBR })
-                              : "Selecione"}
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0 z-[9999] pointer-events-auto" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={d.due_date ? parseISO(d.due_date) : undefined}
-                            onSelect={(date) =>
-                              date &&
-                              updateDraft(d.id, {
-                                due_date: format(date, "yyyy-MM-dd"),
-                              })
-                            }
-                            initialFocus
-                            locale={ptBR}
-                            className="p-3 pointer-events-auto"
-                          />
-                        </PopoverContent>
-                      </Popover>
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label className="text-xs">Data do pagamento</Label>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <Button
-                            variant="outline"
-                            className={cn(
-                              "w-full h-9 text-sm justify-start text-left font-normal",
-                              !d.paid_at && "text-muted-foreground"
-                            )}
-                          >
-                            <CalendarIcon className="mr-2 h-4 w-4" />
-                            {d.paid_at
-                              ? format(new Date(d.paid_at), "dd/MM/yyyy", { locale: ptBR })
-                              : "Não pago"}
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0 z-[9999] pointer-events-auto" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={d.paid_at ? new Date(d.paid_at) : undefined}
-                            onSelect={(date) =>
-                              updateDraft(d.id, {
-                                paid_at: date ? date.toISOString() : null,
-                              })
-                            }
-                            initialFocus
-                            locale={ptBR}
-                            className="p-3 pointer-events-auto"
-                          />
-                        </PopoverContent>
-                      </Popover>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-
-            <div className="flex items-center justify-between gap-2 pt-2 border-t">
-              <p className="text-[11px] text-muted-foreground">
-                Parcelas já pagas têm valor e vencimento bloqueados.
-              </p>
-              <div className="flex gap-2">
-                <Button variant="outline" onClick={() => onOpenChange(false)} className="h-9">
-                  Cancelar
-                </Button>
-                <Button
-                  onClick={() => saveMutation.mutate()}
-                  disabled={saveMutation.isPending}
-                  className="h-9 gap-1.5"
-                >
-                  {saveMutation.isPending ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Save className="h-4 w-4" />
-                  )}
-                  Salvar alterações
-                </Button>
-              </div>
+                </>
+              )}
             </div>
-          </div>
-        )}
-      </DialogContent>
-    </Dialog>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      <AlertDialog open={confirmEstorno} onOpenChange={setConfirmEstorno}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Estornar pagamento?</AlertDialogTitle>
+            <AlertDialogDescription>
+              O valor recebido desta parcela será zerado e ela voltará a constar como pendente.
+              Você poderá então editar valor, vencimento ou remover a parcela.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault();
+                estornoMutation.mutate();
+              }}
+              disabled={estornoMutation.isPending}
+            >
+              {estornoMutation.isPending ? "Estornando..." : "Confirmar estorno"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }

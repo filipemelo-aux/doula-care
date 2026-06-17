@@ -197,7 +197,8 @@ export default function Financial() {
     },
   });
 
-  // Build a map: transaction.id -> last installment due_date (ISO string)
+  // Build a map: transaction.id -> FIRST installment due_date (ISO string).
+  // Fallback to transaction.date when no installment data is available.
   const dueDateByTransaction = new Map<string, string>();
   if (allPayments && transactions) {
     const byTxId = new Map<string, string[]>();
@@ -215,23 +216,23 @@ export default function Financial() {
         byClientKey.set(key, arr);
       }
     }
-    const maxOf = (arr: string[]) => arr.reduce((a, b) => (a > b ? a : b));
+    const minOf = (arr: string[]) => arr.reduce((a, b) => (a < b ? a : b));
     for (const t of transactions) {
       const direct = byTxId.get(t.id);
       if (direct && direct.length > 0) {
-        dueDateByTransaction.set(t.id, maxOf(direct));
+        dueDateByTransaction.set(t.id, minOf(direct));
         continue;
       }
       if (t.client_id) {
         const key = `${t.client_id}|${Number(t.installments || 1)}`;
         const fallback = byClientKey.get(key);
         if (fallback && fallback.length > 0) {
-          dueDateByTransaction.set(t.id, maxOf(fallback));
+          dueDateByTransaction.set(t.id, minOf(fallback));
         }
       }
     }
   }
-  const getDueDate = (t: Transaction): string => (t as any).clients?.dpp || dueDateByTransaction.get(t.id) || t.date;
+  const getDueDate = (t: Transaction): string => dueDateByTransaction.get(t.id) || t.date;
 
   const { data: clients } = useQuery({
     queryKey: ["clients-with-plans"],
@@ -802,11 +803,8 @@ export default function Financial() {
     if (received < total) return "parcial";
     return "recebido";
   };
-  const receiptOrder: Record<string, number> = { a_receber: 0, parcial: 1, recebido: 2 };
+  // Sort revenues by due date ascending (closest at the top)
   const sortByReceiptStatus = (a: Transaction, b: Transaction) => {
-    const diff = receiptOrder[getReceiptStatus(a)] - receiptOrder[getReceiptStatus(b)];
-    if (diff !== 0) return diff;
-    // Then by due date ascending (earliest first)
     const da = getDueDate(a);
     const db = getDueDate(b);
     return new Date(da).getTime() - new Date(db).getTime();
@@ -1133,8 +1131,8 @@ export default function Financial() {
                 <Table>
                   <TableHeader>
                     <TableRow className="hover:bg-transparent border-b">
+                      <TableHead className="w-[80px] text-xs font-medium text-muted-foreground py-2">Data</TableHead>
                       <TableHead className="text-xs font-medium text-muted-foreground py-2">Cliente / Descrição</TableHead>
-                      <TableHead className="w-[75px] text-xs font-medium text-muted-foreground py-2">DPP</TableHead>
                       <TableHead className="text-right w-[90px] text-xs font-medium text-muted-foreground py-2">Valor</TableHead>
                       <TableHead className="text-center w-[55px] text-xs font-medium text-muted-foreground py-2">Parc.</TableHead>
                       <TableHead className="text-right w-[90px] text-xs font-medium text-muted-foreground py-2">Recebido</TableHead>
@@ -1157,6 +1155,9 @@ export default function Financial() {
                           key={transaction.id} 
                           className="group hover:bg-muted/30 border-b transition-colors"
                         >
+                          <TableCell className="py-2.5 text-xs text-muted-foreground whitespace-nowrap">
+                            {formatBrazilDate(getDueDate(transaction), "dd/MM/yy")}
+                          </TableCell>
                           <TableCell className="py-2.5 max-w-[200px]">
                             <div className="flex flex-col gap-0.5 min-w-0">
                               <div className="flex items-center gap-1.5 min-w-0">
@@ -1171,9 +1172,6 @@ export default function Financial() {
                                 {transaction.plan_settings?.name || transaction.description.replace(/\s*-\s*Plano\s+/i, " - ")}
                               </span>
                             </div>
-                          </TableCell>
-                          <TableCell className="py-2.5 text-xs text-muted-foreground">
-                            {(transaction.clients as any)?.dpp ? format(parseISO((transaction.clients as any).dpp), "dd/MM/yy") : "—"}
                           </TableCell>
                           <TableCell className="text-right py-2.5">
                             <span className="font-semibold text-sm">{formatCurrency(totalAmount)}</span>

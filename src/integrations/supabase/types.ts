@@ -2176,6 +2176,10 @@ export type Database = {
         Args: { p_notes?: string; p_request_id: string }
         Returns: undefined
       }
+      revert_installment_payment: {
+        Args: { p_payment_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role:
