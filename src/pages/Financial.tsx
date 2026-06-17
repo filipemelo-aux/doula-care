@@ -1155,6 +1155,9 @@ export default function Financial() {
                           key={transaction.id} 
                           className="group hover:bg-muted/30 border-b transition-colors"
                         >
+                          <TableCell className="py-2.5 text-xs text-muted-foreground whitespace-nowrap">
+                            {formatBrazilDate(getDueDate(transaction), "dd/MM/yy")}
+                          </TableCell>
                           <TableCell className="py-2.5 max-w-[200px]">
                             <div className="flex flex-col gap-0.5 min-w-0">
                               <div className="flex items-center gap-1.5 min-w-0">
@@ -1169,9 +1172,6 @@ export default function Financial() {
                                 {transaction.plan_settings?.name || transaction.description.replace(/\s*-\s*Plano\s+/i, " - ")}
                               </span>
                             </div>
-                          </TableCell>
-                          <TableCell className="py-2.5 text-xs text-muted-foreground">
-                            {(transaction.clients as any)?.dpp ? format(parseISO((transaction.clients as any).dpp), "dd/MM/yy") : "—"}
                           </TableCell>
                           <TableCell className="text-right py-2.5">
                             <span className="font-semibold text-sm">{formatCurrency(totalAmount)}</span>
