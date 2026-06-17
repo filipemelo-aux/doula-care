@@ -1133,7 +1133,7 @@ export default function Financial() {
                 <Table>
                   <TableHeader>
                     <TableRow className="hover:bg-transparent border-b">
-                      <TableHead className="w-[75px] text-xs font-medium text-muted-foreground py-2">Data</TableHead>
+                      <TableHead className="w-[75px] text-xs font-medium text-muted-foreground py-2">DPP</TableHead>
                       <TableHead className="text-xs font-medium text-muted-foreground py-2">Cliente / Descrição</TableHead>
                       <TableHead className="w-[75px] text-xs font-medium text-muted-foreground py-2">DPP</TableHead>
                       <TableHead className="text-right w-[90px] text-xs font-medium text-muted-foreground py-2">Valor</TableHead>
