@@ -1064,7 +1064,8 @@ export default function Financial() {
                                     className="h-7 px-2 gap-1 bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm hover:shadow transition-all text-xs font-medium"
                                   >
                                     <DollarSign className="h-3.5 w-3.5" />
-                                    Registrar Pagamento
+                                    <span className="hidden xl:inline">Registrar Pagamento</span>
+                                    <span className="xl:hidden">Receber</span>
                                   </Button>
                                 </TooltipTrigger>
                                 <TooltipContent>Registrar pagamento</TooltipContent>
