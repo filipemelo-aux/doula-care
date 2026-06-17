@@ -197,7 +197,8 @@ export default function Financial() {
     },
   });
 
-  // Build a map: transaction.id -> last installment due_date (ISO string)
+  // Build a map: transaction.id -> FIRST installment due_date (ISO string).
+  // Fallback to transaction.date when no installment data is available.
   const dueDateByTransaction = new Map<string, string>();
   if (allPayments && transactions) {
     const byTxId = new Map<string, string[]>();
@@ -215,23 +216,23 @@ export default function Financial() {
         byClientKey.set(key, arr);
       }
     }
-    const maxOf = (arr: string[]) => arr.reduce((a, b) => (a > b ? a : b));
+    const minOf = (arr: string[]) => arr.reduce((a, b) => (a < b ? a : b));
     for (const t of transactions) {
       const direct = byTxId.get(t.id);
       if (direct && direct.length > 0) {
-        dueDateByTransaction.set(t.id, maxOf(direct));
+        dueDateByTransaction.set(t.id, minOf(direct));
         continue;
       }
       if (t.client_id) {
         const key = `${t.client_id}|${Number(t.installments || 1)}`;
         const fallback = byClientKey.get(key);
         if (fallback && fallback.length > 0) {
-          dueDateByTransaction.set(t.id, maxOf(fallback));
+          dueDateByTransaction.set(t.id, minOf(fallback));
         }
       }
     }
   }
-  const getDueDate = (t: Transaction): string => (t as any).clients?.dpp || dueDateByTransaction.get(t.id) || t.date;
+  const getDueDate = (t: Transaction): string => dueDateByTransaction.get(t.id) || t.date;
 
   const { data: clients } = useQuery({
     queryKey: ["clients-with-plans"],
