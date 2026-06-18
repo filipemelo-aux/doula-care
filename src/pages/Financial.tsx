@@ -959,8 +959,77 @@ export default function Financial() {
             </div>
           ) : filteredTransactions && filteredTransactions.length > 0 ? (
             <>
-              {/* Responsive Table (same layout on mobile and desktop, horizontal scroll on narrow screens) */}
-              <div className="p-2 sm:p-4 pt-0 overflow-x-auto">
+              {/* Mobile Cards */}
+              <div className="block lg:hidden p-3 space-y-3">
+                {filteredTransactions.map((transaction) => {
+                  const totalAmount = Number(transaction.amount) || 0;
+                  const receivedAmount = Number(transaction.amount_received) || 0;
+                  const pendingAmount = Math.max(0, totalAmount - receivedAmount);
+                  const installments = Number(transaction.installments) || 1;
+                  const isPaid = pendingAmount === 0;
+                  const clientName = transaction.clients?.full_name ? toTitleCase(transaction.clients.full_name) : "—";
+                  const desc = transaction.plan_settings?.name || transaction.description.replace(/\s*-\s*Plano\s+/i, " - ");
+                  return (
+                    <Card key={transaction.id} className="p-3 space-y-2">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-sm truncate">{clientName}</p>
+                          <p className="text-xs text-muted-foreground truncate">{desc}</p>
+                          <p className="text-[11px] text-muted-foreground/80 mt-0.5">
+                            Vence em {formatBrazilDate(getDueDate(transaction), "dd/MM/yy")}
+                          </p>
+                        </div>
+                        <div className="flex flex-col items-end gap-1 flex-shrink-0">
+                          <Badge className="bg-success/15 text-success hover:bg-success/20 text-xs">
+                            {formatCurrency(totalAmount)}
+                          </Badge>
+                          {isPaid ? (
+                            <span className="text-[10px] text-success/80 font-medium">Quitado</span>
+                          ) : (
+                            <span className="text-[10px] text-warning font-medium">
+                              {formatCurrency(pendingAmount)} pendente
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-1 flex-wrap">
+                          <Badge variant="outline" className="text-xs">{installments}x</Badge>
+                          {receivedAmount > 0 && (
+                            <Badge variant="secondary" className="text-xs">
+                              Recebido {formatCurrency(receivedAmount)}
+                            </Badge>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-1 flex-shrink-0">
+                          {!isPaid && (
+                            <Button
+                              size="sm"
+                              onClick={() => handleOpenPaymentDialog(transaction)}
+                              className="h-7 px-2 gap-1 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-medium"
+                            >
+                              <DollarSign className="h-3.5 w-3.5" />
+                              Receber
+                            </Button>
+                          )}
+                          <Button variant="ghost" size="icon" onClick={() => { setEditPaymentsTransaction(transaction); setEditPaymentsOpen(true); }} className="h-7 w-7">
+                            <Pencil className="h-3.5 w-3.5" />
+                          </Button>
+                          <Button variant="ghost" size="icon" onClick={() => handleOpenDetailDialog(transaction.id)} className="h-7 w-7">
+                            <Eye className="h-3.5 w-3.5" />
+                          </Button>
+                          <Button variant="ghost" size="icon" onClick={() => handleDelete(transaction.id)} className="h-7 w-7 text-destructive hover:text-destructive">
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
+                      </div>
+                    </Card>
+                  );
+                })}
+              </div>
+
+              {/* Desktop Table */}
+              <div className="hidden lg:block p-2 sm:p-4 pt-0 overflow-x-auto">
                 <Table className="min-w-[640px]">
                   <TableHeader>
                     <TableRow className="hover:bg-transparent border-b">
@@ -979,7 +1048,6 @@ export default function Financial() {
                       const receivedAmount = Number(transaction.amount_received) || 0;
                       const pendingAmount = Math.max(0, totalAmount - receivedAmount);
                       const isEditingInstallments = editingInstallmentsId === transaction.id;
-                      const currentMethod = (transaction.payment_method as keyof typeof paymentMethodLabels) || "pix";
                       const installments = Number(transaction.installments) || 1;
                       const isPaid = pendingAmount === 0;
 
@@ -993,14 +1061,9 @@ export default function Financial() {
                           </TableCell>
                           <TableCell className="py-2.5 max-w-[200px]">
                             <div className="flex flex-col gap-0.5 min-w-0">
-                              <div className="flex items-center gap-1.5 min-w-0">
-                                {transaction.is_auto_generated && (
-                                  <Zap className="w-3 h-3 text-warning flex-shrink-0" />
-                                )}
-                                <span className="font-medium text-sm text-foreground truncate">
-                                  {transaction.clients?.full_name ? toTitleCase(transaction.clients.full_name) : "—"}
-                                </span>
-                              </div>
+                              <span className="font-medium text-sm text-foreground truncate">
+                                {transaction.clients?.full_name ? toTitleCase(transaction.clients.full_name) : "—"}
+                              </span>
                               <span className="text-xs text-muted-foreground truncate block max-w-[180px]" title={transaction.plan_settings?.name || transaction.description}>
                                 {transaction.plan_settings?.name || transaction.description.replace(/\s*-\s*Plano\s+/i, " - ")}
                               </span>
