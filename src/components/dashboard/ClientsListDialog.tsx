@@ -341,22 +341,32 @@ export function ClientsListDialog({
                           </div>
                         )}
                         {isMobile && (
-                          <div className="flex gap-1 justify-end">
+                          <div className="flex gap-1 justify-end flex-wrap">
                             <Button
                               size="sm"
                               variant="outline"
-                              className="h-5 px-1.5 text-[9px] relative"
+                              className="h-5 px-1.5 text-[9px]"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 setSelectedClient(client);
-                                setDiaryDialogOpen(true);
+                                setDetailsDialogOpen(true);
                               }}
                             >
-                              <BookHeart className="h-2.5 w-2.5 mr-0.5 text-primary" />
-                              Diário
-                              {recentDiaryEntries?.has(client.id) && (
-                                <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-primary animate-pulse" />
-                              )}
+                              <Eye className="h-2.5 w-2.5 mr-0.5 text-primary" />
+                              Detalhes
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-5 px-1.5 text-[9px]"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedClient(client);
+                                setBirthDialogOpen(true);
+                              }}
+                            >
+                              <Pencil className="h-2.5 w-2.5 mr-0.5 text-primary" />
+                              Parto
                             </Button>
                             <Button
                               size="sm"
