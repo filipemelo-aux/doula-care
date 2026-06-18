@@ -91,7 +91,7 @@ async function fetchReportData(tab: ReportTab, period: PeriodOption) {
     return { clients: (data || []) as ClientRow[] };
   }
 
-  // All financial tabs use transactions + payments for received amounts
+  // All financial tabs use transactions (single source of truth, matches Reports KPIs)
   const query = supabase
     .from("transactions")
     .select("date, description, type, amount, amount_received, payment_method, expense_category, is_auto_generated")
@@ -101,38 +101,27 @@ async function fetchReportData(tab: ReportTab, period: PeriodOption) {
   if (tab === "receitas") query.eq("type", "receita");
   if (tab === "despesas") query.eq("type", "despesa");
 
-  const [{ data: txData }, { data: paymentsData }] = await Promise.all([
-    query.order("date", { ascending: false }),
-    supabase
-      .from("payments")
-      .select("amount_paid, status")
-      .gte("due_date", startStr)
-      .lte("due_date", endStr),
-  ]);
+  const { data: txData } = await query.order("date", { ascending: false });
 
   const transactions = (txData || []) as (TransactionRow & { is_auto_generated?: boolean | null })[];
-  const payments = paymentsData || [];
 
   const income = transactions.filter((t) => t.type === "receita");
   const expenses = transactions.filter((t) => t.type === "despesa");
 
-  const totalIncome = income.reduce((s, t) => s + Number(t.amount), 0);
-  // Use payments for received (installments by due_date) + service transactions
-  const receivedFromPayments = payments
-    .filter((p) => p.status === "pago" || p.status === "parcial")
-    .reduce((s, p) => s + Number(p.amount_paid || 0), 0);
-  const receivedFromServices = income
-    .filter((t) => t.is_auto_generated === false)
-    .reduce((s, t) => s + Number(t.amount_received || 0), 0);
-  const totalReceived = receivedFromPayments + receivedFromServices;
-  const totalExpenses = expenses.reduce((s, t) => s + Number(t.amount), 0);
+  const totalIncome = income.reduce((s, t) => s + Number(t.amount || 0), 0);
+  const totalReceived = income.reduce((s, t) => s + Number(t.amount_received || 0), 0);
+  const totalPending = income.reduce(
+    (s, t) => s + Math.max(0, Number(t.amount || 0) - Number(t.amount_received || 0)),
+    0,
+  );
+  const totalExpenses = expenses.reduce((s, t) => s + Number(t.amount || 0), 0);
 
   return {
     transactions,
     summary: {
       totalIncome,
       totalReceived,
-      totalPending: totalIncome - totalReceived,
+      totalPending,
       totalExpenses,
       balance: totalReceived - totalExpenses,
     },
