@@ -119,11 +119,14 @@ export default function Clients() {
       statusFilter === "todas" ? true : client.status === statusFilter;
     return matchesSearch && matchesStatus;
   }).sort((a: any, b: any) => {
+    // Referência da "data do parto": birth_date quando existir, senão DPP (fallback)
+    const postpartumRef = (c: any) => {
+      const ref = c.birth_date || c.dpp;
+      return ref ? new Date(ref).getTime() : -Infinity;
+    };
     if (statusFilter === "lactante") {
-      // Recém-puérperas primeiro (birth_date mais recente no topo)
-      const ad = a.birth_date ? new Date(a.birth_date).getTime() : 0;
-      const bd = b.birth_date ? new Date(b.birth_date).getTime() : 0;
-      return bd - ad;
+      // Recém-puérperas primeiro (mais recente no topo)
+      return postpartumRef(b) - postpartumRef(a);
     }
     if (statusFilter === "todas") {
       // Prioridade: gestante (DPP mais próxima primeiro) > lactante (recém primeiro) > demais
@@ -132,9 +135,7 @@ export default function Clients() {
       const rb = rank(b.status);
       if (ra !== rb) return ra - rb;
       if (a.status === "lactante") {
-        const ad = a.birth_date ? new Date(a.birth_date).getTime() : 0;
-        const bd = b.birth_date ? new Date(b.birth_date).getTime() : 0;
-        return bd - ad;
+        return postpartumRef(b) - postpartumRef(a);
       }
       // gestante e demais: dpp asc (mais próxima no topo)
       const ad = a.dpp ? new Date(a.dpp).getTime() : Infinity;
