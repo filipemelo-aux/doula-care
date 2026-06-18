@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -57,6 +58,25 @@ export function BirthRegistrationDialog({
       birth_height: "",
     },
   });
+
+  useEffect(() => {
+    if (!open) return;
+    if (client?.birth_occurred) {
+      form.reset({
+        birth_date: client.birth_date || new Date().toISOString().split("T")[0],
+        birth_time: client.birth_time ? client.birth_time.slice(0, 5) : "",
+        birth_weight: client.birth_weight != null ? Number(client.birth_weight).toFixed(3) : "",
+        birth_height: client.birth_height != null ? Number(client.birth_height).toFixed(2) : "",
+      });
+    } else {
+      form.reset({
+        birth_date: new Date().toISOString().split("T")[0],
+        birth_time: "",
+        birth_weight: "",
+        birth_height: "",
+      });
+    }
+  }, [open, client?.id]);
 
   const mutation = useMutation({
     mutationFn: async (data: BirthFormData) => {
