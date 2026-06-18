@@ -1,0 +1,1 @@
+DROP POLICY IF EXISTS "Authenticated can read pix config" ON public.system_config;
