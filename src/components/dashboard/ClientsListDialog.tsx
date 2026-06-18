@@ -199,22 +199,54 @@ export function ClientsListDialog({
                       {/* Action buttons for gestantes & puérperas - desktop */}
                       {(status === "gestante" || status === "lactante") && !isMobile && (
                         <div className="flex gap-1 shrink-0">
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            className="h-8 w-8 relative"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setSelectedClient(client);
-                              setDiaryDialogOpen(true);
-                            }}
-                            title={status === "lactante" ? "Diário do Puerpério" : "Ver diário"}
-                          >
-                            <BookHeart className="h-4 w-4 text-primary" />
-                            {recentDiaryEntries?.has(client.id) && (
-                              <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-primary animate-pulse" />
-                            )}
-                          </Button>
+                          {status === "gestante" && (
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="h-8 w-8 relative"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedClient(client);
+                                setDiaryDialogOpen(true);
+                              }}
+                              title="Ver diário"
+                            >
+                              <BookHeart className="h-4 w-4 text-primary" />
+                              {recentDiaryEntries?.has(client.id) && (
+                                <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-primary animate-pulse" />
+                              )}
+                            </Button>
+                          )}
+                          {status === "lactante" && (
+                            <>
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                className="h-8 w-8"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setSelectedClient(client);
+                                  setDetailsDialogOpen(true);
+                                }}
+                                title="Ver detalhes"
+                              >
+                                <Eye className="h-4 w-4 text-primary" />
+                              </Button>
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                className="h-8 w-8"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setSelectedClient(client);
+                                  setBirthDialogOpen(true);
+                                }}
+                                title="Editar informações do parto"
+                              >
+                                <Pencil className="h-4 w-4 text-primary" />
+                              </Button>
+                            </>
+                          )}
                           <Button
                             size="icon"
                             variant="ghost"
