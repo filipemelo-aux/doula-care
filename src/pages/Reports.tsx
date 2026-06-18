@@ -571,7 +571,7 @@ export default function Reports() {
           <Card className="card-glass">
             <CardHeader className="pb-2 px-3 lg:px-6 pt-4 lg:pt-6">
               <CardTitle className="text-sm lg:text-lg font-semibold">
-                Por Forma de Pagamento — {getPeriodLabel(period)}
+                Recebido por Forma de Pagamento — {getPeriodLabel(period)}
               </CardTitle>
             </CardHeader>
             <CardContent className="px-1 lg:px-6 pb-4 overflow-hidden">
