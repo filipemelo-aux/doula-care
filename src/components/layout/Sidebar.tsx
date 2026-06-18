@@ -46,7 +46,7 @@ const navItems = [
     icon: Wallet,
     label: "Financeiro",
     subItems: [
-      { to: "/financeiro", icon: TrendingUp, label: "Receitas" },
+      { to: "/financeiro", icon: TrendingUp, label: "Entradas" },
       { to: "/despesas", icon: TrendingDown, label: "Despesas" },
       { to: "/relatorios", icon: FileText, label: "Relatórios" },
     ],
