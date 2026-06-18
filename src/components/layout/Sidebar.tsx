@@ -46,7 +46,7 @@ const navItems = [
     icon: Wallet,
     label: "Financeiro",
     subItems: [
-      { to: "/financeiro", icon: TrendingUp, label: "Receitas" },
+      { to: "/financeiro", icon: TrendingUp, label: "Entradas" },
       { to: "/despesas", icon: TrendingDown, label: "Despesas" },
       { to: "/relatorios", icon: FileText, label: "Relatórios" },
     ],
@@ -67,7 +67,7 @@ export function Sidebar({ isOpen, onToggle, onNavigate }: SidebarProps) {
   const { organizationId } = useAuth();
 
   const isFinancialRoute = ["/financeiro", "/despesas", "/relatorios"].includes(location.pathname);
-  const [financialOpen, setFinancialOpen] = useState(isFinancialRoute);
+  const financialOpen = true;
 
   const { data: promo } = useQuery({
     queryKey: ["my-org-promo", organizationId],
@@ -157,7 +157,9 @@ export function Sidebar({ isOpen, onToggle, onNavigate }: SidebarProps) {
             return (
               <div key={item.label} className="mt-2">
                 <button
-                  onClick={() => setFinancialOpen((v) => !v)}
+                  onClick={() => {
+                    if (!allDisabled) handleNavClick(item.subItems[0].to);
+                  }}
                   disabled={allDisabled}
                   className={cn(
                     "nav-link w-full text-left relative",
@@ -173,8 +175,7 @@ export function Sidebar({ isOpen, onToggle, onNavigate }: SidebarProps) {
                   </span>
                   <ChevronDown
                     className={cn(
-                      "w-3.5 h-3.5 shrink-0 transition-transform duration-300 ease-out",
-                      financialOpen && "rotate-180",
+                      "w-3.5 h-3.5 shrink-0 rotate-180",
                       !isOpen && "lg:hidden"
                     )}
                     strokeWidth={2}
