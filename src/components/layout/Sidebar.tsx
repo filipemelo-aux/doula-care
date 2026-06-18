@@ -22,7 +22,9 @@ import {
   Crown,
   Wallet,
   MapPin,
+  AlertCircle,
 } from "lucide-react";
+
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -48,9 +50,11 @@ const navItems = [
     subItems: [
       { to: "/financeiro", icon: TrendingUp, label: "Entradas" },
       { to: "/despesas", icon: TrendingDown, label: "Despesas" },
+      { to: "/cobrancas", icon: AlertCircle, label: "Cobranças" },
       { to: "/relatorios", icon: FileText, label: "Relatórios" },
     ],
   },
+
   { to: "/comunidade", icon: Users2, label: "Comunidade" },
   // { to: "/admin/assinatura", icon: Crown, label: "Assinatura" }, // Oculto temporariamente — em edição
   { to: "/configuracoes", icon: Settings, label: "Configurações" },
@@ -64,8 +68,9 @@ export function Sidebar({ isOpen, onToggle, onNavigate }: SidebarProps) {
   const { unreadMessages, unreadNotifications } = useAdminUnreadCounts();
   const { organizationId } = useAuth();
 
-  const isFinancialRoute = ["/financeiro", "/despesas", "/relatorios"].includes(location.pathname);
+  const isFinancialRoute = ["/financeiro", "/despesas", "/cobrancas", "/relatorios"].includes(location.pathname);
   const financialOpen = true;
+
 
   const { data: promo } = useQuery({
     queryKey: ["my-org-promo", organizationId],
@@ -144,8 +149,10 @@ export function Sidebar({ isOpen, onToggle, onNavigate }: SidebarProps) {
             const subLimitKeys: Record<string, keyof typeof limits> = {
               "/financeiro": "financial",
               "/despesas": "expenses",
+              "/cobrancas": "financial",
               "/relatorios": "reports",
             };
+
             const allDisabled = item.subItems.every((s) => {
               const lk = subLimitKeys[s.to];
               return lk ? !limits[lk] : false;

@@ -179,19 +179,10 @@ export function ClientFileDialog({ open, onOpenChange, client }: ClientFileDialo
     enabled: open && !!client,
   });
 
-  const { data: notifications } = useQuery({
-    queryKey: ["client-file-notifications", client?.id],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("client_notifications")
-        .select("*")
-        .eq("client_id", client!.id)
-        .order("created_at", { ascending: false });
-      if (error) throw error;
-      return data;
-    },
-    enabled: open && !!client,
-  });
+  // Notifications section was removed from the client file.
+  // Cobranças (payment reminders) are now managed from the dedicated Cobranças page.
+  const notifications: any[] = [];
+
 
   const isLoading = loadingAppts || loadingDiary || loadingContractions;
 
@@ -403,14 +394,8 @@ export function ClientFileDialog({ open, onOpenChange, client }: ClientFileDialo
         });
       }
 
-      // Notifications
-      if (notifications && notifications.length > 0) {
-        addSection(`Notificações Enviadas (${notifications.length})`);
-        notifications.forEach((n) => {
-          addText(`${formatDateTime(n.created_at)} — ${n.title}`, 10, true);
-          addText(`  ${n.message}`);
-        });
-      }
+      // Notifications section removed from PDF export.
+
 
       doc.save(`ficha-${client.full_name.replace(/\s+/g, "-").toLowerCase()}.pdf`);
       toast.success("Ficha exportada com sucesso!");
@@ -680,22 +665,8 @@ export function ClientFileDialog({ open, onOpenChange, client }: ClientFileDialo
                 </Section>
               )}
 
-              {/* Notifications sent */}
-              {notifications && notifications.length > 0 && (
-                <Section title={`Notificações Enviadas (${notifications.length})`}>
-                  <div className="col-span-2 space-y-2">
-                    {notifications.map((n) => (
-                      <div key={n.id} className="p-2 rounded-md bg-muted/50 space-y-1">
-                        <div className="flex items-center justify-between gap-2">
-                          <p className="font-medium text-xs">{n.title}</p>
-                          <p className="text-[10px] text-muted-foreground shrink-0">{formatDateTime(n.created_at)}</p>
-                        </div>
-                        <p className="text-xs text-muted-foreground">{n.message}</p>
-                      </div>
-                    ))}
-                  </div>
-                </Section>
-              )}
+              {/* Notifications section removed — now in dedicated Cobranças page */}
+
 
               {/* Empty state */}
               {(!appointments || appointments.length === 0) &&

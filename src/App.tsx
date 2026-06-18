@@ -12,6 +12,8 @@ import Clients from "./pages/Clients";
 import Financial from "./pages/Financial";
 import Expenses from "./pages/Expenses";
 import Reports from "./pages/Reports";
+import Cobrancas from "./pages/Cobrancas";
+
 import Settings from "./pages/Settings";
 import Agenda from "./pages/Agenda";
 import NotFound from "./pages/NotFound";
@@ -217,7 +219,9 @@ const App = () => (
               <Route path="/clientes" element={<Clients />} />
               <Route path="/financeiro" element={<Financial />} />
               <Route path="/despesas" element={<Expenses />} />
+              <Route path="/cobrancas" element={<Cobrancas />} />
               <Route path="/relatorios" element={<Reports />} />
+
               <Route path="/comunidade" element={<Forum />} />
               <Route path="/configuracoes" element={<Settings />} />
               <Route path="/localizacao" element={<LocationCoverage />} />
