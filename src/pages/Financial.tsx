@@ -971,13 +971,13 @@ export default function Financial() {
                   const desc = transaction.plan_settings?.name || transaction.description.replace(/\s*-\s*Plano\s+/i, " - ");
                   return (
                     <Card key={transaction.id} className="p-3 space-y-2">
+                      <p className="text-[11px] text-muted-foreground/80">
+                        Vence em {formatBrazilDate(getDueDate(transaction), "dd/MM/yy")}
+                      </p>
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex-1 min-w-0">
                           <p className="font-medium text-sm truncate">{clientName}</p>
                           <p className="text-xs text-muted-foreground truncate">{desc}</p>
-                          <p className="text-[11px] text-muted-foreground/80 mt-0.5">
-                            Vence em {formatBrazilDate(getDueDate(transaction), "dd/MM/yy")}
-                          </p>
                         </div>
                         <div className="flex flex-col items-end gap-1 flex-shrink-0">
                           <Badge className="bg-success/15 text-success hover:bg-success/20 text-xs">
@@ -993,14 +993,7 @@ export default function Financial() {
                         </div>
                       </div>
                       <div className="flex items-center justify-between gap-2">
-                        <div className="flex items-center gap-1 flex-wrap">
-                          <Badge variant="outline" className="text-xs">{installments}x</Badge>
-                          {receivedAmount > 0 && (
-                            <Badge variant="secondary" className="text-xs">
-                              Recebido {formatCurrency(receivedAmount)}
-                            </Badge>
-                          )}
-                        </div>
+                        <Badge variant="outline" className="text-xs">{installments}x</Badge>
                         <div className="flex items-center gap-1 flex-shrink-0">
                           {!isPaid && (
                             <Button
