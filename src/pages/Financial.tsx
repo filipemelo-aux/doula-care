@@ -1166,8 +1166,33 @@ export default function Financial() {
               <div className="w-16 h-16 rounded-2xl bg-muted/50 flex items-center justify-center mb-4">
                 <TrendingUp className="w-8 h-8 text-muted-foreground/40" />
               </div>
-              <p className="text-base font-medium text-foreground/70 mb-1">Nenhuma receita ainda</p>
-              <p className="text-sm text-muted-foreground/60 mb-6 text-center max-w-xs">Você ainda não registrou receitas. Comece a acompanhar seus ganhos.</p>
+              {statusFilter === "a_receber" ? (
+                <>
+                  <p className="text-base font-medium text-foreground/70 mb-1">Nenhuma receita a receber</p>
+                  <p className="text-sm text-muted-foreground/60 mb-6 text-center max-w-xs">
+                    Este filtro mostra apenas receitas que ainda não tiveram nenhum recebimento registrado. No momento, todas as suas receitas já têm algum valor recebido.
+                  </p>
+                </>
+              ) : statusFilter === "parcial" ? (
+                <>
+                  <p className="text-base font-medium text-foreground/70 mb-1">Nenhuma receita parcial</p>
+                  <p className="text-sm text-muted-foreground/60 mb-6 text-center max-w-xs">
+                    Não há receitas com recebimento parcial no momento.
+                  </p>
+                </>
+              ) : statusFilter === "recebido" ? (
+                <>
+                  <p className="text-base font-medium text-foreground/70 mb-1">Nenhuma receita recebida</p>
+                  <p className="text-sm text-muted-foreground/60 mb-6 text-center max-w-xs">
+                    Ainda não há receitas totalmente quitadas para exibir.
+                  </p>
+                </>
+              ) : (
+                <>
+                  <p className="text-base font-medium text-foreground/70 mb-1">Nenhuma receita ainda</p>
+                  <p className="text-sm text-muted-foreground/60 mb-6 text-center max-w-xs">Você ainda não registrou receitas. Comece a acompanhar seus ganhos.</p>
+                </>
+              )}
               <Button onClick={handleOpenDialog} className="gap-2">
                 <Plus className="w-4 h-4" />
                 Registrar receita
