@@ -210,18 +210,15 @@ export function ClientsListDialog({
                             <Button
                               size="icon"
                               variant="ghost"
-                              className="h-8 w-8 relative"
+                              className="h-8 w-8"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 setSelectedClient(client);
-                                setDiaryDialogOpen(true);
+                                setDetailsDialogOpen(true);
                               }}
-                              title="Ver diário"
+                              title="Ver detalhes"
                             >
-                              <BookHeart className="h-4 w-4 text-primary" />
-                              {recentDiaryEntries?.has(client.id) && (
-                                <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-primary animate-pulse" />
-                              )}
+                              <Eye className="h-4 w-4 text-primary" />
                             </Button>
                           )}
                           {status === "lactante" && (
