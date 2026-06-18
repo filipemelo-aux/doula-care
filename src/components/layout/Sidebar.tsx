@@ -51,9 +51,7 @@ const navItems = [
       { to: "/relatorios", icon: FileText, label: "Relatórios" },
     ],
   },
-  { to: "/localizacao", icon: MapPin, label: "Localização e Atendimento", bottomNav: true },
   { to: "/comunidade", icon: Users2, label: "Comunidade" },
-  { to: "/mensagens", icon: MessageCircle, label: "Mensagens", badgeKey: "messages" as const },
   { to: "/admin/assinatura", icon: Crown, label: "Assinatura" },
   { to: "/configuracoes", icon: Settings, label: "Configurações" },
 ];
