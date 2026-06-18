@@ -66,7 +66,7 @@ export default function Reports() {
   const { plan, limits } = usePlanLimits();
   const { data: metrics } = useFinancialMetrics(period);
 
-  // Monthly chart data
+  // Monthly chart data — sourced from transactions only, matching top KPI
   const { data: monthlyData } = useQuery({
     queryKey: ["monthly-report", period],
     queryFn: async () => {
@@ -80,23 +80,21 @@ export default function Reports() {
         const startStr = format(start, "yyyy-MM-dd");
         const endStr = format(end, "yyyy-MM-dd");
 
-        const [{ data: transactions }, { data: payments }] = await Promise.all([
-          supabase.from("transactions").select("*").gte("date", startStr).lte("date", endStr),
-          supabase.from("payments").select("amount_paid, status").gte("due_date", startStr).lte("due_date", endStr),
-        ]);
+        const { data: transactions } = await supabase
+          .from("transactions")
+          .select("type, amount, amount_received, date")
+          .gte("date", startStr)
+          .lte("date", endStr);
 
-        // Received from payments (installments attributed to their due_date month)
-        const receivedFromPayments = (payments || [])
-          .filter((p) => p.status === "pago" || p.status === "parcial")
-          .reduce((sum, p) => sum + Number(p.amount_paid || 0), 0);
-        // Received from service/manual transactions (non-auto-generated)
-        const receivedFromServices = (transactions || [])
-          .filter((t) => t.type === "receita" && t.is_auto_generated === false)
-          .reduce((sum, t) => sum + Number(t.amount_received || 0), 0);
-        const income = receivedFromPayments + receivedFromServices;
-
-        const contracted = transactions?.filter((t) => t.type === "receita").reduce((sum, t) => sum + Number(t.amount), 0) || 0;
-        const expenses = transactions?.filter((t) => t.type === "despesa").reduce((sum, t) => sum + Number(t.amount), 0) || 0;
+        const income = transactions
+          ?.filter((t) => t.type === "receita")
+          .reduce((sum, t) => sum + Number(t.amount_received || 0), 0) || 0;
+        const contracted = transactions
+          ?.filter((t) => t.type === "receita")
+          .reduce((sum, t) => sum + Number(t.amount || 0), 0) || 0;
+        const expenses = transactions
+          ?.filter((t) => t.type === "despesa")
+          .reduce((sum, t) => sum + Number(t.amount || 0), 0) || 0;
 
         months.push({
           month: format(date, "MMM", { locale: ptBR }),
@@ -139,22 +137,24 @@ export default function Reports() {
     },
   });
 
-  // Income by payment method
+  // Income by payment method — uses amount_received to match the "Recebido" KPI
   const { data: incomeByMethod } = useQuery({
     queryKey: ["income-by-method", period],
     queryFn: async () => {
       const { start, end } = getPeriodDates(period);
       const { data } = await supabase
         .from("transactions")
-        .select("payment_method, amount")
+        .select("payment_method, amount_received")
         .eq("type", "receita")
         .gte("date", format(start, "yyyy-MM-dd"))
         .lte("date", format(end, "yyyy-MM-dd"));
 
       const methods: Record<string, number> = {};
       data?.forEach((t) => {
+        const received = Number(t.amount_received || 0);
+        if (received <= 0) return;
         const m = t.payment_method || "pix";
-        methods[m] = (methods[m] || 0) + Number(t.amount);
+        methods[m] = (methods[m] || 0) + received;
       });
 
       const labels: Record<string, string> = { pix: "PIX", cartao: "Cartão", dinheiro: "Dinheiro", transferencia: "Transf.", boleto: "Boleto" };
@@ -202,7 +202,7 @@ export default function Reports() {
     },
   });
 
-  // Monthly table data
+  // Monthly table data — sourced from transactions only, matching top KPI
   const { data: monthlyTableData } = useQuery({
     queryKey: ["monthly-table-report", period],
     queryFn: async () => {
@@ -215,22 +215,17 @@ export default function Reports() {
         const startStr = format(start, "yyyy-MM-dd");
         const endStr = format(end, "yyyy-MM-dd");
 
-        const [{ data: transactions }, { data: payments }] = await Promise.all([
-          supabase.from("transactions").select("*").gte("date", startStr).lte("date", endStr),
-          supabase.from("payments").select("amount_paid, status").gte("due_date", startStr).lte("due_date", endStr),
-        ]);
+        const { data: transactions } = await supabase
+          .from("transactions")
+          .select("type, amount, amount_received, date")
+          .gte("date", startStr)
+          .lte("date", endStr);
 
-        const contracted = transactions?.filter((t) => t.type === "receita").reduce((s, t) => s + Number(t.amount), 0) || 0;
-        // Received from payments (installments by due_date)
-        const receivedFromPayments = (payments || [])
-          .filter((p) => p.status === "pago" || p.status === "parcial")
-          .reduce((s, p) => s + Number(p.amount_paid || 0), 0);
-        // Received from service/manual transactions
-        const receivedFromServices = (transactions || [])
-          .filter((t) => t.type === "receita" && t.is_auto_generated === false)
-          .reduce((s, t) => s + Number(t.amount_received || 0), 0);
-        const received = receivedFromPayments + receivedFromServices;
-        const expenses = transactions?.filter((t) => t.type === "despesa").reduce((s, t) => s + Number(t.amount), 0) || 0;
+        const incomeRows = transactions?.filter((t) => t.type === "receita") || [];
+        const expenseRows = transactions?.filter((t) => t.type === "despesa") || [];
+        const contracted = incomeRows.reduce((s, t) => s + Number(t.amount || 0), 0);
+        const received = incomeRows.reduce((s, t) => s + Number(t.amount_received || 0), 0);
+        const expenses = expenseRows.reduce((s, t) => s + Number(t.amount || 0), 0);
 
         months.push({
           month: format(date, "MMMM yyyy", { locale: ptBR }),
@@ -576,7 +571,7 @@ export default function Reports() {
           <Card className="card-glass">
             <CardHeader className="pb-2 px-3 lg:px-6 pt-4 lg:pt-6">
               <CardTitle className="text-sm lg:text-lg font-semibold">
-                Por Forma de Pagamento — {getPeriodLabel(period)}
+                Recebido por Forma de Pagamento — {getPeriodLabel(period)}
               </CardTitle>
             </CardHeader>
             <CardContent className="px-1 lg:px-6 pb-4 overflow-hidden">
