@@ -175,8 +175,7 @@ export function Sidebar({ isOpen, onToggle, onNavigate }: SidebarProps) {
                   </span>
                   <ChevronDown
                     className={cn(
-                      "w-3.5 h-3.5 shrink-0 transition-transform duration-300 ease-out",
-                      financialOpen && "rotate-180",
+                      "w-3.5 h-3.5 shrink-0 rotate-180",
                       !isOpen && "lg:hidden"
                     )}
                     strokeWidth={2}
