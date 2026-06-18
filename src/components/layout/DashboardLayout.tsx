@@ -227,35 +227,22 @@ export function DashboardLayout() {
             );
           })()}
 
-          {/* Localização e Atendimento — pulsa até ser clicado */}
+          {/* Mensagens */}
           {(() => {
-            const isActive = location.pathname === "/localizacao";
-            const shouldPulse = !locationHintSeen && !isActive;
+            const isActive = location.pathname === "/mensagens";
             return (
               <button
-                onClick={() => { markLocationHintSeen(); navigate("/localizacao"); }}
+                onClick={() => navigate("/mensagens")}
                 className={cn(
                   "flex flex-col items-center justify-center gap-1 px-3 py-2 rounded-[14px] transition-all duration-200 active:scale-[0.97]",
                   isActive
                     ? "bg-primary/10 text-primary font-semibold"
-                    : shouldPulse
-                      ? "bg-warning/15 animate-pulse"
-                      : "text-sidebar-foreground/50 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground/85"
+                    : "text-sidebar-foreground/50 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground/85"
                 )}
-                title="Localização e Atendimento"
+                title="Mensagens"
               >
-                <div className="relative">
-                  <MapPin
-                    className={cn("h-[18px] w-[18px]", shouldPulse && "text-warning")}
-                    strokeWidth={isActive || shouldPulse ? 2 : 1.6}
-                  />
-                  {shouldPulse && (
-                    <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-warning ring-2 ring-[hsl(var(--background))]" />
-                  )}
-                </div>
-                <span className={cn("text-[9px] font-medium leading-none", shouldPulse && "text-warning")}>
-                  Localização
-                </span>
+                <MessageCircle className="h-[18px] w-[18px]" strokeWidth={isActive ? 2 : 1.6} />
+                <span className="text-[9px] font-medium leading-none">Mensagens</span>
               </button>
             );
           })()}
