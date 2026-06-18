@@ -280,18 +280,15 @@ export function ClientsListDialog({
                               <Button
                                 size="sm"
                                 variant="outline"
-                                className="h-5 px-1.5 text-[9px] relative"
+                                className="h-5 px-1.5 text-[9px]"
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   setSelectedClient(client);
-                                  setDiaryDialogOpen(true);
+                                  setDetailsDialogOpen(true);
                                 }}
                               >
-                                <BookHeart className="h-2.5 w-2.5 mr-0.5 text-primary" />
-                                Diário
-                                {recentDiaryEntries?.has(client.id) && (
-                                  <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-primary animate-pulse" />
-                                )}
+                                <Eye className="h-2.5 w-2.5 mr-0.5 text-primary" />
+                                Detalhes
                               </Button>
                               <Button
                                 size="sm"
@@ -299,8 +296,7 @@ export function ClientsListDialog({
                                 className="h-5 px-1.5 text-[9px]"
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  setSelectedClient(client);
-                                  setNotificationDialogOpen(true);
+                                  goToConversation(client.id);
                                 }}
                               >
                                 <MessageCircle className="h-2.5 w-2.5 mr-0.5 text-primary" />
