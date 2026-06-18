@@ -157,7 +157,9 @@ export function Sidebar({ isOpen, onToggle, onNavigate }: SidebarProps) {
             return (
               <div key={item.label} className="mt-2">
                 <button
-                  onClick={() => setFinancialOpen((v) => !v)}
+                  onClick={() => {
+                    if (!allDisabled) handleNavClick(item.subItems[0].to);
+                  }}
                   disabled={allDisabled}
                   className={cn(
                     "nav-link w-full text-left relative",
