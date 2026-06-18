@@ -102,7 +102,7 @@ export function BirthRegistrationDialog({
           birth_date: data.birth_date,
           birth_time: data.birth_time || null,
           birth_weight: parseWeight(data.birth_weight),
-          birth_height: parseHeight(data.birth_height),
+          birth_height: parseHeightCm(data.birth_height),
           status: "lactante",
           labor_started_at: null, // Clear labor status
         })
@@ -237,7 +237,7 @@ export function BirthRegistrationDialog({
                         placeholder="50.00"
                         {...field}
                         onChange={(e) => {
-                          field.onChange(maskHeight(e.target.value));
+                          field.onChange(maskHeightCm(e.target.value));
                         }}
                         className="input-field h-8 text-sm"
                       />
