@@ -54,6 +54,12 @@ export function ClientsListDialog({
   const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
   const [birthDialogOpen, setBirthDialogOpen] = useState(false);
   const isMobile = useIsMobile();
+  const navigate = useNavigate();
+
+  const goToConversation = (clientId: string) => {
+    onOpenChange(false);
+    navigate(`/mensagens?clientId=${clientId}`);
+  };
 
   const { data: clients, isLoading } = useQuery({
     queryKey: ["clients-list-dialog", status],
