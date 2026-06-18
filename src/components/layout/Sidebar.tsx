@@ -52,7 +52,7 @@ const navItems = [
     ],
   },
   { to: "/comunidade", icon: Users2, label: "Comunidade" },
-  { to: "/admin/assinatura", icon: Crown, label: "Assinatura" },
+  // { to: "/admin/assinatura", icon: Crown, label: "Assinatura" }, // Oculto temporariamente — em edição
   { to: "/configuracoes", icon: Settings, label: "Configurações" },
 ];
 
