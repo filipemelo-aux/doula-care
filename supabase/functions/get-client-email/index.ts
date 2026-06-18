@@ -61,8 +61,9 @@ Deno.serve(async (req) => {
     const { data: userData, error: userError } = await supabase.auth.admin.getUserById(userId);
 
     if (userError || !userData.user) {
+      console.error("getUserById failed", userError);
       return new Response(
-        JSON.stringify({ error: "User not found" }),
+        JSON.stringify({ error: "Não foi possível recuperar o email" }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 404 }
       );
     }
@@ -73,9 +74,8 @@ Deno.serve(async (req) => {
     );
   } catch (error) {
     console.error("Error:", error);
-    const message = error instanceof Error ? error.message : "Unknown error";
     return new Response(
-      JSON.stringify({ error: message }),
+      JSON.stringify({ error: "Operação falhou" }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
     );
   }

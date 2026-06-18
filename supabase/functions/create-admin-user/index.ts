@@ -97,11 +97,15 @@ Deno.serve(async (req) => {
     if (createError) {
       if (createError.message.includes("already been registered")) {
         return new Response(
-          JSON.stringify({ message: "Usuário já existe", exists: true }),
+          JSON.stringify({ message: "Conta processada", exists: true }),
           { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
         );
       }
-      throw createError;
+      console.error("createUser error:", createError);
+      return new Response(
+        JSON.stringify({ error: "Não foi possível criar o usuário" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
     if (userData.user && role) {
@@ -128,9 +132,8 @@ Deno.serve(async (req) => {
     );
   } catch (error) {
     console.error("Error:", error);
-    const message = error instanceof Error ? error.message : "Unknown error";
     return new Response(
-      JSON.stringify({ error: message }),
+      JSON.stringify({ error: "Operação falhou. Tente novamente." }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
     );
   }
