@@ -50,6 +50,8 @@ export function ClientsListDialog({
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [notificationDialogOpen, setNotificationDialogOpen] = useState(false);
   const [diaryDialogOpen, setDiaryDialogOpen] = useState(false);
+  const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
+  const [birthDialogOpen, setBirthDialogOpen] = useState(false);
   const isMobile = useIsMobile();
 
   const { data: clients, isLoading } = useQuery({
