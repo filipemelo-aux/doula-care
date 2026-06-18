@@ -234,7 +234,7 @@ export function BirthRegistrationDialog({
                       <Input
                         type="text"
                         inputMode="numeric"
-                        placeholder="50.00"
+                        placeholder="50,00"
                         {...field}
                         onChange={(e) => {
                           field.onChange(maskHeightCm(e.target.value));
