@@ -116,19 +116,19 @@ export function RevenueDetailDialog({ open, onOpenChange, transactionId }: Reven
         <div className="space-y-4">
           {/* Description */}
           <div>
-            <p className="text-sm font-medium flex items-center gap-1.5">
-              {transaction.is_auto_generated && <Zap className="h-3.5 w-3.5 text-warning" />}
-              {transaction.description}
-            </p>
-            {transaction.clients?.full_name && (
-              <p className="text-xs text-muted-foreground mt-0.5">
-                Cliente: {toTitleCase(transaction.clients.full_name)}
-              </p>
-            )}
-            {transaction.plan_settings?.name && (
-              <p className="text-xs text-muted-foreground">
-                Plano: {transaction.plan_settings.name}
-              </p>
+            {transaction.clients?.full_name ? (
+              <>
+                <p className="text-sm font-medium">
+                  {toTitleCase(transaction.clients.full_name)}
+                </p>
+                {transaction.plan_settings?.name && (
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Plano: {transaction.plan_settings.name}
+                  </p>
+                )}
+              </>
+            ) : (
+              <p className="text-sm font-medium">{transaction.description}</p>
             )}
           </div>
 
