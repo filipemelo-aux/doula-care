@@ -67,7 +67,7 @@ export function Sidebar({ isOpen, onToggle, onNavigate }: SidebarProps) {
   const { organizationId } = useAuth();
 
   const isFinancialRoute = ["/financeiro", "/despesas", "/relatorios"].includes(location.pathname);
-  const [financialOpen, setFinancialOpen] = useState(isFinancialRoute);
+  const financialOpen = true;
 
   const { data: promo } = useQuery({
     queryKey: ["my-org-promo", organizationId],
