@@ -1056,20 +1056,22 @@ export default function Financial() {
                           </TableCell>
                           <TableCell className="py-2.5">
                             <div className="flex items-center gap-1 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <Button
-                                    size="sm"
-                                    onClick={() => handleOpenPaymentDialog(transaction)}
-                                    className="h-7 px-2 gap-1 bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm hover:shadow transition-all text-xs font-medium"
-                                  >
-                                    <DollarSign className="h-3.5 w-3.5" />
-                                    <span className="hidden xl:inline">Registrar Pagamento</span>
-                                    <span className="xl:hidden">Receber</span>
-                                  </Button>
-                                </TooltipTrigger>
-                                <TooltipContent>Registrar pagamento</TooltipContent>
-                              </Tooltip>
+                              {!isPaid && (
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button
+                                      size="sm"
+                                      onClick={() => handleOpenPaymentDialog(transaction)}
+                                      className="h-7 px-2 gap-1 bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm hover:shadow transition-all text-xs font-medium"
+                                    >
+                                      <DollarSign className="h-3.5 w-3.5" />
+                                      <span className="hidden xl:inline">Registrar Pagamento</span>
+                                      <span className="xl:hidden">Receber</span>
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>Registrar pagamento</TooltipContent>
+                                </Tooltip>
+                              )}
                               <Tooltip>
                                 <TooltipTrigger asChild>
                                   <Button variant="ghost" size="sm" onClick={() => { setEditPaymentsTransaction(transaction); setEditPaymentsOpen(true); }} className="h-7 px-1.5 text-muted-foreground hover:text-foreground hover:bg-muted hover:shadow-sm transition-all">
