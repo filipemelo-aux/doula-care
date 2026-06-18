@@ -23,7 +23,19 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Baby } from "lucide-react";
 import type { Tables } from "@/integrations/supabase/types";
-import { maskWeight, maskHeight, parseWeight, parseHeight } from "@/lib/masks";
+import { maskWeight, parseWeight } from "@/lib/masks";
+
+// Local height mask: left-to-right fill, comma after 2 digits (e.g. "5" -> "5", "51" -> "51", "510" -> "51,0", "5100" -> "51,00")
+const maskHeightCm = (value: string): string => {
+  const digits = value.replace(/\D/g, "").slice(0, 4);
+  if (digits.length <= 2) return digits;
+  return `${digits.slice(0, 2)},${digits.slice(2)}`;
+};
+const parseHeightCm = (value: string): number | null => {
+  if (!value) return null;
+  const n = parseFloat(value.replace(",", "."));
+  return isNaN(n) ? null : n;
+};
 
 type Client = Tables<"clients">;
 
