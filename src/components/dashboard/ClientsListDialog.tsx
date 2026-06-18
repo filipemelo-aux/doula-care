@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -53,6 +54,12 @@ export function ClientsListDialog({
   const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
   const [birthDialogOpen, setBirthDialogOpen] = useState(false);
   const isMobile = useIsMobile();
+  const navigate = useNavigate();
+
+  const goToConversation = (clientId: string) => {
+    onOpenChange(false);
+    navigate(`/mensagens?clientId=${clientId}`);
+  };
 
   const { data: clients, isLoading } = useQuery({
     queryKey: ["clients-list-dialog", status],
@@ -203,18 +210,15 @@ export function ClientsListDialog({
                             <Button
                               size="icon"
                               variant="ghost"
-                              className="h-8 w-8 relative"
+                              className="h-8 w-8"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 setSelectedClient(client);
-                                setDiaryDialogOpen(true);
+                                setDetailsDialogOpen(true);
                               }}
-                              title="Ver diário"
+                              title="Ver detalhes"
                             >
-                              <BookHeart className="h-4 w-4 text-primary" />
-                              {recentDiaryEntries?.has(client.id) && (
-                                <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-primary animate-pulse" />
-                              )}
+                              <Eye className="h-4 w-4 text-primary" />
                             </Button>
                           )}
                           {status === "lactante" && (
@@ -253,10 +257,9 @@ export function ClientsListDialog({
                             className="h-8 w-8"
                             onClick={(e) => {
                               e.stopPropagation();
-                              setSelectedClient(client);
-                              setNotificationDialogOpen(true);
+                              goToConversation(client.id);
                             }}
-                            title="Enviar mensagem"
+                            title="Abrir conversa"
                           >
                             <MessageCircle className="h-4 w-4 text-primary" />
                           </Button>
@@ -277,18 +280,15 @@ export function ClientsListDialog({
                               <Button
                                 size="sm"
                                 variant="outline"
-                                className="h-5 px-1.5 text-[9px] relative"
+                                className="h-5 px-1.5 text-[9px]"
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   setSelectedClient(client);
-                                  setDiaryDialogOpen(true);
+                                  setDetailsDialogOpen(true);
                                 }}
                               >
-                                <BookHeart className="h-2.5 w-2.5 mr-0.5 text-primary" />
-                                Diário
-                                {recentDiaryEntries?.has(client.id) && (
-                                  <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-primary animate-pulse" />
-                                )}
+                                <Eye className="h-2.5 w-2.5 mr-0.5 text-primary" />
+                                Detalhes
                               </Button>
                               <Button
                                 size="sm"
@@ -296,8 +296,7 @@ export function ClientsListDialog({
                                 className="h-5 px-1.5 text-[9px]"
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  setSelectedClient(client);
-                                  setNotificationDialogOpen(true);
+                                  goToConversation(client.id);
                                 }}
                               >
                                 <MessageCircle className="h-2.5 w-2.5 mr-0.5 text-primary" />
@@ -374,8 +373,7 @@ export function ClientsListDialog({
                               className="h-5 px-1.5 text-[9px]"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                setSelectedClient(client);
-                                setNotificationDialogOpen(true);
+                                goToConversation(client.id);
                               }}
                             >
                               <MessageCircle className="h-2.5 w-2.5 mr-0.5 text-primary" />
