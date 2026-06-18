@@ -78,7 +78,7 @@ export function BirthRegistrationDialog({
         birth_date: client.birth_date || new Date().toISOString().split("T")[0],
         birth_time: client.birth_time ? client.birth_time.slice(0, 5) : "",
         birth_weight: client.birth_weight != null ? Number(client.birth_weight).toFixed(3) : "",
-        birth_height: client.birth_height != null ? Number(client.birth_height).toFixed(2) : "",
+        birth_height: client.birth_height != null ? Number(client.birth_height).toFixed(2).replace(".", ",") : "",
       });
     } else {
       form.reset({
