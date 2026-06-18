@@ -373,8 +373,7 @@ export function ClientsListDialog({
                               className="h-5 px-1.5 text-[9px]"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                setSelectedClient(client);
-                                setNotificationDialogOpen(true);
+                                goToConversation(client.id);
                               }}
                             >
                               <MessageCircle className="h-2.5 w-2.5 mr-0.5 text-primary" />
