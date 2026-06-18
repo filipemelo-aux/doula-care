@@ -126,17 +126,17 @@ export default function Clients() {
       return bd - ad;
     }
     if (statusFilter === "todas") {
-      // Prioridade: gestante > outro/tentante > lactante
-      const rank = (s: string) => (s === "gestante" ? 0 : s === "lactante" ? 2 : 1);
+      // Prioridade: gestante (DPP mais próxima primeiro) > lactante (recém primeiro) > demais
+      const rank = (s: string) => (s === "gestante" ? 0 : s === "lactante" ? 1 : 2);
       const ra = rank(a.status);
       const rb = rank(b.status);
       if (ra !== rb) return ra - rb;
-      if (a.status === "lactante" && b.status === "lactante") {
+      if (a.status === "lactante") {
         const ad = a.birth_date ? new Date(a.birth_date).getTime() : 0;
         const bd = b.birth_date ? new Date(b.birth_date).getTime() : 0;
         return bd - ad;
       }
-      // dpp asc (mais próxima no topo)
+      // gestante e demais: dpp asc (mais próxima no topo)
       const ad = a.dpp ? new Date(a.dpp).getTime() : Infinity;
       const bd = b.dpp ? new Date(b.dpp).getTime() : Infinity;
       return ad - bd;
