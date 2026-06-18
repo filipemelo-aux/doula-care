@@ -20,7 +20,9 @@ import {
   Clock, 
   MessageCircle,
   BookHeart,
-  UserRound
+  UserRound,
+  Eye,
+  Pencil
 } from "lucide-react";
 import { calculateCurrentPregnancyWeeks, calculateCurrentPregnancyDays, isPostTerm } from "@/lib/pregnancy";
 import { abbreviateName, formatBrazilDate } from "@/lib/utils";
@@ -28,6 +30,8 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { Tables } from "@/integrations/supabase/types";
 import { SendNotificationDialog } from "@/components/clients/SendNotificationDialog";
 import { ClientDiaryDialog } from "./ClientDiaryDialog";
+import { ClientDetailsDialog } from "@/components/clients/ClientDetailsDialog";
+import { BirthRegistrationDialog } from "@/components/clients/BirthRegistrationDialog";
 
 type Client = Tables<"clients">;
 type ClientStatus = "gestante" | "lactante" | "outro";
@@ -46,6 +50,8 @@ export function ClientsListDialog({
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [notificationDialogOpen, setNotificationDialogOpen] = useState(false);
   const [diaryDialogOpen, setDiaryDialogOpen] = useState(false);
+  const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
+  const [birthDialogOpen, setBirthDialogOpen] = useState(false);
   const isMobile = useIsMobile();
 
   const { data: clients, isLoading } = useQuery({
@@ -193,22 +199,54 @@ export function ClientsListDialog({
                       {/* Action buttons for gestantes & puérperas - desktop */}
                       {(status === "gestante" || status === "lactante") && !isMobile && (
                         <div className="flex gap-1 shrink-0">
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            className="h-8 w-8 relative"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setSelectedClient(client);
-                              setDiaryDialogOpen(true);
-                            }}
-                            title={status === "lactante" ? "Diário do Puerpério" : "Ver diário"}
-                          >
-                            <BookHeart className="h-4 w-4 text-primary" />
-                            {recentDiaryEntries?.has(client.id) && (
-                              <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-primary animate-pulse" />
-                            )}
-                          </Button>
+                          {status === "gestante" && (
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="h-8 w-8 relative"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedClient(client);
+                                setDiaryDialogOpen(true);
+                              }}
+                              title="Ver diário"
+                            >
+                              <BookHeart className="h-4 w-4 text-primary" />
+                              {recentDiaryEntries?.has(client.id) && (
+                                <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-primary animate-pulse" />
+                              )}
+                            </Button>
+                          )}
+                          {status === "lactante" && (
+                            <>
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                className="h-8 w-8"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setSelectedClient(client);
+                                  setDetailsDialogOpen(true);
+                                }}
+                                title="Ver detalhes"
+                              >
+                                <Eye className="h-4 w-4 text-primary" />
+                              </Button>
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                className="h-8 w-8"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setSelectedClient(client);
+                                  setBirthDialogOpen(true);
+                                }}
+                                title="Editar informações do parto"
+                              >
+                                <Pencil className="h-4 w-4 text-primary" />
+                              </Button>
+                            </>
+                          )}
                           <Button
                             size="icon"
                             variant="ghost"
@@ -303,22 +341,32 @@ export function ClientsListDialog({
                           </div>
                         )}
                         {isMobile && (
-                          <div className="flex gap-1 justify-end">
+                          <div className="flex gap-1 justify-end flex-wrap">
                             <Button
                               size="sm"
                               variant="outline"
-                              className="h-5 px-1.5 text-[9px] relative"
+                              className="h-5 px-1.5 text-[9px]"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 setSelectedClient(client);
-                                setDiaryDialogOpen(true);
+                                setDetailsDialogOpen(true);
                               }}
                             >
-                              <BookHeart className="h-2.5 w-2.5 mr-0.5 text-primary" />
-                              Diário
-                              {recentDiaryEntries?.has(client.id) && (
-                                <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-primary animate-pulse" />
-                              )}
+                              <Eye className="h-2.5 w-2.5 mr-0.5 text-primary" />
+                              Detalhes
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-5 px-1.5 text-[9px]"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedClient(client);
+                                setBirthDialogOpen(true);
+                              }}
+                            >
+                              <Pencil className="h-2.5 w-2.5 mr-0.5 text-primary" />
+                              Parto
                             </Button>
                             <Button
                               size="sm"
@@ -361,6 +409,20 @@ export function ClientsListDialog({
       <ClientDiaryDialog
         open={diaryDialogOpen}
         onOpenChange={setDiaryDialogOpen}
+        client={selectedClient}
+      />
+
+      {/* Client Details Dialog */}
+      <ClientDetailsDialog
+        open={detailsDialogOpen}
+        onOpenChange={setDetailsDialogOpen}
+        client={selectedClient}
+      />
+
+      {/* Birth Registration Dialog */}
+      <BirthRegistrationDialog
+        open={birthDialogOpen}
+        onOpenChange={setBirthDialogOpen}
         client={selectedClient}
       />
     </Dialog>
