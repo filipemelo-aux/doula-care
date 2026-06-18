@@ -66,7 +66,7 @@ export default function Reports() {
   const { plan, limits } = usePlanLimits();
   const { data: metrics } = useFinancialMetrics(period);
 
-  // Monthly chart data
+  // Monthly chart data — sourced from transactions only, matching top KPI
   const { data: monthlyData } = useQuery({
     queryKey: ["monthly-report", period],
     queryFn: async () => {
@@ -80,23 +80,21 @@ export default function Reports() {
         const startStr = format(start, "yyyy-MM-dd");
         const endStr = format(end, "yyyy-MM-dd");
 
-        const [{ data: transactions }, { data: payments }] = await Promise.all([
-          supabase.from("transactions").select("*").gte("date", startStr).lte("date", endStr),
-          supabase.from("payments").select("amount_paid, status").gte("due_date", startStr).lte("due_date", endStr),
-        ]);
+        const { data: transactions } = await supabase
+          .from("transactions")
+          .select("type, amount, amount_received, date")
+          .gte("date", startStr)
+          .lte("date", endStr);
 
-        // Received from payments (installments attributed to their due_date month)
-        const receivedFromPayments = (payments || [])
-          .filter((p) => p.status === "pago" || p.status === "parcial")
-          .reduce((sum, p) => sum + Number(p.amount_paid || 0), 0);
-        // Received from service/manual transactions (non-auto-generated)
-        const receivedFromServices = (transactions || [])
-          .filter((t) => t.type === "receita" && t.is_auto_generated === false)
-          .reduce((sum, t) => sum + Number(t.amount_received || 0), 0);
-        const income = receivedFromPayments + receivedFromServices;
-
-        const contracted = transactions?.filter((t) => t.type === "receita").reduce((sum, t) => sum + Number(t.amount), 0) || 0;
-        const expenses = transactions?.filter((t) => t.type === "despesa").reduce((sum, t) => sum + Number(t.amount), 0) || 0;
+        const income = transactions
+          ?.filter((t) => t.type === "receita")
+          .reduce((sum, t) => sum + Number(t.amount_received || 0), 0) || 0;
+        const contracted = transactions
+          ?.filter((t) => t.type === "receita")
+          .reduce((sum, t) => sum + Number(t.amount || 0), 0) || 0;
+        const expenses = transactions
+          ?.filter((t) => t.type === "despesa")
+          .reduce((sum, t) => sum + Number(t.amount || 0), 0) || 0;
 
         months.push({
           month: format(date, "MMM", { locale: ptBR }),
