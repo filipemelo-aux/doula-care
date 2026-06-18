@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { CheckCircle, Clock, AlertCircle, Zap } from "lucide-react";
+import { CheckCircle, Clock, AlertCircle } from "lucide-react";
 import { toTitleCase } from "@/lib/utils";
 
 interface RevenueDetailDialogProps {
