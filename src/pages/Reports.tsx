@@ -137,22 +137,24 @@ export default function Reports() {
     },
   });
 
-  // Income by payment method
+  // Income by payment method — uses amount_received to match the "Recebido" KPI
   const { data: incomeByMethod } = useQuery({
     queryKey: ["income-by-method", period],
     queryFn: async () => {
       const { start, end } = getPeriodDates(period);
       const { data } = await supabase
         .from("transactions")
-        .select("payment_method, amount")
+        .select("payment_method, amount_received")
         .eq("type", "receita")
         .gte("date", format(start, "yyyy-MM-dd"))
         .lte("date", format(end, "yyyy-MM-dd"));
 
       const methods: Record<string, number> = {};
       data?.forEach((t) => {
+        const received = Number(t.amount_received || 0);
+        if (received <= 0) return;
         const m = t.payment_method || "pix";
-        methods[m] = (methods[m] || 0) + Number(t.amount);
+        methods[m] = (methods[m] || 0) + received;
       });
 
       const labels: Record<string, string> = { pix: "PIX", cartao: "Cartão", dinheiro: "Dinheiro", transferencia: "Transf.", boleto: "Boleto" };
