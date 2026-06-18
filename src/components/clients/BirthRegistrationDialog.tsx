@@ -59,6 +59,25 @@ export function BirthRegistrationDialog({
     },
   });
 
+  useEffect(() => {
+    if (!open) return;
+    if (client?.birth_occurred) {
+      form.reset({
+        birth_date: client.birth_date || new Date().toISOString().split("T")[0],
+        birth_time: client.birth_time ? client.birth_time.slice(0, 5) : "",
+        birth_weight: client.birth_weight != null ? Number(client.birth_weight).toFixed(3) : "",
+        birth_height: client.birth_height != null ? Number(client.birth_height).toFixed(2) : "",
+      });
+    } else {
+      form.reset({
+        birth_date: new Date().toISOString().split("T")[0],
+        birth_time: "",
+        birth_weight: "",
+        birth_height: "",
+      });
+    }
+  }, [open, client?.id]);
+
   const mutation = useMutation({
     mutationFn: async (data: BirthFormData) => {
       if (!client) throw new Error("Cliente não encontrada");
