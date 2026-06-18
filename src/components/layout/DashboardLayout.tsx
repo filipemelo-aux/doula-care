@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import logo from "@/assets/logo.png";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { Sidebar } from "./Sidebar";
-import { Menu, LogOut, ChevronLeft, LayoutDashboard, Users, CalendarDays, MapPin, Baby } from "lucide-react";
+import { Menu, LogOut, ChevronLeft, LayoutDashboard, Users, CalendarDays, MessageCircle, Baby } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { PushNotificationToggle } from "@/components/pwa/PushNotificationToggle";
