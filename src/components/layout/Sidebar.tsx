@@ -156,62 +156,43 @@ export function Sidebar({ isOpen, onToggle, onNavigate }: SidebarProps) {
 
             return (
               <div key={item.label} className="mt-2">
-                <button
-                  onClick={() => {
-                    if (!allDisabled) handleNavClick(item.subItems[0].to);
-                  }}
-                  disabled={allDisabled}
-                  className={cn(
-                    "nav-link w-full text-left relative",
-                    isSubActive && "active",
-                    !isOpen && "lg:justify-center lg:px-0",
-                    allDisabled && "opacity-40 cursor-not-allowed hover:bg-transparent"
-                  )}
-                  title={!isOpen ? item.label : allDisabled ? "Recurso indisponível no seu plano" : undefined}
-                >
-                  <item.icon className="w-[18px] h-[18px] shrink-0" strokeWidth={1.8} />
-                  <span className={cn("transition-opacity flex-1 text-[13px]", !isOpen && "lg:hidden")}>
-                    {item.label}
-                  </span>
-                  <ChevronDown
-                    className={cn(
-                      "w-3.5 h-3.5 shrink-0 rotate-180",
-                      !isOpen && "lg:hidden"
-                    )}
-                    strokeWidth={2}
-                  />
-                </button>
-
-                {/* Submenu with accordion animation */}
                 <div
                   className={cn(
-                    "overflow-hidden transition-all duration-300 ease-out",
-                    financialOpen && isOpen ? "max-h-40 opacity-100" : "max-h-0 opacity-0"
+                    "flex items-center gap-2 px-3 pt-3 pb-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70",
+                    !isOpen && "lg:hidden"
                   )}
                 >
-                  <div className="ml-5 mt-1 space-y-0.5 pl-3 border-l border-border/40">
-                    {item.subItems.map((sub) => {
-                      const lk = subLimitKeys[sub.to];
-                      const subDisabled = lk ? !limits[lk] : false;
-                      const subActive = !subDisabled && location.pathname === sub.to;
-                      return (
-                        <button
-                          key={sub.to}
-                          onClick={() => !subDisabled && handleNavClick(sub.to)}
-                          disabled={subDisabled}
-                          className={cn(
-                            "nav-link w-full text-left text-[13px] py-2.5",
-                            subActive && "active",
-                            subDisabled && "opacity-40 cursor-not-allowed hover:bg-transparent"
-                          )}
-                        >
-                          <sub.icon className="w-4 h-4 shrink-0" strokeWidth={1.8} />
-                          <span className="flex-1">{sub.label}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
+                  <item.icon className="w-3.5 h-3.5 shrink-0" strokeWidth={1.8} />
+                  <span>{item.label}</span>
                 </div>
+
+                <div className="space-y-0.5">
+                  {item.subItems.map((sub) => {
+                    const lk = subLimitKeys[sub.to];
+                    const subDisabled = lk ? !limits[lk] : false;
+                    const subActive = !subDisabled && location.pathname === sub.to;
+                    return (
+                      <button
+                        key={sub.to}
+                        onClick={() => !subDisabled && handleNavClick(sub.to)}
+                        disabled={subDisabled}
+                        className={cn(
+                          "nav-link w-full text-left",
+                          subActive && "active",
+                          !isOpen && "lg:justify-center lg:px-0",
+                          subDisabled && "opacity-40 cursor-not-allowed hover:bg-transparent"
+                        )}
+                        title={!isOpen ? sub.label : undefined}
+                      >
+                        <sub.icon className="w-[18px] h-[18px] shrink-0" strokeWidth={1.8} />
+                        <span className={cn("transition-opacity flex-1 text-[13px]", !isOpen && "lg:hidden")}>
+                          {sub.label}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+
 
                 {/* Collapsed: sub-items as icons */}
                 {!isOpen && (
