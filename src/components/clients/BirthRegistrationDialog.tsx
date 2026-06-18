@@ -23,7 +23,19 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Baby } from "lucide-react";
 import type { Tables } from "@/integrations/supabase/types";
-import { maskWeight, maskHeight, parseWeight, parseHeight } from "@/lib/masks";
+import { maskWeight, parseWeight } from "@/lib/masks";
+
+// Local height mask: left-to-right fill, comma after 2 digits (e.g. "5" -> "5", "51" -> "51", "510" -> "51,0", "5100" -> "51,00")
+const maskHeightCm = (value: string): string => {
+  const digits = value.replace(/\D/g, "").slice(0, 4);
+  if (digits.length <= 2) return digits;
+  return `${digits.slice(0, 2)},${digits.slice(2)}`;
+};
+const parseHeightCm = (value: string): number | null => {
+  if (!value) return null;
+  const n = parseFloat(value.replace(",", "."));
+  return isNaN(n) ? null : n;
+};
 
 type Client = Tables<"clients">;
 
@@ -66,7 +78,7 @@ export function BirthRegistrationDialog({
         birth_date: client.birth_date || new Date().toISOString().split("T")[0],
         birth_time: client.birth_time ? client.birth_time.slice(0, 5) : "",
         birth_weight: client.birth_weight != null ? Number(client.birth_weight).toFixed(3) : "",
-        birth_height: client.birth_height != null ? Number(client.birth_height).toFixed(2) : "",
+        birth_height: client.birth_height != null ? Number(client.birth_height).toFixed(2).replace(".", ",") : "",
       });
     } else {
       form.reset({
@@ -90,7 +102,7 @@ export function BirthRegistrationDialog({
           birth_date: data.birth_date,
           birth_time: data.birth_time || null,
           birth_weight: parseWeight(data.birth_weight),
-          birth_height: parseHeight(data.birth_height),
+          birth_height: parseHeightCm(data.birth_height),
           status: "lactante",
           labor_started_at: null, // Clear labor status
         })
@@ -222,10 +234,10 @@ export function BirthRegistrationDialog({
                       <Input
                         type="text"
                         inputMode="numeric"
-                        placeholder="50.00"
+                        placeholder="50,00"
                         {...field}
                         onChange={(e) => {
-                          field.onChange(maskHeight(e.target.value));
+                          field.onChange(maskHeightCm(e.target.value));
                         }}
                         className="input-field h-8 text-sm"
                       />
