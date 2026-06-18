@@ -411,6 +411,20 @@ export function ClientsListDialog({
         onOpenChange={setDiaryDialogOpen}
         client={selectedClient}
       />
+
+      {/* Client Details Dialog */}
+      <ClientDetailsDialog
+        open={detailsDialogOpen}
+        onOpenChange={setDetailsDialogOpen}
+        client={selectedClient}
+      />
+
+      {/* Birth Registration Dialog */}
+      <BirthRegistrationDialog
+        open={birthDialogOpen}
+        onOpenChange={setBirthDialogOpen}
+        client={selectedClient}
+      />
     </Dialog>
   );
 }
