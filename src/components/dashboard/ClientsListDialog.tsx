@@ -20,7 +20,9 @@ import {
   Clock, 
   MessageCircle,
   BookHeart,
-  UserRound
+  UserRound,
+  Eye,
+  Pencil
 } from "lucide-react";
 import { calculateCurrentPregnancyWeeks, calculateCurrentPregnancyDays, isPostTerm } from "@/lib/pregnancy";
 import { abbreviateName, formatBrazilDate } from "@/lib/utils";
@@ -28,6 +30,8 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { Tables } from "@/integrations/supabase/types";
 import { SendNotificationDialog } from "@/components/clients/SendNotificationDialog";
 import { ClientDiaryDialog } from "./ClientDiaryDialog";
+import { ClientDetailsDialog } from "@/components/clients/ClientDetailsDialog";
+import { BirthRegistrationDialog } from "@/components/clients/BirthRegistrationDialog";
 
 type Client = Tables<"clients">;
 type ClientStatus = "gestante" | "lactante" | "outro";
