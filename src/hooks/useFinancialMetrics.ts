@@ -93,18 +93,21 @@ export function useFinancialMetrics(period?: PeriodOption) {
       const clientPlanTotal = clients.reduce((sum, c) => sum + Number(c.plan_value || 0), 0);
       const averageTicket = clientsWithRevenue > 0 ? clientPlanTotal / clientsWithRevenue : 0;
 
-      // Monthly average: group all-time received by month from transactions
-      const monthlyTotals: Record<string, number> = {};
-      allTransactions
-        .filter((t) => t.type === "receita")
-        .forEach((t) => {
-          const month = t.date?.substring(0, 7) || "unknown";
-          monthlyTotals[month] = (monthlyTotals[month] || 0) + Number(t.amount_received || 0);
-        });
-      const months = Object.keys(monthlyTotals).length;
-      const monthlyAverageRevenue = months > 0
-        ? Object.values(monthlyTotals).reduce((a, b) => a + b, 0) / months
-        : 0;
+      // Monthly average revenue (period-based, matches top KPI scope)
+      const monthsInPeriod = period === "year" ? 12 : period === "semester" ? 6 : period === "quarter" ? 3 : 1;
+      const monthlyAverageRevenue = period
+        ? totalReceived / monthsInPeriod
+        : (() => {
+            const monthlyTotals: Record<string, number> = {};
+            allTransactions
+              .filter((t) => t.type === "receita")
+              .forEach((t) => {
+                const month = t.date?.substring(0, 7) || "unknown";
+                monthlyTotals[month] = (monthlyTotals[month] || 0) + Number(t.amount_received || 0);
+              });
+            const months = Object.keys(monthlyTotals).length;
+            return months > 0 ? Object.values(monthlyTotals).reduce((a, b) => a + b, 0) / months : 0;
+          })();
 
       // Default rate: pending / total contracted
       const defaultRate = totalContracted > 0
