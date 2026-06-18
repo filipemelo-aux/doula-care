@@ -257,10 +257,9 @@ export function ClientsListDialog({
                             className="h-8 w-8"
                             onClick={(e) => {
                               e.stopPropagation();
-                              setSelectedClient(client);
-                              setNotificationDialogOpen(true);
+                              goToConversation(client.id);
                             }}
-                            title="Enviar mensagem"
+                            title="Abrir conversa"
                           >
                             <MessageCircle className="h-4 w-4 text-primary" />
                           </Button>
