@@ -155,10 +155,10 @@ export function Sidebar({ isOpen, onToggle, onNavigate }: SidebarProps) {
             const isSubActive = item.subItems.some((s) => location.pathname === s.to);
 
             return (
-              <div key={item.label} className="mt-2">
+              <div key={item.label} className="mt-3 pt-3 border-t border-border/40">
                 <div
                   className={cn(
-                    "flex items-center gap-2 px-3 pt-3 pb-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70",
+                    "flex items-center gap-2 px-3 pb-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground/60",
                     !isOpen && "lg:hidden"
                   )}
                 >
@@ -192,6 +192,7 @@ export function Sidebar({ isOpen, onToggle, onNavigate }: SidebarProps) {
                     );
                   })}
                 </div>
+
 
 
                 {/* Collapsed: sub-items as icons */}
