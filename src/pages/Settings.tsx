@@ -126,7 +126,7 @@ export default function Settings() {
     email: "",
     password: "",
     fullName: "",
-    role: "moderator" as "admin" | "moderator" | "user",
+    role: "moderator" as "admin" | "moderator",
   });
   const [passwordData, setPasswordData] = useState({
     newPassword: "",
@@ -475,14 +475,14 @@ export default function Settings() {
                           </div>
                           <div className="space-y-2">
                             <Label>Permissão</Label>
-                            <Select value={newUserData.role} onValueChange={(v: "admin" | "moderator" | "user") => setNewUserData({ ...newUserData, role: v })}>
+                            <Select value={newUserData.role} onValueChange={(v: "admin" | "moderator") => setNewUserData({ ...newUserData, role: v })}>
                               <SelectTrigger><SelectValue /></SelectTrigger>
                               <SelectContent>
-                                <SelectItem value="user">Usuário</SelectItem>
                                 <SelectItem value="moderator">Moderador</SelectItem>
                                 {callerIsAdmin && <SelectItem value="admin">Administrador</SelectItem>}
                               </SelectContent>
                             </Select>
+
                           </div>
                           <Button onClick={handleCreateUser} className="w-full" disabled={createUserMutation.isPending}>
                             {createUserMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Criar Usuário"}

@@ -41,16 +41,18 @@ Deno.serve(async (req) => {
       );
     }
 
-    const { data: roleData } = await supabase
+    const { data: callerRoles } = await supabase
       .from("user_roles")
       .select("role")
       .eq("user_id", callingUser.id)
-      .in("role", ["admin"])
-      .maybeSingle();
+      .in("role", ["admin", "moderator"]);
 
-    if (!roleData) {
+    const callerIsAdmin = callerRoles?.some((r) => r.role === "admin") ?? false;
+    const callerIsModerator = callerRoles?.some((r) => r.role === "moderator") ?? false;
+
+    if (!callerIsAdmin && !callerIsModerator) {
       return new Response(
-        JSON.stringify({ error: "Admin role required" }),
+        JSON.stringify({ error: "Admin or moderator role required" }),
         { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -85,6 +87,21 @@ Deno.serve(async (req) => {
         { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
+
+    if (role === "admin" && !callerIsAdmin) {
+      return new Response(
+        JSON.stringify({ error: "Moderadores não podem criar administradores" }),
+        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    if (!["admin", "moderator"].includes(role)) {
+      return new Response(
+        JSON.stringify({ error: "Papel inválido. Use 'admin' ou 'moderator'." }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
 
     // Create user with service role (bypasses email confirmation)
     const { data: userData, error: createError } = await supabase.auth.admin.createUser({
