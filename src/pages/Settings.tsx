@@ -126,7 +126,7 @@ export default function Settings() {
     email: "",
     password: "",
     fullName: "",
-    role: "moderator" as "admin" | "moderator" | "user",
+    role: "moderator" as "admin" | "moderator",
   });
   const [passwordData, setPasswordData] = useState({
     newPassword: "",
