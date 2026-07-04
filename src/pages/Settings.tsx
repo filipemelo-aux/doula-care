@@ -127,7 +127,10 @@ export default function Settings() {
     password: "",
     fullName: "",
     role: "moderator" as "admin" | "moderator",
+    sendInvite: false,
   });
+  const [resetUserId, setResetUserId] = useState<string | null>(null);
+  const [resetResult, setResetResult] = useState<{ name: string; password: string } | null>(null);
   const [passwordData, setPasswordData] = useState({
     newPassword: "",
     confirmPassword: "",
@@ -217,21 +220,48 @@ export default function Settings() {
       const { data, error } = await supabase.functions.invoke("create-admin-user", {
         body: { ...userData, organizationId },
       });
-      if (error) throw error;
-      if (data.error) throw new Error(data.error);
+      if (error) {
+        // Try to parse structured error from edge function response
+        try {
+          const raw = (error as any).context?.body || (error as any).message;
+          const parsed = typeof raw === "string" ? JSON.parse(raw) : raw;
+          if (parsed?.code === "duplicate_email") throw new Error("Este email já está cadastrado no sistema");
+          if (parsed?.error) throw new Error(parsed.error);
+        } catch (parseErr) {
+          if (parseErr instanceof Error && parseErr.message !== error.message) throw parseErr;
+        }
+        throw error;
+      }
+      if (data?.error) {
+        if (data?.code === "duplicate_email") throw new Error("Este email já está cadastrado no sistema");
+        throw new Error(data.error);
+      }
       return data;
     },
     onSuccess: (data) => {
-      if (data.exists) {
-        toast.info("Usuário já existe no sistema");
-      } else {
-        toast.success("Usuário criado com sucesso!");
-        queryClient.invalidateQueries({ queryKey: ["users-with-roles"] });
-      }
+      toast.success(data?.invited ? "Convite enviado por email!" : "Usuário criado com sucesso!");
+      queryClient.invalidateQueries({ queryKey: ["users-with-roles"] });
       setNewUserOpen(false);
-      setNewUserData({ email: "", password: "", fullName: "", role: "moderator" });
+      setNewUserData({ email: "", password: "", fullName: "", role: "moderator", sendInvite: false });
     },
     onError: (error) => toast.error("Erro ao criar usuário", { description: error.message }),
+  });
+
+  const resetPasswordMutation = useMutation({
+    mutationFn: async (userId: string) => {
+      const { data, error } = await supabase.functions.invoke("manage-admin-user", {
+        body: { action: "reset-password", userId },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      return data as { newPassword: string };
+    },
+    onSuccess: (data, userId) => {
+      const target = usersWithRoles?.find((u) => u.user_id === userId);
+      setResetResult({ name: target?.full_name || "Usuário", password: data.newPassword });
+      setResetUserId(null);
+    },
+    onError: (error) => toast.error("Erro ao resetar senha", { description: error.message }),
   });
 
   const updateUserMutation = useMutation({
@@ -272,6 +302,10 @@ export default function Settings() {
     mutationFn: async (newPassword: string) => {
       const { error } = await supabase.auth.updateUser({ password: newPassword });
       if (error) throw error;
+      // Clear must_change_password flag if it was set (e.g. after invite/reset)
+      if (user?.id) {
+        await supabase.from("profiles").update({ must_change_password: false } as any).eq("user_id", user.id);
+      }
       await promptToSaveUpdatedPassword(newPassword, user?.email);
     },
     onSuccess: () => {
@@ -322,8 +356,12 @@ export default function Settings() {
       toast.error(`Seu plano permite no máximo ${limits.maxCollaborators} colaboradores.`);
       return;
     }
-    if (!newUserData.email || !newUserData.password) {
-      toast.error("Preencha email e senha");
+    if (!newUserData.email) {
+      toast.error("Informe o email");
+      return;
+    }
+    if (!newUserData.sendInvite && !newUserData.password) {
+      toast.error("Informe uma senha ou marque enviar convite por email");
       return;
     }
     createUserMutation.mutate(newUserData);
@@ -469,10 +507,23 @@ export default function Settings() {
                             <Label>Email</Label>
                             <Input type="email" value={newUserData.email} onChange={(e) => setNewUserData({ ...newUserData, email: e.target.value })} placeholder="email@exemplo.com" />
                           </div>
-                          <div className="space-y-2">
-                            <Label>Senha</Label>
-                            <Input type="password" value={newUserData.password} onChange={(e) => setNewUserData({ ...newUserData, password: e.target.value })} placeholder="••••••••" />
+                          <div className="flex items-center justify-between rounded-lg border border-border/50 p-3">
+                            <div className="space-y-0.5">
+                              <Label className="text-sm">Enviar convite por email</Label>
+                              <p className="text-[11px] text-muted-foreground">O membro define a própria senha pelo link recebido</p>
+                            </div>
+                            <Switch
+                              checked={newUserData.sendInvite}
+                              onCheckedChange={(v) => setNewUserData({ ...newUserData, sendInvite: v, password: v ? "" : newUserData.password })}
+                            />
                           </div>
+                          {!newUserData.sendInvite && (
+                            <div className="space-y-2">
+                              <Label>Senha temporária</Label>
+                              <Input type="password" value={newUserData.password} onChange={(e) => setNewUserData({ ...newUserData, password: e.target.value })} placeholder="••••••••" />
+                              <p className="text-[11px] text-muted-foreground">O membro será obrigado a trocar esta senha no primeiro acesso</p>
+                            </div>
+                          )}
                           <div className="space-y-2">
                             <Label>Permissão</Label>
                             <Select value={newUserData.role} onValueChange={(v: "admin" | "moderator") => setNewUserData({ ...newUserData, role: v })}>
@@ -482,10 +533,9 @@ export default function Settings() {
                                 {callerIsAdmin && <SelectItem value="admin">Administrador</SelectItem>}
                               </SelectContent>
                             </Select>
-
                           </div>
                           <Button onClick={handleCreateUser} className="w-full" disabled={createUserMutation.isPending}>
-                            {createUserMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Criar Usuário"}
+                            {createUserMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : (newUserData.sendInvite ? "Enviar convite" : "Criar Usuário")}
                           </Button>
                         </div>
                       </DialogContent>
@@ -533,6 +583,11 @@ export default function Settings() {
                                 <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground" onClick={() => openEditUser(userProfile)} title="Editar">
                                   <Edit2 className="h-3.5 w-3.5" />
                                 </Button>
+                                {!isCurrentUser(userProfile.user_id) && (
+                                  <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground" onClick={() => setResetUserId(userProfile.user_id)} title="Resetar senha">
+                                    <Key className="h-3.5 w-3.5" />
+                                  </Button>
+                                )}
                                 {!isCurrentUser(userProfile.user_id) && (
                                   <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => setDeleteUserId(userProfile.user_id)} title="Excluir">
                                     <Trash2 className="h-3.5 w-3.5" />
@@ -675,7 +730,6 @@ export default function Settings() {
               <Select value={editRole} onValueChange={setEditRole}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="user">Usuário</SelectItem>
                   <SelectItem value="moderator">Moderador</SelectItem>
                   {callerIsAdmin && <SelectItem value="admin">Administrador</SelectItem>}
                 </SelectContent>
@@ -718,6 +772,52 @@ export default function Settings() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Reset Password Confirmation */}
+      <AlertDialog open={!!resetUserId} onOpenChange={(o) => !o && setResetUserId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Resetar senha deste membro?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Uma nova senha temporária será gerada. O membro será obrigado a trocá-la no próximo acesso.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={() => resetUserId && resetPasswordMutation.mutate(resetUserId)}>
+              {resetPasswordMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : null}
+              Resetar senha
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Reset Password Result */}
+      <Dialog open={!!resetResult} onOpenChange={(o) => !o && setResetResult(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader><DialogTitle>Senha temporária gerada</DialogTitle></DialogHeader>
+          <div className="space-y-3 py-2">
+            <p className="text-sm text-muted-foreground">
+              Envie esta senha para <strong>{resetResult?.name}</strong>. Ela expira no primeiro uso.
+            </p>
+            <div className="rounded-lg bg-muted p-3 text-center">
+              <p className="font-mono text-lg font-bold tracking-widest select-all">{resetResult?.password}</p>
+            </div>
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={() => {
+                if (resetResult?.password) {
+                  navigator.clipboard.writeText(resetResult.password);
+                  toast.success("Senha copiada!");
+                }
+              }}
+            >
+              Copiar senha
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Edit Plan Dialog */}
       <Dialog open={planDialogOpen} onOpenChange={setPlanDialogOpen}>

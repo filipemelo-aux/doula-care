@@ -5,6 +5,13 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+function jsonResponse(body: Record<string, unknown>, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -15,31 +22,16 @@ Deno.serve(async (req) => {
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
     const supabase = createClient(supabaseUrl, serviceRoleKey, {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false,
-      },
+      auth: { autoRefreshToken: false, persistSession: false },
     });
 
-    // Verify caller is authenticated admin
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader) {
-      return new Response(
-        JSON.stringify({ error: "Missing authorization" }),
-        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
+    if (!authHeader) return jsonResponse({ error: "Missing authorization" }, 401);
 
     const { data: { user: callingUser }, error: authError } = await supabase.auth.getUser(
       authHeader.replace("Bearer ", "")
     );
-
-    if (authError || !callingUser) {
-      return new Response(
-        JSON.stringify({ error: "Invalid token" }),
-        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
+    if (authError || !callingUser) return jsonResponse({ error: "Invalid token" }, 401);
 
     const { data: callerRoles } = await supabase
       .from("user_roles")
@@ -51,13 +43,9 @@ Deno.serve(async (req) => {
     const callerIsModerator = callerRoles?.some((r) => r.role === "moderator") ?? false;
 
     if (!callerIsAdmin && !callerIsModerator) {
-      return new Response(
-        JSON.stringify({ error: "Admin or moderator role required" }),
-        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      return jsonResponse({ error: "Admin or moderator role required" }, 403);
     }
 
-    // Validate caller's organization is active
     const { data: callerProfile } = await supabase
       .from("profiles")
       .select("organization_id")
@@ -70,88 +58,88 @@ Deno.serve(async (req) => {
         .select("status")
         .eq("id", callerProfile.organization_id)
         .single();
-
       if (org?.status === "suspenso") {
-        return new Response(
-          JSON.stringify({ error: "Sua organização está suspensa" }),
-          { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
+        return jsonResponse({ error: "Sua organização está suspensa" }, 403);
       }
     }
 
-    const { email, password, fullName, role, organizationId } = await req.json();
+    const { email, password, fullName, role, organizationId, sendInvite } = await req.json();
 
     if (role === "super_admin") {
-      return new Response(
-        JSON.stringify({ error: "A atribuição de Super Admin está desativada" }),
-        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      return jsonResponse({ error: "A atribuição de Super Admin está desativada" }, 403);
     }
-
     if (role === "admin" && !callerIsAdmin) {
-      return new Response(
-        JSON.stringify({ error: "Moderadores não podem criar administradores" }),
-        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      return jsonResponse({ error: "Moderadores não podem criar administradores" }, 403);
     }
-
     if (!["admin", "moderator"].includes(role)) {
-      return new Response(
-        JSON.stringify({ error: "Papel inválido. Use 'admin' ou 'moderator'." }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      return jsonResponse({ error: "Papel inválido. Use 'admin' ou 'moderator'." }, 400);
+    }
+    if (!email) {
+      return jsonResponse({ error: "Email é obrigatório" }, 400);
+    }
+    if (!sendInvite && !password) {
+      return jsonResponse({ error: "Informe uma senha ou marque enviar convite por email" }, 400);
     }
 
+    // Pre-check duplicate email so we can give clear feedback
+    const { data: existingList } = await supabase.auth.admin.listUsers({ page: 1, perPage: 1 });
+    // listUsers doesn't filter — fallback: try create and detect duplicate below
 
-    // Create user with service role (bypasses email confirmation)
-    const { data: userData, error: createError } = await supabase.auth.admin.createUser({
-      email,
-      password,
-      email_confirm: true,
-      user_metadata: { full_name: fullName },
+    let createdUserId: string | null = null;
+
+    if (sendInvite) {
+      // Send invite email (Supabase default sender); user sets own password via link
+      const { data: inviteData, error: inviteError } = await supabase.auth.admin.inviteUserByEmail(
+        email,
+        { data: { full_name: fullName } }
+      );
+      if (inviteError) {
+        if (inviteError.message?.toLowerCase().includes("already")) {
+          return jsonResponse({ error: "Este email já está cadastrado no sistema", code: "duplicate_email" }, 409);
+        }
+        console.error("inviteUser error:", inviteError);
+        return jsonResponse({ error: "Não foi possível enviar o convite" }, 500);
+      }
+      createdUserId = inviteData.user?.id ?? null;
+    } else {
+      const { data: userData, error: createError } = await supabase.auth.admin.createUser({
+        email,
+        password,
+        email_confirm: true,
+        user_metadata: { full_name: fullName },
+      });
+
+      if (createError) {
+        if (createError.message?.toLowerCase().includes("already")) {
+          return jsonResponse({ error: "Este email já está cadastrado no sistema", code: "duplicate_email" }, 409);
+        }
+        console.error("createUser error:", createError);
+        return jsonResponse({ error: "Não foi possível criar o usuário" }, 500);
+      }
+      createdUserId = userData.user?.id ?? null;
+    }
+
+    if (createdUserId) {
+      await supabase.from("user_roles").insert({ user_id: createdUserId, role });
+
+      const profileUpdate: Record<string, unknown> = {};
+      if (organizationId) profileUpdate.organization_id = organizationId;
+      // Force password change on first login when admin set the initial password.
+      // When sendInvite is used, the user already defines their own password.
+      if (!sendInvite) profileUpdate.must_change_password = true;
+
+      if (Object.keys(profileUpdate).length > 0) {
+        await supabase.from("profiles").update(profileUpdate).eq("user_id", createdUserId);
+      }
+    }
+
+    return jsonResponse({
+      message: sendInvite ? "Convite enviado" : "Usuário criado com sucesso",
+      user: { id: createdUserId, email },
+      invited: !!sendInvite,
     });
-
-    if (createError) {
-      if (createError.message.includes("already been registered")) {
-        return new Response(
-          JSON.stringify({ message: "Conta processada", exists: true }),
-          { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
-        );
-      }
-      console.error("createUser error:", createError);
-      return new Response(
-        JSON.stringify({ error: "Não foi possível criar o usuário" }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    if (userData.user && role) {
-      const { error: roleError } = await supabase
-        .from("user_roles")
-        .insert({ user_id: userData.user.id, role });
-
-      if (roleError) {
-        console.error("Error assigning role:", roleError);
-      }
-
-      // Set organization_id on the user's profile
-      if (organizationId) {
-        await supabase.from("profiles").update({ organization_id: organizationId }).eq("user_id", userData.user.id);
-      }
-    }
-
-    return new Response(
-      JSON.stringify({ 
-        message: "Usuário criado com sucesso", 
-        user: { id: userData.user?.id, email: userData.user?.email } 
-      }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
-    );
   } catch (error) {
     console.error("Error:", error);
-    return new Response(
-      JSON.stringify({ error: "Operação falhou. Tente novamente." }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
-    );
+    return jsonResponse({ error: "Operação falhou. Tente novamente." }, 500);
   }
 });

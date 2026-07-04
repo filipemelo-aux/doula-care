@@ -1,6 +1,8 @@
 import { useState } from "react";
+import { Navigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { usePlanLimits } from "@/hooks/usePlanLimits";
+import { useAuth } from "@/contexts/AuthContext";
 import { UpgradeBanner } from "@/components/plan/UpgradeBanner";
 import { useFinancialMetrics, formatCurrency } from "@/hooks/useFinancialMetrics";
 import { supabase } from "@/integrations/supabase/client";
@@ -64,7 +66,13 @@ export default function Reports() {
   const [activeTab, setActiveTab] = useState<ReportTab>("financeiro");
   const [exporting, setExporting] = useState(false);
   const { plan, limits } = usePlanLimits();
+  const { role } = useAuth();
   const { data: metrics } = useFinancialMetrics(period);
+
+  // Bloqueio para moderadores: relatórios expõem dados agregados de ganhos/lucros
+  if (role === "moderator") {
+    return <Navigate to="/admin" replace />;
+  }
 
   // Monthly chart data — sourced from transactions only, matching top KPI
   const { data: monthlyData } = useQuery({

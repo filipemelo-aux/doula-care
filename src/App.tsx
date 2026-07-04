@@ -15,6 +15,7 @@ import Reports from "./pages/Reports";
 import Cobrancas from "./pages/Cobrancas";
 
 import Settings from "./pages/Settings";
+import AdminChangePassword from "./pages/AdminChangePassword";
 import Agenda from "./pages/Agenda";
 import NotFound from "./pages/NotFound";
 import Register from "./pages/Register";
@@ -200,6 +201,16 @@ const App = () => (
               element={
                 <ProtectedRoute allowedRoles={["client"]}>
                   <GestanteProfile />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Admin change password (before layout guard so it renders standalone) */}
+            <Route
+              path="/admin/alterar-senha"
+              element={
+                <ProtectedRoute allowedRoles={["admin", "moderator"]}>
+                  <AdminChangePassword />
                 </ProtectedRoute>
               }
             />

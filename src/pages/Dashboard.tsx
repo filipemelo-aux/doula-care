@@ -22,7 +22,8 @@ export default function Dashboard() {
   const [outrosDialogOpen, setOutrosDialogOpen] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [showWelcome, setShowWelcome] = useState(false);
-  const { profileName, user } = useAuth();
+  const { profileName, user, role } = useAuth();
+  const canSeeFinancials = role !== "moderator";
 
   useEffect(() => {
     if (!user) return;
@@ -71,11 +72,11 @@ export default function Dashboard() {
             Acompanhe suas clientes e o desempenho do seu negócio
           </p>
         </div>
-        <PeriodFilter selected={period} onChange={setPeriod} />
+        {canSeeFinancials && <PeriodFilter selected={period} onChange={setPeriod} />}
       </div>
 
-      {/* ═══ 1 — Financeiro ═══ */}
-      <FinancialOverview period={period} />
+      {/* ═══ 1 — Financeiro (oculto para moderadores) ═══ */}
+      {canSeeFinancials && <FinancialOverview period={period} />}
 
       {/* ═══ 2 — Compromissos ═══ */}
       <UpcomingAppointments />
@@ -112,8 +113,8 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* ═══ 4 — Planos mais contratados ═══ */}
-      <TopPlansCard />
+      {/* ═══ 4 — Planos mais contratados (oculto para moderadores — dado agregado financeiro) ═══ */}
+      {canSeeFinancials && <TopPlansCard />}
 
       {/* Dialogs */}
       <ClientsListDialog open={gestantesDialogOpen} onOpenChange={setGestantesDialogOpen} status="gestante" />

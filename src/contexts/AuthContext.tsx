@@ -30,12 +30,14 @@ interface AuthContextType {
   isVisitor: boolean;
   client: ClientData | null;
   isFirstLogin: boolean;
+  mustChangePassword: boolean;
   profileName: string | null;
   organizationId: string | null;
   orgStatus: OrgStatus | null;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
   refreshClientData: () => Promise<void>;
+  refreshMustChangePassword: () => Promise<void>;
   setFirstLoginComplete: () => void;
 }
 
@@ -53,6 +55,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profileName, setProfileName] = useState<string | null>(null);
   const [organizationId, setOrganizationId] = useState<string | null>(null);
   const [orgStatus, setOrgStatus] = useState<OrgStatus | null>(null);
+  const [mustChangePassword, setMustChangePassword] = useState(false);
   // Flag to prevent onAuthStateChange from re-running initializeUser when signIn already handled it
   const signInHandledRef = useRef(false);
   const accessLoggedRef = useRef<string | null>(null);
@@ -157,12 +160,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         try {
           const { data: profile } = await supabase
             .from("profiles")
-            .select("full_name, organization_id")
+            .select("full_name, organization_id, must_change_password")
             .eq("user_id", currentSession.user.id)
             .maybeSingle();
           setProfileName(profile?.full_name || null);
           const orgId = profile?.organization_id || null;
           setOrganizationId(orgId);
+          setMustChangePassword(Boolean((profile as any)?.must_change_password));
           if (orgId) {
             const { data: org } = await supabase.from("organizations").select("status").eq("id", orgId).single();
             setOrgStatus((org?.status as OrgStatus) || null);
@@ -171,6 +175,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setProfileName(null);
           setOrganizationId(null);
           setOrgStatus(null);
+          setMustChangePassword(false);
         }
       }
     } catch (error) {
@@ -373,6 +378,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setClient(clientData);
   };
 
+  const refreshMustChangePassword = async () => {
+    if (!user) return;
+    const { data } = await supabase
+      .from("profiles")
+      .select("must_change_password")
+      .eq("user_id", user.id)
+      .maybeSingle();
+    setMustChangePassword(Boolean((data as any)?.must_change_password));
+  };
+
   const setFirstLoginComplete = () => {
     if (client) {
       setClient({ ...client, first_login: false });
@@ -399,12 +414,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isVisitor,
         client,
         isFirstLogin: client?.first_login ?? false,
+        mustChangePassword,
         profileName,
         organizationId,
         orgStatus,
         signIn,
         signOut,
         refreshClientData,
+        refreshMustChangePassword,
         setFirstLoginComplete,
       }}
     >

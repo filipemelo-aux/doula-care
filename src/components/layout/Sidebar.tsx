@@ -66,7 +66,20 @@ export function Sidebar({ isOpen, onToggle, onNavigate }: SidebarProps) {
   const { planLabel, plan, limits } = usePlanLimits();
   const { logoUrl: orgLogo, displayName } = useOrgBranding();
   const { unreadMessages, unreadNotifications } = useAdminUnreadCounts();
-  const { organizationId } = useAuth();
+  const { organizationId, role } = useAuth();
+  const isModerator = role === "moderator";
+
+  // Moderadores não têm acesso a relatórios/resumos agregados de ganhos
+  const visibleNavItems = navItems
+    .map((item) => {
+      if ("subItems" in item && item.subItems) {
+        return {
+          ...item,
+          subItems: isModerator ? item.subItems.filter((s) => s.to !== "/relatorios") : item.subItems,
+        };
+      }
+      return item;
+    });
 
   const isFinancialRoute = ["/financeiro", "/despesas", "/cobrancas", "/relatorios"].includes(location.pathname);
   const financialOpen = true;
@@ -142,7 +155,7 @@ export function Sidebar({ isOpen, onToggle, onNavigate }: SidebarProps) {
 
       {/* Navigation */}
       <nav className="flex-1 py-4 px-3 space-y-0.5 overflow-y-auto scrollbar-thin">
-        {navItems.map((item) => {
+        {visibleNavItems.map((item) => {
           const hideOnMobile = 'bottomNav' in item && item.bottomNav;
           // Submenu item (Financeiro)
           if ("subItems" in item && item.subItems) {
