@@ -10,7 +10,7 @@ interface ProtectedRouteProps {
 }
 
 export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) {
-  const { user, loading, role, roles, roleChecked, isFirstLogin, orgStatus, signOut } = useAuth();
+  const { user, loading, role, roles, roleChecked, isFirstLogin, mustChangePassword, orgStatus, signOut } = useAuth();
   const location = useLocation();
 
   // Show loading during initial auth check or while role check is pending
@@ -102,6 +102,11 @@ export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) 
   // Client first login: force password change
   if (role === "client" && isFirstLogin && location.pathname !== "/gestante/alterar-senha") {
     return <Navigate to="/gestante/alterar-senha" replace />;
+  }
+
+  // Team member (admin/moderator) must change temp password on first login
+  if ((role === "admin" || role === "moderator") && mustChangePassword && location.pathname !== "/admin/alterar-senha") {
+    return <Navigate to="/admin/alterar-senha" replace />;
   }
 
   return <>{children}</>;
