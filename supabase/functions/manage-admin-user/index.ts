@@ -325,10 +325,8 @@ Deno.serve(async (req) => {
     }
 
     if (action === "reset-password") {
-      if (!callerAccess.callerIsSuperAdmin) {
-        return jsonResponse({ error: "Apenas super admin pode resetar senhas" }, 403);
-      }
-
+      // Allow: super_admin (any user); admin of same org (admin or moderator targets);
+      // moderator of same org (moderator targets only). Already guarded by assertTargetManageable above.
       const { data: targetRoles, error: targetRolesError } = await adminClient
         .from("user_roles")
         .select("role")
@@ -336,9 +334,14 @@ Deno.serve(async (req) => {
 
       if (targetRolesError) throw targetRolesError;
 
-      const targetIsAdminOrSuper = targetRoles?.some((r) => r.role === "admin" || r.role === "super_admin");
-      if (!targetIsAdminOrSuper) {
-        return jsonResponse({ error: "Só é possível resetar senhas de administradores" }, 403);
+      const targetIsTeam = targetRoles?.some((r) => r.role === "admin" || r.role === "moderator" || r.role === "super_admin");
+      if (!targetIsTeam) {
+        return jsonResponse({ error: "Só é possível resetar senhas de membros da equipe" }, 403);
+      }
+
+      const targetIsSuperAdmin = targetRoles?.some((r) => r.role === "super_admin");
+      if (targetIsSuperAdmin && !callerAccess.callerIsSuperAdmin) {
+        return jsonResponse({ error: "Apenas super admin pode resetar senha de super admin" }, 403);
       }
 
       const { data: targetProfile, error: targetProfileError } = await adminClient
@@ -354,6 +357,9 @@ Deno.serve(async (req) => {
 
       const { error: updateError } = await adminClient.auth.admin.updateUserById(userId, { password: newPassword });
       if (updateError) throw updateError;
+
+      // Force the user to change this temporary password on next login
+      await adminClient.from("profiles").update({ must_change_password: true }).eq("user_id", userId);
 
       return jsonResponse({ success: true, message: "Senha resetada", newPassword });
     }

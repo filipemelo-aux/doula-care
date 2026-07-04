@@ -30,12 +30,14 @@ interface AuthContextType {
   isVisitor: boolean;
   client: ClientData | null;
   isFirstLogin: boolean;
+  mustChangePassword: boolean;
   profileName: string | null;
   organizationId: string | null;
   orgStatus: OrgStatus | null;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
   refreshClientData: () => Promise<void>;
+  refreshMustChangePassword: () => Promise<void>;
   setFirstLoginComplete: () => void;
 }
 
