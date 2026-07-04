@@ -730,7 +730,6 @@ export default function Settings() {
               <Select value={editRole} onValueChange={setEditRole}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="user">Usuário</SelectItem>
                   <SelectItem value="moderator">Moderador</SelectItem>
                   {callerIsAdmin && <SelectItem value="admin">Administrador</SelectItem>}
                 </SelectContent>
