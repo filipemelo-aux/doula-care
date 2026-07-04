@@ -773,6 +773,52 @@ export default function Settings() {
         </AlertDialogContent>
       </AlertDialog>
 
+      {/* Reset Password Confirmation */}
+      <AlertDialog open={!!resetUserId} onOpenChange={(o) => !o && setResetUserId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Resetar senha deste membro?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Uma nova senha temporária será gerada. O membro será obrigado a trocá-la no próximo acesso.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={() => resetUserId && resetPasswordMutation.mutate(resetUserId)}>
+              {resetPasswordMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : null}
+              Resetar senha
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Reset Password Result */}
+      <Dialog open={!!resetResult} onOpenChange={(o) => !o && setResetResult(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader><DialogTitle>Senha temporária gerada</DialogTitle></DialogHeader>
+          <div className="space-y-3 py-2">
+            <p className="text-sm text-muted-foreground">
+              Envie esta senha para <strong>{resetResult?.name}</strong>. Ela expira no primeiro uso.
+            </p>
+            <div className="rounded-lg bg-muted p-3 text-center">
+              <p className="font-mono text-lg font-bold tracking-widest select-all">{resetResult?.password}</p>
+            </div>
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={() => {
+                if (resetResult?.password) {
+                  navigator.clipboard.writeText(resetResult.password);
+                  toast.success("Senha copiada!");
+                }
+              }}
+            >
+              Copiar senha
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* Edit Plan Dialog */}
       <Dialog open={planDialogOpen} onOpenChange={setPlanDialogOpen}>
         <DialogContent className="max-w-lg">
