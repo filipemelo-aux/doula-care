@@ -378,6 +378,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setClient(clientData);
   };
 
+  const refreshMustChangePassword = async () => {
+    if (!user) return;
+    const { data } = await supabase
+      .from("profiles")
+      .select("must_change_password")
+      .eq("user_id", user.id)
+      .maybeSingle();
+    setMustChangePassword(Boolean((data as any)?.must_change_password));
+  };
+
   const setFirstLoginComplete = () => {
     if (client) {
       setClient({ ...client, first_login: false });
@@ -404,12 +414,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isVisitor,
         client,
         isFirstLogin: client?.first_login ?? false,
+        mustChangePassword,
         profileName,
         organizationId,
         orgStatus,
         signIn,
         signOut,
         refreshClientData,
+        refreshMustChangePassword,
         setFirstLoginComplete,
       }}
     >
