@@ -302,6 +302,10 @@ export default function Settings() {
     mutationFn: async (newPassword: string) => {
       const { error } = await supabase.auth.updateUser({ password: newPassword });
       if (error) throw error;
+      // Clear must_change_password flag if it was set (e.g. after invite/reset)
+      if (user?.id) {
+        await supabase.from("profiles").update({ must_change_password: false } as any).eq("user_id", user.id);
+      }
       await promptToSaveUpdatedPassword(newPassword, user?.email);
     },
     onSuccess: () => {
@@ -352,8 +356,12 @@ export default function Settings() {
       toast.error(`Seu plano permite no máximo ${limits.maxCollaborators} colaboradores.`);
       return;
     }
-    if (!newUserData.email || !newUserData.password) {
-      toast.error("Preencha email e senha");
+    if (!newUserData.email) {
+      toast.error("Informe o email");
+      return;
+    }
+    if (!newUserData.sendInvite && !newUserData.password) {
+      toast.error("Informe uma senha ou marque enviar convite por email");
       return;
     }
     createUserMutation.mutate(newUserData);
