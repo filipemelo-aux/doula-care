@@ -507,10 +507,23 @@ export default function Settings() {
                             <Label>Email</Label>
                             <Input type="email" value={newUserData.email} onChange={(e) => setNewUserData({ ...newUserData, email: e.target.value })} placeholder="email@exemplo.com" />
                           </div>
-                          <div className="space-y-2">
-                            <Label>Senha</Label>
-                            <Input type="password" value={newUserData.password} onChange={(e) => setNewUserData({ ...newUserData, password: e.target.value })} placeholder="••••••••" />
+                          <div className="flex items-center justify-between rounded-lg border border-border/50 p-3">
+                            <div className="space-y-0.5">
+                              <Label className="text-sm">Enviar convite por email</Label>
+                              <p className="text-[11px] text-muted-foreground">O membro define a própria senha pelo link recebido</p>
+                            </div>
+                            <Switch
+                              checked={newUserData.sendInvite}
+                              onCheckedChange={(v) => setNewUserData({ ...newUserData, sendInvite: v, password: v ? "" : newUserData.password })}
+                            />
                           </div>
+                          {!newUserData.sendInvite && (
+                            <div className="space-y-2">
+                              <Label>Senha temporária</Label>
+                              <Input type="password" value={newUserData.password} onChange={(e) => setNewUserData({ ...newUserData, password: e.target.value })} placeholder="••••••••" />
+                              <p className="text-[11px] text-muted-foreground">O membro será obrigado a trocar esta senha no primeiro acesso</p>
+                            </div>
+                          )}
                           <div className="space-y-2">
                             <Label>Permissão</Label>
                             <Select value={newUserData.role} onValueChange={(v: "admin" | "moderator") => setNewUserData({ ...newUserData, role: v })}>
@@ -520,10 +533,9 @@ export default function Settings() {
                                 {callerIsAdmin && <SelectItem value="admin">Administrador</SelectItem>}
                               </SelectContent>
                             </Select>
-
                           </div>
                           <Button onClick={handleCreateUser} className="w-full" disabled={createUserMutation.isPending}>
-                            {createUserMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Criar Usuário"}
+                            {createUserMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : (newUserData.sendInvite ? "Enviar convite" : "Criar Usuário")}
                           </Button>
                         </div>
                       </DialogContent>
