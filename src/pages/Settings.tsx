@@ -127,7 +127,10 @@ export default function Settings() {
     password: "",
     fullName: "",
     role: "moderator" as "admin" | "moderator",
+    sendInvite: false,
   });
+  const [resetUserId, setResetUserId] = useState<string | null>(null);
+  const [resetResult, setResetResult] = useState<{ name: string; password: string } | null>(null);
   const [passwordData, setPasswordData] = useState({
     newPassword: "",
     confirmPassword: "",
@@ -217,21 +220,48 @@ export default function Settings() {
       const { data, error } = await supabase.functions.invoke("create-admin-user", {
         body: { ...userData, organizationId },
       });
-      if (error) throw error;
-      if (data.error) throw new Error(data.error);
+      if (error) {
+        // Try to parse structured error from edge function response
+        try {
+          const raw = (error as any).context?.body || (error as any).message;
+          const parsed = typeof raw === "string" ? JSON.parse(raw) : raw;
+          if (parsed?.code === "duplicate_email") throw new Error("Este email já está cadastrado no sistema");
+          if (parsed?.error) throw new Error(parsed.error);
+        } catch (parseErr) {
+          if (parseErr instanceof Error && parseErr.message !== error.message) throw parseErr;
+        }
+        throw error;
+      }
+      if (data?.error) {
+        if (data?.code === "duplicate_email") throw new Error("Este email já está cadastrado no sistema");
+        throw new Error(data.error);
+      }
       return data;
     },
     onSuccess: (data) => {
-      if (data.exists) {
-        toast.info("Usuário já existe no sistema");
-      } else {
-        toast.success("Usuário criado com sucesso!");
-        queryClient.invalidateQueries({ queryKey: ["users-with-roles"] });
-      }
+      toast.success(data?.invited ? "Convite enviado por email!" : "Usuário criado com sucesso!");
+      queryClient.invalidateQueries({ queryKey: ["users-with-roles"] });
       setNewUserOpen(false);
-      setNewUserData({ email: "", password: "", fullName: "", role: "moderator" });
+      setNewUserData({ email: "", password: "", fullName: "", role: "moderator", sendInvite: false });
     },
     onError: (error) => toast.error("Erro ao criar usuário", { description: error.message }),
+  });
+
+  const resetPasswordMutation = useMutation({
+    mutationFn: async (userId: string) => {
+      const { data, error } = await supabase.functions.invoke("manage-admin-user", {
+        body: { action: "reset-password", userId },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      return data as { newPassword: string };
+    },
+    onSuccess: (data, userId) => {
+      const target = usersWithRoles?.find((u) => u.user_id === userId);
+      setResetResult({ name: target?.full_name || "Usuário", password: data.newPassword });
+      setResetUserId(null);
+    },
+    onError: (error) => toast.error("Erro ao resetar senha", { description: error.message }),
   });
 
   const updateUserMutation = useMutation({
