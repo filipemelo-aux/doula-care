@@ -584,6 +584,11 @@ export default function Settings() {
                                   <Edit2 className="h-3.5 w-3.5" />
                                 </Button>
                                 {!isCurrentUser(userProfile.user_id) && (
+                                  <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground" onClick={() => setResetUserId(userProfile.user_id)} title="Resetar senha">
+                                    <Key className="h-3.5 w-3.5" />
+                                  </Button>
+                                )}
+                                {!isCurrentUser(userProfile.user_id) && (
                                   <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => setDeleteUserId(userProfile.user_id)} title="Excluir">
                                     <Trash2 className="h-3.5 w-3.5" />
                                   </Button>
