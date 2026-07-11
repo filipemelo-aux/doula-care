@@ -223,14 +223,32 @@ export function ClientsOverview() {
                     <p className="font-semibold text-foreground truncate">
                       {displayName(c)}
                     </p>
-                    <p className="text-xs text-muted-foreground">
-                      {gestationLabel(c)}
-                      {c.labor_started_at && !c.birth_occurred && (
-                        <span className="ml-2 inline-flex items-center gap-1 text-destructive font-semibold">
-                          · Em trabalho de parto
-                        </span>
-                      )}
-                    </p>
+                    {isPuer ? (
+                      <p className="text-xs text-muted-foreground">
+                        {c.birth_date
+                          ? `Parto em ${formatBrazilDate(c.birth_date)}`
+                          : "Puérpera"}
+                      </p>
+                    ) : (
+                      <>
+                        <p className="text-xs text-muted-foreground">
+                          {gestationLabel(c)}
+                          {c.dpp && ` · DPP ${formatBrazilDate(c.dpp)}`}
+                          {c.labor_started_at && !c.birth_occurred && (
+                            <span className="ml-2 inline-flex items-center gap-1 text-destructive font-semibold">
+                              · Em trabalho de parto
+                            </span>
+                          )}
+                        </p>
+                        {(c.companion_name || babyName(c)) && (
+                          <p className="text-[11px] text-muted-foreground/80 truncate mt-0.5">
+                            {c.companion_name && `Acompanhante: ${c.companion_name}`}
+                            {c.companion_name && babyName(c) && " · "}
+                            {babyName(c) && `Bebê: ${babyName(c)}`}
+                          </p>
+                        )}
+                      </>
+                    )}
                   </div>
                   <ChevronRight className="w-4 h-4 text-muted-foreground/50 flex-shrink-0" />
                 </button>
