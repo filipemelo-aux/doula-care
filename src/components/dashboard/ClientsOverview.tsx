@@ -69,7 +69,7 @@ export function ClientsOverview() {
       const { data, error } = await supabase
         .from("clients")
         .select(
-          "id, full_name, preferred_name, user_id, status, dpp, pregnancy_weeks, pregnancy_weeks_set_at, labor_started_at, birth_occurred",
+          "id, full_name, preferred_name, user_id, status, dpp, pregnancy_weeks, pregnancy_weeks_set_at, labor_started_at, birth_occurred, birth_date, companion_name, baby_names",
         )
         .in("status", ["gestante", "lactante"])
         .order("dpp", { ascending: true, nullsFirst: false });
