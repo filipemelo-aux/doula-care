@@ -178,6 +178,24 @@ export function ClientsOverview() {
         </div>
       </div>
 
+      <div className="flex items-center gap-2">
+        <FilterChip
+          label="Todas"
+          active={filter === "todas"}
+          onClick={() => setFilter("todas")}
+        />
+        <FilterChip
+          label="Gestantes"
+          active={filter === "gestante"}
+          onClick={() => setFilter("gestante")}
+        />
+        <FilterChip
+          label="Puérperas"
+          active={filter === "lactante"}
+          onClick={() => setFilter("lactante")}
+        />
+      </div>
+
       {isLoading ? (
         <div className="space-y-2">
           {[...Array(3)].map((_, i) => (
