@@ -39,6 +39,7 @@ import { useState } from "react";
 import { ClientDiaryDialog } from "./ClientDiaryDialog";
 import { ClientContractionsDialog } from "./ClientContractionsDialog";
 import { SendNotificationDialog } from "@/components/clients/SendNotificationDialog";
+import { ClientFileDialog } from "@/components/clients/ClientFileDialog";
 
 type Client = Tables<"clients">;
 
@@ -61,6 +62,7 @@ export function ClientQuickViewDialog({
   const [diaryOpen, setDiaryOpen] = useState(false);
   const [contractionsOpen, setContractionsOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
+  const [fichaOpen, setFichaOpen] = useState(false);
 
   const { data: client, isLoading } = useQuery({
     queryKey: ["client-quickview", clientId],
@@ -438,9 +440,7 @@ export function ClientQuickViewDialog({
                   <ActionButton
                     icon={FileText}
                     label="Ficha"
-                    onClick={() =>
-                      go("/clientes", { openClientId: client.id })
-                    }
+                    onClick={() => setFichaOpen(true)}
                   />
                 </div>
               </div>
@@ -462,6 +462,11 @@ export function ClientQuickViewDialog({
       <SendNotificationDialog
         open={notifOpen}
         onOpenChange={setNotifOpen}
+        client={client ?? null}
+      />
+      <ClientFileDialog
+        open={fichaOpen}
+        onOpenChange={setFichaOpen}
         client={client ?? null}
       />
     </>

@@ -224,27 +224,39 @@ export function ClientsOverview() {
                       {displayName(c)}
                     </p>
                     {isPuer ? (
-                      <p className="text-xs text-muted-foreground">
-                        {c.birth_date
-                          ? `Parto em ${formatBrazilDate(c.birth_date)}`
-                          : "Puérpera"}
+                      <p className="text-xs text-muted-foreground flex items-center gap-1 flex-wrap">
+                        <span>
+                          {c.birth_date
+                            ? `Parto em ${formatBrazilDate(c.birth_date)}`
+                            : "Puérpera"}
+                        </span>
+                        {babyName(c) && (
+                          <span className="inline-flex items-center gap-1 text-primary font-medium">
+                            <Baby className="w-3 h-3" />
+                            {babyName(c)}
+                          </span>
+                        )}
                       </p>
                     ) : (
                       <>
-                        <p className="text-xs text-muted-foreground">
-                          {gestationLabel(c)}
-                          {c.dpp && ` · DPP ${formatBrazilDate(c.dpp)}`}
+                        <p className="text-xs text-muted-foreground flex items-center gap-1 flex-wrap">
+                          <span>{gestationLabel(c)}</span>
+                          {c.dpp && <span>· DPP {formatBrazilDate(c.dpp)}</span>}
+                          {babyName(c) && (
+                            <span className="inline-flex items-center gap-1 text-primary font-medium">
+                              <Baby className="w-3 h-3" />
+                              {babyName(c)}
+                            </span>
+                          )}
                           {c.labor_started_at && !c.birth_occurred && (
-                            <span className="ml-2 inline-flex items-center gap-1 text-destructive font-semibold">
+                            <span className="inline-flex items-center gap-1 text-destructive font-semibold">
                               · Em trabalho de parto
                             </span>
                           )}
                         </p>
-                        {(c.companion_name || babyName(c)) && (
+                        {c.companion_name && (
                           <p className="text-[11px] text-muted-foreground/80 truncate mt-0.5">
-                            {c.companion_name && `Acompanhante: ${c.companion_name}`}
-                            {c.companion_name && babyName(c) && " · "}
-                            {babyName(c) && `Bebê: ${babyName(c)}`}
+                            Acompanhante: {c.companion_name}
                           </p>
                         )}
                       </>
