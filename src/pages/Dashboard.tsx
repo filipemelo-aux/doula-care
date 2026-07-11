@@ -76,10 +76,13 @@ export default function Dashboard() {
         {canSeeFinancials && <PeriodFilter selected={period} onChange={setPeriod} />}
       </div>
 
-      {/* ═══ 1 — Financeiro (oculto para moderadores) ═══ */}
+      {/* ═══ 1 — Suas clientes (foco doula) ═══ */}
+      <ClientsOverview />
+
+      {/* ═══ 2 — Financeiro (oculto para moderadores) ═══ */}
       {canSeeFinancials && <FinancialOverview period={period} />}
 
-      {/* ═══ 2 — Compromissos ═══ */}
+      {/* ═══ 3 — Compromissos ═══ */}
       <UpcomingAppointments />
 
       {/* ═══ 3 — Clientes ═══ */}
