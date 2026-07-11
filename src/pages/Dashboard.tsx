@@ -36,8 +36,6 @@ export default function Dashboard() {
       });
   }, [user]);
 
-  const { data: metrics } = useFinancialMetrics(period);
-
   return (
     <div className="space-y-6 lg:space-y-8 overflow-x-hidden">
       {/* Greeting */}
