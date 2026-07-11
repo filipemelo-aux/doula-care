@@ -150,7 +150,9 @@ export function ClientsOverview() {
   });
 
   const sorted = useMemo(() => {
-    const list = [...(clients || [])];
+    const list = [...(clients || [])].filter(
+      (c) => filter === "todas" || c.status === filter,
+    );
     // Puérperas depois; gestantes por DPP asc; sem DPP no fim
     return list.sort((a, b) => {
       const aPuer = a.status === "lactante" ? 1 : 0;
@@ -161,7 +163,7 @@ export function ClientsOverview() {
       if (!b.dpp) return -1;
       return a.dpp.localeCompare(b.dpp);
     });
-  }, [clients]);
+  }, [clients, filter]);
 
   return (
     <div className="rounded-2xl bg-card p-4 lg:p-6 shadow-card space-y-4">
