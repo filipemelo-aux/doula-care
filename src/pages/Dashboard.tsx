@@ -103,32 +103,3 @@ export default function Dashboard() {
   );
 }
 
-/* ── Inline sub-components ── */
-
-function ClientPill({
-  icon: Icon,
-  label,
-  value,
-  onClick,
-}: {
-  icon: React.ElementType;
-  label: string;
-  value: number;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      onClick={onClick}
-      className="group rounded-xl bg-muted/50 hover:bg-muted p-3 text-left transition-all hover:shadow-sm active:scale-[0.97] space-y-1 cursor-pointer"
-    >
-      <div className="flex items-center gap-1.5">
-        <Icon className="w-3.5 h-3.5 text-primary flex-shrink-0" />
-        <span className="text-[10px] lg:text-xs text-muted-foreground">{label}</span>
-      </div>
-      <div className="flex items-center justify-between">
-        <p className="text-lg lg:text-xl font-bold text-foreground">{value}</p>
-        <ChevronRight className="w-3.5 h-3.5 text-muted-foreground/40 transition-transform group-hover:translate-x-0.5" />
-      </div>
-    </button>
-  );
-}
