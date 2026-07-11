@@ -464,6 +464,11 @@ export function ClientQuickViewDialog({
         onOpenChange={setNotifOpen}
         client={client ?? null}
       />
+      <ClientFileDialog
+        open={fichaOpen}
+        onOpenChange={setFichaOpen}
+        client={client ?? null}
+      />
     </>
   );
 }
