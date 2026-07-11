@@ -22,6 +22,9 @@ type ClientRow = {
   pregnancy_weeks_set_at: string | null;
   labor_started_at: string | null;
   birth_occurred: boolean | null;
+  birth_date: string | null;
+  companion_name: string | null;
+  baby_names: string[] | null;
 };
 
 function firstName(full: string) {
