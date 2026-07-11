@@ -222,6 +222,50 @@ export function ClientQuickViewDialog({
                     <p className="text-xs text-muted-foreground truncate">
                       {client.full_name}
                     </p>
+
+                    {/* Same summary line as the dashboard card */}
+                    <p className="text-xs text-muted-foreground flex items-center gap-1 flex-wrap mt-1.5">
+                      {isGest ? (
+                        <>
+                          {gestBadge && (
+                            <span
+                              className={cn(
+                                gestBadge.post && "text-destructive font-semibold",
+                              )}
+                            >
+                              {gestBadge.w}s {gestBadge.d}d
+                            </span>
+                          )}
+                          {client.dpp && (
+                            <span>· DPP {formatBrazilDate(client.dpp)}</span>
+                          )}
+                        </>
+                      ) : (
+                        <span>
+                          {client.birth_date
+                            ? `Parto em ${formatBrazilDate(client.birth_date)}`
+                            : "Puérpera"}
+                        </span>
+                      )}
+                      {babyName(client) && (
+                        <span className="inline-flex items-center gap-1 text-primary font-medium">
+                          <Baby className="w-3 h-3" />
+                          {babyName(client)}
+                        </span>
+                      )}
+                      {inLabor && (
+                        <span className="inline-flex items-center gap-1 text-destructive font-semibold">
+                          · Em trabalho de parto
+                        </span>
+                      )}
+                    </p>
+
+                    {client.companion_name && (
+                      <p className="text-[11px] text-muted-foreground/80 truncate mt-0.5">
+                        Acompanhante: {client.companion_name}
+                      </p>
+                    )}
+
                     <div className="flex flex-wrap items-center gap-1.5 mt-2">
                       {gestBadge && (
                         <Badge
