@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { useFinancialMetrics } from "@/hooks/useFinancialMetrics";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { FinancialOverview } from "@/components/dashboard/FinancialOverview";
