@@ -75,51 +75,16 @@ export default function Dashboard() {
       {/* ═══ 1 — Suas clientes (foco doula) ═══ */}
       <ClientsOverview />
 
-      {/* ═══ 2 — Financeiro (oculto para moderadores) ═══ */}
-      {canSeeFinancials && <FinancialOverview period={period} />}
-
-      {/* ═══ 3 — Compromissos ═══ */}
+      {/* ═══ 2 — Compromissos ═══ */}
       <UpcomingAppointments />
 
-      {/* ═══ 3 — Clientes ═══ */}
-      <div className="rounded-2xl bg-card p-4 lg:p-6 shadow-card space-y-4">
-        <div className="flex items-center gap-2 mb-1">
-          <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
-            <Users className="w-5 h-5 text-primary" />
-          </div>
-          <h2 className="font-semibold text-lg text-foreground">Clientes</h2>
-          <span className="ml-auto text-2xl font-bold text-foreground">{metrics?.totalClients || 0}</span>
-        </div>
-
-        <div className="grid grid-cols-3 gap-3">
-          <ClientPill
-            icon={Baby}
-            label="Gestantes"
-            value={metrics?.gestantes || 0}
-            onClick={() => setGestantesDialogOpen(true)}
-          />
-          <ClientPill
-            icon={Heart}
-            label="Puérperas"
-            value={metrics?.puerperas || 0}
-            onClick={() => setPuerperasDialogOpen(true)}
-          />
-          <ClientPill
-            icon={UserRound}
-            label="Outros"
-            value={metrics?.outros || 0}
-            onClick={() => setOutrosDialogOpen(true)}
-          />
-        </div>
-      </div>
+      {/* ═══ 3 — Financeiro (oculto para moderadores) ═══ */}
+      {canSeeFinancials && <FinancialOverview period={period} />}
 
       {/* ═══ 4 — Planos mais contratados (oculto para moderadores — dado agregado financeiro) ═══ */}
       {canSeeFinancials && <TopPlansCard />}
 
       {/* Dialogs */}
-      <ClientsListDialog open={gestantesDialogOpen} onOpenChange={setGestantesDialogOpen} status="gestante" />
-      <ClientsListDialog open={puerperasDialogOpen} onOpenChange={setPuerperasDialogOpen} status="lactante" />
-      <ClientsListDialog open={outrosDialogOpen} onOpenChange={setOutrosDialogOpen} status="outro" />
       <AdminWelcomeDialog
         open={showWelcome}
         onClose={() => {
