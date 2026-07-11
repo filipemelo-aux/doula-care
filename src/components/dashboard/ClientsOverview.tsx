@@ -11,6 +11,8 @@ import {
   calculateCurrentPregnancyDays,
 } from "@/lib/pregnancy";
 
+type ClientStatusFilter = "todas" | "gestante" | "lactante";
+
 type ClientRow = {
   id: string;
   full_name: string;
@@ -62,6 +64,7 @@ function babyName(c: ClientRow) {
 
 export function ClientsOverview() {
   const [openId, setOpenId] = useState<string | null>(null);
+  const [filter, setFilter] = useState<ClientStatusFilter>("todas");
 
   const { data: clients, isLoading } = useQuery({
     queryKey: ["dashboard-clients-overview"],
@@ -147,7 +150,9 @@ export function ClientsOverview() {
   });
 
   const sorted = useMemo(() => {
-    const list = [...(clients || [])];
+    const list = [...(clients || [])].filter(
+      (c) => filter === "todas" || c.status === filter,
+    );
     // Puérperas depois; gestantes por DPP asc; sem DPP no fim
     return list.sort((a, b) => {
       const aPuer = a.status === "lactante" ? 1 : 0;
@@ -158,7 +163,7 @@ export function ClientsOverview() {
       if (!b.dpp) return -1;
       return a.dpp.localeCompare(b.dpp);
     });
-  }, [clients]);
+  }, [clients, filter]);
 
   return (
     <div className="rounded-2xl bg-card p-4 lg:p-6 shadow-card space-y-4">
@@ -171,6 +176,24 @@ export function ClientsOverview() {
             Suas clientes
           </h2>
         </div>
+      </div>
+
+      <div className="flex items-center gap-2">
+        <FilterChip
+          label="Todas"
+          active={filter === "todas"}
+          onClick={() => setFilter("todas")}
+        />
+        <FilterChip
+          label="Gestantes"
+          active={filter === "gestante"}
+          onClick={() => setFilter("gestante")}
+        />
+        <FilterChip
+          label="Puérperas"
+          active={filter === "lactante"}
+          onClick={() => setFilter("lactante")}
+        />
       </div>
 
       {isLoading ? (
@@ -276,5 +299,30 @@ export function ClientsOverview() {
         clientId={openId}
       />
     </div>
+  );
+}
+
+function FilterChip({
+  label,
+  active,
+  onClick,
+}: {
+  label: string;
+  active: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        "px-3 py-1.5 rounded-full text-xs font-medium transition-all",
+        active
+          ? "bg-primary text-primary-foreground shadow-sm"
+          : "bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground",
+      )}
+    >
+      {label}
+    </button>
   );
 }
