@@ -233,6 +233,12 @@ export function ClientsOverview() {
           })}
         </ul>
       )}
+
+      <ClientQuickViewDialog
+        open={!!openId}
+        onOpenChange={(o) => !o && setOpenId(null)}
+        clientId={openId}
+      />
     </div>
   );
 }
