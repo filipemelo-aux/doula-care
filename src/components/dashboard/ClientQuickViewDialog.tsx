@@ -53,6 +53,12 @@ function firstName(full: string) {
   return full.trim().split(/\s+/)[0];
 }
 
+function babyName(client: Client) {
+  const names = (client.baby_names || []).filter(Boolean);
+  if (names.length === 0) return null;
+  return names.join(", ");
+}
+
 export function ClientQuickViewDialog({
   open,
   onOpenChange,
