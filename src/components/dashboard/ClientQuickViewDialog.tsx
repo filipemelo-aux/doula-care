@@ -62,6 +62,7 @@ export function ClientQuickViewDialog({
   const [diaryOpen, setDiaryOpen] = useState(false);
   const [contractionsOpen, setContractionsOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
+  const [fichaOpen, setFichaOpen] = useState(false);
 
   const { data: client, isLoading } = useQuery({
     queryKey: ["client-quickview", clientId],
