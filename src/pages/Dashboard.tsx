@@ -6,9 +6,8 @@ import { FinancialOverview } from "@/components/dashboard/FinancialOverview";
 import { TopPlansCard } from "@/components/dashboard/TopPlansCard";
 import { UpcomingAppointments } from "@/components/dashboard/UpcomingAppointments";
 import { PeriodFilter, PeriodOption } from "@/components/dashboard/PeriodFilter";
-import { ClientsListDialog } from "@/components/dashboard/ClientsListDialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Heart, Users, Baby, UserRound, ChevronRight } from "lucide-react";
+import { Heart } from "lucide-react";
 import { AdminWelcomeDialog } from "@/components/dashboard/AdminWelcomeDialog";
 import { BillingAlertBanner } from "@/components/dashboard/BillingAlertBanner";
 import { PromoBetaBanner } from "@/components/dashboard/PromoBetaBanner";
@@ -18,9 +17,6 @@ import { ClientsOverview } from "@/components/dashboard/ClientsOverview";
 
 export default function Dashboard() {
   const [period, setPeriod] = useState<PeriodOption>("month");
-  const [gestantesDialogOpen, setGestantesDialogOpen] = useState(false);
-  const [puerperasDialogOpen, setPuerperasDialogOpen] = useState(false);
-  const [outrosDialogOpen, setOutrosDialogOpen] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [showWelcome, setShowWelcome] = useState(false);
   const { profileName, user, role } = useAuth();
