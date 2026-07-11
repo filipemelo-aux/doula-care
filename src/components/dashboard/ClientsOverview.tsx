@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Baby, Heart, ChevronRight } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, formatBrazilDate } from "@/lib/utils";
 import {
   calculateCurrentPregnancyWeeks,
   calculateCurrentPregnancyDays,
