@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Baby, Heart, ChevronRight } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, formatBrazilDate } from "@/lib/utils";
 import {
   calculateCurrentPregnancyWeeks,
   calculateCurrentPregnancyDays,
@@ -22,6 +22,9 @@ type ClientRow = {
   pregnancy_weeks_set_at: string | null;
   labor_started_at: string | null;
   birth_occurred: boolean | null;
+  birth_date: string | null;
+  companion_name: string | null;
+  baby_names: string[] | null;
 };
 
 function firstName(full: string) {
@@ -51,6 +54,12 @@ function gestationLabel(c: ClientRow) {
   );
 }
 
+function babyName(c: ClientRow) {
+  const names = (c.baby_names || []).filter(Boolean);
+  if (names.length === 0) return null;
+  return names.join(", ");
+}
+
 export function ClientsOverview() {
   const [openId, setOpenId] = useState<string | null>(null);
 
@@ -60,7 +69,7 @@ export function ClientsOverview() {
       const { data, error } = await supabase
         .from("clients")
         .select(
-          "id, full_name, preferred_name, user_id, status, dpp, pregnancy_weeks, pregnancy_weeks_set_at, labor_started_at, birth_occurred",
+          "id, full_name, preferred_name, user_id, status, dpp, pregnancy_weeks, pregnancy_weeks_set_at, labor_started_at, birth_occurred, birth_date, companion_name, baby_names",
         )
         .in("status", ["gestante", "lactante"])
         .order("dpp", { ascending: true, nullsFirst: false });
@@ -161,9 +170,6 @@ export function ClientsOverview() {
           <h2 className="font-semibold text-lg text-foreground leading-tight">
             Suas clientes
           </h2>
-          <p className="text-xs text-muted-foreground">
-            Gestantes por DPP mais próxima · puérperas ao final
-          </p>
         </div>
       </div>
 
@@ -217,14 +223,32 @@ export function ClientsOverview() {
                     <p className="font-semibold text-foreground truncate">
                       {displayName(c)}
                     </p>
-                    <p className="text-xs text-muted-foreground">
-                      {gestationLabel(c)}
-                      {c.labor_started_at && !c.birth_occurred && (
-                        <span className="ml-2 inline-flex items-center gap-1 text-destructive font-semibold">
-                          · Em trabalho de parto
-                        </span>
-                      )}
-                    </p>
+                    {isPuer ? (
+                      <p className="text-xs text-muted-foreground">
+                        {c.birth_date
+                          ? `Parto em ${formatBrazilDate(c.birth_date)}`
+                          : "Puérpera"}
+                      </p>
+                    ) : (
+                      <>
+                        <p className="text-xs text-muted-foreground">
+                          {gestationLabel(c)}
+                          {c.dpp && ` · DPP ${formatBrazilDate(c.dpp)}`}
+                          {c.labor_started_at && !c.birth_occurred && (
+                            <span className="ml-2 inline-flex items-center gap-1 text-destructive font-semibold">
+                              · Em trabalho de parto
+                            </span>
+                          )}
+                        </p>
+                        {(c.companion_name || babyName(c)) && (
+                          <p className="text-[11px] text-muted-foreground/80 truncate mt-0.5">
+                            {c.companion_name && `Acompanhante: ${c.companion_name}`}
+                            {c.companion_name && babyName(c) && " · "}
+                            {babyName(c) && `Bebê: ${babyName(c)}`}
+                          </p>
+                        )}
+                      </>
+                    )}
                   </div>
                   <ChevronRight className="w-4 h-4 text-muted-foreground/50 flex-shrink-0" />
                 </button>
