@@ -11,6 +11,8 @@ import {
   calculateCurrentPregnancyDays,
 } from "@/lib/pregnancy";
 
+type ClientStatusFilter = "todas" | "gestante" | "lactante";
+
 type ClientRow = {
   id: string;
   full_name: string;
