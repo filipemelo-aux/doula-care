@@ -170,9 +170,6 @@ export function ClientsOverview() {
           <h2 className="font-semibold text-lg text-foreground leading-tight">
             Suas clientes
           </h2>
-          <p className="text-xs text-muted-foreground">
-            Gestantes por DPP mais próxima · puérperas ao final
-          </p>
         </div>
       </div>
 
