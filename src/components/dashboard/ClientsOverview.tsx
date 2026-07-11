@@ -52,6 +52,10 @@ function gestationLabel(c: ClientRow) {
       {weeks}s {days}d
     </span>
   );
+function babyName(c: ClientRow) {
+  const names = (c.baby_names || []).filter(Boolean);
+  if (names.length === 0) return null;
+  return names.join(", ");
 }
 
 export function ClientsOverview() {
