@@ -86,6 +86,19 @@ export default function Clients() {
     },
   });
 
+  const location = useLocation();
+  useEffect(() => {
+    const openId = (location.state as { openClientId?: string } | null)?.openClientId;
+    if (openId && clients?.length) {
+      const target = clients.find((c) => c.id === openId);
+      if (target) {
+        setSelectedClient(target as Client);
+        setDetailsOpen(true);
+        window.history.replaceState({}, "");
+      }
+    }
+  }, [location.state, clients]);
+
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
       const { data, error } = await supabase.functions.invoke("delete-client-user", {
