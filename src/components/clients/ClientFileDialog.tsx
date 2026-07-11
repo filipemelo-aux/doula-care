@@ -9,10 +9,29 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Download, Loader2 } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  Download,
+  Loader2,
+  User,
+  Phone,
+  MapPin,
+  Heart,
+  Baby,
+  Stethoscope,
+  Camera,
+  Instagram,
+  CreditCard,
+  Calendar,
+  BookHeart,
+  Activity,
+  FileSignature,
+  Sparkles,
+  AlertTriangle,
+  ClipboardList,
+} from "lucide-react";
 import { cn, formatBrazilDate } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { usePlanNames } from "@/hooks/usePlanNames";
