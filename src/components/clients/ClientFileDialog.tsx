@@ -438,135 +438,210 @@ export function ClientFileDialog({ open, onOpenChange, client }: ClientFileDialo
     }
   };
 
+  const isPuer = client.status === "lactante";
+  const calcWeeks = calculateCurrentPregnancyWeeks(client.pregnancy_weeks, client.pregnancy_weeks_set_at, client.dpp);
+  const calcDays = client.dpp ? calculateCurrentPregnancyDays(client.dpp) : 0;
+  const initials = client.full_name
+    .split(" ")
+    .map((n) => n[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg max-h-[90vh]">
-        <DialogHeader className="flex flex-row items-center justify-between gap-2">
-          <DialogTitle className="font-display text-xl">Ficha da Cliente</DialogTitle>
-          <Button
-            variant="outline"
-            size="sm"
-            className="gap-2 shrink-0"
-            onClick={handleExportPDF}
-            disabled={isLoading}
-          >
-            <Download className="w-4 h-4" />
-            Exportar PDF
-          </Button>
+      <DialogContent className="max-w-lg max-h-[90vh] p-0 overflow-hidden gap-0 rounded-3xl">
+        <DialogHeader className="sr-only">
+          <DialogTitle>Ficha da Cliente</DialogTitle>
         </DialogHeader>
 
-        <ScrollArea className="max-h-[calc(90vh-100px)] pr-4">
-          {isLoading ? (
-            <div className="flex justify-center py-12">
-              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+        {isLoading ? (
+          <div className="flex justify-center py-16">
+            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+          </div>
+        ) : (
+          <ScrollArea className="max-h-[90vh]">
+            {/* Hero */}
+            <div
+              className={cn(
+                "relative px-6 pt-7 pb-6 bg-gradient-to-br",
+                client.labor_started_at && !client.birth_occurred
+                  ? "from-destructive/15 to-destructive/5"
+                  : "from-primary/15 to-accent/5",
+              )}
+            >
+              <div className="flex items-start gap-4">
+                <Avatar className="w-16 h-16 shadow-md ring-2 ring-background">
+                  <AvatarImage src={avatarUrl || undefined} alt={client.full_name} className="object-cover" />
+                  <AvatarFallback className="bg-gradient-to-br from-primary/25 to-accent/25 text-primary font-semibold">
+                    {initials || (isPuer ? <Heart className="w-6 h-6" /> : <Baby className="w-6 h-6" />)}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex-1 min-w-0">
+                  <h2 className="font-display text-xl font-semibold text-foreground leading-tight break-words">
+                    {client.preferred_name || client.full_name}
+                  </h2>
+                  {client.preferred_name && (
+                    <p className="text-xs text-muted-foreground truncate">{client.full_name}</p>
+                  )}
+                  <div className="flex flex-wrap items-center gap-1.5 mt-2">
+                    <Badge variant="outline" className={cn("badge-status border-0", `badge-${client.status}`)}>
+                      {statusLabels[client.status] || client.status}
+                    </Badge>
+                    {calcWeeks !== null && !isPuer && (
+                      <Badge
+                        variant="outline"
+                        className={cn(
+                          "text-[10px] h-5",
+                          calcWeeks >= 40
+                            ? "bg-red-100 text-red-700 border-red-200"
+                            : "bg-primary/10 text-primary border-primary/20",
+                        )}
+                      >
+                        {calcWeeks}s {calcDays}d
+                      </Badge>
+                    )}
+                    {client.prenatal_high_risk && (
+                      <Badge variant="destructive" className="text-[10px] h-5 gap-1">
+                        <AlertTriangle className="w-3 h-3" /> Alto risco
+                      </Badge>
+                    )}
+                    {client.labor_started_at && !client.birth_occurred && (
+                      <Badge className="text-[10px] h-5 bg-destructive text-destructive-foreground animate-pulse">
+                        Em trabalho de parto
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-2 shrink-0 mt-4 w-full bg-background/60 backdrop-blur"
+                onClick={handleExportPDF}
+              >
+                <Download className="w-4 h-4" />
+                Exportar em PDF
+              </Button>
             </div>
-          ) : (
-            <div className="space-y-5 text-sm">
-              {/* Personal */}
-              <Section title="Dados Pessoais">
-                <Field label="Nome" value={client.full_name} />
-                {client.preferred_name && <Field label="Nome preferido" value={client.preferred_name} />}
-                <Field label="Telefone" value={client.phone} />
-                {client.cpf && <Field label="CPF" value={client.cpf} />}
-                <Field
-                  label="Situação"
-                  value={client.status === "outro" && client.custom_status ? client.custom_status : statusLabels[client.status] || client.status}
-                />
-                {client.dpp && <Field label="DPP" value={formatDate(client.dpp)} />}
-                {(client.dpp || client.pregnancy_weeks) && (() => {
-                  const calcWeeks = calculateCurrentPregnancyWeeks(client.pregnancy_weeks, client.pregnancy_weeks_set_at, client.dpp);
-                  const calcDays = client.dpp ? calculateCurrentPregnancyDays(client.dpp) : 0;
-                  return calcWeeks !== null ? <Field label="Semanas" value={`${calcWeeks}s${calcDays > 0 ? `${calcDays}d` : ""}`} /> : null;
-                })()}
-                {address && <Field label="Endereço" value={address} fullWidth />}
-                <Field label="Cadastrada em" value={formatDateTime(client.created_at)} />
-              </Section>
+
+            {/* Body */}
+            <div className="px-5 py-5 space-y-4">
+              {/* Contact card */}
+              <Card icon={User} title="Contato" tint="primary">
+                <ChipGrid>
+                  <Chip icon={Phone} label="Telefone" value={client.phone} />
+                  {client.cpf && <Chip label="CPF" value={client.cpf} />}
+                  {client.dpp && <Chip icon={Calendar} label="DPP" value={formatDate(client.dpp)} />}
+                  <Chip label="Cadastrada em" value={formatDate(client.created_at)} />
+                </ChipGrid>
+                {address && (
+                  <div className="flex items-start gap-2 mt-3 rounded-xl bg-muted/50 px-3 py-2 text-xs">
+                    <MapPin className="w-3.5 h-3.5 text-primary shrink-0 mt-0.5" />
+                    <p className="font-medium leading-relaxed">{address}</p>
+                  </div>
+                )}
+              </Card>
 
               {/* Companion */}
-              {(client.companion_name || client.companion_phone) && (
-                <Section title="Acompanhante">
-                  {client.companion_name && <Field label="Nome" value={client.companion_name} />}
-                  {client.companion_phone && <Field label="Telefone" value={client.companion_phone} />}
-                  {client.instagram_acompanhante && <Field label="Instagram" value={client.instagram_acompanhante} />}
-                </Section>
+              {(client.companion_name || client.companion_phone || client.instagram_acompanhante) && (
+                <Card icon={Heart} title="Acompanhante" tint="pink">
+                  <ChipGrid>
+                    {client.companion_name && <Chip label="Nome" value={client.companion_name} />}
+                    {client.companion_phone && <Chip icon={Phone} label="Telefone" value={client.companion_phone} />}
+                    {client.instagram_acompanhante && <Chip icon={Instagram} label="Instagram" value={client.instagram_acompanhante} />}
+                  </ChipGrid>
+                </Card>
               )}
 
-              {/* Social */}
-              {client.instagram_gestante && (
-                <Section title="Redes Sociais">
-                  <Field label="Instagram" value={client.instagram_gestante} />
-                </Section>
+              {/* Baby / Birth */}
+              {(client.birth_occurred || (client.baby_names && client.baby_names.length > 0)) && (
+                <Card icon={Baby} title={client.birth_occurred ? "Dados do Nascimento" : "Bebê"} tint="accent">
+                  <ChipGrid>
+                    {client.baby_names && client.baby_names.length > 0 && (
+                      <Chip label="Nome(s)" value={client.baby_names.join(", ")} highlight />
+                    )}
+                    {client.birth_date && <Chip icon={Calendar} label="Data" value={formatDate(client.birth_date)} />}
+                    {client.birth_time && <Chip label="Hora" value={client.birth_time} />}
+                    {client.birth_weight && <Chip label="Peso" value={`${client.birth_weight}g`} />}
+                    {client.birth_height && <Chip label="Comprimento" value={`${client.birth_height}cm`} />}
+                  </ChipGrid>
+                </Card>
               )}
 
               {/* Clinical */}
-              {(client.prenatal_type || client.prenatal_high_risk || client.comorbidades || client.alergias || client.restricao_aromaterapia || client.birth_location) && (
-                <Section title="Informações Clínicas">
-                  {client.birth_location && <Field label="Local do parto" value={client.birth_location} />}
-                  {client.prenatal_type && <Field label="Pré-natal" value={prenatalTypeLabels[client.prenatal_type] || client.prenatal_type} />}
-                  {client.prenatal_high_risk && (
-                    <div className="col-span-2">
-                      <Badge variant="destructive" className="text-xs">⚠️ Alto Risco</Badge>
+              {(client.prenatal_type || client.birth_location || client.comorbidades || client.alergias || client.restricao_aromaterapia || prenatalTeam) && (
+                <Card icon={Stethoscope} title="Informações Clínicas" tint="primary">
+                  <ChipGrid>
+                    {client.birth_location && <Chip label="Local do parto" value={client.birth_location} />}
+                    {client.prenatal_type && <Chip label="Pré-natal" value={prenatalTypeLabels[client.prenatal_type] || client.prenatal_type} />}
+                  </ChipGrid>
+                  {(client.comorbidades || client.alergias || client.restricao_aromaterapia) && (
+                    <div className="space-y-2 mt-3">
+                      {client.comorbidades && <TextBlock label="Comorbidades" value={client.comorbidades} />}
+                      {client.alergias && <TextBlock label="Alergias" value={client.alergias} />}
+                      {client.restricao_aromaterapia && <TextBlock label="Restrição aromaterapia" value={client.restricao_aromaterapia} />}
                     </div>
                   )}
-                  {client.comorbidades && <Field label="Comorbidades" value={client.comorbidades} fullWidth />}
-                  {client.alergias && <Field label="Alergias" value={client.alergias} fullWidth />}
-                  {client.restricao_aromaterapia && <Field label="Restrição aromaterapia" value={client.restricao_aromaterapia} fullWidth />}
                   {prenatalTeam && (
-                    <div className="col-span-2">
-                      <p className="text-muted-foreground text-xs">Equipe</p>
-                      {prenatalTeam.map((m: any, i: number) => (
-                        <p key={i} className="font-medium">{m.name}{m.role ? ` — ${m.role}` : ""}</p>
-                      ))}
+                    <div className="mt-3">
+                      <p className="text-[10px] text-muted-foreground uppercase tracking-wide mb-1">Equipe</p>
+                      <div className="space-y-1">
+                        {prenatalTeam.map((m: any, i: number) => (
+                          <div key={i} className="rounded-lg bg-muted/50 px-3 py-2 text-xs">
+                            <span className="font-medium">{m.name}</span>
+                            {m.role && <span className="text-muted-foreground"> — {m.role}</span>}
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   )}
-                </Section>
+                </Card>
               )}
 
-              {/* Photographer */}
-              {client.has_fotografa && (client.fotografa_name || client.fotografa_phone) && (
-                <Section title="Fotógrafa">
-                  {client.fotografa_name && <Field label="Nome" value={client.fotografa_name} />}
-                  {client.fotografa_phone && <Field label="Telefone" value={client.fotografa_phone} />}
-                </Section>
+              {/* Photographer / Social */}
+              {((client.has_fotografa && (client.fotografa_name || client.fotografa_phone)) || client.instagram_gestante) && (
+                <Card icon={Camera} title="Extras" tint="accent">
+                  <ChipGrid>
+                    {client.instagram_gestante && <Chip icon={Instagram} label="Instagram" value={client.instagram_gestante} />}
+                    {client.has_fotografa && client.fotografa_name && <Chip icon={Camera} label="Fotógrafa" value={client.fotografa_name} />}
+                    {client.has_fotografa && client.fotografa_phone && <Chip icon={Phone} label="Tel. fotógrafa" value={client.fotografa_phone} />}
+                  </ChipGrid>
+                </Card>
               )}
 
               {/* Labor */}
               {client.labor_started_at && (
-                <Section title="Trabalho de Parto">
-                  <Field label="Início" value={formatDateTime(client.labor_started_at)} />
-                </Section>
-              )}
-
-              {/* Birth */}
-              {client.birth_occurred && (
-                <Section title="Dados do Nascimento">
-                  {client.birth_date && <Field label="Data" value={formatDate(client.birth_date)} />}
-                  {client.birth_time && <Field label="Hora" value={client.birth_time} />}
-                  {client.birth_weight && <Field label="Peso" value={`${client.birth_weight}g`} />}
-                  {client.birth_height && <Field label="Comprimento" value={`${client.birth_height}cm`} />}
-                  {client.baby_names && client.baby_names.length > 0 && (
-                    <Field label="Nome(s)" value={client.baby_names.join(", ")} />
-                  )}
-                </Section>
+                <Card icon={Sparkles} title="Trabalho de Parto" tint="destructive">
+                  <div className="rounded-xl bg-destructive/10 px-3 py-2 text-xs">
+                    <p className="text-[10px] text-destructive uppercase tracking-wide">Início</p>
+                    <p className="font-semibold text-destructive">{formatDateTime(client.labor_started_at)}</p>
+                  </div>
+                </Card>
               )}
 
               {/* Plan & Payment */}
-              <Section title="Plano e Pagamento">
-                <Field label="Plano" value={getPlanName(client.plan_setting_id, client.plan)} />
-                <Field label="Valor" value={formatCurrency(Number(client.plan_value) || 0)} />
-                <Field label="Pagamento" value={paymentMethodLabels[client.payment_method] || client.payment_method} />
-                <Field label="Status" value={paymentStatusLabels[client.payment_status] || client.payment_status} />
-              </Section>
+              <Card icon={CreditCard} title="Plano e Pagamento" tint="primary">
+                <ChipGrid>
+                  <Chip label="Plano" value={getPlanName(client.plan_setting_id, client.plan)} highlight />
+                  <Chip label="Valor" value={formatCurrency(Number(client.plan_value) || 0)} highlight />
+                  <Chip label="Pagamento" value={paymentMethodLabels[client.payment_method] || client.payment_method} />
+                  <Chip label="Status" value={paymentStatusLabels[client.payment_status] || client.payment_status} />
+                </ChipGrid>
 
-              {/* Installments */}
-              {payments && payments.length > 1 && (
-                <Section title={`Parcelas (${payments.length})`}>
-                  <div className="col-span-2 space-y-1">
+                {payments && payments.length > 1 && (
+                  <div className="mt-3 space-y-1.5">
+                    <p className="text-[10px] text-muted-foreground uppercase tracking-wide">
+                      Parcelas ({payments.length})
+                    </p>
                     {payments.map((p) => (
-                      <div key={p.id} className="flex items-center justify-between p-2 rounded-md bg-muted/50 text-xs">
-                        <span className="font-medium">{p.installment_number}/{p.total_installments} — {formatCurrency(Number(p.amount))}</span>
+                      <div key={p.id} className="flex items-center justify-between rounded-lg bg-muted/50 px-3 py-2 text-xs">
+                        <span className="font-medium">
+                          {p.installment_number}/{p.total_installments} · {formatCurrency(Number(p.amount))}
+                        </span>
                         <div className="flex items-center gap-2">
-                          {p.due_date && <span className="text-muted-foreground">{formatDate(p.due_date)}</span>}
+                          {p.due_date && <span className="text-muted-foreground text-[11px]">{formatDate(p.due_date)}</span>}
                           <Badge variant={p.status === "pago" ? "default" : "outline"} className="text-[10px] h-5">
                             {p.status === "pago" ? "Pago" : p.status === "parcial" ? "Parcial" : "Pendente"}
                           </Badge>
@@ -574,96 +649,82 @@ export function ClientFileDialog({ open, onOpenChange, client }: ClientFileDialo
                       </div>
                     ))}
                   </div>
-                </Section>
-              )}
+                )}
+              </Card>
 
               {/* Contracts */}
               {contracts && contracts.length > 0 && (
-                <Section title={`Contratos (${contracts.length})`}>
-                  <div className="col-span-2 space-y-2">
+                <Card icon={FileSignature} title={`Contratos (${contracts.length})`} tint="primary">
+                  <div className="space-y-2">
                     {contracts.map((c) => (
-                      <div key={c.id} className="p-2 rounded-md bg-muted/50 space-y-1">
+                      <div key={c.id} className="rounded-xl bg-muted/50 p-3 space-y-1">
                         <div className="flex items-center justify-between gap-2">
                           <p className="font-medium text-xs">{c.title}</p>
                           <Badge variant={c.status === "signed" ? "default" : "outline"} className="text-[10px] h-5 shrink-0">
                             {c.status === "signed" ? "Assinado" : "Pendente"}
                           </Badge>
                         </div>
-                        {c.signed_at && <p className="text-xs text-muted-foreground">Assinado em {formatDateTime(c.signed_at)}</p>}
-                        {c.signer_name && <p className="text-xs text-muted-foreground">Assinante: {c.signer_name}</p>}
+                        {c.signed_at && <p className="text-[11px] text-muted-foreground">Assinado em {formatDateTime(c.signed_at)}</p>}
+                        {c.signer_name && <p className="text-[11px] text-muted-foreground">Assinante: {c.signer_name}</p>}
                       </div>
                     ))}
                   </div>
-                </Section>
+                </Card>
               )}
 
               {/* Appointments */}
               {appointments && appointments.length > 0 && (
-                <Section title={`Consultas (${appointments.length})`}>
-                  <div className="col-span-2 space-y-3">
+                <Card icon={Calendar} title={`Consultas (${appointments.length})`} tint="accent">
+                  <div className="space-y-2">
                     {appointments.map((apt) => (
-                      <div key={apt.id} className="p-2 rounded-md bg-muted/50 space-y-1">
+                      <div key={apt.id} className="rounded-xl bg-muted/50 p-3 space-y-1">
                         <div className="flex items-center justify-between gap-2">
                           <p className="font-medium text-xs">{apt.title}</p>
                           <Badge variant={apt.completed_at ? "default" : "outline"} className="text-[10px] h-5 shrink-0">
                             {apt.completed_at ? "Concluída" : "Pendente"}
                           </Badge>
                         </div>
-                        <p className="text-muted-foreground text-xs">{formatDateTime(apt.scheduled_at)}</p>
-                        {apt.notes && (
-                          <p className="text-xs"><span className="text-muted-foreground">Obs:</span> {apt.notes}</p>
-                        )}
-                        {apt.completion_notes && (
-                          <p className="text-xs"><span className="text-muted-foreground">Conclusão:</span> {apt.completion_notes}</p>
-                        )}
+                        <p className="text-[11px] text-muted-foreground">{formatDateTime(apt.scheduled_at)}</p>
+                        {apt.notes && <p className="text-[11px]"><span className="text-muted-foreground">Obs:</span> {apt.notes}</p>}
+                        {apt.completion_notes && <p className="text-[11px]"><span className="text-muted-foreground">Conclusão:</span> {apt.completion_notes}</p>}
                       </div>
                     ))}
                   </div>
-                </Section>
+                </Card>
               )}
 
               {/* Service Requests */}
               {serviceRequests && serviceRequests.length > 0 && (
-                <Section title={`Solicitações de Serviço (${serviceRequests.length})`}>
-                  <div className="col-span-2 space-y-3">
+                <Card icon={ClipboardList} title={`Solicitações de Serviço (${serviceRequests.length})`} tint="primary">
+                  <div className="space-y-2">
                     {serviceRequests.map((sr) => (
-                      <div key={sr.id} className="p-2 rounded-md bg-muted/50 space-y-1">
+                      <div key={sr.id} className="rounded-xl bg-muted/50 p-3 space-y-1">
                         <div className="flex items-center justify-between gap-2">
                           <p className="font-medium text-xs">{sr.service_type}</p>
                           <Badge variant="outline" className="text-[10px] h-5 shrink-0">
                             {serviceRequestStatusLabels[sr.status] || sr.status}
                           </Badge>
                         </div>
-                        <p className="text-muted-foreground text-xs">{formatDateTime(sr.created_at)}</p>
-                        {sr.budget_value && (
-                          <p className="text-xs"><span className="text-muted-foreground">Orçamento:</span> {formatCurrency(Number(sr.budget_value))}</p>
-                        )}
-                        {sr.scheduled_date && (
-                          <p className="text-xs"><span className="text-muted-foreground">Agendado:</span> {formatDateTime(sr.scheduled_date)}</p>
-                        )}
-                        {sr.rating && (
-                          <p className="text-xs"><span className="text-muted-foreground">Avaliação:</span> {"⭐".repeat(sr.rating)}</p>
-                        )}
-                        {sr.rating_comment && (
-                          <p className="text-xs"><span className="text-muted-foreground">Comentário:</span> {sr.rating_comment}</p>
-                        )}
+                        <p className="text-[11px] text-muted-foreground">{formatDateTime(sr.created_at)}</p>
+                        {sr.budget_value && <p className="text-[11px]"><span className="text-muted-foreground">Orçamento:</span> {formatCurrency(Number(sr.budget_value))}</p>}
+                        {sr.scheduled_date && <p className="text-[11px]"><span className="text-muted-foreground">Agendado:</span> {formatDateTime(sr.scheduled_date)}</p>}
+                        {sr.rating && <p className="text-[11px]"><span className="text-muted-foreground">Avaliação:</span> {"⭐".repeat(sr.rating)}</p>}
+                        {sr.rating_comment && <p className="text-[11px]"><span className="text-muted-foreground">Comentário:</span> {sr.rating_comment}</p>}
                       </div>
                     ))}
                   </div>
-                </Section>
+                </Card>
               )}
 
               {/* Diary */}
               {diaryEntries && diaryEntries.length > 0 && (
-                <Section title={`Diário (${diaryEntries.length})`}>
-                  <div className="col-span-2 space-y-3">
+                <Card icon={BookHeart} title={`Diário (${diaryEntries.length})`} tint="pink">
+                  <div className="space-y-2">
                     {diaryEntries.map((entry) => (
-                      <div key={entry.id} className="p-2 rounded-md bg-muted/50 space-y-1">
+                      <div key={entry.id} className="rounded-xl bg-muted/50 p-3 space-y-1">
                         <div className="flex items-center justify-between gap-2">
-                          <p className="text-xs text-muted-foreground">{formatDateTime(entry.created_at)}</p>
-                          {entry.emotion && (
-                            <span className="text-xs">{emotionLabels[entry.emotion] || entry.emotion}</span>
-                          )}
+                          <p className="text-[11px] text-muted-foreground">{formatDateTime(entry.created_at)}</p>
+                          {entry.emotion && <span className="text-xs">{emotionLabels[entry.emotion] || entry.emotion}</span>}
                         </div>
                         <p className="text-xs">{entry.content}</p>
                         {entry.symptoms && entry.symptoms.length > 0 && (
@@ -673,66 +734,112 @@ export function ClientFileDialog({ open, onOpenChange, client }: ClientFileDialo
                             ))}
                           </div>
                         )}
-                        {entry.observations && (
-                          <p className="text-xs text-muted-foreground">Obs: {entry.observations}</p>
-                        )}
+                        {entry.observations && <p className="text-[11px] text-muted-foreground">Obs: {entry.observations}</p>}
                       </div>
                     ))}
                   </div>
-                </Section>
+                </Card>
               )}
 
               {/* Contractions */}
               {contractions && contractions.length > 0 && (
-                <Section title={`Contrações (${contractions.length})`}>
-                  <div className="col-span-2 space-y-1">
+                <Card icon={Activity} title={`Contrações (${contractions.length})`} tint="destructive">
+                  <div className="space-y-1">
                     {contractions.map((c) => (
-                      <div key={c.id} className="flex items-center justify-between p-2 rounded-md bg-muted/50">
-                        <p className="text-xs">{formatDateTime(c.started_at)}</p>
-                        <p className="text-xs font-medium">
-                          {c.duration_seconds ? `${c.duration_seconds}s` : "Em andamento"}
-                        </p>
+                      <div key={c.id} className="flex items-center justify-between rounded-lg bg-muted/50 px-3 py-2 text-xs">
+                        <p>{formatDateTime(c.started_at)}</p>
+                        <p className="font-medium">{c.duration_seconds ? `${c.duration_seconds}s` : "Em andamento"}</p>
                       </div>
                     ))}
                   </div>
-                </Section>
+                </Card>
               )}
 
-              {/* Notifications section removed — now in dedicated Cobranças page */}
-
-
-              {/* Empty state */}
               {(!appointments || appointments.length === 0) &&
                 (!diaryEntries || diaryEntries.length === 0) &&
                 (!contractions || contractions.length === 0) &&
                 (!serviceRequests || serviceRequests.length === 0) && (
-                  <p className="text-center text-muted-foreground py-4">
-                    Nenhum registro de acompanhamento encontrado.
+                  <p className="text-center text-muted-foreground text-xs py-2">
+                    Nenhum registro de acompanhamento ainda.
                   </p>
                 )}
             </div>
-          )}
-        </ScrollArea>
+          </ScrollArea>
+        )}
       </DialogContent>
     </Dialog>
   );
 }
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+const tintClasses: Record<string, { bg: string; icon: string }> = {
+  primary: { bg: "bg-primary/10", icon: "text-primary" },
+  accent: { bg: "bg-accent/20", icon: "text-accent-foreground" },
+  pink: { bg: "bg-pink-100", icon: "text-pink-600" },
+  destructive: { bg: "bg-destructive/10", icon: "text-destructive" },
+};
+
+function Card({
+  icon: Icon,
+  title,
+  tint = "primary",
+  children,
+}: {
+  icon: React.ComponentType<{ className?: string }>;
+  title: string;
+  tint?: "primary" | "accent" | "pink" | "destructive";
+  children: React.ReactNode;
+}) {
+  const t = tintClasses[tint];
   return (
-    <div className="space-y-2">
-      <Separator />
-      <h3 className="font-semibold text-foreground">{title}</h3>
-      <div className="grid grid-cols-2 gap-x-4 gap-y-2">{children}</div>
+    <div className="rounded-2xl bg-card border border-border/40 shadow-sm p-4 space-y-3">
+      <div className="flex items-center gap-2">
+        <div className={cn("w-8 h-8 rounded-xl flex items-center justify-center", t.bg)}>
+          <Icon className={cn("w-4 h-4", t.icon)} />
+        </div>
+        <h3 className="font-semibold text-sm text-foreground">{title}</h3>
+      </div>
+      <div>{children}</div>
     </div>
   );
 }
 
-function Field({ label, value, fullWidth }: { label: string; value: string; fullWidth?: boolean }) {
+function ChipGrid({ children }: { children: React.ReactNode }) {
+  return <div className="grid grid-cols-2 gap-2">{children}</div>;
+}
+
+function Chip({
+  icon: Icon,
+  label,
+  value,
+  highlight,
+}: {
+  icon?: React.ComponentType<{ className?: string }>;
+  label: string;
+  value: string;
+  highlight?: boolean;
+}) {
   return (
-    <div className={fullWidth ? "col-span-2" : "col-span-2 sm:col-span-1"}>
-      <p className="text-muted-foreground text-xs">{label}</p>
-      <p className="font-medium break-words">{value}</p>
+    <div
+      className={cn(
+        "rounded-xl px-3 py-2 min-w-0",
+        highlight ? "bg-primary/10" : "bg-muted/50",
+      )}
+    >
+      <div className="flex items-center gap-1.5">
+        {Icon && <Icon className="w-3 h-3 text-primary shrink-0" />}
+        <p className="text-[10px] text-muted-foreground uppercase tracking-wide truncate">{label}</p>
+      </div>
+      <p className={cn("text-xs font-medium break-words", highlight && "text-primary")}>{value}</p>
     </div>
   );
 }
+
+function TextBlock({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-xl bg-muted/50 px-3 py-2">
+      <p className="text-[10px] text-muted-foreground uppercase tracking-wide">{label}</p>
+      <p className="text-xs font-medium whitespace-pre-wrap">{value}</p>
+    </div>
+  );
+}
+
