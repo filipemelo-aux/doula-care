@@ -52,7 +52,7 @@ function gestationLabel(c: ClientRow) {
 }
 
 export function ClientsOverview() {
-  const navigate = useNavigate();
+  const [openId, setOpenId] = useState<string | null>(null);
 
   const { data: clients, isLoading } = useQuery({
     queryKey: ["dashboard-clients-overview"],
