@@ -13,6 +13,7 @@ import { AdminWelcomeDialog } from "@/components/dashboard/AdminWelcomeDialog";
 import { BillingAlertBanner } from "@/components/dashboard/BillingAlertBanner";
 import { PromoBetaBanner } from "@/components/dashboard/PromoBetaBanner";
 import { MatchRequestsCard } from "@/components/dashboard/MatchRequestsCard";
+import { ClientsOverview } from "@/components/dashboard/ClientsOverview";
 
 
 export default function Dashboard() {
