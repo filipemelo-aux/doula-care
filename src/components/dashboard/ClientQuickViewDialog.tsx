@@ -440,9 +440,7 @@ export function ClientQuickViewDialog({
                   <ActionButton
                     icon={FileText}
                     label="Ficha"
-                    onClick={() =>
-                      go("/clientes", { openClientId: client.id })
-                    }
+                    onClick={() => setFichaOpen(true)}
                   />
                 </div>
               </div>
