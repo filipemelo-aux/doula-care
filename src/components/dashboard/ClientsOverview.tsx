@@ -186,9 +186,7 @@ export function ClientsOverview() {
             return (
               <li key={c.id}>
                 <button
-                  onClick={() =>
-                    navigate("/clientes", { state: { openClientId: c.id } })
-                  }
+                  onClick={() => setOpenId(c.id)}
                   className="w-full flex items-center gap-3 rounded-xl bg-muted/40 hover:bg-muted p-3 text-left transition-all active:scale-[0.98]"
                 >
                   <div className="relative flex-shrink-0">
