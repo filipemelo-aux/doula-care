@@ -99,6 +99,20 @@ const serviceRequestStatusLabels: Record<string, string> = {
 
 export function ClientFileDialog({ open, onOpenChange, client }: ClientFileDialogProps) {
   const { getPlanName } = usePlanNames();
+
+  const { data: avatarUrl } = useQuery({
+    queryKey: ["client-file-avatar", client?.user_id],
+    enabled: open && !!client?.user_id,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("avatar_url")
+        .eq("user_id", client!.user_id!)
+        .maybeSingle();
+      return data?.avatar_url ?? null;
+    },
+  });
+
   const { data: appointments, isLoading: loadingAppts } = useQuery({
     queryKey: ["client-file-appointments", client?.id],
     queryFn: async () => {
