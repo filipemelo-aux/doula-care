@@ -62,6 +62,7 @@ function babyName(c: ClientRow) {
 
 export function ClientsOverview() {
   const [openId, setOpenId] = useState<string | null>(null);
+  const [filter, setFilter] = useState<ClientStatusFilter>("todas");
 
   const { data: clients, isLoading } = useQuery({
     queryKey: ["dashboard-clients-overview"],
