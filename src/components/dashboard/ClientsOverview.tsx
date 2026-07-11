@@ -1,5 +1,5 @@
-import { useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { useMemo, useState } from "react";
+import { ClientQuickViewDialog } from "./ClientQuickViewDialog";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -52,7 +52,7 @@ function gestationLabel(c: ClientRow) {
 }
 
 export function ClientsOverview() {
-  const navigate = useNavigate();
+  const [openId, setOpenId] = useState<string | null>(null);
 
   const { data: clients, isLoading } = useQuery({
     queryKey: ["dashboard-clients-overview"],
@@ -186,9 +186,7 @@ export function ClientsOverview() {
             return (
               <li key={c.id}>
                 <button
-                  onClick={() =>
-                    navigate("/clientes", { state: { openClientId: c.id } })
-                  }
+                  onClick={() => setOpenId(c.id)}
                   className="w-full flex items-center gap-3 rounded-xl bg-muted/40 hover:bg-muted p-3 text-left transition-all active:scale-[0.98]"
                 >
                   <div className="relative flex-shrink-0">
@@ -235,6 +233,12 @@ export function ClientsOverview() {
           })}
         </ul>
       )}
+
+      <ClientQuickViewDialog
+        open={!!openId}
+        onOpenChange={(o) => !o && setOpenId(null)}
+        clientId={openId}
+      />
     </div>
   );
 }
