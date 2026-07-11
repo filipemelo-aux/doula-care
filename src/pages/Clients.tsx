@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import { format, parseISO } from "date-fns";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { calculateCurrentPregnancyWeeks, calculateCurrentPregnancyDays, isPostTerm } from "@/lib/pregnancy";
@@ -84,6 +85,19 @@ export default function Clients() {
       return data || [];
     },
   });
+
+  const location = useLocation();
+  useEffect(() => {
+    const openId = (location.state as { openClientId?: string } | null)?.openClientId;
+    if (openId && clients?.length) {
+      const target = clients.find((c) => c.id === openId);
+      if (target) {
+        setSelectedClient(target as Client);
+        setDetailsOpen(true);
+        window.history.replaceState({}, "");
+      }
+    }
+  }, [location.state, clients]);
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {

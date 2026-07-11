@@ -13,6 +13,7 @@ import { AdminWelcomeDialog } from "@/components/dashboard/AdminWelcomeDialog";
 import { BillingAlertBanner } from "@/components/dashboard/BillingAlertBanner";
 import { PromoBetaBanner } from "@/components/dashboard/PromoBetaBanner";
 import { MatchRequestsCard } from "@/components/dashboard/MatchRequestsCard";
+import { ClientsOverview } from "@/components/dashboard/ClientsOverview";
 
 
 export default function Dashboard() {
@@ -75,10 +76,13 @@ export default function Dashboard() {
         {canSeeFinancials && <PeriodFilter selected={period} onChange={setPeriod} />}
       </div>
 
-      {/* ═══ 1 — Financeiro (oculto para moderadores) ═══ */}
+      {/* ═══ 1 — Suas clientes (foco doula) ═══ */}
+      <ClientsOverview />
+
+      {/* ═══ 2 — Financeiro (oculto para moderadores) ═══ */}
       {canSeeFinancials && <FinancialOverview period={period} />}
 
-      {/* ═══ 2 — Compromissos ═══ */}
+      {/* ═══ 3 — Compromissos ═══ */}
       <UpcomingAppointments />
 
       {/* ═══ 3 — Clientes ═══ */}
