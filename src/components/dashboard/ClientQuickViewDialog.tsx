@@ -39,6 +39,7 @@ import { useState } from "react";
 import { ClientDiaryDialog } from "./ClientDiaryDialog";
 import { ClientContractionsDialog } from "./ClientContractionsDialog";
 import { SendNotificationDialog } from "@/components/clients/SendNotificationDialog";
+import { ClientFileDialog } from "@/components/clients/ClientFileDialog";
 
 type Client = Tables<"clients">;
 
