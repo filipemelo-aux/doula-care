@@ -20,9 +20,21 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { Baby } from "lucide-react";
 import type { Tables } from "@/integrations/supabase/types";
+
+export const BIRTH_TYPE_OPTIONS = [
+  { value: "natural", label: "Parto natural" },
+  { value: "normal_induzido", label: "Parto normal induzido" },
+  { value: "cesarea_intraparto", label: "Cesárea intraparto" },
+  { value: "cesarea_eletiva", label: "Cesárea eletiva" },
+] as const;
+
+export const BIRTH_TYPE_LABELS: Record<string, string> = Object.fromEntries(
+  BIRTH_TYPE_OPTIONS.map((o) => [o.value, o.label])
+);
 import { maskWeight, parseWeight } from "@/lib/masks";
 
 // Local height mask: left-to-right fill, comma after 2 digits (e.g. "5" -> "5", "51" -> "51", "510" -> "51,0", "5100" -> "51,00")
