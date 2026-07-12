@@ -1684,8 +1684,33 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
 
               {/* Step 6: Plano e Pagamento */}
               {currentStep === 6 && (
-                <div className="space-y-3">
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+                <div className="space-y-3 relative">
+                  {isPlanLocked && (
+                    <div className="absolute inset-0 z-20 rounded-xl bg-background/80 backdrop-blur-sm flex items-center justify-center p-4">
+                      <div className="max-w-sm text-center space-y-3 bg-card border border-border/60 rounded-2xl p-5 shadow-lg">
+                        <div className="mx-auto w-11 h-11 rounded-full bg-amber-100 flex items-center justify-center">
+                          <Lock className="w-5 h-5 text-amber-600" />
+                        </div>
+                        <div className="space-y-1">
+                          <p className="font-semibold text-sm">Plano bloqueado por segurança</p>
+                          <p className="text-xs text-muted-foreground leading-relaxed">
+                            Esta cliente já possui pagamentos registrados. Para evitar inconsistências, o plano e as condições de pagamento estão congelados.
+                          </p>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="gap-2"
+                          onClick={() => setUnlockConfirmOpen(true)}
+                        >
+                          <AlertTriangle className="w-3.5 h-3.5 text-amber-600" />
+                          Alterar mesmo assim
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                  <div className={cn("grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3", isPlanLocked && "pointer-events-none select-none")}>
                     <FormField
                       control={form.control}
                       name="plan_setting_id"
