@@ -16,8 +16,8 @@ function generatePassword(dpp: string): { password: string; digits: string } {
   } else {
     digits = dpp.replace(/\D/g, "").slice(0, 6);
   }
-  // Prefix "Dc" to avoid HIBP rejection of common 6-digit passwords
-  return { password: `Dc${digits}`, digits };
+  // Prefix "dpp" to avoid HIBP rejection of common 6-digit passwords
+  return { password: `dpp${digits}`, digits };
 }
 
 Deno.serve(async (req) => {
@@ -130,7 +130,8 @@ Deno.serve(async (req) => {
     return new Response(
       JSON.stringify({
         message: "Senha resetada com sucesso",
-        hint: `Nova senha: Dc + dia/mês/ano da DPP (${newPassword})`,
+        password: newPassword,
+        hint: `Nova senha: dpp + dia/mês/ano da DPP (${newPassword})`,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
     );

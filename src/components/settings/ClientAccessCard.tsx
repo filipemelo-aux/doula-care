@@ -38,10 +38,13 @@ const generateUsername = (fullName: string): string => {
 
 const generatePassword = (dpp: string): string => {
   const parts = dpp.split("-");
+  let digits = "";
   if (parts.length === 3) {
-    return `${parts[2]}${parts[1]}${parts[0].slice(-2)}`;
+    digits = `${parts[2]}${parts[1]}${parts[0].slice(-2)}`;
+  } else {
+    digits = dpp.replace(/\D/g, "").slice(0, 6);
   }
-  return dpp.replace(/\D/g, "").slice(0, 6);
+  return `dpp${digits}`;
 };
 
 export function ClientAccessCard({ clientsWithAccounts, loadingClients }: ClientAccessCardProps) {
@@ -49,6 +52,7 @@ export function ClientAccessCard({ clientsWithAccounts, loadingClients }: Client
   const [showPasswords, setShowPasswords] = useState<Record<string, boolean>>({});
   const [resettingClientId, setResettingClientId] = useState<string | null>(null);
   const [resetConfirmClient, setResetConfirmClient] = useState<Client | null>(null);
+  const [passwordResetClient, setPasswordResetClient] = useState<Client | null>(null);
   const [resettingData, setResettingData] = useState(false);
 
   const provisionMutation = useMutation({
@@ -215,11 +219,7 @@ export function ClientAccessCard({ clientsWithAccounts, loadingClients }: Client
                         variant="ghost"
                         size="icon"
                         className="h-7 w-7 text-muted-foreground"
-                        onClick={() => {
-                          if (confirm(`Resetar senha de ${client.full_name.split(" ")[0]}?`)) {
-                            resetPasswordMutation.mutate(client.id);
-                          }
-                        }}
+                        onClick={() => setPasswordResetClient(client)}
                         disabled={resettingClientId === client.id}
                         title="Resetar senha"
                       >
@@ -273,6 +273,50 @@ export function ClientAccessCard({ clientsWithAccounts, loadingClients }: Client
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <AlertDialog open={!!passwordResetClient} onOpenChange={(open) => !open && setPasswordResetClient(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Resetar senha de {passwordResetClient?.full_name?.split(" ")[0]}?</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="text-sm text-muted-foreground space-y-3">
+                <p>A senha será redefinida com base na DPP da cliente.</p>
+                <div className="rounded-xl bg-accent/10 border border-accent/20 p-3">
+                  <p className="text-xs font-semibold text-accent mb-1">Formato da nova senha</p>
+                  <p className="text-xs">
+                    <span className="font-mono font-bold">dpp</span> + dia/mês/ano da DPP
+                    <br />
+                    Ex.: DPP 17/09/2025 → <span className="font-mono font-bold">dpp170925</span>
+                  </p>
+                </div>
+                {passwordResetClient?.dpp && (
+                  <p className="text-xs">
+                    Nova senha desta cliente:{" "}
+                    <span className="font-mono font-bold text-foreground">
+                      {generatePassword(passwordResetClient.dpp)}
+                    </span>
+                  </p>
+                )}
+                <p className="text-xs">A cliente será obrigada a trocá-la no próximo acesso.</p>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (passwordResetClient) {
+                  resetPasswordMutation.mutate(passwordResetClient.id);
+                  setPasswordResetClient(null);
+                }
+              }}
+            >
+              Resetar senha
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
+
   );
 }

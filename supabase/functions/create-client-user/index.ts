@@ -26,8 +26,8 @@ function generatePassword(dpp: string): string {
   } else {
     digits = dpp.replace(/\D/g, "").slice(0, 6);
   }
-  // Prefix "Dc" to avoid HIBP rejection of common 6-digit passwords
-  return `Dc${digits}`;
+  // Prefix "dpp" to avoid HIBP rejection of common 6-digit passwords
+  return `dpp${digits}`;
 }
 
 Deno.serve(async (req) => {
