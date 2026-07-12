@@ -31,6 +31,7 @@ import {
   Sparkles,
   AlertTriangle,
   ClipboardList,
+  StickyNote,
 } from "lucide-react";
 import { cn, formatBrazilDate } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
@@ -772,6 +773,16 @@ export function ClientFileDialog({ open, onOpenChange, client }: ClientFileDialo
                   </div>
                 </Card>
               )}
+
+              {/* Observações da Doula */}
+              {client.notes && (
+                <Card icon={StickyNote} title="Observações" tint="accent">
+                  <p className="text-xs whitespace-pre-wrap leading-relaxed text-foreground/90">
+                    {client.notes}
+                  </p>
+                </Card>
+              )}
+
 
 
               {(!appointments || appointments.length === 0) &&

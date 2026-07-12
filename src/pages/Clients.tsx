@@ -20,7 +20,7 @@ import { Plus, Search, Edit2, Trash2, Eye, Loader2, Phone, Users } from "lucide-
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { ClientDialog } from "@/components/clients/ClientDialog";
-import { ClientDetailsDialog } from "@/components/clients/ClientDetailsDialog";
+import { ClientFileDialog } from "@/components/clients/ClientFileDialog";
 import { toast } from "sonner";
 import {
   AlertDialog,
@@ -501,8 +501,8 @@ export default function Clients() {
         client={selectedClient}
       />
 
-      {/* Client Details Dialog */}
-      <ClientDetailsDialog
+      {/* Client File (Ficha) Dialog */}
+      <ClientFileDialog
         open={detailsOpen}
         onOpenChange={setDetailsOpen}
         client={selectedClient}

@@ -32,8 +32,18 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { CheckCircle, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
+import { CheckCircle, Loader2, ChevronLeft, ChevronRight, Lock, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 import { maskPhone, maskCPF, maskCEP, maskCurrency, parseCurrency } from "@/lib/masks";
 import type { Tables } from "@/integrations/supabase/types";
@@ -112,6 +122,16 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
   const lastEffectivePlanValueRef = useRef<number>(0);
   const [prenatalTeam, setPrenatalTeam] = useState<{name: string; role: string}[]>([]);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const [unlockedPlan, setUnlockedPlan] = useState(false);
+  const [unlockConfirmOpen, setUnlockConfirmOpen] = useState(false);
+
+  // Reset unlock whenever the dialog closes or the target client changes
+  useEffect(() => {
+    if (!open) {
+      setUnlockedPlan(false);
+      setUnlockConfirmOpen(false);
+    }
+  }, [open, client?.id]);
 
   const { data: planSettings } = useQuery({
     queryKey: ["plan-settings"],
@@ -132,7 +152,7 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
       if (!client?.id) return null;
       const { data, error } = await supabase
         .from("transactions")
-        .select("id, installments, installment_value, payment_method, date")
+        .select("id, installments, installment_value, payment_method, date, amount_received")
         .eq("client_id", client.id)
         .eq("is_auto_generated", true)
         .eq("type", "receita")
@@ -173,6 +193,18 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
     },
     enabled: !!client?.id && open,
   });
+
+  // Editing a client with any recorded payment freezes the plan step by default
+  const hasRecordedPayments = useMemo(() => {
+    if (!client) return false;
+    const paidInstallments = (clientInstallmentPayments || []).some(
+      (p) => Number(p.amount_paid || 0) > 0,
+    );
+    const txReceived = Number((clientTransaction as any)?.amount_received || 0) > 0;
+    return paidInstallments || txReceived;
+  }, [client, clientInstallmentPayments, clientTransaction]);
+
+  const isPlanLocked = !!client && hasRecordedPayments && !unlockedPlan;
 
   const form = useForm<ClientFormData>({
     resolver: zodResolver(clientSchema),
@@ -566,11 +598,43 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
       };
 
       if (client) {
+        // ===== PLAN LOCK ENFORCEMENT =====
+        // When editing a client that already has recorded payments, freeze plan-
+        // related fields UNLESS the doula explicitly unlocked the section.
+        const editingHadPayments = hasRecordedPayments;
+        const skipPlanSync = editingHadPayments && !unlockedPlan;
+
+        if (skipPlanSync) {
+          // Preserve original plan/payment values so nothing gets overwritten.
+          (payload as any).plan = (client as any).plan;
+          payload.plan_setting_id = client.plan_setting_id;
+          payload.payment_method = (client as any).payment_method;
+          payload.plan_value = Number(client.plan_value || 0);
+        }
+
+        if (editingHadPayments && unlockedPlan) {
+          // Reverse every paid installment so the schedule can be rebuilt cleanly.
+          const { data: allPayments } = await supabase
+            .from("payments")
+            .select("id, amount_paid")
+            .eq("client_id", client.id);
+          for (const p of allPayments || []) {
+            if (Number((p as any).amount_paid || 0) > 0) {
+              await supabase.rpc("revert_installment_payment", { p_payment_id: p.id } as any);
+            }
+          }
+        }
+
         const { error } = await supabase
           .from("clients")
           .update(payload)
           .eq("id", client.id);
         if (error) throw error;
+
+        if (skipPlanSync) {
+          // Do NOT touch transactions or the payment schedule when locked.
+          return;
+        }
 
         // Update auto-generated transaction
         const resolvedPlanSetting = data.plan_setting_id !== "avulso" ? planSettings?.find(p => p.id === data.plan_setting_id) : null;
@@ -1052,8 +1116,9 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
   };
 
   return (
+    <>
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[55vh] overflow-hidden flex flex-col overflow-x-hidden">
+      <DialogContent className="max-w-2xl w-[95vw] max-h-[92vh] h-[92vh] overflow-hidden flex flex-col overflow-x-hidden">
         <DialogHeader className="pb-0 flex-shrink-0">
           <DialogTitle className="font-display text-lg">
             {client ? "Editar Cliente" : "Nova Cliente"}
@@ -1084,7 +1149,7 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="client-dialog-form flex flex-col flex-1 min-h-0">
-            <div ref={scrollContainerRef} className="flex-1 overflow-y-auto overflow-x-hidden px-1 space-y-0 scrollbar-thin pt-3 pb-4 min-h-[35vh]">
+            <div ref={scrollContainerRef} className="flex-1 overflow-y-auto overflow-x-hidden px-1 space-y-0 scrollbar-thin pt-3 pb-4 min-h-0">
 
               {/* Step 1: Dados Pessoais */}
               {currentStep === 1 && (
@@ -1652,8 +1717,33 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
 
               {/* Step 6: Plano e Pagamento */}
               {currentStep === 6 && (
-                <div className="space-y-3">
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+                <div className="space-y-3 relative">
+                  {isPlanLocked && (
+                    <div className="absolute inset-0 z-20 rounded-xl bg-background/80 backdrop-blur-sm flex items-center justify-center p-4">
+                      <div className="max-w-sm text-center space-y-3 bg-card border border-border/60 rounded-2xl p-5 shadow-lg">
+                        <div className="mx-auto w-11 h-11 rounded-full bg-amber-100 flex items-center justify-center">
+                          <Lock className="w-5 h-5 text-amber-600" />
+                        </div>
+                        <div className="space-y-1">
+                          <p className="font-semibold text-sm">Plano bloqueado por segurança</p>
+                          <p className="text-xs text-muted-foreground leading-relaxed">
+                            Esta cliente já possui pagamentos registrados. Para evitar inconsistências, o plano e as condições de pagamento estão congelados.
+                          </p>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="gap-2"
+                          onClick={() => setUnlockConfirmOpen(true)}
+                        >
+                          <AlertTriangle className="w-3.5 h-3.5 text-amber-600" />
+                          Alterar mesmo assim
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                  <div className={cn("grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3", isPlanLocked && "pointer-events-none select-none")}>
                     <FormField
                       control={form.control}
                       name="plan_setting_id"
@@ -2136,5 +2226,34 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
         </Form>
       </DialogContent>
     </Dialog>
+
+    <AlertDialog open={unlockConfirmOpen} onOpenChange={setUnlockConfirmOpen}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle className="flex items-center gap-2">
+            <AlertTriangle className="w-5 h-5 text-amber-600" />
+            Estornar pagamentos registrados?
+          </AlertDialogTitle>
+          <AlertDialogDescription>
+            Esta cliente já possui pagamentos recebidos. Se você seguir com a alteração
+            do plano ou das condições de pagamento, <strong>todos os pagamentos serão
+            estornados</strong> ao salvar, e você terá que lançar cada recebimento novamente.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+          <AlertDialogAction
+            className="bg-amber-600 hover:bg-amber-700 text-white"
+            onClick={() => {
+              setUnlockedPlan(true);
+              setUnlockConfirmOpen(false);
+            }}
+          >
+            Sim, desbloquear
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+    </>
   );
 }

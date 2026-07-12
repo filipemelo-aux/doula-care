@@ -31,7 +31,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { Tables } from "@/integrations/supabase/types";
 import { SendNotificationDialog } from "@/components/clients/SendNotificationDialog";
 import { ClientDiaryDialog } from "./ClientDiaryDialog";
-import { ClientDetailsDialog } from "@/components/clients/ClientDetailsDialog";
+import { ClientFileDialog } from "@/components/clients/ClientFileDialog";
 import { BirthRegistrationDialog } from "@/components/clients/BirthRegistrationDialog";
 
 type Client = Tables<"clients">;
@@ -410,8 +410,8 @@ export function ClientsListDialog({
         client={selectedClient}
       />
 
-      {/* Client Details Dialog */}
-      <ClientDetailsDialog
+      {/* Client File (Ficha) Dialog */}
+      <ClientFileDialog
         open={detailsDialogOpen}
         onOpenChange={setDetailsDialogOpen}
         client={selectedClient}
