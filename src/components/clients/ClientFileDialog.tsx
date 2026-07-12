@@ -566,6 +566,9 @@ export function ClientFileDialog({ open, onOpenChange, client }: ClientFileDialo
                     )}
                     {client.birth_date && <Chip icon={Calendar} label="Data" value={formatDate(client.birth_date)} />}
                     {client.birth_time && <Chip label="Hora" value={client.birth_time} />}
+                    {(client as any).birth_type && (
+                      <Chip label="Tipo de parto" value={BIRTH_TYPE_LABELS[(client as any).birth_type] || (client as any).birth_type} highlight />
+                    )}
                     {client.birth_weight && <Chip label="Peso" value={`${client.birth_weight}g`} />}
                     {client.birth_height && <Chip label="Comprimento" value={`${client.birth_height}cm`} />}
                   </ChipGrid>
