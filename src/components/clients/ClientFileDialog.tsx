@@ -286,6 +286,15 @@ export function ClientFileDialog({ open, onOpenChange, client }: ClientFileDialo
       addText(`Gerada em ${format(new Date(), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}`, 9);
       y += 4;
 
+      // Contractions
+      if (contractions && contractions.length > 0) {
+        addSection(`Contrações (${contractions.length})`);
+        contractions.forEach((c) => {
+          const dur = c.duration_seconds ? `${c.duration_seconds}s` : "em andamento";
+          addText(`${formatDateTime(c.started_at)} — Duração: ${dur}`);
+        });
+      }
+
       // Appointments
       if (appointments && appointments.length > 0) {
         addSection(`Consultas (${appointments.length})`);
@@ -296,6 +305,7 @@ export function ClientFileDialog({ open, onOpenChange, client }: ClientFileDialo
           if (apt.completion_notes) addText(`  Notas de conclusão: ${apt.completion_notes}`);
         });
       }
+
 
       // Clinical
       if (client.prenatal_type || client.prenatal_high_risk || client.comorbidades || client.alergias || client.restricao_aromaterapia || client.birth_location) {
