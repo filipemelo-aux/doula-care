@@ -307,6 +307,7 @@ export type Database = {
           birth_location: string | null
           birth_occurred: boolean | null
           birth_time: string | null
+          birth_type: Database["public"]["Enums"]["birth_type"] | null
           birth_weight: number | null
           city: string | null
           comorbidades: string | null
@@ -361,6 +362,7 @@ export type Database = {
           birth_location?: string | null
           birth_occurred?: boolean | null
           birth_time?: string | null
+          birth_type?: Database["public"]["Enums"]["birth_type"] | null
           birth_weight?: number | null
           city?: string | null
           comorbidades?: string | null
@@ -415,6 +417,7 @@ export type Database = {
           birth_location?: string | null
           birth_occurred?: boolean | null
           birth_time?: string | null
+          birth_type?: Database["public"]["Enums"]["birth_type"] | null
           birth_weight?: number | null
           city?: string | null
           comorbidades?: string | null
@@ -2192,6 +2195,11 @@ export type Database = {
         | "client"
         | "super_admin"
         | "visitor"
+      birth_type:
+        | "natural"
+        | "normal_induzido"
+        | "cesarea_intraparto"
+        | "cesarea_eletiva"
       client_status: "tentante" | "gestante" | "lactante" | "outro"
       expense_category:
         | "social_media"
@@ -2351,6 +2359,12 @@ export const Constants = {
         "client",
         "super_admin",
         "visitor",
+      ],
+      birth_type: [
+        "natural",
+        "normal_induzido",
+        "cesarea_intraparto",
+        "cesarea_eletiva",
       ],
       client_status: ["tentante", "gestante", "lactante", "outro"],
       expense_category: [
