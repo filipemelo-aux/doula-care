@@ -286,6 +286,49 @@ export function ClientFileDialog({ open, onOpenChange, client }: ClientFileDialo
       addText(`Gerada em ${format(new Date(), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}`, 9);
       y += 4;
 
+      // Appointments
+      if (appointments && appointments.length > 0) {
+        addSection(`Consultas (${appointments.length})`);
+        appointments.forEach((apt) => {
+          const status = apt.completed_at ? "✅ Concluída" : "⏳ Pendente";
+          addText(`${formatDateTime(apt.scheduled_at)} — ${apt.title} [${status}]`, 10, true);
+          if (apt.notes) addText(`  Observações: ${apt.notes}`);
+          if (apt.completion_notes) addText(`  Notas de conclusão: ${apt.completion_notes}`);
+        });
+      }
+
+      // Clinical
+      if (client.prenatal_type || client.prenatal_high_risk || client.comorbidades || client.alergias || client.restricao_aromaterapia || client.birth_location) {
+        addSection("Informações Clínicas");
+        if (client.birth_location) addText(`Local do parto: ${client.birth_location}`);
+        if (client.prenatal_type) addText(`Tipo de pré-natal: ${prenatalTypeLabels[client.prenatal_type] || client.prenatal_type}`);
+        if (client.prenatal_high_risk) addText("⚠️ Gestação de alto risco");
+        if (client.comorbidades) addText(`Comorbidades: ${client.comorbidades}`);
+        if (client.alergias) addText(`Alergias: ${client.alergias}`);
+        if (client.restricao_aromaterapia) addText(`Restrição aromaterapia: ${client.restricao_aromaterapia}`);
+        if (prenatalTeam) {
+          addText("Equipe de pré-natal:");
+          prenatalTeam.forEach((m: any) => addText(`  • ${m.name}${m.role ? ` — ${m.role}` : ""}`));
+        }
+      }
+
+      // Labor
+      if (client.labor_started_at) {
+        addSection("Trabalho de Parto");
+        addText(`Início: ${formatDateTime(client.labor_started_at)}`);
+      }
+
+      // Birth
+      if (client.birth_occurred) {
+        addSection("Dados do Nascimento");
+        if (client.birth_date) addText(`Data: ${formatDate(client.birth_date)}`);
+        if (client.birth_time) addText(`Hora: ${client.birth_time}`);
+        if ((client as any).birth_type) addText(`Tipo de parto: ${BIRTH_TYPE_LABELS[(client as any).birth_type] || (client as any).birth_type}`);
+        if (client.birth_weight) addText(`Peso: ${client.birth_weight}g`);
+        if (client.birth_height) addText(`Comprimento: ${client.birth_height}cm`);
+        if (client.baby_names && client.baby_names.length > 0) addText(`Nome(s): ${client.baby_names.join(", ")}`);
+      }
+
       // Personal Info
       addSection("Dados Pessoais");
       addText(`Nome: ${client.full_name}`);
@@ -316,43 +359,11 @@ export function ClientFileDialog({ open, onOpenChange, client }: ClientFileDialo
         addText(`Instagram: ${client.instagram_gestante}`);
       }
 
-      // Clinical
-      if (client.prenatal_type || client.prenatal_high_risk || client.comorbidades || client.alergias || client.restricao_aromaterapia || client.birth_location) {
-        addSection("Informações Clínicas");
-        if (client.birth_location) addText(`Local do parto: ${client.birth_location}`);
-        if (client.prenatal_type) addText(`Tipo de pré-natal: ${prenatalTypeLabels[client.prenatal_type] || client.prenatal_type}`);
-        if (client.prenatal_high_risk) addText("⚠️ Gestação de alto risco");
-        if (client.comorbidades) addText(`Comorbidades: ${client.comorbidades}`);
-        if (client.alergias) addText(`Alergias: ${client.alergias}`);
-        if (client.restricao_aromaterapia) addText(`Restrição aromaterapia: ${client.restricao_aromaterapia}`);
-        if (prenatalTeam) {
-          addText("Equipe de pré-natal:");
-          prenatalTeam.forEach((m: any) => addText(`  • ${m.name}${m.role ? ` — ${m.role}` : ""}`));
-        }
-      }
-
       // Photographer
       if (client.has_fotografa && (client.fotografa_name || client.fotografa_phone)) {
         addSection("Fotógrafa");
         if (client.fotografa_name) addText(`Nome: ${client.fotografa_name}`);
         if (client.fotografa_phone) addText(`Telefone: ${client.fotografa_phone}`);
-      }
-
-      // Labor
-      if (client.labor_started_at) {
-        addSection("Trabalho de Parto");
-        addText(`Início: ${formatDateTime(client.labor_started_at)}`);
-      }
-
-      // Birth
-      if (client.birth_occurred) {
-        addSection("Dados do Nascimento");
-        if (client.birth_date) addText(`Data: ${formatDate(client.birth_date)}`);
-        if (client.birth_time) addText(`Hora: ${client.birth_time}`);
-        if ((client as any).birth_type) addText(`Tipo de parto: ${BIRTH_TYPE_LABELS[(client as any).birth_type] || (client as any).birth_type}`);
-        if (client.birth_weight) addText(`Peso: ${client.birth_weight}g`);
-        if (client.birth_height) addText(`Comprimento: ${client.birth_height}cm`);
-        if (client.baby_names && client.baby_names.length > 0) addText(`Nome(s): ${client.baby_names.join(", ")}`);
       }
 
       // Plan & Payment
@@ -380,17 +391,6 @@ export function ClientFileDialog({ open, onOpenChange, client }: ClientFileDialo
           addText(`${c.title} [${st}]`, 10, true);
           if (c.signed_at) addText(`  Assinado em: ${formatDateTime(c.signed_at)}`);
           if (c.signer_name) addText(`  Assinante: ${c.signer_name}`);
-        });
-      }
-
-      // Appointments
-      if (appointments && appointments.length > 0) {
-        addSection(`Consultas (${appointments.length})`);
-        appointments.forEach((apt) => {
-          const status = apt.completed_at ? "✅ Concluída" : "⏳ Pendente";
-          addText(`${formatDateTime(apt.scheduled_at)} — ${apt.title} [${status}]`, 10, true);
-          if (apt.notes) addText(`  Observações: ${apt.notes}`);
-          if (apt.completion_notes) addText(`  Notas de conclusão: ${apt.completion_notes}`);
         });
       }
 
