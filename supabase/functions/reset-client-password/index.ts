@@ -130,7 +130,8 @@ Deno.serve(async (req) => {
     return new Response(
       JSON.stringify({
         message: "Senha resetada com sucesso",
-        hint: `Nova senha: Dc + dia/mês/ano da DPP (${newPassword})`,
+        password: newPassword,
+        hint: `Nova senha: dpp + dia/mês/ano da DPP (${newPassword})`,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
     );
