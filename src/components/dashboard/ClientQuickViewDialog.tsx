@@ -73,6 +73,7 @@ export function ClientQuickViewDialog({
   clientId,
 }: ClientQuickViewDialogProps) {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [diaryOpen, setDiaryOpen] = useState(false);
   const [contractionsOpen, setContractionsOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
