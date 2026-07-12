@@ -194,6 +194,18 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
     enabled: !!client?.id && open,
   });
 
+  // Editing a client with any recorded payment freezes the plan step by default
+  const hasRecordedPayments = useMemo(() => {
+    if (!client) return false;
+    const paidInstallments = (clientInstallmentPayments || []).some(
+      (p) => Number(p.amount_paid || 0) > 0,
+    );
+    const txReceived = Number((clientTransaction as any)?.amount_received || 0) > 0;
+    return paidInstallments || txReceived;
+  }, [client, clientInstallmentPayments, clientTransaction]);
+
+  const isPlanLocked = !!client && hasRecordedPayments && !unlockedPlan;
+
   const form = useForm<ClientFormData>({
     resolver: zodResolver(clientSchema),
     defaultValues: {
