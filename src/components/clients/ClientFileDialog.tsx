@@ -420,14 +420,6 @@ export function ClientFileDialog({ open, onOpenChange, client }: ClientFileDialo
         });
       }
 
-      // Contractions
-      if (contractions && contractions.length > 0) {
-        addSection(`Contrações (${contractions.length})`);
-        contractions.forEach((c) => {
-          const dur = c.duration_seconds ? `${c.duration_seconds}s` : "em andamento";
-          addText(`${formatDateTime(c.started_at)} — Duração: ${dur}`);
-        });
-      }
 
       // Notifications section removed from PDF export.
 
