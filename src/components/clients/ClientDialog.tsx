@@ -152,7 +152,7 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
       if (!client?.id) return null;
       const { data, error } = await supabase
         .from("transactions")
-        .select("id, installments, installment_value, payment_method, date")
+        .select("id, installments, installment_value, payment_method, date, amount_received")
         .eq("client_id", client.id)
         .eq("is_auto_generated", true)
         .eq("type", "receita")
