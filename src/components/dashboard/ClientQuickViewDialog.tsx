@@ -21,11 +21,17 @@ import {
   Bell,
   Baby,
   Heart,
-  Phone,
   Calendar,
   MapPin,
   Sparkles,
   ChevronRight,
+  Hospital,
+  AlertTriangle,
+  Stethoscope,
+  Leaf,
+  Scale,
+  Ruler,
+  Clock,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatBrazilDate } from "@/lib/utils";
@@ -309,29 +315,123 @@ export function ClientQuickViewDialog({
 
               {/* Body */}
               <div className="px-5 py-4 space-y-4 max-h-[70vh] overflow-y-auto">
-                {/* Info chips */}
+                {/* Info chips - useful pregnancy/postpartum info */}
                 <div className="grid grid-cols-2 gap-2 text-xs">
-                  {client.dpp && (
+                  {isGest && client.prenatal_type && (
                     <div className="flex items-center gap-2 rounded-xl bg-muted/50 px-3 py-2">
-                      <Calendar className="w-3.5 h-3.5 text-primary shrink-0" />
+                      <Stethoscope className="w-3.5 h-3.5 text-primary shrink-0" />
                       <div className="min-w-0">
                         <p className="text-[10px] text-muted-foreground uppercase tracking-wide">
-                          DPP
+                          Pré-natal
                         </p>
-                        <p className="font-medium truncate">
-                          {formatBrazilDate(client.dpp)}
+                        <p className="font-medium truncate capitalize">
+                          {client.prenatal_type}
                         </p>
                       </div>
                     </div>
                   )}
-                  {client.phone && (
-                    <div className="flex items-center gap-2 rounded-xl bg-muted/50 px-3 py-2">
-                      <Phone className="w-3.5 h-3.5 text-primary shrink-0" />
+                  {isGest && client.prenatal_high_risk && (
+                    <div className="flex items-center gap-2 rounded-xl bg-red-50 border border-red-100 px-3 py-2">
+                      <AlertTriangle className="w-3.5 h-3.5 text-red-600 shrink-0" />
+                      <div className="min-w-0">
+                        <p className="text-[10px] text-red-600/80 uppercase tracking-wide">
+                          Gestação
+                        </p>
+                        <p className="font-medium truncate text-red-700">
+                          Alto risco
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                  {client.birth_location && (
+                    <div className="flex items-center gap-2 rounded-xl bg-muted/50 px-3 py-2 col-span-2">
+                      <Hospital className="w-3.5 h-3.5 text-primary shrink-0" />
                       <div className="min-w-0">
                         <p className="text-[10px] text-muted-foreground uppercase tracking-wide">
-                          Telefone
+                          Local do parto
                         </p>
-                        <p className="font-medium truncate">{client.phone}</p>
+                        <p className="font-medium truncate">
+                          {client.birth_location}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                  {isPuer && client.birth_date && (
+                    <div className="flex items-center gap-2 rounded-xl bg-muted/50 px-3 py-2">
+                      <Clock className="w-3.5 h-3.5 text-primary shrink-0" />
+                      <div className="min-w-0">
+                        <p className="text-[10px] text-muted-foreground uppercase tracking-wide">
+                          Nascimento
+                        </p>
+                        <p className="font-medium truncate">
+                          {formatBrazilDate(client.birth_date)}
+                          {client.birth_time && ` · ${client.birth_time.slice(0, 5)}`}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                  {isPuer && client.birth_weight && (
+                    <div className="flex items-center gap-2 rounded-xl bg-muted/50 px-3 py-2">
+                      <Scale className="w-3.5 h-3.5 text-primary shrink-0" />
+                      <div className="min-w-0">
+                        <p className="text-[10px] text-muted-foreground uppercase tracking-wide">
+                          Peso
+                        </p>
+                        <p className="font-medium truncate">
+                          {client.birth_weight}g
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                  {isPuer && client.birth_height && (
+                    <div className="flex items-center gap-2 rounded-xl bg-muted/50 px-3 py-2">
+                      <Ruler className="w-3.5 h-3.5 text-primary shrink-0" />
+                      <div className="min-w-0">
+                        <p className="text-[10px] text-muted-foreground uppercase tracking-wide">
+                          Altura
+                        </p>
+                        <p className="font-medium truncate">
+                          {client.birth_height}cm
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                  {client.alergias && (
+                    <div className="flex items-center gap-2 rounded-xl bg-amber-50 border border-amber-100 px-3 py-2 col-span-2">
+                      <AlertTriangle className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                      <div className="min-w-0">
+                        <p className="text-[10px] text-amber-700/80 uppercase tracking-wide">
+                          Alergias
+                        </p>
+                        <p className="font-medium truncate text-amber-900">
+                          {client.alergias}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                  {client.comorbidades && (
+                    <div className="flex items-center gap-2 rounded-xl bg-muted/50 px-3 py-2 col-span-2">
+                      <Stethoscope className="w-3.5 h-3.5 text-primary shrink-0" />
+                      <div className="min-w-0">
+                        <p className="text-[10px] text-muted-foreground uppercase tracking-wide">
+                          Comorbidades
+                        </p>
+                        <p className="font-medium truncate">
+                          {client.comorbidades}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                  {client.restricao_aromaterapia && (
+                    <div className="flex items-center gap-2 rounded-xl bg-muted/50 px-3 py-2 col-span-2">
+                      <Leaf className="w-3.5 h-3.5 text-primary shrink-0" />
+                      <div className="min-w-0">
+                        <p className="text-[10px] text-muted-foreground uppercase tracking-wide">
+                          Restrição aromaterapia
+                        </p>
+                        <p className="font-medium truncate">
+                          {client.restricao_aromaterapia}
+                        </p>
                       </div>
                     </div>
                   )}
