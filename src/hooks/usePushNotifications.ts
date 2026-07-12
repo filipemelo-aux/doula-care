@@ -10,9 +10,10 @@ import {
 // Extend ServiceWorkerRegistration to include pushManager
 declare global {
   interface ServiceWorkerRegistration {
-    readonly pushManager?: PushManager;
+    readonly pushManager: PushManager;
   }
 }
+
 
 
 export function usePushNotifications() {
