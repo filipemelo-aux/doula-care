@@ -34,6 +34,8 @@ import {
   Ruler,
   Clock,
 } from "lucide-react";
+import { differenceInDays, startOfDay } from "date-fns";
+
 import { cn } from "@/lib/utils";
 import { formatBrazilDate } from "@/lib/utils";
 import {
