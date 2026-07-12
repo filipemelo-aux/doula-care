@@ -364,6 +364,15 @@ export default function Settings() {
       toast.error("Informe uma senha ou marque enviar convite por email");
       return;
     }
+    if (!newUserData.sendInvite) {
+      const pwd = newUserData.password;
+      if (pwd.length < 6 || !/[a-z]/.test(pwd) || !/[A-Z]/.test(pwd) || !/[0-9]/.test(pwd)) {
+        toast.error("Senha inválida", {
+          description: "Use pelo menos 6 caracteres, com uma letra maiúscula, uma minúscula e um número.",
+        });
+        return;
+      }
+    }
     createUserMutation.mutate(newUserData);
   };
 
