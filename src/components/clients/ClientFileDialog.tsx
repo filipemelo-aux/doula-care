@@ -286,6 +286,15 @@ export function ClientFileDialog({ open, onOpenChange, client }: ClientFileDialo
       addText(`Gerada em ${format(new Date(), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}`, 9);
       y += 4;
 
+      // Contractions
+      if (contractions && contractions.length > 0) {
+        addSection(`Contrações (${contractions.length})`);
+        contractions.forEach((c) => {
+          const dur = c.duration_seconds ? `${c.duration_seconds}s` : "em andamento";
+          addText(`${formatDateTime(c.started_at)} — Duração: ${dur}`);
+        });
+      }
+
       // Appointments
       if (appointments && appointments.length > 0) {
         addSection(`Consultas (${appointments.length})`);
@@ -296,6 +305,7 @@ export function ClientFileDialog({ open, onOpenChange, client }: ClientFileDialo
           if (apt.completion_notes) addText(`  Notas de conclusão: ${apt.completion_notes}`);
         });
       }
+
 
       // Clinical
       if (client.prenatal_type || client.prenatal_high_risk || client.comorbidades || client.alergias || client.restricao_aromaterapia || client.birth_location) {
@@ -420,14 +430,6 @@ export function ClientFileDialog({ open, onOpenChange, client }: ClientFileDialo
         });
       }
 
-      // Contractions
-      if (contractions && contractions.length > 0) {
-        addSection(`Contrações (${contractions.length})`);
-        contractions.forEach((c) => {
-          const dur = c.duration_seconds ? `${c.duration_seconds}s` : "em andamento";
-          addText(`${formatDateTime(c.started_at)} — Duração: ${dur}`);
-        });
-      }
 
       // Notifications section removed from PDF export.
 
@@ -530,6 +532,20 @@ export function ClientFileDialog({ open, onOpenChange, client }: ClientFileDialo
 
             {/* Body */}
             <div className="px-5 py-5 space-y-4">
+              {/* Contractions */}
+              {contractions && contractions.length > 0 && (
+                <Card icon={Activity} title={`Contrações (${contractions.length})`} tint="destructive">
+                  <div className="space-y-1">
+                    {contractions.map((c) => (
+                      <div key={c.id} className="flex items-center justify-between rounded-lg bg-muted/50 px-3 py-2 text-xs">
+                        <p>{formatDateTime(c.started_at)}</p>
+                        <p className="font-medium">{c.duration_seconds ? `${c.duration_seconds}s` : "Em andamento"}</p>
+                      </div>
+                    ))}
+                  </div>
+                </Card>
+              )}
+
               {/* Appointments */}
               {appointments && appointments.length > 0 && (
                 <Card icon={Calendar} title={`Consultas (${appointments.length})`} tint="accent">
@@ -550,6 +566,7 @@ export function ClientFileDialog({ open, onOpenChange, client }: ClientFileDialo
                   </div>
                 </Card>
               )}
+
 
               {/* Clinical */}
               {(client.prenatal_type || client.birth_location || client.comorbidades || client.alergias || client.restricao_aromaterapia || prenatalTeam) && (
@@ -746,19 +763,6 @@ export function ClientFileDialog({ open, onOpenChange, client }: ClientFileDialo
                 </Card>
               )}
 
-              {/* Contractions */}
-              {contractions && contractions.length > 0 && (
-                <Card icon={Activity} title={`Contrações (${contractions.length})`} tint="destructive">
-                  <div className="space-y-1">
-                    {contractions.map((c) => (
-                      <div key={c.id} className="flex items-center justify-between rounded-lg bg-muted/50 px-3 py-2 text-xs">
-                        <p>{formatDateTime(c.started_at)}</p>
-                        <p className="font-medium">{c.duration_seconds ? `${c.duration_seconds}s` : "Em andamento"}</p>
-                      </div>
-                    ))}
-                  </div>
-                </Card>
-              )}
 
               {(!appointments || appointments.length === 0) &&
                 (!diaryEntries || diaryEntries.length === 0) &&

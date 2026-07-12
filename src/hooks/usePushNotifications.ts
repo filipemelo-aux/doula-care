@@ -10,9 +10,12 @@ import {
 // Extend ServiceWorkerRegistration to include pushManager
 declare global {
   interface ServiceWorkerRegistration {
-    pushManager: PushManager;
+    readonly pushManager: PushManager;
   }
 }
+
+
+
 export function usePushNotifications() {
   const [isSupported, setIsSupported] = useState(false);
   const [isSubscribed, setIsSubscribed] = useState(false);
