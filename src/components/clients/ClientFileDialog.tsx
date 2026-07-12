@@ -31,6 +31,7 @@ import {
   Sparkles,
   AlertTriangle,
   ClipboardList,
+  StickyNote,
 } from "lucide-react";
 import { cn, formatBrazilDate } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
