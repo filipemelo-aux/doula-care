@@ -20,9 +20,21 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { Baby } from "lucide-react";
 import type { Tables } from "@/integrations/supabase/types";
+
+export const BIRTH_TYPE_OPTIONS = [
+  { value: "natural", label: "Parto natural" },
+  { value: "normal_induzido", label: "Parto normal induzido" },
+  { value: "cesarea_intraparto", label: "Cesárea intraparto" },
+  { value: "cesarea_eletiva", label: "Cesárea eletiva" },
+] as const;
+
+export const BIRTH_TYPE_LABELS: Record<string, string> = Object.fromEntries(
+  BIRTH_TYPE_OPTIONS.map((o) => [o.value, o.label])
+);
 import { maskWeight, parseWeight } from "@/lib/masks";
 
 // Local height mask: left-to-right fill, comma after 2 digits (e.g. "5" -> "5", "51" -> "51", "510" -> "51,0", "5100" -> "51,00")
@@ -44,6 +56,9 @@ const birthSchema = z.object({
   birth_time: z.string().optional(),
   birth_weight: z.string().optional(),
   birth_height: z.string().optional(),
+  birth_type: z.enum(["natural", "normal_induzido", "cesarea_intraparto", "cesarea_eletiva"], {
+    required_error: "Selecione o tipo de parto",
+  }),
 });
 
 type BirthFormData = z.infer<typeof birthSchema>;
@@ -68,6 +83,7 @@ export function BirthRegistrationDialog({
       birth_time: "",
       birth_weight: "",
       birth_height: "",
+      birth_type: undefined as any,
     },
   });
 
@@ -79,6 +95,7 @@ export function BirthRegistrationDialog({
         birth_time: client.birth_time ? client.birth_time.slice(0, 5) : "",
         birth_weight: client.birth_weight != null ? Number(client.birth_weight).toFixed(3) : "",
         birth_height: client.birth_height != null ? Number(client.birth_height).toFixed(2).replace(".", ",") : "",
+        birth_type: ((client as any).birth_type ?? undefined) as any,
       });
     } else {
       form.reset({
@@ -86,6 +103,7 @@ export function BirthRegistrationDialog({
         birth_time: "",
         birth_weight: "",
         birth_height: "",
+        birth_type: undefined as any,
       });
     }
   }, [open, client?.id]);
@@ -103,9 +121,10 @@ export function BirthRegistrationDialog({
           birth_time: data.birth_time || null,
           birth_weight: parseWeight(data.birth_weight),
           birth_height: parseHeightCm(data.birth_height),
+          birth_type: data.birth_type,
           status: "lactante",
           labor_started_at: null, // Clear labor status
-        })
+        } as any)
         .eq("id", client.id);
 
       if (updateError) throw updateError;
@@ -247,6 +266,32 @@ export function BirthRegistrationDialog({
                 )}
               />
             </div>
+
+            <FormField
+              control={form.control}
+              name="birth_type"
+              render={({ field }) => (
+                <FormItem className="space-y-1">
+                  <FormLabel className="text-xs">Tipo de parto *</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value ?? ""}>
+                    <FormControl>
+                      <SelectTrigger className="input-field h-9 text-sm">
+                        <SelectValue placeholder="Selecione como o parto ocorreu" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {BIRTH_TYPE_OPTIONS.map((opt) => (
+                        <SelectItem key={opt.value} value={opt.value}>
+                          {opt.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
 
             <div className="flex justify-end gap-2 pt-2 border-t">
               <Button

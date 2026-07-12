@@ -38,6 +38,7 @@ import { usePlanNames } from "@/hooks/usePlanNames";
 import { toast } from "sonner";
 import type { Tables } from "@/integrations/supabase/types";
 import { calculateCurrentPregnancyWeeks, calculateCurrentPregnancyDays } from "@/lib/pregnancy";
+import { BIRTH_TYPE_LABELS } from "@/components/clients/BirthRegistrationDialog";
 
 type Client = Tables<"clients">;
 
@@ -348,6 +349,7 @@ export function ClientFileDialog({ open, onOpenChange, client }: ClientFileDialo
         addSection("Dados do Nascimento");
         if (client.birth_date) addText(`Data: ${formatDate(client.birth_date)}`);
         if (client.birth_time) addText(`Hora: ${client.birth_time}`);
+        if ((client as any).birth_type) addText(`Tipo de parto: ${BIRTH_TYPE_LABELS[(client as any).birth_type] || (client as any).birth_type}`);
         if (client.birth_weight) addText(`Peso: ${client.birth_weight}g`);
         if (client.birth_height) addText(`Comprimento: ${client.birth_height}cm`);
         if (client.baby_names && client.baby_names.length > 0) addText(`Nome(s): ${client.baby_names.join(", ")}`);
@@ -564,6 +566,9 @@ export function ClientFileDialog({ open, onOpenChange, client }: ClientFileDialo
                     )}
                     {client.birth_date && <Chip icon={Calendar} label="Data" value={formatDate(client.birth_date)} />}
                     {client.birth_time && <Chip label="Hora" value={client.birth_time} />}
+                    {(client as any).birth_type && (
+                      <Chip label="Tipo de parto" value={BIRTH_TYPE_LABELS[(client as any).birth_type] || (client as any).birth_type} highlight />
+                    )}
                     {client.birth_weight && <Chip label="Peso" value={`${client.birth_weight}g`} />}
                     {client.birth_height && <Chip label="Comprimento" value={`${client.birth_height}cm`} />}
                   </ChipGrid>
