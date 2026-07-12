@@ -522,6 +522,20 @@ export function ClientFileDialog({ open, onOpenChange, client }: ClientFileDialo
 
             {/* Body */}
             <div className="px-5 py-5 space-y-4">
+              {/* Contractions */}
+              {contractions && contractions.length > 0 && (
+                <Card icon={Activity} title={`Contrações (${contractions.length})`} tint="destructive">
+                  <div className="space-y-1">
+                    {contractions.map((c) => (
+                      <div key={c.id} className="flex items-center justify-between rounded-lg bg-muted/50 px-3 py-2 text-xs">
+                        <p>{formatDateTime(c.started_at)}</p>
+                        <p className="font-medium">{c.duration_seconds ? `${c.duration_seconds}s` : "Em andamento"}</p>
+                      </div>
+                    ))}
+                  </div>
+                </Card>
+              )}
+
               {/* Appointments */}
               {appointments && appointments.length > 0 && (
                 <Card icon={Calendar} title={`Consultas (${appointments.length})`} tint="accent">
@@ -542,6 +556,7 @@ export function ClientFileDialog({ open, onOpenChange, client }: ClientFileDialo
                   </div>
                 </Card>
               )}
+
 
               {/* Clinical */}
               {(client.prenatal_type || client.birth_location || client.comorbidades || client.alergias || client.restricao_aromaterapia || prenatalTeam) && (
