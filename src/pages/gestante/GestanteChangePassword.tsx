@@ -144,6 +144,7 @@ export default function GestanteChangePassword() {
                   )}
                 </Button>
               </div>
+              <p className="text-[11px] text-muted-foreground">Mínimo 6 caracteres, com uma letra maiúscula, uma minúscula e um número.</p>
             </div>
             <div className="space-y-2">
               <Label htmlFor="confirmPassword">Confirmar Nova Senha</Label>
