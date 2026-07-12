@@ -38,10 +38,13 @@ const generateUsername = (fullName: string): string => {
 
 const generatePassword = (dpp: string): string => {
   const parts = dpp.split("-");
+  let digits = "";
   if (parts.length === 3) {
-    return `${parts[2]}${parts[1]}${parts[0].slice(-2)}`;
+    digits = `${parts[2]}${parts[1]}${parts[0].slice(-2)}`;
+  } else {
+    digits = dpp.replace(/\D/g, "").slice(0, 6);
   }
-  return dpp.replace(/\D/g, "").slice(0, 6);
+  return `dpp${digits}`;
 };
 
 export function ClientAccessCard({ clientsWithAccounts, loadingClients }: ClientAccessCardProps) {
