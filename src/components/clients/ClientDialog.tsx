@@ -598,11 +598,43 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
       };
 
       if (client) {
+        // ===== PLAN LOCK ENFORCEMENT =====
+        // When editing a client that already has recorded payments, freeze plan-
+        // related fields UNLESS the doula explicitly unlocked the section.
+        const editingHadPayments = hasRecordedPayments;
+        const skipPlanSync = editingHadPayments && !unlockedPlan;
+
+        if (skipPlanSync) {
+          // Preserve original plan/payment values so nothing gets overwritten.
+          (payload as any).plan = (client as any).plan;
+          payload.plan_setting_id = client.plan_setting_id;
+          payload.payment_method = (client as any).payment_method;
+          payload.plan_value = Number(client.plan_value || 0);
+        }
+
+        if (editingHadPayments && unlockedPlan) {
+          // Reverse every paid installment so the schedule can be rebuilt cleanly.
+          const { data: allPayments } = await supabase
+            .from("payments")
+            .select("id, amount_paid")
+            .eq("client_id", client.id);
+          for (const p of allPayments || []) {
+            if (Number((p as any).amount_paid || 0) > 0) {
+              await supabase.rpc("revert_installment_payment", { p_payment_id: p.id } as any);
+            }
+          }
+        }
+
         const { error } = await supabase
           .from("clients")
           .update(payload)
           .eq("id", client.id);
         if (error) throw error;
+
+        if (skipPlanSync) {
+          // Do NOT touch transactions or the payment schedule when locked.
+          return;
+        }
 
         // Update auto-generated transaction
         const resolvedPlanSetting = data.plan_setting_id !== "avulso" ? planSettings?.find(p => p.id === data.plan_setting_id) : null;
