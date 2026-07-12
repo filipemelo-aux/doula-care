@@ -1,7 +1,8 @@
 import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { AdminClientAvatarUpload } from "./AdminClientAvatarUpload";
 import {
   Dialog,
   DialogContent,
@@ -72,6 +73,7 @@ export function ClientQuickViewDialog({
   clientId,
 }: ClientQuickViewDialogProps) {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [diaryOpen, setDiaryOpen] = useState(false);
   const [contractionsOpen, setContractionsOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
@@ -214,20 +216,17 @@ export function ClientQuickViewDialog({
                 )}
               >
                 <div className="flex items-center gap-4">
-                  <Avatar className="w-16 h-16 shadow-md ring-2 ring-background">
-                    <AvatarImage
-                      src={avatar || undefined}
-                      alt={name}
-                      className="object-cover"
-                    />
-                    <AvatarFallback className="bg-gradient-to-br from-primary/25 to-accent/25">
-                      {isPuer ? (
-                        <Heart className="w-6 h-6 text-primary" />
-                      ) : (
-                        <Baby className="w-6 h-6 text-primary" />
-                      )}
-                    </AvatarFallback>
-                  </Avatar>
+                  <AdminClientAvatarUpload
+                    clientId={client.id}
+                    currentUrl={avatar ?? null}
+                    isPuerpera={isPuer}
+                    onUploaded={(url) => {
+                      queryClient.setQueryData(
+                        ["client-quickview-avatar", client.user_id],
+                        url,
+                      );
+                    }}
+                  />
                   <div className="flex-1 min-w-0">
                     <h2 className="font-display text-xl font-semibold text-foreground truncate">
                       {name}
