@@ -267,6 +267,32 @@ export function BirthRegistrationDialog({
               />
             </div>
 
+            <FormField
+              control={form.control}
+              name="birth_type"
+              render={({ field }) => (
+                <FormItem className="space-y-1">
+                  <FormLabel className="text-xs">Tipo de parto *</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value ?? ""}>
+                    <FormControl>
+                      <SelectTrigger className="input-field h-9 text-sm">
+                        <SelectValue placeholder="Selecione como o parto ocorreu" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {BIRTH_TYPE_OPTIONS.map((opt) => (
+                        <SelectItem key={opt.value} value={opt.value}>
+                          {opt.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+
             <div className="flex justify-end gap-2 pt-2 border-t">
               <Button
                 type="button"
