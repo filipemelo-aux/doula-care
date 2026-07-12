@@ -24,8 +24,10 @@ export default function GestanteChangePassword() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (newPassword.length < 6) {
-      toast.error("A senha deve ter pelo menos 6 caracteres");
+    if (newPassword.length < 6 || !/[a-z]/.test(newPassword) || !/[A-Z]/.test(newPassword) || !/[0-9]/.test(newPassword)) {
+      toast.error("Senha inválida", {
+        description: "Use pelo menos 6 caracteres, com uma letra maiúscula, uma minúscula e um número.",
+      });
       return;
     }
 
