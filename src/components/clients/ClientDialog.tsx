@@ -2225,5 +2225,34 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
         </Form>
       </DialogContent>
     </Dialog>
+
+    <AlertDialog open={unlockConfirmOpen} onOpenChange={setUnlockConfirmOpen}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle className="flex items-center gap-2">
+            <AlertTriangle className="w-5 h-5 text-amber-600" />
+            Estornar pagamentos registrados?
+          </AlertDialogTitle>
+          <AlertDialogDescription>
+            Esta cliente já possui pagamentos recebidos. Se você seguir com a alteração
+            do plano ou das condições de pagamento, <strong>todos os pagamentos serão
+            estornados</strong> ao salvar, e você terá que lançar cada recebimento novamente.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+          <AlertDialogAction
+            className="bg-amber-600 hover:bg-amber-700 text-white"
+            onClick={() => {
+              setUnlockedPlan(true);
+              setUnlockConfirmOpen(false);
+            }}
+          >
+            Sim, desbloquear
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+    </>
   );
 }
