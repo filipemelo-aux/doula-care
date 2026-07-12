@@ -23,9 +23,10 @@ function jsonResponse(body: Record<string, unknown>, status = 200) {
 
 function generateDefaultPassword(fullName: string): string {
   const firstName = (fullName || "User").trim().split(/\s+/)[0];
-  const firstLetter = firstName.charAt(0).toUpperCase();
-  const digits = Array.from({ length: 5 }, () => Math.floor(Math.random() * 10)).join("");
-  return `${firstLetter}${digits}`;
+  const firstLetter = firstName.charAt(0).toUpperCase() || "U";
+  const digits = Array.from({ length: 6 }, () => Math.floor(Math.random() * 10)).join("");
+  // Include a symbol to satisfy stricter password policies and reduce HIBP collision odds
+  return `${firstLetter}c!${digits}`;
 }
 
 async function getCallingUser(userClient: AdminClient, authHeader: string | null) {
