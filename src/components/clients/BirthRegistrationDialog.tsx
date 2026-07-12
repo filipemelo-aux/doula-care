@@ -56,6 +56,9 @@ const birthSchema = z.object({
   birth_time: z.string().optional(),
   birth_weight: z.string().optional(),
   birth_height: z.string().optional(),
+  birth_type: z.enum(["natural", "normal_induzido", "cesarea_intraparto", "cesarea_eletiva"], {
+    required_error: "Selecione o tipo de parto",
+  }),
 });
 
 type BirthFormData = z.infer<typeof birthSchema>;
@@ -80,6 +83,7 @@ export function BirthRegistrationDialog({
       birth_time: "",
       birth_weight: "",
       birth_height: "",
+      birth_type: undefined as any,
     },
   });
 
@@ -91,6 +95,7 @@ export function BirthRegistrationDialog({
         birth_time: client.birth_time ? client.birth_time.slice(0, 5) : "",
         birth_weight: client.birth_weight != null ? Number(client.birth_weight).toFixed(3) : "",
         birth_height: client.birth_height != null ? Number(client.birth_height).toFixed(2).replace(".", ",") : "",
+        birth_type: ((client as any).birth_type ?? undefined) as any,
       });
     } else {
       form.reset({
@@ -98,6 +103,7 @@ export function BirthRegistrationDialog({
         birth_time: "",
         birth_weight: "",
         birth_height: "",
+        birth_type: undefined as any,
       });
     }
   }, [open, client?.id]);
@@ -115,9 +121,10 @@ export function BirthRegistrationDialog({
           birth_time: data.birth_time || null,
           birth_weight: parseWeight(data.birth_weight),
           birth_height: parseHeightCm(data.birth_height),
+          birth_type: data.birth_type,
           status: "lactante",
           labor_started_at: null, // Clear labor status
-        })
+        } as any)
         .eq("id", client.id);
 
       if (updateError) throw updateError;
