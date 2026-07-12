@@ -21,11 +21,17 @@ import {
   Bell,
   Baby,
   Heart,
-  Phone,
   Calendar,
   MapPin,
   Sparkles,
   ChevronRight,
+  Hospital,
+  AlertTriangle,
+  Stethoscope,
+  Leaf,
+  Scale,
+  Ruler,
+  Clock,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatBrazilDate } from "@/lib/utils";
