@@ -298,15 +298,18 @@ export function ClientQuickViewDialog({
                           variant="outline"
                           className={cn(
                             "text-[10px] h-5",
-                            gestBadge.post
+                            gestBadge.daysUntilDpp < 0
                               ? "bg-red-100 text-red-700 border-red-200"
-                              : gestBadge.w >= 40
+                              : gestBadge.daysUntilDpp <= 7
                               ? "bg-orange-100 text-orange-700 border-orange-200"
                               : "bg-primary/10 text-primary border-primary/20",
                           )}
                         >
-                          {gestBadge.w}s {gestBadge.d}d
-                          {gestBadge.post && " · pós-data"}
+                          {gestBadge.daysUntilDpp === 0
+                            ? "DPP hoje"
+                            : gestBadge.daysUntilDpp < 0
+                            ? `Atraso de ${Math.abs(gestBadge.daysUntilDpp)} dias`
+                            : `Faltam ${gestBadge.daysUntilDpp} dias`}
                         </Badge>
                       )}
                       {isPuer && (
