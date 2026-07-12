@@ -32,8 +32,18 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { CheckCircle, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
+import { CheckCircle, Loader2, ChevronLeft, ChevronRight, Lock, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 import { maskPhone, maskCPF, maskCEP, maskCurrency, parseCurrency } from "@/lib/masks";
 import type { Tables } from "@/integrations/supabase/types";
