@@ -410,8 +410,8 @@ export function ClientsListDialog({
         client={selectedClient}
       />
 
-      {/* Client Details Dialog */}
-      <ClientDetailsDialog
+      {/* Client File (Ficha) Dialog */}
+      <ClientFileDialog
         open={detailsDialogOpen}
         onOpenChange={setDetailsDialogOpen}
         client={selectedClient}
