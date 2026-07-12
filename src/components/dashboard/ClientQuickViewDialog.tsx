@@ -183,7 +183,13 @@ export function ClientQuickViewDialog({
     if (w === null) return null;
     const d = calculateCurrentPregnancyDays(client.dpp);
     const post = isPostTerm(client.dpp);
-    return { w, d, post };
+    const daysUntilDpp = client.dpp
+      ? differenceInDays(
+          toLocalMidnight(client.dpp),
+          startOfDay(new Date()),
+        )
+      : 0;
+    return { w, d, post, daysUntilDpp };
   }, [client, isGest]);
 
   const name = client
