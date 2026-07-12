@@ -530,7 +530,7 @@ export default function Settings() {
                             <div className="space-y-2">
                               <Label>Senha temporária</Label>
                               <Input type="password" value={newUserData.password} onChange={(e) => setNewUserData({ ...newUserData, password: e.target.value })} placeholder="••••••••" />
-                              <p className="text-[11px] text-muted-foreground">O membro será obrigado a trocar esta senha no primeiro acesso</p>
+                              <p className="text-[11px] text-muted-foreground">Mínimo 6 caracteres, com maiúscula, minúscula e número. O membro trocará esta senha no primeiro acesso.</p>
                             </div>
                           )}
                           <div className="space-y-2">
