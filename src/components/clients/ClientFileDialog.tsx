@@ -360,14 +360,15 @@ export function ClientFileDialog({ open, onOpenChange, client }: ClientFileDialo
         addSection("Acompanhante");
         if (client.companion_name) addText(`Nome: ${client.companion_name}`);
         if (client.companion_phone) addText(`Telefone: ${client.companion_phone}`);
-        if (client.instagram_acompanhante) addText(`Instagram: ${client.instagram_acompanhante}`);
       }
 
-      // Social
-      if (client.instagram_gestante) {
-        addSection("Redes Sociais");
-        addText(`Instagram: ${client.instagram_gestante}`);
+      // Instagram
+      if (client.instagram_gestante || client.instagram_acompanhante) {
+        addSection("Instagram");
+        if (client.instagram_gestante) addText(`Cliente: ${client.instagram_gestante}`);
+        if (client.instagram_acompanhante) addText(`Acompanhante: ${client.instagram_acompanhante}`);
       }
+
 
       // Photographer
       if (client.has_fotografa && (client.fotografa_name || client.fotografa_phone)) {
@@ -643,26 +644,35 @@ export function ClientFileDialog({ open, onOpenChange, client }: ClientFileDialo
               </Card>
 
               {/* Companion */}
-              {(client.companion_name || client.companion_phone || client.instagram_acompanhante) && (
+              {(client.companion_name || client.companion_phone) && (
                 <Card icon={Heart} title="Acompanhante" tint="pink">
                   <ChipGrid>
                     {client.companion_name && <Chip label="Nome" value={client.companion_name} />}
                     {client.companion_phone && <Chip icon={Phone} label="Telefone" value={client.companion_phone} />}
-                    {client.instagram_acompanhante && <Chip icon={Instagram} label="Instagram" value={client.instagram_acompanhante} />}
                   </ChipGrid>
                 </Card>
               )}
 
-              {/* Photographer / Social */}
-              {((client.has_fotografa && (client.fotografa_name || client.fotografa_phone)) || client.instagram_gestante) && (
-                <Card icon={Camera} title="Extras" tint="accent">
+              {/* Instagram */}
+              {(client.instagram_gestante || client.instagram_acompanhante) && (
+                <Card icon={Instagram} title="Instagram" tint="accent">
                   <ChipGrid>
-                    {client.instagram_gestante && <Chip icon={Instagram} label="Instagram" value={client.instagram_gestante} />}
-                    {client.has_fotografa && client.fotografa_name && <Chip icon={Camera} label="Fotógrafa" value={client.fotografa_name} />}
-                    {client.has_fotografa && client.fotografa_phone && <Chip icon={Phone} label="Tel. fotógrafa" value={client.fotografa_phone} />}
+                    {client.instagram_gestante && <Chip icon={Instagram} label="Cliente" value={client.instagram_gestante} />}
+                    {client.instagram_acompanhante && <Chip icon={Instagram} label="Acompanhante" value={client.instagram_acompanhante} />}
                   </ChipGrid>
                 </Card>
               )}
+
+              {/* Photographer */}
+              {client.has_fotografa && (client.fotografa_name || client.fotografa_phone) && (
+                <Card icon={Camera} title="Fotógrafa" tint="accent">
+                  <ChipGrid>
+                    {client.fotografa_name && <Chip icon={Camera} label="Nome" value={client.fotografa_name} />}
+                    {client.fotografa_phone && <Chip icon={Phone} label="Telefone" value={client.fotografa_phone} />}
+                  </ChipGrid>
+                </Card>
+              )}
+
 
               {/* Plan & Payment */}
               <Card icon={CreditCard} title="Plano e Pagamento" tint="primary">
