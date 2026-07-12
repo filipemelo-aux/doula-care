@@ -34,6 +34,8 @@ import {
   Ruler,
   Clock,
 } from "lucide-react";
+import { differenceInDays, startOfDay } from "date-fns";
+
 import { cn } from "@/lib/utils";
 import { formatBrazilDate } from "@/lib/utils";
 import {
@@ -66,6 +68,12 @@ function babyName(client: Client) {
   if (names.length === 0) return null;
   return names.join(", ");
 }
+
+function toLocalMidnight(dateStr: string): Date {
+  const [year, month, day] = dateStr.split("-").map(Number);
+  return new Date(year, month - 1, day);
+}
+
 
 export function ClientQuickViewDialog({
   open,
@@ -175,7 +183,13 @@ export function ClientQuickViewDialog({
     if (w === null) return null;
     const d = calculateCurrentPregnancyDays(client.dpp);
     const post = isPostTerm(client.dpp);
-    return { w, d, post };
+    const daysUntilDpp = client.dpp
+      ? differenceInDays(
+          toLocalMidnight(client.dpp),
+          startOfDay(new Date()),
+        )
+      : 0;
+    return { w, d, post, daysUntilDpp };
   }, [client, isGest]);
 
   const name = client
@@ -284,15 +298,18 @@ export function ClientQuickViewDialog({
                           variant="outline"
                           className={cn(
                             "text-[10px] h-5",
-                            gestBadge.post
+                            gestBadge.daysUntilDpp < 0
                               ? "bg-red-100 text-red-700 border-red-200"
-                              : gestBadge.w >= 40
+                              : gestBadge.daysUntilDpp <= 7
                               ? "bg-orange-100 text-orange-700 border-orange-200"
                               : "bg-primary/10 text-primary border-primary/20",
                           )}
                         >
-                          {gestBadge.w}s {gestBadge.d}d
-                          {gestBadge.post && " · pós-data"}
+                          {gestBadge.daysUntilDpp === 0
+                            ? "DPP hoje"
+                            : gestBadge.daysUntilDpp < 0
+                            ? `Atraso de ${Math.abs(gestBadge.daysUntilDpp)} dias`
+                            : `Faltam ${gestBadge.daysUntilDpp} dias`}
                         </Badge>
                       )}
                       {isPuer && (
