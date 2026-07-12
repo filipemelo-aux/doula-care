@@ -52,6 +52,7 @@ export function ClientAccessCard({ clientsWithAccounts, loadingClients }: Client
   const [showPasswords, setShowPasswords] = useState<Record<string, boolean>>({});
   const [resettingClientId, setResettingClientId] = useState<string | null>(null);
   const [resetConfirmClient, setResetConfirmClient] = useState<Client | null>(null);
+  const [passwordResetClient, setPasswordResetClient] = useState<Client | null>(null);
   const [resettingData, setResettingData] = useState(false);
 
   const provisionMutation = useMutation({
