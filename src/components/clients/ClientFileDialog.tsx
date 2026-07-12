@@ -360,14 +360,15 @@ export function ClientFileDialog({ open, onOpenChange, client }: ClientFileDialo
         addSection("Acompanhante");
         if (client.companion_name) addText(`Nome: ${client.companion_name}`);
         if (client.companion_phone) addText(`Telefone: ${client.companion_phone}`);
-        if (client.instagram_acompanhante) addText(`Instagram: ${client.instagram_acompanhante}`);
       }
 
-      // Social
-      if (client.instagram_gestante) {
-        addSection("Redes Sociais");
-        addText(`Instagram: ${client.instagram_gestante}`);
+      // Instagram
+      if (client.instagram_gestante || client.instagram_acompanhante) {
+        addSection("Instagram");
+        if (client.instagram_gestante) addText(`Cliente: ${client.instagram_gestante}`);
+        if (client.instagram_acompanhante) addText(`Acompanhante: ${client.instagram_acompanhante}`);
       }
+
 
       // Photographer
       if (client.has_fotografa && (client.fotografa_name || client.fotografa_phone)) {
