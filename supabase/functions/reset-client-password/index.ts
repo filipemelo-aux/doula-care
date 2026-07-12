@@ -115,8 +115,8 @@ Deno.serve(async (req) => {
     if (!client.user_id) throw new Error("Cliente não possui acesso ao sistema");
     if (!client.dpp) throw new Error("Cliente não possui DPP cadastrada");
 
-    const newPassword = generatePassword(client.dpp);
-    if (newPassword.length < 4) throw new Error("DPP inválida para gerar senha");
+    const { password: newPassword, digits } = generatePassword(client.dpp);
+    if (digits.length < 4) throw new Error("DPP inválida para gerar senha");
 
     const { error: updateError } = await supabase.auth.admin.updateUserById(
       client.user_id,
@@ -128,16 +128,17 @@ Deno.serve(async (req) => {
     await supabase.from("clients").update({ first_login: true }).eq("id", clientId);
 
     return new Response(
-      JSON.stringify({ 
+      JSON.stringify({
         message: "Senha resetada com sucesso",
-        hint: `Nova senha: dia e mês da DPP (${newPassword.slice(0, 2)}/${newPassword.slice(2, 4)})`
+        hint: `Nova senha: Dc + dia/mês/ano da DPP (${newPassword})`,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
     );
   } catch (error) {
     console.error("Error:", error);
+    const message = error instanceof Error ? error.message : "Operação falhou. Tente novamente.";
     return new Response(
-      JSON.stringify({ error: "Operação falhou. Tente novamente." }),
+      JSON.stringify({ error: message }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
     );
   }
