@@ -46,6 +46,7 @@ import { ClientDiaryDialog } from "./ClientDiaryDialog";
 import { ClientContractionsDialog } from "./ClientContractionsDialog";
 import { SendNotificationDialog } from "@/components/clients/SendNotificationDialog";
 import { ClientFileDialog } from "@/components/clients/ClientFileDialog";
+import { BIRTH_TYPE_LABELS } from "@/components/clients/BirthRegistrationDialog";
 
 type Client = Tables<"clients">;
 
@@ -352,6 +353,19 @@ export function ClientQuickViewDialog({
                         </p>
                         <p className="font-medium truncate">
                           {client.birth_location}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                  {isPuer && client.birth_type && (
+                    <div className="flex items-center gap-2 rounded-xl bg-muted/50 px-3 py-2 col-span-2">
+                      <Hospital className="w-3.5 h-3.5 text-primary shrink-0" />
+                      <div className="min-w-0">
+                        <p className="text-[10px] text-muted-foreground uppercase tracking-wide">
+                          Tipo de parto
+                        </p>
+                        <p className="font-medium truncate">
+                          {BIRTH_TYPE_LABELS[client.birth_type] || client.birth_type}
                         </p>
                       </div>
                     </div>
