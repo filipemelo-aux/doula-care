@@ -8,9 +8,12 @@ import {
 } from "@/lib/capacitorPush";
 
 // Extend ServiceWorkerRegistration to include pushManager
+declare global {
   interface ServiceWorkerRegistration {
     readonly pushManager?: PushManager;
   }
+}
+
 
 export function usePushNotifications() {
   const [isSupported, setIsSupported] = useState(false);
