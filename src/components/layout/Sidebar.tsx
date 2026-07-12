@@ -213,31 +213,6 @@ export function Sidebar({ isOpen, onToggle, onNavigate }: SidebarProps) {
 
 
 
-                {/* Collapsed: sub-items as icons */}
-                {!isOpen && (
-                  <div className="hidden lg:flex flex-col items-center mt-1 space-y-0.5">
-                    {item.subItems.map((sub) => {
-                      const lk = subLimitKeys[sub.to];
-                      const subDisabled = lk ? !limits[lk] : false;
-                      const subActive = !subDisabled && location.pathname === sub.to;
-                      return (
-                        <button
-                          key={sub.to}
-                          onClick={() => !subDisabled && handleNavClick(sub.to)}
-                          disabled={subDisabled}
-                          className={cn(
-                            "nav-link justify-center px-0 w-full",
-                            subActive && "active",
-                            subDisabled && "opacity-40 cursor-not-allowed hover:bg-transparent"
-                          )}
-                          title={sub.label}
-                        >
-                          <sub.icon className="w-4 h-4 shrink-0" strokeWidth={1.8} />
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
                 <div className="mt-3 border-b border-border/40" />
               </div>
             );
