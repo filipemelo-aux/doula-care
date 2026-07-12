@@ -219,11 +219,7 @@ export function ClientAccessCard({ clientsWithAccounts, loadingClients }: Client
                         variant="ghost"
                         size="icon"
                         className="h-7 w-7 text-muted-foreground"
-                        onClick={() => {
-                          if (confirm(`Resetar senha de ${client.full_name.split(" ")[0]}?`)) {
-                            resetPasswordMutation.mutate(client.id);
-                          }
-                        }}
+                        onClick={() => setPasswordResetClient(client)}
                         disabled={resettingClientId === client.id}
                         title="Resetar senha"
                       >
