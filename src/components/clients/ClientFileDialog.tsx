@@ -38,6 +38,7 @@ import { usePlanNames } from "@/hooks/usePlanNames";
 import { toast } from "sonner";
 import type { Tables } from "@/integrations/supabase/types";
 import { calculateCurrentPregnancyWeeks, calculateCurrentPregnancyDays } from "@/lib/pregnancy";
+import { BIRTH_TYPE_LABELS } from "@/components/clients/BirthRegistrationDialog";
 
 type Client = Tables<"clients">;
 
