@@ -94,11 +94,12 @@ Deno.serve(async (req) => {
         { data: { full_name: fullName } }
       );
       if (inviteError) {
-        if (inviteError.message?.toLowerCase().includes("already")) {
+        const msg = (inviteError.message || "").toLowerCase();
+        if (msg.includes("already")) {
           return jsonResponse({ error: "Este email já está cadastrado no sistema", code: "duplicate_email" }, 409);
         }
         console.error("inviteUser error:", inviteError);
-        return jsonResponse({ error: "Não foi possível enviar o convite" }, 500);
+        return jsonResponse({ error: inviteError.message || "Não foi possível enviar o convite" }, 500);
       }
       createdUserId = inviteData.user?.id ?? null;
     } else {
@@ -110,11 +111,15 @@ Deno.serve(async (req) => {
       });
 
       if (createError) {
-        if (createError.message?.toLowerCase().includes("already")) {
+        const msg = (createError.message || "").toLowerCase();
+        if (msg.includes("already")) {
           return jsonResponse({ error: "Este email já está cadastrado no sistema", code: "duplicate_email" }, 409);
         }
+        if ((createError as any).code === "weak_password" || msg.includes("weak") || msg.includes("pwned")) {
+          return jsonResponse({ error: "Senha muito fraca ou vazada. Use pelo menos 8 caracteres com letras, números e símbolos.", code: "weak_password" }, 400);
+        }
         console.error("createUser error:", createError);
-        return jsonResponse({ error: "Não foi possível criar o usuário" }, 500);
+        return jsonResponse({ error: createError.message || "Não foi possível criar o usuário" }, 500);
       }
       createdUserId = userData.user?.id ?? null;
     }

@@ -17,13 +17,17 @@ function generateUsername(fullName: string): string {
 
 function generatePassword(dpp: string): string {
   const parts = dpp.split("-");
+  let digits = "";
   if (parts.length === 3) {
     const year = parts[0].slice(-2);
     const month = parts[1];
     const day = parts[2];
-    return `${day}${month}${year}`;
+    digits = `${day}${month}${year}`;
+  } else {
+    digits = dpp.replace(/\D/g, "").slice(0, 6);
   }
-  return dpp.replace(/\D/g, "").slice(0, 6);
+  // Prefix "Dc" to avoid HIBP rejection of common 6-digit passwords
+  return `Dc${digits}`;
 }
 
 Deno.serve(async (req) => {
