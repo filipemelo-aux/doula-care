@@ -501,8 +501,8 @@ export default function Clients() {
         client={selectedClient}
       />
 
-      {/* Client Details Dialog */}
-      <ClientDetailsDialog
+      {/* Client File (Ficha) Dialog */}
+      <ClientFileDialog
         open={detailsOpen}
         onOpenChange={setDetailsOpen}
         client={selectedClient}
