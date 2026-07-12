@@ -122,6 +122,16 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
   const lastEffectivePlanValueRef = useRef<number>(0);
   const [prenatalTeam, setPrenatalTeam] = useState<{name: string; role: string}[]>([]);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const [unlockedPlan, setUnlockedPlan] = useState(false);
+  const [unlockConfirmOpen, setUnlockConfirmOpen] = useState(false);
+
+  // Reset unlock whenever the dialog closes or the target client changes
+  useEffect(() => {
+    if (!open) {
+      setUnlockedPlan(false);
+      setUnlockConfirmOpen(false);
+    }
+  }, [open, client?.id]);
 
   const { data: planSettings } = useQuery({
     queryKey: ["plan-settings"],
