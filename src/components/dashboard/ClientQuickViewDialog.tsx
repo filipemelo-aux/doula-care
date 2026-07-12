@@ -223,13 +223,13 @@ export function ClientQuickViewDialog({
               {/* Header */}
               <div
                 className={cn(
-                  "relative px-6 pt-7 pb-6 bg-gradient-to-br",
+                  "relative px-5 pt-6 pb-5 sm:px-6 sm:pt-7 sm:pb-6 bg-gradient-to-br",
                   inLabor
                     ? "from-destructive/15 to-destructive/5"
                     : "from-primary/15 to-accent/5",
                 )}
               >
-                <div className="flex items-center gap-4">
+                <div className="flex items-start sm:items-center gap-3 sm:gap-4">
                   <AdminClientAvatarUpload
                     clientId={client.id}
                     currentUrl={avatar ?? null}
@@ -242,20 +242,21 @@ export function ClientQuickViewDialog({
                     }}
                   />
                   <div className="flex-1 min-w-0">
-                    <h2 className="font-display text-xl font-semibold text-foreground truncate">
+                    <h2 className="font-display text-lg sm:text-xl font-semibold text-foreground truncate">
                       {name}
                     </h2>
-                    <p className="text-xs text-muted-foreground truncate">
+                    <p className="text-xs text-muted-foreground truncate max-w-full">
                       {client.full_name}
                     </p>
 
                     {/* Same summary line as the dashboard card */}
-                    <p className="text-xs text-muted-foreground flex items-center gap-1 flex-wrap mt-1.5">
+                    <p className="text-xs text-muted-foreground flex flex-col items-start gap-1 sm:flex-row sm:flex-wrap sm:items-center mt-1.5">
                       {isGest ? (
                         <>
                           {gestBadge && (
                             <span
                               className={cn(
+                                "inline-flex items-center gap-1",
                                 gestBadge.post && "text-destructive font-semibold",
                               )}
                             >
@@ -263,7 +264,10 @@ export function ClientQuickViewDialog({
                             </span>
                           )}
                           {client.dpp && (
-                            <span>· DPP {formatBrazilDate(client.dpp)}</span>
+                            <span className="inline-flex items-center gap-1">
+                              <span className="hidden sm:inline">·</span>
+                              DPP {formatBrazilDate(client.dpp)}
+                            </span>
                           )}
                         </>
                       ) : (
@@ -275,19 +279,21 @@ export function ClientQuickViewDialog({
                       )}
                       {babyName(client) && (
                         <span className="inline-flex items-center gap-1 text-primary font-medium">
+                          <span className="hidden sm:inline">·</span>
                           <Baby className="w-3 h-3" />
                           {babyName(client)}
                         </span>
                       )}
                       {inLabor && (
                         <span className="inline-flex items-center gap-1 text-destructive font-semibold">
-                          · Em trabalho de parto
+                          <span className="hidden sm:inline">·</span>
+                          Em trabalho de parto
                         </span>
                       )}
                     </p>
 
                     {client.companion_name && (
-                      <p className="text-[11px] text-muted-foreground/80 truncate mt-0.5">
+                      <p className="text-[11px] text-muted-foreground/80 truncate max-w-full mt-1">
                         Acompanhante: {client.companion_name}
                       </p>
                     )}
@@ -331,7 +337,7 @@ export function ClientQuickViewDialog({
               </div>
 
               {/* Body */}
-              <div className="px-5 py-4 space-y-4 max-h-[70vh] overflow-y-auto">
+              <div className="px-4 py-4 sm:px-5 space-y-4 max-h-[70vh] overflow-y-auto">
                 {/* Info chips - useful pregnancy/postpartum info */}
                 <div className="grid grid-cols-2 gap-2 text-xs">
                   {isGest && client.prenatal_type && (
@@ -341,7 +347,7 @@ export function ClientQuickViewDialog({
                         <p className="text-[10px] text-muted-foreground uppercase tracking-wide">
                           Pré-natal
                         </p>
-                        <p className="font-medium truncate capitalize">
+                        <p className="font-medium line-clamp-2 break-words leading-snug capitalize">
                           {client.prenatal_type}
                         </p>
                       </div>
@@ -354,7 +360,7 @@ export function ClientQuickViewDialog({
                         <p className="text-[10px] text-red-600/80 uppercase tracking-wide">
                           Gestação
                         </p>
-                        <p className="font-medium truncate text-red-700">
+                        <p className="font-medium line-clamp-2 break-words leading-snug text-red-700">
                           Alto risco
                         </p>
                       </div>
@@ -367,7 +373,7 @@ export function ClientQuickViewDialog({
                         <p className="text-[10px] text-muted-foreground uppercase tracking-wide">
                           Local do parto
                         </p>
-                        <p className="font-medium truncate">
+                        <p className="font-medium line-clamp-2 break-words leading-snug">
                           {client.birth_location}
                         </p>
                       </div>
@@ -380,7 +386,7 @@ export function ClientQuickViewDialog({
                         <p className="text-[10px] text-muted-foreground uppercase tracking-wide">
                           Tipo de parto
                         </p>
-                        <p className="font-medium truncate">
+                        <p className="font-medium line-clamp-2 break-words leading-snug">
                           {BIRTH_TYPE_LABELS[client.birth_type] || client.birth_type}
                         </p>
                       </div>
@@ -393,7 +399,7 @@ export function ClientQuickViewDialog({
                         <p className="text-[10px] text-muted-foreground uppercase tracking-wide">
                           Nascimento
                         </p>
-                        <p className="font-medium truncate">
+                        <p className="font-medium line-clamp-2 break-words leading-snug">
                           {formatBrazilDate(client.birth_date)}
                           {client.birth_time && ` · ${client.birth_time.slice(0, 5)}`}
                         </p>
@@ -407,7 +413,7 @@ export function ClientQuickViewDialog({
                         <p className="text-[10px] text-muted-foreground uppercase tracking-wide">
                           Peso
                         </p>
-                        <p className="font-medium truncate">
+                        <p className="font-medium line-clamp-2 break-words leading-snug">
                           {client.birth_weight}g
                         </p>
                       </div>
@@ -420,7 +426,7 @@ export function ClientQuickViewDialog({
                         <p className="text-[10px] text-muted-foreground uppercase tracking-wide">
                           Altura
                         </p>
-                        <p className="font-medium truncate">
+                        <p className="font-medium line-clamp-2 break-words leading-snug">
                           {client.birth_height}cm
                         </p>
                       </div>
@@ -433,7 +439,7 @@ export function ClientQuickViewDialog({
                         <p className="text-[10px] text-amber-700/80 uppercase tracking-wide">
                           Alergias
                         </p>
-                        <p className="font-medium truncate text-amber-900">
+                        <p className="font-medium line-clamp-2 break-words leading-snug text-amber-900">
                           {client.alergias}
                         </p>
                       </div>
@@ -446,7 +452,7 @@ export function ClientQuickViewDialog({
                         <p className="text-[10px] text-muted-foreground uppercase tracking-wide">
                           Comorbidades
                         </p>
-                        <p className="font-medium truncate">
+                        <p className="font-medium line-clamp-2 break-words leading-snug">
                           {client.comorbidades}
                         </p>
                       </div>
@@ -459,7 +465,7 @@ export function ClientQuickViewDialog({
                         <p className="text-[10px] text-muted-foreground uppercase tracking-wide">
                           Restrição aromaterapia
                         </p>
-                        <p className="font-medium truncate">
+                        <p className="font-medium line-clamp-2 break-words leading-snug">
                           {client.restricao_aromaterapia}
                         </p>
                       </div>
@@ -468,7 +474,7 @@ export function ClientQuickViewDialog({
                   {(client.city || client.neighborhood) && (
                     <div className="flex items-center gap-2 rounded-xl bg-muted/50 px-3 py-2 col-span-2">
                       <MapPin className="w-3.5 h-3.5 text-primary shrink-0" />
-                      <p className="font-medium truncate">
+                      <p className="font-medium line-clamp-2 break-words leading-snug">
                         {[client.neighborhood, client.city, client.state]
                           .filter(Boolean)
                           .join(", ")}
@@ -670,7 +676,7 @@ function ActionButton({
     <button
       onClick={onClick}
       className={cn(
-        "relative flex flex-col items-center justify-center gap-1.5 rounded-2xl p-3 transition-all active:scale-[0.96]",
+        "relative flex flex-col items-center justify-center gap-1.5 rounded-2xl p-2.5 sm:p-3 transition-all active:scale-[0.96]",
         highlight
           ? "bg-destructive/10 hover:bg-destructive/15 text-destructive"
           : "bg-muted/50 hover:bg-primary/10 text-foreground",
@@ -678,11 +684,11 @@ function ActionButton({
     >
       <Icon
         className={cn(
-          "w-5 h-5",
+          "w-[18px] h-[18px] sm:w-5 sm:h-5",
           highlight ? "text-destructive" : "text-primary",
         )}
       />
-      <span className="text-[11px] font-medium leading-tight">{label}</span>
+      <span className="text-[10px] sm:text-[11px] font-medium leading-tight">{label}</span>
       {badge && badge > 0 ? (
         <span className="absolute top-1.5 right-1.5 min-w-[16px] h-4 px-1 rounded-full bg-destructive text-destructive-foreground text-[9px] font-bold flex items-center justify-center">
           {badge > 9 ? "9+" : badge}
