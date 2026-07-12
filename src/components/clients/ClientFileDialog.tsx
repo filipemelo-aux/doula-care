@@ -530,48 +530,24 @@ export function ClientFileDialog({ open, onOpenChange, client }: ClientFileDialo
 
             {/* Body */}
             <div className="px-5 py-5 space-y-4">
-              {/* Contact card */}
-              <Card icon={User} title="Contato" tint="primary">
-                <ChipGrid>
-                  <Chip icon={Phone} label="Telefone" value={client.phone} />
-                  {client.cpf && <Chip label="CPF" value={client.cpf} />}
-                  {client.dpp && <Chip icon={Calendar} label="DPP" value={formatDate(client.dpp)} />}
-                  <Chip label="Cadastrada em" value={formatDate(client.created_at)} />
-                </ChipGrid>
-                {address && (
-                  <div className="flex items-start gap-2 mt-3 rounded-xl bg-muted/50 px-3 py-2 text-xs">
-                    <MapPin className="w-3.5 h-3.5 text-primary shrink-0 mt-0.5" />
-                    <p className="font-medium leading-relaxed">{address}</p>
+              {/* Appointments */}
+              {appointments && appointments.length > 0 && (
+                <Card icon={Calendar} title={`Consultas (${appointments.length})`} tint="accent">
+                  <div className="space-y-2">
+                    {appointments.map((apt) => (
+                      <div key={apt.id} className="rounded-xl bg-muted/50 p-3 space-y-1">
+                        <div className="flex items-center justify-between gap-2">
+                          <p className="font-medium text-xs">{apt.title}</p>
+                          <Badge variant={apt.completed_at ? "default" : "outline"} className="text-[10px] h-5 shrink-0">
+                            {apt.completed_at ? "Concluída" : "Pendente"}
+                          </Badge>
+                        </div>
+                        <p className="text-[11px] text-muted-foreground">{formatDateTime(apt.scheduled_at)}</p>
+                        {apt.notes && <p className="text-[11px]"><span className="text-muted-foreground">Obs:</span> {apt.notes}</p>}
+                        {apt.completion_notes && <p className="text-[11px]"><span className="text-muted-foreground">Conclusão:</span> {apt.completion_notes}</p>}
+                      </div>
+                    ))}
                   </div>
-                )}
-              </Card>
-
-              {/* Companion */}
-              {(client.companion_name || client.companion_phone || client.instagram_acompanhante) && (
-                <Card icon={Heart} title="Acompanhante" tint="pink">
-                  <ChipGrid>
-                    {client.companion_name && <Chip label="Nome" value={client.companion_name} />}
-                    {client.companion_phone && <Chip icon={Phone} label="Telefone" value={client.companion_phone} />}
-                    {client.instagram_acompanhante && <Chip icon={Instagram} label="Instagram" value={client.instagram_acompanhante} />}
-                  </ChipGrid>
-                </Card>
-              )}
-
-              {/* Baby / Birth */}
-              {(client.birth_occurred || (client.baby_names && client.baby_names.length > 0)) && (
-                <Card icon={Baby} title={client.birth_occurred ? "Dados do Nascimento" : "Bebê"} tint="accent">
-                  <ChipGrid>
-                    {client.baby_names && client.baby_names.length > 0 && (
-                      <Chip label="Nome(s)" value={client.baby_names.join(", ")} highlight />
-                    )}
-                    {client.birth_date && <Chip icon={Calendar} label="Data" value={formatDate(client.birth_date)} />}
-                    {client.birth_time && <Chip label="Hora" value={client.birth_time} />}
-                    {(client as any).birth_type && (
-                      <Chip label="Tipo de parto" value={BIRTH_TYPE_LABELS[(client as any).birth_type] || (client as any).birth_type} highlight />
-                    )}
-                    {client.birth_weight && <Chip label="Peso" value={`${client.birth_weight}g`} />}
-                    {client.birth_height && <Chip label="Comprimento" value={`${client.birth_height}cm`} />}
-                  </ChipGrid>
                 </Card>
               )}
 
@@ -605,13 +581,20 @@ export function ClientFileDialog({ open, onOpenChange, client }: ClientFileDialo
                 </Card>
               )}
 
-              {/* Photographer / Social */}
-              {((client.has_fotografa && (client.fotografa_name || client.fotografa_phone)) || client.instagram_gestante) && (
-                <Card icon={Camera} title="Extras" tint="accent">
+              {/* Baby / Birth */}
+              {(client.birth_occurred || (client.baby_names && client.baby_names.length > 0)) && (
+                <Card icon={Baby} title={client.birth_occurred ? "Dados do Nascimento" : "Bebê"} tint="accent">
                   <ChipGrid>
-                    {client.instagram_gestante && <Chip icon={Instagram} label="Instagram" value={client.instagram_gestante} />}
-                    {client.has_fotografa && client.fotografa_name && <Chip icon={Camera} label="Fotógrafa" value={client.fotografa_name} />}
-                    {client.has_fotografa && client.fotografa_phone && <Chip icon={Phone} label="Tel. fotógrafa" value={client.fotografa_phone} />}
+                    {client.baby_names && client.baby_names.length > 0 && (
+                      <Chip label="Nome(s)" value={client.baby_names.join(", ")} highlight />
+                    )}
+                    {client.birth_date && <Chip icon={Calendar} label="Data" value={formatDate(client.birth_date)} />}
+                    {client.birth_time && <Chip label="Hora" value={client.birth_time} />}
+                    {(client as any).birth_type && (
+                      <Chip label="Tipo de parto" value={BIRTH_TYPE_LABELS[(client as any).birth_type] || (client as any).birth_type} highlight />
+                    )}
+                    {client.birth_weight && <Chip label="Peso" value={`${client.birth_weight}g`} />}
+                    {client.birth_height && <Chip label="Comprimento" value={`${client.birth_height}cm`} />}
                   </ChipGrid>
                 </Card>
               )}
@@ -623,6 +606,44 @@ export function ClientFileDialog({ open, onOpenChange, client }: ClientFileDialo
                     <p className="text-[10px] text-destructive uppercase tracking-wide">Início</p>
                     <p className="font-semibold text-destructive">{formatDateTime(client.labor_started_at)}</p>
                   </div>
+                </Card>
+              )}
+
+              {/* Contact card */}
+              <Card icon={User} title="Contato" tint="primary">
+                <ChipGrid>
+                  <Chip icon={Phone} label="Telefone" value={client.phone} />
+                  {client.cpf && <Chip label="CPF" value={client.cpf} />}
+                  {client.dpp && <Chip icon={Calendar} label="DPP" value={formatDate(client.dpp)} />}
+                  <Chip label="Cadastrada em" value={formatDate(client.created_at)} />
+                </ChipGrid>
+                {address && (
+                  <div className="flex items-start gap-2 mt-3 rounded-xl bg-muted/50 px-3 py-2 text-xs">
+                    <MapPin className="w-3.5 h-3.5 text-primary shrink-0 mt-0.5" />
+                    <p className="font-medium leading-relaxed">{address}</p>
+                  </div>
+                )}
+              </Card>
+
+              {/* Companion */}
+              {(client.companion_name || client.companion_phone || client.instagram_acompanhante) && (
+                <Card icon={Heart} title="Acompanhante" tint="pink">
+                  <ChipGrid>
+                    {client.companion_name && <Chip label="Nome" value={client.companion_name} />}
+                    {client.companion_phone && <Chip icon={Phone} label="Telefone" value={client.companion_phone} />}
+                    {client.instagram_acompanhante && <Chip icon={Instagram} label="Instagram" value={client.instagram_acompanhante} />}
+                  </ChipGrid>
+                </Card>
+              )}
+
+              {/* Photographer / Social */}
+              {((client.has_fotografa && (client.fotografa_name || client.fotografa_phone)) || client.instagram_gestante) && (
+                <Card icon={Camera} title="Extras" tint="accent">
+                  <ChipGrid>
+                    {client.instagram_gestante && <Chip icon={Instagram} label="Instagram" value={client.instagram_gestante} />}
+                    {client.has_fotografa && client.fotografa_name && <Chip icon={Camera} label="Fotógrafa" value={client.fotografa_name} />}
+                    {client.has_fotografa && client.fotografa_phone && <Chip icon={Phone} label="Tel. fotógrafa" value={client.fotografa_phone} />}
+                  </ChipGrid>
                 </Card>
               )}
 
@@ -671,27 +692,6 @@ export function ClientFileDialog({ open, onOpenChange, client }: ClientFileDialo
                         </div>
                         {c.signed_at && <p className="text-[11px] text-muted-foreground">Assinado em {formatDateTime(c.signed_at)}</p>}
                         {c.signer_name && <p className="text-[11px] text-muted-foreground">Assinante: {c.signer_name}</p>}
-                      </div>
-                    ))}
-                  </div>
-                </Card>
-              )}
-
-              {/* Appointments */}
-              {appointments && appointments.length > 0 && (
-                <Card icon={Calendar} title={`Consultas (${appointments.length})`} tint="accent">
-                  <div className="space-y-2">
-                    {appointments.map((apt) => (
-                      <div key={apt.id} className="rounded-xl bg-muted/50 p-3 space-y-1">
-                        <div className="flex items-center justify-between gap-2">
-                          <p className="font-medium text-xs">{apt.title}</p>
-                          <Badge variant={apt.completed_at ? "default" : "outline"} className="text-[10px] h-5 shrink-0">
-                            {apt.completed_at ? "Concluída" : "Pendente"}
-                          </Badge>
-                        </div>
-                        <p className="text-[11px] text-muted-foreground">{formatDateTime(apt.scheduled_at)}</p>
-                        {apt.notes && <p className="text-[11px]"><span className="text-muted-foreground">Obs:</span> {apt.notes}</p>}
-                        {apt.completion_notes && <p className="text-[11px]"><span className="text-muted-foreground">Conclusão:</span> {apt.completion_notes}</p>}
                       </div>
                     ))}
                   </div>
