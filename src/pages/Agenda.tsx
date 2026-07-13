@@ -63,7 +63,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { AppointmentDetailDialog } from "@/components/clients/AppointmentDetailDialog";
 import { AppointmentCompleteDialog } from "@/components/clients/AppointmentCompleteDialog";
-import { format, isToday, isPast, isFuture, parseISO, isSameDay, startOfDay, addHours, isBefore, isAfter, isWithinInterval } from "date-fns";
+import { format, isToday, isPast, isSameDay, addHours, isWithinInterval } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { fromZonedTime, toZonedTime } from "date-fns-tz";
 import { toast } from "sonner";
