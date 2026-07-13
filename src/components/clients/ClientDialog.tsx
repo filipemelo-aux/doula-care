@@ -371,6 +371,12 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
         instagram_gestante: (client as any).instagram_gestante || "",
         instagram_acompanhante: (client as any).instagram_acompanhante || "",
         notes: client.notes || "",
+        date_of_birth: (client as any).date_of_birth || "",
+        historico_saude: (client as any).historico_saude || "",
+        historico_saude_familiar: (client as any).historico_saude_familiar || "",
+        tipo_sanguineo: (client as any).tipo_sanguineo || "",
+        cirurgias_anteriores: (client as any).cirurgias_anteriores || "",
+        restricoes_alimentares: (client as any).restricoes_alimentares || "",
       });
       setEntryAlreadyPaid(isParcelado ? isFirstInstallmentPaid : false);
       setEntryType("equal");
