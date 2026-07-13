@@ -814,7 +814,7 @@ export default function Agenda() {
                   {filteredAppointments.length > 0 ? (
                     <ScrollArea className="max-h-[280px]">
                       <div className="space-y-2">
-                        {filteredAppointments.map((apt) => (
+                        {sortAppointmentsWithFutureFirst(filteredAppointments).map((apt) => (
                           <AppointmentRow
                             key={apt.id}
                             apt={apt}
