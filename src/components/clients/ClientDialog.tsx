@@ -1807,19 +1807,6 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
                       </FormItem>
                     )}
                   />
-                  <FormField
-                    control={form.control}
-                    name="restricoes_alimentares"
-                    render={({ field }) => (
-                      <FormItem className="space-y-1">
-                        <FormLabel className="text-xs">Restrições alimentares</FormLabel>
-                        <FormControl>
-                          <Textarea {...field} className="min-h-[60px] resize-none text-sm" placeholder="Ex: vegetariana, vegana, sem lactose, sem glúten..." />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
                 </div>
               )}
 
