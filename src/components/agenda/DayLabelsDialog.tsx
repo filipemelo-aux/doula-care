@@ -165,7 +165,13 @@ export function DayLabelsDialog({ open, onOpenChange, organizationId, date, onOp
             </Button>
           )}
         </div>
+        <DialogFooter>
+          <Button onClick={() => onOpenChange(false)} className="w-full">
+            Concluir
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
 }
+
