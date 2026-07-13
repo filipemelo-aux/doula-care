@@ -1,11 +1,18 @@
 import { useMemo, useState } from "react";
-import { Ban, CheckCircle, Mail, Trash2, Loader2, ArrowUp, ArrowDown, ArrowUpDown } from "lucide-react";
+import { Ban, CheckCircle, Mail, Trash2, Loader2, ArrowUp, ArrowDown, ArrowUpDown, MoreVertical } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   AlertDialog,
@@ -131,9 +138,9 @@ export function OrgTable({
               <SortHeader label="Email" k="email" className="hidden md:table-cell" />
               <SortHeader label="Plano" k="plan" />
               <SortHeader label="Status" k="status" />
-              <SortHeader label="Gestantes" k="clients" className="hidden sm:table-cell text-right" />
+              <SortHeader label="Gest." k="clients" className="hidden sm:table-cell text-right" />
               <SortHeader label="Desde" k="created" className="hidden lg:table-cell" />
-              <TableHead className="text-right">Ações</TableHead>
+              <TableHead className="text-right w-16">Ações</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -147,29 +154,29 @@ export function OrgTable({
                 .toUpperCase();
               return (
                 <TableRow key={org.id} className="group">
-                  <TableCell className="py-2.5">
-                    <div className="flex items-center gap-2.5 min-w-0">
-                      <div className="relative flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
-                        <span className="text-[11px] font-bold text-primary">{initials}</span>
+                  <TableCell className="py-1.5 px-2.5">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <div className="relative flex-shrink-0 w-7 h-7 rounded-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
+                        <span className="text-[10px] font-bold text-primary">{initials}</span>
                         {onlineOrgIds.has(org.id) && (
-                          <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-emerald-500 ring-2 ring-card" title="Online agora" />
+                          <span className="absolute -bottom-0.5 -right-0.5 h-2 w-2 rounded-full bg-emerald-500 ring-2 ring-card" title="Online agora" />
                         )}
                       </div>
                       <div className="min-w-0">
-                        <p className="text-sm font-medium text-foreground truncate leading-tight">{displayName}</p>
-                        <p className="text-[11px] text-muted-foreground md:hidden flex items-center gap-1 mt-0.5">
+                        <p className="text-xs font-medium text-foreground truncate leading-tight max-w-[120px] sm:max-w-[160px] md:max-w-[200px]">{displayName}</p>
+                        <p className="text-[10px] text-muted-foreground md:hidden flex items-center gap-1 mt-0.5">
                           <Mail className="h-2.5 w-2.5" />
-                          <span className="truncate">{org.responsible_email}</span>
+                          <span className="truncate max-w-[120px]">{org.responsible_email}</span>
                         </p>
                       </div>
                     </div>
                   </TableCell>
-                  <TableCell className="hidden md:table-cell text-xs text-muted-foreground">
-                    <span className="truncate inline-block max-w-[220px] align-middle">{org.responsible_email}</span>
+                  <TableCell className="hidden md:table-cell px-2.5 py-1.5 text-[11px] text-muted-foreground">
+                    <span className="truncate inline-block max-w-[160px] align-middle">{org.responsible_email}</span>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="px-2.5 py-1.5">
                     <Select value={org.plan} onValueChange={(v) => onPlanChange(org.id, v as any)}>
-                      <SelectTrigger className={cn("h-7 w-[92px] text-xs border-0", planBadgeStyles[org.plan])}>
+                      <SelectTrigger className={cn("h-6 w-[66px] min-w-0 px-1.5 text-[10px] border-0", planBadgeStyles[org.plan])}>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -179,85 +186,77 @@ export function OrgTable({
                       </SelectContent>
                     </Select>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="px-2.5 py-1.5">
                     {org.status === "suspenso" ? (
-                      <Badge className="h-5 px-2 text-[10px] font-medium rounded-full bg-destructive/15 text-destructive">Suspenso</Badge>
+                      <Badge className="h-5 px-1.5 text-[10px] font-medium rounded-full bg-destructive/15 text-destructive">Suspenso</Badge>
                     ) : org.status === "pendente" ? (
-                      <Badge className="h-5 px-2 text-[10px] font-medium rounded-full bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">Pendente</Badge>
+                      <Badge className="h-5 px-1.5 text-[10px] font-medium rounded-full bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">Pendente</Badge>
                     ) : (
-                      <Badge className="h-5 px-2 text-[10px] font-medium rounded-full bg-success/15 text-success">Ativo</Badge>
+                      <Badge className="h-5 px-1.5 text-[10px] font-medium rounded-full bg-success/15 text-success">Ativo</Badge>
                     )}
                   </TableCell>
-                  <TableCell className="hidden sm:table-cell text-right text-sm text-foreground">{org.client_count}</TableCell>
-                  <TableCell className="hidden lg:table-cell text-xs text-muted-foreground">
-                    {format(new Date(org.created_at), "dd/MM/yyyy", { locale: ptBR })}
+                  <TableCell className="hidden sm:table-cell px-2.5 py-1.5 text-right text-xs text-foreground">{org.client_count}</TableCell>
+                  <TableCell className="hidden lg:table-cell px-2.5 py-1.5 text-[11px] text-muted-foreground whitespace-nowrap">
+                    {format(new Date(org.created_at), "dd/MM/yy", { locale: ptBR })}
                   </TableCell>
-                  <TableCell>
-                    <div className="flex items-center justify-end gap-0.5">
-                      <TooltipProvider>
-                        {org.status === "ativo" ? (
+                  <TableCell className="px-2.5 py-1.5">
+                    <div className="flex items-center justify-end gap-1">
+                      <div className="hidden sm:flex items-center">
+                        <PromoTriggerButton orgId={org.id} orgName={displayName} mode="actions" />
+                      </div>
+                      <DropdownMenu>
+                        <TooltipProvider>
                           <Tooltip>
                             <TooltipTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-7 w-7 text-muted-foreground hover:text-foreground"
-                                onClick={() => onStatusChange(org.id, "suspenso")}
-                                disabled={isStatusPending}
-                              >
-                                <Ban className="h-3.5 w-3.5" />
-                              </Button>
+                              <DropdownMenuTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-7 w-7 text-muted-foreground hover:text-foreground hover:bg-muted"
+                                  disabled={isStatusPending || isDeletePending}
+                                >
+                                  <MoreVertical className="h-3.5 w-3.5" />
+                                </Button>
+                              </DropdownMenuTrigger>
                             </TooltipTrigger>
-                            <TooltipContent className="text-xs">Suspender</TooltipContent>
+                            <TooltipContent side="top" className="text-xs">Ações</TooltipContent>
                           </Tooltip>
-                        ) : (
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-7 w-7 text-success hover:bg-success/15"
-                                onClick={() => onStatusChange(org.id, "ativo")}
-                                disabled={isStatusPending}
-                              >
-                                <CheckCircle className="h-3.5 w-3.5" />
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent className="text-xs">Ativar</TooltipContent>
-                          </Tooltip>
-                        )}
-                      </TooltipProvider>
-                      <PromoTriggerButton orgId={org.id} orgName={displayName} mode="actions" />
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-7 w-7 text-destructive hover:bg-destructive/10"
+                        </TooltipProvider>
+                        <DropdownMenuContent align="end" className="w-44">
+                          {org.status === "ativo" ? (
+                            <DropdownMenuItem
+                              className="text-xs gap-2"
+                              onClick={() => onStatusChange(org.id, "suspenso")}
+                              disabled={isStatusPending}
+                            >
+                              <Ban className="h-3.5 w-3.5 text-muted-foreground" />
+                              Suspender
+                            </DropdownMenuItem>
+                          ) : (
+                            <DropdownMenuItem
+                              className="text-xs gap-2"
+                              onClick={() => onStatusChange(org.id, "ativo")}
+                              disabled={isStatusPending}
+                            >
+                              <CheckCircle className="h-3.5 w-3.5 text-success" />
+                              Ativar
+                            </DropdownMenuItem>
+                          )}
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            className="text-xs gap-2 text-destructive focus:text-destructive focus:bg-destructive/10"
+                            onClick={() => {
+                              if (window.confirm(`Tem certeza que deseja excluir "${displayName}"? Esta ação é irreversível.`)) {
+                                onDelete(org.id);
+                              }
+                            }}
                             disabled={isDeletePending}
                           >
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Excluir organização</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              Tem certeza que deseja excluir <strong>{displayName}</strong>? Esta ação é irreversível e apagará todos os dados.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                            <AlertDialogAction
-                              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                              onClick={() => onDelete(org.id)}
-                            >
-                              {isDeletePending ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Trash2 className="h-4 w-4 mr-1" />}
-                              Excluir permanentemente
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
+                            {isDeletePending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
+                            Excluir permanente
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </div>
                   </TableCell>
                 </TableRow>

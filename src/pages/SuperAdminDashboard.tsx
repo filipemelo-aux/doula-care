@@ -670,16 +670,23 @@ export default function SuperAdminDashboard() {
                     · {activeOrgs.length} ativa{activeOrgs.length !== 1 ? "s" : ""} · {suspendedOrgs.length} suspensa{suspendedOrgs.length !== 1 ? "s" : ""}
                   </span>
                 </h2>
-                <OrgTable
-                  orgs={[...activeOrgs, ...suspendedOrgs]}
-                  onlineOrgIds={onlineOrgIds}
-                  onPlanChange={(orgId, plan) => planMutation.mutate({ orgId, plan })}
-                  onStatusChange={(orgId, status) => statusMutation.mutate({ orgId, status })}
-                  onDelete={(orgId) => deleteMutation.mutate(orgId)}
-                  isPlanPending={planMutation.isPending}
-                  isStatusPending={statusMutation.isPending}
-                  isDeletePending={deleteMutation.isPending}
-                />
+                <div className="hidden lg:block">
+                  <OrgTable
+                    orgs={[...activeOrgs, ...suspendedOrgs]}
+                    onlineOrgIds={onlineOrgIds}
+                    onPlanChange={(orgId, plan) => planMutation.mutate({ orgId, plan })}
+                    onStatusChange={(orgId, status) => statusMutation.mutate({ orgId, status })}
+                    onDelete={(orgId) => deleteMutation.mutate(orgId)}
+                    isPlanPending={planMutation.isPending}
+                    isStatusPending={statusMutation.isPending}
+                    isDeletePending={deleteMutation.isPending}
+                  />
+                </div>
+                <div className="lg:hidden grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {[...activeOrgs, ...suspendedOrgs].map((org) => (
+                    <OrgCard key={org.id} org={org} />
+                  ))}
+                </div>
               </div>
             )}
           </div>
