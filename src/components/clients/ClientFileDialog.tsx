@@ -254,6 +254,17 @@ export function ClientFileDialog({ open, onOpenChange, client }: ClientFileDialo
     return null;
   })();
 
+  const assistenciaData = (() => {
+    const data = (client as any).restricoes_assistencia || {};
+    return {
+      alergias: data.alergias || client.alergias || null,
+      restricoes: data.restricoes || client.restricoes_alimentares || null,
+      fobias_gatilhos: data.fobias_gatilhos || null,
+      condicoes_especiais: data.condicoes_especiais || null,
+      aromaterapia: client.restricao_aromaterapia || null,
+    };
+  })();
+
   const handleExportPDF = async () => {
     try {
       const { default: jsPDF } = await import("jspdf");
