@@ -1372,6 +1372,38 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
                         </FormItem>
                       )}
                     />
+                    <FormField
+                      control={form.control}
+                      name="has_pets"
+                      render={({ field }) => (
+                        <FormItem className="space-y-1 md:col-span-2">
+                          <div className="flex items-center justify-between rounded-2xl border border-border/40 bg-card/50 px-3 py-2">
+                            <div>
+                              <FormLabel className="text-xs">Possui pets?</FormLabel>
+                              <p className="text-[10px] text-muted-foreground">Presença de animais no ambiente pode influenciar cuidados</p>
+                            </div>
+                            <FormControl>
+                              <Switch checked={!!field.value} onCheckedChange={field.onChange} />
+                            </FormControl>
+                          </div>
+                        </FormItem>
+                      )}
+                    />
+                    {form.watch("has_pets") && (
+                      <FormField
+                        control={form.control}
+                        name="pets_names"
+                        render={({ field }) => (
+                          <FormItem className="space-y-1 md:col-span-2">
+                            <FormLabel className="text-xs">Nome(s) do(s) pet(s)</FormLabel>
+                            <FormControl>
+                              <Input {...field} className="h-9 text-sm" placeholder="Ex: Mel (cachorra), Frajola (gato)" />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    )}
                   </div>
                 </div>
               )}
