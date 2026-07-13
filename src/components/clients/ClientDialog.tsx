@@ -1742,9 +1742,6 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
                         )}
                       />
                     </div>
-                    <p className="text-[11px] text-muted-foreground leading-relaxed">
-                      🚨 Alergia a lavanda. 🚨 Pânico de agulhas. 🚨 História de violência obstétrica. 🚨 Não gosta de ser tocada sem autorização. 🚨 Dieta vegetariana. 🚨 Evangélica — prefere evitar determinadas práticas. 🚨 TEA nível 1. 🚨 Surdez parcial. 🚨 Medo intenso de hospitais. 🚨 Trauma relacionado a cesariana anterior.
-                    </p>
                   </div>
                   <FormField
                     control={form.control}
