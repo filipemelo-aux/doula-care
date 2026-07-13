@@ -202,7 +202,7 @@ export function MatchRequestsCard() {
           if (!o) setEditClient(null);
         }}
         client={editClient}
-        initialStep={7}
+        initialStep={6}
       />
     </>
   );
