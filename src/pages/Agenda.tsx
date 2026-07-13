@@ -695,21 +695,18 @@ export default function Agenda() {
       {viewMode === "list" && (
         <div className="space-y-4">
           <div className="flex items-center gap-2">
-            <ToggleGroup
-              type="single"
-              value={agendaFilter}
-              onValueChange={(v) => v && setAgendaFilter(v as AgendaFilter)}
-              className="flex-1"
-            >
-              <ToggleGroupItem value="calendar" className="flex-1 gap-1.5 text-xs data-[state=on]:bg-primary data-[state=on]:text-primary-foreground">
-                <CalendarDays className="h-3.5 w-3.5" />
-                Data no calendário
-              </ToggleGroupItem>
-              <ToggleGroupItem value="all" className="flex-1 gap-1.5 text-xs data-[state=on]:bg-primary data-[state=on]:text-primary-foreground">
-                <List className="h-3.5 w-3.5" />
-                Todos os compromissos
-              </ToggleGroupItem>
-            </ToggleGroup>
+            <Tabs value={agendaFilter} onValueChange={(v) => v && setAgendaFilter(v as AgendaFilter)}>
+              <TabsList className="flex-1 grid grid-cols-2 gap-0 p-1">
+                <TabsTrigger value="calendar" className="gap-1.5 text-xs sm:text-sm px-1">
+                  <CalendarDays className="h-3.5 w-3.5" />
+                  <span className="truncate">Data no calendário</span>
+                </TabsTrigger>
+                <TabsTrigger value="all" className="gap-1.5 text-xs sm:text-sm px-1">
+                  <List className="h-3.5 w-3.5" />
+                  <span className="truncate">Todos os compromissos</span>
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
