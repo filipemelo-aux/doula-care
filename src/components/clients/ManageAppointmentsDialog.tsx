@@ -2,6 +2,7 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useOccupiedSlots } from "@/hooks/useOccupiedSlots";
+import { sortAppointmentsWithFutureFirst } from "@/lib/appointments";
 import {
   Dialog,
   DialogContent,
@@ -234,7 +235,7 @@ export function ManageAppointmentsDialog({
               </div>
             ) : appointments && appointments.length > 0 ? (
               <div className="space-y-2">
-                {appointments.map((apt) => {
+                {sortAppointmentsWithFutureFirst(appointments).map((apt) => {
                   const past = isPast(apt.scheduled_at);
                   const date = new Date(apt.scheduled_at);
 

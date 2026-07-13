@@ -80,6 +80,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { fetchAddressByCep, formatAddressWithNumber } from "@/lib/address";
 import { maskCEP } from "@/lib/masks";
 import { ensureAvailabilityForAppointment } from "@/lib/ensureAvailability";
+import { sortAppointmentsWithFutureFirst } from "@/lib/appointments";
 
 // ─── Types ───────────────────────────────────────────────
 interface AppointmentWithClient {
@@ -813,7 +814,7 @@ export default function Agenda() {
                   {filteredAppointments.length > 0 ? (
                     <ScrollArea className="max-h-[280px]">
                       <div className="space-y-2">
-                        {filteredAppointments.map((apt) => (
+                        {sortAppointmentsWithFutureFirst(filteredAppointments).map((apt) => (
                           <AppointmentRow
                             key={apt.id}
                             apt={apt}
@@ -866,15 +867,13 @@ export default function Agenda() {
 
               {agendaFilter === "all" ? (
                 <>
-                  {/* Unified list — sorted ascending by date, status shown via badge */}
+                  {/* Unified list — future appointments first */}
                   {filteredAppointments.length > 0 && (
                     <section>
                       <div className="space-y-2">
-                        {[...filteredAppointments]
-                          .sort((a, b) => new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime())
-                          .map((apt) => (
-                            <AppointmentRow key={apt.id} apt={apt} onEdit={openEditAppointment} onDelete={(id) => setDeleteTarget({ type: "appointment", id })} displayName={displayName} onCompleted={() => queryClient.invalidateQueries({ queryKey: ["agenda-appointments"] })} />
-                          ))}
+                        {sortAppointmentsWithFutureFirst(filteredAppointments).map((apt) => (
+                          <AppointmentRow key={apt.id} apt={apt} onEdit={openEditAppointment} onDelete={(id) => setDeleteTarget({ type: "appointment", id })} displayName={displayName} onCompleted={() => queryClient.invalidateQueries({ queryKey: ["agenda-appointments"] })} />
+                        ))}
                       </div>
                     </section>
                   )}
@@ -895,15 +894,13 @@ export default function Agenda() {
                 </>
               ) : (
                 <>
-                  {/* Calendar-day mode keeps single ascending list too */}
+                  {/* Calendar-day mode keeps future-first sort */}
                   {filteredAppointments.length > 0 && (
                     <section>
                       <div className="space-y-2">
-                        {[...filteredAppointments]
-                          .sort((a, b) => new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime())
-                          .map((apt) => (
-                            <AppointmentRow key={apt.id} apt={apt} onEdit={openEditAppointment} onDelete={(id) => setDeleteTarget({ type: "appointment", id })} displayName={displayName} onCompleted={() => queryClient.invalidateQueries({ queryKey: ["agenda-appointments"] })} />
-                          ))}
+                        {sortAppointmentsWithFutureFirst(filteredAppointments).map((apt) => (
+                          <AppointmentRow key={apt.id} apt={apt} onEdit={openEditAppointment} onDelete={(id) => setDeleteTarget({ type: "appointment", id })} displayName={displayName} onCompleted={() => queryClient.invalidateQueries({ queryKey: ["agenda-appointments"] })} />
+                        ))}
                       </div>
                     </section>
                   )}
