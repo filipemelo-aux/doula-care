@@ -75,6 +75,7 @@ export default function Dashboard() {
 
       {/* ═══ 2 — Compromissos ═══ */}
       <UpcomingAppointments />
+      <CalendarLabelsSummaryCard />
 
       {/* ═══ 3 — Financeiro (oculto para moderadores) ═══ */}
       {canSeeFinancials && <FinancialOverview period={period} />}
