@@ -102,6 +102,21 @@ export function ClientQuickViewDialog({
   const [notifOpen, setNotifOpen] = useState(false);
   const [fichaOpen, setFichaOpen] = useState(false);
 
+  type DetailAppointment = {
+    id: string;
+    title: string;
+    scheduled_at: string;
+    notes: string | null;
+    completed_at: string | null;
+    completion_notes: string | null;
+    address: string | null;
+  };
+  const [detailApt, setDetailApt] = useState<DetailAppointment | null>(null);
+  const [completeApt, setCompleteApt] = useState<DetailAppointment | null>(null);
+  const [editNotesApt, setEditNotesApt] = useState<DetailAppointment | null>(null);
+  const [editApt, setEditApt] = useState<DetailAppointment | null>(null);
+  const [deleteAptId, setDeleteAptId] = useState<string | null>(null);
+
   const { data: client, isLoading } = useQuery({
     queryKey: ["client-quickview", clientId],
     enabled: !!clientId && open,
