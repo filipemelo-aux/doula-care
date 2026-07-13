@@ -444,7 +444,7 @@ export function ClientQuickViewDialog({
                       </div>
                     </div>
                   )}
-                  {client.alergias && (
+                  {assistenciaData?.alergias && (
                     <div className="flex items-center gap-2 rounded-xl bg-amber-50 border border-amber-100 px-3 py-2 col-span-2">
                       <AlertTriangle className="w-3.5 h-3.5 text-amber-600 shrink-0" />
                       <div className="min-w-0">
@@ -452,7 +452,7 @@ export function ClientQuickViewDialog({
                           Alergias
                         </p>
                         <p className="font-medium line-clamp-2 break-words leading-snug text-amber-900">
-                          {client.alergias}
+                          {assistenciaData.alergias}
                         </p>
                       </div>
                     </div>
@@ -470,17 +470,44 @@ export function ClientQuickViewDialog({
                       </div>
                     </div>
                   )}
-                  {client.restricao_aromaterapia && (
-                    <div className="flex items-center gap-2 rounded-xl bg-muted/50 px-3 py-2 col-span-2">
-                      <Leaf className="w-3.5 h-3.5 text-primary shrink-0" />
-                      <div className="min-w-0">
-                        <p className="text-[10px] text-muted-foreground uppercase tracking-wide">
-                          Restrição aromaterapia
-                        </p>
-                        <p className="font-medium line-clamp-2 break-words leading-snug">
-                          {client.restricao_aromaterapia}
-                        </p>
-                      </div>
+                  {assistenciaData && (assistenciaData.restricoes || assistenciaData.fobias_gatilhos || assistenciaData.condicoes_especiais || assistenciaData.aromaterapia) && (
+                    <div className="col-span-2 space-y-2">
+                      {assistenciaData.restricoes && (
+                        <div className="flex items-center gap-2 rounded-xl bg-muted/50 px-3 py-2">
+                          <Leaf className="w-3.5 h-3.5 text-primary shrink-0" />
+                          <div className="min-w-0">
+                            <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Restrições</p>
+                            <p className="font-medium line-clamp-2 break-words leading-snug">{assistenciaData.restricoes}</p>
+                          </div>
+                        </div>
+                      )}
+                      {assistenciaData.fobias_gatilhos && (
+                        <div className="flex items-center gap-2 rounded-xl bg-muted/50 px-3 py-2">
+                          <Heart className="w-3.5 h-3.5 text-primary shrink-0" />
+                          <div className="min-w-0">
+                            <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Fobias / gatilhos</p>
+                            <p className="font-medium line-clamp-2 break-words leading-snug">{assistenciaData.fobias_gatilhos}</p>
+                          </div>
+                        </div>
+                      )}
+                      {assistenciaData.condicoes_especiais && (
+                        <div className="flex items-center gap-2 rounded-xl bg-muted/50 px-3 py-2">
+                          <Activity className="w-3.5 h-3.5 text-primary shrink-0" />
+                          <div className="min-w-0">
+                            <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Condições especiais</p>
+                            <p className="font-medium line-clamp-2 break-words leading-snug">{assistenciaData.condicoes_especiais}</p>
+                          </div>
+                        </div>
+                      )}
+                      {assistenciaData.aromaterapia && (
+                        <div className="flex items-center gap-2 rounded-xl bg-muted/50 px-3 py-2">
+                          <Leaf className="w-3.5 h-3.5 text-primary shrink-0" />
+                          <div className="min-w-0">
+                            <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Restrição aromaterapia</p>
+                            <p className="font-medium line-clamp-2 break-words leading-snug">{assistenciaData.aromaterapia}</p>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )}
                   {(client.city || client.neighborhood) && (
