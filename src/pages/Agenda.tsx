@@ -672,21 +672,18 @@ export default function Agenda() {
             className="pl-10"
           />
         </div>
-        <ToggleGroup
-          type="single"
-          value={viewMode}
-          onValueChange={(v) => v && setViewMode(v as "list" | "calendar")}
-          className="w-full sm:w-auto justify-stretch"
-        >
-          <ToggleGroupItem value="list" aria-label="Compromissos" className="h-10 gap-1.5 px-3 flex-1 sm:flex-initial">
-            <List className="h-4 w-4" />
-            <span className="text-sm">Compromissos</span>
-          </ToggleGroupItem>
-          <ToggleGroupItem value="calendar" aria-label="Disponibilidade" className="h-10 gap-1.5 px-3 flex-1 sm:flex-initial">
-            <CalendarDays className="h-4 w-4" />
-            <span className="text-sm">Disponibilidade</span>
-          </ToggleGroupItem>
-        </ToggleGroup>
+        <Tabs value={viewMode} onValueChange={(v) => v && setViewMode(v as "list" | "calendar")}>
+          <TabsList className="w-full sm:w-auto grid grid-cols-2 gap-0 p-1">
+            <TabsTrigger value="list" className="gap-1.5 text-xs sm:text-sm px-3">
+              <List className="h-4 w-4" />
+              <span>Compromissos</span>
+            </TabsTrigger>
+            <TabsTrigger value="calendar" className="gap-1.5 text-xs sm:text-sm px-3">
+              <CalendarDays className="h-4 w-4" />
+              <span>Disponibilidade</span>
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
       </div>
 
       {/* Calendar View - availability only */}
