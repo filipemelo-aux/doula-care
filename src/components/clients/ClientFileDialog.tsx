@@ -591,17 +591,20 @@ export function ClientFileDialog({ open, onOpenChange, client }: ClientFileDialo
 
 
               {/* Clinical */}
-              {(client.prenatal_type || client.birth_location || client.comorbidades || client.alergias || client.restricao_aromaterapia || prenatalTeam) && (
+              {(client.prenatal_type || client.birth_location || client.comorbidades || assistenciaData.alergias || assistenciaData.restricoes || assistenciaData.fobias_gatilhos || assistenciaData.condicoes_especiais || assistenciaData.aromaterapia || prenatalTeam) && (
                 <Card icon={Stethoscope} title="Informações Clínicas" tint="primary">
                   <ChipGrid>
                     {client.birth_location && <Chip label="Local do parto" value={client.birth_location} />}
                     {client.prenatal_type && <Chip label="Pré-natal" value={prenatalTypeLabels[client.prenatal_type] || client.prenatal_type} />}
                   </ChipGrid>
-                  {(client.comorbidades || client.alergias || client.restricao_aromaterapia) && (
+                  {(client.comorbidades || assistenciaData.alergias || assistenciaData.restricoes || assistenciaData.fobias_gatilhos || assistenciaData.condicoes_especiais || assistenciaData.aromaterapia) && (
                     <div className="space-y-2 mt-3">
                       {client.comorbidades && <TextBlock label="Comorbidades" value={client.comorbidades} />}
-                      {client.alergias && <TextBlock label="Alergias" value={client.alergias} />}
-                      {client.restricao_aromaterapia && <TextBlock label="Restrição aromaterapia" value={client.restricao_aromaterapia} />}
+                      {assistenciaData.alergias && <TextBlock label="Alergias" value={assistenciaData.alergias} />}
+                      {assistenciaData.restricoes && <TextBlock label="Restrições" value={assistenciaData.restricoes} />}
+                      {assistenciaData.fobias_gatilhos && <TextBlock label="Fobias / gatilhos emocionais" value={assistenciaData.fobias_gatilhos} />}
+                      {assistenciaData.condicoes_especiais && <TextBlock label="Condições especiais" value={assistenciaData.condicoes_especiais} />}
+                      {assistenciaData.aromaterapia && <TextBlock label="Restrição aromaterapia" value={assistenciaData.aromaterapia} />}
                     </div>
                   )}
                   {prenatalTeam && (
