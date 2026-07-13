@@ -1759,7 +1759,12 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
                       <FormItem className="space-y-1">
                         <FormLabel className="text-xs">Comorbidades</FormLabel>
                         <FormControl>
-                          <Textarea {...field} className="min-h-[60px] resize-none text-sm" placeholder="Ex: diabetes gestacional, hipertensão..." />
+                          <SuggestionChips
+                            value={field.value || ""}
+                            onChange={field.onChange}
+                            suggestions={COMORBIDADES_SUGGESTIONS}
+                            placeholder="Outras (separe por vírgula)"
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -1769,7 +1774,7 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
                     <div className="space-y-1">
                       <p className="text-sm font-semibold">Restrições de assistência</p>
                       <p className="text-xs text-muted-foreground leading-relaxed">
-                        Espaço amplo para tudo o que pode alterar a condução do cuidado: alergias, restrições, fobias, gatilhos emocionais e condições especiais.
+                        Toque para selecionar e/ou preencha o campo "Outros" com o que não estiver na lista.
                       </p>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -1779,9 +1784,13 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
                         render={({ field }) => (
                           <FormItem className="space-y-1">
                             <FormLabel className="text-xs">Alergias</FormLabel>
-                            <span className="text-[10px] text-muted-foreground block -mt-0.5">medicamentos, alimentos, óleos essenciais, látex etc.</span>
+                            <span className="text-[10px] text-muted-foreground block -mt-0.5">medicamentos, alimentos, óleos, látex etc.</span>
                             <FormControl>
-                              <Textarea {...field} className="min-h-[60px] resize-y text-sm" placeholder="Ex: dipirona, látex, amendoim, óleo de lavanda..." />
+                              <SuggestionChips
+                                value={field.value || ""}
+                                onChange={field.onChange}
+                                suggestions={ALERGIAS_SUGGESTIONS}
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -1795,7 +1804,11 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
                             <FormLabel className="text-xs">Restrições</FormLabel>
                             <span className="text-[10px] text-muted-foreground block -mt-0.5">alimentares, religiosas, culturais, terapêuticas</span>
                             <FormControl>
-                              <Textarea {...field} className="min-h-[60px] resize-y text-sm" placeholder="Ex: vegetariana, evangélica, não pratica shantala..." />
+                              <SuggestionChips
+                                value={field.value || ""}
+                                onChange={field.onChange}
+                                suggestions={RESTRICOES_SUGGESTIONS}
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -1808,7 +1821,11 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
                           <FormItem className="space-y-1">
                             <FormLabel className="text-xs">Fobias e gatilhos emocionais</FormLabel>
                             <FormControl>
-                              <Textarea {...field} className="min-h-[60px] resize-y text-sm" placeholder="Ex: pânico de agulhas, medo intenso de hospitais, não gosta de ser tocada sem autorização..." />
+                              <SuggestionChips
+                                value={field.value || ""}
+                                onChange={field.onChange}
+                                suggestions={FOBIAS_SUGGESTIONS}
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -1821,7 +1838,11 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
                           <FormItem className="space-y-1">
                             <FormLabel className="text-xs">Condições especiais</FormLabel>
                             <FormControl>
-                              <Textarea {...field} className="min-h-[60px] resize-y text-sm" placeholder="Ex: TEA, TDAH, surdez parcial, ansiedade, histórico de violência obstétrica, abuso sexual, luto gestacional..." />
+                              <SuggestionChips
+                                value={field.value || ""}
+                                onChange={field.onChange}
+                                suggestions={CONDICOES_SUGGESTIONS}
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -1858,12 +1879,40 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
                       <FormItem className="space-y-1">
                         <FormLabel className="text-xs">Histórico de saúde prévio</FormLabel>
                         <FormControl>
-                          <Textarea {...field} className="min-h-[60px] resize-none text-sm" placeholder="Doenças anteriores, tratamentos, condições relevantes..." />
+                          <SuggestionChips
+                            value={field.value || ""}
+                            onChange={field.onChange}
+                            suggestions={HIST_SAUDE_SUGGESTIONS}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
+                  <div className="border border-border/40 rounded-2xl p-3 space-y-2 bg-card/50">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-xs font-semibold">Partos anteriores</p>
+                        <p className="text-[10px] text-muted-foreground">Marque se já teve filho(s) e preencha nome e idade</p>
+                      </div>
+                      <Switch
+                        checked={hasPartosAnteriores}
+                        onCheckedChange={(v) => {
+                          setHasPartosAnteriores(v);
+                          if (v && partosAnterioresChildren.length === 0) {
+                            setPartosAnterioresChildren([{ name: "", age: "" }]);
+                          }
+                        }}
+                      />
+                    </div>
+                    {hasPartosAnteriores && (
+                      <ChildrenList
+                        value={partosAnterioresChildren}
+                        onChange={setPartosAnterioresChildren}
+                        label={`Filho(s) — ${partosAnterioresChildren.filter(c => c.name.trim() || c.age.trim()).length}`}
+                      />
+                    )}
+                  </div>
                   <FormField
                     control={form.control}
                     name="historico_saude_familiar"
@@ -1871,7 +1920,11 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
                       <FormItem className="space-y-1">
                         <FormLabel className="text-xs">Histórico de saúde da mãe / irmãs / avó</FormLabel>
                         <FormControl>
-                          <Textarea {...field} className="min-h-[60px] resize-none text-sm" placeholder="Ex: partos anteriores, doenças hereditárias, complicações gestacionais na família..." />
+                          <SuggestionChips
+                            value={field.value || ""}
+                            onChange={field.onChange}
+                            suggestions={HIST_FAMILIAR_SUGGESTIONS}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -1880,15 +1933,34 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
                   <FormField
                     control={form.control}
                     name="cirurgias_anteriores"
-                    render={({ field }) => (
-                      <FormItem className="space-y-1">
-                        <FormLabel className="text-xs">Cirurgias anteriores</FormLabel>
-                        <FormControl>
-                          <Textarea {...field} className="min-h-[60px] resize-none text-sm" placeholder="Ex: cesárea, apendicectomia, ano..." />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
+                    render={({ field }) => {
+                      const hasCesarea = /cesárea|cesarea/i.test(field.value || "");
+                      return (
+                        <FormItem className="space-y-1">
+                          <FormLabel className="text-xs">Cirurgias anteriores</FormLabel>
+                          <FormControl>
+                            <SuggestionChips
+                              value={field.value || ""}
+                              onChange={field.onChange}
+                              suggestions={CIRURGIAS_SUGGESTIONS}
+                            />
+                          </FormControl>
+                          {hasCesarea && (
+                            <div className="mt-2 border border-border/40 rounded-2xl p-3 bg-card/50">
+                              <p className="text-[11px] font-medium text-muted-foreground mb-2">
+                                Filho(s) nascido(s) por cesárea
+                              </p>
+                              <ChildrenList
+                                value={filhosCesarea}
+                                onChange={setFilhosCesarea}
+                                label={`Filho(s) — ${filhosCesarea.filter(c => c.name.trim() || c.age.trim()).length}`}
+                              />
+                            </div>
+                          )}
+                          <FormMessage />
+                        </FormItem>
+                      );
+                    }}
                   />
                 </div>
               )}
