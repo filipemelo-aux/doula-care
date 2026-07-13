@@ -114,6 +114,7 @@ const STEPS = [
   { id: 4, title: "Saúde e Restrições", shortTitle: "Saúde" },
   { id: 5, title: "Rede de Apoio", shortTitle: "Apoio" },
   { id: 6, title: "Plano e Pagamento", shortTitle: "Plano" },
+  { id: 7, title: "Observações", shortTitle: "Observações" },
 ];
 
 export function ClientDialog({ open, onOpenChange, client, initialStep }: ClientDialogProps) {
@@ -2298,27 +2299,29 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
                       })()}
                     </div>
                   )}
+                </div>
+              )}
 
-                  {/* Observações */}
-                  <div className="border-t border-border/30 pt-3">
-                    <FormField
-                      control={form.control}
-                      name="notes"
-                      render={({ field }) => (
-                        <FormItem className="space-y-1">
-                          <FormLabel className="text-xs">Observações</FormLabel>
-                          <FormControl>
-                            <Textarea
-                              {...field}
-                              className="min-h-[70px] resize-none text-sm"
-                              placeholder="Anotações sobre a cliente..."
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
+              {/* Step 7: Observações */}
+              {currentStep === 7 && (
+                <div className="space-y-3">
+                  <FormField
+                    control={form.control}
+                    name="notes"
+                    render={({ field }) => (
+                      <FormItem className="space-y-1">
+                        <FormLabel className="text-xs">Observações</FormLabel>
+                        <FormControl>
+                          <Textarea
+                            {...field}
+                            className="min-h-[140px] resize-none text-sm"
+                            placeholder="Anotações sobre a cliente..."
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                 </div>
               )}
 
