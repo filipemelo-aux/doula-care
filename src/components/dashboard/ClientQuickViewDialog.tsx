@@ -528,17 +528,81 @@ export function ClientQuickViewDialog({
                       )}
                     </div>
                   )}
-                  {(client.city || client.neighborhood) && (
-                    <div className="flex items-center gap-2 rounded-xl bg-muted/50 px-3 py-2 col-span-2">
-                      <MapPin className="w-3.5 h-3.5 text-primary shrink-0" />
-                      <p className="font-medium line-clamp-2 break-words leading-snug">
-                        {[client.neighborhood, client.city, client.state]
-                          .filter(Boolean)
-                          .join(", ")}
-                      </p>
-                    </div>
-                  )}
                 </div>
+                {/* Consultas & anotações */}
+                {(activity?.nextAppointment || activity?.lastCompletedAppointment) ? (
+                  <div className="rounded-2xl bg-primary/5 border border-primary/10 p-3 space-y-3">
+                    <div className="flex items-center gap-2">
+                      <Calendar className="w-4 h-4 text-primary" />
+                      <p className="text-xs font-semibold text-foreground uppercase tracking-wide">
+                        Consultas & anotações
+                      </p>
+                      {typeof activity?.completedAppointmentsCount === "number" && activity.completedAppointmentsCount > 0 && (
+                        <span className="ml-auto text-[10px] text-muted-foreground">
+                          {activity.completedAppointmentsCount} realizada{activity.completedAppointmentsCount > 1 ? "s" : ""}
+                        </span>
+                      )}
+                    </div>
+
+                    {activity?.nextAppointment && (
+                      <div className="rounded-xl bg-background/60 p-2.5">
+                        <p className="text-[10px] text-muted-foreground uppercase tracking-wide mb-0.5">
+                          Próxima
+                        </p>
+                        <p className="text-sm font-medium leading-snug">
+                          {activity.nextAppointment.title}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {new Date(activity.nextAppointment.scheduled_at).toLocaleString("pt-BR", {
+                            dateStyle: "short",
+                            timeStyle: "short",
+                          })}
+                        </p>
+                        {activity.nextAppointment.notes && (
+                          <p className="mt-1.5 text-xs text-foreground/80 line-clamp-3 whitespace-pre-wrap">
+                            <span className="font-semibold text-foreground">Obs: </span>
+                            {activity.nextAppointment.notes}
+                          </p>
+                        )}
+                      </div>
+                    )}
+
+                    {activity?.lastCompletedAppointment && (
+                      <div className="rounded-xl bg-background/60 p-2.5">
+                        <p className="text-[10px] text-muted-foreground uppercase tracking-wide mb-0.5">
+                          Última realizada
+                        </p>
+                        <p className="text-sm font-medium leading-snug">
+                          {activity.lastCompletedAppointment.title}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {new Date(activity.lastCompletedAppointment.scheduled_at).toLocaleString("pt-BR", {
+                            dateStyle: "short",
+                            timeStyle: "short",
+                          })}
+                        </p>
+                        {activity.lastCompletedAppointment.notes && (
+                          <p className="mt-1.5 text-xs text-foreground/80 line-clamp-3 whitespace-pre-wrap">
+                            <span className="font-semibold text-foreground">Obs: </span>
+                            {activity.lastCompletedAppointment.notes}
+                          </p>
+                        )}
+                        {activity.lastCompletedAppointment.completion_notes && (
+                          <p className="mt-1 text-xs text-foreground/80 line-clamp-3 whitespace-pre-wrap">
+                            <span className="font-semibold text-foreground">Anotações: </span>
+                            {activity.lastCompletedAppointment.completion_notes}
+                          </p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="rounded-2xl bg-muted/40 p-3 text-xs text-muted-foreground text-center">
+                    Nenhuma consulta registrada ainda.
+                  </div>
+                )}
+                <div className="hidden">
+                  {/* placeholder to preserve outer div balance */}
 
                 {/* Novidades */}
                 {activity &&
