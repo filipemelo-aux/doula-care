@@ -575,28 +575,6 @@ export function ClientFileDialog({ open, onOpenChange, client }: ClientFileDialo
                 </Card>
               )}
 
-              {/* Appointments */}
-              {appointments && appointments.length > 0 && (
-                <Card icon={Calendar} title={`Consultas (${appointments.length})`} tint="accent">
-                  <div className="space-y-2">
-                    {appointments.map((apt) => (
-                      <div key={apt.id} className="rounded-xl bg-muted/50 p-3 space-y-1">
-                        <div className="flex items-center justify-between gap-2">
-                          <p className="font-medium text-xs">{apt.title}</p>
-                          <Badge variant={apt.completed_at ? "default" : "outline"} className="text-[10px] h-5 shrink-0">
-                            {apt.completed_at ? "Concluída" : "Pendente"}
-                          </Badge>
-                        </div>
-                        <p className="text-[11px] text-muted-foreground">{formatDateTime(apt.scheduled_at)}</p>
-                        {apt.notes && <p className="text-[11px]"><span className="text-muted-foreground">Obs:</span> {apt.notes}</p>}
-                        {apt.completion_notes && <p className="text-[11px]"><span className="text-muted-foreground">Conclusão:</span> {apt.completion_notes}</p>}
-                      </div>
-                    ))}
-                  </div>
-                </Card>
-              )}
-
-
               {/* Clinical */}
               {(client.prenatal_type || client.birth_location || client.comorbidades || assistenciaData.alergias || assistenciaData.restricoes || assistenciaData.fobias_gatilhos || assistenciaData.condicoes_especiais || assistenciaData.aromaterapia || prenatalTeam) && (
                 <Card icon={Stethoscope} title="Informações Clínicas" tint="primary">
@@ -630,13 +608,31 @@ export function ClientFileDialog({ open, onOpenChange, client }: ClientFileDialo
                 </Card>
               )}
 
-              {/* Baby / Birth */}
-              {(client.birth_occurred || (client.baby_names && client.baby_names.length > 0)) && (
-                <Card icon={Baby} title={client.birth_occurred ? "Dados do Nascimento" : "Bebê"} tint="accent">
+              {/* Appointments (Registro de acompanhamentos) */}
+              {appointments && appointments.length > 0 && (
+                <Card icon={Calendar} title={`Consultas (${appointments.length})`} tint="accent">
+                  <div className="space-y-2">
+                    {appointments.map((apt) => (
+                      <div key={apt.id} className="rounded-xl bg-muted/50 p-3 space-y-1">
+                        <div className="flex items-center justify-between gap-2">
+                          <p className="font-medium text-xs">{apt.title}</p>
+                          <Badge variant={apt.completed_at ? "default" : "outline"} className="text-[10px] h-5 shrink-0">
+                            {apt.completed_at ? "Concluída" : "Pendente"}
+                          </Badge>
+                        </div>
+                        <p className="text-[11px] text-muted-foreground">{formatDateTime(apt.scheduled_at)}</p>
+                        {apt.notes && <p className="text-[11px]"><span className="text-muted-foreground">Obs:</span> {apt.notes}</p>}
+                        {apt.completion_notes && <p className="text-[11px]"><span className="text-muted-foreground">Conclusão:</span> {apt.completion_notes}</p>}
+                      </div>
+                    ))}
+                  </div>
+                </Card>
+              )}
+
+              {/* Birth data (baby name shown in header) */}
+              {client.birth_occurred && (
+                <Card icon={Baby} title="Dados do Nascimento" tint="accent">
                   <ChipGrid>
-                    {client.baby_names && client.baby_names.length > 0 && (
-                      <Chip label="Nome(s)" value={client.baby_names.join(", ")} highlight />
-                    )}
                     {client.birth_date && <Chip icon={Calendar} label="Data" value={formatDate(client.birth_date)} />}
                     {client.birth_time && <Chip label="Hora" value={client.birth_time} />}
                     {(client as any).birth_type && (
@@ -647,6 +643,7 @@ export function ClientFileDialog({ open, onOpenChange, client }: ClientFileDialo
                   </ChipGrid>
                 </Card>
               )}
+
 
               {/* Labor */}
               {client.labor_started_at && (
