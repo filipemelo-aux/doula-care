@@ -2396,18 +2396,17 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
 
               {/* Step 7: Observações */}
               {currentStep === 7 && (
-                <div className="space-y-2">
+                <div className="flex flex-col h-full min-h-0">
                   <FormField
                     control={form.control}
                     name="notes"
                     render={({ field }) => (
-                      <FormItem className="space-y-1">
+                      <FormItem className="space-y-1 flex flex-col flex-1 min-h-0">
                         <FormLabel className="text-xs">Observações</FormLabel>
                         <FormControl>
                           <Textarea
                             {...field}
-                            className="h-40 md:h-56 resize-none text-sm"
-                            style={{ height: "clamp(120px, 30vh, 240px)" }}
+                            className="flex-1 min-h-0 resize-none text-sm"
                             placeholder="Anotações sobre a cliente..."
                           />
                         </FormControl>
