@@ -267,8 +267,9 @@ export function ClientFileDialog({ open, onOpenChange, client }: ClientFileDialo
 
   const handleExportPDF = async () => {
     try {
-      const { default: jsPDF } = await import("jspdf");
+      const { jsPDF } = await import("jspdf");
       const doc = new jsPDF();
+
       let y = 20;
       const marginLeft = 15;
       const pageWidth = doc.internal.pageSize.getWidth();
