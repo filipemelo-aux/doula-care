@@ -1268,6 +1268,7 @@ export default function Agenda() {
               }
             : null
         }
+        onEdit={selectedDetailApt ? () => openEditAppointment(selectedDetailApt) : undefined}
       />
     </div>
   );
