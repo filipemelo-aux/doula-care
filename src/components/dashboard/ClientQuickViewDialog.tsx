@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { AdminClientAvatarUpload } from "./AdminClientAvatarUpload";
 import {
@@ -10,6 +10,16 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -35,6 +45,7 @@ import {
   Clock,
 } from "lucide-react";
 import { differenceInDays, startOfDay } from "date-fns";
+import { toast } from "sonner";
 
 import { cn } from "@/lib/utils";
 import { formatBrazilDate } from "@/lib/utils";
@@ -50,6 +61,10 @@ import { ClientContractionsDialog } from "./ClientContractionsDialog";
 import { SendNotificationDialog } from "@/components/clients/SendNotificationDialog";
 import { ClientFileDialog } from "@/components/clients/ClientFileDialog";
 import { BIRTH_TYPE_LABELS } from "@/components/clients/BirthRegistrationDialog";
+import { AppointmentDetailDialog } from "@/components/clients/AppointmentDetailDialog";
+import { AppointmentCompleteDialog } from "@/components/clients/AppointmentCompleteDialog";
+import { AppointmentEditDialog } from "@/components/clients/AppointmentEditDialog";
+
 
 type Client = Tables<"clients">;
 
@@ -86,6 +101,21 @@ export function ClientQuickViewDialog({
   const [contractionsOpen, setContractionsOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
   const [fichaOpen, setFichaOpen] = useState(false);
+
+  type DetailAppointment = {
+    id: string;
+    title: string;
+    scheduled_at: string;
+    notes: string | null;
+    completed_at: string | null;
+    completion_notes: string | null;
+    address: string | null;
+  };
+  const [detailApt, setDetailApt] = useState<DetailAppointment | null>(null);
+  const [completeApt, setCompleteApt] = useState<DetailAppointment | null>(null);
+  const [editNotesApt, setEditNotesApt] = useState<DetailAppointment | null>(null);
+  const [editApt, setEditApt] = useState<DetailAppointment | null>(null);
+  const [deleteAptId, setDeleteAptId] = useState<string | null>(null);
 
   const { data: client, isLoading } = useQuery({
     queryKey: ["client-quickview", clientId],
@@ -149,7 +179,7 @@ export function ClientQuickViewDialog({
           .maybeSingle(),
         supabase
           .from("appointments")
-          .select("id, title, scheduled_at, notes")
+          .select("id, title, scheduled_at, notes, completed_at, completion_notes, address")
           .eq("client_id", clientId!)
           .is("completed_at", null)
           .gte("scheduled_at", new Date().toISOString())
@@ -158,7 +188,7 @@ export function ClientQuickViewDialog({
           .maybeSingle(),
         supabase
           .from("appointments")
-          .select("id, title, scheduled_at, notes, completion_notes, completed_at")
+          .select("id, title, scheduled_at, notes, completion_notes, completed_at, address")
           .eq("client_id", clientId!)
           .not("completed_at", "is", null)
           .order("completed_at", { ascending: false })
@@ -183,6 +213,23 @@ export function ClientQuickViewDialog({
       };
     },
     refetchInterval: 30000,
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("appointments").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["client-quickview-activity", clientId] });
+      queryClient.invalidateQueries({ queryKey: ["agenda-appointments"] });
+      queryClient.invalidateQueries({ queryKey: ["all-appointments"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
+      toast.success("Consulta removida");
+      setDeleteAptId(null);
+      setDetailApt(null);
+    },
+    onError: () => toast.error("Erro ao remover consulta"),
   });
 
   const isPuer = client?.status === "lactante";
@@ -547,7 +594,7 @@ export function ClientQuickViewDialog({
                     {activity?.nextAppointment && (
                       <button
                         type="button"
-                        onClick={() => go("/agenda", { viewAppointmentId: activity.nextAppointment!.id })}
+                        onClick={() => activity.nextAppointment && setDetailApt(activity.nextAppointment as DetailAppointment)}
                         className="w-full text-left rounded-xl bg-background/60 p-2.5 hover:bg-background transition-colors group cursor-pointer"
                       >
                         <div className="flex items-start justify-between gap-2">
@@ -579,7 +626,7 @@ export function ClientQuickViewDialog({
                     {activity?.lastCompletedAppointment && (
                       <button
                         type="button"
-                        onClick={() => go("/agenda", { viewAppointmentId: activity.lastCompletedAppointment!.id })}
+                        onClick={() => activity.lastCompletedAppointment && setDetailApt(activity.lastCompletedAppointment as DetailAppointment)}
                         className="w-full text-left rounded-xl bg-background/60 p-2.5 hover:bg-background transition-colors group cursor-pointer"
                       >
                         <div className="flex items-start justify-between gap-2">
@@ -774,6 +821,91 @@ export function ClientQuickViewDialog({
         onOpenChange={setFichaOpen}
         client={client ?? null}
       />
+
+      <AppointmentDetailDialog
+        open={!!detailApt}
+        onOpenChange={(open) => !open && setDetailApt(null)}
+        appointment={
+          detailApt
+            ? {
+                title: detailApt.title,
+                scheduled_at: detailApt.scheduled_at,
+                notes: detailApt.notes,
+                clientName: client?.full_name,
+                completed_at: detailApt.completed_at,
+                completion_notes: detailApt.completion_notes,
+              }
+            : null
+        }
+        onEdit={() => detailApt && setEditApt(detailApt)}
+        onEditNotes={detailApt?.completed_at ? () => setEditNotesApt(detailApt) : undefined}
+        onComplete={detailApt && !detailApt.completed_at ? () => setCompleteApt(detailApt) : undefined}
+        onDelete={() => detailApt && setDeleteAptId(detailApt.id)}
+      />
+
+      <AppointmentCompleteDialog
+        open={!!completeApt}
+        onOpenChange={(open) => !open && setCompleteApt(null)}
+        appointmentId={completeApt?.id}
+        appointmentTitle={completeApt?.title}
+        onCompleted={() => {
+          queryClient.invalidateQueries({ queryKey: ["client-quickview-activity", clientId] });
+          queryClient.invalidateQueries({ queryKey: ["agenda-appointments"] });
+          queryClient.invalidateQueries({ queryKey: ["all-appointments"] });
+          setDetailApt(null);
+          setCompleteApt(null);
+        }}
+      />
+
+      <AppointmentCompleteDialog
+        open={!!editNotesApt}
+        onOpenChange={(open) => !open && setEditNotesApt(null)}
+        appointmentId={editNotesApt?.id}
+        appointmentTitle={editNotesApt?.title}
+        editMode
+        initialNotes={editNotesApt?.completion_notes}
+        onCompleted={() => {
+          queryClient.invalidateQueries({ queryKey: ["client-quickview-activity", clientId] });
+          queryClient.invalidateQueries({ queryKey: ["agenda-appointments"] });
+          queryClient.invalidateQueries({ queryKey: ["all-appointments"] });
+          setDetailApt(null);
+          setEditNotesApt(null);
+        }}
+      />
+
+      <AppointmentEditDialog
+        open={!!editApt}
+        onOpenChange={(open) => !open && setEditApt(null)}
+        appointment={editApt}
+        clientName={client?.full_name || ""}
+        onSaved={() => {
+          queryClient.invalidateQueries({ queryKey: ["client-quickview-activity", clientId] });
+          queryClient.invalidateQueries({ queryKey: ["agenda-appointments"] });
+          queryClient.invalidateQueries({ queryKey: ["all-appointments"] });
+          queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
+          setDetailApt(null);
+        }}
+      />
+
+      <AlertDialog open={!!deleteAptId} onOpenChange={(open) => !open && setDeleteAptId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar exclusão?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta consulta será removida permanentemente.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => deleteAptId && deleteMutation.mutate(deleteAptId)}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
