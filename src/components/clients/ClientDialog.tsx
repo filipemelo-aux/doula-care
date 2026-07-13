@@ -390,7 +390,7 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
         historico_saude_familiar: (client as any).historico_saude_familiar || "",
         tipo_sanguineo: (client as any).tipo_sanguineo || "",
         cirurgias_anteriores: (client as any).cirurgias_anteriores || "",
-        restricoes_alimentares: (client as any).restricoes_alimentares || "",
+        
       });
       setEntryAlreadyPaid(isParcelado ? isFirstInstallmentPaid : false);
       setEntryType("equal");
