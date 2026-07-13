@@ -357,11 +357,13 @@ export default function Agenda() {
           organization_id: organizationId || null,
         } as any);
         if (error) throw error;
+        await ensureAvailabilityForAppointment(organizationId, scheduledUtc);
       }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["agenda-appointments"] });
       queryClient.invalidateQueries({ queryKey: ["all-appointments"] });
+      queryClient.invalidateQueries({ queryKey: ["doula-availability"] });
 
       // Send push to client when new appointment is created (not editing)
       if (!editingAppointment && aptClientId) {
