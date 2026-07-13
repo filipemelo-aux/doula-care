@@ -79,6 +79,7 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import { fetchAddressByCep, formatAddressWithNumber } from "@/lib/address";
 import { maskCEP } from "@/lib/masks";
+import { ensureAvailabilityForAppointment } from "@/lib/ensureAvailability";
 
 // ─── Types ───────────────────────────────────────────────
 interface AppointmentWithClient {
