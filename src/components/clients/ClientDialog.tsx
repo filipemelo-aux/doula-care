@@ -1185,14 +1185,14 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
             {client ? "Editar Cliente" : "Nova Cliente"}
           </DialogTitle>
           {/* Tab-style step navigation */}
-          <div className="grid grid-cols-4 sm:grid-cols-7 gap-x-0.5 gap-y-1 pt-2 border-b border-border/40 overflow-hidden min-w-0">
+          <div className="flex flex-nowrap items-center justify-between pt-2 border-b border-border/40 overflow-hidden min-w-0">
             {STEPS.map((step) => (
               <button
                 key={step.id}
                 type="button"
                 onClick={() => handleStepClick(step.id)}
                 className={cn(
-                  "relative min-w-0 px-1.5 py-1.5 text-[10px] sm:text-[11px] font-medium transition-all text-center leading-tight break-words",
+                  "relative flex-1 min-w-0 px-0.5 sm:px-1.5 py-1.5 text-[10px] sm:text-[11px] font-medium transition-all text-center leading-tight truncate",
                   currentStep === step.id
                     ? "text-primary"
                     : step.id < currentStep
@@ -1207,6 +1207,7 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
               </button>
             ))}
           </div>
+
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="client-dialog-form flex flex-col min-h-0 min-w-0 overflow-x-hidden">
