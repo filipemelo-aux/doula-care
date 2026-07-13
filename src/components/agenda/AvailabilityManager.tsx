@@ -288,11 +288,18 @@ export function AvailabilityManager() {
             </CardTitle>
             <p className="text-xs text-muted-foreground mt-1">Selecione um dia e defina seus horários</p>
           </div>
-          <Button size="sm" variant="outline" onClick={openBatchDialog} className="gap-1.5">
-            <Copy className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">Aplicar em Lote</span>
-            <span className="sm:hidden">Lote</span>
-          </Button>
+          <div className="flex items-center gap-1.5">
+            <Button size="sm" variant="outline" onClick={() => setDayLabelsFor(selectedDate)} className="gap-1.5">
+              <Tag className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Etiquetar dia</span>
+              <span className="sm:hidden">Etiqueta</span>
+            </Button>
+            <Button size="sm" variant="outline" onClick={openBatchDialog} className="gap-1.5">
+              <Copy className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Aplicar em Lote</span>
+              <span className="sm:hidden">Lote</span>
+            </Button>
+          </div>
         </div>
       </CardHeader>
       <CardContent>
