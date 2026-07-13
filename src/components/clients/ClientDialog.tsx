@@ -1242,7 +1242,7 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
                       control={form.control}
                       name="cpf"
                       render={({ field }) => (
-                        <FormItem className="space-y-1">
+                        <FormItem className="space-y-1 md:col-span-2">
                           <FormLabel className="text-xs">CPF</FormLabel>
                           <FormControl>
                             <Input 
@@ -1260,7 +1260,7 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
                       control={form.control}
                       name="date_of_birth"
                       render={({ field }) => (
-                        <FormItem className="space-y-1">
+                        <FormItem className="space-y-1 md:col-span-2">
                           <FormLabel className="text-xs">Data de nascimento</FormLabel>
                           <FormControl>
                             <Input {...field} type="date" className="h-9 text-sm" />
