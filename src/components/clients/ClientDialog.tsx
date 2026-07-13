@@ -82,8 +82,10 @@ const clientSchema = z.object({
   prenatal_type: z.string().optional(),
   prenatal_high_risk: z.boolean().optional(),
   comorbidades: z.string().optional(),
-  alergias: z.string().optional(),
-  restricao_aromaterapia: z.string().optional(),
+  restricoes_assistencia_alergias: z.string().optional(),
+  restricoes_assistencia_restricoes: z.string().optional(),
+  restricoes_assistencia_fobias_gatilhos: z.string().optional(),
+  restricoes_assistencia_condicoes_especiais: z.string().optional(),
   date_of_birth: z.string().optional(),
   profissao: z.string().optional(),
   religiao: z.string().optional(),
@@ -92,7 +94,6 @@ const clientSchema = z.object({
   historico_saude_familiar: z.string().optional(),
   tipo_sanguineo: z.string().optional(),
   cirurgias_anteriores: z.string().optional(),
-  restricoes_alimentares: z.string().optional(),
   has_fotografa: z.boolean().optional(),
   fotografa_name: z.string().optional(),
   fotografa_phone: z.string().optional(),
@@ -251,8 +252,10 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
         prenatal_type: "",
         prenatal_high_risk: false,
         comorbidades: "",
-        alergias: "",
-        restricao_aromaterapia: "",
+        restricoes_assistencia_alergias: "",
+        restricoes_assistencia_restricoes: "",
+        restricoes_assistencia_fobias_gatilhos: "",
+        restricoes_assistencia_condicoes_especiais: "",
         has_fotografa: false,
         fotografa_name: "",
         fotografa_phone: "",
@@ -267,7 +270,6 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
         historico_saude_familiar: "",
         tipo_sanguineo: "",
         cirurgias_anteriores: "",
-        restricoes_alimentares: "",
       },
   });
 
@@ -370,8 +372,10 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
         prenatal_type: ((client as any).prenatal_type === "equipe_particular" ? "particular" : (client as any).prenatal_type) || "",
         prenatal_high_risk: (client as any).prenatal_high_risk || false,
         comorbidades: (client as any).comorbidades || "",
-        alergias: (client as any).alergias || "",
-        restricao_aromaterapia: (client as any).restricao_aromaterapia || "",
+        restricoes_assistencia_alergias: (client as any).restricoes_assistencia?.alergias || "",
+        restricoes_assistencia_restricoes: (client as any).restricoes_assistencia?.restricoes || "",
+        restricoes_assistencia_fobias_gatilhos: (client as any).restricoes_assistencia?.fobias_gatilhos || "",
+        restricoes_assistencia_condicoes_especiais: (client as any).restricoes_assistencia?.condicoes_especiais || "",
         has_fotografa: (client as any).has_fotografa || false,
         fotografa_name: (client as any).fotografa_name || "",
         fotografa_phone: (client as any).fotografa_phone || "",
@@ -386,7 +390,7 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
         historico_saude_familiar: (client as any).historico_saude_familiar || "",
         tipo_sanguineo: (client as any).tipo_sanguineo || "",
         cirurgias_anteriores: (client as any).cirurgias_anteriores || "",
-        restricoes_alimentares: (client as any).restricoes_alimentares || "",
+        
       });
       setEntryAlreadyPaid(isParcelado ? isFirstInstallmentPaid : false);
       setEntryType("equal");
@@ -448,8 +452,10 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
         prenatal_type: "",
         prenatal_high_risk: false,
         comorbidades: "",
-        alergias: "",
-        restricao_aromaterapia: "",
+        restricoes_assistencia_alergias: "",
+        restricoes_assistencia_restricoes: "",
+        restricoes_assistencia_fobias_gatilhos: "",
+        restricoes_assistencia_condicoes_especiais: "",
         has_fotografa: false,
         fotografa_name: "",
         fotografa_phone: "",
@@ -464,7 +470,7 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
         historico_saude_familiar: "",
         tipo_sanguineo: "",
         cirurgias_anteriores: "",
-        restricoes_alimentares: "",
+        
       });
     }
   }, [client, open, form, planSettings, clientTransaction, clientInstallmentPayments]);
@@ -627,8 +633,12 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
         prenatal_high_risk: data.prenatal_high_risk || false,
         prenatal_team: hasPrivateTeam ? prenatalTeam.filter(m => m.name.trim()) : [],
         comorbidades: data.comorbidades || null,
-        alergias: data.alergias || null,
-        restricao_aromaterapia: data.restricao_aromaterapia || null,
+        restricoes_assistencia: {
+          alergias: data.restricoes_assistencia_alergias || null,
+          restricoes: data.restricoes_assistencia_restricoes || null,
+          fobias_gatilhos: data.restricoes_assistencia_fobias_gatilhos || null,
+          condicoes_especiais: data.restricoes_assistencia_condicoes_especiais || null,
+        },
         has_fotografa: data.has_fotografa || false,
         fotografa_name: data.has_fotografa ? (data.fotografa_name || null) : null,
         fotografa_phone: data.has_fotografa ? (data.fotografa_phone || null) : null,
@@ -643,7 +653,7 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
         historico_saude_familiar: data.historico_saude_familiar || null,
         tipo_sanguineo: data.tipo_sanguineo || null,
         cirurgias_anteriores: data.cirurgias_anteriores || null,
-        restricoes_alimentares: data.restricoes_alimentares || null,
+        
         owner_id: user?.id || null,
         organization_id: organizationId || null,
       };
@@ -1669,32 +1679,73 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
                       </FormItem>
                     )}
                   />
-                  <FormField
-                    control={form.control}
-                    name="alergias"
-                    render={({ field }) => (
-                      <FormItem className="space-y-1">
-                        <FormLabel className="text-xs">Alergias</FormLabel>
-                        <FormControl>
-                          <Textarea {...field} className="min-h-[60px] resize-none text-sm" placeholder="Ex: dipirona, látex, amendoim..." />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="restricao_aromaterapia"
-                    render={({ field }) => (
-                      <FormItem className="space-y-1">
-                        <FormLabel className="text-xs">Restrições em Aromaterapia</FormLabel>
-                        <FormControl>
-                          <Textarea {...field} className="min-h-[60px] resize-none text-sm" placeholder="Ex: óleo de canela, hortelã-pimenta..." />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                  <div className="border border-border/40 rounded-2xl p-4 space-y-3 bg-card/50">
+                    <div className="space-y-1">
+                      <p className="text-sm font-semibold">Restrições de assistência</p>
+                      <p className="text-xs text-muted-foreground leading-relaxed">
+                        Espaço amplo para tudo o que pode alterar a condução do cuidado: alergias, restrições, fobias, gatilhos emocionais e condições especiais.
+                      </p>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <FormField
+                        control={form.control}
+                        name="restricoes_assistencia_alergias"
+                        render={({ field }) => (
+                          <FormItem className="space-y-1">
+                            <FormLabel className="text-xs">Alergias</FormLabel>
+                            <span className="text-[10px] text-muted-foreground block -mt-0.5">medicamentos, alimentos, óleos essenciais, látex etc.</span>
+                            <FormControl>
+                              <Textarea {...field} className="min-h-[60px] resize-y text-sm" placeholder="Ex: dipirona, látex, amendoim, óleo de lavanda..." />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="restricoes_assistencia_restricoes"
+                        render={({ field }) => (
+                          <FormItem className="space-y-1">
+                            <FormLabel className="text-xs">Restrições</FormLabel>
+                            <span className="text-[10px] text-muted-foreground block -mt-0.5">alimentares, religiosas, culturais, terapêuticas</span>
+                            <FormControl>
+                              <Textarea {...field} className="min-h-[60px] resize-y text-sm" placeholder="Ex: vegetariana, evangélica, não pratica shantala..." />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="restricoes_assistencia_fobias_gatilhos"
+                        render={({ field }) => (
+                          <FormItem className="space-y-1">
+                            <FormLabel className="text-xs">Fobias e gatilhos emocionais</FormLabel>
+                            <FormControl>
+                              <Textarea {...field} className="min-h-[60px] resize-y text-sm" placeholder="Ex: pânico de agulhas, medo intenso de hospitais, não gosta de ser tocada sem autorização..." />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="restricoes_assistencia_condicoes_especiais"
+                        render={({ field }) => (
+                          <FormItem className="space-y-1">
+                            <FormLabel className="text-xs">Condições especiais</FormLabel>
+                            <FormControl>
+                              <Textarea {...field} className="min-h-[60px] resize-y text-sm" placeholder="Ex: TEA, TDAH, surdez parcial, ansiedade, histórico de violência obstétrica, abuso sexual, luto gestacional..." />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    <p className="text-[11px] text-muted-foreground leading-relaxed">
+                      🚨 Alergia a lavanda. 🚨 Pânico de agulhas. 🚨 História de violência obstétrica. 🚨 Não gosta de ser tocada sem autorização. 🚨 Dieta vegetariana. 🚨 Evangélica — prefere evitar determinadas práticas. 🚨 TEA nível 1. 🚨 Surdez parcial. 🚨 Medo intenso de hospitais. 🚨 Trauma relacionado a cesariana anterior.
+                    </p>
+                  </div>
                   <FormField
                     control={form.control}
                     name="tipo_sanguineo"
@@ -1751,19 +1802,6 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
                         <FormLabel className="text-xs">Cirurgias anteriores</FormLabel>
                         <FormControl>
                           <Textarea {...field} className="min-h-[60px] resize-none text-sm" placeholder="Ex: cesárea, apendicectomia, ano..." />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="restricoes_alimentares"
-                    render={({ field }) => (
-                      <FormItem className="space-y-1">
-                        <FormLabel className="text-xs">Restrições alimentares</FormLabel>
-                        <FormControl>
-                          <Textarea {...field} className="min-h-[60px] resize-none text-sm" placeholder="Ex: vegetariana, vegana, sem lactose, sem glúten..." />
                         </FormControl>
                         <FormMessage />
                       </FormItem>

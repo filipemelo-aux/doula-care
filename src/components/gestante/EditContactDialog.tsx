@@ -56,8 +56,10 @@ export function EditContactDialog({
     prenatal_type: "",
     prenatal_high_risk: false,
     comorbidades: "",
-    alergias: "",
-    restricao_aromaterapia: "",
+    restricoes_assistencia_alergias: "",
+    restricoes_assistencia_restricoes: "",
+    restricoes_assistencia_fobias_gatilhos: "",
+    restricoes_assistencia_condicoes_especiais: "",
     has_fotografa: false,
     fotografa_name: "",
     fotografa_phone: "",
@@ -84,8 +86,10 @@ export function EditContactDialog({
         prenatal_type: client.prenatal_type || "",
         prenatal_high_risk: client.prenatal_high_risk || false,
         comorbidades: client.comorbidades || "",
-        alergias: client.alergias || "",
-        restricao_aromaterapia: client.restricao_aromaterapia || "",
+        restricoes_assistencia_alergias: (client as any).restricoes_assistencia?.alergias || client.alergias || "",
+        restricoes_assistencia_restricoes: (client as any).restricoes_assistencia?.restricoes || client.restricoes_alimentares || "",
+        restricoes_assistencia_fobias_gatilhos: (client as any).restricoes_assistencia?.fobias_gatilhos || "",
+        restricoes_assistencia_condicoes_especiais: (client as any).restricoes_assistencia?.condicoes_especiais || "",
         has_fotografa: client.has_fotografa || false,
         fotografa_name: client.fotografa_name || "",
         fotografa_phone: client.fotografa_phone || "",
@@ -163,8 +167,12 @@ export function EditContactDialog({
           prenatal_type: formData.prenatal_type || null,
           prenatal_high_risk: formData.prenatal_high_risk,
           comorbidades: formData.comorbidades || null,
-          alergias: formData.alergias || null,
-          restricao_aromaterapia: formData.restricao_aromaterapia || null,
+          restricoes_assistencia: {
+            alergias: formData.restricoes_assistencia_alergias || null,
+            restricoes: formData.restricoes_assistencia_restricoes || null,
+            fobias_gatilhos: formData.restricoes_assistencia_fobias_gatilhos || null,
+            condicoes_especiais: formData.restricoes_assistencia_condicoes_especiais || null,
+          },
           has_fotografa: formData.has_fotografa,
           fotografa_name: formData.fotografa_name || null,
           fotografa_phone: formData.fotografa_phone || null,
@@ -388,23 +396,52 @@ export function EditContactDialog({
                 />
               </div>
 
+              <div className="space-y-2 col-span-2">
+                <Label className="text-sm font-medium">Restrições de assistência</Label>
+                <p className="text-xs text-muted-foreground">Espaço amplo para tudo o que pode alterar a condução do cuidado: alergias, restrições, fobias, gatilhos emocionais e condições especiais.</p>
+              </div>
+
               <div className="space-y-2">
-                <Label htmlFor="alergias">Alergias</Label>
+                <Label htmlFor="restricoes_assistencia_alergias">Alergias</Label>
+                <span className="text-[10px] text-muted-foreground block -mt-1">medicamentos, alimentos, óleos essenciais, látex etc.</span>
                 <Textarea
-                  id="alergias"
-                  value={formData.alergias}
-                  onChange={(e) => handleChange("alergias", e.target.value)}
+                  id="restricoes_assistencia_alergias"
+                  value={formData.restricoes_assistencia_alergias}
+                  onChange={(e) => handleChange("restricoes_assistencia_alergias", e.target.value)}
                   placeholder="Descreva se houver"
                   rows={2}
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="restricao_aromaterapia">Restrição a Aromaterapia</Label>
+                <Label htmlFor="restricoes_assistencia_restricoes">Restrições</Label>
+                <span className="text-[10px] text-muted-foreground block -mt-1">alimentares, religiosas, culturais, terapêuticas</span>
                 <Textarea
-                  id="restricao_aromaterapia"
-                  value={formData.restricao_aromaterapia}
-                  onChange={(e) => handleChange("restricao_aromaterapia", e.target.value)}
+                  id="restricoes_assistencia_restricoes"
+                  value={formData.restricoes_assistencia_restricoes}
+                  onChange={(e) => handleChange("restricoes_assistencia_restricoes", e.target.value)}
+                  placeholder="Descreva se houver"
+                  rows={2}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="restricoes_assistencia_fobias_gatilhos">Fobias e gatilhos emocionais</Label>
+                <Textarea
+                  id="restricoes_assistencia_fobias_gatilhos"
+                  value={formData.restricoes_assistencia_fobias_gatilhos}
+                  onChange={(e) => handleChange("restricoes_assistencia_fobias_gatilhos", e.target.value)}
+                  placeholder="Descreva se houver"
+                  rows={2}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="restricoes_assistencia_condicoes_especiais">Condições especiais</Label>
+                <Textarea
+                  id="restricoes_assistencia_condicoes_especiais"
+                  value={formData.restricoes_assistencia_condicoes_especiais}
+                  onChange={(e) => handleChange("restricoes_assistencia_condicoes_especiais", e.target.value)}
                   placeholder="Descreva se houver"
                   rows={2}
                 />

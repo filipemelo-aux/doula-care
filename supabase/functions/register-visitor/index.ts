@@ -31,7 +31,7 @@ Deno.serve(async (req) => {
       // gestational
       status, dpp, pregnancy_weeks,
       // health
-      prenatal_high_risk, prenatal_type, comorbidades, alergias, restricao_aromaterapia,
+      prenatal_high_risk, prenatal_type, comorbidades, alergias, restricao_aromaterapia, restricoes_assistencia,
       // support
       companion_name, companion_phone,
       has_fotografa, fotografa_name, fotografa_phone,
@@ -104,6 +104,7 @@ Deno.serve(async (req) => {
         comorbidades: comorbidades || null,
         alergias: alergias || null,
         restricao_aromaterapia: restricao_aromaterapia || null,
+        restricoes_assistencia: restricoes_assistencia || null,
         companion_name: companion_name || null,
         companion_phone: companion_phone || null,
         has_fotografa: !!has_fotografa,

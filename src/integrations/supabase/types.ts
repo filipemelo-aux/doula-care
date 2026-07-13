@@ -353,6 +353,7 @@ export type Database = {
           religiao: string | null
           restricao_aromaterapia: string | null
           restricoes_alimentares: string | null
+          restricoes_assistencia: Json | null
           state: string | null
           status: Database["public"]["Enums"]["client_status"]
           street: string | null
@@ -417,6 +418,7 @@ export type Database = {
           religiao?: string | null
           restricao_aromaterapia?: string | null
           restricoes_alimentares?: string | null
+          restricoes_assistencia?: Json | null
           state?: string | null
           status?: Database["public"]["Enums"]["client_status"]
           street?: string | null
@@ -481,6 +483,7 @@ export type Database = {
           religiao?: string | null
           restricao_aromaterapia?: string | null
           restricoes_alimentares?: string | null
+          restricoes_assistencia?: Json | null
           state?: string | null
           status?: Database["public"]["Enums"]["client_status"]
           street?: string | null

@@ -254,6 +254,17 @@ export function ClientFileDialog({ open, onOpenChange, client }: ClientFileDialo
     return null;
   })();
 
+  const assistenciaData = (() => {
+    const data = (client as any).restricoes_assistencia || {};
+    return {
+      alergias: data.alergias || client.alergias || null,
+      restricoes: data.restricoes || client.restricoes_alimentares || null,
+      fobias_gatilhos: data.fobias_gatilhos || null,
+      condicoes_especiais: data.condicoes_especiais || null,
+      aromaterapia: client.restricao_aromaterapia || null,
+    };
+  })();
+
   const handleExportPDF = async () => {
     try {
       const { default: jsPDF } = await import("jspdf");
@@ -309,14 +320,23 @@ export function ClientFileDialog({ open, onOpenChange, client }: ClientFileDialo
 
 
       // Clinical
-      if (client.prenatal_type || client.prenatal_high_risk || client.comorbidades || client.alergias || client.restricao_aromaterapia || client.birth_location) {
+      const assistencia = (client as any).restricoes_assistencia || {};
+      const alergias = assistencia.alergias || client.alergias;
+      const restricoes = assistencia.restricoes || client.restricoes_alimentares;
+      const fobiasGatilhos = assistencia.fobias_gatilhos;
+      const condicoesEspeciais = assistencia.condicoes_especiais;
+      const hasRestricoesAssistencia = alergias || restricoes || fobiasGatilhos || condicoesEspeciais || client.restricao_aromaterapia;
+
+      if (client.prenatal_type || client.prenatal_high_risk || client.comorbidades || hasRestricoesAssistencia || client.birth_location) {
         addSection("Informações Clínicas");
         if (client.birth_location) addText(`Local do parto: ${client.birth_location}`);
         if (client.prenatal_type) addText(`Tipo de pré-natal: ${prenatalTypeLabels[client.prenatal_type] || client.prenatal_type}`);
         if (client.prenatal_high_risk) addText("⚠️ Gestação de alto risco");
         if (client.comorbidades) addText(`Comorbidades: ${client.comorbidades}`);
-        if (client.alergias) addText(`Alergias: ${client.alergias}`);
-        if (client.restricao_aromaterapia) addText(`Restrição aromaterapia: ${client.restricao_aromaterapia}`);
+        if (alergias) addText(`Alergias: ${alergias}${client.restricao_aromaterapia ? `; ${client.restricao_aromaterapia}` : ""}`);
+        if (restricoes) addText(`Restrições: ${restricoes}`);
+        if (fobiasGatilhos) addText(`Fobias / gatilhos emocionais: ${fobiasGatilhos}`);
+        if (condicoesEspeciais) addText(`Condições especiais: ${condicoesEspeciais}`);
         if (prenatalTeam) {
           addText("Equipe de pré-natal:");
           prenatalTeam.forEach((m: any) => addText(`  • ${m.name}${m.role ? ` — ${m.role}` : ""}`));
@@ -571,17 +591,20 @@ export function ClientFileDialog({ open, onOpenChange, client }: ClientFileDialo
 
 
               {/* Clinical */}
-              {(client.prenatal_type || client.birth_location || client.comorbidades || client.alergias || client.restricao_aromaterapia || prenatalTeam) && (
+              {(client.prenatal_type || client.birth_location || client.comorbidades || assistenciaData.alergias || assistenciaData.restricoes || assistenciaData.fobias_gatilhos || assistenciaData.condicoes_especiais || assistenciaData.aromaterapia || prenatalTeam) && (
                 <Card icon={Stethoscope} title="Informações Clínicas" tint="primary">
                   <ChipGrid>
                     {client.birth_location && <Chip label="Local do parto" value={client.birth_location} />}
                     {client.prenatal_type && <Chip label="Pré-natal" value={prenatalTypeLabels[client.prenatal_type] || client.prenatal_type} />}
                   </ChipGrid>
-                  {(client.comorbidades || client.alergias || client.restricao_aromaterapia) && (
+                  {(client.comorbidades || assistenciaData.alergias || assistenciaData.restricoes || assistenciaData.fobias_gatilhos || assistenciaData.condicoes_especiais || assistenciaData.aromaterapia) && (
                     <div className="space-y-2 mt-3">
                       {client.comorbidades && <TextBlock label="Comorbidades" value={client.comorbidades} />}
-                      {client.alergias && <TextBlock label="Alergias" value={client.alergias} />}
-                      {client.restricao_aromaterapia && <TextBlock label="Restrição aromaterapia" value={client.restricao_aromaterapia} />}
+                      {assistenciaData.alergias && <TextBlock label="Alergias" value={assistenciaData.alergias} />}
+                      {assistenciaData.restricoes && <TextBlock label="Restrições" value={assistenciaData.restricoes} />}
+                      {assistenciaData.fobias_gatilhos && <TextBlock label="Fobias / gatilhos emocionais" value={assistenciaData.fobias_gatilhos} />}
+                      {assistenciaData.condicoes_especiais && <TextBlock label="Condições especiais" value={assistenciaData.condicoes_especiais} />}
+                      {assistenciaData.aromaterapia && <TextBlock label="Restrição aromaterapia" value={assistenciaData.aromaterapia} />}
                     </div>
                   )}
                   {prenatalTeam && (
