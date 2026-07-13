@@ -1164,7 +1164,7 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
     }
     const planValid = await form.trigger(["plan_setting_id"]);
     if (!planValid) {
-      setCurrentStep(6);
+      setCurrentStep(7);
       return;
     }
     // Validate gestante needs DPP
