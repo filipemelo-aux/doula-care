@@ -1426,6 +1426,8 @@ function AppointmentRow({
           completed_at: apt.completed_at,
           completion_notes: apt.completion_notes,
         }}
+        onEdit={() => onEdit(apt)}
+        onEditNotes={() => setEditNotesOpen(true)}
       />
       <AppointmentCompleteDialog
         open={completeOpen}
