@@ -178,6 +178,74 @@ export type Database = {
           },
         ]
       }
+      calendar_day_labels: {
+        Row: {
+          created_at: string
+          day: string
+          id: string
+          label_id: string
+          note: string | null
+          organization_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          day: string
+          id?: string
+          label_id: string
+          note?: string | null
+          organization_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          day?: string
+          id?: string
+          label_id?: string
+          note?: string | null
+          organization_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "calendar_day_labels_label_id_fkey"
+            columns: ["label_id"]
+            isOneToOne: false
+            referencedRelation: "calendar_labels"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      calendar_labels: {
+        Row: {
+          color: string
+          created_at: string
+          id: string
+          name: string
+          organization_id: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          color?: string
+          created_at?: string
+          id?: string
+          name: string
+          organization_id: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          color?: string
+          created_at?: string
+          id?: string
+          name?: string
+          organization_id?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       client_contracts: {
         Row: {
           client_id: string
