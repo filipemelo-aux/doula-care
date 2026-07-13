@@ -186,6 +186,8 @@ export default function Agenda() {
   // Appointment detail preview (opened from external links, e.g. Dashboard)
   const [selectedDetailApt, setSelectedDetailApt] = useState<AppointmentWithClient | null>(null);
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
+  const [detailCompleteOpen, setDetailCompleteOpen] = useState(false);
+  const [detailEditNotesOpen, setDetailEditNotesOpen] = useState(false);
 
   // ─── Queries ─────────────────────────────────────────────
   const { data: appointments, isLoading: loadingApts } = useQuery({
@@ -430,6 +432,10 @@ export default function Agenda() {
       queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
       toast.success("Removido com sucesso!");
       setDeleteTarget(null);
+      if (target.type === "appointment" && selectedDetailApt?.id === target.id) {
+        setDetailDialogOpen(false);
+        setSelectedDetailApt(null);
+      }
     },
     onError: () => toast.error("Erro ao remover"),
   });
