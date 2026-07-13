@@ -717,7 +717,7 @@ export default function Agenda() {
                             onEdit={openEditAppointment}
                             onDelete={(id) => setDeleteTarget({ type: "appointment", id })}
                             displayName={displayName}
-                            past={!!apt.completed_at || getAppointmentStatus(apt) === "past"}
+                            past={!!apt.completed_at}
                             onCompleted={() => queryClient.invalidateQueries({ queryKey: ["agenda-appointments"] })}
                           />
                         ))}
