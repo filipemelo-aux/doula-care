@@ -123,7 +123,7 @@ export function ClientFileDialog({ open, onOpenChange, client }: ClientFileDialo
         .from("appointments")
         .select("*")
         .eq("client_id", client!.id)
-        .order("scheduled_at", { ascending: false });
+        .order("scheduled_at", { ascending: true });
       if (error) throw error;
       return data;
     },
