@@ -55,14 +55,14 @@ import {
   type ChildEntry,
 } from "./health-fields";
 
-const ALERGIAS_SUGGESTIONS = ["Dipirona", "Látex", "Amendoim", "Óleo de lavanda", "Frutos do mar", "Penicilina", "Poeira", "Pólen"];
-const RESTRICOES_SUGGESTIONS = ["Vegetariana", "Vegana", "Sem glúten", "Sem lactose", "Halal", "Kosher", "Sem porco", "Não pratica shantala"];
+const ALERGIAS_SUGGESTIONS = ["Dipirona", "Látex", "Amendoim", "Óleos essenciais", "Frutos do mar", "Penicilina", "Poeira", "Pólen"];
+const RESTRICOES_SUGGESTIONS = ["Vegetariana", "Vegana", "Sem glúten", "Sem lactose", "Não consome porco", "Não pratica shantala"];
 const FOBIAS_SUGGESTIONS = ["Agulhas", "Hospitais", "Sangue", "Toque sem autorização", "Espaços fechados", "Fotos durante o parto", "Barulhos altos"];
-const CONDICOES_SUGGESTIONS = ["TEA", "TDAH", "Ansiedade", "Depressão", "Violência obstétrica prévia", "Abuso sexual", "Luto gestacional", "Surdez parcial"];
+const CONDICOES_SUGGESTIONS = ["TEA", "TDAH", "Ansiedade", "Depressão", "Violência obstétrica prévia", "Abuso sexual", "Luto", "Surdez parcial / total"];
 const COMORBIDADES_SUGGESTIONS = ["Diabetes gestacional", "Hipertensão", "Hipotireoidismo", "Anemia", "Asma", "Diabetes tipo 1", "Diabetes tipo 2", "Pré-eclâmpsia"];
 const HIST_SAUDE_SUGGESTIONS = ["Depressão", "Ansiedade", "Endometriose", "SOP", "Aborto anterior", "Cirurgia pélvica", "Infertilidade tratada", "ISTs"];
 const HIST_FAMILIAR_SUGGESTIONS = ["Diabetes", "Hipertensão", "Câncer", "Trombose", "Doença cardíaca", "Pré-eclâmpsia", "Parto prematuro", "Gemelaridade"];
-const CIRURGIAS_SUGGESTIONS = ["Cesárea", "Apendicectomia", "Colecistectomia", "Miomectomia", "Laparoscopia", "Amigdalectomia", "Cirurgia bariátrica"];
+const CIRURGIAS_SUGGESTIONS = ["Cesárea", "Cirurgia nas mamas", "Apendicectomia", "Colecistectomia", "Miomectomia", "Laparoscopia", "Amigdalectomia", "Cirurgia bariátrica"];
 
 type Client = Tables<"clients">;
 
@@ -1899,7 +1899,7 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
                         checked={hasPartosAnteriores}
                         onCheckedChange={(v) => {
                           setHasPartosAnteriores(v);
-                          if (v && partosAnterioresChildren.length === 0) {
+                          if (v) {
                             setPartosAnterioresChildren([{ name: "", age: "" }]);
                           }
                         }}
@@ -1909,7 +1909,7 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
                       <ChildrenList
                         value={partosAnterioresChildren}
                         onChange={setPartosAnterioresChildren}
-                        label={`Filho(s) — ${partosAnterioresChildren.filter(c => c.name.trim() || c.age.trim()).length}`}
+                        label={`Filho(s) (${partosAnterioresChildren.filter(c => c.name.trim() || c.age.trim()).length})`}
                       />
                     )}
                   </div>
@@ -1953,7 +1953,7 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
                               <ChildrenList
                                 value={filhosCesarea}
                                 onChange={setFilhosCesarea}
-                                label={`Filho(s) — ${filhosCesarea.filter(c => c.name.trim() || c.age.trim()).length}`}
+                                label={`Filho(s) (${filhosCesarea.filter(c => c.name.trim() || c.age.trim()).length})`}
                               />
                             </div>
                           )}
