@@ -135,7 +135,6 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
   const [prenatalTeam, setPrenatalTeam] = useState<{name: string; role: string}[]>([]);
   const [hasPrivateTeam, setHasPrivateTeam] = useState(false);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const stepButtonRefs = useRef<Record<number, HTMLButtonElement | null>>({});
   const [unlockedPlan, setUnlockedPlan] = useState(false);
   const [unlockConfirmOpen, setUnlockConfirmOpen] = useState(false);
 
@@ -146,15 +145,6 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
       setUnlockConfirmOpen(false);
     }
   }, [open, client?.id]);
-
-  useEffect(() => {
-    if (!open) return;
-    stepButtonRefs.current[currentStep]?.scrollIntoView({
-      behavior: "smooth",
-      inline: "center",
-      block: "nearest",
-    });
-  }, [currentStep, open]);
 
   const { data: planSettings } = useQuery({
     queryKey: ["plan-settings"],
@@ -1189,21 +1179,20 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
   return (
     <>
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl w-[95vw] max-h-[92vh] overflow-hidden flex flex-col overflow-x-hidden">
-        <DialogHeader className="pb-0 flex-shrink-0">
+      <DialogContent className="max-w-2xl w-[95vw] max-w-[95vw] max-h-[92vh] overflow-hidden flex flex-col overflow-x-hidden min-w-0">
+        <DialogHeader className="pb-0 flex-shrink-0 min-w-0 overflow-hidden">
           <DialogTitle className="font-display text-lg">
             {client ? "Editar Cliente" : "Nova Cliente"}
           </DialogTitle>
           {/* Tab-style step navigation */}
-          <div className="flex items-center pt-2 border-b border-border/40 overflow-x-auto overflow-y-hidden scrollbar-none -mx-1 px-1 overscroll-x-contain">
+          <div className="grid grid-cols-4 sm:grid-cols-7 gap-x-0.5 gap-y-1 pt-2 border-b border-border/40 overflow-hidden min-w-0">
             {STEPS.map((step) => (
               <button
                 key={step.id}
-                ref={(el) => { stepButtonRefs.current[step.id] = el; }}
                 type="button"
                 onClick={() => handleStepClick(step.id)}
                 className={cn(
-                  "relative flex-none px-2.5 py-1.5 text-[11px] font-medium transition-all whitespace-nowrap text-center",
+                  "relative min-w-0 px-1.5 py-1.5 text-[10px] sm:text-[11px] font-medium transition-all text-center leading-tight break-words",
                   currentStep === step.id
                     ? "text-primary"
                     : step.id < currentStep
@@ -1220,8 +1209,8 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
           </div>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="client-dialog-form flex flex-col min-h-0">
-            <div ref={scrollContainerRef} className="overflow-y-auto overflow-x-hidden px-4 space-y-0 scrollbar-thin pt-3 pb-4 min-h-0">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="client-dialog-form flex flex-col min-h-0 min-w-0 overflow-x-hidden">
+            <div ref={scrollContainerRef} className="overflow-y-auto overflow-x-hidden px-4 space-y-0 scrollbar-thin pt-3 pb-4 min-h-0 min-w-0 max-w-full">
 
 
               {/* Step 1: Dados Pessoais */}
@@ -2404,17 +2393,17 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
 
               {/* Step 7: Observações */}
               {currentStep === 7 && (
-                <div className="flex flex-col h-full min-h-0">
+                <div className="flex flex-col h-full min-h-0 min-w-0 max-w-full overflow-x-hidden">
                   <FormField
                     control={form.control}
                     name="notes"
                     render={({ field }) => (
-                      <FormItem className="space-y-1 flex flex-col flex-1 min-h-0">
+                      <FormItem className="space-y-1 flex flex-col flex-1 min-h-0 min-w-0 max-w-full">
                         <FormLabel className="text-xs">Observações</FormLabel>
                         <FormControl>
                           <Textarea
                             {...field}
-                            className="flex-1 min-h-0 resize-none text-sm"
+                            className="flex-1 min-h-0 min-w-0 max-w-full resize-none text-sm"
                             placeholder="Anotações sobre a cliente..."
                           />
                         </FormControl>
@@ -2428,7 +2417,7 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
             </div>
 
             {/* Navigation - Fixed at bottom */}
-            <div className="flex items-center justify-between pt-3 mt-auto border-t border-border/40 flex-shrink-0 pb-1">
+            <div className="flex items-center justify-between gap-2 pt-3 mt-auto border-t border-border/40 flex-shrink-0 pb-1 min-w-0 overflow-hidden">
               <Button
                 type="button"
                 variant="ghost"
