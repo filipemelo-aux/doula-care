@@ -588,7 +588,7 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
         birth_location: data.status === "gestante" ? (data.birth_location || null) : null,
         prenatal_type: data.prenatal_type || null,
         prenatal_high_risk: data.prenatal_high_risk || false,
-        prenatal_team: data.prenatal_type === "equipe_particular" ? prenatalTeam.filter(m => m.name.trim()) : [],
+        prenatal_team: hasPrivateTeam ? prenatalTeam.filter(m => m.name.trim()) : [],
         comorbidades: data.comorbidades || null,
         alergias: data.alergias || null,
         restricao_aromaterapia: data.restricao_aromaterapia || null,
