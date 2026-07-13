@@ -1640,6 +1640,80 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
                       </FormItem>
                     )}
                   />
+                  <FormField
+                    control={form.control}
+                    name="tipo_sanguineo"
+                    render={({ field }) => (
+                      <FormItem className="space-y-1">
+                        <FormLabel className="text-xs">Tipagem sanguínea</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value || ""}>
+                          <FormControl>
+                            <SelectTrigger className="h-9 text-sm">
+                              <SelectValue placeholder="Selecione" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {["A+","A-","B+","B-","AB+","AB-","O+","O-","Não sei"].map(t => (
+                              <SelectItem key={t} value={t}>{t}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="historico_saude"
+                    render={({ field }) => (
+                      <FormItem className="space-y-1">
+                        <FormLabel className="text-xs">Histórico de saúde prévio</FormLabel>
+                        <FormControl>
+                          <Textarea {...field} className="min-h-[60px] resize-none text-sm" placeholder="Doenças anteriores, tratamentos, condições relevantes..." />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="historico_saude_familiar"
+                    render={({ field }) => (
+                      <FormItem className="space-y-1">
+                        <FormLabel className="text-xs">Histórico de saúde da mãe / irmãs / avó</FormLabel>
+                        <FormControl>
+                          <Textarea {...field} className="min-h-[60px] resize-none text-sm" placeholder="Ex: partos anteriores, doenças hereditárias, complicações gestacionais na família..." />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="cirurgias_anteriores"
+                    render={({ field }) => (
+                      <FormItem className="space-y-1">
+                        <FormLabel className="text-xs">Cirurgias anteriores</FormLabel>
+                        <FormControl>
+                          <Textarea {...field} className="min-h-[60px] resize-none text-sm" placeholder="Ex: cesárea, apendicectomia, ano..." />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="restricoes_alimentares"
+                    render={({ field }) => (
+                      <FormItem className="space-y-1">
+                        <FormLabel className="text-xs">Restrições alimentares</FormLabel>
+                        <FormControl>
+                          <Textarea {...field} className="min-h-[60px] resize-none text-sm" placeholder="Ex: vegetariana, vegana, sem lactose, sem glúten..." />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                 </div>
               )}
 
