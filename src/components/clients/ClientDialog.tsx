@@ -1185,14 +1185,14 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
             {client ? "Editar Cliente" : "Nova Cliente"}
           </DialogTitle>
           {/* Tab-style step navigation */}
-          <div className="flex flex-nowrap items-center justify-between pt-2 border-b border-border/40 overflow-hidden min-w-0">
+          <div className="flex flex-nowrap items-center justify-between pt-2 border-b border-border/40 overflow-hidden">
             {STEPS.map((step) => (
               <button
                 key={step.id}
                 type="button"
                 onClick={() => handleStepClick(step.id)}
                 className={cn(
-                  "relative flex-1 min-w-0 px-0.5 sm:px-1.5 py-1.5 text-[10px] sm:text-[11px] font-medium transition-all text-center leading-tight truncate",
+                  "relative flex-shrink-0 px-0.5 sm:px-1 py-1.5 text-[10px] sm:text-[11px] font-medium transition-all text-center leading-tight whitespace-nowrap",
                   currentStep === step.id
                     ? "text-primary"
                     : step.id < currentStep
