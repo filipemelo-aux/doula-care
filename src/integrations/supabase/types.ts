@@ -387,11 +387,13 @@ export type Database = {
           custom_status: string | null
           date_of_birth: string | null
           dpp: string | null
+          filhos_cesarea: Json | null
           first_login: boolean | null
           fotografa_name: string | null
           fotografa_phone: string | null
           full_name: string
           has_fotografa: boolean | null
+          has_pets: boolean | null
           historico_saude: string | null
           historico_saude_familiar: string | null
           id: string
@@ -404,9 +406,11 @@ export type Database = {
           number: string | null
           organization_id: string | null
           owner_id: string | null
+          partos_anteriores: Json | null
           payment_method: Database["public"]["Enums"]["payment_method"]
           payment_status: Database["public"]["Enums"]["payment_status"]
           personalidade: string | null
+          pets_names: string | null
           phone: string
           plan: Database["public"]["Enums"]["plan_type"]
           plan_setting_id: string | null
@@ -452,11 +456,13 @@ export type Database = {
           custom_status?: string | null
           date_of_birth?: string | null
           dpp?: string | null
+          filhos_cesarea?: Json | null
           first_login?: boolean | null
           fotografa_name?: string | null
           fotografa_phone?: string | null
           full_name: string
           has_fotografa?: boolean | null
+          has_pets?: boolean | null
           historico_saude?: string | null
           historico_saude_familiar?: string | null
           id?: string
@@ -469,9 +475,11 @@ export type Database = {
           number?: string | null
           organization_id?: string | null
           owner_id?: string | null
+          partos_anteriores?: Json | null
           payment_method?: Database["public"]["Enums"]["payment_method"]
           payment_status?: Database["public"]["Enums"]["payment_status"]
           personalidade?: string | null
+          pets_names?: string | null
           phone: string
           plan?: Database["public"]["Enums"]["plan_type"]
           plan_setting_id?: string | null
@@ -517,11 +525,13 @@ export type Database = {
           custom_status?: string | null
           date_of_birth?: string | null
           dpp?: string | null
+          filhos_cesarea?: Json | null
           first_login?: boolean | null
           fotografa_name?: string | null
           fotografa_phone?: string | null
           full_name?: string
           has_fotografa?: boolean | null
+          has_pets?: boolean | null
           historico_saude?: string | null
           historico_saude_familiar?: string | null
           id?: string
@@ -534,9 +544,11 @@ export type Database = {
           number?: string | null
           organization_id?: string | null
           owner_id?: string | null
+          partos_anteriores?: Json | null
           payment_method?: Database["public"]["Enums"]["payment_method"]
           payment_status?: Database["public"]["Enums"]["payment_status"]
           personalidade?: string | null
+          pets_names?: string | null
           phone?: string
           plan?: Database["public"]["Enums"]["plan_type"]
           plan_setting_id?: string | null
