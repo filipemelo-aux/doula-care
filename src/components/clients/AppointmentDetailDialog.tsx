@@ -23,6 +23,8 @@ interface AppointmentDetailDialogProps {
   } | null;
   onEdit?: () => void;
   onEditNotes?: () => void;
+  onComplete?: () => void;
+  onDelete?: () => void;
 }
 
 export function AppointmentDetailDialog({
@@ -31,6 +33,8 @@ export function AppointmentDetailDialog({
   appointment,
   onEdit,
   onEditNotes,
+  onComplete,
+  onDelete,
 }: AppointmentDetailDialogProps) {
   if (!appointment) return null;
 
