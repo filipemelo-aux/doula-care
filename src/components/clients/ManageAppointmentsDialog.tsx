@@ -77,22 +77,26 @@ export function ManageAppointmentsDialog({
       if (occupiedSlots?.has(slotKey)) {
         throw new Error("SLOT_OCCUPIED");
       }
+      const scheduledIso = d.toISOString();
       const { error } = await supabase.from("appointments").insert({
         client_id: clientId,
         title,
-        scheduled_at: d.toISOString(),
+        scheduled_at: scheduledIso,
         notes: notes || null,
         address: address.trim() || null,
         owner_id: user?.id || null,
         organization_id: organizationId || null,
       } as any);
       if (error) throw error;
+      const { ensureAvailabilityForAppointment } = await import("@/lib/ensureAvailability");
+      await ensureAvailabilityForAppointment(organizationId, scheduledIso);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["client-appointments", clientId] });
       queryClient.invalidateQueries({ queryKey: ["agenda-appointments"] });
       queryClient.invalidateQueries({ queryKey: ["all-appointments"] });
       queryClient.invalidateQueries({ queryKey: ["occupied-slots"] });
+      queryClient.invalidateQueries({ queryKey: ["doula-availability"] });
       setTitle("");
       setScheduledAt("");
       setNotes("");
