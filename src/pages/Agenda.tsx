@@ -882,10 +882,11 @@ export default function Agenda() {
                   <Calendar className="h-4 w-4" />
                   {format(selectedDate, "dd 'de' MMMM, EEEE", { locale: ptBR })}
                   <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
-                    {filteredAppointments.length}
+                    {unifiedItems.length}
                   </Badge>
                 </h2>
               )}
+
 
               {unifiedItems.length > 0 ? (
                 <section>
