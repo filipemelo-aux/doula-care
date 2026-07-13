@@ -117,8 +117,8 @@ const STEPS = [
   { id: 3, title: "Gestação e Pré-natal", shortTitle: "Gestação" },
   { id: 4, title: "Saúde e Restrições", shortTitle: "Saúde" },
   { id: 5, title: "Rede de Apoio", shortTitle: "Apoio" },
-  { id: 6, title: "Observações", shortTitle: "Obs." },
-  { id: 7, title: "Plano e Pagamento", shortTitle: "Plano" },
+  { id: 6, title: "Plano e Pagamento", shortTitle: "Plano" },
+  { id: 7, title: "Observações", shortTitle: "Obs." },
 ];
 
 export function ClientDialog({ open, onOpenChange, client, initialStep }: ClientDialogProps) {
@@ -1164,7 +1164,7 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
     }
     const planValid = await form.trigger(["plan_setting_id"]);
     if (!planValid) {
-      setCurrentStep(7);
+      setCurrentStep(6);
       return;
     }
     // Validate gestante needs DPP
@@ -1948,8 +1948,8 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
                 </div>
               )}
 
-              {/* Step 7: Plano e Pagamento */}
-              {currentStep === 7 && (
+              {/* Step 6: Plano e Pagamento */}
+              {currentStep === 6 && (
                 <div className="space-y-3 relative">
                   {isPlanLocked && (
                     <div className="absolute inset-0 z-20 rounded-xl bg-background/80 backdrop-blur-sm flex items-center justify-center p-4">
@@ -2392,8 +2392,8 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
                 </div>
               )}
 
-              {/* Step 6: Observações */}
-              {currentStep === 6 && (
+              {/* Step 7: Observações */}
+              {currentStep === 7 && (
                 <div className="flex flex-col h-full min-h-0 min-w-0 max-w-full overflow-x-hidden">
                   <FormField
                     control={form.control}
