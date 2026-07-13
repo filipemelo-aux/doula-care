@@ -80,6 +80,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { fetchAddressByCep, formatAddressWithNumber } from "@/lib/address";
 import { maskCEP } from "@/lib/masks";
 import { ensureAvailabilityForAppointment } from "@/lib/ensureAvailability";
+import { sortAppointmentsWithFutureFirst } from "@/lib/appointments";
 
 // ─── Types ───────────────────────────────────────────────
 interface AppointmentWithClient {
