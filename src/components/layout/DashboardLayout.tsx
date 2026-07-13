@@ -132,7 +132,7 @@ export function DashboardLayout() {
           </Button>
         </header>
 
-        <main className="flex-1 min-h-0 p-3 lg:p-8 pb-24 lg:pb-8 overflow-y-auto overscroll-y-contain touch-pan-y [WebkitOverflowScrolling:touch] w-full box-border">
+        <main className="flex-1 min-h-0 p-3 lg:p-8 pb-24 overflow-y-auto overscroll-y-contain touch-pan-y [WebkitOverflowScrolling:touch] w-full box-border">
           <div className="max-w-7xl mx-auto animate-fade-in space-y-4 lg:space-y-6">
             <ExpiredPlanBanner />
             <NotificationTopBanner />
@@ -141,11 +141,11 @@ export function DashboardLayout() {
         </main>
       </div>
 
-      {/* Fixed bottom navigation bar — mobile only */}
+      {/* Fixed bottom navigation bar */}
       <div className={cn(
-        "fixed bottom-0 left-0 right-0 z-40 lg:hidden pb-[var(--app-safe-bottom)]",
+        "fixed bottom-0 left-0 right-0 z-40 pb-[var(--app-safe-bottom)]",
         "bg-[hsl(var(--background))] shadow-[0_-1px_12px_-4px_hsl(var(--foreground)/0.08)]",
-        sidebarOpen && "hidden"
+        sidebarOpen && "hidden lg:block"
       )}>
         <div className="flex items-end justify-evenly px-2 py-1.5 relative max-w-md mx-auto">
           {/* Visão Geral */}
