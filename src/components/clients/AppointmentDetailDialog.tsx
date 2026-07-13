@@ -93,6 +93,38 @@ export function AppointmentDetailDialog({
             </div>
           )}
         </div>
+
+        {(onEdit || onEditNotes) && (
+          <DialogFooter className="flex-col sm:flex-row gap-2 pt-2">
+            {onEditNotes && appointment.completed_at && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  onOpenChange(false);
+                  onEditNotes();
+                }}
+                className="gap-1.5"
+              >
+                <NotebookPen className="h-3.5 w-3.5" />
+                Editar anotações
+              </Button>
+            )}
+            {onEdit && (
+              <Button
+                size="sm"
+                onClick={() => {
+                  onOpenChange(false);
+                  onEdit();
+                }}
+                className="gap-1.5"
+              >
+                <Edit2 className="h-3.5 w-3.5" />
+                Editar compromisso
+              </Button>
+            )}
+          </DialogFooter>
+        )}
       </DialogContent>
     </Dialog>
   );
