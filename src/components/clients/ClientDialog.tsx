@@ -1118,7 +1118,7 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
   return (
     <>
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl w-[95vw] max-h-[92vh] h-[92vh] overflow-hidden flex flex-col overflow-x-hidden">
+      <DialogContent className="max-w-2xl w-[95vw] max-h-[92vh] overflow-hidden flex flex-col overflow-x-hidden">
         <DialogHeader className="pb-0 flex-shrink-0">
           <DialogTitle className="font-display text-lg">
             {client ? "Editar Cliente" : "Nova Cliente"}
