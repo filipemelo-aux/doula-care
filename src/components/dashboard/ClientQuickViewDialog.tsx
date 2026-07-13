@@ -577,7 +577,7 @@ export function ClientQuickViewDialog({
                     {activity?.nextAppointment && (
                       <button
                         type="button"
-                        onClick={() => go("/agenda", { viewAppointmentId: activity.nextAppointment!.id })}
+                        onClick={() => activity.nextAppointment && setDetailApt(activity.nextAppointment as DetailAppointment)}
                         className="w-full text-left rounded-xl bg-background/60 p-2.5 hover:bg-background transition-colors group cursor-pointer"
                       >
                         <div className="flex items-start justify-between gap-2">
@@ -609,7 +609,7 @@ export function ClientQuickViewDialog({
                     {activity?.lastCompletedAppointment && (
                       <button
                         type="button"
-                        onClick={() => go("/agenda", { viewAppointmentId: activity.lastCompletedAppointment!.id })}
+                        onClick={() => activity.lastCompletedAppointment && setDetailApt(activity.lastCompletedAppointment as DetailAppointment)}
                         className="w-full text-left rounded-xl bg-background/60 p-2.5 hover:bg-background transition-colors group cursor-pointer"
                       >
                         <div className="flex items-start justify-between gap-2">
