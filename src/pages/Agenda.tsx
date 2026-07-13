@@ -894,15 +894,13 @@ export default function Agenda() {
                 </>
               ) : (
                 <>
-                  {/* Calendar-day mode keeps single ascending list too */}
+                  {/* Calendar-day mode keeps future-first sort */}
                   {filteredAppointments.length > 0 && (
                     <section>
                       <div className="space-y-2">
-                        {[...filteredAppointments]
-                          .sort((a, b) => new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime())
-                          .map((apt) => (
-                            <AppointmentRow key={apt.id} apt={apt} onEdit={openEditAppointment} onDelete={(id) => setDeleteTarget({ type: "appointment", id })} displayName={displayName} onCompleted={() => queryClient.invalidateQueries({ queryKey: ["agenda-appointments"] })} />
-                          ))}
+                        {sortAppointmentsWithFutureFirst(filteredAppointments).map((apt) => (
+                          <AppointmentRow key={apt.id} apt={apt} onEdit={openEditAppointment} onDelete={(id) => setDeleteTarget({ type: "appointment", id })} displayName={displayName} onCompleted={() => queryClient.invalidateQueries({ queryKey: ["agenda-appointments"] })} />
+                        ))}
                       </div>
                     </section>
                   )}
