@@ -696,16 +696,16 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
         cirurgias_anteriores: data.cirurgias_anteriores || null,
         has_pets: data.has_pets || false,
         pets_names: data.has_pets ? (data.pets_names || null) : null,
-        partos_anteriores: hasPartosAnteriores
+        partos_anteriores: (hasPartosAnteriores
           ? {
               children: partosAnterioresChildren.filter((c) => c.name.trim() || c.age.trim()),
             }
-          : null,
-        filhos_cesarea: /cesárea|cesarea/i.test(data.cirurgias_anteriores || "")
+          : null) as any,
+        filhos_cesarea: (/cesárea|cesarea/i.test(data.cirurgias_anteriores || "")
           ? {
               children: filhosCesarea.filter((c) => c.name.trim() || c.age.trim()),
             }
-          : null,
+          : null) as any,
         
         owner_id: user?.id || null,
         organization_id: organizationId || null,
