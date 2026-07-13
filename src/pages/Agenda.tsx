@@ -186,6 +186,8 @@ export default function Agenda() {
   // Appointment detail preview (opened from external links, e.g. Dashboard)
   const [selectedDetailApt, setSelectedDetailApt] = useState<AppointmentWithClient | null>(null);
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
+  const [detailCompleteOpen, setDetailCompleteOpen] = useState(false);
+  const [detailEditNotesOpen, setDetailEditNotesOpen] = useState(false);
 
   // ─── Queries ─────────────────────────────────────────────
   const { data: appointments, isLoading: loadingApts } = useQuery({
@@ -430,6 +432,10 @@ export default function Agenda() {
       queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
       toast.success("Removido com sucesso!");
       setDeleteTarget(null);
+      if (target.type === "appointment" && selectedDetailApt?.id === target.id) {
+        setDetailDialogOpen(false);
+        setSelectedDetailApt(null);
+      }
     },
     onError: () => toast.error("Erro ao remover"),
   });
@@ -1254,7 +1260,7 @@ export default function Agenda() {
         }}
       />
 
-      {/* Appointment detail preview (from Dashboard) */}
+      {/* Appointment detail preview (from Dashboard / Client Quick View) */}
       <AppointmentDetailDialog
         open={detailDialogOpen}
         onOpenChange={setDetailDialogOpen}
@@ -1271,6 +1277,35 @@ export default function Agenda() {
             : null
         }
         onEdit={selectedDetailApt ? () => openEditAppointment(selectedDetailApt) : undefined}
+        onEditNotes={selectedDetailApt && selectedDetailApt.completed_at ? () => setDetailEditNotesOpen(true) : undefined}
+        onComplete={selectedDetailApt && !selectedDetailApt.completed_at ? () => setDetailCompleteOpen(true) : undefined}
+        onDelete={selectedDetailApt ? () => setDeleteTarget({ type: "appointment", id: selectedDetailApt.id }) : undefined}
+      />
+
+      <AppointmentCompleteDialog
+        open={detailCompleteOpen}
+        onOpenChange={setDetailCompleteOpen}
+        appointmentId={selectedDetailApt?.id}
+        appointmentTitle={selectedDetailApt?.title}
+        onCompleted={() => {
+          queryClient.invalidateQueries({ queryKey: ["agenda-appointments"] });
+          setDetailDialogOpen(false);
+          setSelectedDetailApt(null);
+        }}
+      />
+
+      <AppointmentCompleteDialog
+        open={detailEditNotesOpen}
+        onOpenChange={setDetailEditNotesOpen}
+        appointmentId={selectedDetailApt?.id}
+        appointmentTitle={selectedDetailApt?.title}
+        editMode
+        initialNotes={selectedDetailApt?.completion_notes}
+        onCompleted={() => {
+          queryClient.invalidateQueries({ queryKey: ["agenda-appointments"] });
+          setDetailDialogOpen(false);
+          setSelectedDetailApt(null);
+        }}
       />
     </div>
   );
