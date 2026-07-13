@@ -75,7 +75,7 @@ import { CalendarLabelsManager } from "@/components/agenda/CalendarLabelsManager
 import { DayLabelsDialog } from "@/components/agenda/DayLabelsDialog";
 import { useCalendarLabels } from "@/hooks/useCalendarLabels";
 import { Calendar as CalendarPicker } from "@/components/ui/calendar";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
 import { fetchAddressByCep, formatAddressWithNumber } from "@/lib/address";
 import { maskCEP } from "@/lib/masks";
