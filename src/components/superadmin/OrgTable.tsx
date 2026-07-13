@@ -243,10 +243,6 @@ export function OrgTable({
                             </DropdownMenuItem>
                           )}
                           <DropdownMenuSeparator />
-                          <div className="sm:hidden px-2 py-1.5">
-                            <PromoTriggerButton orgId={org.id} orgName={displayName} mode="actions" />
-                          </div>
-                          <DropdownMenuSeparator className="sm:hidden" />
                           <DropdownMenuItem
                             className="text-xs gap-2 text-destructive focus:text-destructive focus:bg-destructive/10"
                             onClick={() => {
