@@ -7,7 +7,9 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
+  DialogFooter,
 } from "@/components/ui/dialog";
+
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -163,7 +165,13 @@ export function DayLabelsDialog({ open, onOpenChange, organizationId, date, onOp
             </Button>
           )}
         </div>
+        <DialogFooter>
+          <Button onClick={() => onOpenChange(false)} className="w-full">
+            Concluir
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
 }
+
