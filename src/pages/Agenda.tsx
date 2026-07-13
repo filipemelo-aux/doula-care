@@ -79,6 +79,7 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import { fetchAddressByCep, formatAddressWithNumber } from "@/lib/address";
 import { maskCEP } from "@/lib/masks";
+import { ensureAvailabilityForAppointment } from "@/lib/ensureAvailability";
 
 // ─── Types ───────────────────────────────────────────────
 interface AppointmentWithClient {
@@ -285,10 +286,12 @@ export default function Agenda() {
         organization_id: organizationId || null,
       } as any);
       if (error) throw error;
+      await ensureAvailabilityForAppointment(organizationId, scheduledUtc);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["agenda-appointments"] });
       queryClient.invalidateQueries({ queryKey: ["all-appointments"] });
+      queryClient.invalidateQueries({ queryKey: ["doula-availability"] });
       closePersonalDialog();
       toast.success("Compromisso pessoal agendado!");
 
@@ -354,11 +357,13 @@ export default function Agenda() {
           organization_id: organizationId || null,
         } as any);
         if (error) throw error;
+        await ensureAvailabilityForAppointment(organizationId, scheduledUtc);
       }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["agenda-appointments"] });
       queryClient.invalidateQueries({ queryKey: ["all-appointments"] });
+      queryClient.invalidateQueries({ queryKey: ["doula-availability"] });
 
       // Send push to client when new appointment is created (not editing)
       if (!editingAppointment && aptClientId) {
@@ -648,7 +653,7 @@ export default function Agenda() {
 
 
       {/* Search + View Toggle */}
-      <div className="flex items-center gap-3">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/60" />
           <Input
@@ -658,14 +663,19 @@ export default function Agenda() {
             className="pl-10"
           />
         </div>
-        <ToggleGroup type="single" value={viewMode} onValueChange={(v) => v && setViewMode(v as "list" | "calendar")}>
-          <ToggleGroupItem value="list" aria-label="Lista" className="h-10 gap-1.5 px-3">
+        <ToggleGroup
+          type="single"
+          value={viewMode}
+          onValueChange={(v) => v && setViewMode(v as "list" | "calendar")}
+          className="w-full sm:w-auto justify-stretch"
+        >
+          <ToggleGroupItem value="list" aria-label="Compromissos" className="h-10 gap-1.5 px-3 flex-1 sm:flex-initial">
             <List className="h-4 w-4" />
-            <span className="hidden sm:inline text-sm">Compromissos</span>
+            <span className="text-sm">Compromissos</span>
           </ToggleGroupItem>
-          <ToggleGroupItem value="calendar" aria-label="Disponibilidade" className="h-10 gap-1.5 px-3">
+          <ToggleGroupItem value="calendar" aria-label="Disponibilidade" className="h-10 gap-1.5 px-3 flex-1 sm:flex-initial">
             <CalendarDays className="h-4 w-4" />
-            <span className="hidden sm:inline text-sm">Disponibilidade</span>
+            <span className="text-sm">Disponibilidade</span>
           </ToggleGroupItem>
         </ToggleGroup>
       </div>
