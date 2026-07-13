@@ -85,6 +85,9 @@ const clientSchema = z.object({
   alergias: z.string().optional(),
   restricao_aromaterapia: z.string().optional(),
   date_of_birth: z.string().optional(),
+  profissao: z.string().optional(),
+  religiao: z.string().optional(),
+  personalidade: z.string().optional(),
   historico_saude: z.string().optional(),
   historico_saude_familiar: z.string().optional(),
   tipo_sanguineo: z.string().optional(),
@@ -257,6 +260,9 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
         instagram_acompanhante: "",
         notes: "",
         date_of_birth: "",
+        profissao: "",
+        religiao: "",
+        personalidade: "",
         historico_saude: "",
         historico_saude_familiar: "",
         tipo_sanguineo: "",
@@ -373,6 +379,9 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
         instagram_acompanhante: (client as any).instagram_acompanhante || "",
         notes: client.notes || "",
         date_of_birth: (client as any).date_of_birth || "",
+        profissao: (client as any).profissao || "",
+        religiao: (client as any).religiao || "",
+        personalidade: (client as any).personalidade || "",
         historico_saude: (client as any).historico_saude || "",
         historico_saude_familiar: (client as any).historico_saude_familiar || "",
         tipo_sanguineo: (client as any).tipo_sanguineo || "",
@@ -448,6 +457,9 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
         instagram_acompanhante: "",
         notes: "",
         date_of_birth: "",
+        profissao: "",
+        religiao: "",
+        personalidade: "",
         historico_saude: "",
         historico_saude_familiar: "",
         tipo_sanguineo: "",
@@ -624,6 +636,9 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
         instagram_acompanhante: data.instagram_acompanhante || null,
         notes: data.notes || null,
         date_of_birth: data.date_of_birth || null,
+        profissao: data.profissao || null,
+        religiao: data.religiao || null,
+        personalidade: data.personalidade || null,
         historico_saude: data.historico_saude || null,
         historico_saude_familiar: data.historico_saude_familiar || null,
         tipo_sanguineo: data.tipo_sanguineo || null,
@@ -1249,6 +1264,45 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
                           <FormLabel className="text-xs">Data de nascimento</FormLabel>
                           <FormControl>
                             <Input {...field} type="date" className="h-9 text-sm" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="profissao"
+                      render={({ field }) => (
+                        <FormItem className="space-y-1">
+                          <FormLabel className="text-xs">Profissão</FormLabel>
+                          <FormControl>
+                            <Input {...field} className="h-9 text-sm" placeholder="Profissão" mask="name" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="religiao"
+                      render={({ field }) => (
+                        <FormItem className="space-y-1">
+                          <FormLabel className="text-xs">Religião</FormLabel>
+                          <FormControl>
+                            <Input {...field} className="h-9 text-sm" placeholder="Religião" mask="name" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="personalidade"
+                      render={({ field }) => (
+                        <FormItem className="space-y-1 md:col-span-2">
+                          <FormLabel className="text-xs">Personalidade</FormLabel>
+                          <FormControl>
+                            <Input {...field} className="h-9 text-sm" placeholder="Ex: calma, ansiosa, comunicativa..." mask="name" />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
