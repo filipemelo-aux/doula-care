@@ -663,28 +663,8 @@ export function ClientQuickViewDialog({
                     </div>
                   )}
 
-                {/* Próxima consulta */}
-                {activity?.nextAppointment && (
-                  <div className="rounded-2xl bg-primary/5 border border-primary/10 p-3">
-                    <div className="flex items-center gap-2 mb-1">
-                      <Calendar className="w-4 h-4 text-primary" />
-                      <p className="text-xs font-semibold text-foreground uppercase tracking-wide">
-                        Próxima consulta
-                      </p>
-                    </div>
-                    <p className="text-sm font-medium">
-                      {activity.nextAppointment.title}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {new Date(
-                        activity.nextAppointment.scheduled_at,
-                      ).toLocaleString("pt-BR", {
-                        dateStyle: "short",
-                        timeStyle: "short",
-                      })}
-                    </p>
-                  </div>
-                )}
+
+
 
                 {/* Último diário */}
                 {activity?.lastDiary && (
