@@ -176,6 +176,11 @@ export default function Agenda() {
   // Photo viewer
   const [viewingPhotos, setViewingPhotos] = useState<{ photos: string[]; comment: string | null; rating: number } | null>(null);
 
+  // Calendar labels
+  const [labelsManagerOpen, setLabelsManagerOpen] = useState(false);
+  const [dayLabelsFor, setDayLabelsFor] = useState<Date | null>(null);
+  const { dayMap: labelsDayMap } = useCalendarLabels(organizationId);
+
   // ─── Queries ─────────────────────────────────────────────
   const { data: appointments, isLoading: loadingApts } = useQuery({
     queryKey: ["agenda-appointments"],
