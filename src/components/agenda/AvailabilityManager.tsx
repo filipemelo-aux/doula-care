@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
-import { CalendarCheck, Plus, Trash2, Loader2, Clock, Copy, ChevronDown, ChevronUp, Tag } from "lucide-react";
+import { CalendarCheck, Plus, Trash2, Loader2, Clock, Copy, ChevronDown, ChevronUp, Tag, Info } from "lucide-react";
 import { format, addDays, isBefore, startOfDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
@@ -303,6 +303,19 @@ export function AvailabilityManager() {
         </div>
       </CardHeader>
       <CardContent>
+        <div className="mb-4 rounded-xl bg-primary/5 border border-primary/20 p-3 flex items-start gap-3">
+          <div className="mt-0.5 rounded-full bg-primary/10 p-1.5">
+            <Info className="h-4 w-4 text-primary" />
+          </div>
+          <div>
+            <p className="text-sm font-medium text-foreground">
+              Sua disponibilidade é vista pelas clientes
+            </p>
+            <p className="text-xs text-muted-foreground leading-relaxed mt-0.5">
+              Esses horários aparecem nas áreas das clientes para agendamento de consultas e serviços. Mantenha-os sempre atualizados para não perder atendimentos.
+            </p>
+          </div>
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <Calendar
