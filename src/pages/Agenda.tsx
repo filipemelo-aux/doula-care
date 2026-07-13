@@ -601,25 +601,36 @@ export default function Agenda() {
           <h1 className="page-title">Agenda</h1>
           <p className="page-description">Consultas e serviços em um só lugar</p>
         </div>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button size="sm" className="gap-1.5">
-              <Plus className="h-4 w-4" />
-              Novo compromisso
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-52">
-            <DropdownMenuItem onClick={() => setAppointmentDialog(true)} className="gap-2.5 py-2.5">
-              <Calendar className="h-4 w-4" /> Nova consulta
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setPersonalAptDialog(true)} className="gap-2.5 py-2.5">
-              <CalendarCheck className="h-4 w-4" /> Novo compromisso
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setServiceDialog(true)} className="gap-2.5 py-2.5">
-              <Briefcase className="h-4 w-4" /> Novo serviço
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <div className="flex items-center gap-2">
+          <Button
+            size="sm"
+            variant="outline"
+            className="gap-1.5"
+            onClick={() => setLabelsManagerOpen(true)}
+          >
+            <Tag className="h-4 w-4" />
+            <span className="hidden sm:inline">Etiquetas</span>
+          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button size="sm" className="gap-1.5">
+                <Plus className="h-4 w-4" />
+                Novo compromisso
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-52">
+              <DropdownMenuItem onClick={() => setAppointmentDialog(true)} className="gap-2.5 py-2.5">
+                <Calendar className="h-4 w-4" /> Nova consulta
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setPersonalAptDialog(true)} className="gap-2.5 py-2.5">
+                <CalendarCheck className="h-4 w-4" /> Novo compromisso
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setServiceDialog(true)} className="gap-2.5 py-2.5">
+                <Briefcase className="h-4 w-4" /> Novo serviço
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </div>
 
 
