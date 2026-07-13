@@ -179,7 +179,7 @@ export function ClientQuickViewDialog({
           .maybeSingle(),
         supabase
           .from("appointments")
-          .select("id, title, scheduled_at, notes")
+          .select("id, title, scheduled_at, notes, completed_at, completion_notes, address")
           .eq("client_id", clientId!)
           .is("completed_at", null)
           .gte("scheduled_at", new Date().toISOString())
@@ -188,7 +188,7 @@ export function ClientQuickViewDialog({
           .maybeSingle(),
         supabase
           .from("appointments")
-          .select("id, title, scheduled_at, notes, completion_notes, completed_at")
+          .select("id, title, scheduled_at, notes, completion_notes, completed_at, address")
           .eq("client_id", clientId!)
           .not("completed_at", "is", null)
           .order("completed_at", { ascending: false })
