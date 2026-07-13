@@ -141,11 +141,11 @@ export function DashboardLayout() {
         </main>
       </div>
 
-      {/* Fixed bottom navigation bar — mobile only */}
+      {/* Fixed bottom navigation bar */}
       <div className={cn(
-        "fixed bottom-0 left-0 right-0 z-40 lg:hidden pb-[var(--app-safe-bottom)]",
+        "fixed bottom-0 left-0 right-0 z-40 pb-[var(--app-safe-bottom)]",
         "bg-[hsl(var(--background))] shadow-[0_-1px_12px_-4px_hsl(var(--foreground)/0.08)]",
-        sidebarOpen && "hidden"
+        sidebarOpen && "hidden lg:block"
       )}>
         <div className="flex items-end justify-evenly px-2 py-1.5 relative max-w-md mx-auto">
           {/* Visão Geral */}
