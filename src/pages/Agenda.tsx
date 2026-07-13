@@ -915,9 +915,10 @@ export default function Agenda() {
 
 
               {/* Empty state */}
-              {filteredAppointments.length === 0 && filteredServices.length === 0 && (
+              {unifiedItems.length === 0 && (
                 <EmptyState icon={Calendar} message={agendaFilter === "calendar" ? "Nenhum compromisso neste dia" : "Nenhum compromisso encontrado"} />
               )}
+
             </div>
           )}
         </div>
