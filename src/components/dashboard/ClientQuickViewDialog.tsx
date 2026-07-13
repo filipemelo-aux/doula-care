@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { AdminClientAvatarUpload } from "./AdminClientAvatarUpload";
 import {
@@ -10,6 +10,16 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -35,6 +45,7 @@ import {
   Clock,
 } from "lucide-react";
 import { differenceInDays, startOfDay } from "date-fns";
+import { toast } from "sonner";
 
 import { cn } from "@/lib/utils";
 import { formatBrazilDate } from "@/lib/utils";
@@ -50,6 +61,10 @@ import { ClientContractionsDialog } from "./ClientContractionsDialog";
 import { SendNotificationDialog } from "@/components/clients/SendNotificationDialog";
 import { ClientFileDialog } from "@/components/clients/ClientFileDialog";
 import { BIRTH_TYPE_LABELS } from "@/components/clients/BirthRegistrationDialog";
+import { AppointmentDetailDialog } from "@/components/clients/AppointmentDetailDialog";
+import { AppointmentCompleteDialog } from "@/components/clients/AppointmentCompleteDialog";
+import { AppointmentEditDialog } from "@/components/clients/AppointmentEditDialog";
+
 
 type Client = Tables<"clients">;
 
