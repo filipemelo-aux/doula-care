@@ -196,6 +196,18 @@ export function ClientQuickViewDialog({
     ? (client.preferred_name?.trim() || firstName(client.full_name))
     : "";
 
+  const assistenciaData = useMemo(() => {
+    if (!client) return null;
+    const data = (client as any).restricoes_assistencia || {};
+    return {
+      alergias: data.alergias || client.alergias || null,
+      restricoes: data.restricoes || client.restricoes_alimentares || null,
+      fobias_gatilhos: data.fobias_gatilhos || null,
+      condicoes_especiais: data.condicoes_especiais || null,
+      aromaterapia: client.restricao_aromaterapia || null,
+    };
+  }, [client]);
+
   const go = (path: string, state?: unknown) => {
     onOpenChange(false);
     setTimeout(() => navigate(path, state ? { state } : undefined), 60);
