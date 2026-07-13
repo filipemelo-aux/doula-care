@@ -1357,7 +1357,7 @@ function AppointmentRow({
         )}
 
         {/* Actions row */}
-        <div className="flex items-center justify-between pt-2 border-t border-border/60">
+        <div className="flex items-center justify-between pt-2 border-t border-border/60" onClick={(e) => e.stopPropagation()}>
           <div className="flex items-center gap-1.5">
             {apt.address && (
               <Button
