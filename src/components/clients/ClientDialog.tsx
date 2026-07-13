@@ -1269,6 +1269,45 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
                         </FormItem>
                       )}
                     />
+                    <FormField
+                      control={form.control}
+                      name="profissao"
+                      render={({ field }) => (
+                        <FormItem className="space-y-1">
+                          <FormLabel className="text-xs">Profissão</FormLabel>
+                          <FormControl>
+                            <Input {...field} className="h-9 text-sm" placeholder="Profissão" mask="name" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="religiao"
+                      render={({ field }) => (
+                        <FormItem className="space-y-1">
+                          <FormLabel className="text-xs">Religião</FormLabel>
+                          <FormControl>
+                            <Input {...field} className="h-9 text-sm" placeholder="Religião" mask="name" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="personalidade"
+                      render={({ field }) => (
+                        <FormItem className="space-y-1 md:col-span-2">
+                          <FormLabel className="text-xs">Personalidade</FormLabel>
+                          <FormControl>
+                            <Input {...field} className="h-9 text-sm" placeholder="Ex: calma, ansiosa, comunicativa..." mask="name" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                   </div>
                 </div>
               )}
