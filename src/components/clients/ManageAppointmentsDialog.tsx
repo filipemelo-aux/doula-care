@@ -235,7 +235,7 @@ export function ManageAppointmentsDialog({
               </div>
             ) : appointments && appointments.length > 0 ? (
               <div className="space-y-2">
-                {appointments.map((apt) => {
+                {sortAppointmentsWithFutureFirst(appointments).map((apt) => {
                   const past = isPast(apt.scheduled_at);
                   const date = new Date(apt.scheduled_at);
 
