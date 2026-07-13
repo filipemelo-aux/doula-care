@@ -511,6 +511,12 @@ export function ClientFileDialog({ open, onOpenChange, client }: ClientFileDialo
                   {client.preferred_name && (
                     <p className="text-xs text-muted-foreground truncate">{client.full_name}</p>
                   )}
+                  {client.baby_names && client.baby_names.length > 0 && (
+                    <p className="text-xs text-primary font-medium mt-1 flex items-center gap-1">
+                      <Baby className="w-3 h-3" />
+                      {client.baby_names.join(", ")}
+                    </p>
+                  )}
                   <div className="flex flex-wrap items-center gap-1.5 mt-2">
                     <Badge variant="outline" className={cn("badge-status border-0", `badge-${client.status}`)}>
                       {statusLabels[client.status] || client.status}
