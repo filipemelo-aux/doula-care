@@ -123,6 +123,12 @@ export default function RegisterVisitor() {
           comorbidades: comorbidades || null,
           alergias: alergias || null,
           restricao_aromaterapia: restricaoAromaterapia || null,
+          restricoes_assistencia: {
+            alergias: alergias || null,
+            restricoes: null,
+            fobias_gatilhos: null,
+            condicoes_especiais: null,
+          },
           companion_name: companionName || null,
           companion_phone: companionPhone || null,
           has_fotografa: hasFotografa,
