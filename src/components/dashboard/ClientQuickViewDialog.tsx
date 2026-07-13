@@ -118,7 +118,7 @@ export function ClientQuickViewDialog({
     queryKey: ["client-quickview-activity", clientId],
     enabled: !!clientId && open,
     queryFn: async () => {
-      const [msgs, diary, svc, apt, lastDiary, nextAppt] = await Promise.all([
+      const [msgs, diary, svc, apt, lastDiary, nextAppt, lastCompleted, completedCount] = await Promise.all([
         supabase
           .from("client_notifications")
           .select("id", { count: "exact", head: true })
@@ -178,7 +178,8 @@ export function ClientQuickViewDialog({
         pendingAppointments: apt.count ?? 0,
         lastDiary: lastDiary.data,
         nextAppointment: nextAppt.data,
-        lastCompletedAppointment: (arguments as any),
+        lastCompletedAppointment: lastCompleted.data,
+        completedAppointmentsCount: completedCount.count ?? 0,
       };
     },
     refetchInterval: 30000,
