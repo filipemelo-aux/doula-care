@@ -9,14 +9,13 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
-import { CalendarCheck, Plus, Trash2, Loader2, Clock, Copy, ChevronDown, ChevronUp, Tag, Info } from "lucide-react";
+import { CalendarCheck, Plus, Trash2, Loader2, Clock, Copy, ChevronDown, ChevronUp, Info } from "lucide-react";
 import { format, addDays, isBefore, startOfDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useCalendarLabels } from "@/hooks/useCalendarLabels";
-import { DayLabelsDialog } from "@/components/agenda/DayLabelsDialog";
-import { CalendarLabelsManager } from "@/components/agenda/CalendarLabelsManager";
+
 
 interface AvailabilitySlot {
   id: string;
@@ -37,9 +36,8 @@ export function AvailabilityManager() {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [addSlotOpen, setAddSlotOpen] = useState(false);
   const [batchDialogOpen, setBatchDialogOpen] = useState(false);
-  const [dayLabelsFor, setDayLabelsFor] = useState<Date | null>(null);
-  const [labelsManagerOpen, setLabelsManagerOpen] = useState(false);
   const { dayMap: labelsDayMap } = useCalendarLabels(organizationId);
+
 
   // For single-day add: selected hour toggles
   const [selectedStartHours, setSelectedStartHours] = useState<number[]>([]);
@@ -289,17 +287,13 @@ export function AvailabilityManager() {
             <p className="text-xs text-muted-foreground mt-1">Selecione um dia e defina seus horários</p>
           </div>
           <div className="flex items-center gap-1.5">
-            <Button size="sm" variant="outline" onClick={() => setDayLabelsFor(selectedDate)} className="h-8 gap-1 px-2 text-xs">
-              <Tag className="h-3 w-3" />
-              <span className="hidden sm:inline">Etiquetar dia</span>
-              <span className="sm:hidden">Etiqueta</span>
-            </Button>
             <Button size="sm" variant="outline" onClick={openBatchDialog} className="h-8 gap-1 px-2 text-xs">
               <Copy className="h-3 w-3" />
               <span className="hidden sm:inline">Aplicar em Lote</span>
               <span className="sm:hidden">Lote</span>
             </Button>
           </div>
+
         </div>
       </CardHeader>
       <CardContent>
@@ -610,23 +604,8 @@ export function AvailabilityManager() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      <DayLabelsDialog
-        open={!!dayLabelsFor}
-        onOpenChange={(o) => !o && setDayLabelsFor(null)}
-        organizationId={organizationId}
-        date={dayLabelsFor}
-        onOpenLabelsManager={() => {
-          setDayLabelsFor(null);
-          setLabelsManagerOpen(true);
-        }}
-      />
-
-      <CalendarLabelsManager
-        open={labelsManagerOpen}
-        onOpenChange={setLabelsManagerOpen}
-        organizationId={organizationId}
-      />
     </Card>
+
   );
 }
 
