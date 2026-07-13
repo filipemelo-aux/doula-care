@@ -720,11 +720,14 @@ export default function Agenda() {
                           <div className="relative flex flex-col items-center justify-center w-full h-full">
                             <span>{props.date.getDate()}</span>
                             {dayLabels.length > 0 && (
-                              <div className="absolute -bottom-0.5 flex gap-0.5">
-                                {dayLabels.slice(0, 3).map((d) => (
+                              <div
+                                className="absolute bottom-0.5 left-1/2 -translate-x-1/2 flex overflow-hidden rounded-full"
+                                style={{ width: "70%", height: "3px" }}
+                              >
+                                {dayLabels.slice(0, 4).map((d) => (
                                   <span
                                     key={d.id}
-                                    className="inline-block h-1.5 w-1.5 rounded-full"
+                                    className="flex-1"
                                     style={{ backgroundColor: d.label?.color || "#999" }}
                                   />
                                 ))}
@@ -739,12 +742,13 @@ export default function Agenda() {
                     .has-appointment::before {
                       content: '';
                       position: absolute;
-                      top: 3px;
-                      right: 3px;
+                      top: 4px;
+                      right: 4px;
                       width: 5px;
                       height: 5px;
                       border-radius: 50%;
                       background-color: hsl(var(--primary));
+                      z-index: 1;
                     }
                     .has-appointment {
                       position: relative;
@@ -755,21 +759,17 @@ export default function Agenda() {
                   <div className="mt-3 flex items-center justify-between gap-2 rounded-lg bg-muted/40 px-3 py-2">
                     <div className="flex items-center gap-2 min-w-0 flex-1">
                       <Tag className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
-                      <div className="flex flex-wrap gap-1 min-w-0">
+                      <div className="flex flex-wrap gap-1.5 min-w-0">
                         {(labelsDayMap.get(format(selectedDate, "yyyy-MM-dd")) || []).length === 0 ? (
                           <span className="text-xs text-muted-foreground">Sem etiquetas neste dia</span>
                         ) : (
                           (labelsDayMap.get(format(selectedDate, "yyyy-MM-dd")) || []).map((d) => (
                             <span
                               key={d.id}
-                              className="inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[10px] font-medium"
-                              style={{
-                                backgroundColor: `${d.label?.color || "#999"}22`,
-                                color: d.label?.color || "#666",
-                              }}
+                              className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold text-white shadow-sm"
+                              style={{ backgroundColor: d.label?.color || "#999" }}
                               title={d.note || undefined}
                             >
-                              <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: d.label?.color || "#999" }} />
                               {d.label?.name || "?"}
                             </span>
                           ))
