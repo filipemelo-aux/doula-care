@@ -629,6 +629,16 @@ export function ClientFileDialog({ open, onOpenChange, client }: ClientFileDialo
                 </Card>
               )}
 
+              {/* Observações da Doula */}
+              {client.notes && (
+                <Card icon={StickyNote} title="Observações" tint="accent">
+                  <p className="text-xs whitespace-pre-wrap leading-relaxed text-foreground/90">
+                    {client.notes}
+                  </p>
+                </Card>
+              )}
+
+
               {/* Birth data (baby name shown in header) */}
               {client.birth_occurred && (
                 <Card icon={Baby} title="Dados do Nascimento" tint="accent">
