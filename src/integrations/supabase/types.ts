@@ -338,6 +338,7 @@ export type Database = {
           owner_id: string | null
           payment_method: Database["public"]["Enums"]["payment_method"]
           payment_status: Database["public"]["Enums"]["payment_status"]
+          personalidade: string | null
           phone: string
           plan: Database["public"]["Enums"]["plan_type"]
           plan_setting_id: string | null
@@ -348,6 +349,8 @@ export type Database = {
           prenatal_high_risk: boolean | null
           prenatal_team: Json | null
           prenatal_type: string | null
+          profissao: string | null
+          religiao: string | null
           restricao_aromaterapia: string | null
           restricoes_alimentares: string | null
           state: string | null
@@ -399,6 +402,7 @@ export type Database = {
           owner_id?: string | null
           payment_method?: Database["public"]["Enums"]["payment_method"]
           payment_status?: Database["public"]["Enums"]["payment_status"]
+          personalidade?: string | null
           phone: string
           plan?: Database["public"]["Enums"]["plan_type"]
           plan_setting_id?: string | null
@@ -409,6 +413,8 @@ export type Database = {
           prenatal_high_risk?: boolean | null
           prenatal_team?: Json | null
           prenatal_type?: string | null
+          profissao?: string | null
+          religiao?: string | null
           restricao_aromaterapia?: string | null
           restricoes_alimentares?: string | null
           state?: string | null
@@ -460,6 +466,7 @@ export type Database = {
           owner_id?: string | null
           payment_method?: Database["public"]["Enums"]["payment_method"]
           payment_status?: Database["public"]["Enums"]["payment_status"]
+          personalidade?: string | null
           phone?: string
           plan?: Database["public"]["Enums"]["plan_type"]
           plan_setting_id?: string | null
@@ -470,6 +477,8 @@ export type Database = {
           prenatal_high_risk?: boolean | null
           prenatal_team?: Json | null
           prenatal_type?: string | null
+          profissao?: string | null
+          religiao?: string | null
           restricao_aromaterapia?: string | null
           restricoes_alimentares?: string | null
           state?: string | null
