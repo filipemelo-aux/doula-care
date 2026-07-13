@@ -63,7 +63,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { AppointmentDetailDialog } from "@/components/clients/AppointmentDetailDialog";
 import { AppointmentCompleteDialog } from "@/components/clients/AppointmentCompleteDialog";
-import { format, isToday, isPast, isFuture, parseISO, isSameDay, startOfDay, addHours, isBefore, isAfter, isWithinInterval } from "date-fns";
+import { format, isToday, isPast, isSameDay, addHours, isWithinInterval } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { fromZonedTime, toZonedTime } from "date-fns-tz";
 import { toast } from "sonner";
@@ -570,25 +570,43 @@ export default function Agenda() {
     return svcs;
   }, [services, searchTerm]);
 
-  // An appointment is "em andamento" only if current time is within the scheduled hour
-  const getAppointmentStatus = (apt: AppointmentWithClient) => {
-    if (apt.completed_at) return "completed";
-    const scheduledTime = new Date(apt.scheduled_at);
-    const scheduledEnd = addHours(scheduledTime, 1);
-    if (isWithinInterval(now, { start: scheduledTime, end: scheduledEnd })) return "in_progress";
-    if (isBefore(now, scheduledTime)) return "future";
-    return "past";
-  };
+  const activeServices = useMemo(
+    () => filteredServices.filter((s) => s.status === "pending" || s.status === "budget_sent" || s.status === "date_proposed"),
+    [filteredServices]
+  );
 
-  const futureApts = filteredAppointments.filter((a) => {
-    const status = getAppointmentStatus(a);
-    return status === "future" || status === "in_progress";
-  });
-  const pastApts = filteredAppointments.filter((a) => {
-    const status = getAppointmentStatus(a);
-    return status === "past" && !a.completed_at;
-  }).sort((a, b) => new Date(b.scheduled_at).getTime() - new Date(a.scheduled_at).getTime());
-  const completedApts = filteredAppointments.filter((a) => !!a.completed_at).sort((a, b) => new Date(b.scheduled_at).getTime() - new Date(a.scheduled_at).getTime());
+  const activeServicesForView = useMemo(() => {
+    if (agendaFilter !== "calendar") return activeServices;
+    return activeServices.filter((svc) => {
+      const dateStr = svc.scheduled_date || svc.preferred_date;
+      if (!dateStr) return false;
+      return isSameDay(toZonedTime(new Date(dateStr), "America/Sao_Paulo"), selectedDate);
+    });
+  }, [activeServices, agendaFilter, selectedDate]);
+
+  const unifiedItems = useMemo(() => {
+    const items: (
+      | { type: "appointment"; data: AppointmentWithClient; scheduled_at: string; completed_at: string | null }
+      | { type: "service"; data: ServiceRequestFull; scheduled_at: string; completed_at: null }
+    )[] = [
+      ...filteredAppointments.map((apt) => ({
+        type: "appointment" as const,
+        data: apt,
+        scheduled_at: apt.scheduled_at,
+        completed_at: apt.completed_at,
+      })),
+      ...activeServicesForView.map((svc) => ({
+        type: "service" as const,
+        data: svc,
+        scheduled_at: svc.scheduled_date || svc.preferred_date || svc.created_at,
+        completed_at: null,
+      })),
+    ];
+    return sortAppointmentsWithFutureFirst(items);
+  }, [filteredAppointments, activeServicesForView]);
+
+
+
 
   const isLoading = loadingApts || loadingSvc;
 
@@ -812,23 +830,42 @@ export default function Agenda() {
                     <Calendar className="h-4 w-4 text-primary" />
                     {format(selectedDate, "dd 'de' MMMM, EEEE", { locale: ptBR })}
                     <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
-                      {filteredAppointments.length}
+                      {unifiedItems.length}
                     </Badge>
                   </h3>
-                  {filteredAppointments.length > 0 ? (
+                  {unifiedItems.length > 0 ? (
                     <ScrollArea className="max-h-[280px]">
                       <div className="space-y-2">
-                        {sortAppointmentsWithFutureFirst(filteredAppointments).map((apt) => (
-                          <AppointmentRow
-                            key={apt.id}
-                            apt={apt}
-                            onEdit={openEditAppointment}
-                            onDelete={(id) => setDeleteTarget({ type: "appointment", id })}
-                            displayName={displayName}
-                            past={!!apt.completed_at}
-                            onCompleted={() => queryClient.invalidateQueries({ queryKey: ["agenda-appointments"] })}
-                          />
-                        ))}
+                        {unifiedItems.map((item) =>
+                          item.type === "appointment" ? (
+                            <AppointmentRow
+                              key={item.data.id}
+                              apt={item.data}
+                              onEdit={openEditAppointment}
+                              onDelete={(id) => setDeleteTarget({ type: "appointment", id })}
+                              displayName={displayName}
+                              past={!!item.data.completed_at}
+                              onCompleted={() => queryClient.invalidateQueries({ queryKey: ["agenda-appointments"] })}
+                            />
+                          ) : (
+                            <ServiceRow
+                              key={item.data.id}
+                              svc={item.data}
+                              displayName={displayName}
+                              onSendBudget={(s) =>
+                                setBudgetRequest({
+                                  id: s.id,
+                                  client_id: s.client_id,
+                                  service_type: s.service_type,
+                                  client_name: s.clients?.full_name || "",
+                                  preferred_date: s.preferred_date,
+                                })
+                              }
+                              onDelete={(id) => setDeleteTarget({ type: "service", id })}
+                              onViewPhotos={setViewingPhotos}
+                            />
+                          )
+                        )}
                       </div>
                     </ScrollArea>
                   ) : (
@@ -837,6 +874,7 @@ export default function Agenda() {
                       <p className="text-sm text-muted-foreground">Nenhum compromisso neste dia</p>
                     </div>
                   )}
+
                 </div>
                 <AppointmentRequestsSection />
               </div>
@@ -864,70 +902,54 @@ export default function Agenda() {
                   <Calendar className="h-4 w-4" />
                   {format(selectedDate, "dd 'de' MMMM, EEEE", { locale: ptBR })}
                   <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
-                    {filteredAppointments.length}
+                    {unifiedItems.length}
                   </Badge>
                 </h2>
               )}
 
-              {agendaFilter === "all" ? (
-                <>
-                  {/* Unified list — future appointments first */}
-                  {filteredAppointments.length > 0 && (
-                    <section>
-                      <div className="space-y-2">
-                        {sortAppointmentsWithFutureFirst(filteredAppointments).map((apt) => (
-                          <AppointmentRow key={apt.id} apt={apt} onEdit={openEditAppointment} onDelete={(id) => setDeleteTarget({ type: "appointment", id })} displayName={displayName} onCompleted={() => queryClient.invalidateQueries({ queryKey: ["agenda-appointments"] })} />
-                        ))}
-                      </div>
-                    </section>
-                  )}
 
-                  {/* Services needing attention */}
-                  {filteredServices.filter(s => s.status === "pending" || s.status === "budget_sent" || s.status === "date_proposed").length > 0 && (
-                    <section>
-                      <h2 className="text-sm font-semibold text-muted-foreground mb-3 flex items-center gap-2">
-                        <Briefcase className="h-4 w-4" /> Serviços que precisam de atenção
-                      </h2>
-                      <div className="space-y-2">
-                        {filteredServices.filter(s => s.status === "pending" || s.status === "budget_sent" || s.status === "date_proposed").map((svc) => (
-                          <ServiceRow key={svc.id} svc={svc} displayName={displayName} onSendBudget={(s) => setBudgetRequest({ id: s.id, client_id: s.client_id, service_type: s.service_type, client_name: s.clients?.full_name || "", preferred_date: s.preferred_date })} onDelete={(id) => setDeleteTarget({ type: "service", id })} onViewPhotos={setViewingPhotos} />
-                        ))}
-                      </div>
-                    </section>
-                  )}
-                </>
-              ) : (
-                <>
-                  {/* Calendar-day mode keeps future-first sort */}
-                  {filteredAppointments.length > 0 && (
-                    <section>
-                      <div className="space-y-2">
-                        {sortAppointmentsWithFutureFirst(filteredAppointments).map((apt) => (
-                          <AppointmentRow key={apt.id} apt={apt} onEdit={openEditAppointment} onDelete={(id) => setDeleteTarget({ type: "appointment", id })} displayName={displayName} onCompleted={() => queryClient.invalidateQueries({ queryKey: ["agenda-appointments"] })} />
-                        ))}
-                      </div>
-                    </section>
-                  )}
+              {unifiedItems.length > 0 ? (
+                <section>
+                  <div className="space-y-2">
+                    {unifiedItems.map((item) =>
+                      item.type === "appointment" ? (
+                        <AppointmentRow
+                          key={item.data.id}
+                          apt={item.data}
+                          onEdit={openEditAppointment}
+                          onDelete={(id) => setDeleteTarget({ type: "appointment", id })}
+                          displayName={displayName}
+                          onCompleted={() => queryClient.invalidateQueries({ queryKey: ["agenda-appointments"] })}
+                        />
+                      ) : (
+                        <ServiceRow
+                          key={item.data.id}
+                          svc={item.data}
+                          displayName={displayName}
+                          onSendBudget={(s) =>
+                            setBudgetRequest({
+                              id: s.id,
+                              client_id: s.client_id,
+                              service_type: s.service_type,
+                              client_name: s.clients?.full_name || "",
+                              preferred_date: s.preferred_date,
+                            })
+                          }
+                          onDelete={(id) => setDeleteTarget({ type: "service", id })}
+                          onViewPhotos={setViewingPhotos}
+                        />
+                      )
+                    )}
+                  </div>
+                </section>
+              ) : null}
 
-                  {filteredServices.filter(s => s.status === "pending" || s.status === "budget_sent" || s.status === "date_proposed").length > 0 && (
-                    <section>
-                      <h2 className="text-sm font-semibold text-muted-foreground mb-3 flex items-center gap-2">
-                        <Briefcase className="h-4 w-4" /> Serviços que precisam de atenção
-                      </h2>
-                      <div className="space-y-2">
-                        {filteredServices.filter(s => s.status === "pending" || s.status === "budget_sent" || s.status === "date_proposed").map((svc) => (
-                          <ServiceRow key={svc.id} svc={svc} displayName={displayName} onSendBudget={(s) => setBudgetRequest({ id: s.id, client_id: s.client_id, service_type: s.service_type, client_name: s.clients?.full_name || "", preferred_date: s.preferred_date })} onDelete={(id) => setDeleteTarget({ type: "service", id })} onViewPhotos={setViewingPhotos} />
-                        ))}
-                      </div>
-                    </section>
-                  )}
-                </>
-              )}
 
               {/* Empty state */}
-              {filteredAppointments.length === 0 && filteredServices.length === 0 && (
+              {unifiedItems.length === 0 && (
                 <EmptyState icon={Calendar} message={agendaFilter === "calendar" ? "Nenhum compromisso neste dia" : "Nenhum compromisso encontrado"} />
               )}
+
             </div>
           )}
         </div>
