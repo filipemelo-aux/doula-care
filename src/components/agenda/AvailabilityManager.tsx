@@ -303,8 +303,8 @@ export function AvailabilityManager() {
         </div>
       </CardHeader>
       <CardContent>
-        <div className="mb-4 rounded-xl bg-primary/8 border border-primary/20 p-3 flex items-start gap-3">
-          <div className="mt-0.5 rounded-full bg-primary/15 p-1.5">
+        <div className="mb-4 rounded-xl bg-primary/5 border border-primary/20 p-3 flex items-start gap-3">
+          <div className="mt-0.5 rounded-full bg-primary/10 p-1.5">
             <Info className="h-4 w-4 text-primary" />
           </div>
           <div>
