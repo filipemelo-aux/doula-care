@@ -830,23 +830,42 @@ export default function Agenda() {
                     <Calendar className="h-4 w-4 text-primary" />
                     {format(selectedDate, "dd 'de' MMMM, EEEE", { locale: ptBR })}
                     <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
-                      {filteredAppointments.length}
+                      {unifiedItems.length}
                     </Badge>
                   </h3>
-                  {filteredAppointments.length > 0 ? (
+                  {unifiedItems.length > 0 ? (
                     <ScrollArea className="max-h-[280px]">
                       <div className="space-y-2">
-                        {sortAppointmentsWithFutureFirst(filteredAppointments).map((apt) => (
-                          <AppointmentRow
-                            key={apt.id}
-                            apt={apt}
-                            onEdit={openEditAppointment}
-                            onDelete={(id) => setDeleteTarget({ type: "appointment", id })}
-                            displayName={displayName}
-                            past={!!apt.completed_at}
-                            onCompleted={() => queryClient.invalidateQueries({ queryKey: ["agenda-appointments"] })}
-                          />
-                        ))}
+                        {unifiedItems.map((item) =>
+                          item.type === "appointment" ? (
+                            <AppointmentRow
+                              key={item.data.id}
+                              apt={item.data}
+                              onEdit={openEditAppointment}
+                              onDelete={(id) => setDeleteTarget({ type: "appointment", id })}
+                              displayName={displayName}
+                              past={!!item.data.completed_at}
+                              onCompleted={() => queryClient.invalidateQueries({ queryKey: ["agenda-appointments"] })}
+                            />
+                          ) : (
+                            <ServiceRow
+                              key={item.data.id}
+                              svc={item.data}
+                              displayName={displayName}
+                              onSendBudget={(s) =>
+                                setBudgetRequest({
+                                  id: s.id,
+                                  client_id: s.client_id,
+                                  service_type: s.service_type,
+                                  client_name: s.clients?.full_name || "",
+                                  preferred_date: s.preferred_date,
+                                })
+                              }
+                              onDelete={(id) => setDeleteTarget({ type: "service", id })}
+                              onViewPhotos={setViewingPhotos}
+                            />
+                          )
+                        )}
                       </div>
                     </ScrollArea>
                   ) : (
@@ -855,6 +874,7 @@ export default function Agenda() {
                       <p className="text-sm text-muted-foreground">Nenhum compromisso neste dia</p>
                     </div>
                   )}
+
                 </div>
                 <AppointmentRequestsSection />
               </div>
