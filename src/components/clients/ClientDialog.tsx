@@ -1441,7 +1441,7 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
                               <SelectItem value="sus">SUS</SelectItem>
                               <SelectItem value="plano">Plano de Saúde</SelectItem>
                               <SelectItem value="particular">Particular</SelectItem>
-                              <SelectItem value="equipe_particular">Equipe Particular</SelectItem>
+                              
                             </SelectContent>
                           </Select>
                           <FormMessage />
