@@ -398,23 +398,6 @@ export function ClientFileDialog({ open, onOpenChange, client }: ClientFileDialo
         if (client.fotografa_phone) addText(`Telefone: ${client.fotografa_phone}`);
       }
 
-      // Plan & Payment
-      addSection("Plano e Pagamento");
-      addText(`Plano: ${getPlanName(client.plan_setting_id, client.plan)}`);
-      addText(`Valor: ${formatCurrency(Number(client.plan_value) || 0)}`);
-      addText(`Pagamento: ${paymentMethodLabels[client.payment_method] || client.payment_method}`);
-      addText(`Status: ${paymentStatusLabels[client.payment_status] || client.payment_status}`);
-
-      if (payments && payments.length > 1) {
-        addText("");
-        addText("Parcelas:", 10, true);
-        payments.forEach((p) => {
-          const statusStr = p.status === "pago" ? "✅ Pago" : p.status === "parcial" ? "⚠️ Parcial" : "⏳ Pendente";
-          const dueStr = p.due_date ? ` — Vence: ${formatDate(p.due_date)}` : "";
-          addText(`  ${p.installment_number}/${p.total_installments}: ${formatCurrency(Number(p.amount))} [${statusStr}]${dueStr}`);
-        });
-      }
-
       // Contract
       if (contracts && contracts.length > 0) {
         addSection("Contratos");
@@ -452,6 +435,23 @@ export function ClientFileDialog({ open, onOpenChange, client }: ClientFileDialo
         });
       }
 
+
+      // Plan & Payment
+      addSection("Plano e Pagamento");
+      addText(`Plano: ${getPlanName(client.plan_setting_id, client.plan)}`);
+      addText(`Valor: ${formatCurrency(Number(client.plan_value) || 0)}`);
+      addText(`Pagamento: ${paymentMethodLabels[client.payment_method] || client.payment_method}`);
+      addText(`Status: ${paymentStatusLabels[client.payment_status] || client.payment_status}`);
+
+      if (payments && payments.length > 1) {
+        addText("");
+        addText("Parcelas:", 10, true);
+        payments.forEach((p) => {
+          const statusStr = p.status === "pago" ? "✅ Pago" : p.status === "parcial" ? "⚠️ Parcial" : "⏳ Pendente";
+          const dueStr = p.due_date ? ` — Vence: ${formatDate(p.due_date)}` : "";
+          addText(`  ${p.installment_number}/${p.total_installments}: ${formatCurrency(Number(p.amount))} [${statusStr}]${dueStr}`);
+        });
+      }
 
       // Notifications section removed from PDF export.
 
@@ -698,37 +698,6 @@ export function ClientFileDialog({ open, onOpenChange, client }: ClientFileDialo
               )}
 
 
-              {/* Plan & Payment */}
-              <Card icon={CreditCard} title="Plano e Pagamento" tint="primary">
-                <ChipGrid>
-                  <Chip label="Plano" value={getPlanName(client.plan_setting_id, client.plan)} highlight />
-                  <Chip label="Valor" value={formatCurrency(Number(client.plan_value) || 0)} highlight />
-                  <Chip label="Pagamento" value={paymentMethodLabels[client.payment_method] || client.payment_method} />
-                  <Chip label="Status" value={paymentStatusLabels[client.payment_status] || client.payment_status} />
-                </ChipGrid>
-
-                {payments && payments.length > 1 && (
-                  <div className="mt-3 space-y-1.5">
-                    <p className="text-[10px] text-muted-foreground uppercase tracking-wide">
-                      Parcelas ({payments.length})
-                    </p>
-                    {payments.map((p) => (
-                      <div key={p.id} className="flex items-center justify-between rounded-lg bg-muted/50 px-3 py-2 text-xs">
-                        <span className="font-medium">
-                          {p.installment_number}/{p.total_installments} · {formatCurrency(Number(p.amount))}
-                        </span>
-                        <div className="flex items-center gap-2">
-                          {p.due_date && <span className="text-muted-foreground text-[11px]">{formatDate(p.due_date)}</span>}
-                          <Badge variant={p.status === "pago" ? "default" : "outline"} className="text-[10px] h-5">
-                            {p.status === "pago" ? "Pago" : p.status === "parcial" ? "Parcial" : "Pendente"}
-                          </Badge>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </Card>
-
               {/* Contracts */}
               {contracts && contracts.length > 0 && (
                 <Card icon={FileSignature} title={`Contratos (${contracts.length})`} tint="primary">
@@ -807,6 +776,37 @@ export function ClientFileDialog({ open, onOpenChange, client }: ClientFileDialo
               )}
 
 
+
+              {/* Plan & Payment */}
+              <Card icon={CreditCard} title="Plano e Pagamento" tint="primary">
+                <ChipGrid>
+                  <Chip label="Plano" value={getPlanName(client.plan_setting_id, client.plan)} highlight />
+                  <Chip label="Valor" value={formatCurrency(Number(client.plan_value) || 0)} highlight />
+                  <Chip label="Pagamento" value={paymentMethodLabels[client.payment_method] || client.payment_method} />
+                  <Chip label="Status" value={paymentStatusLabels[client.payment_status] || client.payment_status} />
+                </ChipGrid>
+
+                {payments && payments.length > 1 && (
+                  <div className="mt-3 space-y-1.5">
+                    <p className="text-[10px] text-muted-foreground uppercase tracking-wide">
+                      Parcelas ({payments.length})
+                    </p>
+                    {payments.map((p) => (
+                      <div key={p.id} className="flex items-center justify-between rounded-lg bg-muted/50 px-3 py-2 text-xs">
+                        <span className="font-medium">
+                          {p.installment_number}/{p.total_installments} · {formatCurrency(Number(p.amount))}
+                        </span>
+                        <div className="flex items-center gap-2">
+                          {p.due_date && <span className="text-muted-foreground text-[11px]">{formatDate(p.due_date)}</span>}
+                          <Badge variant={p.status === "pago" ? "default" : "outline"} className="text-[10px] h-5">
+                            {p.status === "pago" ? "Pago" : p.status === "parcial" ? "Parcial" : "Pendente"}
+                          </Badge>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </Card>
 
               {(!appointments || appointments.length === 0) &&
                 (!diaryEntries || diaryEntries.length === 0) &&
