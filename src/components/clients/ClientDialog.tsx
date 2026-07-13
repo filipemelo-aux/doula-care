@@ -2304,7 +2304,7 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
 
               {/* Step 7: Observações */}
               {currentStep === 7 && (
-                <div className="space-y-3">
+                <div className="space-y-2">
                   <FormField
                     control={form.control}
                     name="notes"
@@ -2314,7 +2314,8 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
                         <FormControl>
                           <Textarea
                             {...field}
-                            className="min-h-[140px] resize-none text-sm"
+                            className="h-40 md:h-56 resize-none text-sm"
+                            style={{ height: "clamp(120px, 30vh, 240px)" }}
                             placeholder="Anotações sobre a cliente..."
                           />
                         </FormControl>
