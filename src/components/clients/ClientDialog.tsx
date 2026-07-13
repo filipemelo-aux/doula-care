@@ -122,6 +122,7 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
   const [datesManuallyEdited, setDatesManuallyEdited] = useState<boolean[]>([]);
   const lastEffectivePlanValueRef = useRef<number>(0);
   const [prenatalTeam, setPrenatalTeam] = useState<{name: string; role: string}[]>([]);
+  const [hasPrivateTeam, setHasPrivateTeam] = useState(false);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [unlockedPlan, setUnlockedPlan] = useState(false);
   const [unlockConfirmOpen, setUnlockConfirmOpen] = useState(false);
