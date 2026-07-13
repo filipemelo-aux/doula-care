@@ -821,6 +821,91 @@ export function ClientQuickViewDialog({
         onOpenChange={setFichaOpen}
         client={client ?? null}
       />
+
+      <AppointmentDetailDialog
+        open={!!detailApt}
+        onOpenChange={(open) => !open && setDetailApt(null)}
+        appointment={
+          detailApt
+            ? {
+                title: detailApt.title,
+                scheduled_at: detailApt.scheduled_at,
+                notes: detailApt.notes,
+                clientName: client?.full_name,
+                completed_at: detailApt.completed_at,
+                completion_notes: detailApt.completion_notes,
+              }
+            : null
+        }
+        onEdit={() => detailApt && setEditApt(detailApt)}
+        onEditNotes={detailApt?.completed_at ? () => setEditNotesApt(detailApt) : undefined}
+        onComplete={detailApt && !detailApt.completed_at ? () => setCompleteApt(detailApt) : undefined}
+        onDelete={() => detailApt && setDeleteAptId(detailApt.id)}
+      />
+
+      <AppointmentCompleteDialog
+        open={!!completeApt}
+        onOpenChange={(open) => !open && setCompleteApt(null)}
+        appointmentId={completeApt?.id}
+        appointmentTitle={completeApt?.title}
+        onCompleted={() => {
+          queryClient.invalidateQueries({ queryKey: ["client-quickview-activity", clientId] });
+          queryClient.invalidateQueries({ queryKey: ["agenda-appointments"] });
+          queryClient.invalidateQueries({ queryKey: ["all-appointments"] });
+          setDetailApt(null);
+          setCompleteApt(null);
+        }}
+      />
+
+      <AppointmentCompleteDialog
+        open={!!editNotesApt}
+        onOpenChange={(open) => !open && setEditNotesApt(null)}
+        appointmentId={editNotesApt?.id}
+        appointmentTitle={editNotesApt?.title}
+        editMode
+        initialNotes={editNotesApt?.completion_notes}
+        onCompleted={() => {
+          queryClient.invalidateQueries({ queryKey: ["client-quickview-activity", clientId] });
+          queryClient.invalidateQueries({ queryKey: ["agenda-appointments"] });
+          queryClient.invalidateQueries({ queryKey: ["all-appointments"] });
+          setDetailApt(null);
+          setEditNotesApt(null);
+        }}
+      />
+
+      <AppointmentEditDialog
+        open={!!editApt}
+        onOpenChange={(open) => !open && setEditApt(null)}
+        appointment={editApt}
+        clientName={client?.full_name || ""}
+        onSaved={() => {
+          queryClient.invalidateQueries({ queryKey: ["client-quickview-activity", clientId] });
+          queryClient.invalidateQueries({ queryKey: ["agenda-appointments"] });
+          queryClient.invalidateQueries({ queryKey: ["all-appointments"] });
+          queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
+          setDetailApt(null);
+        }}
+      />
+
+      <AlertDialog open={!!deleteAptId} onOpenChange={(open) => !open && setDeleteAptId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar exclusão?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta consulta será removida permanentemente.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => deleteAptId && deleteMutation.mutate(deleteAptId)}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
