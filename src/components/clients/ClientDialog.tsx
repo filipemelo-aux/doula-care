@@ -1748,19 +1748,6 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
                   </div>
                   <FormField
                     control={form.control}
-                    name="restricao_aromaterapia"
-                    render={({ field }) => (
-                      <FormItem className="space-y-1">
-                        <FormLabel className="text-xs">Restrições em Aromaterapia</FormLabel>
-                        <FormControl>
-                          <Textarea {...field} className="min-h-[60px] resize-none text-sm" placeholder="Ex: óleo de canela, hortelã-pimenta..." />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
                     name="tipo_sanguineo"
                     render={({ field }) => (
                       <FormItem className="space-y-1">
