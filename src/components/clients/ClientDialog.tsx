@@ -412,8 +412,23 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
         historico_saude_familiar: (client as any).historico_saude_familiar || "",
         tipo_sanguineo: (client as any).tipo_sanguineo || "",
         cirurgias_anteriores: (client as any).cirurgias_anteriores || "",
-        
+        has_pets: (client as any).has_pets || false,
+        pets_names: (client as any).pets_names || "",
       });
+      const partosData = (client as any).partos_anteriores;
+      if (partosData && Array.isArray(partosData?.children) && partosData.children.length > 0) {
+        setHasPartosAnteriores(true);
+        setPartosAnterioresChildren(partosData.children);
+      } else {
+        setHasPartosAnteriores(false);
+        setPartosAnterioresChildren([{ name: "", age: "" }]);
+      }
+      const cesareaData = (client as any).filhos_cesarea;
+      if (cesareaData && Array.isArray(cesareaData?.children) && cesareaData.children.length > 0) {
+        setFilhosCesarea(cesareaData.children);
+      } else {
+        setFilhosCesarea([{ name: "", age: "" }]);
+      }
       setEntryAlreadyPaid(isParcelado ? isFirstInstallmentPaid : false);
       setEntryType("equal");
       setEntryPercentage(0);
