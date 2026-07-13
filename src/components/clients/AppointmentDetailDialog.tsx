@@ -21,12 +21,16 @@ interface AppointmentDetailDialogProps {
     completed_at?: string | null;
     completion_notes?: string | null;
   } | null;
+  onEdit?: () => void;
+  onEditNotes?: () => void;
 }
 
 export function AppointmentDetailDialog({
   open,
   onOpenChange,
   appointment,
+  onEdit,
+  onEditNotes,
 }: AppointmentDetailDialogProps) {
   if (!appointment) return null;
 
