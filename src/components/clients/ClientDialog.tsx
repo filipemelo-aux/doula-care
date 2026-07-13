@@ -348,7 +348,7 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
         custom_interval_days: 30,
         first_due_date: firstDueDate,
         plan_value: Number(client.plan_value) || 0,
-        prenatal_type: (client as any).prenatal_type || "",
+        prenatal_type: ((client as any).prenatal_type === "equipe_particular" ? "particular" : (client as any).prenatal_type) || "",
         prenatal_high_risk: (client as any).prenatal_high_risk || false,
         comorbidades: (client as any).comorbidades || "",
         alergias: (client as any).alergias || "",
