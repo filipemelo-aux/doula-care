@@ -87,7 +87,7 @@ export function AppointmentsCard({ clientId }: AppointmentsCardProps) {
                   {format(date, "EEEE, HH:mm", { locale: ptBR })}
                 </p>
                 {apt.notes && (
-                  <p className="text-xs text-muted-foreground mt-0.5 break-words">{apt.notes}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5 break-words whitespace-pre-wrap line-clamp-3">{apt.notes}</p>
                 )}
               </div>
               {today && (

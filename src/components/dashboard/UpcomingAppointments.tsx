@@ -265,12 +265,15 @@ function AppointmentCard({
           )}
         </div>
 
-        {apt.notes && <p className="text-xs text-muted-foreground/70 truncate">{apt.notes}</p>}
+        {apt.notes && <p className="text-xs text-muted-foreground/80 line-clamp-2 whitespace-pre-wrap" title={apt.notes}>{apt.notes}</p>}
         {apt.address && (
           <p className="text-xs text-muted-foreground flex items-center gap-1 truncate" title={apt.address}>
             <MapPin className="h-3 w-3 flex-shrink-0" />
             <span className="truncate">{apt.address}</span>
           </p>
+        )}
+        {apt.completion_notes && (
+          <p className="text-xs text-primary line-clamp-2 whitespace-pre-wrap" title={apt.completion_notes}>📝 {apt.completion_notes}</p>
         )}
 
         {/* Actions row — same as Agenda */}
