@@ -570,25 +570,30 @@ export default function Agenda() {
     return svcs;
   }, [services, searchTerm]);
 
-  // An appointment is "em andamento" only if current time is within the scheduled hour
-  const getAppointmentStatus = (apt: AppointmentWithClient) => {
-    if (apt.completed_at) return "completed";
-    const scheduledTime = new Date(apt.scheduled_at);
-    const scheduledEnd = addHours(scheduledTime, 1);
-    if (isWithinInterval(now, { start: scheduledTime, end: scheduledEnd })) return "in_progress";
-    if (isBefore(now, scheduledTime)) return "future";
-    return "past";
-  };
+  const activeServices = useMemo(
+    () => filteredServices.filter((s) => s.status === "pending" || s.status === "budget_sent" || s.status === "date_proposed"),
+    [filteredServices]
+  );
 
-  const futureApts = filteredAppointments.filter((a) => {
-    const status = getAppointmentStatus(a);
-    return status === "future" || status === "in_progress";
-  });
-  const pastApts = filteredAppointments.filter((a) => {
-    const status = getAppointmentStatus(a);
-    return status === "past" && !a.completed_at;
-  }).sort((a, b) => new Date(b.scheduled_at).getTime() - new Date(a.scheduled_at).getTime());
-  const completedApts = filteredAppointments.filter((a) => !!a.completed_at).sort((a, b) => new Date(b.scheduled_at).getTime() - new Date(a.scheduled_at).getTime());
+  const unifiedItems = useMemo(() => {
+    const aptItems = filteredAppointments.map((apt) => ({
+      type: "appointment" as const,
+      data: apt,
+      date: apt.scheduled_at,
+      completed: !!apt.completed_at,
+    }));
+    const svcItems = activeServices.map((svc) => ({
+      type: "service" as const,
+      data: svc,
+      date: svc.scheduled_date || svc.preferred_date || svc.created_at,
+      completed: false,
+    }));
+    const items = [...aptItems, ...svcItems];
+    return sortAppointmentsWithFutureFirst(
+      items.map((item) => ({ scheduled_at: item.date, completed_at: item.completed ? new Date().toISOString() : null }))
+    ).map((sorted) => items.find((item) => item.date === sorted.scheduled_at)!).filter(Boolean);
+  }, [filteredAppointments, activeServices]);
+
 
   const isLoading = loadingApts || loadingSvc;
 
