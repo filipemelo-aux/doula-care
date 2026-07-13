@@ -251,6 +251,9 @@ export function ClientQuickViewDialog({
                         ["client-quickview-avatar", client.user_id],
                         url,
                       );
+                      queryClient.invalidateQueries({ queryKey: ["dashboard-clients-avatars"] });
+                      queryClient.invalidateQueries({ queryKey: ["clients"] });
+                      queryClient.invalidateQueries({ queryKey: ["recent-clients"] });
                     }}
                   />
                   <div className="flex-1 min-w-0">
