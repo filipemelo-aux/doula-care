@@ -1953,7 +1953,7 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
                               <ChildrenList
                                 value={filhosCesarea}
                                 onChange={setFilhosCesarea}
-                                label={`Filho(s) — ${filhosCesarea.filter(c => c.name.trim() || c.age.trim()).length}`}
+                                label={`Filho(s) (${filhosCesarea.filter(c => c.name.trim() || c.age.trim()).length})`}
                               />
                             </div>
                           )}
