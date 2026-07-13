@@ -326,11 +326,14 @@ export function AvailabilityManager() {
                     <div className="relative flex flex-col items-center justify-center w-full h-full">
                       <span>{props.date.getDate()}</span>
                       {dayLabels.length > 0 && (
-                        <div className="absolute -bottom-0.5 flex gap-0.5">
-                          {dayLabels.slice(0, 3).map((d) => (
+                        <div
+                          className="absolute bottom-0.5 left-1/2 -translate-x-1/2 flex overflow-hidden rounded-full"
+                          style={{ width: "70%", height: "3px" }}
+                        >
+                          {dayLabels.slice(0, 4).map((d) => (
                             <span
                               key={d.id}
-                              className="inline-block h-1.5 w-1.5 rounded-full"
+                              className="flex-1"
                               style={{ backgroundColor: d.label?.color || "#999" }}
                             />
                           ))}
@@ -344,30 +347,20 @@ export function AvailabilityManager() {
             <style>{`
               .available-day:not([aria-selected="true"]) {
                 position: relative;
-                background-color: hsl(var(--primary) / 0.12) !important;
+                background-color: hsl(var(--primary) / 0.10) !important;
                 color: hsl(var(--primary)) !important;
                 font-weight: 600;
+                border-radius: 0.5rem;
               }
               .available-day:not([aria-selected="true"])::after {
                 content: '';
                 position: absolute;
-                bottom: 2px;
-                left: 50%;
-                transform: translateX(-50%);
+                top: 4px;
+                right: 4px;
                 width: 5px;
                 height: 5px;
                 border-radius: 50%;
                 background-color: hsl(var(--primary));
-              }
-              .rdp-day_selected,
-              .rdp-day_selected:hover,
-              .rdp-day_selected:focus {
-                background-color: hsl(var(--primary)) !important;
-                color: hsl(var(--primary-foreground)) !important;
-              }
-              .rdp-day_today:not([aria-selected="true"]) {
-                background-color: hsl(var(--accent)) !important;
-                color: hsl(var(--accent-foreground)) !important;
               }
             `}</style>
           </div>
