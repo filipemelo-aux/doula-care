@@ -1899,7 +1899,7 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
                         checked={hasPartosAnteriores}
                         onCheckedChange={(v) => {
                           setHasPartosAnteriores(v);
-                          if (v && partosAnterioresChildren.length === 0) {
+                          if (v) {
                             setPartosAnterioresChildren([{ name: "", age: "" }]);
                           }
                         }}
@@ -1909,7 +1909,7 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
                       <ChildrenList
                         value={partosAnterioresChildren}
                         onChange={setPartosAnterioresChildren}
-                        label={`Filho(s) — ${partosAnterioresChildren.filter(c => c.name.trim() || c.age.trim()).length}`}
+                        label={`Filho(s) (${partosAnterioresChildren.filter(c => c.name.trim() || c.age.trim()).length})`}
                       />
                     )}
                   </div>
