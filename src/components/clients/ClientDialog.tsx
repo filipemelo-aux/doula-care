@@ -446,6 +446,12 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
         instagram_gestante: "",
         instagram_acompanhante: "",
         notes: "",
+        date_of_birth: "",
+        historico_saude: "",
+        historico_saude_familiar: "",
+        tipo_sanguineo: "",
+        cirurgias_anteriores: "",
+        restricoes_alimentares: "",
       });
     }
   }, [client, open, form, planSettings, clientTransaction, clientInstallmentPayments]);
