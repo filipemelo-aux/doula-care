@@ -575,6 +575,15 @@ export default function Agenda() {
     [filteredServices]
   );
 
+  const activeServicesForView = useMemo(() => {
+    if (agendaFilter !== "calendar") return activeServices;
+    return activeServices.filter((svc) => {
+      const dateStr = svc.scheduled_date || svc.preferred_date;
+      if (!dateStr) return false;
+      return isSameDay(toZonedTime(new Date(dateStr), "America/Sao_Paulo"), selectedDate);
+    });
+  }, [activeServices, agendaFilter, selectedDate]);
+
   const unifiedItems = useMemo(() => {
     const items: (
       | { type: "appointment"; data: AppointmentWithClient; scheduled_at: string; completed_at: string | null }
@@ -586,7 +595,7 @@ export default function Agenda() {
         scheduled_at: apt.scheduled_at,
         completed_at: apt.completed_at,
       })),
-      ...activeServices.map((svc) => ({
+      ...activeServicesForView.map((svc) => ({
         type: "service" as const,
         data: svc,
         scheduled_at: svc.scheduled_date || svc.preferred_date || svc.created_at,
@@ -594,7 +603,8 @@ export default function Agenda() {
       })),
     ];
     return sortAppointmentsWithFutureFirst(items);
-  }, [filteredAppointments, activeServices]);
+  }, [filteredAppointments, activeServicesForView]);
+
 
 
 
