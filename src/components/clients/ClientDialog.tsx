@@ -1210,7 +1210,7 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="client-dialog-form flex flex-col min-h-0">
-            <div ref={scrollContainerRef} className="overflow-y-auto overflow-x-hidden px-1 space-y-0 scrollbar-thin pt-3 pb-4 min-h-0">
+            <div ref={scrollContainerRef} className="overflow-y-auto overflow-x-hidden px-4 space-y-0 scrollbar-thin pt-3 pb-4 min-h-0">
 
 
               {/* Step 1: Dados Pessoais */}
