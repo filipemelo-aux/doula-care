@@ -52,6 +52,7 @@ import {
   MoreVertical,
   MapPin,
   Navigation,
+  Tag,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -70,6 +71,9 @@ import { SendBudgetDialog } from "@/components/dashboard/SendBudgetDialog";
 import { NewServiceDialog } from "@/components/agenda/NewServiceDialog";
 import { AvailabilityManager } from "@/components/agenda/AvailabilityManager";
 import { AppointmentRequestsSection } from "@/components/agenda/AppointmentRequestsSection";
+import { CalendarLabelsManager } from "@/components/agenda/CalendarLabelsManager";
+import { DayLabelsDialog } from "@/components/agenda/DayLabelsDialog";
+import { useCalendarLabels } from "@/hooks/useCalendarLabels";
 import { Calendar as CalendarPicker } from "@/components/ui/calendar";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -171,6 +175,11 @@ export default function Agenda() {
 
   // Photo viewer
   const [viewingPhotos, setViewingPhotos] = useState<{ photos: string[]; comment: string | null; rating: number } | null>(null);
+
+  // Calendar labels
+  const [labelsManagerOpen, setLabelsManagerOpen] = useState(false);
+  const [dayLabelsFor, setDayLabelsFor] = useState<Date | null>(null);
+  const { dayMap: labelsDayMap } = useCalendarLabels(organizationId);
 
   // ─── Queries ─────────────────────────────────────────────
   const { data: appointments, isLoading: loadingApts } = useQuery({
@@ -592,25 +601,36 @@ export default function Agenda() {
           <h1 className="page-title">Agenda</h1>
           <p className="page-description">Consultas e serviços em um só lugar</p>
         </div>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button size="sm" className="gap-1.5">
-              <Plus className="h-4 w-4" />
-              Novo compromisso
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-52">
-            <DropdownMenuItem onClick={() => setAppointmentDialog(true)} className="gap-2.5 py-2.5">
-              <Calendar className="h-4 w-4" /> Nova consulta
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setPersonalAptDialog(true)} className="gap-2.5 py-2.5">
-              <CalendarCheck className="h-4 w-4" /> Novo compromisso
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setServiceDialog(true)} className="gap-2.5 py-2.5">
-              <Briefcase className="h-4 w-4" /> Novo serviço
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <div className="flex items-center gap-2">
+          <Button
+            size="sm"
+            variant="outline"
+            className="gap-1.5"
+            onClick={() => setLabelsManagerOpen(true)}
+          >
+            <Tag className="h-4 w-4" />
+            <span className="hidden sm:inline">Etiquetas</span>
+          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button size="sm" className="gap-1.5">
+                <Plus className="h-4 w-4" />
+                Novo compromisso
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-52">
+              <DropdownMenuItem onClick={() => setAppointmentDialog(true)} className="gap-2.5 py-2.5">
+                <Calendar className="h-4 w-4" /> Nova consulta
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setPersonalAptDialog(true)} className="gap-2.5 py-2.5">
+                <CalendarCheck className="h-4 w-4" /> Novo compromisso
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setServiceDialog(true)} className="gap-2.5 py-2.5">
+                <Briefcase className="h-4 w-4" /> Novo serviço
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </div>
 
 
@@ -673,18 +693,41 @@ export default function Agenda() {
                     modifiers={{
                       hasAppointment: (date) =>
                         datesWithAppointments.has(format(date, "yyyy-MM-dd")),
+                      hasLabel: (date) => labelsDayMap.has(format(date, "yyyy-MM-dd")),
                     }}
                     modifiersClassNames={{
                       hasAppointment: "has-appointment",
+                      hasLabel: "has-label",
+                    }}
+                    components={{
+                      DayContent: (props) => {
+                        const key = format(props.date, "yyyy-MM-dd");
+                        const dayLabels = labelsDayMap.get(key) || [];
+                        return (
+                          <div className="relative flex flex-col items-center justify-center w-full h-full">
+                            <span>{props.date.getDate()}</span>
+                            {dayLabels.length > 0 && (
+                              <div className="absolute -bottom-0.5 flex gap-0.5">
+                                {dayLabels.slice(0, 3).map((d) => (
+                                  <span
+                                    key={d.id}
+                                    className="inline-block h-1.5 w-1.5 rounded-full"
+                                    style={{ backgroundColor: d.label?.color || "#999" }}
+                                  />
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      },
                     }}
                   />
                   <style>{`
-                    .has-appointment::after {
+                    .has-appointment::before {
                       content: '';
                       position: absolute;
-                      bottom: 2px;
-                      left: 50%;
-                      transform: translateX(-50%);
+                      top: 3px;
+                      right: 3px;
                       width: 5px;
                       height: 5px;
                       border-radius: 50%;
@@ -694,6 +737,41 @@ export default function Agenda() {
                       position: relative;
                     }
                   `}</style>
+
+                  {/* Manage labels on selected day */}
+                  <div className="mt-3 flex items-center justify-between gap-2 rounded-lg bg-muted/40 px-3 py-2">
+                    <div className="flex items-center gap-2 min-w-0 flex-1">
+                      <Tag className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
+                      <div className="flex flex-wrap gap-1 min-w-0">
+                        {(labelsDayMap.get(format(selectedDate, "yyyy-MM-dd")) || []).length === 0 ? (
+                          <span className="text-xs text-muted-foreground">Sem etiquetas neste dia</span>
+                        ) : (
+                          (labelsDayMap.get(format(selectedDate, "yyyy-MM-dd")) || []).map((d) => (
+                            <span
+                              key={d.id}
+                              className="inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[10px] font-medium"
+                              style={{
+                                backgroundColor: `${d.label?.color || "#999"}22`,
+                                color: d.label?.color || "#666",
+                              }}
+                              title={d.note || undefined}
+                            >
+                              <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: d.label?.color || "#999" }} />
+                              {d.label?.name || "?"}
+                            </span>
+                          ))
+                        )}
+                      </div>
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-7 px-2 text-xs flex-shrink-0"
+                      onClick={() => setDayLabelsFor(selectedDate)}
+                    >
+                      Etiquetar
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
 
@@ -1106,6 +1184,25 @@ export default function Agenda() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Calendar labels manager */}
+      <CalendarLabelsManager
+        open={labelsManagerOpen}
+        onOpenChange={setLabelsManagerOpen}
+        organizationId={organizationId}
+      />
+
+      {/* Day labels dialog */}
+      <DayLabelsDialog
+        open={!!dayLabelsFor}
+        onOpenChange={(o) => !o && setDayLabelsFor(null)}
+        organizationId={organizationId}
+        date={dayLabelsFor}
+        onOpenLabelsManager={() => {
+          setDayLabelsFor(null);
+          setLabelsManagerOpen(true);
+        }}
+      />
 
     </div>
   );
