@@ -636,7 +636,7 @@ export function ClientFileDialog({ open, onOpenChange, client }: ClientFileDialo
 
               {/* Observações da Doula */}
               {client.notes && (
-                <Card icon={StickyNote} title="Observações" tint="accent">
+                <Card icon={StickyNote} title="Observações Iniciais" tint="accent">
                   <p className="text-xs whitespace-pre-wrap leading-relaxed text-foreground/90">
                     {client.notes}
                   </p>
