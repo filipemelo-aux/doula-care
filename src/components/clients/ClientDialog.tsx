@@ -48,6 +48,21 @@ import {
 
 import { maskPhone, maskCPF, maskCEP, maskCurrency, parseCurrency } from "@/lib/masks";
 import type { Tables } from "@/integrations/supabase/types";
+import {
+  SuggestionChips,
+  ChildrenList,
+  parseSuggestionValue,
+  type ChildEntry,
+} from "./health-fields";
+
+const ALERGIAS_SUGGESTIONS = ["Dipirona", "Látex", "Amendoim", "Óleo de lavanda", "Frutos do mar", "Penicilina", "Poeira", "Pólen"];
+const RESTRICOES_SUGGESTIONS = ["Vegetariana", "Vegana", "Sem glúten", "Sem lactose", "Halal", "Kosher", "Sem porco", "Não pratica shantala"];
+const FOBIAS_SUGGESTIONS = ["Agulhas", "Hospitais", "Sangue", "Toque sem autorização", "Espaços fechados", "Fotos durante o parto", "Barulhos altos"];
+const CONDICOES_SUGGESTIONS = ["TEA", "TDAH", "Ansiedade", "Depressão", "Violência obstétrica prévia", "Abuso sexual", "Luto gestacional", "Surdez parcial"];
+const COMORBIDADES_SUGGESTIONS = ["Diabetes gestacional", "Hipertensão", "Hipotireoidismo", "Anemia", "Asma", "Diabetes tipo 1", "Diabetes tipo 2", "Pré-eclâmpsia"];
+const HIST_SAUDE_SUGGESTIONS = ["Depressão", "Ansiedade", "Endometriose", "SOP", "Aborto anterior", "Cirurgia pélvica", "Infertilidade tratada", "ISTs"];
+const HIST_FAMILIAR_SUGGESTIONS = ["Diabetes", "Hipertensão", "Câncer", "Trombose", "Doença cardíaca", "Pré-eclâmpsia", "Parto prematuro", "Gemelaridade"];
+const CIRURGIAS_SUGGESTIONS = ["Cesárea", "Apendicectomia", "Colecistectomia", "Miomectomia", "Laparoscopia", "Amigdalectomia", "Cirurgia bariátrica"];
 
 type Client = Tables<"clients">;
 
