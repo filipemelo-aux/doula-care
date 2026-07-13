@@ -52,6 +52,7 @@ import {
   MoreVertical,
   MapPin,
   Navigation,
+  Tag,
 } from "lucide-react";
 import {
   DropdownMenu,
