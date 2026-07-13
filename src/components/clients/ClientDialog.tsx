@@ -1474,8 +1474,27 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
                     />
                   </div>
 
+                  {/* Toggle equipe particular independente */}
+                  <div className="flex items-center justify-between rounded-lg border border-border/60 p-3">
+                    <div className="space-y-0.5">
+                      <p className="text-sm font-medium">Também conta com equipe particular</p>
+                      <p className="text-xs text-muted-foreground">
+                        Marque se contratou profissionais particulares (obstetra, enfermeira, etc.), independente do atendimento acima.
+                      </p>
+                    </div>
+                    <Switch
+                      checked={hasPrivateTeam}
+                      onCheckedChange={(v) => {
+                        setHasPrivateTeam(v);
+                        if (v && prenatalTeam.length === 0) {
+                          setPrenatalTeam([{ name: "", role: "" }]);
+                        }
+                      }}
+                    />
+                  </div>
+
                   {/* Equipe particular - membros da equipe */}
-                  {form.watch("prenatal_type") === "equipe_particular" && (
+                  {hasPrivateTeam && (
                     <div className="space-y-3" ref={(el) => { if (el) setTimeout(() => scrollContainerRef.current?.scrollTo({ top: scrollContainerRef.current.scrollHeight, behavior: 'smooth' }), 100); }}>
                       <div className="flex items-center justify-between">
                         <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Equipe</p>
