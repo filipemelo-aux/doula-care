@@ -1679,19 +1679,73 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
                       </FormItem>
                     )}
                   />
-                  <FormField
-                    control={form.control}
-                    name="alergias"
-                    render={({ field }) => (
-                      <FormItem className="space-y-1">
-                        <FormLabel className="text-xs">Alergias</FormLabel>
-                        <FormControl>
-                          <Textarea {...field} className="min-h-[60px] resize-none text-sm" placeholder="Ex: dipirona, látex, amendoim..." />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                  <div className="border border-border/40 rounded-2xl p-4 space-y-3 bg-card/50">
+                    <div className="space-y-1">
+                      <p className="text-sm font-semibold">Restrições de assistência</p>
+                      <p className="text-xs text-muted-foreground leading-relaxed">
+                        Espaço amplo para tudo o que pode alterar a condução do cuidado: alergias, restrições, fobias, gatilhos emocionais e condições especiais.
+                      </p>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <FormField
+                        control={form.control}
+                        name="restricoes_assistencia_alergias"
+                        render={({ field }) => (
+                          <FormItem className="space-y-1">
+                            <FormLabel className="text-xs">Alergias</FormLabel>
+                            <span className="text-[10px] text-muted-foreground block -mt-0.5">medicamentos, alimentos, óleos essenciais, látex etc.</span>
+                            <FormControl>
+                              <Textarea {...field} className="min-h-[60px] resize-y text-sm" placeholder="Ex: dipirona, látex, amendoim, óleo de lavanda..." />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="restricoes_assistencia_restricoes"
+                        render={({ field }) => (
+                          <FormItem className="space-y-1">
+                            <FormLabel className="text-xs">Restrições</FormLabel>
+                            <span className="text-[10px] text-muted-foreground block -mt-0.5">alimentares, religiosas, culturais, terapêuticas</span>
+                            <FormControl>
+                              <Textarea {...field} className="min-h-[60px] resize-y text-sm" placeholder="Ex: vegetariana, evangélica, não pratica shantala..." />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="restricoes_assistencia_fobias_gatilhos"
+                        render={({ field }) => (
+                          <FormItem className="space-y-1">
+                            <FormLabel className="text-xs">Fobias e gatilhos emocionais</FormLabel>
+                            <FormControl>
+                              <Textarea {...field} className="min-h-[60px] resize-y text-sm" placeholder="Ex: pânico de agulhas, medo intenso de hospitais, não gosta de ser tocada sem autorização..." />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="restricoes_assistencia_condicoes_especiais"
+                        render={({ field }) => (
+                          <FormItem className="space-y-1">
+                            <FormLabel className="text-xs">Condições especiais</FormLabel>
+                            <FormControl>
+                              <Textarea {...field} className="min-h-[60px] resize-y text-sm" placeholder="Ex: TEA, TDAH, surdez parcial, ansiedade, histórico de violência obstétrica, abuso sexual, luto gestacional..." />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    <p className="text-[11px] text-muted-foreground leading-relaxed">
+                      🚨 Alergia a lavanda. 🚨 Pânico de agulhas. 🚨 História de violência obstétrica. 🚨 Não gosta de ser tocada sem autorização. 🚨 Dieta vegetariana. 🚨 Evangélica — prefere evitar determinadas práticas. 🚨 TEA nível 1. 🚨 Surdez parcial. 🚨 Medo intenso de hospitais. 🚨 Trauma relacionado a cesariana anterior.
+                    </p>
+                  </div>
                   <FormField
                     control={form.control}
                     name="restricao_aromaterapia"
