@@ -114,6 +114,7 @@ const STEPS = [
   { id: 4, title: "Saúde e Restrições", shortTitle: "Saúde" },
   { id: 5, title: "Rede de Apoio", shortTitle: "Apoio" },
   { id: 6, title: "Plano e Pagamento", shortTitle: "Plano" },
+  { id: 7, title: "Observações", shortTitle: "Observações" },
 ];
 
 export function ClientDialog({ open, onOpenChange, client, initialStep }: ClientDialogProps) {
