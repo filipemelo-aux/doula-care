@@ -576,30 +576,48 @@ export function AvailabilityManager() {
 // Reusable hour grid component
 function HourGrid({ hours, onToggle, disabledHours }: { hours: number[]; onToggle: (h: number) => void; disabledHours?: Set<number> }) {
   return (
-    <div className="grid grid-cols-5 gap-1.5">
-      {HOURS.map((h) => {
-        const isSelected = hours.includes(h);
-        const isDisabled = disabledHours?.has(h) ?? false;
-        return (
-          <button
-            key={h}
-            type="button"
-            onClick={() => !isDisabled && onToggle(h)}
-            disabled={isDisabled}
-            title={isDisabled ? "Horário ocupado por compromisso" : undefined}
-            className={cn(
-              "rounded-md py-2 text-xs font-medium transition-colors border",
-              isDisabled
-                ? "bg-muted/60 text-muted-foreground/60 border-border/50 opacity-50 cursor-not-allowed line-through"
-                : isSelected
-                  ? "bg-primary text-primary-foreground border-primary shadow-sm"
-                  : "bg-card text-foreground border-border hover:bg-accent/60 hover:text-accent-foreground"
-            )}
-          >
-            {formatHour(h)}
-          </button>
-        );
-      })}
+    <div className="space-y-2">
+      {/* Legend */}
+      <div className="flex flex-wrap items-center gap-3 text-[10px] text-muted-foreground">
+        <div className="flex items-center gap-1">
+          <span className="inline-block h-3 w-3 rounded-sm bg-card border border-border" />
+          Livre
+        </div>
+        <div className="flex items-center gap-1">
+          <span className="inline-block h-3 w-3 rounded-sm bg-primary border border-primary" />
+          Selecionado
+        </div>
+        <div className="flex items-center gap-1">
+          <span className="inline-block h-3 w-3 rounded-sm bg-muted/60 border border-border/50" />
+          Ocupado
+        </div>
+      </div>
+
+      <div className="grid grid-cols-5 gap-1.5">
+        {HOURS.map((h) => {
+          const isSelected = hours.includes(h);
+          const isDisabled = disabledHours?.has(h) ?? false;
+          return (
+            <button
+              key={h}
+              type="button"
+              onClick={() => !isDisabled && onToggle(h)}
+              disabled={isDisabled}
+              title={isDisabled ? "Horário ocupado por compromisso" : undefined}
+              className={cn(
+                "rounded-md py-2 text-xs font-medium transition-colors border",
+                isDisabled
+                  ? "bg-muted/60 text-muted-foreground/60 border-border/50 opacity-50 cursor-not-allowed line-through"
+                  : isSelected
+                    ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                    : "bg-card text-foreground border-border hover:bg-accent/60 hover:text-accent-foreground"
+              )}
+            >
+              {formatHour(h)}
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }
