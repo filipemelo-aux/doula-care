@@ -1268,6 +1268,7 @@ export default function Agenda() {
               }
             : null
         }
+        onEdit={selectedDetailApt ? () => openEditAppointment(selectedDetailApt) : undefined}
       />
     </div>
   );
@@ -1300,7 +1301,10 @@ function AppointmentRow({
 
   return (
     <>
-      <Card className={`px-3 py-2.5 space-y-1.5 w-full box-border min-w-0 overflow-hidden ${isCompleted ? "opacity-70" : ""}`}>
+      <Card
+        onClick={() => setDetailOpen(true)}
+        className={`px-3 py-2.5 space-y-1.5 w-full box-border min-w-0 overflow-hidden cursor-pointer transition-colors hover:bg-muted/40 ${isCompleted ? "opacity-70" : ""}`}
+      >
         {/* Header: date + title */}
         <div className="flex items-center gap-3 min-w-0">
           <div className="text-center min-w-[44px] flex-shrink-0">
@@ -1354,7 +1358,7 @@ function AppointmentRow({
         )}
 
         {/* Actions row */}
-        <div className="flex items-center justify-between pt-2 border-t border-border/60">
+        <div className="flex items-center justify-between pt-2 border-t border-border/60" onClick={(e) => e.stopPropagation()}>
           <div className="flex items-center gap-1.5">
             {apt.address && (
               <Button
@@ -1423,6 +1427,8 @@ function AppointmentRow({
           completed_at: apt.completed_at,
           completion_notes: apt.completion_notes,
         }}
+        onEdit={() => onEdit(apt)}
+        onEditNotes={() => setEditNotesOpen(true)}
       />
       <AppointmentCompleteDialog
         open={completeOpen}
