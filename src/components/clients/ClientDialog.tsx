@@ -252,7 +252,7 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
         prenatal_type: "",
         prenatal_high_risk: false,
         comorbidades: "",
-        alergias: "",
+        restricoes_assistencia_alergias: "",
         restricao_aromaterapia: "",
         has_fotografa: false,
         fotografa_name: "",
