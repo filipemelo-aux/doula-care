@@ -1,10 +1,12 @@
 import {
   Dialog,
   DialogContent,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Calendar, Clock, FileText, CheckCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Calendar, Clock, FileText, CheckCircle, Edit2, NotebookPen } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
