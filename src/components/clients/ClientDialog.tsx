@@ -30,6 +30,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { CheckCircle, Loader2, ChevronLeft, ChevronRight, Lock, AlertTriangle } from "lucide-react";
@@ -121,6 +122,7 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
   const [datesManuallyEdited, setDatesManuallyEdited] = useState<boolean[]>([]);
   const lastEffectivePlanValueRef = useRef<number>(0);
   const [prenatalTeam, setPrenatalTeam] = useState<{name: string; role: string}[]>([]);
+  const [hasPrivateTeam, setHasPrivateTeam] = useState(false);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [unlockedPlan, setUnlockedPlan] = useState(false);
   const [unlockConfirmOpen, setUnlockConfirmOpen] = useState(false);
@@ -346,7 +348,7 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
         custom_interval_days: 30,
         first_due_date: firstDueDate,
         plan_value: Number(client.plan_value) || 0,
-        prenatal_type: (client as any).prenatal_type || "",
+        prenatal_type: ((client as any).prenatal_type === "equipe_particular" ? "particular" : (client as any).prenatal_type) || "",
         prenatal_high_risk: (client as any).prenatal_high_risk || false,
         comorbidades: (client as any).comorbidades || "",
         alergias: (client as any).alergias || "",
@@ -375,7 +377,9 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
         setDatesManuallyEdited([]);
       }
       const teamData = (client as any).prenatal_team;
-      setPrenatalTeam(Array.isArray(teamData) ? teamData : []);
+      const teamArr = Array.isArray(teamData) ? teamData : [];
+      setPrenatalTeam(teamArr);
+      setHasPrivateTeam(teamArr.length > 0 || (client as any).prenatal_type === "equipe_particular");
     } else {
       setEntryAlreadyPaid(false);
       setEntryType("equal");
@@ -384,6 +388,7 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
       setCustomInstallmentDates([]);
       setDatesManuallyEdited([]);
       setPrenatalTeam([]);
+      setHasPrivateTeam(false);
       form.reset({
         full_name: "",
         phone: "",
@@ -583,7 +588,7 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
         birth_location: data.status === "gestante" ? (data.birth_location || null) : null,
         prenatal_type: data.prenatal_type || null,
         prenatal_high_risk: data.prenatal_high_risk || false,
-        prenatal_team: data.prenatal_type === "equipe_particular" ? prenatalTeam.filter(m => m.name.trim()) : [],
+        prenatal_team: hasPrivateTeam ? prenatalTeam.filter(m => m.name.trim()) : [],
         comorbidades: data.comorbidades || null,
         alergias: data.alergias || null,
         restricao_aromaterapia: data.restricao_aromaterapia || null,
@@ -1436,7 +1441,7 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
                               <SelectItem value="sus">SUS</SelectItem>
                               <SelectItem value="plano">Plano de Saúde</SelectItem>
                               <SelectItem value="particular">Particular</SelectItem>
-                              <SelectItem value="equipe_particular">Equipe Particular</SelectItem>
+                              
                             </SelectContent>
                           </Select>
                           <FormMessage />
@@ -1469,8 +1474,27 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
                     />
                   </div>
 
+                  {/* Toggle equipe particular independente */}
+                  <div className="flex items-center justify-between rounded-lg border border-border/60 p-3">
+                    <div className="space-y-0.5">
+                      <p className="text-sm font-medium">Também conta com equipe particular</p>
+                      <p className="text-xs text-muted-foreground">
+                        Marque se contratou profissionais particulares (obstetra, enfermeira, etc.), independente do atendimento acima.
+                      </p>
+                    </div>
+                    <Switch
+                      checked={hasPrivateTeam}
+                      onCheckedChange={(v) => {
+                        setHasPrivateTeam(v);
+                        if (v && prenatalTeam.length === 0) {
+                          setPrenatalTeam([{ name: "", role: "" }]);
+                        }
+                      }}
+                    />
+                  </div>
+
                   {/* Equipe particular - membros da equipe */}
-                  {form.watch("prenatal_type") === "equipe_particular" && (
+                  {hasPrivateTeam && (
                     <div className="space-y-3" ref={(el) => { if (el) setTimeout(() => scrollContainerRef.current?.scrollTo({ top: scrollContainerRef.current.scrollHeight, behavior: 'smooth' }), 100); }}>
                       <div className="flex items-center justify-between">
                         <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Equipe</p>
