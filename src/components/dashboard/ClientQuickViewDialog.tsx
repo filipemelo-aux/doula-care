@@ -149,13 +149,26 @@ export function ClientQuickViewDialog({
           .maybeSingle(),
         supabase
           .from("appointments")
-          .select("id, title, scheduled_at")
+          .select("id, title, scheduled_at, notes")
           .eq("client_id", clientId!)
           .is("completed_at", null)
           .gte("scheduled_at", new Date().toISOString())
           .order("scheduled_at", { ascending: true })
           .limit(1)
           .maybeSingle(),
+        supabase
+          .from("appointments")
+          .select("id, title, scheduled_at, notes, completion_notes, completed_at")
+          .eq("client_id", clientId!)
+          .not("completed_at", "is", null)
+          .order("completed_at", { ascending: false })
+          .limit(1)
+          .maybeSingle(),
+        supabase
+          .from("appointments")
+          .select("id", { count: "exact", head: true })
+          .eq("client_id", clientId!)
+          .not("completed_at", "is", null),
       ]);
 
       return {
@@ -165,6 +178,7 @@ export function ClientQuickViewDialog({
         pendingAppointments: apt.count ?? 0,
         lastDiary: lastDiary.data,
         nextAppointment: nextAppt.data,
+        lastCompletedAppointment: (arguments as any),
       };
     },
     refetchInterval: 30000,
