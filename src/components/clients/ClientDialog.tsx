@@ -622,6 +622,12 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
         instagram_gestante: data.instagram_gestante || null,
         instagram_acompanhante: data.instagram_acompanhante || null,
         notes: data.notes || null,
+        date_of_birth: data.date_of_birth || null,
+        historico_saude: data.historico_saude || null,
+        historico_saude_familiar: data.historico_saude_familiar || null,
+        tipo_sanguineo: data.tipo_sanguineo || null,
+        cirurgias_anteriores: data.cirurgias_anteriores || null,
+        restricoes_alimentares: data.restricoes_alimentares || null,
         owner_id: user?.id || null,
         organization_id: organizationId || null,
       };
