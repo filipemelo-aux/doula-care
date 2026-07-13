@@ -613,7 +613,7 @@ export function ClientFileDialog({ open, onOpenChange, client }: ClientFileDialo
               <Card icon={Calendar} title={`Consultas (${appointments?.length || 0})`} tint="accent">
                 {appointments && appointments.length > 0 ? (
                   <div className="space-y-2">
-                    {appointments.map((apt) => (
+                    {sortAppointmentsWithFutureFirst(appointments).map((apt) => (
                       <div key={apt.id} className="rounded-xl bg-muted/50 p-3 space-y-1">
                         <div className="flex items-center justify-between gap-2">
                           <p className="font-medium text-xs">{apt.title}</p>
