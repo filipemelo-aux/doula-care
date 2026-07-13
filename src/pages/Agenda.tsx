@@ -75,7 +75,7 @@ import { CalendarLabelsManager } from "@/components/agenda/CalendarLabelsManager
 import { DayLabelsDialog } from "@/components/agenda/DayLabelsDialog";
 import { useCalendarLabels } from "@/hooks/useCalendarLabels";
 import { Calendar as CalendarPicker } from "@/components/ui/calendar";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
 import { fetchAddressByCep, formatAddressWithNumber } from "@/lib/address";
 import { maskCEP } from "@/lib/masks";
@@ -672,21 +672,18 @@ export default function Agenda() {
             className="pl-10"
           />
         </div>
-        <ToggleGroup
-          type="single"
-          value={viewMode}
-          onValueChange={(v) => v && setViewMode(v as "list" | "calendar")}
-          className="w-full sm:w-auto justify-stretch"
-        >
-          <ToggleGroupItem value="list" aria-label="Compromissos" className="h-10 gap-1.5 px-3 flex-1 sm:flex-initial">
-            <List className="h-4 w-4" />
-            <span className="text-sm">Compromissos</span>
-          </ToggleGroupItem>
-          <ToggleGroupItem value="calendar" aria-label="Disponibilidade" className="h-10 gap-1.5 px-3 flex-1 sm:flex-initial">
-            <CalendarDays className="h-4 w-4" />
-            <span className="text-sm">Disponibilidade</span>
-          </ToggleGroupItem>
-        </ToggleGroup>
+        <Tabs value={viewMode} onValueChange={(v) => v && setViewMode(v as "list" | "calendar")}>
+          <TabsList className="w-full sm:w-auto grid grid-cols-2 gap-0 p-1">
+            <TabsTrigger value="list" className="gap-1.5 text-xs sm:text-sm px-3">
+              <List className="h-4 w-4" />
+              <span>Compromissos</span>
+            </TabsTrigger>
+            <TabsTrigger value="calendar" className="gap-1.5 text-xs sm:text-sm px-3">
+              <CalendarDays className="h-4 w-4" />
+              <span>Disponibilidade</span>
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
       </div>
 
       {/* Calendar View - availability only */}
@@ -698,21 +695,18 @@ export default function Agenda() {
       {viewMode === "list" && (
         <div className="space-y-4">
           <div className="flex items-center gap-2">
-            <ToggleGroup
-              type="single"
-              value={agendaFilter}
-              onValueChange={(v) => v && setAgendaFilter(v as AgendaFilter)}
-              className="flex-1"
-            >
-              <ToggleGroupItem value="calendar" className="flex-1 gap-1.5 text-xs data-[state=on]:bg-primary data-[state=on]:text-primary-foreground">
-                <CalendarDays className="h-3.5 w-3.5" />
-                Data no calendário
-              </ToggleGroupItem>
-              <ToggleGroupItem value="all" className="flex-1 gap-1.5 text-xs data-[state=on]:bg-primary data-[state=on]:text-primary-foreground">
-                <List className="h-3.5 w-3.5" />
-                Todos os compromissos
-              </ToggleGroupItem>
-            </ToggleGroup>
+            <Tabs value={agendaFilter} onValueChange={(v) => v && setAgendaFilter(v as AgendaFilter)}>
+              <TabsList className="flex-1 grid grid-cols-2 gap-0 p-1">
+                <TabsTrigger value="calendar" className="gap-1.5 text-xs sm:text-sm px-1">
+                  <CalendarDays className="h-3.5 w-3.5" />
+                  <span className="truncate">Data no calendário</span>
+                </TabsTrigger>
+                <TabsTrigger value="all" className="gap-1.5 text-xs sm:text-sm px-1">
+                  <List className="h-3.5 w-3.5" />
+                  <span className="truncate">Todos os compromissos</span>
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
