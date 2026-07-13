@@ -6,21 +6,31 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Calendar, Trash2, Loader2, Clock, Eye, CheckCircle, MoreVertical, MapPin, Navigation, CalendarCheck, Plus, Briefcase } from "lucide-react";
+import { Calendar, Trash2, Loader2, Clock, CheckCircle, MapPin, CalendarCheck, Plus, Briefcase } from "lucide-react";
 import { AppointmentDetailDialog } from "@/components/clients/AppointmentDetailDialog";
 import { AppointmentCompleteDialog } from "@/components/clients/AppointmentCompleteDialog";
 import { format, isToday } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
 import { ManageAppointmentsDialog } from "@/components/clients/ManageAppointmentsDialog";
+
 
 interface AppointmentWithClient {
   id: string;
@@ -219,14 +229,20 @@ function AppointmentCard({
   onDelete: (id: string) => void;
   onRefresh: () => void;
 }) {
+  const navigate = useNavigate();
   const [detailOpen, setDetailOpen] = useState(false);
   const [completeOpen, setCompleteOpen] = useState(false);
+  const [editNotesOpen, setEditNotesOpen] = useState(false);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const date = new Date(apt.scheduled_at);
   const today = isToday(date);
 
   return (
     <>
-      <Card className="px-3 py-2.5 space-y-1.5 w-full box-border min-w-0">
+      <Card
+        onClick={() => setDetailOpen(true)}
+        className={`px-3 py-2.5 space-y-1.5 w-full box-border min-w-0 overflow-hidden cursor-pointer transition-colors hover:bg-muted/40 ${apt.completed_at ? "opacity-70" : ""}`}
+      >
         {/* Header: date column + title */}
         <div className="flex items-center gap-3 min-w-0">
           <div className="text-center min-w-[44px] flex-shrink-0">
@@ -276,54 +292,22 @@ function AppointmentCard({
           <p className="text-xs text-primary line-clamp-2 whitespace-pre-wrap" title={apt.completion_notes}>📝 {apt.completion_notes}</p>
         )}
 
-        {/* Actions row — same as Agenda */}
-        <div className="flex items-center flex-wrap gap-1.5 pt-2 border-t border-border/60">
-          <div className="flex items-center gap-1.5">
-            {apt.address && (
-              <Button
-                size="sm"
-                onClick={() => {
-                  const query = encodeURIComponent(apt.address!);
-                  window.open(`https://www.google.com/maps/search/?api=1&query=${query}`, "_blank");
-                }}
-                className="h-8 px-2.5 gap-1 text-xs font-medium bg-blue-600 hover:bg-blue-700 text-white border-0 shadow-none transition-all"
-              >
-                <MapPin className="h-3.5 w-3.5" />
-                Rota
-              </Button>
-            )}
+        {/* Route shortcut only — all other actions live inside the detail dialog */}
+        {apt.address && (
+          <div className="flex items-center pt-2 border-t border-border/60" onClick={(e) => e.stopPropagation()}>
+            <Button
+              size="sm"
+              onClick={() => {
+                const query = encodeURIComponent(apt.address!);
+                window.open(`https://www.google.com/maps/search/?api=1&query=${query}`, "_blank");
+              }}
+              className="h-8 px-3 gap-1.5 text-xs font-medium bg-blue-600 hover:bg-blue-700 text-white border-0 shadow-none transition-all"
+            >
+              <MapPin className="h-3.5 w-3.5" />
+              Rota
+            </Button>
           </div>
-          <div className="flex items-center gap-1.5 ml-auto flex-shrink-0">
-            {!apt.completed_at && (
-              <Button
-                size="sm"
-                onClick={() => setCompleteOpen(true)}
-                className="h-8 px-2.5 gap-1 bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm hover:shadow transition-all text-xs font-medium"
-              >
-                <CheckCircle className="h-3.5 w-3.5" />
-                Concluir
-              </Button>
-            )}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm" className="h-8 w-8 p-0 text-muted-foreground flex-shrink-0 hover:bg-muted transition-colors">
-                  <MoreVertical className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48 animate-fade-in">
-                <DropdownMenuItem onClick={() => setDetailOpen(true)} className="gap-2.5 text-xs py-2.5 cursor-pointer transition-colors">
-                  <Eye className="h-3.5 w-3.5 text-muted-foreground" />
-                  Ver detalhes
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => onDelete(apt.id)} className="gap-2.5 text-xs py-2.5 cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/10 transition-colors">
-                  <Trash2 className="h-3.5 w-3.5" />
-                  Excluir
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        </div>
+        )}
       </Card>
 
       <AppointmentDetailDialog
@@ -337,17 +321,52 @@ function AppointmentCard({
           completed_at: apt.completed_at,
           completion_notes: apt.completion_notes,
         }}
+        onEdit={() => navigate("/agenda", { state: { editAppointmentId: apt.id } })}
+        onEditNotes={() => setEditNotesOpen(true)}
+        onComplete={() => setCompleteOpen(true)}
+        onDelete={() => setDeleteConfirmOpen(true)}
       />
 
-      {completeOpen && (
-        <AppointmentCompleteDialog
-          open={completeOpen}
-          onOpenChange={setCompleteOpen}
-          appointmentId={apt.id}
-          appointmentTitle={apt.title}
-          onCompleted={onRefresh}
-        />
-      )}
+      <AppointmentCompleteDialog
+        open={completeOpen}
+        onOpenChange={setCompleteOpen}
+        appointmentId={apt.id}
+        appointmentTitle={apt.title}
+        onCompleted={onRefresh}
+      />
+
+      <AppointmentCompleteDialog
+        open={editNotesOpen}
+        onOpenChange={setEditNotesOpen}
+        appointmentId={apt.id}
+        appointmentTitle={apt.title}
+        editMode
+        initialNotes={apt.completion_notes}
+        onCompleted={onRefresh}
+      />
+
+      <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar exclusão?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta consulta será removida permanentemente.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                setDeleteConfirmOpen(false);
+                onDelete(apt.id);
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }

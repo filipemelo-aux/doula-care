@@ -243,7 +243,15 @@ export default function Agenda() {
 
   // Auto-open dialog from navigation state (e.g. from Dashboard)
   useEffect(() => {
-    const state = location.state as { openDialog?: string; viewAppointmentId?: string } | null;
+    const state = location.state as { openDialog?: string; viewAppointmentId?: string; editAppointmentId?: string } | null;
+    if (state?.editAppointmentId && appointments) {
+      const apt = appointments.find((a) => a.id === state.editAppointmentId);
+      if (apt) {
+        openEditAppointment(apt);
+        window.history.replaceState({}, document.title);
+        return;
+      }
+    }
     if (state?.viewAppointmentId && appointments) {
       const apt = appointments.find((a) => a.id === state.viewAppointmentId);
       if (apt) {
