@@ -1124,12 +1124,15 @@ function AppointmentRow({
 }) {
   const [detailOpen, setDetailOpen] = useState(false);
   const [completeOpen, setCompleteOpen] = useState(false);
+  const [editNotesOpen, setEditNotesOpen] = useState(false);
   const date = new Date(apt.scheduled_at);
   const today = isToday(date);
+  const isCompleted = !!apt.completed_at;
+  const isOverdue = !isCompleted && isPast(date) && !today;
 
   return (
     <>
-      <Card className={`px-3 py-2.5 space-y-1.5 w-full box-border min-w-0 overflow-hidden ${apt.completed_at ? "opacity-60" : past ? "opacity-50" : ""}`}>
+      <Card className={`px-3 py-2.5 space-y-1.5 w-full box-border min-w-0 overflow-hidden ${isCompleted ? "opacity-70" : ""}`}>
         {/* Header: date + title */}
         <div className="flex items-center gap-3 min-w-0">
           <div className="text-center min-w-[44px] flex-shrink-0">
@@ -1137,11 +1140,16 @@ function AppointmentRow({
             <p className="text-lg font-bold leading-tight">{format(date, "dd")}</p>
           </div>
           <div className="flex-1 min-w-0 overflow-hidden">
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-1.5 flex-wrap">
               <p className="font-medium text-sm truncate" title={apt.title}>{apt.title}</p>
-              {apt.completed_at && (
+              {isCompleted && (
                 <span className="inline-flex items-center gap-0.5 rounded-full bg-success/10 text-success px-1.5 py-0 text-[10px] font-medium flex-shrink-0">
                   <CheckCircle className="h-2.5 w-2.5" /> Concluída
+                </span>
+              )}
+              {isOverdue && (
+                <span className="inline-flex items-center gap-0.5 rounded-full bg-amber-100 text-amber-800 px-1.5 py-0 text-[10px] font-medium flex-shrink-0">
+                  Atrasada
                 </span>
               )}
             </div>
@@ -1166,7 +1174,7 @@ function AppointmentRow({
           )}
         </div>
 
-        {apt.notes && <p className="text-xs text-muted-foreground/70 truncate">{apt.notes}</p>}
+        {apt.notes && <p className="text-xs text-muted-foreground/70 truncate" title={apt.notes}>{apt.notes}</p>}
         {apt.address && (
           <p className="text-xs text-muted-foreground flex items-center gap-1 truncate" title={apt.address}>
             <MapPin className="h-3 w-3 flex-shrink-0" />
@@ -1174,70 +1182,67 @@ function AppointmentRow({
           </p>
         )}
         {apt.completion_notes && (
-          <p className="text-xs text-primary truncate" title={apt.completion_notes}>📝 {apt.completion_notes}</p>
+          <p className="text-xs text-primary line-clamp-2 whitespace-pre-wrap" title={apt.completion_notes}>📝 {apt.completion_notes}</p>
         )}
 
-        {/* Actions row — like financial cards */}
-        {(() => {
-          const isInactive = !!apt.completed_at || !!past;
-          return (
-            <div className="flex items-center justify-between pt-2 border-t border-border/60">
-              <div className="flex items-center gap-1.5">
-                {apt.address && !isInactive && (
-                  <Button
-                    size="sm"
-                    onClick={() => {
-                      const query = encodeURIComponent(apt.address!);
-                      window.open(`https://www.google.com/maps/search/?api=1&query=${query}`, "_blank");
-                    }}
-                    className="h-8 px-3 gap-1.5 text-xs font-medium bg-blue-600 hover:bg-blue-700 text-white border-0 shadow-none transition-all"
-                  >
-                    <MapPin className="h-3.5 w-3.5" />
-                    Rota
-                  </Button>
+        {/* Actions row */}
+        <div className="flex items-center justify-between pt-2 border-t border-border/60">
+          <div className="flex items-center gap-1.5">
+            {apt.address && (
+              <Button
+                size="sm"
+                onClick={() => {
+                  const query = encodeURIComponent(apt.address!);
+                  window.open(`https://www.google.com/maps/search/?api=1&query=${query}`, "_blank");
+                }}
+                className="h-8 px-3 gap-1.5 text-xs font-medium bg-blue-600 hover:bg-blue-700 text-white border-0 shadow-none transition-all"
+              >
+                <MapPin className="h-3.5 w-3.5" />
+                Rota
+              </Button>
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            {!isCompleted && (
+              <Button
+                size="sm"
+                onClick={() => setCompleteOpen(true)}
+                className="h-8 px-3 gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm hover:shadow transition-all text-xs font-medium"
+              >
+                <CheckCircle className="h-3.5 w-3.5" />
+                Concluir
+              </Button>
+            )}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="h-10 w-10 p-0 text-muted-foreground flex-shrink-0 hover:bg-muted transition-colors">
+                  <MoreVertical className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-52 animate-fade-in">
+                <DropdownMenuItem onClick={() => setDetailOpen(true)} className="gap-2.5 text-xs py-2.5 cursor-pointer transition-colors">
+                  <Eye className="h-3.5 w-3.5 text-muted-foreground" />
+                  Ver detalhes
+                </DropdownMenuItem>
+                {isCompleted && (
+                  <DropdownMenuItem onClick={() => setEditNotesOpen(true)} className="gap-2.5 text-xs py-2.5 cursor-pointer transition-colors">
+                    <Edit2 className="h-3.5 w-3.5 text-muted-foreground" />
+                    Editar anotações
+                  </DropdownMenuItem>
                 )}
-              </div>
-              <div className="flex items-center gap-2">
-                {!isInactive && (
-                  <Button
-                    size="sm"
-                    onClick={() => setCompleteOpen(true)}
-                    className="h-8 px-3 gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm hover:shadow transition-all text-xs font-medium"
-                  >
-                    <CheckCircle className="h-3.5 w-3.5" />
-                    Concluir
-                  </Button>
-                )}
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="outline" size="sm" className="h-10 w-10 p-0 text-muted-foreground flex-shrink-0 hover:bg-muted transition-colors">
-                      <MoreVertical className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-48 animate-fade-in">
-                    <DropdownMenuItem onClick={() => setDetailOpen(true)} className="gap-2.5 text-xs py-2.5 cursor-pointer transition-colors">
-                      <Eye className="h-3.5 w-3.5 text-muted-foreground" />
-                      Ver detalhes
-                    </DropdownMenuItem>
-                    {!isInactive && (
-                      <>
-                        <DropdownMenuItem onClick={() => onEdit(apt)} className="gap-2.5 text-xs py-2.5 cursor-pointer transition-colors">
-                          <Edit2 className="h-3.5 w-3.5 text-muted-foreground" />
-                          Editar
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem onClick={() => onDelete(apt.id)} className="gap-2.5 text-xs py-2.5 cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/10 transition-colors">
-                          <Trash2 className="h-3.5 w-3.5" />
-                          Excluir
-                        </DropdownMenuItem>
-                      </>
-                    )}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-            </div>
-          );
-        })()}
+                <DropdownMenuItem onClick={() => onEdit(apt)} className="gap-2.5 text-xs py-2.5 cursor-pointer transition-colors">
+                  <Edit2 className="h-3.5 w-3.5 text-muted-foreground" />
+                  Editar
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => onDelete(apt.id)} className="gap-2.5 text-xs py-2.5 cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/10 transition-colors">
+                  <Trash2 className="h-3.5 w-3.5" />
+                  Excluir
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </div>
       </Card>
       <AppointmentDetailDialog
         open={detailOpen}
@@ -1256,6 +1261,15 @@ function AppointmentRow({
         onOpenChange={setCompleteOpen}
         appointmentId={apt.id}
         appointmentTitle={apt.title}
+        onCompleted={() => onCompleted?.()}
+      />
+      <AppointmentCompleteDialog
+        open={editNotesOpen}
+        onOpenChange={setEditNotesOpen}
+        appointmentId={apt.id}
+        appointmentTitle={apt.title}
+        editMode
+        initialNotes={apt.completion_notes}
         onCompleted={() => onCompleted?.()}
       />
     </>
