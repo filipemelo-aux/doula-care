@@ -1300,7 +1300,10 @@ function AppointmentRow({
 
   return (
     <>
-      <Card className={`px-3 py-2.5 space-y-1.5 w-full box-border min-w-0 overflow-hidden ${isCompleted ? "opacity-70" : ""}`}>
+      <Card
+        onClick={() => setDetailOpen(true)}
+        className={`px-3 py-2.5 space-y-1.5 w-full box-border min-w-0 overflow-hidden cursor-pointer transition-colors hover:bg-muted/40 ${isCompleted ? "opacity-70" : ""}`}
+      >
         {/* Header: date + title */}
         <div className="flex items-center gap-3 min-w-0">
           <div className="text-center min-w-[44px] flex-shrink-0">
