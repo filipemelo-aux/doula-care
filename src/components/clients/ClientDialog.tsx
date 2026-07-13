@@ -2315,6 +2315,7 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
                           <Textarea
                             {...field}
                             className="h-40 md:h-56 resize-none text-sm"
+                            style={{ height: "clamp(120px, 30vh, 240px)" }}
                             placeholder="Anotações sobre a cliente..."
                           />
                         </FormControl>
