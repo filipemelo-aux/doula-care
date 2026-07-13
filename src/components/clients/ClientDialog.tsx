@@ -84,6 +84,12 @@ const clientSchema = z.object({
   comorbidades: z.string().optional(),
   alergias: z.string().optional(),
   restricao_aromaterapia: z.string().optional(),
+  date_of_birth: z.string().optional(),
+  historico_saude: z.string().optional(),
+  historico_saude_familiar: z.string().optional(),
+  tipo_sanguineo: z.string().optional(),
+  cirurgias_anteriores: z.string().optional(),
+  restricoes_alimentares: z.string().optional(),
   has_fotografa: z.boolean().optional(),
   fotografa_name: z.string().optional(),
   fotografa_phone: z.string().optional(),
@@ -249,6 +255,12 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
         instagram_gestante: "",
         instagram_acompanhante: "",
         notes: "",
+        date_of_birth: "",
+        historico_saude: "",
+        historico_saude_familiar: "",
+        tipo_sanguineo: "",
+        cirurgias_anteriores: "",
+        restricoes_alimentares: "",
       },
   });
 
@@ -359,6 +371,12 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
         instagram_gestante: (client as any).instagram_gestante || "",
         instagram_acompanhante: (client as any).instagram_acompanhante || "",
         notes: client.notes || "",
+        date_of_birth: (client as any).date_of_birth || "",
+        historico_saude: (client as any).historico_saude || "",
+        historico_saude_familiar: (client as any).historico_saude_familiar || "",
+        tipo_sanguineo: (client as any).tipo_sanguineo || "",
+        cirurgias_anteriores: (client as any).cirurgias_anteriores || "",
+        restricoes_alimentares: (client as any).restricoes_alimentares || "",
       });
       setEntryAlreadyPaid(isParcelado ? isFirstInstallmentPaid : false);
       setEntryType("equal");
@@ -428,6 +446,12 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
         instagram_gestante: "",
         instagram_acompanhante: "",
         notes: "",
+        date_of_birth: "",
+        historico_saude: "",
+        historico_saude_familiar: "",
+        tipo_sanguineo: "",
+        cirurgias_anteriores: "",
+        restricoes_alimentares: "",
       });
     }
   }, [client, open, form, planSettings, clientTransaction, clientInstallmentPayments]);
@@ -598,6 +622,12 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
         instagram_gestante: data.instagram_gestante || null,
         instagram_acompanhante: data.instagram_acompanhante || null,
         notes: data.notes || null,
+        date_of_birth: data.date_of_birth || null,
+        historico_saude: data.historico_saude || null,
+        historico_saude_familiar: data.historico_saude_familiar || null,
+        tipo_sanguineo: data.tipo_sanguineo || null,
+        cirurgias_anteriores: data.cirurgias_anteriores || null,
+        restricoes_alimentares: data.restricoes_alimentares || null,
         owner_id: user?.id || null,
         organization_id: organizationId || null,
       };
@@ -1210,6 +1240,19 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
                         </FormItem>
                       )}
                     />
+                    <FormField
+                      control={form.control}
+                      name="date_of_birth"
+                      render={({ field }) => (
+                        <FormItem className="space-y-1">
+                          <FormLabel className="text-xs">Data de nascimento</FormLabel>
+                          <FormControl>
+                            <Input {...field} type="date" className="h-9 text-sm" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                   </div>
                 </div>
               )}
@@ -1592,6 +1635,80 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
                         <FormLabel className="text-xs">Restrições em Aromaterapia</FormLabel>
                         <FormControl>
                           <Textarea {...field} className="min-h-[60px] resize-none text-sm" placeholder="Ex: óleo de canela, hortelã-pimenta..." />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="tipo_sanguineo"
+                    render={({ field }) => (
+                      <FormItem className="space-y-1">
+                        <FormLabel className="text-xs">Tipagem sanguínea</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value || ""}>
+                          <FormControl>
+                            <SelectTrigger className="h-9 text-sm">
+                              <SelectValue placeholder="Selecione" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {["A+","A-","B+","B-","AB+","AB-","O+","O-","Não sei"].map(t => (
+                              <SelectItem key={t} value={t}>{t}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="historico_saude"
+                    render={({ field }) => (
+                      <FormItem className="space-y-1">
+                        <FormLabel className="text-xs">Histórico de saúde prévio</FormLabel>
+                        <FormControl>
+                          <Textarea {...field} className="min-h-[60px] resize-none text-sm" placeholder="Doenças anteriores, tratamentos, condições relevantes..." />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="historico_saude_familiar"
+                    render={({ field }) => (
+                      <FormItem className="space-y-1">
+                        <FormLabel className="text-xs">Histórico de saúde da mãe / irmãs / avó</FormLabel>
+                        <FormControl>
+                          <Textarea {...field} className="min-h-[60px] resize-none text-sm" placeholder="Ex: partos anteriores, doenças hereditárias, complicações gestacionais na família..." />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="cirurgias_anteriores"
+                    render={({ field }) => (
+                      <FormItem className="space-y-1">
+                        <FormLabel className="text-xs">Cirurgias anteriores</FormLabel>
+                        <FormControl>
+                          <Textarea {...field} className="min-h-[60px] resize-none text-sm" placeholder="Ex: cesárea, apendicectomia, ano..." />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="restricoes_alimentares"
+                    render={({ field }) => (
+                      <FormItem className="space-y-1">
+                        <FormLabel className="text-xs">Restrições alimentares</FormLabel>
+                        <FormControl>
+                          <Textarea {...field} className="min-h-[60px] resize-none text-sm" placeholder="Ex: vegetariana, vegana, sem lactose, sem glúten..." />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
