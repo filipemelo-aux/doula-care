@@ -458,6 +458,9 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
       setDatesManuallyEdited([]);
       setPrenatalTeam([]);
       setHasPrivateTeam(false);
+      setHasPartosAnteriores(false);
+      setPartosAnterioresChildren([{ name: "", age: "" }]);
+      setFilhosCesarea([{ name: "", age: "" }]);
       form.reset({
         full_name: "",
         phone: "",
