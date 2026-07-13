@@ -27,6 +27,7 @@ import { PromoTriggerButton } from "@/components/superadmin/PromoTriggerButton";
 import { ModerationSection } from "@/components/superadmin/ModerationSection";
 import { TopActiveOrgsCard } from "@/components/superadmin/TopActiveOrgsCard";
 import { AppPagesDirectory } from "@/components/superadmin/AppPagesDirectory";
+import { OrgTable } from "@/components/superadmin/OrgTable";
 import { useOnlineOrgs } from "@/hooks/useOnlineOrgs";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
