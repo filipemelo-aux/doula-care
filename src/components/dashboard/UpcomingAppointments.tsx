@@ -6,21 +6,31 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Calendar, Trash2, Loader2, Clock, Eye, CheckCircle, MoreVertical, MapPin, Navigation, CalendarCheck, Plus, Briefcase } from "lucide-react";
+import { Calendar, Trash2, Loader2, Clock, CheckCircle, MapPin, CalendarCheck, Plus, Briefcase } from "lucide-react";
 import { AppointmentDetailDialog } from "@/components/clients/AppointmentDetailDialog";
 import { AppointmentCompleteDialog } from "@/components/clients/AppointmentCompleteDialog";
 import { format, isToday } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
 import { ManageAppointmentsDialog } from "@/components/clients/ManageAppointmentsDialog";
+
 
 interface AppointmentWithClient {
   id: string;
