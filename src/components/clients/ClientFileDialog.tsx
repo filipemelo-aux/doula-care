@@ -811,15 +811,6 @@ export function ClientFileDialog({ open, onOpenChange, client }: ClientFileDialo
                   </div>
                 )}
               </Card>
-
-              {(!appointments || appointments.length === 0) &&
-                (!diaryEntries || diaryEntries.length === 0) &&
-                (!contractions || contractions.length === 0) &&
-                (!serviceRequests || serviceRequests.length === 0) && (
-                  <p className="text-center text-muted-foreground text-xs py-2">
-                    Nenhum registro de acompanhamento ainda.
-                  </p>
-                )}
             </div>
           </ScrollArea>
         )}
@@ -827,6 +818,7 @@ export function ClientFileDialog({ open, onOpenChange, client }: ClientFileDialo
     </Dialog>
   );
 }
+
 
 const tintClasses: Record<string, { bg: string; icon: string }> = {
   primary: { bg: "bg-primary/10", icon: "text-primary" },
