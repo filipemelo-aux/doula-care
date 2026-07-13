@@ -653,7 +653,7 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
         historico_saude_familiar: data.historico_saude_familiar || null,
         tipo_sanguineo: data.tipo_sanguineo || null,
         cirurgias_anteriores: data.cirurgias_anteriores || null,
-        restricoes_alimentares: data.restricoes_alimentares || null,
+        
         owner_id: user?.id || null,
         organization_id: organizationId || null,
       };
