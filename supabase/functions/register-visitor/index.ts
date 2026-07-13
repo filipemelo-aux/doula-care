@@ -104,6 +104,7 @@ Deno.serve(async (req) => {
         comorbidades: comorbidades || null,
         alergias: alergias || null,
         restricao_aromaterapia: restricao_aromaterapia || null,
+        restricoes_assistencia: restricoes_assistencia || null,
         companion_name: companion_name || null,
         companion_phone: companion_phone || null,
         has_fotografa: !!has_fotografa,
