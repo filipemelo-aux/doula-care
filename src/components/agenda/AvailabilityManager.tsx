@@ -311,6 +311,28 @@ export function AvailabilityManager() {
               modifiersClassNames={{
                 available: "available-day",
               }}
+              components={{
+                DayContent: (props) => {
+                  const key = format(props.date, "yyyy-MM-dd");
+                  const dayLabels = labelsDayMap.get(key) || [];
+                  return (
+                    <div className="relative flex flex-col items-center justify-center w-full h-full">
+                      <span>{props.date.getDate()}</span>
+                      {dayLabels.length > 0 && (
+                        <div className="absolute -bottom-0.5 flex gap-0.5">
+                          {dayLabels.slice(0, 3).map((d) => (
+                            <span
+                              key={d.id}
+                              className="inline-block h-1.5 w-1.5 rounded-full"
+                              style={{ backgroundColor: d.label?.color || "#999" }}
+                            />
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                },
+              }}
             />
             <style>{`
               .available-day:not([aria-selected="true"]) {
