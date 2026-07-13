@@ -576,23 +576,26 @@ export default function Agenda() {
   );
 
   const unifiedItems = useMemo(() => {
-    const aptItems = filteredAppointments.map((apt) => ({
-      type: "appointment" as const,
-      data: apt,
-      date: apt.scheduled_at,
-      completed: !!apt.completed_at,
-    }));
-    const svcItems = activeServices.map((svc) => ({
-      type: "service" as const,
-      data: svc,
-      date: svc.scheduled_date || svc.preferred_date || svc.created_at,
-      completed: false,
-    }));
-    const items = [...aptItems, ...svcItems];
-    return sortAppointmentsWithFutureFirst(
-      items.map((item) => ({ scheduled_at: item.date, completed_at: item.completed ? new Date().toISOString() : null }))
-    ).map((sorted) => items.find((item) => item.date === sorted.scheduled_at)!).filter(Boolean);
+    const items: (
+      | { type: "appointment"; data: AppointmentWithClient; scheduled_at: string; completed_at: string | null }
+      | { type: "service"; data: ServiceRequestFull; scheduled_at: string; completed_at: null }
+    )[] = [
+      ...filteredAppointments.map((apt) => ({
+        type: "appointment" as const,
+        data: apt,
+        scheduled_at: apt.scheduled_at,
+        completed_at: apt.completed_at,
+      })),
+      ...activeServices.map((svc) => ({
+        type: "service" as const,
+        data: svc,
+        scheduled_at: svc.scheduled_date || svc.preferred_date || svc.created_at,
+        completed_at: null,
+      })),
+    ];
+    return sortAppointmentsWithFutureFirst(items);
   }, [filteredAppointments, activeServices]);
+
 
 
   const isLoading = loadingApts || loadingSvc;
