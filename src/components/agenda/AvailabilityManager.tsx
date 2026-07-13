@@ -37,6 +37,9 @@ export function AvailabilityManager() {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [addSlotOpen, setAddSlotOpen] = useState(false);
   const [batchDialogOpen, setBatchDialogOpen] = useState(false);
+  const [dayLabelsFor, setDayLabelsFor] = useState<Date | null>(null);
+  const [labelsManagerOpen, setLabelsManagerOpen] = useState(false);
+  const { dayMap: labelsDayMap } = useCalendarLabels(organizationId);
 
   // For single-day add: selected hour toggles
   const [selectedStartHours, setSelectedStartHours] = useState<number[]>([]);
