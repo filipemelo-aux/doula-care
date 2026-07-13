@@ -377,7 +377,9 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
         setDatesManuallyEdited([]);
       }
       const teamData = (client as any).prenatal_team;
-      setPrenatalTeam(Array.isArray(teamData) ? teamData : []);
+      const teamArr = Array.isArray(teamData) ? teamData : [];
+      setPrenatalTeam(teamArr);
+      setHasPrivateTeam(teamArr.length > 0 || (client as any).prenatal_type === "equipe_particular");
     } else {
       setEntryAlreadyPaid(false);
       setEntryType("equal");
