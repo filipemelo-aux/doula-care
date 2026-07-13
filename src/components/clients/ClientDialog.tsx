@@ -1948,8 +1948,8 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
                 </div>
               )}
 
-              {/* Step 6: Plano e Pagamento */}
-              {currentStep === 6 && (
+              {/* Step 7: Plano e Pagamento */}
+              {currentStep === 7 && (
                 <div className="space-y-3 relative">
                   {isPlanLocked && (
                     <div className="absolute inset-0 z-20 rounded-xl bg-background/80 backdrop-blur-sm flex items-center justify-center p-4">
