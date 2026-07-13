@@ -604,6 +604,22 @@ export function AvailabilityManager() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      <DayLabelsDialog
+        open={!!dayLabelsFor}
+        onOpenChange={(o) => !o && setDayLabelsFor(null)}
+        organizationId={organizationId}
+        date={dayLabelsFor}
+        onOpenLabelsManager={() => {
+          setDayLabelsFor(null);
+          setLabelsManagerOpen(true);
+        }}
+      />
+
+      <CalendarLabelsManager
+        open={labelsManagerOpen}
+        onOpenChange={setLabelsManagerOpen}
+        organizationId={organizationId}
+      />
     </Card>
   );
 }
