@@ -270,7 +270,6 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
         historico_saude_familiar: "",
         tipo_sanguineo: "",
         cirurgias_anteriores: "",
-        restricoes_alimentares: "",
       },
   });
 
