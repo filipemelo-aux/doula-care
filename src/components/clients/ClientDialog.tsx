@@ -2392,8 +2392,8 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
                 </div>
               )}
 
-              {/* Step 7: Observações */}
-              {currentStep === 7 && (
+              {/* Step 6: Observações */}
+              {currentStep === 6 && (
                 <div className="flex flex-col h-full min-h-0 min-w-0 max-w-full overflow-x-hidden">
                   <FormField
                     control={form.control}
