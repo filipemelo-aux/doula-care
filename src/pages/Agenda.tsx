@@ -181,6 +181,10 @@ export default function Agenda() {
   const [dayLabelsFor, setDayLabelsFor] = useState<Date | null>(null);
   const { dayMap: labelsDayMap } = useCalendarLabels(organizationId);
 
+  // Appointment detail preview (opened from external links, e.g. Dashboard)
+  const [selectedDetailApt, setSelectedDetailApt] = useState<AppointmentWithClient | null>(null);
+  const [detailDialogOpen, setDetailDialogOpen] = useState(false);
+
   // ─── Queries ─────────────────────────────────────────────
   const { data: appointments, isLoading: loadingApts } = useQuery({
     queryKey: ["agenda-appointments"],
@@ -237,7 +241,16 @@ export default function Agenda() {
 
   // Auto-open dialog from navigation state (e.g. from Dashboard)
   useEffect(() => {
-    const state = location.state as { openDialog?: string } | null;
+    const state = location.state as { openDialog?: string; viewAppointmentId?: string } | null;
+    if (state?.viewAppointmentId && appointments) {
+      const apt = appointments.find((a) => a.id === state.viewAppointmentId);
+      if (apt) {
+        setSelectedDetailApt(apt);
+        setDetailDialogOpen(true);
+        window.history.replaceState({}, document.title);
+        return;
+      }
+    }
     if (state?.openDialog) {
       if (state.openDialog === "consulta") setAppointmentDialog(true);
       else if (state.openDialog === "compromisso") setPersonalAptDialog(true);
@@ -245,7 +258,7 @@ export default function Agenda() {
       // Clear the state so it doesn't re-trigger
       window.history.replaceState({}, document.title);
     }
-  }, [location.state]);
+  }, [location.state, appointments]);
 
   const closePersonalDialog = () => {
     setPersonalAptDialog(false);
@@ -1204,6 +1217,23 @@ export default function Agenda() {
         }}
       />
 
+      {/* Appointment detail preview (from Dashboard) */}
+      <AppointmentDetailDialog
+        open={detailDialogOpen}
+        onOpenChange={setDetailDialogOpen}
+        appointment={
+          selectedDetailApt
+            ? {
+                title: selectedDetailApt.title,
+                scheduled_at: selectedDetailApt.scheduled_at,
+                notes: selectedDetailApt.notes,
+                clientName: selectedDetailApt.clients?.full_name,
+                completed_at: selectedDetailApt.completed_at,
+                completion_notes: selectedDetailApt.completion_notes,
+              }
+            : null
+        }
+      />
     </div>
   );
 }
