@@ -661,30 +661,25 @@ export default function SuperAdminDashboard() {
                 </div>
               </div>
             )}
-            {activeOrgs.length > 0 && (
+            {(activeOrgs.length > 0 || suspendedOrgs.length > 0) && (
               <div className="space-y-3">
                 <h2 className="text-sm font-semibold text-foreground flex items-center gap-2">
-                  <CheckCircle className="h-4 w-4 text-success" />
-                  Ativas ({activeOrgs.length})
+                  <Building2 className="h-4 w-4 text-primary" />
+                  Organizações ({activeOrgs.length + suspendedOrgs.length})
+                  <span className="text-xs font-normal text-muted-foreground">
+                    · {activeOrgs.length} ativa{activeOrgs.length !== 1 ? "s" : ""} · {suspendedOrgs.length} suspensa{suspendedOrgs.length !== 1 ? "s" : ""}
+                  </span>
                 </h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                  {activeOrgs.map((org) => (
-                    <OrgCard key={org.id} org={org} />
-                  ))}
-                </div>
-              </div>
-            )}
-            {suspendedOrgs.length > 0 && (
-              <div className="space-y-3">
-                <h2 className="text-sm font-semibold text-foreground flex items-center gap-2">
-                  <Ban className="h-4 w-4 text-destructive" />
-                  Suspensas ({suspendedOrgs.length})
-                </h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                  {suspendedOrgs.map((org) => (
-                    <OrgCard key={org.id} org={org} />
-                  ))}
-                </div>
+                <OrgTable
+                  orgs={[...activeOrgs, ...suspendedOrgs]}
+                  onlineOrgIds={onlineOrgIds}
+                  onPlanChange={(orgId, plan) => planMutation.mutate({ orgId, plan })}
+                  onStatusChange={(orgId, status) => statusMutation.mutate({ orgId, status })}
+                  onDelete={(orgId) => deleteMutation.mutate(orgId)}
+                  isPlanPending={planMutation.isPending}
+                  isStatusPending={statusMutation.isPending}
+                  isDeletePending={deleteMutation.isPending}
+                />
               </div>
             )}
           </div>
