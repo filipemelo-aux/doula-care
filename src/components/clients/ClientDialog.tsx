@@ -135,6 +135,7 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
   const [prenatalTeam, setPrenatalTeam] = useState<{name: string; role: string}[]>([]);
   const [hasPrivateTeam, setHasPrivateTeam] = useState(false);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const stepButtonRefs = useRef<Record<number, HTMLButtonElement | null>>({});
   const [unlockedPlan, setUnlockedPlan] = useState(false);
   const [unlockConfirmOpen, setUnlockConfirmOpen] = useState(false);
 
@@ -145,6 +146,15 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
       setUnlockConfirmOpen(false);
     }
   }, [open, client?.id]);
+
+  useEffect(() => {
+    if (!open) return;
+    stepButtonRefs.current[currentStep]?.scrollIntoView({
+      behavior: "smooth",
+      inline: "center",
+      block: "nearest",
+    });
+  }, [currentStep, open]);
 
   const { data: planSettings } = useQuery({
     queryKey: ["plan-settings"],
@@ -1185,14 +1195,15 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
             {client ? "Editar Cliente" : "Nova Cliente"}
           </DialogTitle>
           {/* Tab-style step navigation */}
-          <div className="flex items-center pt-2 border-b border-border/40">
+          <div className="flex items-center pt-2 border-b border-border/40 overflow-x-auto overflow-y-hidden scrollbar-none -mx-1 px-1 overscroll-x-contain">
             {STEPS.map((step) => (
               <button
                 key={step.id}
+                ref={(el) => { stepButtonRefs.current[step.id] = el; }}
                 type="button"
                 onClick={() => handleStepClick(step.id)}
                 className={cn(
-                  "relative flex-1 px-1 py-1.5 text-[11px] font-medium transition-all whitespace-nowrap text-center",
+                  "relative flex-none px-2.5 py-1.5 text-[11px] font-medium transition-all whitespace-nowrap text-center",
                   currentStep === step.id
                     ? "text-primary"
                     : step.id < currentStep
