@@ -609,8 +609,8 @@ export function ClientFileDialog({ open, onOpenChange, client }: ClientFileDialo
               )}
 
               {/* Appointments (Registro de acompanhamentos) */}
-              {appointments && appointments.length > 0 && (
-                <Card icon={Calendar} title={`Consultas (${appointments.length})`} tint="accent">
+              <Card icon={Calendar} title={`Consultas (${appointments?.length || 0})`} tint="accent">
+                {appointments && appointments.length > 0 ? (
                   <div className="space-y-2">
                     {appointments.map((apt) => (
                       <div key={apt.id} className="rounded-xl bg-muted/50 p-3 space-y-1">
@@ -626,8 +626,13 @@ export function ClientFileDialog({ open, onOpenChange, client }: ClientFileDialo
                       </div>
                     ))}
                   </div>
-                </Card>
-              )}
+                ) : (
+                  <p className="text-center text-muted-foreground text-xs py-2">
+                    Nenhum registro de acompanhamento ainda.
+                  </p>
+                )}
+              </Card>
+
 
               {/* Observações da Doula */}
               {client.notes && (
