@@ -1357,64 +1357,22 @@ function AppointmentRow({
           <p className="text-xs text-primary line-clamp-2 whitespace-pre-wrap" title={apt.completion_notes}>📝 {apt.completion_notes}</p>
         )}
 
-        {/* Actions row */}
-        <div className="flex items-center justify-between pt-2 border-t border-border/60" onClick={(e) => e.stopPropagation()}>
-          <div className="flex items-center gap-1.5">
-            {apt.address && (
-              <Button
-                size="sm"
-                onClick={() => {
-                  const query = encodeURIComponent(apt.address!);
-                  window.open(`https://www.google.com/maps/search/?api=1&query=${query}`, "_blank");
-                }}
-                className="h-8 px-3 gap-1.5 text-xs font-medium bg-blue-600 hover:bg-blue-700 text-white border-0 shadow-none transition-all"
-              >
-                <MapPin className="h-3.5 w-3.5" />
-                Rota
-              </Button>
-            )}
+        {/* Route shortcut only — all other actions live inside the detail dialog */}
+        {apt.address && (
+          <div className="flex items-center pt-2 border-t border-border/60" onClick={(e) => e.stopPropagation()}>
+            <Button
+              size="sm"
+              onClick={() => {
+                const query = encodeURIComponent(apt.address!);
+                window.open(`https://www.google.com/maps/search/?api=1&query=${query}`, "_blank");
+              }}
+              className="h-8 px-3 gap-1.5 text-xs font-medium bg-blue-600 hover:bg-blue-700 text-white border-0 shadow-none transition-all"
+            >
+              <MapPin className="h-3.5 w-3.5" />
+              Rota
+            </Button>
           </div>
-          <div className="flex items-center gap-2">
-            {!isCompleted && (
-              <Button
-                size="sm"
-                onClick={() => setCompleteOpen(true)}
-                className="h-8 px-3 gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm hover:shadow transition-all text-xs font-medium"
-              >
-                <CheckCircle className="h-3.5 w-3.5" />
-                Concluir
-              </Button>
-            )}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm" className="h-10 w-10 p-0 text-muted-foreground flex-shrink-0 hover:bg-muted transition-colors">
-                  <MoreVertical className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-52 animate-fade-in">
-                <DropdownMenuItem onClick={() => setDetailOpen(true)} className="gap-2.5 text-xs py-2.5 cursor-pointer transition-colors">
-                  <Eye className="h-3.5 w-3.5 text-muted-foreground" />
-                  Ver detalhes
-                </DropdownMenuItem>
-                {isCompleted && (
-                  <DropdownMenuItem onClick={() => setEditNotesOpen(true)} className="gap-2.5 text-xs py-2.5 cursor-pointer transition-colors">
-                    <Edit2 className="h-3.5 w-3.5 text-muted-foreground" />
-                    Editar anotações
-                  </DropdownMenuItem>
-                )}
-                <DropdownMenuItem onClick={() => onEdit(apt)} className="gap-2.5 text-xs py-2.5 cursor-pointer transition-colors">
-                  <Edit2 className="h-3.5 w-3.5 text-muted-foreground" />
-                  Editar
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => onDelete(apt.id)} className="gap-2.5 text-xs py-2.5 cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/10 transition-colors">
-                  <Trash2 className="h-3.5 w-3.5" />
-                  Excluir
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        </div>
+        )}
       </Card>
       <AppointmentDetailDialog
         open={detailOpen}
@@ -1429,6 +1387,8 @@ function AppointmentRow({
         }}
         onEdit={() => onEdit(apt)}
         onEditNotes={() => setEditNotesOpen(true)}
+        onComplete={() => setCompleteOpen(true)}
+        onDelete={() => onDelete(apt.id)}
       />
       <AppointmentCompleteDialog
         open={completeOpen}

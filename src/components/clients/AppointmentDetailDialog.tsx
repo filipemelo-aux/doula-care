@@ -6,7 +6,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Calendar, Clock, FileText, CheckCircle, Edit2, NotebookPen } from "lucide-react";
+import { Calendar, Clock, FileText, CheckCircle, Edit2, NotebookPen, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -23,6 +23,8 @@ interface AppointmentDetailDialogProps {
   } | null;
   onEdit?: () => void;
   onEditNotes?: () => void;
+  onComplete?: () => void;
+  onDelete?: () => void;
 }
 
 export function AppointmentDetailDialog({
@@ -31,6 +33,8 @@ export function AppointmentDetailDialog({
   appointment,
   onEdit,
   onEditNotes,
+  onComplete,
+  onDelete,
 }: AppointmentDetailDialogProps) {
   if (!appointment) return null;
 
@@ -94,8 +98,21 @@ export function AppointmentDetailDialog({
           )}
         </div>
 
-        {(onEdit || onEditNotes) && (
-          <DialogFooter className="flex-col sm:flex-row gap-2 pt-2">
+        {(onEdit || onEditNotes || onComplete || onDelete) && (
+          <DialogFooter className="flex flex-col gap-2 pt-2 sm:flex-col sm:space-x-0">
+            {onComplete && !appointment.completed_at && (
+              <Button
+                size="sm"
+                onClick={() => {
+                  onOpenChange(false);
+                  onComplete();
+                }}
+                className="gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white w-full"
+              >
+                <CheckCircle className="h-3.5 w-3.5" />
+                Concluir consulta
+              </Button>
+            )}
             {onEditNotes && appointment.completed_at && (
               <Button
                 variant="outline"
@@ -104,7 +121,7 @@ export function AppointmentDetailDialog({
                   onOpenChange(false);
                   onEditNotes();
                 }}
-                className="gap-1.5"
+                className="gap-1.5 w-full"
               >
                 <NotebookPen className="h-3.5 w-3.5" />
                 Editar anotações
@@ -112,15 +129,30 @@ export function AppointmentDetailDialog({
             )}
             {onEdit && (
               <Button
+                variant="outline"
                 size="sm"
                 onClick={() => {
                   onOpenChange(false);
                   onEdit();
                 }}
-                className="gap-1.5"
+                className="gap-1.5 w-full"
               >
                 <Edit2 className="h-3.5 w-3.5" />
                 Editar compromisso
+              </Button>
+            )}
+            {onDelete && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  onOpenChange(false);
+                  onDelete();
+                }}
+                className="gap-1.5 w-full text-destructive hover:text-destructive hover:bg-destructive/10"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+                Excluir
               </Button>
             )}
           </DialogFooter>
