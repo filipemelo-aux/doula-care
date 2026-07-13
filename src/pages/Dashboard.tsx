@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { FinancialOverview } from "@/components/dashboard/FinancialOverview";
 import { TopPlansCard } from "@/components/dashboard/TopPlansCard";
 import { UpcomingAppointments } from "@/components/dashboard/UpcomingAppointments";
+import { CalendarLabelsSummaryCard } from "@/components/dashboard/CalendarLabelsSummaryCard";
 import { PeriodFilter, PeriodOption } from "@/components/dashboard/PeriodFilter";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Heart } from "lucide-react";
