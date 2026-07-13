@@ -627,8 +627,9 @@ export default function Agenda() {
           onClick={() => setLabelsManagerOpen(true)}
         >
           <Tag className="h-4 w-4" />
-          <span className="hidden sm:inline">Criar Etiqueta</span>
+          <span>Etiquetas</span>
         </Button>
+
 
       </div>
 
