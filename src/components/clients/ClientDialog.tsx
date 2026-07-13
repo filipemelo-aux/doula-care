@@ -115,6 +115,8 @@ const clientSchema = z.object({
   instagram_gestante: z.string().optional(),
   instagram_acompanhante: z.string().optional(),
   notes: z.string().optional(),
+  has_pets: z.boolean().optional(),
+  pets_names: z.string().optional(),
 });
 
 type ClientFormData = z.infer<typeof clientSchema>;
