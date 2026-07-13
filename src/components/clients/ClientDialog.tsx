@@ -510,7 +510,8 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
         historico_saude_familiar: "",
         tipo_sanguineo: "",
         cirurgias_anteriores: "",
-        
+        has_pets: false,
+        pets_names: "",
       });
     }
   }, [client, open, form, planSettings, clientTransaction, clientInstallmentPayments]);
