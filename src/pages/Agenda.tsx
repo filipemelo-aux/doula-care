@@ -286,10 +286,12 @@ export default function Agenda() {
         organization_id: organizationId || null,
       } as any);
       if (error) throw error;
+      await ensureAvailabilityForAppointment(organizationId, scheduledUtc);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["agenda-appointments"] });
       queryClient.invalidateQueries({ queryKey: ["all-appointments"] });
+      queryClient.invalidateQueries({ queryKey: ["doula-availability"] });
       closePersonalDialog();
       toast.success("Compromisso pessoal agendado!");
 
