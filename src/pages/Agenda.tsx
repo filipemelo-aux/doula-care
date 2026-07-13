@@ -761,57 +761,63 @@ export default function Agenda() {
                 </h2>
               )}
 
-              {/* In-progress appointments */}
-              {filteredAppointments.filter(a => getAppointmentStatus(a) === "in_progress").length > 0 && (
-                <section>
-                  <h2 className="text-sm font-semibold text-primary mb-3 flex items-center gap-2">
-                    <Clock className="h-4 w-4" /> Em andamento agora
-                  </h2>
-                  <div className="space-y-2">
-                    {filteredAppointments.filter(a => getAppointmentStatus(a) === "in_progress").map((apt) => (
-                      <AppointmentRow key={apt.id} apt={apt} onEdit={openEditAppointment} onDelete={(id) => setDeleteTarget({ type: "appointment", id })} displayName={displayName} onCompleted={() => queryClient.invalidateQueries({ queryKey: ["agenda-appointments"] })} />
-                    ))}
-                  </div>
-                </section>
-              )}
+              {agendaFilter === "all" ? (
+                <>
+                  {/* Unified list — sorted ascending by date, status shown via badge */}
+                  {filteredAppointments.length > 0 && (
+                    <section>
+                      <div className="space-y-2">
+                        {[...filteredAppointments]
+                          .sort((a, b) => new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime())
+                          .map((apt) => (
+                            <AppointmentRow key={apt.id} apt={apt} onEdit={openEditAppointment} onDelete={(id) => setDeleteTarget({ type: "appointment", id })} displayName={displayName} onCompleted={() => queryClient.invalidateQueries({ queryKey: ["agenda-appointments"] })} />
+                          ))}
+                      </div>
+                    </section>
+                  )}
 
-              {/* Future appointments */}
-              {futureApts.filter(a => getAppointmentStatus(a) === "future").length > 0 && (
-                <section>
-                  <div className="space-y-2">
-                    {futureApts.filter(a => getAppointmentStatus(a) === "future").map((apt) => (
-                      <AppointmentRow key={apt.id} apt={apt} onEdit={openEditAppointment} onDelete={(id) => setDeleteTarget({ type: "appointment", id })} displayName={displayName} onCompleted={() => queryClient.invalidateQueries({ queryKey: ["agenda-appointments"] })} />
-                    ))}
-                  </div>
-                </section>
-              )}
+                  {/* Services needing attention */}
+                  {filteredServices.filter(s => s.status === "pending" || s.status === "budget_sent" || s.status === "date_proposed").length > 0 && (
+                    <section>
+                      <h2 className="text-sm font-semibold text-muted-foreground mb-3 flex items-center gap-2">
+                        <Briefcase className="h-4 w-4" /> Serviços que precisam de atenção
+                      </h2>
+                      <div className="space-y-2">
+                        {filteredServices.filter(s => s.status === "pending" || s.status === "budget_sent" || s.status === "date_proposed").map((svc) => (
+                          <ServiceRow key={svc.id} svc={svc} displayName={displayName} onSendBudget={(s) => setBudgetRequest({ id: s.id, client_id: s.client_id, service_type: s.service_type, client_name: s.clients?.full_name || "", preferred_date: s.preferred_date })} onDelete={(id) => setDeleteTarget({ type: "service", id })} onViewPhotos={setViewingPhotos} />
+                        ))}
+                      </div>
+                    </section>
+                  )}
+                </>
+              ) : (
+                <>
+                  {/* Calendar-day mode keeps single ascending list too */}
+                  {filteredAppointments.length > 0 && (
+                    <section>
+                      <div className="space-y-2">
+                        {[...filteredAppointments]
+                          .sort((a, b) => new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime())
+                          .map((apt) => (
+                            <AppointmentRow key={apt.id} apt={apt} onEdit={openEditAppointment} onDelete={(id) => setDeleteTarget({ type: "appointment", id })} displayName={displayName} onCompleted={() => queryClient.invalidateQueries({ queryKey: ["agenda-appointments"] })} />
+                          ))}
+                      </div>
+                    </section>
+                  )}
 
-              {/* Services needing attention */}
-              {filteredServices.filter(s => s.status === "pending" || s.status === "budget_sent" || s.status === "date_proposed").length > 0 && (
-                <section>
-                  <h2 className="text-sm font-semibold text-muted-foreground mb-3 flex items-center gap-2">
-                    <Briefcase className="h-4 w-4" /> Serviços que precisam de atenção
-                  </h2>
-                  <div className="space-y-2">
-                    {filteredServices.filter(s => s.status === "pending" || s.status === "budget_sent" || s.status === "date_proposed").map((svc) => (
-                      <ServiceRow key={svc.id} svc={svc} displayName={displayName} onSendBudget={(s) => setBudgetRequest({ id: s.id, client_id: s.client_id, service_type: s.service_type, client_name: s.clients?.full_name || "", preferred_date: s.preferred_date })} onDelete={(id) => setDeleteTarget({ type: "service", id })} onViewPhotos={setViewingPhotos} />
-                    ))}
-                  </div>
-                </section>
-              )}
-
-              {/* Past / completed appointments */}
-              {(pastApts.length > 0 || completedApts.length > 0) && (
-                <section>
-                  <h2 className="text-sm font-semibold text-muted-foreground mb-3 flex items-center gap-2">
-                    <CheckCircle className="h-4 w-4" /> Histórico
-                  </h2>
-                  <div className="space-y-2">
-                    {[...completedApts, ...pastApts].map((apt) => (
-                      <AppointmentRow key={apt.id} apt={apt} onEdit={openEditAppointment} onDelete={(id) => setDeleteTarget({ type: "appointment", id })} displayName={displayName} past onCompleted={() => queryClient.invalidateQueries({ queryKey: ["agenda-appointments"] })} />
-                    ))}
-                  </div>
-                </section>
+                  {filteredServices.filter(s => s.status === "pending" || s.status === "budget_sent" || s.status === "date_proposed").length > 0 && (
+                    <section>
+                      <h2 className="text-sm font-semibold text-muted-foreground mb-3 flex items-center gap-2">
+                        <Briefcase className="h-4 w-4" /> Serviços que precisam de atenção
+                      </h2>
+                      <div className="space-y-2">
+                        {filteredServices.filter(s => s.status === "pending" || s.status === "budget_sent" || s.status === "date_proposed").map((svc) => (
+                          <ServiceRow key={svc.id} svc={svc} displayName={displayName} onSendBudget={(s) => setBudgetRequest({ id: s.id, client_id: s.client_id, service_type: s.service_type, client_name: s.clients?.full_name || "", preferred_date: s.preferred_date })} onDelete={(id) => setDeleteTarget({ type: "service", id })} onViewPhotos={setViewingPhotos} />
+                        ))}
+                      </div>
+                    </section>
+                  )}
+                </>
               )}
 
               {/* Empty state */}
