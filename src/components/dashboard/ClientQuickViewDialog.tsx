@@ -601,8 +601,8 @@ export function ClientQuickViewDialog({
                     Nenhuma consulta registrada ainda.
                   </div>
                 )}
-                <div className="hidden">
-                  {/* placeholder to preserve outer div balance */}
+
+
 
                 {/* Novidades */}
                 {activity &&
