@@ -372,7 +372,7 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
         prenatal_type: ((client as any).prenatal_type === "equipe_particular" ? "particular" : (client as any).prenatal_type) || "",
         prenatal_high_risk: (client as any).prenatal_high_risk || false,
         comorbidades: (client as any).comorbidades || "",
-        alergias: (client as any).alergias || "",
+        restricoes_assistencia_alergias: (client as any).restricoes_assistencia?.alergias || "",
         restricao_aromaterapia: (client as any).restricao_aromaterapia || "",
         has_fotografa: (client as any).has_fotografa || false,
         fotografa_name: (client as any).fotografa_name || "",
