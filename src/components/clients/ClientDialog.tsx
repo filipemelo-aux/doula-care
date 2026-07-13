@@ -388,6 +388,7 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
       setCustomInstallmentDates([]);
       setDatesManuallyEdited([]);
       setPrenatalTeam([]);
+      setHasPrivateTeam(false);
       form.reset({
         full_name: "",
         phone: "",
