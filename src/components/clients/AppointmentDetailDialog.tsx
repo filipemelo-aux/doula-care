@@ -6,7 +6,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Calendar, Clock, FileText, CheckCircle, Edit2, NotebookPen } from "lucide-react";
+import { Calendar, Clock, FileText, CheckCircle, Edit2, NotebookPen, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
