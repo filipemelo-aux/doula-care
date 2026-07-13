@@ -215,6 +215,23 @@ export function ClientQuickViewDialog({
     refetchInterval: 30000,
   });
 
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("appointments").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["client-quickview-activity", clientId] });
+      queryClient.invalidateQueries({ queryKey: ["agenda-appointments"] });
+      queryClient.invalidateQueries({ queryKey: ["all-appointments"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
+      toast.success("Consulta removida");
+      setDeleteAptId(null);
+      setDetailApt(null);
+    },
+    onError: () => toast.error("Erro ao remover consulta"),
+  });
+
   const isPuer = client?.status === "lactante";
   const isGest = client?.status === "gestante";
 
