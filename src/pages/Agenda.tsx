@@ -659,11 +659,13 @@ export default function Agenda() {
           />
         </div>
         <ToggleGroup type="single" value={viewMode} onValueChange={(v) => v && setViewMode(v as "list" | "calendar")}>
-          <ToggleGroupItem value="list" aria-label="Lista" className="h-10 w-10">
+          <ToggleGroupItem value="list" aria-label="Lista" className="h-10 gap-1.5 px-3">
             <List className="h-4 w-4" />
+            <span className="hidden sm:inline text-sm">Compromissos</span>
           </ToggleGroupItem>
-          <ToggleGroupItem value="calendar" aria-label="Disponibilidade" className="h-10 w-10">
+          <ToggleGroupItem value="calendar" aria-label="Disponibilidade" className="h-10 gap-1.5 px-3">
             <CalendarDays className="h-4 w-4" />
+            <span className="hidden sm:inline text-sm">Disponibilidade</span>
           </ToggleGroupItem>
         </ToggleGroup>
       </div>
