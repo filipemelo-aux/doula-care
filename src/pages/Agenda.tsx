@@ -1185,6 +1185,25 @@ export default function Agenda() {
         </DialogContent>
       </Dialog>
 
+      {/* Calendar labels manager */}
+      <CalendarLabelsManager
+        open={labelsManagerOpen}
+        onOpenChange={setLabelsManagerOpen}
+        organizationId={organizationId}
+      />
+
+      {/* Day labels dialog */}
+      <DayLabelsDialog
+        open={!!dayLabelsFor}
+        onOpenChange={(o) => !o && setDayLabelsFor(null)}
+        organizationId={organizationId}
+        date={dayLabelsFor}
+        onOpenLabelsManager={() => {
+          setDayLabelsFor(null);
+          setLabelsManagerOpen(true);
+        }}
+      />
+
     </div>
   );
 }
