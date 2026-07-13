@@ -1240,6 +1240,19 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
                         </FormItem>
                       )}
                     />
+                    <FormField
+                      control={form.control}
+                      name="date_of_birth"
+                      render={({ field }) => (
+                        <FormItem className="space-y-1">
+                          <FormLabel className="text-xs">Data de nascimento</FormLabel>
+                          <FormControl>
+                            <Input {...field} type="date" className="h-9 text-sm" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                   </div>
                 </div>
               )}
