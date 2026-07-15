@@ -299,7 +299,12 @@ export function NotificationsCenter({ fullPage = false }: NotificationsCenterPro
   });
 
   const isLoading = loadingBirth || loadingDiary || loadingContractions || loadingSvc || loadingApt;
-  const unreadCount = notifications.filter(n => !n.isRead).length;
+  // On the full page view, once the admin/moderator opened the Notifications
+  // area everything counts as seen — no per-item red dots or header badge.
+  const unreadCount = fullPage ? 0 : notifications.filter(n => !n.isRead).length;
+  if (fullPage) {
+    notifications.forEach(n => { n.isRead = true; });
+  }
 
   // Handlers
   const handleRegisterBirth = (client: Client) => { setSelectedClient(client); setBirthDialogOpen(true); };
