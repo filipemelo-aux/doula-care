@@ -473,16 +473,27 @@ export default function Settings() {
         </div>
       </div>
 
-      <Tabs defaultValue={callerIsModerator ? "security" : "users"} className="space-y-4">
-        {!callerIsModerator && (
-          <TabsList className="w-full grid grid-cols-5 gap-0 p-1">
-            <TabsTrigger value="users" className="px-1 text-xs sm:text-sm gap-1"><Users className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" /><span className="truncate">Usuários</span></TabsTrigger>
-            <TabsTrigger value="plans" className="px-1 text-xs sm:text-sm gap-1"><CreditCard className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" /><span className="truncate">Planos</span></TabsTrigger>
-            <TabsTrigger value="branding" className="px-1 text-xs sm:text-sm gap-1"><Palette className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" /><span className="truncate">Marca</span></TabsTrigger>
-            <TabsTrigger value="pix" className="px-1 text-xs sm:text-sm gap-1"><QrCode className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" /><span className="truncate">Pix</span></TabsTrigger>
-            <TabsTrigger value="security" className="px-1 text-xs sm:text-sm gap-1"><Shield className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" /><span className="truncate">Segurança</span></TabsTrigger>
-          </TabsList>
-        )}
+      {callerIsModerator ? (
+        <div className="space-y-6">
+          <SecuritySection
+            changePasswordOpen={changePasswordOpen}
+            setChangePasswordOpen={setChangePasswordOpen}
+            passwordData={passwordData}
+            setPasswordData={setPasswordData}
+            handleChangePassword={handleChangePassword}
+            changePasswordPending={changePasswordMutation.isPending}
+          />
+        </div>
+      ) : (
+      <Tabs defaultValue="users" className="space-y-4">
+        <TabsList className="w-full grid grid-cols-5 gap-0 p-1">
+          <TabsTrigger value="users" className="px-1 text-xs sm:text-sm gap-1"><Users className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" /><span className="truncate">Usuários</span></TabsTrigger>
+          <TabsTrigger value="plans" className="px-1 text-xs sm:text-sm gap-1"><CreditCard className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" /><span className="truncate">Planos</span></TabsTrigger>
+          <TabsTrigger value="branding" className="px-1 text-xs sm:text-sm gap-1"><Palette className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" /><span className="truncate">Marca</span></TabsTrigger>
+          <TabsTrigger value="pix" className="px-1 text-xs sm:text-sm gap-1"><QrCode className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" /><span className="truncate">Pix</span></TabsTrigger>
+          <TabsTrigger value="security" className="px-1 text-xs sm:text-sm gap-1"><Shield className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" /><span className="truncate">Segurança</span></TabsTrigger>
+        </TabsList>
+
 
 
         {/* ─── USERS TAB ─── */}
