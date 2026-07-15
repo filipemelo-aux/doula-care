@@ -67,6 +67,9 @@ import { BIRTH_TYPE_LABELS } from "@/components/clients/BirthRegistrationDialog"
 import { AppointmentDetailDialog } from "@/components/clients/AppointmentDetailDialog";
 import { AppointmentCompleteDialog } from "@/components/clients/AppointmentCompleteDialog";
 import { AppointmentEditDialog } from "@/components/clients/AppointmentEditDialog";
+import { ModeratorPaymentRequestDialog } from "@/components/dashboard/ModeratorPaymentRequestDialog";
+import { useAuth } from "@/contexts/AuthContext";
+
 
 
 type Client = Tables<"clients">;
