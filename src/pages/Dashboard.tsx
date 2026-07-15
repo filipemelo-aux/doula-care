@@ -35,6 +35,13 @@ export default function Dashboard() {
         setAvatarUrl(data?.avatar_url || null);
         if (data && !(data as any).welcome_seen) {
           setShowWelcome(true);
+          // Persist immediately so it never appears again on any device,
+          // regardless of whether the user actually closes the dialog.
+          supabase
+            .from("profiles")
+            .update({ welcome_seen: true } as any)
+            .eq("user_id", user.id)
+            .then(() => {});
         }
       });
   }, [user]);
