@@ -103,10 +103,14 @@ export function ClientQuickViewDialog({
 }: ClientQuickViewDialogProps) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { role } = useAuth();
+  const isModerator = role === "moderator";
   const [diaryOpen, setDiaryOpen] = useState(false);
   const [contractionsOpen, setContractionsOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
+  const [chargeOpen, setChargeOpen] = useState(false);
   const [fichaOpen, setFichaOpen] = useState(false);
+
 
   type DetailAppointment = {
     id: string;
