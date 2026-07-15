@@ -472,6 +472,17 @@ export default function Agenda() {
     setAptCepLoading(false);
     setAptCepData(null);
     setAptNumber("");
+    setLockedClientId(null);
+    // If we came from the Dashboard client quick view, hop back and reopen it
+    // so the just-added appointment shows up in the summary.
+    if (returnToClientId) {
+      const cid = returnToClientId;
+      setReturnToClientId(null);
+      queryClient.invalidateQueries({ queryKey: ["client-quick-view", cid] });
+      queryClient.invalidateQueries({ queryKey: ["client-quick-view-activity", cid] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard-upcoming-appointments"] });
+      navigate("/admin", { state: { openClientId: cid } });
+    }
   };
 
   const openEditAppointment = (apt: AppointmentWithClient) => {
