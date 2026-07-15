@@ -473,16 +473,99 @@ export default function Settings() {
         </div>
       </div>
 
-      <Tabs defaultValue={callerIsModerator ? "security" : "users"} className="space-y-4">
-        {!callerIsModerator && (
-          <TabsList className="w-full grid grid-cols-5 gap-0 p-1">
-            <TabsTrigger value="users" className="px-1 text-xs sm:text-sm gap-1"><Users className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" /><span className="truncate">Usuários</span></TabsTrigger>
-            <TabsTrigger value="plans" className="px-1 text-xs sm:text-sm gap-1"><CreditCard className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" /><span className="truncate">Planos</span></TabsTrigger>
-            <TabsTrigger value="branding" className="px-1 text-xs sm:text-sm gap-1"><Palette className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" /><span className="truncate">Marca</span></TabsTrigger>
-            <TabsTrigger value="pix" className="px-1 text-xs sm:text-sm gap-1"><QrCode className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" /><span className="truncate">Pix</span></TabsTrigger>
-            <TabsTrigger value="security" className="px-1 text-xs sm:text-sm gap-1"><Shield className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" /><span className="truncate">Segurança</span></TabsTrigger>
-          </TabsList>
-        )}
+      {callerIsModerator ? (
+        <div className="space-y-6">
+          <PushNotificationStatusCard />
+          <Card className="card-glass">
+            <CardHeader>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg bg-success/10 flex items-center justify-center">
+                  <Shield className="w-5 h-5 text-success" />
+                </div>
+                <div>
+                  <CardTitle className="text-lg">Segurança</CardTitle>
+                  <CardDescription>Autenticação e controle de acesso</CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <Dialog open={changePasswordOpen} onOpenChange={setChangePasswordOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="outline" className="w-full justify-start gap-2">
+                    <Key className="w-4 h-4" /> Alterar Senha
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader><DialogTitle>Alterar Senha</DialogTitle></DialogHeader>
+                  <div className="space-y-4 py-4">
+                    <div className="space-y-2">
+                      <Label>Nova Senha</Label>
+                      <Input type="password" value={passwordData.newPassword} onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })} placeholder="••••••••" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Confirmar Senha</Label>
+                      <Input type="password" value={passwordData.confirmPassword} onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })} placeholder="••••••••" />
+                    </div>
+                    <Button onClick={handleChangePassword} className="w-full" disabled={changePasswordMutation.isPending}>
+                      {changePasswordMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Salvar Nova Senha"}
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            </CardContent>
+          </Card>
+
+          <Card className="card-glass">
+            <CardContent className="pt-6 space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                    <RefreshCw className="w-5 h-5 text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-foreground text-sm">Verificar atualizações</h3>
+                    <p className="text-xs text-muted-foreground">Limpa cache e busca a versão mais recente</p>
+                  </div>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    toast.loading("Verificando atualizações...", { id: "update-check" });
+                    void hardRefreshApp();
+                  }}
+                >
+                  Atualizar
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="card-glass">
+            <CardContent className="pt-6">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center">
+                  <Heart className="w-6 h-6 text-primary-foreground" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-foreground">Doula Care Dashboard</h3>
+                  <p className="text-sm text-muted-foreground">v{APP_VERSION} • Desenvolvido com ❤️ para Doulas</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      ) : (
+      <Tabs defaultValue="users" className="space-y-4">
+        <TabsList className="w-full grid grid-cols-5 gap-0 p-1">
+          <TabsTrigger value="users" className="px-1 text-xs sm:text-sm gap-1"><Users className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" /><span className="truncate">Usuários</span></TabsTrigger>
+          <TabsTrigger value="plans" className="px-1 text-xs sm:text-sm gap-1"><CreditCard className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" /><span className="truncate">Planos</span></TabsTrigger>
+          <TabsTrigger value="branding" className="px-1 text-xs sm:text-sm gap-1"><Palette className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" /><span className="truncate">Marca</span></TabsTrigger>
+          <TabsTrigger value="pix" className="px-1 text-xs sm:text-sm gap-1"><QrCode className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" /><span className="truncate">Pix</span></TabsTrigger>
+          <TabsTrigger value="security" className="px-1 text-xs sm:text-sm gap-1"><Shield className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" /><span className="truncate">Segurança</span></TabsTrigger>
+        </TabsList>
+
+
 
 
         {/* ─── USERS TAB ─── */}
@@ -721,6 +804,8 @@ export default function Settings() {
           </Card>
         </TabsContent>
       </Tabs>
+      )}
+
 
       {/* ─── Dialogs ─── */}
 
