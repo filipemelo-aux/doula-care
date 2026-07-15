@@ -827,6 +827,8 @@ export function ClientFileDialog({ open, onOpenChange, client }: ClientFileDialo
                   </div>
                 )}
               </Card>
+              )}
+
             </div>
           </ScrollArea>
         )}
