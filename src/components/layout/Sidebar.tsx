@@ -55,10 +55,11 @@ const navItems = [
     ],
   },
 
-  { to: "/comunidade", icon: Users2, label: "Comunidade" },
+  // { to: "/comunidade", icon: Users2, label: "Comunidade" }, // Oculto — acessível apenas via URL direta
   // { to: "/admin/assinatura", icon: Crown, label: "Assinatura" }, // Oculto temporariamente — em edição
-  { to: "/configuracoes", icon: Settings, label: "Configurações" },
 ];
+
+const settingsNavItem = { to: "/configuracoes", icon: Settings, label: "Configurações" };
 
 export function Sidebar({ isOpen, onToggle, onNavigate }: SidebarProps) {
   const location = useLocation();
@@ -259,8 +260,26 @@ export function Sidebar({ isOpen, onToggle, onNavigate }: SidebarProps) {
         })}
       </nav>
 
+      {/* Configurações — fixado no rodapé, acima do card de plano */}
+      <div className="px-3 pt-2 pb-1 border-t border-border/40">
+        <button
+          onClick={() => handleNavClick(settingsNavItem.to)}
+          className={cn(
+            "nav-link w-full text-left",
+            location.pathname === settingsNavItem.to && "active",
+            !isOpen && "lg:justify-center lg:px-0"
+          )}
+          title={!isOpen ? settingsNavItem.label : undefined}
+        >
+          <settingsNavItem.icon className="w-[18px] h-[18px] shrink-0" strokeWidth={1.8} />
+          <span className={cn("transition-opacity flex-1 text-[13px]", !isOpen && "lg:hidden")}>
+            {settingsNavItem.label}
+          </span>
+        </button>
+      </div>
+
       {/* Footer — info card style */}
-      <div className={cn("p-4", !isOpen && "lg:hidden")}>
+      <div className={cn("px-4 pb-4 pt-2", !isOpen && "lg:hidden")}>
         <div className="rounded-xl bg-muted/40 p-3.5">
           <div className="flex items-center gap-2 mb-1">
             <span className={cn("text-xs font-medium", planColors[plan] || "text-muted-foreground")}>
