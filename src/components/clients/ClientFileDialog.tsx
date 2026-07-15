@@ -795,8 +795,10 @@ export function ClientFileDialog({ open, onOpenChange, client }: ClientFileDialo
               )}
 
 
-              {/* Plan & Payment */}
+              {/* Plan & Payment (oculto para moderadores) */}
+              {!isModerator && (
               <Card icon={CreditCard} title="Plano e Pagamento" tint="primary">
+
                 <ChipGrid>
                   <Chip label="Plano" value={getPlanName(client.plan_setting_id, client.plan)} highlight />
                   <Chip label="Valor" value={formatCurrency(Number(client.plan_value) || 0)} highlight />
