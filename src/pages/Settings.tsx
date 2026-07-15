@@ -732,6 +732,8 @@ export default function Settings() {
           </Card>
         </TabsContent>
       </Tabs>
+      )}
+
 
       {/* ─── Dialogs ─── */}
 
