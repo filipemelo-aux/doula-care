@@ -144,6 +144,11 @@ const getServiceStatus = (svc: ServiceRequestFull) => {
 export default function Agenda() {
   const { user, organizationId } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
+  // When "Agendar" is clicked from the Dashboard client quick view, we remember
+  // which client to reopen once the appointment dialog closes.
+  const [returnToClientId, setReturnToClientId] = useState<string | null>(null);
+  const [lockedClientId, setLockedClientId] = useState<string | null>(null);
   const queryClient = useQueryClient();
   const [agendaFilter, setAgendaFilter] = useState<AgendaFilter>("calendar");
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
