@@ -35,6 +35,8 @@ import {
 } from "lucide-react";
 import { cn, formatBrazilDate } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+
 import { sortAppointmentsWithFutureFirst } from "@/lib/appointments";
 import { usePlanNames } from "@/hooks/usePlanNames";
 import { toast } from "sonner";
@@ -102,6 +104,9 @@ const serviceRequestStatusLabels: Record<string, string> = {
 
 export function ClientFileDialog({ open, onOpenChange, client }: ClientFileDialogProps) {
   const { getPlanName } = usePlanNames();
+  const { role } = useAuth();
+  const isModerator = role === "moderator";
+
 
   const { data: avatarUrl } = useQuery({
     queryKey: ["client-file-avatar", client?.user_id],
@@ -438,22 +443,25 @@ export function ClientFileDialog({ open, onOpenChange, client }: ClientFileDialo
       }
 
 
-      // Plan & Payment
-      addSection("Plano e Pagamento");
-      addText(`Plano: ${getPlanName(client.plan_setting_id, client.plan)}`);
-      addText(`Valor: ${formatCurrency(Number(client.plan_value) || 0)}`);
-      addText(`Pagamento: ${paymentMethodLabels[client.payment_method] || client.payment_method}`);
-      addText(`Status: ${paymentStatusLabels[client.payment_status] || client.payment_status}`);
+      // Plan & Payment (oculto para moderadores)
+      if (!isModerator) {
+        addSection("Plano e Pagamento");
+        addText(`Plano: ${getPlanName(client.plan_setting_id, client.plan)}`);
+        addText(`Valor: ${formatCurrency(Number(client.plan_value) || 0)}`);
+        addText(`Pagamento: ${paymentMethodLabels[client.payment_method] || client.payment_method}`);
+        addText(`Status: ${paymentStatusLabels[client.payment_status] || client.payment_status}`);
 
-      if (payments && payments.length > 1) {
-        addText("");
-        addText("Parcelas:", 10, true);
-        payments.forEach((p) => {
-          const statusStr = p.status === "pago" ? "✅ Pago" : p.status === "parcial" ? "⚠️ Parcial" : "⏳ Pendente";
-          const dueStr = p.due_date ? ` — Vence: ${formatDate(p.due_date)}` : "";
-          addText(`  ${p.installment_number}/${p.total_installments}: ${formatCurrency(Number(p.amount))} [${statusStr}]${dueStr}`);
-        });
+        if (payments && payments.length > 1) {
+          addText("");
+          addText("Parcelas:", 10, true);
+          payments.forEach((p) => {
+            const statusStr = p.status === "pago" ? "✅ Pago" : p.status === "parcial" ? "⚠️ Parcial" : "⏳ Pendente";
+            const dueStr = p.due_date ? ` — Vence: ${formatDate(p.due_date)}` : "";
+            addText(`  ${p.installment_number}/${p.total_installments}: ${formatCurrency(Number(p.amount))} [${statusStr}]${dueStr}`);
+          });
+        }
       }
+
 
       // Notifications section removed from PDF export.
 
@@ -787,8 +795,10 @@ export function ClientFileDialog({ open, onOpenChange, client }: ClientFileDialo
               )}
 
 
-              {/* Plan & Payment */}
+              {/* Plan & Payment (oculto para moderadores) */}
+              {!isModerator && (
               <Card icon={CreditCard} title="Plano e Pagamento" tint="primary">
+
                 <ChipGrid>
                   <Chip label="Plano" value={getPlanName(client.plan_setting_id, client.plan)} highlight />
                   <Chip label="Valor" value={formatCurrency(Number(client.plan_value) || 0)} highlight />
@@ -817,6 +827,8 @@ export function ClientFileDialog({ open, onOpenChange, client }: ClientFileDialo
                   </div>
                 )}
               </Card>
+              )}
+
             </div>
           </ScrollArea>
         )}

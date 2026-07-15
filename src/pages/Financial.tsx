@@ -1,4 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -186,6 +188,51 @@ export default function Financial() {
       return data as Transaction[];
     },
   });
+
+  // Auto-open payment dialog when navigated from admin approval of a moderator request
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [pendingModeratorRequestId, setPendingModeratorRequestId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const st = (location.state || {}) as {
+      openPaymentClientId?: string;
+      moderatorRequestId?: string;
+    };
+    if (!st.openPaymentClientId || !transactions) return;
+    const candidates = transactions.filter(
+      (t) => t.client_id === st.openPaymentClientId && Number(t.amount_received || 0) < Number(t.amount || 0)
+    );
+    const pick = candidates.sort((a, b) =>
+      (a.created_at || "").localeCompare(b.created_at || "")
+    )[0];
+    if (pick) {
+      setPaymentTransaction(pick as Transaction);
+      setPaymentDialogOpen(true);
+      if (st.moderatorRequestId) setPendingModeratorRequestId(st.moderatorRequestId);
+    } else {
+      toast.info("Nenhuma receita em aberto encontrada para esta cliente. Crie a receita primeiro.");
+    }
+    // clear state so refreshes don't re-trigger
+    navigate(location.pathname, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [transactions, location.state]);
+
+  // Approve moderator request once payment dialog closes after being opened for it
+  useEffect(() => {
+    if (!paymentDialogOpen && pendingModeratorRequestId) {
+      const id = pendingModeratorRequestId;
+      setPendingModeratorRequestId(null);
+      supabase
+        .from("moderator_payment_requests" as any)
+        .update({ status: "approved", resolved_at: new Date().toISOString(), resolved_by: user?.id })
+        .eq("id", id)
+        .then(() => {
+          queryClient.invalidateQueries({ queryKey: ["moderator-payment-requests"] });
+        });
+    }
+  }, [paymentDialogOpen, pendingModeratorRequestId, user?.id, queryClient]);
+
 
   // Fetch all payment installments to compute due dates per transaction
   const { data: allPayments } = useQuery({

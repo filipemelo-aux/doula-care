@@ -69,17 +69,12 @@ export function Sidebar({ isOpen, onToggle, onNavigate }: SidebarProps) {
   const { organizationId, role } = useAuth();
   const isModerator = role === "moderator";
 
-  // Moderadores não têm acesso a relatórios/resumos agregados de ganhos
-  const visibleNavItems = navItems
-    .map((item) => {
-      if ("subItems" in item && item.subItems) {
-        return {
-          ...item,
-          subItems: isModerator ? item.subItems.filter((s) => s.to !== "/relatorios") : item.subItems,
-        };
-      }
-      return item;
-    });
+  // Moderadores não têm acesso ao módulo Financeiro (entradas, despesas, cobranças e relatórios)
+  const visibleNavItems = navItems.filter((item) => {
+    if (isModerator && "subItems" in item && item.label === "Financeiro") return false;
+    return true;
+  });
+
 
   const isFinancialRoute = ["/financeiro", "/despesas", "/cobrancas", "/relatorios"].includes(location.pathname);
   const financialOpen = true;

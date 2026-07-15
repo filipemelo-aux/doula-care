@@ -31,6 +31,9 @@ import {
   FileText,
   Bell,
   Baby,
+  DollarSign,
+
+
   Heart,
   Calendar,
   MapPin,
@@ -64,6 +67,9 @@ import { BIRTH_TYPE_LABELS } from "@/components/clients/BirthRegistrationDialog"
 import { AppointmentDetailDialog } from "@/components/clients/AppointmentDetailDialog";
 import { AppointmentCompleteDialog } from "@/components/clients/AppointmentCompleteDialog";
 import { AppointmentEditDialog } from "@/components/clients/AppointmentEditDialog";
+import { ModeratorPaymentRequestDialog } from "@/components/dashboard/ModeratorPaymentRequestDialog";
+import { useAuth } from "@/contexts/AuthContext";
+
 
 
 type Client = Tables<"clients">;
@@ -97,10 +103,14 @@ export function ClientQuickViewDialog({
 }: ClientQuickViewDialogProps) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { role } = useAuth();
+  const isModerator = role === "moderator";
   const [diaryOpen, setDiaryOpen] = useState(false);
   const [contractionsOpen, setContractionsOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
+  const [chargeOpen, setChargeOpen] = useState(false);
   const [fichaOpen, setFichaOpen] = useState(false);
+
 
   type DetailAppointment = {
     id: string;
@@ -784,11 +794,20 @@ export function ClientQuickViewDialog({
                       highlight={inLabor}
                     />
                   )}
-                  <ActionButton
-                    icon={Bell}
-                    label="Notificar"
-                    onClick={() => setNotifOpen(true)}
-                  />
+                  {isModerator ? (
+                    <ActionButton
+                      icon={DollarSign}
+                      label="Cobrar"
+                      onClick={() => setChargeOpen(true)}
+                    />
+                  ) : (
+                    <ActionButton
+                      icon={Bell}
+                      label="Notificar"
+                      onClick={() => setNotifOpen(true)}
+                    />
+                  )}
+
                   <ActionButton
                     icon={FileText}
                     label="Ficha"
@@ -816,6 +835,13 @@ export function ClientQuickViewDialog({
         onOpenChange={setNotifOpen}
         client={client ?? null}
       />
+      <ModeratorPaymentRequestDialog
+        open={chargeOpen}
+        onOpenChange={setChargeOpen}
+        clientId={client?.id ?? null}
+        clientName={client ? (client.preferred_name?.trim() || client.full_name) : undefined}
+      />
+
       <ClientFileDialog
         open={fichaOpen}
         onOpenChange={setFichaOpen}

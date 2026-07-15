@@ -12,7 +12,9 @@ import { AdminWelcomeDialog } from "@/components/dashboard/AdminWelcomeDialog";
 import { BillingAlertBanner } from "@/components/dashboard/BillingAlertBanner";
 import { PromoBetaBanner } from "@/components/dashboard/PromoBetaBanner";
 import { MatchRequestsCard } from "@/components/dashboard/MatchRequestsCard";
+import { ModeratorPaymentRequestsCard } from "@/components/dashboard/ModeratorPaymentRequestsCard";
 import { ClientsOverview } from "@/components/dashboard/ClientsOverview";
+
 
 
 export default function Dashboard() {
@@ -58,6 +60,8 @@ export default function Dashboard() {
       <PromoBetaBanner />
       <BillingAlertBanner />
       <MatchRequestsCard />
+      <ModeratorPaymentRequestsCard />
+
 
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
