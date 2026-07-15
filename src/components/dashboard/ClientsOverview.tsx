@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useLocation } from "react-router-dom";
 import { ClientQuickViewDialog } from "./ClientQuickViewDialog";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -65,6 +66,17 @@ function babyName(c: ClientRow) {
 export function ClientsOverview() {
   const [openId, setOpenId] = useState<string | null>(null);
   const [filter, setFilter] = useState<ClientStatusFilter>("todas");
+  const location = useLocation();
+
+  // Reopen the client quick view when returning from the Agenda after
+  // scheduling an appointment from this same card.
+  useEffect(() => {
+    const cid = (location.state as any)?.openClientId as string | undefined;
+    if (cid) {
+      setOpenId(cid);
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
 
   const { data: clients, isLoading } = useQuery({
     queryKey: ["dashboard-clients-overview"],

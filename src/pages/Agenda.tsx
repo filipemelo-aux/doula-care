@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { sendPushNotification } from "@/lib/pushNotifications";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -144,6 +144,11 @@ const getServiceStatus = (svc: ServiceRequestFull) => {
 export default function Agenda() {
   const { user, organizationId } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
+  // When "Agendar" is clicked from the Dashboard client quick view, we remember
+  // which client to reopen once the appointment dialog closes.
+  const [returnToClientId, setReturnToClientId] = useState<string | null>(null);
+  const [lockedClientId, setLockedClientId] = useState<string | null>(null);
   const queryClient = useQueryClient();
   const [agendaFilter, setAgendaFilter] = useState<AgendaFilter>("calendar");
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
@@ -264,13 +269,34 @@ export default function Agenda() {
       }
     }
     if (state?.openDialog) {
-      if (state.openDialog === "consulta") setAppointmentDialog(true);
+      if (state.openDialog === "consulta") {
+        setAppointmentDialog(true);
+        if ((state as any).clientId) {
+          const cid = (state as any).clientId as string;
+          setAptClientId(cid);
+          setLockedClientId(cid);
+        }
+        if ((state as any).returnToClientId) {
+          setReturnToClientId((state as any).returnToClientId as string);
+        }
+      }
       else if (state.openDialog === "compromisso") setPersonalAptDialog(true);
       else if (state.openDialog === "servico") setServiceDialog(true);
       // Clear the state so it doesn't re-trigger
       window.history.replaceState({}, document.title);
     }
   }, [location.state, appointments]);
+
+  // Auto-fill the appointment address once the clients list resolves for a
+  // pre-locked client coming from the Dashboard quick view.
+  useEffect(() => {
+    if (!lockedClientId || !clients || aptAddress) return;
+    const c = clients.find(x => x.id === lockedClientId);
+    if (!c) return;
+    const parts = [c.street, c.number, c.neighborhood, c.city, c.state].filter(Boolean);
+    const addr = parts.join(", ");
+    if (addr) setAptAddress(addr);
+  }, [lockedClientId, clients, aptAddress]);
 
   const closePersonalDialog = () => {
     setPersonalAptDialog(false);
@@ -457,6 +483,19 @@ export default function Agenda() {
     setAptCepLoading(false);
     setAptCepData(null);
     setAptNumber("");
+    setLockedClientId(null);
+    // If we came from the Dashboard client quick view, hop back and reopen it
+    // so the just-added appointment shows up in the summary.
+    if (returnToClientId) {
+      const cid = returnToClientId;
+      setReturnToClientId(null);
+      queryClient.invalidateQueries({ queryKey: ["client-quickview", cid] });
+      queryClient.invalidateQueries({ queryKey: ["client-quickview-activity", cid] });
+      queryClient.invalidateQueries({ queryKey: ["agenda-appointments"] });
+      queryClient.invalidateQueries({ queryKey: ["all-appointments"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
+      navigate("/admin", { state: { openClientId: cid } });
+    }
   };
 
   const openEditAppointment = (apt: AppointmentWithClient) => {
@@ -976,8 +1015,12 @@ export default function Agenda() {
           <div className="space-y-4">
             {!editingAppointment && (
               <div>
-                <Label className="text-xs">Cliente (opcional)</Label>
-                <Select value={aptClientId} onValueChange={handleAptClientChange}>
+                <Label className="text-xs">Cliente {lockedClientId ? "" : "(opcional)"}</Label>
+                <Select
+                  value={aptClientId}
+                  onValueChange={handleAptClientChange}
+                  disabled={!!lockedClientId}
+                >
                   <SelectTrigger className="mt-1">
                     <SelectValue placeholder="Selecione ou deixe em branco..." />
                   </SelectTrigger>
