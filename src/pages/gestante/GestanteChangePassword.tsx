@@ -107,6 +107,7 @@ export default function GestanteChangePassword() {
       <WelcomeNameDialog
         fullName={clientFullName}
         userId={user.id}
+        clientId={clientId ?? undefined}
         onComplete={() => {
           navigate("/gestante", { replace: true });
         }}
