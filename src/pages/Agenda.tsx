@@ -1015,8 +1015,12 @@ export default function Agenda() {
           <div className="space-y-4">
             {!editingAppointment && (
               <div>
-                <Label className="text-xs">Cliente (opcional)</Label>
-                <Select value={aptClientId} onValueChange={handleAptClientChange}>
+                <Label className="text-xs">Cliente {lockedClientId ? "" : "(opcional)"}</Label>
+                <Select
+                  value={aptClientId}
+                  onValueChange={handleAptClientChange}
+                  disabled={!!lockedClientId}
+                >
                   <SelectTrigger className="mt-1">
                     <SelectValue placeholder="Selecione ou deixe em branco..." />
                   </SelectTrigger>
