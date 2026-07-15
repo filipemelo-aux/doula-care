@@ -55,10 +55,11 @@ const navItems = [
     ],
   },
 
-  { to: "/comunidade", icon: Users2, label: "Comunidade" },
+  // { to: "/comunidade", icon: Users2, label: "Comunidade" }, // Oculto — acessível apenas via URL direta
   // { to: "/admin/assinatura", icon: Crown, label: "Assinatura" }, // Oculto temporariamente — em edição
-  { to: "/configuracoes", icon: Settings, label: "Configurações" },
 ];
+
+const settingsNavItem = { to: "/configuracoes", icon: Settings, label: "Configurações" };
 
 export function Sidebar({ isOpen, onToggle, onNavigate }: SidebarProps) {
   const location = useLocation();
