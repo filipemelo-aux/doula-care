@@ -104,6 +104,9 @@ const serviceRequestStatusLabels: Record<string, string> = {
 
 export function ClientFileDialog({ open, onOpenChange, client }: ClientFileDialogProps) {
   const { getPlanName } = usePlanNames();
+  const { role } = useAuth();
+  const isModerator = role === "moderator";
+
 
   const { data: avatarUrl } = useQuery({
     queryKey: ["client-file-avatar", client?.user_id],
