@@ -1,10 +1,7 @@
 import { Skeleton } from "@/components/ui/skeleton";
-import { PeriodOption, getPeriodLabel } from "./PeriodFilter";
+import { useState } from "react";
+import { PeriodFilter, PeriodOption, getPeriodLabel } from "./PeriodFilter";
 import { useFinancialMetrics, formatCurrency } from "@/hooks/useFinancialMetrics";
-
-interface FinancialOverviewProps {
-  period: PeriodOption;
-}
 
 const paymentMethodLabels: Record<string, string> = {
   pix: "PIX",
@@ -14,7 +11,8 @@ const paymentMethodLabels: Record<string, string> = {
   boleto: "Boleto",
 };
 
-export function FinancialOverview({ period }: FinancialOverviewProps) {
+export function FinancialOverview() {
+  const [period, setPeriod] = useState<PeriodOption>("month");
   const { data: metrics, isLoading } = useFinancialMetrics(period);
 
   if (isLoading) {
@@ -39,13 +37,16 @@ export function FinancialOverview({ period }: FinancialOverviewProps) {
 
   return (
     <div className="rounded-2xl bg-gradient-to-br from-success/10 via-success/5 to-transparent p-4 lg:p-6 shadow-card space-y-4">
-      <div>
-        <p className="text-xs text-muted-foreground/70 mb-0.5">
-          Receita Contratada — {getPeriodLabel(period)}
-        </p>
-        <p className="text-3xl lg:text-4xl font-bold tracking-tight text-foreground">
-          {formatCurrency(totalContracted)}
-        </p>
+      <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3">
+        <div>
+          <p className="text-xs text-muted-foreground/70 mb-0.5">
+            Receita Contratada — {getPeriodLabel(period)}
+          </p>
+          <p className="text-3xl lg:text-4xl font-bold tracking-tight text-foreground">
+            {formatCurrency(totalContracted)}
+          </p>
+        </div>
+        <PeriodFilter selected={period} onChange={setPeriod} />
       </div>
       <div className="grid grid-cols-3 gap-3">
         <div className="space-y-0.5">
