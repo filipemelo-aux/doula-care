@@ -228,10 +228,11 @@ const App = () => (
               <Route path="/mensagens" element={<AdminMessages />} />
               <Route path="/agenda" element={<Agenda />} />
               <Route path="/clientes" element={<Clients />} />
-              <Route path="/financeiro" element={<Financial />} />
-              <Route path="/despesas" element={<Expenses />} />
-              <Route path="/cobrancas" element={<Cobrancas />} />
-              <Route path="/relatorios" element={<Reports />} />
+              <Route path="/financeiro" element={<ProtectedRoute allowedRoles={["admin"]}><Financial /></ProtectedRoute>} />
+              <Route path="/despesas" element={<ProtectedRoute allowedRoles={["admin"]}><Expenses /></ProtectedRoute>} />
+              <Route path="/cobrancas" element={<ProtectedRoute allowedRoles={["admin"]}><Cobrancas /></ProtectedRoute>} />
+              <Route path="/relatorios" element={<ProtectedRoute allowedRoles={["admin"]}><Reports /></ProtectedRoute>} />
+
 
               <Route path="/comunidade" element={<Forum />} />
               <Route path="/configuracoes" element={<Settings />} />
