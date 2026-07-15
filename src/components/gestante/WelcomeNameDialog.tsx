@@ -8,10 +8,11 @@ import { toast } from "sonner";
 interface WelcomeNameDialogProps {
   fullName: string;
   userId: string;
+  clientId?: string;
   onComplete: (preferredName: string) => void;
 }
 
-export function WelcomeNameDialog({ fullName, userId, onComplete }: WelcomeNameDialogProps) {
+export function WelcomeNameDialog({ fullName, userId, clientId, onComplete }: WelcomeNameDialogProps) {
   const firstName = fullName?.split(" ")[0] || "";
   const [name, setName] = useState(firstName);
   const [saving, setSaving] = useState(false);
@@ -26,10 +27,43 @@ export function WelcomeNameDialog({ fullName, userId, onComplete }: WelcomeNameD
 
     setSaving(true);
     try {
-      const { error } = await supabase
+      // Safety: re-check that the authenticated user really owns a client row
+      // AND has no admin/moderator/super_admin role. Prevents writing this
+      // field for the wrong person when a moderator/doula opens the app while
+      // a client is signed in on the same device.
+      const { data: authData } = await supabase.auth.getUser();
+      const authUid = authData.user?.id;
+      if (!authUid || authUid !== userId) {
+        toast.error("Sessão inválida. Faça login novamente.");
+        setSaving(false);
+        return;
+      }
+
+      const { data: roleRows } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", authUid);
+      const nonClientRole = roleRows?.find((r) =>
+        ["admin", "moderator", "super_admin"].includes(r.role as string)
+      );
+      if (nonClientRole) {
+        toast.error(
+          "Esta tela é exclusiva de gestantes. Sua conta é de equipe (" +
+            nonClientRole.role +
+            ")."
+        );
+        setSaving(false);
+        return;
+      }
+
+      // Scope the update explicitly by client id when available, always
+      // combined with the authenticated user_id, so a stray session can never
+      // rewrite someone else's client record.
+      const query = supabase
         .from("clients")
         .update({ preferred_name: trimmed })
-        .eq("user_id", userId);
+        .eq("user_id", authUid);
+      const { error } = clientId ? await query.eq("id", clientId) : await query;
 
       if (error) throw error;
       onComplete(trimmed);

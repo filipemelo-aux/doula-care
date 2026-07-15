@@ -18,8 +18,9 @@ export default function GestanteChangePassword() {
   const [loading, setLoading] = useState(false);
   const [showWelcome, setShowWelcome] = useState(false);
   const [clientFullName, setClientFullName] = useState("");
+  const [clientId, setClientId] = useState<string | null>(null);
   const navigate = useNavigate();
-  const { user, setFirstLoginComplete, refreshClientData } = useAuth();
+  const { user, role, roles, setFirstLoginComplete, refreshClientData } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,19 +37,32 @@ export default function GestanteChangePassword() {
       return;
     }
 
+    // Guardrail: this screen is exclusively for clients (gestantes).
+    // If a team member (admin/moderator/super_admin) somehow lands here on a
+    // shared device or session, do not let them rewrite the client's data.
+    const hasTeamRole = roles?.some((r) => ["admin", "moderator", "super_admin"].includes(r));
+    if (hasTeamRole) {
+      toast.error("Esta tela é exclusiva de gestantes.", {
+        description: "Sua conta de equipe não pode alterar dados desta gestante.",
+      });
+      navigate(role === "super_admin" ? "/super-admin" : "/admin", { replace: true });
+      return;
+    }
+
     setLoading(true);
 
     try {
       if (user) {
-        // Fetch client full name for the welcome dialog
+        // Fetch client id + full name for the welcome dialog
         const { data: clientData } = await supabase
           .from("clients")
-          .select("full_name")
+          .select("id, full_name")
           .eq("user_id", user.id)
           .maybeSingle();
 
         if (clientData) {
           setClientFullName(clientData.full_name);
+          setClientId(clientData.id);
         }
 
         const { error: updateError } = await supabase
@@ -93,6 +107,7 @@ export default function GestanteChangePassword() {
       <WelcomeNameDialog
         fullName={clientFullName}
         userId={user.id}
+        clientId={clientId ?? undefined}
         onComplete={() => {
           navigate("/gestante", { replace: true });
         }}
