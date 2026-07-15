@@ -17,7 +17,7 @@ import { ClientsOverview } from "@/components/dashboard/ClientsOverview";
 
 
 export default function Dashboard() {
-  const [period, setPeriod] = useState<PeriodOption>("month");
+  
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [showWelcome, setShowWelcome] = useState(false);
   const { profileName, user, role } = useAuth();
