@@ -777,7 +777,11 @@ export function ClientQuickViewDialog({
                     icon={CalendarPlus}
                     label="Agendar"
                     onClick={() =>
-                      go("/agenda", { openDialog: "consulta" })
+                      go("/agenda", {
+                        openDialog: "consulta",
+                        clientId: client.id,
+                        returnToClientId: client.id,
+                      })
                     }
                   />
                   <ActionButton
