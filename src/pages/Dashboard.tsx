@@ -5,7 +5,6 @@ import { FinancialOverview } from "@/components/dashboard/FinancialOverview";
 import { TopPlansCard } from "@/components/dashboard/TopPlansCard";
 import { UpcomingAppointments } from "@/components/dashboard/UpcomingAppointments";
 import { CalendarLabelsSummaryCard } from "@/components/dashboard/CalendarLabelsSummaryCard";
-import { PeriodFilter, PeriodOption } from "@/components/dashboard/PeriodFilter";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Heart } from "lucide-react";
 import { AdminWelcomeDialog } from "@/components/dashboard/AdminWelcomeDialog";
@@ -78,7 +77,6 @@ export default function Dashboard() {
             Acompanhe suas clientes e o desempenho do seu negócio
           </p>
         </div>
-        {canSeeFinancials && <PeriodFilter selected={period} onChange={setPeriod} />}
       </div>
 
       {/* ═══ 1 — Suas clientes (foco doula) ═══ */}
@@ -89,7 +87,7 @@ export default function Dashboard() {
       <CalendarLabelsSummaryCard />
 
       {/* ═══ 3 — Financeiro (oculto para moderadores) ═══ */}
-      {canSeeFinancials && <FinancialOverview period={period} />}
+      {canSeeFinancials && <FinancialOverview />}
 
       {/* ═══ 4 — Planos mais contratados (oculto para moderadores — dado agregado financeiro) ═══ */}
       {canSeeFinancials && <TopPlansCard />}
