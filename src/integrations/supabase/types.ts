@@ -961,6 +961,45 @@ export type Database = {
           },
         ]
       }
+      moderator_payment_requests: {
+        Row: {
+          amount: number
+          client_id: string
+          created_at: string
+          id: string
+          moderator_id: string
+          notes: string | null
+          organization_id: string
+          resolved_at: string | null
+          resolved_by: string | null
+          status: string
+        }
+        Insert: {
+          amount: number
+          client_id: string
+          created_at?: string
+          id?: string
+          moderator_id: string
+          notes?: string | null
+          organization_id: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string
+        }
+        Update: {
+          amount?: number
+          client_id?: string
+          created_at?: string
+          id?: string
+          moderator_id?: string
+          notes?: string | null
+          organization_id?: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
       notification_seen: {
         Row: {
           created_at: string
