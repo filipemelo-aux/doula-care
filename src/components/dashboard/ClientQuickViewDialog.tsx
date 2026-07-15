@@ -835,6 +835,13 @@ export function ClientQuickViewDialog({
         onOpenChange={setNotifOpen}
         client={client ?? null}
       />
+      <ModeratorPaymentRequestDialog
+        open={chargeOpen}
+        onOpenChange={setChargeOpen}
+        clientId={client?.id ?? null}
+        clientName={client ? (client.preferred_name?.trim() || client.full_name) : undefined}
+      />
+
       <ClientFileDialog
         open={fichaOpen}
         onOpenChange={setFichaOpen}
