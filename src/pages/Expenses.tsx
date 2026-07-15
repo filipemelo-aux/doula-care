@@ -109,7 +109,8 @@ const expenseSchema = z.object({
 type ExpenseFormData = z.infer<typeof expenseSchema>;
 
 export default function Expenses() {
-  const { user, organizationId } = useAuth();
+  const { user, organizationId, role } = useAuth();
+  const isModerator = role === "moderator";
   const [dialogOpen, setDialogOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -132,13 +133,14 @@ export default function Expenses() {
   });
 
   const { data: expenses, isLoading } = useQuery({
-    queryKey: ["transactions", "despesa"],
+    queryKey: ["transactions", "despesa", isModerator ? user?.id : "all"],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let q = supabase
         .from("transactions")
         .select("*")
-        .eq("type", "despesa")
-        .order("date", { ascending: false });
+        .eq("type", "despesa");
+      if (isModerator && user?.id) q = q.eq("owner_id", user.id);
+      const { data, error } = await q.order("date", { ascending: false });
 
       if (error) throw error;
       return data;

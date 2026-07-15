@@ -107,7 +107,8 @@ type TransactionFormData = z.infer<typeof transactionSchema>;
 // Services come entirely from the database (custom_services table per org)
 
 export default function Financial() {
-  const { user, organizationId } = useAuth();
+  const { user, organizationId, role } = useAuth();
+  const isModerator = role === "moderator";
   const [dialogOpen, setDialogOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -172,13 +173,14 @@ export default function Financial() {
   const selectedClientId = form.watch("client_id");
 
   const { data: transactions, isLoading } = useQuery({
-    queryKey: ["transactions", "receita"],
+    queryKey: ["transactions", "receita", isModerator ? user?.id : "all"],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let q = supabase
         .from("transactions")
         .select("*, clients(full_name, dpp), plan_settings(name)")
-        .eq("type", "receita")
-        .order("created_at", { ascending: false });
+        .eq("type", "receita");
+      if (isModerator && user?.id) q = q.eq("owner_id", user.id);
+      const { data, error } = await q.order("created_at", { ascending: false });
 
       if (error) throw error;
       return data as Transaction[];
@@ -235,12 +237,13 @@ export default function Financial() {
   const getDueDate = (t: Transaction): string => dueDateByTransaction.get(t.id) || t.date;
 
   const { data: clients } = useQuery({
-    queryKey: ["clients-with-plans"],
+    queryKey: ["clients-with-plans", isModerator ? user?.id : "all"],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let q = supabase
         .from("clients")
-        .select("id, full_name, plan, plan_value, plan_setting_id")
-        .order("full_name");
+        .select("id, full_name, plan, plan_value, plan_setting_id");
+      if (isModerator && user?.id) q = q.eq("owner_id", user.id);
+      const { data, error } = await q.order("full_name");
       if (error) throw error;
       return data;
     },
@@ -869,25 +872,27 @@ export default function Financial() {
         </Button>
       </div>
 
-      {/* Stats — Recebido como destaque */}
-      <div className="rounded-2xl bg-gradient-to-br from-success/10 via-success/5 to-transparent p-4 lg:p-6 shadow-card">
-        <p className="text-xs text-muted-foreground/70 mb-0.5">Recebido</p>
-        <p className="text-3xl lg:text-4xl font-bold tracking-tight text-success">{formatCurrency(totalReceived)}</p>
-        <div className="grid grid-cols-3 gap-3 mt-4">
-          <div className="space-y-0.5">
-            <p className="text-[10px] lg:text-xs text-muted-foreground/60 font-normal">Total contratado</p>
-            <p className="text-sm lg:text-base font-semibold text-foreground/80">{formatCurrency(totalIncome)}</p>
-          </div>
-          <div className="space-y-0.5">
-            <p className="text-[10px] lg:text-xs text-muted-foreground/60 font-normal">A receber</p>
-            <p className="text-sm lg:text-base font-semibold text-amber-600/80">{formatCurrency(pendingIncome)}</p>
-          </div>
-          <div className="space-y-0.5">
-            <p className="text-[10px] lg:text-xs text-muted-foreground/60 font-normal">Transações</p>
-            <p className="text-sm lg:text-base font-semibold text-foreground/80">{transactions?.length || 0}</p>
+      {/* Stats — Recebido como destaque (oculto para moderadores) */}
+      {!isModerator && (
+        <div className="rounded-2xl bg-gradient-to-br from-success/10 via-success/5 to-transparent p-4 lg:p-6 shadow-card">
+          <p className="text-xs text-muted-foreground/70 mb-0.5">Recebido</p>
+          <p className="text-3xl lg:text-4xl font-bold tracking-tight text-success">{formatCurrency(totalReceived)}</p>
+          <div className="grid grid-cols-3 gap-3 mt-4">
+            <div className="space-y-0.5">
+              <p className="text-[10px] lg:text-xs text-muted-foreground/60 font-normal">Total contratado</p>
+              <p className="text-sm lg:text-base font-semibold text-foreground/80">{formatCurrency(totalIncome)}</p>
+            </div>
+            <div className="space-y-0.5">
+              <p className="text-[10px] lg:text-xs text-muted-foreground/60 font-normal">A receber</p>
+              <p className="text-sm lg:text-base font-semibold text-amber-600/80">{formatCurrency(pendingIncome)}</p>
+            </div>
+            <div className="space-y-0.5">
+              <p className="text-[10px] lg:text-xs text-muted-foreground/60 font-normal">Transações</p>
+              <p className="text-sm lg:text-base font-semibold text-foreground/80">{transactions?.length || 0}</p>
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Search */}
       <Card className="card-glass">
