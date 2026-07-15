@@ -173,13 +173,14 @@ export default function Financial() {
   const selectedClientId = form.watch("client_id");
 
   const { data: transactions, isLoading } = useQuery({
-    queryKey: ["transactions", "receita"],
+    queryKey: ["transactions", "receita", isModerator ? user?.id : "all"],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let q = supabase
         .from("transactions")
         .select("*, clients(full_name, dpp), plan_settings(name)")
-        .eq("type", "receita")
-        .order("created_at", { ascending: false });
+        .eq("type", "receita");
+      if (isModerator && user?.id) q = q.eq("owner_id", user.id);
+      const { data, error } = await q.order("created_at", { ascending: false });
 
       if (error) throw error;
       return data as Transaction[];
