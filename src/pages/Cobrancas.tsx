@@ -57,18 +57,19 @@ export default function Cobrancas() {
   const [customMessage, setCustomMessage] = useState("");
 
   const { data: rows, isLoading } = useQuery<InstallmentRow[]>({
-    queryKey: ["cobrancas-installments", organizationId],
+    queryKey: ["cobrancas-installments", organizationId, isModerator ? user?.id : "all"],
     enabled: !!organizationId,
     queryFn: async () => {
-      const { data, error } = await supabase
+      let q = supabase
         .from("payments")
         .select(
           "id, client_id, installment_number, total_installments, amount, amount_paid, due_date, status, clients(full_name, phone, user_id, payment_status)"
         )
         .eq("organization_id", organizationId!)
         .neq("status", "pago")
-        .not("due_date", "is", null)
-        .order("due_date", { ascending: true });
+        .not("due_date", "is", null);
+      if (isModerator && user?.id) q = q.eq("owner_id", user.id);
+      const { data, error } = await q.order("due_date", { ascending: true });
 
       if (error) throw error;
 
