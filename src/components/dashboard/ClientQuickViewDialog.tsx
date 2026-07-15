@@ -30,7 +30,8 @@ import {
   Activity,
   FileText,
   Bell,
-  Baby,
+  DollarSign,
+
   Heart,
   Calendar,
   MapPin,
