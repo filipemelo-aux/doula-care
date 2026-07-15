@@ -478,9 +478,11 @@ export default function Agenda() {
     if (returnToClientId) {
       const cid = returnToClientId;
       setReturnToClientId(null);
-      queryClient.invalidateQueries({ queryKey: ["client-quick-view", cid] });
-      queryClient.invalidateQueries({ queryKey: ["client-quick-view-activity", cid] });
-      queryClient.invalidateQueries({ queryKey: ["dashboard-upcoming-appointments"] });
+      queryClient.invalidateQueries({ queryKey: ["client-quickview", cid] });
+      queryClient.invalidateQueries({ queryKey: ["client-quickview-activity", cid] });
+      queryClient.invalidateQueries({ queryKey: ["agenda-appointments"] });
+      queryClient.invalidateQueries({ queryKey: ["all-appointments"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
       navigate("/admin", { state: { openClientId: cid } });
     }
   };
