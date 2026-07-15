@@ -237,12 +237,13 @@ export default function Financial() {
   const getDueDate = (t: Transaction): string => dueDateByTransaction.get(t.id) || t.date;
 
   const { data: clients } = useQuery({
-    queryKey: ["clients-with-plans"],
+    queryKey: ["clients-with-plans", isModerator ? user?.id : "all"],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let q = supabase
         .from("clients")
-        .select("id, full_name, plan, plan_value, plan_setting_id")
-        .order("full_name");
+        .select("id, full_name, plan, plan_value, plan_setting_id");
+      if (isModerator && user?.id) q = q.eq("owner_id", user.id);
+      const { data, error } = await q.order("full_name");
       if (error) throw error;
       return data;
     },
