@@ -794,11 +794,20 @@ export function ClientQuickViewDialog({
                       highlight={inLabor}
                     />
                   )}
-                  <ActionButton
-                    icon={Bell}
-                    label="Notificar"
-                    onClick={() => setNotifOpen(true)}
-                  />
+                  {isModerator ? (
+                    <ActionButton
+                      icon={DollarSign}
+                      label="Cobrar"
+                      onClick={() => setChargeOpen(true)}
+                    />
+                  ) : (
+                    <ActionButton
+                      icon={Bell}
+                      label="Notificar"
+                      onClick={() => setNotifOpen(true)}
+                    />
+                  )}
+
                   <ActionButton
                     icon={FileText}
                     label="Ficha"
