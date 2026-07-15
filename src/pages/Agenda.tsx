@@ -287,6 +287,17 @@ export default function Agenda() {
     }
   }, [location.state, appointments]);
 
+  // Auto-fill the appointment address once the clients list resolves for a
+  // pre-locked client coming from the Dashboard quick view.
+  useEffect(() => {
+    if (!lockedClientId || !clients || aptAddress) return;
+    const c = clients.find(x => x.id === lockedClientId);
+    if (!c) return;
+    const parts = [c.street, c.number, c.neighborhood, c.city, c.state].filter(Boolean);
+    const addr = parts.join(", ");
+    if (addr) setAptAddress(addr);
+  }, [lockedClientId, clients, aptAddress]);
+
   const closePersonalDialog = () => {
     setPersonalAptDialog(false);
     setPersonalTitle("");
