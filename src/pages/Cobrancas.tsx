@@ -48,7 +48,8 @@ const formatCurrency = (v: number) =>
   v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
 export default function Cobrancas() {
-  const { organizationId } = useAuth();
+  const { user, organizationId, role } = useAuth();
+  const isModerator = role === "moderator";
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [tab, setTab] = useState<"todos" | "vencidas" | "vencendo">("todos");
