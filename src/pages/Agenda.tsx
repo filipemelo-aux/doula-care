@@ -269,7 +269,17 @@ export default function Agenda() {
       }
     }
     if (state?.openDialog) {
-      if (state.openDialog === "consulta") setAppointmentDialog(true);
+      if (state.openDialog === "consulta") {
+        setAppointmentDialog(true);
+        if ((state as any).clientId) {
+          const cid = (state as any).clientId as string;
+          setAptClientId(cid);
+          setLockedClientId(cid);
+        }
+        if ((state as any).returnToClientId) {
+          setReturnToClientId((state as any).returnToClientId as string);
+        }
+      }
       else if (state.openDialog === "compromisso") setPersonalAptDialog(true);
       else if (state.openDialog === "servico") setServiceDialog(true);
       // Clear the state so it doesn't re-trigger
