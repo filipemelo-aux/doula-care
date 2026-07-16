@@ -2116,21 +2116,27 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
                           <Lock className="w-5 h-5 text-amber-600" />
                         </div>
                         <div className="space-y-1">
-                          <p className="font-semibold text-sm">Plano bloqueado por segurança</p>
+                          <p className="font-semibold text-sm">
+                            {isModerator ? "Plano restrito à administradora" : "Plano bloqueado por segurança"}
+                          </p>
                           <p className="text-xs text-muted-foreground leading-relaxed">
-                            Esta cliente já possui pagamentos registrados. Para evitar inconsistências, o plano e as condições de pagamento estão congelados.
+                            {isModerator
+                              ? "Como moderadora, você não pode definir ou editar o plano. A administradora receberá um aviso para completar as informações do plano após o cadastro."
+                              : "Esta cliente já possui pagamentos registrados. Para evitar inconsistências, o plano e as condições de pagamento estão congelados."}
                           </p>
                         </div>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          className="gap-2"
-                          onClick={() => setUnlockConfirmOpen(true)}
-                        >
-                          <AlertTriangle className="w-3.5 h-3.5 text-amber-600" />
-                          Alterar mesmo assim
-                        </Button>
+                        {!isModerator && (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="gap-2"
+                            onClick={() => setUnlockConfirmOpen(true)}
+                          >
+                            <AlertTriangle className="w-3.5 h-3.5 text-amber-600" />
+                            Alterar mesmo assim
+                          </Button>
+                        )}
                       </div>
                     </div>
                   )}
