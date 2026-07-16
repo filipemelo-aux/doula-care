@@ -140,7 +140,8 @@ const STEPS = [
 
 export function ClientDialog({ open, onOpenChange, client, initialStep }: ClientDialogProps) {
   const queryClient = useQueryClient();
-  const { user, organizationId } = useAuth();
+  const { user, organizationId, role } = useAuth();
+  const isModerator = role === "moderator";
   const [currentStep, setCurrentStep] = useState(1);
   const [entryAlreadyPaid, setEntryAlreadyPaid] = useState(false);
   const [entryType, setEntryType] = useState<"equal" | "percentage">("equal");
