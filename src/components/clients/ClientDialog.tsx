@@ -1216,10 +1216,12 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
       setCurrentStep(1);
       return;
     }
-    const planValid = await form.trigger(["plan_setting_id"]);
-    if (!planValid) {
-      setCurrentStep(6);
-      return;
+    if (!isModerator) {
+      const planValid = await form.trigger(["plan_setting_id"]);
+      if (!planValid) {
+        setCurrentStep(6);
+        return;
+      }
     }
     // Validate gestante needs DPP
     if (form.getValues("status") === "gestante" && !form.getValues("dpp")) {
