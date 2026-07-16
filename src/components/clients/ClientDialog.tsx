@@ -1184,7 +1184,7 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
       3: status === "gestante" ? ["dpp"] : [],
       4: [],
       5: [],
-      6: ["plan_setting_id"],
+      6: isModerator ? [] : ["plan_setting_id"],
       7: [],
     };
     const fields = fieldsPerStep[currentStep] || [];
