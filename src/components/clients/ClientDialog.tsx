@@ -717,7 +717,7 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
         // When editing a client that already has recorded payments, freeze plan-
         // related fields UNLESS the doula explicitly unlocked the section.
         const editingHadPayments = hasRecordedPayments;
-        const skipPlanSync = editingHadPayments && !unlockedPlan;
+        const skipPlanSync = (editingHadPayments && !unlockedPlan) || isModerator;
 
         if (skipPlanSync) {
           // Preserve original plan/payment values so nothing gets overwritten.
