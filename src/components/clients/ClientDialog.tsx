@@ -1154,6 +1154,19 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
             console.error("Error invoking create-client-user:", userError);
           }
         }
+
+        if (isModerator && organizationId) {
+          try {
+            await supabase.from("org_notifications").insert({
+              organization_id: organizationId,
+              title: "📝 Nova cliente cadastrada por moderadora",
+              message: `${data.full_name} foi cadastrada. Complete as informações de plano e pagamento.`,
+              type: "clients",
+            });
+          } catch (notifErr) {
+            console.error("Error notifying admin:", notifErr);
+          }
+        }
       }
     },
     onSuccess: () => {
