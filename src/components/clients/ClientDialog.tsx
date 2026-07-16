@@ -140,7 +140,8 @@ const STEPS = [
 
 export function ClientDialog({ open, onOpenChange, client, initialStep }: ClientDialogProps) {
   const queryClient = useQueryClient();
-  const { user, organizationId } = useAuth();
+  const { user, organizationId, role } = useAuth();
+  const isModerator = role === "moderator";
   const [currentStep, setCurrentStep] = useState(1);
   const [entryAlreadyPaid, setEntryAlreadyPaid] = useState(false);
   const [entryType, setEntryType] = useState<"equal" | "percentage">("equal");
@@ -237,7 +238,7 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
     return paidInstallments || txReceived;
   }, [client, clientInstallmentPayments, clientTransaction]);
 
-  const isPlanLocked = !!client && hasRecordedPayments && !unlockedPlan;
+  const isPlanLocked = isModerator || (!!client && hasRecordedPayments && !unlockedPlan);
 
   const form = useForm<ClientFormData>({
     resolver: zodResolver(clientSchema),
@@ -716,7 +717,7 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
         // When editing a client that already has recorded payments, freeze plan-
         // related fields UNLESS the doula explicitly unlocked the section.
         const editingHadPayments = hasRecordedPayments;
-        const skipPlanSync = editingHadPayments && !unlockedPlan;
+        const skipPlanSync = (editingHadPayments && !unlockedPlan) || isModerator;
 
         if (skipPlanSync) {
           // Preserve original plan/payment values so nothing gets overwritten.
@@ -1153,6 +1154,19 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
             console.error("Error invoking create-client-user:", userError);
           }
         }
+
+        if (isModerator && organizationId) {
+          try {
+            await supabase.from("org_notifications").insert({
+              organization_id: organizationId,
+              title: "📝 Nova cliente cadastrada por moderadora",
+              message: `${data.full_name} foi cadastrada. Complete as informações de plano e pagamento.`,
+              type: "clients",
+            });
+          } catch (notifErr) {
+            console.error("Error notifying admin:", notifErr);
+          }
+        }
       }
     },
     onSuccess: () => {
@@ -1164,7 +1178,7 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
       queryClient.invalidateQueries({ queryKey: ["financial-metrics"] });
       queryClient.invalidateQueries({ queryKey: ["monthly-transactions"] });
       queryClient.invalidateQueries({ queryKey: ["birth-alert-clients"] });
-      toast.success(client ? "Cliente atualizada!" : "Cliente cadastrada com receita!");
+      toast.success(client ? "Cliente atualizada!" : (isModerator ? "Cliente cadastrada! A administradora foi avisada para completar o plano." : "Cliente cadastrada com receita!"));
       onOpenChange(false);
     },
     onError: () => {
@@ -1183,7 +1197,7 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
       3: status === "gestante" ? ["dpp"] : [],
       4: [],
       5: [],
-      6: ["plan_setting_id"],
+      6: isModerator ? [] : ["plan_setting_id"],
       7: [],
     };
     const fields = fieldsPerStep[currentStep] || [];
@@ -1215,10 +1229,12 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
       setCurrentStep(1);
       return;
     }
-    const planValid = await form.trigger(["plan_setting_id"]);
-    if (!planValid) {
-      setCurrentStep(6);
-      return;
+    if (!isModerator) {
+      const planValid = await form.trigger(["plan_setting_id"]);
+      if (!planValid) {
+        setCurrentStep(6);
+        return;
+      }
     }
     // Validate gestante needs DPP
     if (form.getValues("status") === "gestante" && !form.getValues("dpp")) {
@@ -2115,21 +2131,27 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
                           <Lock className="w-5 h-5 text-amber-600" />
                         </div>
                         <div className="space-y-1">
-                          <p className="font-semibold text-sm">Plano bloqueado por segurança</p>
+                          <p className="font-semibold text-sm">
+                            {isModerator ? "Plano restrito à administradora" : "Plano bloqueado por segurança"}
+                          </p>
                           <p className="text-xs text-muted-foreground leading-relaxed">
-                            Esta cliente já possui pagamentos registrados. Para evitar inconsistências, o plano e as condições de pagamento estão congelados.
+                            {isModerator
+                              ? "Como moderadora, você não pode definir ou editar o plano. A administradora receberá um aviso para completar as informações do plano após o cadastro."
+                              : "Esta cliente já possui pagamentos registrados. Para evitar inconsistências, o plano e as condições de pagamento estão congelados."}
                           </p>
                         </div>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          className="gap-2"
-                          onClick={() => setUnlockConfirmOpen(true)}
-                        >
-                          <AlertTriangle className="w-3.5 h-3.5 text-amber-600" />
-                          Alterar mesmo assim
-                        </Button>
+                        {!isModerator && (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="gap-2"
+                            onClick={() => setUnlockConfirmOpen(true)}
+                          >
+                            <AlertTriangle className="w-3.5 h-3.5 text-amber-600" />
+                            Alterar mesmo assim
+                          </Button>
+                        )}
                       </div>
                     </div>
                   )}
