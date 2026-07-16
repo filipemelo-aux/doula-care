@@ -238,7 +238,7 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
     return paidInstallments || txReceived;
   }, [client, clientInstallmentPayments, clientTransaction]);
 
-  const isPlanLocked = !!client && hasRecordedPayments && !unlockedPlan;
+  const isPlanLocked = isModerator || (!!client && hasRecordedPayments && !unlockedPlan);
 
   const form = useForm<ClientFormData>({
     resolver: zodResolver(clientSchema),
