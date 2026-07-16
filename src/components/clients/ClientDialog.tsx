@@ -1178,7 +1178,7 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
       queryClient.invalidateQueries({ queryKey: ["financial-metrics"] });
       queryClient.invalidateQueries({ queryKey: ["monthly-transactions"] });
       queryClient.invalidateQueries({ queryKey: ["birth-alert-clients"] });
-      toast.success(client ? "Cliente atualizada!" : "Cliente cadastrada com receita!");
+      toast.success(client ? "Cliente atualizada!" : (isModerator ? "Cliente cadastrada! A administradora foi avisada para completar o plano." : "Cliente cadastrada com receita!"));
       onOpenChange(false);
     },
     onError: () => {
