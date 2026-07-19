@@ -271,6 +271,34 @@ export default function GestanteContractions() {
       });
   }, [laborStatus, client?.id, client?.full_name]);
 
+  // Auto-cancel labor when it was started by the gestante but contractions no longer meet criterion 3
+  const laborAutoCancelledRef = useRef(false);
+  useEffect(() => {
+    if (loading || !client?.id) return;
+    const laborStartedAt = (client as any)?.labor_started_at as string | null | undefined;
+    const laborStartedBy = (client as any)?.labor_started_by as string | null | undefined;
+    if (!laborStartedAt || laborStartedBy !== "client") return;
+    if (laborStatus === "active") return;
+    if (laborAutoCancelledRef.current) return;
+    laborAutoCancelledRef.current = true;
+
+    supabase
+      .from("clients")
+      .update({ labor_started_at: null, labor_started_by: null } as any)
+      .eq("id", client.id)
+      .then(({ error }) => {
+        if (error) {
+          laborAutoCancelledRef.current = false;
+          return;
+        }
+        activeLaborNotifiedRef.current = false;
+        toast.info(
+          "Trabalho de parto pausado: suas contrações não mantêm o padrão ativo (3 em 10 minutos, ≥ 1 min). Continue registrando — o sistema detecta automaticamente.",
+          { duration: 8000 },
+        );
+      });
+  }, [laborStatus, loading, client]);
+
   const navigate = useNavigate();
 
   // Block access if birth already registered
