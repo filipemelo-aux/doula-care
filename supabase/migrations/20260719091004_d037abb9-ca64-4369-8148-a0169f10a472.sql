@@ -1,0 +1,1 @@
+ALTER TABLE public.clients ADD COLUMN IF NOT EXISTS labor_started_by text;

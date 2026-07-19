@@ -401,6 +401,7 @@ export type Database = {
           instagram_gestante: string | null
           is_visitor: boolean
           labor_started_at: string | null
+          labor_started_by: string | null
           neighborhood: string | null
           notes: string | null
           number: string | null
@@ -470,6 +471,7 @@ export type Database = {
           instagram_gestante?: string | null
           is_visitor?: boolean
           labor_started_at?: string | null
+          labor_started_by?: string | null
           neighborhood?: string | null
           notes?: string | null
           number?: string | null
@@ -539,6 +541,7 @@ export type Database = {
           instagram_gestante?: string | null
           is_visitor?: boolean
           labor_started_at?: string | null
+          labor_started_by?: string | null
           neighborhood?: string | null
           notes?: string | null
           number?: string | null
