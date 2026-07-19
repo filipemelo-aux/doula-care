@@ -72,7 +72,7 @@ export function ClientContractionsDialog({
     try {
       const { error } = await supabase
         .from("clients")
-        .update({ labor_started_at: null })
+        .update({ labor_started_at: null, labor_started_by: null } as any)
         .eq("id", client.id);
       if (error) throw error;
       toast.success("Trabalho de parto cancelado.");
