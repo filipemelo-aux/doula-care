@@ -188,6 +188,29 @@ export function ClientContractionsDialog({
           </DialogDescription>
         </DialogHeader>
 
+        {client?.labor_started_at && (
+          <div className="mb-3 rounded-xl border border-destructive/30 bg-destructive/5 p-3 flex items-center gap-3">
+            <div className="w-9 h-9 rounded-full bg-destructive/15 flex items-center justify-center flex-shrink-0">
+              <Baby className="h-4 w-4 text-destructive" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-semibold text-destructive">Trabalho de parto ativo</p>
+              <p className="text-[11px] text-muted-foreground">
+                Iniciado em {formatBrazilDate(client.labor_started_at, "dd/MM 'às' HH:mm")}
+              </p>
+            </div>
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-8 border-destructive/40 text-destructive hover:bg-destructive/10"
+              onClick={() => setCancelOpen(true)}
+            >
+              <XCircle className="h-3.5 w-3.5 mr-1" />
+              Cancelar
+            </Button>
+          </div>
+        )}
+
         {/* Doula Live Timer - available when there is active labor context or existing contraction history */}
         {client?.id && (client.labor_started_at || (contractions?.length ?? 0) > 0) && (
           <div className="mb-3">
