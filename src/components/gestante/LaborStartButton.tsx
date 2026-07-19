@@ -22,6 +22,22 @@ interface LaborStartButtonProps {
   onLaborStarted: () => void;
 }
 
+// Same criterion as birthAlerts.ts / GestanteContractions.tsx (condition 3):
+// 3+ contractions within the last 10 minutes with duration >= 60s OR still ongoing.
+async function hasActiveLaborPattern(clientId: string): Promise<boolean> {
+  const since = new Date(Date.now() - 10 * 60 * 1000).toISOString();
+  const { data, error } = await supabase
+    .from("contractions")
+    .select("started_at, ended_at, duration_seconds")
+    .eq("client_id", clientId)
+    .gte("started_at", since);
+  if (error || !data) return false;
+  const qualifying = data.filter(
+    (c) => (c.duration_seconds ?? 0) >= 60 || !c.ended_at,
+  );
+  return qualifying.length >= 3;
+}
+
 export function LaborStartButton({ laborStarted, onLaborStarted }: LaborStartButtonProps) {
   const { client, organizationId } = useGestanteAuth();
   const [loading, setLoading] = useState(false);
@@ -32,6 +48,17 @@ export function LaborStartButton({ laborStarted, onLaborStarted }: LaborStartBut
     
     setLoading(true);
     try {
+      // Validate condition 3 before marking labor as started
+      const patternOk = await hasActiveLaborPattern(client.id);
+      if (!patternOk) {
+        toast.error(
+          "Ainda não identificamos um padrão de trabalho de parto ativo. Registre suas contrações — o sistema detecta automaticamente quando o padrão aparecer (3 ou mais em 10 minutos, com pelo menos 1 minuto de duração).",
+          { duration: 8000 },
+        );
+        setOpen(false);
+        return;
+      }
+
       // Update client with labor start time
       const { error: updateError } = await supabase
         .from("clients")
@@ -117,7 +144,7 @@ export function LaborStartButton({ laborStarted, onLaborStarted }: LaborStartBut
             Confirmar início do trabalho de parto?
           </AlertDialogTitle>
           <AlertDialogDescription className="text-center">
-            Sua Doula será notificada imediatamente e entrará em contato com você.
+            Só confirme se você estiver com contrações fortes e frequentes (pelo menos 3 em 10 minutos, cada uma com mais de 1 minuto). Sua Doula será notificada imediatamente.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter className="flex-col sm:flex-col gap-2">

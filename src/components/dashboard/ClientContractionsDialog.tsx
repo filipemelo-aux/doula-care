@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -8,14 +8,26 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { Timer, Calendar, Loader2, TrendingDown } from "lucide-react";
+import { Timer, Calendar, Loader2, TrendingDown, Baby, XCircle } from "lucide-react";
 import { differenceInMinutes, differenceInSeconds } from "date-fns";
 import { formatBrazilDate, formatBrazilTime } from "@/lib/utils";
 import { Tables } from "@/integrations/supabase/types";
 import { DoulaContractionTimer } from "@/components/dashboard/DoulaContractionTimer";
+import { toast } from "sonner";
 
 type Client = Tables<"clients">;
 type Contraction = Tables<"contractions">;
@@ -32,6 +44,9 @@ export function ClientContractionsDialog({
   client,
 }: ClientContractionsDialogProps) {
   const queryClient = useQueryClient();
+
+  const [cancelOpen, setCancelOpen] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
 
   const { data: contractions, isLoading } = useQuery({
     queryKey: ["client-contractions", client?.id],
@@ -50,6 +65,29 @@ export function ClientContractionsDialog({
     },
     enabled: open && !!client?.id,
   });
+
+  const handleCancelLabor = async () => {
+    if (!client?.id) return;
+    setCancelling(true);
+    try {
+      const { error } = await supabase
+        .from("clients")
+        .update({ labor_started_at: null })
+        .eq("id", client.id);
+      if (error) throw error;
+      toast.success("Trabalho de parto cancelado.");
+      queryClient.invalidateQueries({ queryKey: ["birth-alert-clients"] });
+      queryClient.invalidateQueries({ queryKey: ["clients"] });
+      queryClient.invalidateQueries({ queryKey: ["recent-clients"] });
+      queryClient.invalidateQueries({ queryKey: ["client-contractions", client.id] });
+      setCancelOpen(false);
+    } catch (e) {
+      console.error(e);
+      toast.error("Não foi possível cancelar. Tente novamente.");
+    } finally {
+      setCancelling(false);
+    }
+  };
 
   // Mark unread contractions as read when dialog opens
   useEffect(() => {
@@ -150,6 +188,29 @@ export function ClientContractionsDialog({
           </DialogDescription>
         </DialogHeader>
 
+        {client?.labor_started_at && (
+          <div className="mb-3 rounded-xl border border-destructive/30 bg-destructive/5 p-3 flex items-center gap-3">
+            <div className="w-9 h-9 rounded-full bg-destructive/15 flex items-center justify-center flex-shrink-0">
+              <Baby className="h-4 w-4 text-destructive" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-semibold text-destructive">Trabalho de parto ativo</p>
+              <p className="text-[11px] text-muted-foreground">
+                Iniciado em {formatBrazilDate(client.labor_started_at, "dd/MM 'às' HH:mm")}
+              </p>
+            </div>
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-8 border-destructive/40 text-destructive hover:bg-destructive/10"
+              onClick={() => setCancelOpen(true)}
+            >
+              <XCircle className="h-3.5 w-3.5 mr-1" />
+              Cancelar
+            </Button>
+          </div>
+        )}
+
         {/* Doula Live Timer - available when there is active labor context or existing contraction history */}
         {client?.id && (client.labor_started_at || (contractions?.length ?? 0) > 0) && (
           <div className="mb-3">
@@ -244,6 +305,30 @@ export function ClientContractionsDialog({
           )}
         </ScrollArea>
       </DialogContent>
+
+      <AlertDialog open={cancelOpen} onOpenChange={setCancelOpen}>
+        <AlertDialogContent className="max-w-sm">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Cancelar trabalho de parto?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Isso vai remover o marcador de trabalho de parto desta cliente. Use esta opção quando a gestante marcou por engano ou o quadro não se confirmou. O histórico de contrações será mantido.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={cancelling}>Voltar</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={cancelling}
+              onClick={(e) => {
+                e.preventDefault();
+                handleCancelLabor();
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {cancelling ? <Loader2 className="h-4 w-4 animate-spin" /> : "Sim, cancelar"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Dialog>
   );
 }
