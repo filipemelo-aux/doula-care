@@ -312,7 +312,7 @@ export function NotificationsCenter({ fullPage = false }: NotificationsCenterPro
   const handleStartLabor = async (clientId: string) => {
     const client = clientsMap.get(clientId);
     if (!client) return;
-    const { error } = await supabase.from("clients").update({ labor_started_at: new Date().toISOString() }).eq("id", clientId);
+    const { error } = await supabase.from("clients").update({ labor_started_at: new Date().toISOString(), labor_started_by: "doula" } as any).eq("id", clientId);
     if (error) { toast.error("Erro ao registrar trabalho de parto"); return; }
     toast.success(`Trabalho de parto registrado para ${client.full_name}`);
     queryClient.invalidateQueries({ queryKey: ["birth-alert-clients"] });

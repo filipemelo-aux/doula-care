@@ -62,7 +62,7 @@ export function LaborStartButton({ laborStarted, onLaborStarted }: LaborStartBut
       // Update client with labor start time
       const { error: updateError } = await supabase
         .from("clients")
-        .update({ labor_started_at: new Date().toISOString() })
+        .update({ labor_started_at: new Date().toISOString(), labor_started_by: "client" } as any)
         .eq("id", client.id);
 
       if (updateError) throw updateError;

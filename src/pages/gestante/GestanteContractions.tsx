@@ -247,7 +247,7 @@ export default function GestanteContractions() {
 
         supabase
           .from("clients")
-          .update({ labor_started_at: new Date().toISOString() })
+          .update({ labor_started_at: new Date().toISOString(), labor_started_by: "auto" } as any)
           .eq("id", client.id)
           .then(() => {
             supabase.from("client_notifications").insert({
@@ -270,6 +270,46 @@ export default function GestanteContractions() {
           });
       });
   }, [laborStatus, client?.id, client?.full_name]);
+
+  // Auto-cancel labor when it was started by the gestante but contractions no longer meet criterion 3
+  const laborAutoCancelledRef = useRef(false);
+  useEffect(() => {
+    if (loading || !client?.id) return;
+    if (laborStatus === "active") return;
+    if (laborAutoCancelledRef.current) return;
+
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from("clients")
+        .select("labor_started_at, labor_started_by")
+        .eq("id", client.id)
+        .maybeSingle();
+      if (cancelled) return;
+      const startedAt = (data as any)?.labor_started_at as string | null | undefined;
+      const startedBy = (data as any)?.labor_started_by as string | null | undefined;
+      if (!startedAt || startedBy !== "client") return;
+
+      laborAutoCancelledRef.current = true;
+      const { error } = await supabase
+        .from("clients")
+        .update({ labor_started_at: null, labor_started_by: null } as any)
+        .eq("id", client.id);
+      if (error) {
+        laborAutoCancelledRef.current = false;
+        return;
+      }
+      activeLaborNotifiedRef.current = false;
+      toast.info(
+        "Trabalho de parto pausado: suas contrações não mantêm o padrão ativo (3 em 10 minutos, ≥ 1 min). Continue registrando — o sistema detecta automaticamente.",
+        { duration: 8000 },
+      );
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [laborStatus, loading, client?.id]);
 
   const navigate = useNavigate();
 
