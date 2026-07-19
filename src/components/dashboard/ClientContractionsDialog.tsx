@@ -47,6 +47,12 @@ export function ClientContractionsDialog({
 
   const [cancelOpen, setCancelOpen] = useState(false);
   const [cancelling, setCancelling] = useState(false);
+  const [laborCancelled, setLaborCancelled] = useState(false);
+
+  // Reset local cancelled flag when opening for a different client / re-opening
+  useEffect(() => {
+    if (open) setLaborCancelled(false);
+  }, [open, client?.id]);
 
   const { data: contractions, isLoading } = useQuery({
     queryKey: ["client-contractions", client?.id],
