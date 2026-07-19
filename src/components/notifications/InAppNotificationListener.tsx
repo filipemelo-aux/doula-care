@@ -71,7 +71,7 @@ export function InAppNotificationListener({ userId, role, clientId, organization
                 onClick: async () => {
                   const { error } = await supabase
                     .from("clients")
-                    .update({ labor_started_at: new Date().toISOString() })
+                    .update({ labor_started_at: new Date().toISOString(), labor_started_by: "doula" } as any)
                     .eq("id", clientData.id);
 
                   if (error) {
