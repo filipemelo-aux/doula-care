@@ -47,6 +47,12 @@ export function ClientContractionsDialog({
 
   const [cancelOpen, setCancelOpen] = useState(false);
   const [cancelling, setCancelling] = useState(false);
+  const [laborCancelled, setLaborCancelled] = useState(false);
+
+  // Reset local cancelled flag when opening for a different client / re-opening
+  useEffect(() => {
+    if (open) setLaborCancelled(false);
+  }, [open, client?.id]);
 
   const { data: contractions, isLoading } = useQuery({
     queryKey: ["client-contractions", client?.id],
@@ -75,11 +81,15 @@ export function ClientContractionsDialog({
         .update({ labor_started_at: null, labor_started_by: null } as any)
         .eq("id", client.id);
       if (error) throw error;
+      setLaborCancelled(true);
       toast.success("Trabalho de parto cancelado.");
-      queryClient.invalidateQueries({ queryKey: ["birth-alert-clients"] });
-      queryClient.invalidateQueries({ queryKey: ["clients"] });
-      queryClient.invalidateQueries({ queryKey: ["recent-clients"] });
-      queryClient.invalidateQueries({ queryKey: ["client-contractions", client.id] });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["birth-alert-clients"] }),
+        queryClient.invalidateQueries({ queryKey: ["clients"] }),
+        queryClient.invalidateQueries({ queryKey: ["recent-clients"] }),
+        queryClient.invalidateQueries({ queryKey: ["client-contractions", client.id] }),
+        queryClient.invalidateQueries({ queryKey: ["client-quick-view", client.id] }),
+      ]);
       setCancelOpen(false);
     } catch (e) {
       console.error(e);
@@ -188,7 +198,7 @@ export function ClientContractionsDialog({
           </DialogDescription>
         </DialogHeader>
 
-        {client?.labor_started_at && (
+        {client?.labor_started_at && !laborCancelled && (
           <div className="mb-3 rounded-xl border border-destructive/30 bg-destructive/5 p-3 flex items-center gap-3">
             <div className="w-9 h-9 rounded-full bg-destructive/15 flex items-center justify-center flex-shrink-0">
               <Baby className="h-4 w-4 text-destructive" />
@@ -202,17 +212,22 @@ export function ClientContractionsDialog({
             <Button
               size="sm"
               variant="outline"
+              disabled={cancelling}
               className="h-8 border-destructive/40 text-destructive hover:bg-destructive/10"
               onClick={() => setCancelOpen(true)}
             >
-              <XCircle className="h-3.5 w-3.5 mr-1" />
-              Cancelar
+              {cancelling ? (
+                <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />
+              ) : (
+                <XCircle className="h-3.5 w-3.5 mr-1" />
+              )}
+              {cancelling ? "Cancelando..." : "Cancelar"}
             </Button>
           </div>
         )}
 
         {/* Doula Live Timer - available when there is active labor context or existing contraction history */}
-        {client?.id && (client.labor_started_at || (contractions?.length ?? 0) > 0) && (
+        {client?.id && ((client.labor_started_at && !laborCancelled) || (contractions?.length ?? 0) > 0) && (
           <div className="mb-3">
             <DoulaContractionTimer
               clientId={client.id}
