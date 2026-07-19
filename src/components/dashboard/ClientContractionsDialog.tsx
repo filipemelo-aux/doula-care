@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -8,14 +8,26 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { Timer, Calendar, Loader2, TrendingDown } from "lucide-react";
+import { Timer, Calendar, Loader2, TrendingDown, Baby, XCircle } from "lucide-react";
 import { differenceInMinutes, differenceInSeconds } from "date-fns";
 import { formatBrazilDate, formatBrazilTime } from "@/lib/utils";
 import { Tables } from "@/integrations/supabase/types";
 import { DoulaContractionTimer } from "@/components/dashboard/DoulaContractionTimer";
+import { toast } from "sonner";
 
 type Client = Tables<"clients">;
 type Contraction = Tables<"contractions">;
