@@ -247,7 +247,7 @@ export default function GestanteContractions() {
 
         supabase
           .from("clients")
-          .update({ labor_started_at: new Date().toISOString() })
+          .update({ labor_started_at: new Date().toISOString(), labor_started_by: "auto" } as any)
           .eq("id", client.id)
           .then(() => {
             supabase.from("client_notifications").insert({
