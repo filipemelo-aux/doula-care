@@ -81,11 +81,15 @@ export function ClientContractionsDialog({
         .update({ labor_started_at: null, labor_started_by: null } as any)
         .eq("id", client.id);
       if (error) throw error;
+      setLaborCancelled(true);
       toast.success("Trabalho de parto cancelado.");
-      queryClient.invalidateQueries({ queryKey: ["birth-alert-clients"] });
-      queryClient.invalidateQueries({ queryKey: ["clients"] });
-      queryClient.invalidateQueries({ queryKey: ["recent-clients"] });
-      queryClient.invalidateQueries({ queryKey: ["client-contractions", client.id] });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["birth-alert-clients"] }),
+        queryClient.invalidateQueries({ queryKey: ["clients"] }),
+        queryClient.invalidateQueries({ queryKey: ["recent-clients"] }),
+        queryClient.invalidateQueries({ queryKey: ["client-contractions", client.id] }),
+        queryClient.invalidateQueries({ queryKey: ["client-quick-view", client.id] }),
+      ]);
       setCancelOpen(false);
     } catch (e) {
       console.error(e);
