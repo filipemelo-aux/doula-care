@@ -305,6 +305,30 @@ export function ClientContractionsDialog({
           )}
         </ScrollArea>
       </DialogContent>
+
+      <AlertDialog open={cancelOpen} onOpenChange={setCancelOpen}>
+        <AlertDialogContent className="max-w-sm">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Cancelar trabalho de parto?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Isso vai remover o marcador de trabalho de parto desta cliente. Use esta opção quando a gestante marcou por engano ou o quadro não se confirmou. O histórico de contrações será mantido.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={cancelling}>Voltar</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={cancelling}
+              onClick={(e) => {
+                e.preventDefault();
+                handleCancelLabor();
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {cancelling ? <Loader2 className="h-4 w-4 animate-spin" /> : "Sim, cancelar"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Dialog>
   );
 }
