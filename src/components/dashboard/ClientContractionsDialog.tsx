@@ -45,6 +45,9 @@ export function ClientContractionsDialog({
 }: ClientContractionsDialogProps) {
   const queryClient = useQueryClient();
 
+  const [cancelOpen, setCancelOpen] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
+
   const { data: contractions, isLoading } = useQuery({
     queryKey: ["client-contractions", client?.id],
     queryFn: async () => {
@@ -62,6 +65,29 @@ export function ClientContractionsDialog({
     },
     enabled: open && !!client?.id,
   });
+
+  const handleCancelLabor = async () => {
+    if (!client?.id) return;
+    setCancelling(true);
+    try {
+      const { error } = await supabase
+        .from("clients")
+        .update({ labor_started_at: null })
+        .eq("id", client.id);
+      if (error) throw error;
+      toast.success("Trabalho de parto cancelado.");
+      queryClient.invalidateQueries({ queryKey: ["birth-alert-clients"] });
+      queryClient.invalidateQueries({ queryKey: ["clients"] });
+      queryClient.invalidateQueries({ queryKey: ["recent-clients"] });
+      queryClient.invalidateQueries({ queryKey: ["client-contractions", client.id] });
+      setCancelOpen(false);
+    } catch (e) {
+      console.error(e);
+      toast.error("Não foi possível cancelar. Tente novamente.");
+    } finally {
+      setCancelling(false);
+    }
+  };
 
   // Mark unread contractions as read when dialog opens
   useEffect(() => {
