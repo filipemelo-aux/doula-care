@@ -94,6 +94,14 @@ export default function Subscription() {
 
   const [purchasing, setPurchasing] = useState<string | null>(null);
   const [restoring, setRestoring] = useState(false);
+  // Pix é permitido no Google Play e na web — nunca no iOS (regra 3.1.1 da Apple)
+  const pixAllowed = platform !== "ios";
+  const [pixTarget, setPixTarget] = useState<{
+    planId: string;
+    planName: string;
+    billingType: BillingPeriod;
+    amountCents: number;
+  } | null>(null);
 
   const {
     plan: effectivePlan,
