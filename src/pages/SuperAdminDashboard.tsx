@@ -700,8 +700,11 @@ export default function SuperAdminDashboard() {
           <div className="space-y-6">
             <SubscriptionBillingCard />
 
+            <PixSubscriptionRequestsCard />
             <PlanLimitsCard />
+            <StoreProductsCard />
             <PlanPricingCard />
+
             <OrgBillingCard />
           </div>
         );
