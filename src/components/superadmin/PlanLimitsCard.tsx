@@ -81,6 +81,8 @@ export function PlanLimitsCard() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["platform-plan-limits"] });
       queryClient.invalidateQueries({ queryKey: ["platform-plan-limits-admin"] });
+      queryClient.invalidateQueries({ queryKey: ["platform-plans-subscription"] });
+      queryClient.invalidateQueries({ queryKey: ["store-products"] });
       toast.success("Limites atualizados!");
     },
     onError: () => toast.error("Erro ao atualizar limites"),

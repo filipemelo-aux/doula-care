@@ -19,6 +19,8 @@ import { APP_VERSION } from "@/lib/appVersion";
 import { hardRefreshApp } from "@/lib/appUpdate";
 import { PlanPricingCard } from "@/components/superadmin/PlanPricingCard";
 import { PlanLimitsCard } from "@/components/superadmin/PlanLimitsCard";
+import { StoreProductsCard } from "@/components/superadmin/StoreProductsCard";
+import { PixSubscriptionRequestsCard } from "@/components/superadmin/PixSubscriptionRequestsCard";
 import { OrgBillingCard } from "@/components/superadmin/OrgBillingCard";
 import { UserManagementCard } from "@/components/superadmin/UserManagementCard";
 import { SubscriptionBillingCard } from "@/components/superadmin/SubscriptionBillingCard";
@@ -700,8 +702,11 @@ export default function SuperAdminDashboard() {
           <div className="space-y-6">
             <SubscriptionBillingCard />
 
+            <PixSubscriptionRequestsCard />
             <PlanLimitsCard />
+            <StoreProductsCard />
             <PlanPricingCard />
+
             <OrgBillingCard />
           </div>
         );

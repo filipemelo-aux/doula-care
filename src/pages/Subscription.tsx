@@ -13,12 +13,14 @@ import {
   Check,
   Crown,
   Loader2,
+  QrCode,
   RefreshCcw,
   Smartphone,
   Sparkles,
   Star,
 } from "lucide-react";
 import { toast } from "sonner";
+import { PixSubscriptionDialog } from "@/components/subscription/PixSubscriptionDialog";
 import {
   AppStoreSubscriptionService,
   type StoreProduct,
@@ -92,6 +94,14 @@ export default function Subscription() {
 
   const [purchasing, setPurchasing] = useState<string | null>(null);
   const [restoring, setRestoring] = useState(false);
+  // Pix é permitido no Google Play e na web — nunca no iOS (regra 3.1.1 da Apple)
+  const pixAllowed = platform !== "ios";
+  const [pixTarget, setPixTarget] = useState<{
+    planId: string;
+    planName: string;
+    billingType: BillingPeriod;
+    amountCents: number;
+  } | null>(null);
 
   const {
     plan: effectivePlan,
@@ -491,7 +501,52 @@ export default function Subscription() {
                           Produto não mapeado para esta plataforma.
                         </p>
                       )}
+                      {pixAllowed && (
+                        <>
+                          <div className="flex items-center gap-2 pt-1">
+                            <span className="h-px flex-1 bg-border" />
+                            <span className="text-[10px] uppercase text-muted-foreground">
+                              ou
+                            </span>
+                            <span className="h-px flex-1 bg-border" />
+                          </div>
+                          <Button
+                            variant="secondary"
+                            className="w-full"
+                            onClick={() =>
+                              setPixTarget({
+                                planId: plan.id,
+                                planName: plan.name,
+                                billingType: "monthly",
+                                amountCents: plan.price_monthly,
+                              })
+                            }
+                          >
+                            <QrCode className="w-4 h-4 mr-2" />
+                            Pagar com Pix (mensal)
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            className="w-full"
+                            onClick={() =>
+                              setPixTarget({
+                                planId: plan.id,
+                                planName: plan.name,
+                                billingType: "yearly",
+                                amountCents:
+                                  plan.price_yearly > 0
+                                    ? plan.price_yearly
+                                    : plan.price_monthly * 12,
+                              })
+                            }
+                          >
+                            <QrCode className="w-4 h-4 mr-2" />
+                            Pagar com Pix (anual)
+                          </Button>
+                        </>
+                      )}
                     </>
+
                   )}
                 </div>
               </CardContent>
@@ -512,6 +567,18 @@ export default function Subscription() {
           </CardContent>
         </Card>
       )}
+
+      {pixTarget && (
+        <PixSubscriptionDialog
+          open={!!pixTarget}
+          onOpenChange={(o) => !o && setPixTarget(null)}
+          planId={pixTarget.planId}
+          planName={pixTarget.planName}
+          billingType={pixTarget.billingType}
+          amountCents={pixTarget.amountCents}
+        />
+      )}
     </div>
   );
+
 }
