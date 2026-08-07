@@ -567,6 +567,18 @@ export default function Subscription() {
           </CardContent>
         </Card>
       )}
+
+      {pixTarget && (
+        <PixSubscriptionDialog
+          open={!!pixTarget}
+          onOpenChange={(o) => !o && setPixTarget(null)}
+          planId={pixTarget.planId}
+          planName={pixTarget.planName}
+          billingType={pixTarget.billingType}
+          amountCents={pixTarget.amountCents}
+        />
+      )}
     </div>
   );
+
 }
