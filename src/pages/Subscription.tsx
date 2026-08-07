@@ -501,7 +501,52 @@ export default function Subscription() {
                           Produto não mapeado para esta plataforma.
                         </p>
                       )}
+                      {pixAllowed && (
+                        <>
+                          <div className="flex items-center gap-2 pt-1">
+                            <span className="h-px flex-1 bg-border" />
+                            <span className="text-[10px] uppercase text-muted-foreground">
+                              ou
+                            </span>
+                            <span className="h-px flex-1 bg-border" />
+                          </div>
+                          <Button
+                            variant="secondary"
+                            className="w-full"
+                            onClick={() =>
+                              setPixTarget({
+                                planId: plan.id,
+                                planName: plan.name,
+                                billingType: "monthly",
+                                amountCents: plan.price_monthly,
+                              })
+                            }
+                          >
+                            <QrCode className="w-4 h-4 mr-2" />
+                            Pagar com Pix (mensal)
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            className="w-full"
+                            onClick={() =>
+                              setPixTarget({
+                                planId: plan.id,
+                                planName: plan.name,
+                                billingType: "yearly",
+                                amountCents:
+                                  plan.price_yearly > 0
+                                    ? plan.price_yearly
+                                    : plan.price_monthly * 12,
+                              })
+                            }
+                          >
+                            <QrCode className="w-4 h-4 mr-2" />
+                            Pagar com Pix (anual)
+                          </Button>
+                        </>
+                      )}
                     </>
+
                   )}
                 </div>
               </CardContent>
