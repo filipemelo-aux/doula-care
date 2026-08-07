@@ -13,12 +13,14 @@ import {
   Check,
   Crown,
   Loader2,
+  QrCode,
   RefreshCcw,
   Smartphone,
   Sparkles,
   Star,
 } from "lucide-react";
 import { toast } from "sonner";
+import { PixSubscriptionDialog } from "@/components/subscription/PixSubscriptionDialog";
 import {
   AppStoreSubscriptionService,
   type StoreProduct,
