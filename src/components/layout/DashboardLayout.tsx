@@ -14,7 +14,6 @@ import { BirthAlertDialog } from "@/components/dashboard/BirthAlertDialog";
 import { ClientContractionsDialog } from "@/components/dashboard/ClientContractionsDialog";
 import type { Tables } from "@/integrations/supabase/types";
 import { NotificationTopBanner } from "@/components/dashboard/NotificationTopBanner";
-import { ExpiredPlanBanner } from "@/components/dashboard/ExpiredPlanBanner";
 import { cn } from "@/lib/utils";
 
 export function DashboardLayout() {

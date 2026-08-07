@@ -31,7 +31,6 @@ import { Badge } from "@/components/ui/badge";
 import { usePlanLimits } from "@/hooks/usePlanLimits";
 import { useAdminUnreadCounts } from "@/hooks/useAdminUnreadCounts";
 import { useAuth } from "@/contexts/AuthContext";
-import { differenceInDays } from "date-fns";
 
 interface SidebarProps {
   isOpen: boolean;
