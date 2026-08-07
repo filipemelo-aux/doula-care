@@ -14,7 +14,6 @@ import { BirthAlertDialog } from "@/components/dashboard/BirthAlertDialog";
 import { ClientContractionsDialog } from "@/components/dashboard/ClientContractionsDialog";
 import type { Tables } from "@/integrations/supabase/types";
 import { NotificationTopBanner } from "@/components/dashboard/NotificationTopBanner";
-import { ExpiredPlanBanner } from "@/components/dashboard/ExpiredPlanBanner";
 import { cn } from "@/lib/utils";
 
 export function DashboardLayout() {
@@ -134,7 +133,7 @@ export function DashboardLayout() {
 
         <main className="flex-1 min-h-0 p-3 lg:p-8 pb-24 overflow-y-auto overscroll-y-contain touch-pan-y [WebkitOverflowScrolling:touch] w-full box-border">
           <div className="max-w-7xl mx-auto animate-fade-in space-y-4 lg:space-y-6">
-            <ExpiredPlanBanner />
+            
             <NotificationTopBanner />
             <Outlet />
           </div>

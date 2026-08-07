@@ -8,8 +8,6 @@ import { CalendarLabelsSummaryCard } from "@/components/dashboard/CalendarLabels
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Heart } from "lucide-react";
 import { AdminWelcomeDialog } from "@/components/dashboard/AdminWelcomeDialog";
-import { BillingAlertBanner } from "@/components/dashboard/BillingAlertBanner";
-import { PromoBetaBanner } from "@/components/dashboard/PromoBetaBanner";
 import { MatchRequestsCard } from "@/components/dashboard/MatchRequestsCard";
 import { ModeratorPaymentRequestsCard } from "@/components/dashboard/ModeratorPaymentRequestsCard";
 import { ClientsOverview } from "@/components/dashboard/ClientsOverview";
@@ -63,8 +61,6 @@ export default function Dashboard() {
         </div>
       )}
 
-      <PromoBetaBanner />
-      <BillingAlertBanner />
       <MatchRequestsCard />
       <ModeratorPaymentRequestsCard />
 
