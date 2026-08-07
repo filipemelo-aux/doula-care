@@ -145,6 +145,7 @@ export function usePlanLimits() {
 
   // ── Trial expiry check ──
   const isTrialExpired = (() => {
+    return false; // Trials desativados — todas as contas com acesso completo
     if (isSuperAdmin) return false;
     if (!promoData) return false;
     if (promoData.status === "lifetime_active") return false;
@@ -159,6 +160,7 @@ export function usePlanLimits() {
   // ── Subscription state ──
   // Super admins are NEVER considered expired or blocked
   const isSubscriptionExpired = (() => {
+    return false; // Cobrança desativada no app — nenhum bloqueio por assinatura
     if (isSuperAdmin) return false;
     if (plan === "free") return false;
     // Trial expired without active subscription → expired

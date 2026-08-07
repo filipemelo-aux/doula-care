@@ -51,7 +51,7 @@ async function notifySuperAdmins(supabase: any, doulaName: string, doulaEmail: s
         const pushMessage: PushMessage = {
           data: JSON.stringify({
             title: "Nova doula cadastrada!",
-            body: `${doulaName} (${doulaEmail}) se cadastrou e já está ativa com trial de 7 dias.`,
+            body: `${doulaName} (${doulaEmail}) se cadastrou e já está ativa.`,
             icon: "/pwa-icon-192.png",
             badge: "/pwa-icon-192.png",
             url: "/super-admin",
@@ -168,7 +168,7 @@ Deno.serve(async (req) => {
       .insert({
         name: fullName,
         responsible_email: email,
-        plan: "premium",
+        plan: "pro",
         status: "ativo",
       })
       .select("id")
@@ -205,24 +205,12 @@ Deno.serve(async (req) => {
       organization_id: org.id,
     });
 
-    // 6. Create 7-day premium trial promotion
-    const now = new Date();
-    const trialEnds = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
-
-    await supabase.from("org_promotions").insert({
-      organization_id: org.id,
-      promotion_type: "trial",
-      trial_started_at: now.toISOString(),
-      trial_ends_at: trialEnds.toISOString(),
-      status: "trial_active",
-    });
-
-    // 7. Send welcome notification
+    // 6. Send welcome notification
     await supabase.from("org_notifications").insert({
       organization_id: org.id,
       title: "🎉 Bem-vinda ao Doula Care!",
-      message: "Você tem 7 dias gratuitos para experimentar todos os recursos do plano Premium. Aproveite ao máximo!",
-      type: "promotion",
+      message: "Sua conta está ativa com todos os recursos liberados. Aproveite!",
+      type: "info",
     });
 
     // 8. Notify super admins via push notification
