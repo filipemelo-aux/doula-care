@@ -63,8 +63,6 @@ export default function Dashboard() {
         </div>
       )}
 
-      <PromoBetaBanner />
-      <BillingAlertBanner />
       <MatchRequestsCard />
       <ModeratorPaymentRequestsCard />
 

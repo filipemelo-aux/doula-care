@@ -99,10 +99,6 @@ export function Sidebar({ isOpen, onToggle, onNavigate }: SidebarProps) {
     enabled: !!organizationId,
   });
 
-  const isLifetime = promo?.status === "lifetime_active";
-  const promoActive = promo && (promo.status === "trial_active" || promo.status === "lifetime_active");
-  const promoEndDate = promo?.trial_ends_at ? new Date(promo.trial_ends_at) : null;
-  const promoDaysLeft = promoEndDate ? Math.max(0, differenceInDays(promoEndDate, new Date())) : 0;
 
   const getBadgeCount = (key?: "notifications" | "messages") => {
     if (key === "notifications") return unreadNotifications;
@@ -289,31 +285,6 @@ export function Sidebar({ isOpen, onToggle, onNavigate }: SidebarProps) {
           <p className="text-[11px] text-muted-foreground/60 leading-relaxed">
             {plan === "free" ? "Limite de 5 gestantes" : plan === "pro" ? "Gestantes ilimitadas" : "Recursos avançados"}
           </p>
-          {promoActive && (
-            <div className="mt-2 pt-2 border-t border-border/30">
-              <div className="flex items-center gap-1.5">
-                {isLifetime ? (
-                  <>
-                    <Crown className="h-3 w-3 text-amber-500" />
-                    <span className="text-[10px] font-medium text-amber-600/80">Premium Vitalício</span>
-                  </>
-                ) : (
-                  <>
-                    <Gift className="h-3 w-3 text-primary/60" />
-                    <span className="text-[10px] font-medium text-primary/70">Trial Premium</span>
-                  </>
-                )}
-              </div>
-              {!isLifetime && (
-                <p className="text-[10px] text-muted-foreground/50 mt-0.5">
-                  {promoDaysLeft} dia{promoDaysLeft !== 1 ? "s" : ""} restante{promoDaysLeft !== 1 ? "s" : ""}
-                </p>
-              )}
-              {isLifetime && (
-                <p className="text-[10px] text-muted-foreground/50 mt-0.5">Acesso sem limite de tempo</p>
-              )}
-            </div>
-          )}
         </div>
       </div>
     </aside>
