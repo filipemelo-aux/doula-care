@@ -297,7 +297,7 @@ Deno.serve(async (req) => {
       }
 
       if (email !== undefined && email !== "") {
-        const { error: emailError } = await adminClient.auth.admin.updateUserById(userId, { email });
+        const { error: emailError } = await adminClient.auth.admin.updateUserById(userId, { email, email_confirm: true });
         if (emailError) throw emailError;
       }
 
@@ -364,7 +364,7 @@ Deno.serve(async (req) => {
         return jsonResponse({ error: "O membro não possui um email válido para login" }, 400);
       }
 
-      const { error: updateError } = await adminClient.auth.admin.updateUserById(userId, { password: newPassword });
+      const { error: updateError } = await adminClient.auth.admin.updateUserById(userId, { password: newPassword, email_confirm: true });
       if (updateError) throw updateError;
 
       // Never expose a temporary password before proving that Auth accepts it.

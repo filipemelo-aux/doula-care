@@ -75,7 +75,7 @@ Deno.serve(async (req) => {
 
     const { error: updateError } = await supabase.auth.admin.updateUserById(
       user.id,
-      { password: newPassword }
+      { password: newPassword, email_confirm: true }
     );
 
     if (updateError) throw updateError;
