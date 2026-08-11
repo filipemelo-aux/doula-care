@@ -490,6 +490,7 @@ export function ClientFileDialog({ open, onOpenChange, client }: ClientFileDialo
     .toUpperCase();
 
   return (
+    <>
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg max-h-[90vh] p-0 overflow-hidden gap-0 rounded-3xl">
         <DialogHeader className="sr-only">
