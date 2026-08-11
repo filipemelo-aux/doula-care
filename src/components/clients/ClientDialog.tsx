@@ -133,9 +133,8 @@ const STEPS = [
   { id: 2, title: "Endereço", shortTitle: "Endereço" },
   { id: 3, title: "Gestação e Pré-natal", shortTitle: "Gestação" },
   { id: 4, title: "Saúde e Restrições", shortTitle: "Saúde" },
-  { id: 5, title: "Rede de Apoio", shortTitle: "Apoio" },
-  { id: 6, title: "Plano e Pagamento", shortTitle: "Plano" },
-  { id: 7, title: "Observações", shortTitle: "Obs." },
+  { id: 5, title: "Plano e Pagamento", shortTitle: "Plano" },
+  { id: 6, title: "Observações", shortTitle: "Obs." },
 ];
 
 export function ClientDialog({ open, onOpenChange, client, initialStep }: ClientDialogProps) {
@@ -1196,9 +1195,8 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
       2: [],
       3: status === "gestante" ? ["dpp"] : [],
       4: [],
-      5: [],
-      6: isModerator ? [] : ["plan_setting_id"],
-      7: [],
+      5: isModerator ? [] : ["plan_setting_id"],
+      6: [],
     };
     const fields = fieldsPerStep[currentStep] || [];
     if (fields.length === 0) return true;
@@ -1232,7 +1230,7 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
     if (!isModerator) {
       const planValid = await form.trigger(["plan_setting_id"]);
       if (!planValid) {
-        setCurrentStep(6);
+        setCurrentStep(5);
         return;
       }
     }
