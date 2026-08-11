@@ -356,13 +356,40 @@ Deno.serve(async (req) => {
       const userName = targetProfile?.full_name || "User";
       const newPassword = generateDefaultPassword(userName);
 
+      const { data: targetAuth, error: targetAuthError } = await adminClient.auth.admin.getUserById(userId);
+      if (targetAuthError) throw targetAuthError;
+
+      const targetEmail = targetAuth.user?.email?.trim().toLowerCase();
+      if (!targetEmail) {
+        return jsonResponse({ error: "O membro não possui um email válido para login" }, 400);
+      }
+
       const { error: updateError } = await adminClient.auth.admin.updateUserById(userId, { password: newPassword });
       if (updateError) throw updateError;
 
-      // Force the user to change this temporary password on next login
-      await adminClient.from("profiles").update({ must_change_password: true }).eq("user_id", userId);
+      // Never expose a temporary password before proving that Auth accepts it.
+      // This prevents the UI from showing a credential that cannot actually be used.
+      const verificationClient = createClient(supabaseUrl, anonKey, {
+        auth: { autoRefreshToken: false, persistSession: false },
+      });
+      const { error: verificationError } = await verificationClient.auth.signInWithPassword({
+        email: targetEmail,
+        password: newPassword,
+      });
+      if (verificationError) {
+        console.error("Temporary password verification failed:", verificationError.message);
+        return jsonResponse({ error: "A senha foi alterada, mas não pôde ser validada. Gere uma nova senha e tente novamente." }, 500);
+      }
+      await verificationClient.auth.signOut();
 
-      return jsonResponse({ success: true, message: "Senha resetada", newPassword });
+      // Force the user to change this temporary password on next login
+      const { error: profileUpdateError } = await adminClient
+        .from("profiles")
+        .update({ must_change_password: true })
+        .eq("user_id", userId);
+      if (profileUpdateError) throw profileUpdateError;
+
+      return jsonResponse({ success: true, message: "Senha resetada e validada", newPassword });
     }
 
     return jsonResponse({ error: "Invalid action" }, 400);
