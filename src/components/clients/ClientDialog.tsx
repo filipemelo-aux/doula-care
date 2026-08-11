@@ -1421,6 +1421,77 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
                       />
                     )}
                   </div>
+
+                  {/* Acompanhante */}
+                  <div className="border-t border-border/30 pt-4 space-y-3">
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Acompanhante</p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <FormField
+                        control={form.control}
+                        name="companion_name"
+                        render={({ field }) => (
+                          <FormItem className="space-y-1">
+                            <FormLabel className="text-xs">Nome do Acompanhante</FormLabel>
+                            <FormControl>
+                              <Input {...field} className="h-9 text-sm" placeholder="Nome do acompanhante" mask="name" />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="companion_phone"
+                        render={({ field }) => (
+                          <FormItem className="space-y-1">
+                            <FormLabel className="text-xs">Telefone do Acompanhante</FormLabel>
+                            <FormControl>
+                              <Input
+                                {...field}
+                                className="h-9 text-sm"
+                                placeholder="(00) 00000-0000"
+                                onChange={(e) => field.onChange(maskPhone(e.target.value))}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Instagram */}
+                  <div className="border-t border-border/30 pt-4 space-y-3">
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Instagram</p>
+                    <div className="grid grid-cols-2 gap-3">
+                      <FormField
+                        control={form.control}
+                        name="instagram_gestante"
+                        render={({ field }) => (
+                          <FormItem className="space-y-1">
+                            <FormLabel className="text-xs">Gestante</FormLabel>
+                            <FormControl>
+                              <Input {...field} className="h-9 text-sm lowercase" placeholder="@usuario" />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="instagram_acompanhante"
+                        render={({ field }) => (
+                          <FormItem className="space-y-1">
+                            <FormLabel className="text-xs">Acompanhante</FormLabel>
+                            <FormControl>
+                              <Input {...field} className="h-9 text-sm lowercase" placeholder="@usuario" />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  </div>
                 </div>
               )}
 
