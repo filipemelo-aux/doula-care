@@ -854,14 +854,15 @@ export function ClientFileDialog({ open, onOpenChange, client }: ClientFileDialo
           </ScrollArea>
         )}
       </DialogContent>
-
-      <PastAppointmentDialog
-        open={pastApptOpen}
-        onOpenChange={setPastApptOpen}
-        clientId={client.id}
-        clientName={client.full_name}
-      />
     </Dialog>
+
+    <PastAppointmentDialog
+      open={pastApptOpen}
+      onOpenChange={setPastApptOpen}
+      clientId={client.id}
+      clientName={client.full_name}
+    />
+    </>
   );
 }
 
