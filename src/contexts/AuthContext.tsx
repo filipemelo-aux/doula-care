@@ -303,10 +303,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         loginEmail = `${email}@gestante.doula.app`;
       }
 
-      let { data, error } = await supabase.auth.signInWithPassword({
-        email: loginEmail,
-        password,
-      });
+      // Legacy/new senha provisória: contas antigas usam "ddmmaa" e as novas "dppddmmaa".
+      // Testamos as duas variações para não travar o acesso com "credenciais inválidas".
+      const passwordVariants = (() => {
+        const list = [password];
+        if (/^dpp\d{4,8}$/i.test(password)) list.push(password.slice(3));
+        else if (/^\d{4,8}$/.test(password)) list.push(`dpp${password}`);
+        return list;
+      })();
+
+      const attempt = async (targetEmail: string) => {
+        let last = await supabase.auth.signInWithPassword({ email: targetEmail, password: passwordVariants[0] });
+        for (let i = 1; i < passwordVariants.length; i++) {
+          if (!last.error || !last.error.message.includes("Invalid login credentials")) break;
+          last = await supabase.auth.signInWithPassword({ email: targetEmail, password: passwordVariants[i] });
+        }
+        return last;
+      };
+
+      let { data, error } = await attempt(loginEmail);
 
       // If login failed with generated email, try resolving via edge function (bypasses RLS)
       if (error && error.message.includes("Invalid login credentials") && !email.includes("@")) {
@@ -315,11 +330,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             body: { username: email.toLowerCase() },
           });
 
-          if (response.data?.email) {
-            const retryResult = await supabase.auth.signInWithPassword({
-              email: response.data.email,
-              password,
-            });
+          if (response.data?.email && response.data.email !== loginEmail) {
+            const retryResult = await attempt(response.data.email);
             data = retryResult.data;
             error = retryResult.error;
           }
@@ -327,6 +339,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           console.error("Error resolving client login:", resolveError);
         }
       }
+
+
 
       if (error) {
         setLoading(false);

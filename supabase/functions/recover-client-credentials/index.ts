@@ -17,14 +17,19 @@ function generateUsername(fullName: string): string {
 
 function generatePassword(dpp: string): string {
   const parts = dpp.split("-");
+  let digits = "";
   if (parts.length === 3) {
     const year = parts[0].slice(-2);
     const month = parts[1];
     const day = parts[2];
-    return `${day}${month}${year}`;
+    digits = `${day}${month}${year}`;
+  } else {
+    digits = dpp.replace(/\D/g, "").slice(0, 6);
   }
-  return dpp.replace(/\D/g, "").slice(0, 6);
+  // Mesmo formato usado em create-client-user / reset-client-password
+  return `dpp${digits}`;
 }
+
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
