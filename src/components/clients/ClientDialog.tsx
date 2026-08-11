@@ -1762,6 +1762,70 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
                       )}
                     </div>
                   )}
+
+                  {/* Fotógrafa (equipe) */}
+                  <div className="border-t border-border/30 pt-4 space-y-3">
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Fotógrafa</p>
+                    <FormField
+                      control={form.control}
+                      name="has_fotografa"
+                      render={({ field }) => (
+                        <FormItem className="space-y-1">
+                          <FormLabel className="text-xs">Tem fotógrafa?</FormLabel>
+                          <Select
+                            onValueChange={(v) => field.onChange(v === "true")}
+                            value={field.value ? "true" : "false"}
+                          >
+                            <FormControl>
+                              <SelectTrigger className="h-9 text-sm">
+                                <SelectValue />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="false">Não</SelectItem>
+                              <SelectItem value="true">Sim</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    {form.watch("has_fotografa") && (
+                      <div className="grid grid-cols-2 gap-3">
+                        <FormField
+                          control={form.control}
+                          name="fotografa_name"
+                          render={({ field }) => (
+                            <FormItem className="space-y-1">
+                              <FormLabel className="text-xs">Nome</FormLabel>
+                              <FormControl>
+                                <Input {...field} className="h-9 text-sm" placeholder="Nome da fotógrafa" mask="name" />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="fotografa_phone"
+                          render={({ field }) => (
+                            <FormItem className="space-y-1">
+                              <FormLabel className="text-xs">Telefone</FormLabel>
+                              <FormControl>
+                                <Input
+                                  {...field}
+                                  className="h-9 text-sm"
+                                  placeholder="(00) 00000-0000"
+                                  onChange={(e) => field.onChange(maskPhone(e.target.value))}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
 
