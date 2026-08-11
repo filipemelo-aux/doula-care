@@ -124,6 +124,8 @@ export function ClientFileDialog({ open, onOpenChange, client }: ClientFileDialo
     },
   });
 
+  const [pastApptOpen, setPastApptOpen] = useState(false);
+
   const { data: appointments, isLoading: loadingAppts } = useQuery({
     queryKey: ["client-file-appointments", client?.id],
     queryFn: async () => {
