@@ -1981,7 +1981,6 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
                 </div>
               )}
 
-              {/* Step 5: Rede de Apoio */}
 
               {/* Step 5: Plano e Pagamento */}
               {currentStep === 5 && (
