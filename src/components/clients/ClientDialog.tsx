@@ -133,9 +133,8 @@ const STEPS = [
   { id: 2, title: "Endereço", shortTitle: "Endereço" },
   { id: 3, title: "Gestação e Pré-natal", shortTitle: "Gestação" },
   { id: 4, title: "Saúde e Restrições", shortTitle: "Saúde" },
-  { id: 5, title: "Rede de Apoio", shortTitle: "Apoio" },
-  { id: 6, title: "Plano e Pagamento", shortTitle: "Plano" },
-  { id: 7, title: "Observações", shortTitle: "Obs." },
+  { id: 5, title: "Plano e Pagamento", shortTitle: "Plano" },
+  { id: 6, title: "Observações", shortTitle: "Obs." },
 ];
 
 export function ClientDialog({ open, onOpenChange, client, initialStep }: ClientDialogProps) {
@@ -1196,9 +1195,8 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
       2: [],
       3: status === "gestante" ? ["dpp"] : [],
       4: [],
-      5: [],
-      6: isModerator ? [] : ["plan_setting_id"],
-      7: [],
+      5: isModerator ? [] : ["plan_setting_id"],
+      6: [],
     };
     const fields = fieldsPerStep[currentStep] || [];
     if (fields.length === 0) return true;
@@ -1232,7 +1230,7 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
     if (!isModerator) {
       const planValid = await form.trigger(["plan_setting_id"]);
       if (!planValid) {
-        setCurrentStep(6);
+        setCurrentStep(5);
         return;
       }
     }
@@ -1420,6 +1418,77 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
                         )}
                       />
                     )}
+                  </div>
+
+                  {/* Acompanhante */}
+                  <div className="border-t border-border/30 pt-4 space-y-3">
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Acompanhante</p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <FormField
+                        control={form.control}
+                        name="companion_name"
+                        render={({ field }) => (
+                          <FormItem className="space-y-1">
+                            <FormLabel className="text-xs">Nome do Acompanhante</FormLabel>
+                            <FormControl>
+                              <Input {...field} className="h-9 text-sm" placeholder="Nome do acompanhante" mask="name" />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="companion_phone"
+                        render={({ field }) => (
+                          <FormItem className="space-y-1">
+                            <FormLabel className="text-xs">Telefone do Acompanhante</FormLabel>
+                            <FormControl>
+                              <Input
+                                {...field}
+                                className="h-9 text-sm"
+                                placeholder="(00) 00000-0000"
+                                onChange={(e) => field.onChange(maskPhone(e.target.value))}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Instagram */}
+                  <div className="border-t border-border/30 pt-4 space-y-3">
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Instagram</p>
+                    <div className="grid grid-cols-2 gap-3">
+                      <FormField
+                        control={form.control}
+                        name="instagram_gestante"
+                        render={({ field }) => (
+                          <FormItem className="space-y-1">
+                            <FormLabel className="text-xs">Gestante</FormLabel>
+                            <FormControl>
+                              <Input {...field} className="h-9 text-sm lowercase" placeholder="@usuario" />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="instagram_acompanhante"
+                        render={({ field }) => (
+                          <FormItem className="space-y-1">
+                            <FormLabel className="text-xs">Acompanhante</FormLabel>
+                            <FormControl>
+                              <Input {...field} className="h-9 text-sm lowercase" placeholder="@usuario" />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
                   </div>
                 </div>
               )}
@@ -1762,6 +1831,70 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
                       )}
                     </div>
                   )}
+
+                  {/* Fotógrafa (equipe) */}
+                  <div className="border-t border-border/30 pt-4 space-y-3">
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Fotógrafa</p>
+                    <FormField
+                      control={form.control}
+                      name="has_fotografa"
+                      render={({ field }) => (
+                        <FormItem className="space-y-1">
+                          <FormLabel className="text-xs">Tem fotógrafa?</FormLabel>
+                          <Select
+                            onValueChange={(v) => field.onChange(v === "true")}
+                            value={field.value ? "true" : "false"}
+                          >
+                            <FormControl>
+                              <SelectTrigger className="h-9 text-sm">
+                                <SelectValue />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="false">Não</SelectItem>
+                              <SelectItem value="true">Sim</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    {form.watch("has_fotografa") && (
+                      <div className="grid grid-cols-2 gap-3">
+                        <FormField
+                          control={form.control}
+                          name="fotografa_name"
+                          render={({ field }) => (
+                            <FormItem className="space-y-1">
+                              <FormLabel className="text-xs">Nome</FormLabel>
+                              <FormControl>
+                                <Input {...field} className="h-9 text-sm" placeholder="Nome da fotógrafa" mask="name" />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="fotografa_phone"
+                          render={({ field }) => (
+                            <FormItem className="space-y-1">
+                              <FormLabel className="text-xs">Telefone</FormLabel>
+                              <FormControl>
+                                <Input
+                                  {...field}
+                                  className="h-9 text-sm"
+                                  placeholder="(00) 00000-0000"
+                                  onChange={(e) => field.onChange(maskPhone(e.target.value))}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
 
@@ -1981,148 +2114,9 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
                 </div>
               )}
 
-              {/* Step 5: Rede de Apoio */}
+
+              {/* Step 5: Plano e Pagamento */}
               {currentStep === 5 && (
-                <div className="space-y-4">
-                  {/* Acompanhante */}
-                  <div className="space-y-3">
-                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Acompanhante</p>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      <FormField
-                        control={form.control}
-                        name="companion_name"
-                        render={({ field }) => (
-                          <FormItem className="space-y-1">
-                            <FormLabel className="text-xs">Nome do Acompanhante</FormLabel>
-                            <FormControl>
-                              <Input {...field} className="h-9 text-sm" placeholder="Nome do acompanhante" mask="name" />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="companion_phone"
-                        render={({ field }) => (
-                          <FormItem className="space-y-1">
-                            <FormLabel className="text-xs">Telefone do Acompanhante</FormLabel>
-                            <FormControl>
-                              <Input 
-                                {...field} 
-                                className="h-9 text-sm" 
-                                placeholder="(00) 00000-0000"
-                                onChange={(e) => field.onChange(maskPhone(e.target.value))}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                  </div>
-
-                  {/* Fotógrafa */}
-                  <div className="border-t border-border/30 pt-4 space-y-3">
-                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Fotógrafa</p>
-                    <FormField
-                      control={form.control}
-                      name="has_fotografa"
-                      render={({ field }) => (
-                        <FormItem className="space-y-1">
-                          <FormLabel className="text-xs">Tem fotógrafa?</FormLabel>
-                          <Select
-                            onValueChange={(v) => field.onChange(v === "true")}
-                            value={field.value ? "true" : "false"}
-                          >
-                            <FormControl>
-                              <SelectTrigger className="h-9 text-sm">
-                                <SelectValue />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="false">Não</SelectItem>
-                              <SelectItem value="true">Sim</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    {form.watch("has_fotografa") && (
-                      <div className="grid grid-cols-2 gap-3">
-                        <FormField
-                          control={form.control}
-                          name="fotografa_name"
-                          render={({ field }) => (
-                            <FormItem className="space-y-1">
-                              <FormLabel className="text-xs">Nome</FormLabel>
-                              <FormControl>
-                                <Input {...field} className="h-9 text-sm" placeholder="Nome da fotógrafa" mask="name" />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={form.control}
-                          name="fotografa_phone"
-                          render={({ field }) => (
-                            <FormItem className="space-y-1">
-                              <FormLabel className="text-xs">Telefone</FormLabel>
-                              <FormControl>
-                                <Input
-                                  {...field}
-                                  className="h-9 text-sm"
-                                  placeholder="(00) 00000-0000"
-                                  onChange={(e) => field.onChange(maskPhone(e.target.value))}
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Instagram */}
-                  <div className="border-t border-border/30 pt-4 space-y-3">
-                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Instagram</p>
-                    <div className="grid grid-cols-2 gap-3">
-                      <FormField
-                        control={form.control}
-                        name="instagram_gestante"
-                        render={({ field }) => (
-                          <FormItem className="space-y-1">
-                            <FormLabel className="text-xs">Gestante</FormLabel>
-                            <FormControl>
-                              <Input {...field} className="h-9 text-sm lowercase" placeholder="@usuario" />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="instagram_acompanhante"
-                        render={({ field }) => (
-                          <FormItem className="space-y-1">
-                            <FormLabel className="text-xs">Acompanhante</FormLabel>
-                            <FormControl>
-                              <Input {...field} className="h-9 text-sm lowercase" placeholder="@usuario" />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Step 6: Plano e Pagamento */}
-              {currentStep === 6 && (
                 <div className="space-y-3 relative">
                   {isPlanLocked && (
                     <div className="absolute inset-0 z-20 rounded-xl bg-background/80 backdrop-blur-sm flex items-center justify-center p-4">
@@ -2571,8 +2565,8 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
                 </div>
               )}
 
-              {/* Step 7: Observações */}
-              {currentStep === 7 && (
+              {/* Step 6: Observações */}
+              {currentStep === 6 && (
                 <div className="flex flex-col h-full min-h-0 min-w-0 max-w-full overflow-x-hidden">
                   <FormField
                     control={form.control}

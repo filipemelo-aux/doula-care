@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Plus, X } from "lucide-react";
@@ -54,6 +54,11 @@ export function SuggestionChips({
     [value, suggestions]
   );
 
+  // Keeps exactly what the user is typing (including trailing commas/spaces),
+  // otherwise re-serializing on every keystroke would strip the separator.
+  const [draft, setDraft] = useState<string | null>(null);
+  const shownOutros = draft ?? outros;
+
   const commit = (nextSelected: Set<string>, nextOutros: string) => {
     onChange(buildSuggestionValue(nextSelected, nextOutros));
   };
@@ -71,7 +76,7 @@ export function SuggestionChips({
                 const next = new Set(selected);
                 if (isOn) next.delete(s);
                 else next.add(s);
-                commit(next, outros);
+                commit(next, shownOutros);
                 onToggle?.(s, !isOn);
               }}
               className={cn(
@@ -87,8 +92,12 @@ export function SuggestionChips({
         })}
       </div>
       <Input
-        value={outros}
-        onChange={(e) => commit(selected, e.target.value)}
+        value={shownOutros}
+        onChange={(e) => {
+          setDraft(e.target.value);
+          commit(selected, e.target.value);
+        }}
+        onBlur={() => setDraft(null)}
         placeholder={placeholder}
         className="h-8 text-xs"
       />

@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -32,6 +33,7 @@ import {
   AlertTriangle,
   ClipboardList,
   StickyNote,
+  Plus,
 } from "lucide-react";
 import { cn, formatBrazilDate } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
@@ -43,6 +45,7 @@ import { toast } from "sonner";
 import type { Tables } from "@/integrations/supabase/types";
 import { calculateCurrentPregnancyWeeks, calculateCurrentPregnancyDays } from "@/lib/pregnancy";
 import { BIRTH_TYPE_LABELS } from "@/components/clients/BirthRegistrationDialog";
+import { PastAppointmentDialog } from "@/components/clients/PastAppointmentDialog";
 
 type Client = Tables<"clients">;
 
@@ -120,6 +123,8 @@ export function ClientFileDialog({ open, onOpenChange, client }: ClientFileDialo
       return data?.avatar_url ?? null;
     },
   });
+
+  const [pastApptOpen, setPastApptOpen] = useState(false);
 
   const { data: appointments, isLoading: loadingAppts } = useQuery({
     queryKey: ["client-file-appointments", client?.id],
@@ -485,6 +490,7 @@ export function ClientFileDialog({ open, onOpenChange, client }: ClientFileDialo
     .toUpperCase();
 
   return (
+    <>
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg max-h-[90vh] p-0 overflow-hidden gap-0 rounded-3xl">
         <DialogHeader className="sr-only">
@@ -618,7 +624,22 @@ export function ClientFileDialog({ open, onOpenChange, client }: ClientFileDialo
               )}
 
               {/* Appointments (Registro de acompanhamentos) */}
-              <Card icon={Calendar} title={`Consultas (${appointments?.length || 0})`} tint="accent">
+              <Card
+                icon={Calendar}
+                title={`Consultas (${appointments?.length || 0})`}
+                tint="accent"
+                action={
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="h-7 px-2 text-xs"
+                    onClick={() => setPastApptOpen(true)}
+                  >
+                    <Plus className="w-3.5 h-3.5 mr-1" />
+                    Registrar
+                  </Button>
+                }
+              >
                 {appointments && appointments.length > 0 ? (
                   <div className="space-y-2">
                     {sortAppointmentsWithFutureFirst(appointments).map((apt) => (
@@ -834,6 +855,14 @@ export function ClientFileDialog({ open, onOpenChange, client }: ClientFileDialo
         )}
       </DialogContent>
     </Dialog>
+
+    <PastAppointmentDialog
+      open={pastApptOpen}
+      onOpenChange={setPastApptOpen}
+      clientId={client.id}
+      clientName={client.full_name}
+    />
+    </>
   );
 }
 
@@ -849,11 +878,13 @@ function Card({
   icon: Icon,
   title,
   tint = "primary",
+  action,
   children,
 }: {
   icon: React.ComponentType<{ className?: string }>;
   title: string;
   tint?: "primary" | "accent" | "pink" | "destructive";
+  action?: React.ReactNode;
   children: React.ReactNode;
 }) {
   const t = tintClasses[tint];
@@ -864,6 +895,7 @@ function Card({
           <Icon className={cn("w-4 h-4", t.icon)} />
         </div>
         <h3 className="font-semibold text-sm text-foreground">{title}</h3>
+        {action && <div className="ml-auto">{action}</div>}
       </div>
       <div>{children}</div>
     </div>
