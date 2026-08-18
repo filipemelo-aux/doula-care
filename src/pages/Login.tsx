@@ -203,6 +203,11 @@ export default function Login() {
           </form>
           <div className="mt-4 text-center text-sm text-muted-foreground space-y-2">
             <div>
+              <Link to="/esqueci-senha" className="text-primary hover:underline font-medium">
+                Esqueci minha senha
+              </Link>
+            </div>
+            <div>
               É doula?{" "}
               <Link to="/cadastro" className="text-primary hover:underline font-medium">
                 Crie sua conta
