@@ -20,6 +20,8 @@ import Agenda from "./pages/Agenda";
 import NotFound from "./pages/NotFound";
 import Register from "./pages/Register";
 import RecoverCredentials from "./pages/RecoverCredentials";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import DeleteAccount from "./pages/DeleteAccount";
 import Documentation from "./pages/Documentation";
@@ -82,6 +84,8 @@ const App = () => (
             <Route path="/cadastro" element={<Register />} />
             <Route path="/cadastro-visitante" element={<RegisterVisitor />} />
             <Route path="/recuperar-acesso" element={<RecoverCredentials />} />
+            <Route path="/esqueci-senha" element={<ForgotPassword />} />
+            <Route path="/redefinir-senha" element={<ResetPassword />} />
             <Route path="/politica-de-privacidade" element={<PrivacyPolicy />} />
             <Route path="/excluir-conta" element={<DeleteAccount />} />
             <Route path="/documentacao" element={<Documentation />} />
