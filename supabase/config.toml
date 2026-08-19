@@ -1,52 +1,39 @@
 project_id = "gjnvxzsforfrxjanxqnq"
 
-[functions.create-admin-user]
-verify_jwt = false
-
-[functions.create-client-user]
-verify_jwt = false
-
-[functions.provision-existing-clients]
-verify_jwt = false
-
-[functions.get-vapid-public-key]
-verify_jwt = false
-
-[functions.generate-vapid-keys]
-verify_jwt = false
-
-[functions.send-push-notification]
-verify_jwt = false
-
-[functions.check-payment-due-dates]
-verify_jwt = false
-
-[functions.check-appointment-reminders]
-verify_jwt = false
-
-[functions.register-doula]
-verify_jwt = false
-
-[functions.generate-service-icon]
-verify_jwt = false
-
-[functions.check-billing-overdue]
-verify_jwt = false
-
-[functions.delete-organization]
-verify_jwt = false
-
-[functions.generate-notification-text]
-verify_jwt = false
-
-[functions.notify-forum-post]
-verify_jwt = false
-
-[functions.manage-admin-user]
-verify_jwt = false
-
-[functions.webhook-apple-subscriptions]
-verify_jwt = false
-
-[functions.webhook-google-play]
-verify_jwt = false
+[functions]
+  [functions.auth-email-hook]
+    verify_jwt = false
+  [functions.check-appointment-reminders]
+    verify_jwt = false
+  [functions.check-billing-overdue]
+    verify_jwt = false
+  [functions.check-payment-due-dates]
+    verify_jwt = false
+  [functions.create-admin-user]
+    verify_jwt = false
+  [functions.create-client-user]
+    verify_jwt = false
+  [functions.delete-organization]
+    verify_jwt = false
+  [functions.generate-notification-text]
+    verify_jwt = false
+  [functions.generate-service-icon]
+    verify_jwt = false
+  [functions.generate-vapid-keys]
+    verify_jwt = false
+  [functions.get-vapid-public-key]
+    verify_jwt = false
+  [functions.manage-admin-user]
+    verify_jwt = false
+  [functions.notify-forum-post]
+    verify_jwt = false
+  [functions.provision-existing-clients]
+    verify_jwt = false
+  [functions.register-doula]
+    verify_jwt = false
+  [functions.send-push-notification]
+    verify_jwt = false
+  [functions.webhook-apple-subscriptions]
+    verify_jwt = false
+  [functions.webhook-google-play]
+    verify_jwt = false
