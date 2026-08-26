@@ -11,28 +11,28 @@ import {
 import { Button } from "@/components/ui/button";
 import { MapPin, Sparkles, Search, Heart } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { getNotificationSeenAt, markNotificationSeen } from "@/lib/notificationSeen";
 
 export default function LocationCoverage() {
-  const { organizationId } = useAuth();
+  const { organizationId, user } = useAuth();
   const [welcomeOpen, setWelcomeOpen] = useState(false);
 
-  const storageKey = organizationId
-    ? `location-coverage-welcome-seen:${organizationId}`
+  const welcomeKey = organizationId
+    ? `location-coverage-welcome:${organizationId}`
     : null;
 
   useEffect(() => {
-    if (!storageKey) return;
-    try {
-      const seen = localStorage.getItem(storageKey) === "1";
-      if (!seen) setWelcomeOpen(true);
-    } catch {
-      /* ignore */
-    }
-  }, [storageKey]);
+    if (!welcomeKey || !user) return;
+    // Persistido no banco (por usuário): uma vez fechada, a mensagem não
+    // reaparece em nenhum outro dispositivo.
+    getNotificationSeenAt(welcomeKey, "welcome", user.id)
+      .then((seenAt) => { if (!seenAt) setWelcomeOpen(true); })
+      .catch(() => { /* ignore */ });
+  }, [welcomeKey, user]);
 
   const handleClose = () => {
-    if (storageKey) {
-      try { localStorage.setItem(storageKey, "1"); } catch { /* ignore */ }
+    if (welcomeKey && user) {
+      markNotificationSeen(welcomeKey, "welcome", user.id).catch(() => { /* ignore */ });
     }
     setWelcomeOpen(false);
   };

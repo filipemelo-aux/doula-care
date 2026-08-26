@@ -30,7 +30,10 @@ export default function Dashboard() {
       .maybeSingle()
       .then(({ data }) => {
         setAvatarUrl(data?.avatar_url || null);
-        if (data && !(data as any).welcome_seen) {
+        // Boas-vindas EXCLUSIVA da doula (dona da conta). Moderadores e
+        // qualquer outro papel jamais veem — nem consomem — este flag,
+        // mesmo que cheguem a renderizar esta tela por algum erro de rota.
+        if (role === "admin" && data && !(data as any).welcome_seen) {
           setShowWelcome(true);
           // Persist immediately so it never appears again on any device,
           // regardless of whether the user actually closes the dialog.
@@ -41,7 +44,7 @@ export default function Dashboard() {
             .then(() => {});
         }
       });
-  }, [user]);
+  }, [user, role]);
 
   return (
     <div className="space-y-6 lg:space-y-8 overflow-x-hidden">
