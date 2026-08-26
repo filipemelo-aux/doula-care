@@ -1,0 +1,1 @@
+- [Welcome alignment](mem://features/welcome-messages-alignment) — Boas-vindas doula/gestante separadas, opt-in por papel, persistidas no banco
