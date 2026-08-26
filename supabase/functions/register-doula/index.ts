@@ -189,10 +189,13 @@ Deno.serve(async (req) => {
       throw roleError;
     }
 
-    // 4. Update profile with organization_id and full_name
+    // 4. Update profile with organization_id and full_name.
+    //    welcome_seen = false libera a boas-vindas da doula (opt-in):
+    //    o padrão da coluna é true para que gestantes/visitantes/moderadores
+    //    nunca recebam essa mensagem.
     const { error: profileError } = await supabase
       .from("profiles")
-      .update({ organization_id: org.id, full_name: fullName })
+      .update({ organization_id: org.id, full_name: fullName, welcome_seen: false })
       .eq("user_id", userId);
 
     if (profileError) {
