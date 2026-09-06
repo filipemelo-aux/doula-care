@@ -348,6 +348,9 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
   // Reset form when client changes or dialog opens fresh
   useEffect(() => {
     if (!open) return;
+    // Never re-hydrate over changes the user already typed: background refetches
+    // (client list, transactions, installments) must not wipe the open form.
+    if (form.formState.isDirty) return;
     setCurrentStep(initialStep && initialStep >= 1 && initialStep <= STEPS.length ? initialStep : 1);
     if (client) {
       const txInstallments = clientTransaction?.installments ? Number(clientTransaction.installments) : 1;
