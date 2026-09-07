@@ -659,7 +659,7 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
         status: data.status || "gestante",
         custom_status: data.status === "outro" ? (data.custom_status || null) : null,
         pregnancy_weeks: data.dpp 
-          ? calculateCurrentPregnancyWeeks(null, null, data.dpp) 
+          ? Math.max(0, Math.min(45, calculateCurrentPregnancyWeeks(null, null, data.dpp) ?? 0))
           : null,
         dpp: data.dpp || null,
         baby_names: data.baby_names 
