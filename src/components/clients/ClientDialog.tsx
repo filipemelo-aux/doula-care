@@ -78,7 +78,7 @@ const clientSchema = z.object({
   zip_code: z.string().optional(),
   companion_name: z.string().optional(),
   companion_phone: z.string().optional(),
-  status: z.enum(["gestante", "lactante", "outro"]).optional().default("gestante"),
+  status: z.enum(["gestante", "lactante", "outro", "tentante"]).optional().default("gestante"),
   custom_status: z.string().optional(),
   pregnancy_weeks: z.number().min(0).max(42).optional().nullable(),
   dpp: z.string().optional().default(""),
@@ -378,7 +378,7 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
         zip_code: client.zip_code || "",
         companion_name: client.companion_name || "",
         companion_phone: client.companion_phone || "",
-        status: client.status as "gestante" | "lactante" | "outro",
+        status: (client.status === "tentante" ? "outro" : client.status) as "gestante" | "lactante" | "outro",
         custom_status: (client as any).custom_status || "",
         pregnancy_weeks: client.pregnancy_weeks,
         dpp: client.dpp || "",
@@ -1243,7 +1243,18 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
       setCurrentStep(3);
       return;
     }
-    form.handleSubmit(onSubmit)();
+    form.handleSubmit(onSubmit, (errors) => {
+      const stepByField: Record<string, number> = {
+        full_name: 1, phone: 1, cpf: 1, status: 1, custom_status: 1, date_of_birth: 1,
+        street: 2, number: 2, neighborhood: 2, city: 2, state: 2, zip_code: 2,
+        dpp: 3, pregnancy_weeks: 3, prenatal_type: 3, baby_names: 3, birth_location: 3,
+        plan_setting_id: 5, plan_value: 5, installments: 5, first_due_date: 5,
+      };
+      const firstField = Object.keys(errors)[0];
+      const message = (errors as any)[firstField]?.message as string | undefined;
+      if (stepByField[firstField]) setCurrentStep(stepByField[firstField]);
+      toast.error(message || "Verifique os campos obrigatórios antes de salvar");
+    })();
   };
 
   return (
