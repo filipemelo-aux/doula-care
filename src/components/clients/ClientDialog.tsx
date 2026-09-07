@@ -80,7 +80,7 @@ const clientSchema = z.object({
   companion_phone: z.string().optional(),
   status: z.enum(["gestante", "lactante", "outro", "tentante"]).optional().default("gestante"),
   custom_status: z.string().optional(),
-  pregnancy_weeks: z.number().min(0).max(42).optional().nullable(),
+  pregnancy_weeks: z.number().optional().nullable(),
   dpp: z.string().optional().default(""),
   baby_names: z.string().optional(),
   birth_location: z.string().optional(),
@@ -659,7 +659,7 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
         status: data.status || "gestante",
         custom_status: data.status === "outro" ? (data.custom_status || null) : null,
         pregnancy_weeks: data.dpp 
-          ? calculateCurrentPregnancyWeeks(null, null, data.dpp) 
+          ? Math.max(0, Math.min(45, calculateCurrentPregnancyWeeks(null, null, data.dpp) ?? 0))
           : null,
         dpp: data.dpp || null,
         baby_names: data.baby_names 
