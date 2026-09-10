@@ -233,8 +233,9 @@ async function setupNativePlugin(): Promise<boolean> {
       console.warn(
         "[IAP] RevenueCat API key ausente para",
         getCurrentPlatform(),
-        "- defina VITE_REVENUECAT_IOS_KEY / VITE_REVENUECAT_ANDROID_KEY ou window.__REVENUECAT_KEYS__"
+        "- configure a chave no Super Admin (Assinaturas) ou em window.__REVENUECAT_KEYS__"
       );
+      _setupPromise = null; // permite nova tentativa após configurar a chave
       return false;
     }
 
