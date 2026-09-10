@@ -489,7 +489,7 @@ export default function Subscription() {
                         {purchasing === monthlyProduct?.productId ? (
                           <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                         ) : null}
-                        Assinar mensal — {formatCentavos(plan.price_monthly)}
+                        Assinar mensal — {monthlyLabel}
                       </Button>
                       <Button
                         variant="outline"
@@ -500,12 +500,7 @@ export default function Subscription() {
                         {purchasing === yearlyProduct?.productId ? (
                           <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                         ) : null}
-                        Assinar anual —{" "}
-                        {formatCentavos(
-                          plan.price_yearly > 0
-                            ? plan.price_yearly
-                            : plan.price_monthly * 12
-                        )}
+                        Assinar anual — {yearlyLabel}
                       </Button>
                       {!monthlyProduct && !yearlyProduct && (
                         <p className="text-[11px] text-muted-foreground text-center">
