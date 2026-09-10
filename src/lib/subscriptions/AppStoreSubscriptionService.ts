@@ -111,8 +111,59 @@ async function fetchPlanProductMap(): Promise<StoreProduct[]> {
         style: "currency",
         currency: "BRL",
       }).format(cents / 100),
+      priceSource: "config",
     } as StoreProduct;
   });
+}
+
+/**
+ * Substitui os preços configurados pelos preços reais da loja (App Store /
+ * Google Play). A Apple exige que o app exiba o preço praticado por ela.
+ * Se a loja não responder, mantém o preço configurado como fallback.
+ */
+async function enrichWithStorePrices(products: StoreProduct[]): Promise<StoreProduct[]> {
+  if (!isNativeMobile() || products.length === 0) return products;
+  try {
+    const ready = await setupNativePlugin();
+    const Purchases: any = await loadNativePurchases();
+    if (!ready || !Purchases?.getProducts) return products;
+
+    const res: any = await Purchases.getProducts({
+      productIdentifiers: products.map((p) => p.productId),
+articulate: undefined,
+    });
+    const list: any[] = res?.products ?? res?.data ?? [];
+    if (!Array.isArray(list) || list.length === 0) return products;
+
+    const byId = new Map<string, any>();
+    list.forEach((p) => {
+      const id = p?.identifier ?? p?.productIdentifier ?? p?.sku;
+      if (id) byId.set(String(id), p);
+    });
+
+    return products.map((p) => {
+      const native = byId.get(p.productId);
+      if (!native) return p;
+      const priceNumber = Number(
+        native.price ?? native.priceAmount ?? native.price_amount ?? NaN
+      );
+      const priceString: string | undefined =
+        native.priceString ?? native.price_string ?? native.localizedPrice;
+      if (!priceString && !Number.isFinite(priceNumber)) return p;
+      return {
+        ...p,
+        currency: native.currencyCode ?? native.currency_code ?? p.currency,
+        priceCents: Number.isFinite(priceNumber)
+          ? Math.round(priceNumber * 100)
+          : p.priceCents,
+        priceString: priceString ?? p.priceString,
+        priceSource: "store" as const,
+      };
+    });
+  } catch (err) {
+    console.warn("[IAP] Não foi possível ler preços da loja:", err);
+    return products;
+  }
 }
 
 // ──────────────────────────────────────────────────────────────────
