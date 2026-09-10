@@ -130,7 +130,7 @@ async function enrichWithStorePrices(products: StoreProduct[]): Promise<StorePro
 
     const res: any = await Purchases.getProducts({
       productIdentifiers: products.map((p) => p.productId),
-articulate: undefined,
+
     });
     const list: any[] = res?.products ?? res?.data ?? [];
     if (!Array.isArray(list) || list.length === 0) return products;
