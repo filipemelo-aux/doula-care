@@ -420,33 +420,32 @@ export default function Subscription() {
                   </div>
                 ) : (
                   (() => {
-                    const yearly =
-                      plan.price_yearly > 0
-                        ? plan.price_yearly
-                        : plan.price_monthly * 12;
-                    const hasDiscount = yearly < plan.price_monthly * 12;
+                    const hasDiscount = yearlyCents < plan.price_monthly * 12;
                     return (
                       <div className="space-y-1">
                         <div>
                           <span className="text-3xl font-bold text-foreground">
-                            {formatCentavos(plan.price_monthly)}
+                            {monthlyLabel}
                           </span>
                           <span className="text-sm text-muted-foreground">/mês</span>
                         </div>
                         <div>
                           <span className="text-lg font-semibold text-muted-foreground">
-                            {formatCentavos(yearly)}
+                            {yearlyLabel}
                           </span>
                           <span className="text-xs text-muted-foreground">/ano</span>
                           {hasDiscount && (
                             <Badge variant="secondary" className="ml-2 text-xs">
                               {Math.round(
-                                (1 - yearly / (plan.price_monthly * 12)) * 100
+                                (1 - yearlyCents / (plan.price_monthly * 12)) * 100
                               )}
                               % off
                             </Badge>
                           )}
                         </div>
+                        <p className="text-[11px] text-muted-foreground">
+                          Assinatura com renovação automática. Cancele quando quiser.
+                        </p>
                       </div>
                     );
                   })()
