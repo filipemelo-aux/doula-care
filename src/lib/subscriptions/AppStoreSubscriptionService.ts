@@ -295,7 +295,8 @@ export const AppStoreSubscriptionService = {
    * No web devolve produtos das duas lojas para preview/mock.
    */
   async getProducts(): Promise<StoreProduct[]> {
-    return fetchPlanProductMap();
+    const configured = await fetchPlanProductMap();
+    return enrichWithStorePrices(configured);
   },
 
   /**
