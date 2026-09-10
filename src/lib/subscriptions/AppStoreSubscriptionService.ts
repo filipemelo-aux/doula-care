@@ -22,6 +22,12 @@ export interface StoreProduct {
   priceString: string;
   priceCents: number;
   currency: string;
+  /**
+   * "store" = preço lido diretamente da App Store / Google Play (fonte oficial,
+   * exigida pela Apple para exibição). "config" = preço configurado no Super
+   * Admin (usado na web/preview, onde a loja não está disponível).
+   */
+  priceSource: "store" | "config";
 }
 
 export interface ActiveSubscriptionInfo {
@@ -105,8 +111,59 @@ async function fetchPlanProductMap(): Promise<StoreProduct[]> {
         style: "currency",
         currency: "BRL",
       }).format(cents / 100),
+      priceSource: "config",
     } as StoreProduct;
   });
+}
+
+/**
+ * Substitui os preços configurados pelos preços reais da loja (App Store /
+ * Google Play). A Apple exige que o app exiba o preço praticado por ela.
+ * Se a loja não responder, mantém o preço configurado como fallback.
+ */
+async function enrichWithStorePrices(products: StoreProduct[]): Promise<StoreProduct[]> {
+  if (!isNativeMobile() || products.length === 0) return products;
+  try {
+    const ready = await setupNativePlugin();
+    const Purchases: any = await loadNativePurchases();
+    if (!ready || !Purchases?.getProducts) return products;
+
+    const res: any = await Purchases.getProducts({
+      productIdentifiers: products.map((p) => p.productId),
+
+    });
+    const list: any[] = res?.products ?? res?.data ?? [];
+    if (!Array.isArray(list) || list.length === 0) return products;
+
+    const byId = new Map<string, any>();
+    list.forEach((p) => {
+      const id = p?.identifier ?? p?.productIdentifier ?? p?.sku;
+      if (id) byId.set(String(id), p);
+    });
+
+    return products.map((p) => {
+      const native = byId.get(p.productId);
+      if (!native) return p;
+      const priceNumber = Number(
+        native.price ?? native.priceAmount ?? native.price_amount ?? NaN
+      );
+      const priceString: string | undefined =
+        native.priceString ?? native.price_string ?? native.localizedPrice;
+      if (!priceString && !Number.isFinite(priceNumber)) return p;
+      return {
+        ...p,
+        currency: native.currencyCode ?? native.currency_code ?? p.currency,
+        priceCents: Number.isFinite(priceNumber)
+          ? Math.round(priceNumber * 100)
+          : p.priceCents,
+        priceString: priceString ?? p.priceString,
+        priceSource: "store" as const,
+      };
+    });
+  } catch (err) {
+    console.warn("[IAP] Não foi possível ler preços da loja:", err);
+    return products;
+  }
 }
 
 // ──────────────────────────────────────────────────────────────────
@@ -129,25 +186,32 @@ async function loadNativePurchases() {
  * Aceita tanto variáveis Vite quanto um override em window (útil em runtime
  * remoto via Capacitor).  Sem chave => setup é ignorado silenciosamente.
  */
-function getRevenueCatApiKey(): string | null {
+async function getRevenueCatApiKey(): Promise<string | null> {
   const platform = getCurrentPlatform();
+  if (platform === "web") return null;
+
   const w = (typeof window !== "undefined" ? (window as any) : {}) || {};
   const overrides = w.__REVENUECAT_KEYS__ ?? {};
-  if (platform === "ios") {
-    return (
-      overrides.ios ||
-      (import.meta.env.VITE_REVENUECAT_IOS_KEY as string | undefined) ||
-      null
-    );
+  const envKey =
+    platform === "ios"
+      ? (import.meta.env.VITE_REVENUECAT_IOS_KEY as string | undefined)
+      : (import.meta.env.VITE_REVENUECAT_ANDROID_KEY as string | undefined);
+  const local = overrides[platform] || envKey;
+  if (local) return local;
+
+  // Fonte principal: configuração remota (Super Admin), pois o app nativo
+  // roda a build hospedada e não recebe variáveis de ambiente locais.
+  try {
+    const { data } = await supabase
+      .from("system_config")
+      .select("value")
+      .eq("key", platform === "ios" ? "revenuecat_ios_key" : "revenuecat_android_key")
+      .maybeSingle();
+    const value = (data as any)?.value?.trim();
+    return value ? value : null;
+  } catch {
+    return null;
   }
-  if (platform === "android") {
-    return (
-      overrides.android ||
-      (import.meta.env.VITE_REVENUECAT_ANDROID_KEY as string | undefined) ||
-      null
-    );
-  }
-  return null;
 }
 
 let _setupPromise: Promise<boolean> | null = null;
@@ -164,13 +228,14 @@ async function setupNativePlugin(): Promise<boolean> {
     const Purchases: any = await loadNativePurchases();
     if (!Purchases) return false;
 
-    const apiKey = getRevenueCatApiKey();
+    const apiKey = await getRevenueCatApiKey();
     if (!apiKey) {
       console.warn(
         "[IAP] RevenueCat API key ausente para",
         getCurrentPlatform(),
-        "- defina VITE_REVENUECAT_IOS_KEY / VITE_REVENUECAT_ANDROID_KEY ou window.__REVENUECAT_KEYS__"
+        "- configure a chave no Super Admin (Assinaturas) ou em window.__REVENUECAT_KEYS__"
       );
+      _setupPromise = null; // permite nova tentativa após configurar a chave
       return false;
     }
 
@@ -238,7 +303,8 @@ export const AppStoreSubscriptionService = {
    * No web devolve produtos das duas lojas para preview/mock.
    */
   async getProducts(): Promise<StoreProduct[]> {
-    return fetchPlanProductMap();
+    const configured = await fetchPlanProductMap();
+    return enrichWithStorePrices(configured);
   },
 
   /**

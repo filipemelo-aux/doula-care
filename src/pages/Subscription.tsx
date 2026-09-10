@@ -377,6 +377,18 @@ export default function Subscription() {
             !!purchasing &&
             (purchasing === monthlyProduct?.productId ||
               purchasing === yearlyProduct?.productId);
+          // A Apple exige exibir o preço praticado pela loja. Quando o app
+          // consegue ler o preço real, ele tem prioridade sobre o configurado.
+          const monthlyLabel =
+            monthlyProduct?.priceSource === "store"
+              ? monthlyProduct.priceString
+              : formatCentavos(plan.price_monthly);
+          const yearlyCents =
+            plan.price_yearly > 0 ? plan.price_yearly : plan.price_monthly * 12;
+          const yearlyLabel =
+            yearlyProduct?.priceSource === "store"
+              ? yearlyProduct.priceString
+              : formatCentavos(yearlyCents);
 
           return (
             <Card
@@ -408,33 +420,32 @@ export default function Subscription() {
                   </div>
                 ) : (
                   (() => {
-                    const yearly =
-                      plan.price_yearly > 0
-                        ? plan.price_yearly
-                        : plan.price_monthly * 12;
-                    const hasDiscount = yearly < plan.price_monthly * 12;
+                    const hasDiscount = yearlyCents < plan.price_monthly * 12;
                     return (
                       <div className="space-y-1">
                         <div>
                           <span className="text-3xl font-bold text-foreground">
-                            {formatCentavos(plan.price_monthly)}
+                            {monthlyLabel}
                           </span>
                           <span className="text-sm text-muted-foreground">/mês</span>
                         </div>
                         <div>
                           <span className="text-lg font-semibold text-muted-foreground">
-                            {formatCentavos(yearly)}
+                            {yearlyLabel}
                           </span>
                           <span className="text-xs text-muted-foreground">/ano</span>
                           {hasDiscount && (
                             <Badge variant="secondary" className="ml-2 text-xs">
                               {Math.round(
-                                (1 - yearly / (plan.price_monthly * 12)) * 100
+                                (1 - yearlyCents / (plan.price_monthly * 12)) * 100
                               )}
                               % off
                             </Badge>
                           )}
                         </div>
+                        <p className="text-[11px] text-muted-foreground">
+                          Assinatura com renovação automática. Cancele quando quiser.
+                        </p>
                       </div>
                     );
                   })()
@@ -478,7 +489,7 @@ export default function Subscription() {
                         {purchasing === monthlyProduct?.productId ? (
                           <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                         ) : null}
-                        Assinar mensal — {formatCentavos(plan.price_monthly)}
+                        Assinar mensal — {monthlyLabel}
                       </Button>
                       <Button
                         variant="outline"
@@ -489,12 +500,7 @@ export default function Subscription() {
                         {purchasing === yearlyProduct?.productId ? (
                           <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                         ) : null}
-                        Assinar anual —{" "}
-                        {formatCentavos(
-                          plan.price_yearly > 0
-                            ? plan.price_yearly
-                            : plan.price_monthly * 12
-                        )}
+                        Assinar anual — {yearlyLabel}
                       </Button>
                       {!monthlyProduct && !yearlyProduct && (
                         <p className="text-[11px] text-muted-foreground text-center">
@@ -567,6 +573,36 @@ export default function Subscription() {
           </CardContent>
         </Card>
       )}
+
+      {/* Informações obrigatórias de assinatura (App Store / Google Play) */}
+      <Card className="card-glass">
+        <CardContent className="pt-6 space-y-2 text-xs text-muted-foreground">
+          <p className="font-medium text-foreground">Sobre as assinaturas</p>
+          <p>
+            As assinaturas Pro e Premium são mensais ou anuais e renovam
+            automaticamente ao final de cada período, salvo cancelamento com
+            pelo menos 24 horas de antecedência.
+          </p>
+          <p>
+            O pagamento é cobrado na conta da loja no momento da confirmação da
+            compra e na renovação. Você pode gerenciar ou cancelar sua
+            assinatura a qualquer momento nos ajustes da sua conta na loja.
+          </p>
+          <div className="flex flex-wrap gap-4 pt-1">
+            <a href="/politica-de-privacidade" className="underline">
+              Política de Privacidade
+            </a>
+            <a href="/suporte" className="underline">
+              Termos de Uso e Suporte
+            </a>
+            {!isWeb && (
+              <button type="button" onClick={handleRestore} className="underline">
+                Restaurar compras
+              </button>
+            )}
+          </div>
+        </CardContent>
+      </Card>
 
       {pixTarget && (
         <PixSubscriptionDialog
