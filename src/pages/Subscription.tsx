@@ -574,6 +574,36 @@ export default function Subscription() {
         </Card>
       )}
 
+      {/* Informações obrigatórias de assinatura (App Store / Google Play) */}
+      <Card className="card-glass">
+        <CardContent className="pt-6 space-y-2 text-xs text-muted-foreground">
+          <p className="font-medium text-foreground">Sobre as assinaturas</p>
+          <p>
+            As assinaturas Pro e Premium são mensais ou anuais e renovam
+            automaticamente ao final de cada período, salvo cancelamento com
+            pelo menos 24 horas de antecedência.
+          </p>
+          <p>
+            O pagamento é cobrado na conta da loja no momento da confirmação da
+            compra e na renovação. Você pode gerenciar ou cancelar sua
+            assinatura a qualquer momento nos ajustes da sua conta na loja.
+          </p>
+          <div className="flex flex-wrap gap-4 pt-1">
+            <a href="/politica-de-privacidade" className="underline">
+              Política de Privacidade
+            </a>
+            <a href="/suporte" className="underline">
+              Termos de Uso e Suporte
+            </a>
+            {!isWeb && (
+              <button type="button" onClick={handleRestore} className="underline">
+                Restaurar compras
+              </button>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
       {pixTarget && (
         <PixSubscriptionDialog
           open={!!pixTarget}
