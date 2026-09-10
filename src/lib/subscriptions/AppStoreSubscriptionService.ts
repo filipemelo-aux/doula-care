@@ -22,6 +22,12 @@ export interface StoreProduct {
   priceString: string;
   priceCents: number;
   currency: string;
+  /**
+   * "store" = preço lido diretamente da App Store / Google Play (fonte oficial,
+   * exigida pela Apple para exibição). "config" = preço configurado no Super
+   * Admin (usado na web/preview, onde a loja não está disponível).
+   */
+  priceSource: "store" | "config";
 }
 
 export interface ActiveSubscriptionInfo {
