@@ -228,7 +228,7 @@ async function setupNativePlugin(): Promise<boolean> {
     const Purchases: any = await loadNativePurchases();
     if (!Purchases) return false;
 
-    const apiKey = getRevenueCatApiKey();
+    const apiKey = await getRevenueCatApiKey();
     if (!apiKey) {
       console.warn(
         "[IAP] RevenueCat API key ausente para",
