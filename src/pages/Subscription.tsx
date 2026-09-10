@@ -377,6 +377,18 @@ export default function Subscription() {
             !!purchasing &&
             (purchasing === monthlyProduct?.productId ||
               purchasing === yearlyProduct?.productId);
+          // A Apple exige exibir o preço praticado pela loja. Quando o app
+          // consegue ler o preço real, ele tem prioridade sobre o configurado.
+          const monthlyLabel =
+            monthlyProduct?.priceSource === "store"
+              ? monthlyProduct.priceString
+              : formatCentavos(plan.price_monthly);
+          const yearlyCents =
+            plan.price_yearly > 0 ? plan.price_yearly : plan.price_monthly * 12;
+          const yearlyLabel =
+            yearlyProduct?.priceSource === "store"
+              ? yearlyProduct.priceString
+              : formatCentavos(yearlyCents);
 
           return (
             <Card
