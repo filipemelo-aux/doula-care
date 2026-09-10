@@ -186,25 +186,32 @@ async function loadNativePurchases() {
  * Aceita tanto variáveis Vite quanto um override em window (útil em runtime
  * remoto via Capacitor).  Sem chave => setup é ignorado silenciosamente.
  */
-function getRevenueCatApiKey(): string | null {
+async function getRevenueCatApiKey(): Promise<string | null> {
   const platform = getCurrentPlatform();
+  if (platform === "web") return null;
+
   const w = (typeof window !== "undefined" ? (window as any) : {}) || {};
   const overrides = w.__REVENUECAT_KEYS__ ?? {};
-  if (platform === "ios") {
-    return (
-      overrides.ios ||
-      (import.meta.env.VITE_REVENUECAT_IOS_KEY as string | undefined) ||
-      null
-    );
+  const envKey =
+    platform === "ios"
+      ? (import.meta.env.VITE_REVENUECAT_IOS_KEY as string | undefined)
+      : (import.meta.env.VITE_REVENUECAT_ANDROID_KEY as string | undefined);
+  const local = overrides[platform] || envKey;
+  if (local) return local;
+
+  // Fonte principal: configuração remota (Super Admin), pois o app nativo
+  // roda a build hospedada e não recebe variáveis de ambiente locais.
+  try {
+    const { data } = await supabase
+      .from("system_config")
+      .select("value")
+      .eq("key", platform === "ios" ? "revenuecat_ios_key" : "revenuecat_android_key")
+      .maybeSingle();
+    const value = (data as any)?.value?.trim();
+    return value ? value : null;
+  } catch {
+    return null;
   }
-  if (platform === "android") {
-    return (
-      overrides.android ||
-      (import.meta.env.VITE_REVENUECAT_ANDROID_KEY as string | undefined) ||
-      null
-    );
-  }
-  return null;
 }
 
 let _setupPromise: Promise<boolean> | null = null;
