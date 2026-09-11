@@ -355,6 +355,7 @@ export default function SuperAdminDashboard() {
   }
 
   const OrgCard = ({ org }: { org: OrgWithCounts }) => {
+    const openDetails = () => setDetailsOrgId(org.id);
     const displayName = (org.nome_exibicao && org.nome_exibicao.trim()) || org.name;
     const initials = displayName
       .split(" ")
@@ -375,7 +376,13 @@ export default function SuperAdminDashboard() {
               )}
             </div>
             <div className="flex-1 min-w-0">
-              <h3 className="font-semibold text-sm text-foreground truncate leading-tight">{displayName}</h3>
+              <button
+                type="button"
+                onClick={openDetails}
+                className="font-semibold text-sm text-foreground truncate leading-tight text-left hover:text-primary transition-colors w-full"
+              >
+                {displayName}
+              </button>
               <div className="flex items-center gap-1.5 mt-0.5 text-xs text-muted-foreground">
                 <Mail className="h-3 w-3 flex-shrink-0" />
                 <span className="truncate">{org.responsible_email}</span>
@@ -499,7 +506,13 @@ export default function SuperAdminDashboard() {
             <Clock className="h-5 w-5 text-amber-600" />
           </div>
           <div className="flex-1 min-w-0 space-y-1">
-            <h3 className="font-semibold text-sm text-foreground">{displayName}</h3>
+            <button
+              type="button"
+              onClick={() => setDetailsOrgId(org.id)}
+              className="font-semibold text-sm text-foreground text-left hover:text-primary transition-colors"
+            >
+              {displayName}
+            </button>
             <p className="text-xs text-muted-foreground truncate">{org.responsible_email}</p>
             <p className="text-[11px] text-muted-foreground">
               {format(new Date(org.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
@@ -800,6 +813,12 @@ export default function SuperAdminDashboard() {
           {renderContent()}
         </main>
       </div>
+
+      <OrgDetailsDialog
+        orgId={detailsOrgId}
+        open={!!detailsOrgId}
+        onOpenChange={(o) => !o && setDetailsOrgId(null)}
+      />
     </div>
   );
 }
