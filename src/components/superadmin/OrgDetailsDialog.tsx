@@ -93,7 +93,6 @@ export function OrgDetailsDialog({ orgId, open, onOpenChange }: Props) {
             .from("clients")
             .select("id, full_name, preferred_name, phone, status, custom_status, dpp, created_at")
             .eq("organization_id", orgId)
-            .eq("is_visitor", false)
             .order("full_name", { ascending: true }),
         ]);
 
@@ -248,7 +247,7 @@ export function OrgDetailsDialog({ orgId, open, onOpenChange }: Props) {
                 <div className="overflow-hidden rounded-2xl bg-muted/40">
                   <div className="divide-y divide-border/50">
                     {data.clients.map((client) => (
-                      <div key={client.id} className="grid gap-2 px-3 py-3 sm:grid-cols-[minmax(0,1fr)_150px_110px] sm:items-center">
+                      <div key={client.id} className="grid gap-2 px-3 py-3 sm:grid-cols-[minmax(0,1fr)_150px_100px_110px] sm:items-center">
                         <div className="min-w-0">
                           <p className="truncate text-sm font-medium text-foreground">{client.full_name}</p>
                           {client.preferred_name && client.preferred_name !== client.full_name ? (
@@ -259,15 +258,13 @@ export function OrgDetailsDialog({ orgId, open, onOpenChange }: Props) {
                           <Phone className="h-3.5 w-3.5 flex-shrink-0" />
                           <span>{maskPhone(client.phone)}</span>
                         </div>
+                        <span className="whitespace-nowrap text-xs text-muted-foreground">
+                          {client.dpp ? `DPP ${fmtDate(client.dpp)}` : "Sem DPP"}
+                        </span>
                         <div className="flex items-center justify-between gap-2 sm:justify-end">
                           <Badge variant="outline" className="text-[10px]">
                             {client.custom_status?.trim() || clientStatusLabels[client.status] || client.status}
                           </Badge>
-                          {client.dpp ? (
-                            <span className="whitespace-nowrap text-[10px] text-muted-foreground sm:hidden">
-                              DPP {fmtDate(client.dpp)}
-                            </span>
-                          ) : null}
                         </div>
                       </div>
                     ))}
