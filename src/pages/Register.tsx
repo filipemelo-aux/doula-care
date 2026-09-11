@@ -429,7 +429,7 @@ export default function Register() {
                 <Checkbox checked={acceptPrivacy} onCheckedChange={(v) => setAcceptPrivacy(v === true)} />
                 <span>
                   Li e aceito a{" "}
-                  <Link to="/privacidade" className="text-primary hover:underline" target="_blank">
+                  <Link to="/politica-de-privacidade" className="text-primary hover:underline" target="_blank">
                     Política de Privacidade
                   </Link>{" "}
                   e autorizo o tratamento dos meus dados.
