@@ -332,7 +332,7 @@ export default function Register() {
                   </p>
                 ) : (
                   <p className="text-xs text-muted-foreground">
-                    Enviaremos um código de 6 dígitos para confirmar que o e-mail é seu.
+                    Enviaremos um código de verificação para confirmar que o e-mail é seu.
                   </p>
                 )}
               </div>
