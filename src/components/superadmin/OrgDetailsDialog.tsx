@@ -23,7 +23,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
-import { formatCPF, formatPhone } from "@/lib/masks";
+import { maskCPF, maskPhone } from "@/lib/masks";
 
 interface Props {
   orgId: string | null;
@@ -150,7 +150,7 @@ export function OrgDetailsDialog({ orgId, open, onOpenChange }: Props) {
 
             <Section title="Dados pessoais da doula">
               <Row icon={IdCard} label="Nome completo" value={owner?.full_name} />
-              <Row icon={IdCard} label="CPF" value={ownerPersonal?.cpf ? formatCPF(ownerPersonal.cpf) : null} />
+              <Row icon={IdCard} label="CPF" value={ownerPersonal?.cpf ? maskCPF(ownerPersonal.cpf) : null} />
               <Row icon={CalendarDays} label="Data de nascimento" value={fmtDate(ownerPersonal?.birth_date)} />
               <Row
                 icon={ShieldCheck}
@@ -169,7 +169,7 @@ export function OrgDetailsDialog({ orgId, open, onOpenChange }: Props) {
             </Section>
 
             <Section title="Contato">
-              <Row icon={Phone} label="WhatsApp" value={org.whatsapp ? formatPhone(org.whatsapp) : null} />
+              <Row icon={Phone} label="WhatsApp" value={org.whatsapp ? maskPhone(org.whatsapp) : null} />
               <Row icon={Instagram} label="Instagram" value={org.instagram ? `@${String(org.instagram).replace(/^@/, "")}` : null} />
             </Section>
 
