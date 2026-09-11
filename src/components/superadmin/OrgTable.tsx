@@ -1,30 +1,11 @@
 import { useMemo, useState } from "react";
-import { Ban, CheckCircle, Mail, Trash2, Loader2, ArrowUp, ArrowDown, ArrowUpDown, MoreVertical, Eye } from "lucide-react";
+import { Ban, CheckCircle, Trash2, Loader2, ArrowUp, ArrowDown, ArrowUpDown, Eye } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
 import { cn } from "@/lib/utils";
 import { PromoTriggerButton } from "@/components/superadmin/PromoTriggerButton";
 
@@ -79,6 +60,7 @@ export function OrgTable({
 }: Props) {
   const [sortKey, setSortKey] = useState<SortKey>(defaultSort);
   const [sortDir, setSortDir] = useState<SortDir>(defaultDir);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
 
   const toggleSort = (key: SortKey) => {
     if (sortKey === key) {
@@ -113,8 +95,11 @@ export function OrgTable({
     return arr;
   }, [orgs, sortKey, sortDir]);
 
+  const selected = sorted.find((o) => o.id === selectedId) || null;
+  const selectedName = selected ? (selected.nome_exibicao?.trim() || selected.name) : "";
+
   const SortHeader = ({ label, k, className }: { label: string; k: SortKey; className?: string }) => (
-    <TableHead className={className}>
+    <TableHead className={cn("h-8 px-2 text-[11px] whitespace-nowrap", className)}>
       <button
         type="button"
         onClick={() => toggleSort(k)}
@@ -132,17 +117,77 @@ export function OrgTable({
 
   return (
     <div className="rounded-xl border bg-card overflow-hidden">
+      {/* Toolbar */}
+      <div className="flex items-center gap-1.5 px-2 py-1.5 border-b bg-muted/30 overflow-x-auto">
+        <span className="text-[11px] text-muted-foreground truncate min-w-0 max-w-[40%] mr-1">
+          {selected ? selectedName : "Selecione uma organização"}
+        </span>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-7 px-2 text-[11px] gap-1 shrink-0"
+          disabled={!selected}
+          onClick={() => selected && onViewDetails?.(selected.id)}
+        >
+          <Eye className="h-3.5 w-3.5" />
+          Ficha
+        </Button>
+        {selected?.status === "ativo" ? (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-7 px-2 text-[11px] gap-1 shrink-0"
+            disabled={!selected || isStatusPending}
+            onClick={() => selected && onStatusChange(selected.id, "suspenso")}
+          >
+            <Ban className="h-3.5 w-3.5" />
+            Suspender
+          </Button>
+        ) : (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-7 px-2 text-[11px] gap-1 shrink-0 text-success"
+            disabled={!selected || isStatusPending}
+            onClick={() => selected && onStatusChange(selected.id, "ativo")}
+          >
+            <CheckCircle className="h-3.5 w-3.5" />
+            Ativar
+          </Button>
+        )}
+        {selected && (
+          <div className="flex items-center shrink-0">
+            <PromoTriggerButton orgId={selected.id} orgName={selectedName} mode="actions" />
+          </div>
+        )}
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-7 px-2 text-[11px] gap-1 shrink-0 text-destructive hover:text-destructive hover:bg-destructive/10 ml-auto"
+          disabled={!selected || isDeletePending}
+          onClick={() => {
+            if (!selected) return;
+            if (window.confirm(`Tem certeza que deseja excluir "${selectedName}"? Esta ação é irreversível.`)) {
+              onDelete(selected.id);
+              setSelectedId(null);
+            }
+          }}
+        >
+          {isDeletePending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
+          Excluir
+        </Button>
+      </div>
+
       <div className="overflow-x-auto">
-        <Table>
+        <Table className="min-w-[760px]">
           <TableHeader>
             <TableRow className="hover:bg-transparent">
               <SortHeader label="Organização" k="name" />
-              <SortHeader label="Email" k="email" className="hidden md:table-cell" />
+              <SortHeader label="Email" k="email" />
               <SortHeader label="Plano" k="plan" />
               <SortHeader label="Status" k="status" />
-              <SortHeader label="Gest." k="clients" className="hidden sm:table-cell text-right" />
-              <SortHeader label="Desde" k="created" className="hidden lg:table-cell" />
-              <TableHead className="text-right w-16">Ações</TableHead>
+              <SortHeader label="Gest." k="clients" className="text-right" />
+              <SortHeader label="Desde" k="created" />
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -154,29 +199,39 @@ export function OrgTable({
                 .join("")
                 .slice(0, 2)
                 .toUpperCase();
+              const isSelected = org.id === selectedId;
               return (
-                <TableRow key={org.id} className="group">
-                  <TableCell className="py-1.5 px-2.5">
+                <TableRow
+                  key={org.id}
+                  onClick={() => setSelectedId(org.id)}
+                  onDoubleClick={() => onViewDetails?.(org.id)}
+                  className={cn("cursor-pointer", isSelected && "bg-primary/10 hover:bg-primary/10")}
+                >
+                  <TableCell className="py-1 px-2">
                     <div className="flex items-center gap-2 min-w-0">
-                      <div className="relative flex-shrink-0 w-7 h-7 rounded-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
-                        <span className="text-[10px] font-bold text-primary">{initials}</span>
+                      <div className="relative flex-shrink-0 w-6 h-6 rounded-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
+                        <span className="text-[9px] font-bold text-primary">{initials}</span>
                         {onlineOrgIds.has(org.id) && (
                           <span className="absolute -bottom-0.5 -right-0.5 h-2 w-2 rounded-full bg-emerald-500 ring-2 ring-card" title="Online agora" />
                         )}
                       </div>
-                      <div className="min-w-0">
-                        <p className="text-xs font-medium text-foreground truncate leading-tight max-w-[120px] sm:max-w-[160px] md:max-w-[200px]">{displayName}</p>
-                        <p className="text-[10px] text-muted-foreground md:hidden flex items-center gap-1 mt-0.5">
-                          <Mail className="h-2.5 w-2.5" />
-                          <span className="truncate max-w-[120px]">{org.responsible_email}</span>
-                        </p>
-                      </div>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedId(org.id);
+                          onViewDetails?.(org.id);
+                        }}
+                        className="text-xs font-medium text-foreground truncate leading-tight max-w-[180px] text-left hover:underline"
+                      >
+                        {displayName}
+                      </button>
                     </div>
                   </TableCell>
-                  <TableCell className="hidden md:table-cell px-2.5 py-1.5 text-[11px] text-muted-foreground">
-                    <span className="truncate inline-block max-w-[160px] align-middle">{org.responsible_email}</span>
+                  <TableCell className="px-2 py-1 text-[11px] text-muted-foreground">
+                    <span className="truncate inline-block max-w-[180px] align-middle">{org.responsible_email}</span>
                   </TableCell>
-                  <TableCell className="px-2.5 py-1.5">
+                  <TableCell className="px-2 py-1" onClick={(e) => e.stopPropagation()}>
                     <Select value={org.plan} onValueChange={(v) => onPlanChange(org.id, v as any)}>
                       <SelectTrigger className={cn("h-6 w-[66px] min-w-0 px-1.5 text-[10px] border-0", planBadgeStyles[org.plan])}>
                         <SelectValue />
@@ -188,7 +243,7 @@ export function OrgTable({
                       </SelectContent>
                     </Select>
                   </TableCell>
-                  <TableCell className="px-2.5 py-1.5">
+                  <TableCell className="px-2 py-1">
                     {org.status === "suspenso" ? (
                       <Badge className="h-5 px-1.5 text-[10px] font-medium rounded-full bg-destructive/15 text-destructive">Suspenso</Badge>
                     ) : org.status === "pendente" ? (
@@ -197,82 +252,16 @@ export function OrgTable({
                       <Badge className="h-5 px-1.5 text-[10px] font-medium rounded-full bg-success/15 text-success">Ativo</Badge>
                     )}
                   </TableCell>
-                  <TableCell className="hidden sm:table-cell px-2.5 py-1.5 text-right text-xs text-foreground">{org.client_count}</TableCell>
-                  <TableCell className="hidden lg:table-cell px-2.5 py-1.5 text-[11px] text-muted-foreground whitespace-nowrap">
+                  <TableCell className="px-2 py-1 text-right text-xs text-foreground">{org.client_count}</TableCell>
+                  <TableCell className="px-2 py-1 text-[11px] text-muted-foreground whitespace-nowrap">
                     {format(new Date(org.created_at), "dd/MM/yy", { locale: ptBR })}
-                  </TableCell>
-                  <TableCell className="px-2.5 py-1.5">
-                    <div className="flex items-center justify-end gap-1">
-                      <div className="hidden sm:flex items-center">
-                        <PromoTriggerButton orgId={org.id} orgName={displayName} mode="actions" />
-                      </div>
-                      <DropdownMenu>
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <DropdownMenuTrigger asChild>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-7 w-7 text-muted-foreground hover:text-foreground hover:bg-muted"
-                                  disabled={isStatusPending || isDeletePending}
-                                >
-                                  <MoreVertical className="h-3.5 w-3.5" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                            </TooltipTrigger>
-                            <TooltipContent side="top" className="text-xs">Ações</TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                        <DropdownMenuContent align="end" className="w-52">
-                          {onViewDetails && (
-                            <DropdownMenuItem className="text-xs gap-2" onClick={() => onViewDetails(org.id)}>
-                              <Eye className="h-3.5 w-3.5 text-muted-foreground" />
-                              Ver cadastro completo
-                            </DropdownMenuItem>
-                          )}
-                          {org.status === "ativo" ? (
-                            <DropdownMenuItem
-                              className="text-xs gap-2"
-                              onClick={() => onStatusChange(org.id, "suspenso")}
-                              disabled={isStatusPending}
-                            >
-                              <Ban className="h-3.5 w-3.5 text-muted-foreground" />
-                              Suspender
-                            </DropdownMenuItem>
-                          ) : (
-                            <DropdownMenuItem
-                              className="text-xs gap-2"
-                              onClick={() => onStatusChange(org.id, "ativo")}
-                              disabled={isStatusPending}
-                            >
-                              <CheckCircle className="h-3.5 w-3.5 text-success" />
-                              Ativar
-                            </DropdownMenuItem>
-                          )}
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem
-                            className="text-xs gap-2 text-destructive focus:text-destructive focus:bg-destructive/10"
-                            onClick={() => {
-                              if (window.confirm(`Tem certeza que deseja excluir "${displayName}"? Esta ação é irreversível.`)) {
-                                onDelete(org.id);
-                              }
-                            }}
-                            disabled={isDeletePending}
-                          >
-                            {isDeletePending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
-                            Excluir permanente
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </div>
                   </TableCell>
                 </TableRow>
               );
             })}
             {sorted.length === 0 && (
               <TableRow>
-                <TableCell colSpan={7} className="text-center text-sm text-muted-foreground py-8">
+                <TableCell colSpan={6} className="text-center text-sm text-muted-foreground py-8">
                   Nenhuma organização
                 </TableCell>
               </TableRow>
