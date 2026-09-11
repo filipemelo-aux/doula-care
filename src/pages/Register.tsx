@@ -128,8 +128,8 @@ export default function Register() {
 
   const verifyCode = async () => {
     const token = code.replace(/\D/g, "");
-    if (token.length !== 6) {
-      toast.error("Digite os 6 dígitos do código");
+    if (token.length < 6) {
+      toast.error("Digite o código recebido por e-mail");
       return;
     }
     setSubmitting(true);
@@ -332,7 +332,7 @@ export default function Register() {
                   </p>
                 ) : (
                   <p className="text-xs text-muted-foreground">
-                    Enviaremos um código de 6 dígitos para confirmar que o e-mail é seu.
+                    Enviaremos um código de verificação para confirmar que o e-mail é seu.
                   </p>
                 )}
               </div>
@@ -353,11 +353,11 @@ export default function Register() {
               </div>
               <Input
                 inputMode="numeric"
-                maxLength={6}
+                maxLength={8}
                 placeholder="000000"
                 value={code}
-                onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
-                className="input-field text-center text-2xl tracking-[0.5em]"
+                onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 8))}
+                className="input-field text-center text-2xl tracking-[0.4em]"
               />
               <Button className="w-full" onClick={verifyCode} disabled={submitting}>
                 {submitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
