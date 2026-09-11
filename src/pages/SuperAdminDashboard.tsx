@@ -63,6 +63,7 @@ interface OrgWithCounts {
   status: "ativo" | "suspenso" | "pendente";
   created_at: string;
   client_count: number;
+  last_access: string | null;
 }
 
 const planBadgeStyles: Record<string, string> = {
