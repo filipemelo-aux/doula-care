@@ -701,11 +701,6 @@ export default function SuperAdminDashboard() {
                     isDeletePending={deleteMutation.isPending}
                   />
                 </div>
-                <div className="lg:hidden grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {[...activeOrgs, ...suspendedOrgs].map((org) => (
-                    <OrgCard key={org.id} org={org} />
-                  ))}
-                </div>
               </div>
             )}
           </div>
