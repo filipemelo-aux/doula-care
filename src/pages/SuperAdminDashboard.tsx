@@ -688,7 +688,7 @@ export default function SuperAdminDashboard() {
                     · {activeOrgs.length} ativa{activeOrgs.length !== 1 ? "s" : ""} · {suspendedOrgs.length} suspensa{suspendedOrgs.length !== 1 ? "s" : ""}
                   </span>
                 </h2>
-                <div className="hidden lg:block">
+                <div>
                   <OrgTable
                     orgs={[...activeOrgs, ...suspendedOrgs]}
                     onlineOrgIds={onlineOrgIds}
@@ -700,11 +700,6 @@ export default function SuperAdminDashboard() {
                     isStatusPending={statusMutation.isPending}
                     isDeletePending={deleteMutation.isPending}
                   />
-                </div>
-                <div className="lg:hidden grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {[...activeOrgs, ...suspendedOrgs].map((org) => (
-                    <OrgCard key={org.id} org={org} />
-                  ))}
                 </div>
               </div>
             )}
