@@ -77,18 +77,26 @@ export function OrgTable({
   const [sortKey, setSortKey] = useState<SortKey>(defaultSort);
   const [sortDir, setSortDir] = useState<SortDir>(defaultDir);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [activity, setActivity] = useState<ActivityFilter>("all");
 
   const toggleSort = (key: SortKey) => {
     if (sortKey === key) {
       setSortDir((d) => (d === "asc" ? "desc" : "asc"));
     } else {
       setSortKey(key);
-      setSortDir(key === "created" || key === "clients" ? "desc" : "asc");
+      setSortDir(key === "created" || key === "clients" || key === "last_access" ? "desc" : "asc");
     }
   };
 
   const sorted = useMemo(() => {
-    const arr = [...orgs];
+    const arr = orgs.filter((o) => {
+      if (activity === "all") return true;
+      const ts = o.last_access ? new Date(o.last_access).getTime() : 0;
+      const days = ts ? (Date.now() - ts) / 86400000 : Infinity;
+      if (activity === "7") return days <= 7;
+      if (activity === "30") return days <= 30;
+      return days > 30;
+    });
     arr.sort((a, b) => {
       const dir = sortDir === "asc" ? 1 : -1;
       const nameA = (a.nome_exibicao?.trim() || a.name).toLowerCase();
