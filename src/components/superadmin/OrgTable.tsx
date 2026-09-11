@@ -208,7 +208,7 @@ export function OrgTable({
       </div>
 
       <div className="overflow-x-auto">
-        <Table className="min-w-[760px]">
+        <Table className="min-w-[860px]">
           <TableHeader>
             <TableRow className="hover:bg-transparent">
               <SortHeader label="Organização" k="name" />
