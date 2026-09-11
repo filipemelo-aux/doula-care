@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -78,6 +78,8 @@ export function ProfileCompletionGate() {
       setWhatsapp((org as any)?.whatsapp ?? "");
       setInstagram(((org as any)?.instagram ?? "").replace(/^@/, ""));
       setPostalCode((org as any)?.postal_code ?? "");
+      initialCepRef.current = unmask(String((org as any)?.postal_code ?? ""));
+
       setStreet((org as any)?.street ?? "");
       setStreetNumber((org as any)?.street_number ?? "");
       setNeighborhood((org as any)?.neighborhood ?? "");
@@ -96,25 +98,34 @@ export function ProfileCompletionGate() {
     };
   }, [user, role, organizationId]);
 
-  // 2. CEP → endereço
+  // 2. CEP → endereço (sobrescreve ao trocar o CEP, exceto no carregamento inicial)
+  const initialCepRef = useRef<string | null>(null);
   useEffect(() => {
     const digits = unmask(postalCode);
     if (digits.length !== 8) return;
+    if (initialCepRef.current === null) {
+      // primeiro CEP vindo do cadastro existente: não sobrescreve o que já está salvo
+      initialCepRef.current = digits;
+      return;
+    }
+    if (initialCepRef.current === digits) return;
+    initialCepRef.current = digits;
     let cancelled = false;
     setCepLoading(true);
     fetchAddressByCep(digits)
       .then((addr) => {
         if (cancelled || !addr) return;
-        setStreet((v) => v || addr.street);
-        setNeighborhood((v) => v || addr.neighborhood);
-        setCity((v) => v || addr.city);
-        setUf((v) => v || (addr.state || "").toUpperCase());
+        setStreet(addr.street || "");
+        setNeighborhood(addr.neighborhood || "");
+        setCity(addr.city || "");
+        setUf((addr.state || "").toUpperCase());
       })
       .finally(() => !cancelled && setCepLoading(false));
     return () => {
       cancelled = true;
     };
   }, [postalCode]);
+
 
   const validStep1 = useMemo(
     () =>
