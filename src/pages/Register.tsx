@@ -234,16 +234,17 @@ export default function Register() {
               </div>
               <CardTitle className="text-2xl font-display font-bold tracking-wide">Doula Care</CardTitle>
             </div>
-            <CardDescription>Cadastro temporariamente indisponível</CardDescription>
+            <CardDescription>Manutenção de segurança em andamento</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="rounded-2xl bg-muted/50 p-4 space-y-2 text-center">
               <Wrench className="h-7 w-7 text-primary mx-auto" />
               <p className="text-sm text-foreground font-medium">Voltamos em instantes</p>
               <p className="text-xs text-muted-foreground leading-relaxed">
-                Para garantir a melhor experiência, novos cadastros estão pausados no momento.
+                Estamos realizando uma manutenção de segurança e novos cadastros estão pausados no momento.
                 Agradecemos a paciência.
               </p>
+
               <p className="text-xs text-muted-foreground leading-relaxed">
                 Você poderá tentar novamente
                 {maintenance.hoursLeft
