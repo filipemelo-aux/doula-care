@@ -18,9 +18,25 @@ export interface OrgRow {
   status: "ativo" | "suspenso" | "pendente";
   created_at: string;
   client_count: number;
+  last_access?: string | null;
 }
 
-type SortKey = "name" | "email" | "plan" | "status" | "clients" | "created";
+type SortKey = "name" | "email" | "plan" | "status" | "clients" | "created" | "last_access";
+type ActivityFilter = "all" | "7" | "30" | "inactive";
+
+const relativeAccess = (value?: string | null) => {
+  if (!value) return "Nunca";
+  const diff = Date.now() - new Date(value).getTime();
+  const days = Math.floor(diff / 86400000);
+  if (days <= 0) {
+    const hours = Math.floor(diff / 3600000);
+    if (hours <= 0) return "Agora";
+    return `${hours}h`;
+  }
+  if (days === 1) return "Ontem";
+  if (days < 30) return `${days}d`;
+  return format(new Date(value), "dd/MM/yy", { locale: ptBR });
+};
 type SortDir = "asc" | "desc";
 
 const planBadgeStyles: Record<string, string> = {
