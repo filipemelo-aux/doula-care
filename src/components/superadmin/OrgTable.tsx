@@ -57,6 +57,7 @@ interface Props {
   onPlanChange: (orgId: string, plan: "free" | "pro" | "premium") => void;
   onStatusChange: (orgId: string, status: string) => void;
   onDelete: (orgId: string) => void;
+  onViewDetails?: (orgId: string) => void;
   isPlanPending?: boolean;
   isStatusPending?: boolean;
   isDeletePending?: boolean;
@@ -70,6 +71,7 @@ export function OrgTable({
   onPlanChange,
   onStatusChange,
   onDelete,
+  onViewDetails,
   isStatusPending,
   isDeletePending,
   defaultSort = "created",
@@ -222,7 +224,13 @@ export function OrgTable({
                             <TooltipContent side="top" className="text-xs">Ações</TooltipContent>
                           </Tooltip>
                         </TooltipProvider>
-                        <DropdownMenuContent align="end" className="w-44">
+                        <DropdownMenuContent align="end" className="w-52">
+                          {onViewDetails && (
+                            <DropdownMenuItem className="text-xs gap-2" onClick={() => onViewDetails(org.id)}>
+                              <Eye className="h-3.5 w-3.5 text-muted-foreground" />
+                              Ver cadastro completo
+                            </DropdownMenuItem>
+                          )}
                           {org.status === "ativo" ? (
                             <DropdownMenuItem
                               className="text-xs gap-2"
