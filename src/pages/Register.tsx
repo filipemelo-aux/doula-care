@@ -128,8 +128,8 @@ export default function Register() {
 
   const verifyCode = async () => {
     const token = code.replace(/\D/g, "");
-    if (token.length !== 6) {
-      toast.error("Digite os 6 dígitos do código");
+    if (token.length < 6) {
+      toast.error("Digite o código recebido por e-mail");
       return;
     }
     setSubmitting(true);
