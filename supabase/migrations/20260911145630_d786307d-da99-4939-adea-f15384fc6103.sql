@@ -1,0 +1,1 @@
+REVOKE ALL ON FUNCTION public.restrict_client_service_request_fields() FROM public, anon, authenticated;
