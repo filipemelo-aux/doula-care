@@ -1,5 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { validateProfessionalEmail } from "../_shared/email-guard.ts";
+import { getSignupMaintenance, MAINTENANCE_MESSAGE } from "../_shared/signup-maintenance.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -28,6 +29,12 @@ Deno.serve(async (req) => {
     const admin = createClient(supabaseUrl, serviceRoleKey, {
       auth: { autoRefreshToken: false, persistSession: false },
     });
+
+    const maintenance = await getSignupMaintenance(admin);
+    if (maintenance.active) {
+      return json({ error: MAINTENANCE_MESSAGE, maintenance: true, until: maintenance.until }, 503);
+    }
+
 
     // Se já existe uma conta concluída com esse e-mail, não faz sentido cadastrar.
     const { data: list } = await admin.auth.admin.listUsers({ page: 1, perPage: 1000 });
