@@ -417,6 +417,11 @@ export default function Register() {
                     {showPassword ? <EyeOff className="h-4 w-4 text-muted-foreground" /> : <Eye className="h-4 w-4 text-muted-foreground" />}
                   </Button>
                 </div>
+                {password && !passwordStrong && (
+                  <p className="text-xs text-destructive">
+                    A senha precisa de no mínimo 6 caracteres, com pelo menos 1 letra maiúscula e 1 número.
+                  </p>
+                )}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="confirmPassword">Confirmar senha</Label>
