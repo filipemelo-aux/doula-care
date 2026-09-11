@@ -269,7 +269,7 @@ export default function Register() {
                       Faça login
                     </Link>{" "}
                     ou{" "}
-                    <Link to="/recuperar-senha" className="underline">
+                    <Link to="/esqueci-senha" className="underline">
                       recupere sua senha
                     </Link>
                     .
