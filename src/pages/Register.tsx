@@ -151,15 +151,20 @@ export default function Register() {
     }
   };
 
+  const passwordStrong = useMemo(
+    () => password.length >= 6 && /[A-Z]/.test(password) && /[0-9]/.test(password),
+    [password]
+  );
+
   const validPersonal = useMemo(() => {
     return (
       fullName.trim().includes(" ") &&
       unmask(cpf).length === 11 &&
       !!birthDate &&
-      password.length >= 6 &&
+      passwordStrong &&
       password === confirmPassword
     );
-  }, [fullName, cpf, birthDate, password, confirmPassword]);
+  }, [fullName, cpf, birthDate, password, confirmPassword, passwordStrong]);
 
   const validContact =
     unmask(whatsapp).length >= 10 &&
@@ -402,7 +407,7 @@ export default function Register() {
                   <Input
                     id="password"
                     type={showPassword ? "text" : "password"}
-                    placeholder="Mínimo 6 caracteres"
+                    placeholder="Mín. 6 caracteres, 1 maiúscula e 1 número"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     className="input-field pr-10"
