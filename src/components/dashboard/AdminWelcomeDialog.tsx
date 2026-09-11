@@ -24,8 +24,8 @@ export function AdminWelcomeDialog({ open, onClose, name }: AdminWelcomeDialogPr
         </DialogHeader>
         <div className="space-y-4 py-2">
           <p className="text-muted-foreground">
-            Seu espaço está pronto! Sua conta já está ativa no plano Pro, com tudo liberado
-            para você usar.
+            Seu espaço está pronto! Aqui você encontra tudo para acompanhar suas gestantes,
+            organizar sua agenda e simplificar o cuidado do início ao puerpério.
           </p>
           <div className="bg-muted/50 rounded-lg p-4 text-left space-y-2 text-sm">
             <p className="font-medium">Primeiros passos:</p>
