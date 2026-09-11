@@ -212,7 +212,15 @@ export default function Register() {
       });
 
       if (error || data?.error) {
-        toast.error("Erro ao criar conta", { description: data?.error || error?.message });
+        let description = data?.error || error?.message;
+        const ctx = (error as any)?.context;
+        if (ctx && typeof ctx.json === "function") {
+          try {
+            const body = await ctx.json();
+            if (body?.error) description = body.error;
+          } catch { /* mantém mensagem padrão */ }
+        }
+        toast.error("Erro ao criar conta", { description });
         return;
       }
 

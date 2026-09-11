@@ -213,7 +213,19 @@ Deno.serve(async (req) => {
       password,
       user_metadata: { full_name: fullName },
     });
-    if (pwError) throw pwError;
+    if (pwError) {
+      const pwMsg = String((pwError as any)?.message || "");
+      if ((pwError as any)?.code === "weak_password" || /weak|pwned|password/i.test(pwMsg)) {
+        return json(
+          {
+            error:
+              "Essa senha é muito comum e já apareceu em vazamentos de dados. Escolha outra senha, com letras maiúsculas, minúsculas e números.",
+          },
+          400,
+        );
+      }
+      throw pwError;
+    }
 
     // 2. Cria a organização
     const { data: org, error: orgError } = await supabase
