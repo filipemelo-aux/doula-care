@@ -234,20 +234,21 @@ export default function Register() {
               </div>
               <CardTitle className="text-2xl font-display font-bold tracking-wide">Doula Care</CardTitle>
             </div>
-            <CardDescription>Novos cadastros temporariamente pausados</CardDescription>
+            <CardDescription>Cadastro temporariamente indisponível</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="rounded-2xl bg-muted/50 p-4 space-y-2 text-center">
               <Wrench className="h-7 w-7 text-primary mx-auto" />
-              <p className="text-sm text-foreground font-medium">Estamos em manutenção</p>
+              <p className="text-sm text-foreground font-medium">Voltamos em instantes</p>
               <p className="text-xs text-muted-foreground leading-relaxed">
-                Estamos finalizando uma melhoria no envio dos e-mails de confirmação, que garante
-                que só profissionais com e-mail verificado consigam criar conta. Por isso, novos
-                cadastros ficam pausados por algumas horas.
+                Para garantir a melhor experiência, novos cadastros estão pausados no momento.
+                Agradecemos a paciência.
               </p>
               <p className="text-xs text-muted-foreground leading-relaxed">
                 Você poderá tentar novamente
-                {maintenance.hoursLeft ? ` em cerca de ${maintenance.hoursLeft} hora${maintenance.hoursLeft > 1 ? "s" : ""}` : " em breve"}
+                {maintenance.hoursLeft
+                  ? ` em até ${maintenance.hoursLeft} hora${maintenance.hoursLeft > 1 ? "s" : ""}`
+                  : " em breve"}
                 {maintenance.until
                   ? ` (a partir de ${maintenance.until.toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}).`
                   : "."}
