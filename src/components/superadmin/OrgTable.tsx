@@ -4,6 +4,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
@@ -127,6 +128,10 @@ export function OrgTable({
   const selected = sorted.find((o) => o.id === selectedId) || null;
   const selectedName = selected ? (selected.nome_exibicao?.trim() || selected.name) : "";
 
+  const toggleSelection = (orgId: string) => {
+    setSelectedId((current) => (current === orgId ? null : orgId));
+  };
+
   const SortHeader = ({ label, k, className }: { label: string; k: SortKey; className?: string }) => (
     <TableHead className={cn("h-8 px-2 text-[11px] whitespace-nowrap", className)}>
       <button
@@ -159,9 +164,6 @@ export function OrgTable({
             <SelectItem value="inactive">Inativas +30 dias</SelectItem>
           </SelectContent>
         </Select>
-        <span className="text-[11px] text-muted-foreground truncate min-w-0 max-w-[30%] mr-1">
-          {selected ? selectedName : "Selecione uma organização"}
-        </span>
         <Button
           variant="ghost"
           size="sm"
@@ -222,6 +224,7 @@ export function OrgTable({
         <Table className="min-w-[860px]">
           <TableHeader>
             <TableRow className="hover:bg-transparent">
+              <TableHead className="h-8 w-10 px-2" />
               <SortHeader label="Organização" k="name" />
               <SortHeader label="Email" k="email" />
               <SortHeader label="Plano" k="plan" />
@@ -234,12 +237,6 @@ export function OrgTable({
           <TableBody>
             {sorted.map((org) => {
               const displayName = (org.nome_exibicao && org.nome_exibicao.trim()) || org.name;
-              const initials = displayName
-                .split(" ")
-                .map((w) => w[0])
-                .join("")
-                .slice(0, 2)
-                .toUpperCase();
               const isSelected = org.id === selectedId;
               return (
                 <TableRow
@@ -248,14 +245,15 @@ export function OrgTable({
                   onDoubleClick={() => onViewDetails?.(org.id)}
                   className={cn("cursor-pointer", isSelected && "bg-primary/10 hover:bg-primary/10")}
                 >
+                  <TableCell className="py-1 px-2" onClick={(e) => e.stopPropagation()}>
+                    <Checkbox
+                      checked={isSelected}
+                      onCheckedChange={() => toggleSelection(org.id)}
+                      aria-label={`Selecionar ${displayName}`}
+                    />
+                  </TableCell>
                   <TableCell className="py-1 px-2">
                     <div className="flex items-center gap-2 min-w-0">
-                      <div className="relative flex-shrink-0 w-6 h-6 rounded-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
-                        <span className="text-[9px] font-bold text-primary">{initials}</span>
-                        {onlineOrgIds.has(org.id) && (
-                          <span className="absolute -bottom-0.5 -right-0.5 h-2 w-2 rounded-full bg-emerald-500 ring-2 ring-card" title="Online agora" />
-                        )}
-                      </div>
                       <button
                         type="button"
                         onClick={(e) => {
@@ -311,7 +309,7 @@ export function OrgTable({
             })}
             {sorted.length === 0 && (
               <TableRow>
-                <TableCell colSpan={7} className="text-center text-sm text-muted-foreground py-8">
+                <TableCell colSpan={8} className="text-center text-sm text-muted-foreground py-8">
                   Nenhuma organização
                 </TableCell>
               </TableRow>
