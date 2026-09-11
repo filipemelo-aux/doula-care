@@ -26,6 +26,7 @@ export default function Register() {
 
   // Etapa 1/2 — e-mail verificado
   const [email, setEmail] = useState("");
+  const [emailTaken, setEmailTaken] = useState(false);
   const [code, setCode] = useState("");
   const [verifiedUserId, setVerifiedUserId] = useState<string | null>(null);
   const [resendIn, setResendIn] = useState(0);
@@ -88,13 +89,31 @@ export default function Register() {
       toast.error("Informe seu e-mail profissional");
       return;
     }
+    setEmailTaken(false);
     setSubmitting(true);
     try {
       const { data, error } = await supabase.functions.invoke("send-signup-code", {
         body: { email: email.trim().toLowerCase() },
       });
-      if (error || data?.error) {
-        toast.error(data?.error || "Não foi possível enviar o código");
+      let serverMessage: string | null = data?.error ?? null;
+      // Em respostas 4xx/5xx o invoke devolve apenas `error`; é preciso ler o corpo.
+      if (error && !serverMessage) {
+        try {
+          const ctx = (error as { context?: Response }).context;
+          if (ctx) {
+            const body = await ctx.clone().json().catch(() => null);
+            serverMessage = body?.error ?? null;
+          }
+        } catch {
+          /* sem corpo legível */
+        }
+      }
+      if (error || serverMessage) {
+        const msg = serverMessage || "Não foi possível enviar o código";
+        if (/já está cadastrado|já possui uma conta/i.test(msg)) {
+          setEmailTaken(true);
+        }
+        toast.error(msg);
         return;
       }
       toast.success("Código enviado!", { description: "Confira sua caixa de entrada e o spam." });
@@ -235,14 +254,31 @@ export default function Register() {
                   type="email"
                   placeholder="seu@email.com"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    setEmailTaken(false);
+                  }}
                   autoComplete="email"
                   className="input-field lowercase"
                   style={{ textTransform: "lowercase" }}
                 />
-                <p className="text-xs text-muted-foreground">
-                  Enviaremos um código de 6 dígitos para confirmar que o e-mail é seu.
-                </p>
+                {emailTaken ? (
+                  <p className="text-xs font-medium text-destructive">
+                    Este e-mail já possui cadastro.{" "}
+                    <Link to="/login" className="underline">
+                      Faça login
+                    </Link>{" "}
+                    ou{" "}
+                    <Link to="/esqueci-senha" className="underline">
+                      recupere sua senha
+                    </Link>
+                    .
+                  </p>
+                ) : (
+                  <p className="text-xs text-muted-foreground">
+                    Enviaremos um código de 6 dígitos para confirmar que o e-mail é seu.
+                  </p>
+                )}
               </div>
               <Button className="w-full" onClick={sendCode} disabled={submitting}>
                 {submitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
