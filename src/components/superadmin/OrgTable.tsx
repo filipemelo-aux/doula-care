@@ -282,6 +282,15 @@ export function OrgTable({
                     )}
                   </TableCell>
                   <TableCell className="px-2 py-1 text-right text-xs text-foreground">{org.client_count}</TableCell>
+                  <TableCell
+                    className={cn(
+                      "px-2 py-1 text-[11px] whitespace-nowrap",
+                      !org.last_access ? "text-muted-foreground/70" : "text-muted-foreground"
+                    )}
+                    title={org.last_access ? format(new Date(org.last_access), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR }) : "Sem registro"}
+                  >
+                    {relativeAccess(org.last_access)}
+                  </TableCell>
                   <TableCell className="px-2 py-1 text-[11px] text-muted-foreground whitespace-nowrap">
                     {format(new Date(org.created_at), "dd/MM/yy", { locale: ptBR })}
                   </TableCell>
