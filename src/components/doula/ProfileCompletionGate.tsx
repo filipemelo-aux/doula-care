@@ -78,6 +78,8 @@ export function ProfileCompletionGate() {
       setWhatsapp((org as any)?.whatsapp ?? "");
       setInstagram(((org as any)?.instagram ?? "").replace(/^@/, ""));
       setPostalCode((org as any)?.postal_code ?? "");
+      initialCepRef.current = unmask(String((org as any)?.postal_code ?? ""));
+
       setStreet((org as any)?.street ?? "");
       setStreetNumber((org as any)?.street_number ?? "");
       setNeighborhood((org as any)?.neighborhood ?? "");
