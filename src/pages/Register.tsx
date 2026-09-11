@@ -242,6 +242,8 @@ export default function Register() {
               <p className="text-sm text-foreground font-medium">Voltamos em instantes</p>
               <p className="text-xs text-muted-foreground leading-relaxed">
                 Estamos realizando uma manutenção de segurança e novos cadastros estão pausados no momento.
+              </p>
+              <p className="text-xs text-muted-foreground leading-relaxed">
                 Agradecemos a paciência.
               </p>
 
@@ -250,9 +252,14 @@ export default function Register() {
                 {maintenance.hoursLeft
                   ? ` em até ${maintenance.hoursLeft} hora${maintenance.hoursLeft > 1 ? "s" : ""}`
                   : " em breve"}
-                {maintenance.until
-                  ? ` (a partir de ${maintenance.until.toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}).`
-                  : "."}
+                {maintenance.until ? (
+                  <>
+                    <br />
+                    (a partir de {maintenance.until.toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}).
+                  </>
+                ) : (
+                  "."
+                )}
               </p>
             </div>
             <Button variant="outline" className="w-full" onClick={() => refetchMaintenance()}>
