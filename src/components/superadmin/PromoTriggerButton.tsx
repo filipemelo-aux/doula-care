@@ -1,33 +1,18 @@
-import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { Gift, Loader2, Crown, Zap, CreditCard } from "lucide-react";
+import { Loader2, Crown, CreditCard } from "lucide-react";
 import { toast } from "sonner";
-import { addDays, format, differenceInDays } from "date-fns";
-import { sendPushNotification } from "@/lib/pushNotifications";
+import { format, differenceInDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 
 interface PromoTriggerButtonProps {
   orgId: string;
   orgName: string;
-  /** When 'badge' (default): renders only the status badge. When 'actions': renders only the action buttons (lifetime, expire trial, liberate trial). */
+  /** When 'badge' (default): renders only the status badge. When 'actions': renders only the lifetime action button. */
   mode?: "badge" | "actions";
 }
 
@@ -41,7 +26,6 @@ const statusLabels: Record<string, { label: string; className: string }> = {
 
 export function PromoTriggerButton({ orgId, orgName, mode = "badge" }: PromoTriggerButtonProps) {
   const queryClient = useQueryClient();
-  const [trialDays, setTrialDays] = useState<number>(7);
 
   const { data: subscription } = useQuery({
     queryKey: ["org-subscription-sa", orgId],
@@ -91,79 +75,6 @@ export function PromoTriggerButton({ orgId, orgName, mode = "badge" }: PromoTrig
     queryClient.invalidateQueries({ queryKey: ["org-subscription-sa", orgId] });
     queryClient.invalidateQueries({ queryKey: ["super-admin-orgs"] });
   };
-
-  const sendTrialMutation = useMutation({
-    mutationFn: async () => {
-      const now = new Date();
-      const trialEnds = addDays(now, trialDays);
-
-      const { error: promoError } = await supabase
-        .from("org_promotions" as any)
-        .insert({
-          organization_id: orgId,
-          promotion_type: "trial",
-          trial_started_at: now.toISOString(),
-          trial_ends_at: trialEnds.toISOString(),
-          status: "trial_active",
-        } as any);
-      if (promoError) throw promoError;
-
-      const { error: orgError } = await supabase
-        .from("organizations")
-        .update({ plan: "premium" as any })
-        .eq("id", orgId);
-      if (orgError) throw orgError;
-
-      await supabase.from("org_notifications").insert({
-        organization_id: orgId,
-        title: "🎉 Teste Premium ativado!",
-        message: `Você recebeu ${trialDays} dias de teste para usar todos os recursos do plano Premium.`,
-        type: "promotion",
-      });
-
-      const { data: orgProfiles } = await supabase
-        .from("profiles")
-        .select("user_id")
-        .eq("organization_id", orgId);
-
-      if (orgProfiles && orgProfiles.length > 0) {
-        await sendPushNotification({
-          user_ids: orgProfiles.map((p) => p.user_id),
-          title: "🎁 Teste Premium liberado!",
-          message: `Seu teste de ${trialDays} dias do Premium já está ativo.`,
-          url: "/admin",
-          type: "general",
-          tag: "promo-trial",
-        });
-      }
-    },
-    onSuccess: () => {
-      invalidateAll();
-      toast.success(`Trial liberado para ${orgName}!`);
-    },
-    onError: (err: Error) => toast.error(`Erro: ${err.message}`),
-  });
-
-  const forceExpireMutation = useMutation({
-    mutationFn: async () => {
-      if (!promo) throw new Error("Sem trial ativo");
-
-      await supabase
-        .from("org_promotions" as any)
-        .update({ status: "expired", trial_ends_at: new Date().toISOString() } as any)
-        .eq("id", promo.id);
-
-      await supabase
-        .from("organizations")
-        .update({ plan: "free" as any })
-        .eq("id", orgId);
-    },
-    onSuccess: () => {
-      invalidateAll();
-      toast.success(`Trial encerrado para ${orgName}`);
-    },
-    onError: (err: Error) => toast.error(`Erro: ${err.message}`),
-  });
 
   const makeLifetimeMutation = useMutation({
     mutationFn: async () => {
@@ -245,109 +156,9 @@ export function PromoTriggerButton({ orgId, orgName, mode = "badge" }: PromoTrig
     </Tooltip>
   ) : null;
 
-  const expireIconButton = promo?.status === "trial_active" ? (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-7 w-7 text-destructive bg-destructive/5 hover:bg-destructive/10"
-          onClick={() => forceExpireMutation.mutate()}
-          disabled={forceExpireMutation.isPending}
-        >
-          {forceExpireMutation.isPending ? (
-            <Loader2 className="h-3.5 w-3.5 animate-spin" />
-          ) : (
-            <Zap className="h-3.5 w-3.5" />
-          )}
-        </Button>
-      </TooltipTrigger>
-      <TooltipContent side="top" className="text-xs">Encerrar trial agora</TooltipContent>
-    </Tooltip>
-  ) : null;
-
   // ===== MODE: actions =====
   if (mode === "actions") {
-    if (hasActiveSub) {
-      return <TooltipProvider>{lifetimeIconButton}</TooltipProvider>;
-    }
-    if (promo) {
-      return (
-        <TooltipProvider>
-          <div className="flex items-center gap-1">
-            {expireIconButton}
-            {lifetimeIconButton}
-          </div>
-        </TooltipProvider>
-      );
-    }
-    return (
-      <TooltipProvider>
-        <div className="flex items-center gap-1">
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-7 w-7 text-primary bg-primary/10 hover:bg-primary/15"
-                    disabled={sendTrialMutation.isPending}
-                  >
-                    <Gift className="h-3.5 w-3.5" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent side="top" className="text-xs">Liberar Trial</TooltipContent>
-              </Tooltip>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Liberar Teste Premium</AlertDialogTitle>
-                <AlertDialogDescription asChild>
-                  <div className="space-y-4">
-                    <p>
-                      Libere acesso completo ao plano Premium para <strong>{orgName}</strong> por um período de teste gratuito.
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      Ao final do período, a doula será direcionada para escolher e assinar um plano.
-                    </p>
-                    <div className="space-y-2">
-                      <Label htmlFor="trial-days" className="text-sm font-medium text-foreground">
-                        Duração do período gratuito
-                      </Label>
-                      <Input
-                        id="trial-days"
-                        type="number"
-                        min={1}
-                        max={365}
-                        value={trialDays}
-                        onChange={(e) => setTrialDays(Math.max(1, Math.min(365, Number(e.target.value) || 1)))}
-                        className="w-32"
-                      />
-                      <p className="text-xs text-muted-foreground">
-                        A doula terá <strong>{trialDays} dias</strong> para experimentar todos os recursos do Premium.
-                      </p>
-                    </div>
-                  </div>
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                <AlertDialogAction onClick={() => sendTrialMutation.mutate()}>
-                  {sendTrialMutation.isPending ? (
-                    <Loader2 className="h-4 w-4 animate-spin mr-1" />
-                  ) : (
-                    <Gift className="h-4 w-4 mr-1" />
-                  )}
-                  Liberar Trial
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-          {lifetimeIconButton}
-        </div>
-      </TooltipProvider>
-    );
+    return <TooltipProvider>{lifetimeIconButton}</TooltipProvider>;
   }
 
   // ===== MODE: badge (default) =====
@@ -370,7 +181,7 @@ export function PromoTriggerButton({ orgId, orgName, mode = "badge" }: PromoTrig
       : null;
     return (
       <Badge className={cn("h-5 px-2 text-[10px] font-medium rounded-full inline-flex items-center gap-1", info.className)}>
-        {isLifetime ? <Crown className="h-3 w-3" /> : <Gift className="h-3 w-3" />}
+        {isLifetime ? <Crown className="h-3 w-3" /> : <CreditCard className="h-3 w-3" />}
         {info.label}
         {!isLifetime && trialEndsAt && (
           <span className="opacity-80 font-normal">· até {trialEndsAt}</span>

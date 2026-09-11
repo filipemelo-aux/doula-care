@@ -197,11 +197,6 @@ export function OrgTable({
             Ativar
           </Button>
         )}
-        {selected && (
-          <div className="flex items-center shrink-0">
-            <PromoTriggerButton orgId={selected.id} orgName={selectedName} mode="actions" />
-          </div>
-        )}
         <Button
           variant="ghost"
           size="sm"
