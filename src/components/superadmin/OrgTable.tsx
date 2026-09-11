@@ -18,9 +18,25 @@ export interface OrgRow {
   status: "ativo" | "suspenso" | "pendente";
   created_at: string;
   client_count: number;
+  last_access?: string | null;
 }
 
-type SortKey = "name" | "email" | "plan" | "status" | "clients" | "created";
+type SortKey = "name" | "email" | "plan" | "status" | "clients" | "created" | "last_access";
+type ActivityFilter = "all" | "7" | "30" | "inactive";
+
+const relativeAccess = (value?: string | null) => {
+  if (!value) return "Nunca";
+  const diff = Date.now() - new Date(value).getTime();
+  const days = Math.floor(diff / 86400000);
+  if (days <= 0) {
+    const hours = Math.floor(diff / 3600000);
+    if (hours <= 0) return "Agora";
+    return `${hours}h`;
+  }
+  if (days === 1) return "Ontem";
+  if (days < 30) return `${days}d`;
+  return format(new Date(value), "dd/MM/yy", { locale: ptBR });
+};
 type SortDir = "asc" | "desc";
 
 const planBadgeStyles: Record<string, string> = {
@@ -61,18 +77,26 @@ export function OrgTable({
   const [sortKey, setSortKey] = useState<SortKey>(defaultSort);
   const [sortDir, setSortDir] = useState<SortDir>(defaultDir);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [activity, setActivity] = useState<ActivityFilter>("all");
 
   const toggleSort = (key: SortKey) => {
     if (sortKey === key) {
       setSortDir((d) => (d === "asc" ? "desc" : "asc"));
     } else {
       setSortKey(key);
-      setSortDir(key === "created" || key === "clients" ? "desc" : "asc");
+      setSortDir(key === "created" || key === "clients" || key === "last_access" ? "desc" : "asc");
     }
   };
 
   const sorted = useMemo(() => {
-    const arr = [...orgs];
+    const arr = orgs.filter((o) => {
+      if (activity === "all") return true;
+      const ts = o.last_access ? new Date(o.last_access).getTime() : 0;
+      const days = ts ? (Date.now() - ts) / 86400000 : Infinity;
+      if (activity === "7") return days <= 7;
+      if (activity === "30") return days <= 30;
+      return days > 30;
+    });
     arr.sort((a, b) => {
       const dir = sortDir === "asc" ? 1 : -1;
       const nameA = (a.nome_exibicao?.trim() || a.name).toLowerCase();
@@ -90,10 +114,15 @@ export function OrgTable({
           return (a.client_count - b.client_count) * dir;
         case "created":
           return (new Date(a.created_at).getTime() - new Date(b.created_at).getTime()) * dir;
+        case "last_access": {
+          const ta = a.last_access ? new Date(a.last_access).getTime() : 0;
+          const tb = b.last_access ? new Date(b.last_access).getTime() : 0;
+          return (ta - tb) * dir;
+        }
       }
     });
     return arr;
-  }, [orgs, sortKey, sortDir]);
+  }, [orgs, sortKey, sortDir, activity]);
 
   const selected = sorted.find((o) => o.id === selectedId) || null;
   const selectedName = selected ? (selected.nome_exibicao?.trim() || selected.name) : "";
@@ -119,7 +148,18 @@ export function OrgTable({
     <div className="rounded-xl border bg-card overflow-hidden">
       {/* Toolbar */}
       <div className="flex items-center gap-1.5 px-2 py-1.5 border-b bg-muted/30 overflow-x-auto">
-        <span className="text-[11px] text-muted-foreground truncate min-w-0 max-w-[40%] mr-1">
+        <Select value={activity} onValueChange={(v) => setActivity(v as ActivityFilter)}>
+          <SelectTrigger className="h-7 w-[124px] shrink-0 px-2 text-[11px]">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todas</SelectItem>
+            <SelectItem value="7">Ativas 7 dias</SelectItem>
+            <SelectItem value="30">Ativas 30 dias</SelectItem>
+            <SelectItem value="inactive">Inativas +30 dias</SelectItem>
+          </SelectContent>
+        </Select>
+        <span className="text-[11px] text-muted-foreground truncate min-w-0 max-w-[30%] mr-1">
           {selected ? selectedName : "Selecione uma organização"}
         </span>
         <Button
@@ -179,7 +219,7 @@ export function OrgTable({
       </div>
 
       <div className="overflow-x-auto">
-        <Table className="min-w-[760px]">
+        <Table className="min-w-[860px]">
           <TableHeader>
             <TableRow className="hover:bg-transparent">
               <SortHeader label="Organização" k="name" />
@@ -187,6 +227,7 @@ export function OrgTable({
               <SortHeader label="Plano" k="plan" />
               <SortHeader label="Status" k="status" />
               <SortHeader label="Gest." k="clients" className="text-right" />
+              <SortHeader label="Últ. acesso" k="last_access" />
               <SortHeader label="Desde" k="created" />
             </TableRow>
           </TableHeader>
@@ -253,6 +294,15 @@ export function OrgTable({
                     )}
                   </TableCell>
                   <TableCell className="px-2 py-1 text-right text-xs text-foreground">{org.client_count}</TableCell>
+                  <TableCell
+                    className={cn(
+                      "px-2 py-1 text-[11px] whitespace-nowrap",
+                      !org.last_access ? "text-muted-foreground/70" : "text-muted-foreground"
+                    )}
+                    title={org.last_access ? format(new Date(org.last_access), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR }) : "Sem registro"}
+                  >
+                    {relativeAccess(org.last_access)}
+                  </TableCell>
                   <TableCell className="px-2 py-1 text-[11px] text-muted-foreground whitespace-nowrap">
                     {format(new Date(org.created_at), "dd/MM/yy", { locale: ptBR })}
                   </TableCell>
@@ -261,7 +311,7 @@ export function OrgTable({
             })}
             {sorted.length === 0 && (
               <TableRow>
-                <TableCell colSpan={6} className="text-center text-sm text-muted-foreground py-8">
+                <TableCell colSpan={7} className="text-center text-sm text-muted-foreground py-8">
                   Nenhuma organização
                 </TableCell>
               </TableRow>

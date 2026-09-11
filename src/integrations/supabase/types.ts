@@ -2305,6 +2305,13 @@ export type Database = {
           organization_id: string
         }[]
       }
+      get_org_last_access: {
+        Args: never
+        Returns: {
+          last_access: string
+          organization_id: string
+        }[]
+      }
       get_org_match_requests: {
         Args: never
         Returns: {
