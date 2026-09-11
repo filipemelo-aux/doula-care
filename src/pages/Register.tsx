@@ -7,7 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, Eye, EyeOff, ArrowLeft, MailCheck, ShieldCheck } from "lucide-react";
+import { Loader2, Eye, EyeOff, ArrowLeft, MailCheck, ShieldCheck, Wrench } from "lucide-react";
+import { useSignupMaintenance } from "@/hooks/useSignupMaintenance";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchAddressByCep } from "@/lib/address";
@@ -20,6 +21,7 @@ const TOTAL_STEPS = 6;
 
 export default function Register() {
   const navigate = useNavigate();
+  const { data: maintenance, refetch: refetchMaintenance } = useSignupMaintenance();
   const [step, setStep] = useState(1);
   const [submitting, setSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -220,6 +222,51 @@ export default function Register() {
       setSubmitting(false);
     }
   };
+
+  if (maintenance?.active) {
+    return (
+      <div className="h-[100dvh] overflow-y-auto flex items-start sm:items-center justify-center bg-gradient-to-br from-background via-background to-primary/5 p-4 py-8">
+        <Card className="w-full max-w-md card-glass">
+          <CardHeader className="text-center space-y-2">
+            <div className="flex flex-col items-center gap-1.5">
+              <div className="w-[4.5rem] h-[4.5rem] rounded-[40%] bg-[#FFF5EE] overflow-hidden">
+                <img src={logo} alt="Doula Care" className="w-full h-full object-cover mix-blend-multiply scale-[1.15]" />
+              </div>
+              <CardTitle className="text-2xl font-display font-bold tracking-wide">Doula Care</CardTitle>
+            </div>
+            <CardDescription>Novos cadastros temporariamente pausados</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="rounded-2xl bg-muted/50 p-4 space-y-2 text-center">
+              <Wrench className="h-7 w-7 text-primary mx-auto" />
+              <p className="text-sm text-foreground font-medium">Estamos em manutenção</p>
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                Estamos finalizando uma melhoria no envio dos e-mails de confirmação, que garante
+                que só profissionais com e-mail verificado consigam criar conta. Por isso, novos
+                cadastros ficam pausados por algumas horas.
+              </p>
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                Você poderá tentar novamente
+                {maintenance.hoursLeft ? ` em cerca de ${maintenance.hoursLeft} hora${maintenance.hoursLeft > 1 ? "s" : ""}` : " em breve"}
+                {maintenance.until
+                  ? ` (a partir de ${maintenance.until.toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}).`
+                  : "."}
+              </p>
+            </div>
+            <Button variant="outline" className="w-full" onClick={() => refetchMaintenance()}>
+              Tentar novamente
+            </Button>
+            <div className="pt-1 text-center text-sm text-muted-foreground">
+              Já tem uma conta?{" "}
+              <Link to="/login" className="text-primary hover:underline font-medium">
+                Fazer login
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="h-[100dvh] overflow-y-auto flex items-start sm:items-center justify-center bg-gradient-to-br from-background via-background to-primary/5 p-4 py-8">
