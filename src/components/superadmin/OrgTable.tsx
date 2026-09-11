@@ -216,6 +216,7 @@ export function OrgTable({
               <SortHeader label="Plano" k="plan" />
               <SortHeader label="Status" k="status" />
               <SortHeader label="Gest." k="clients" className="text-right" />
+              <SortHeader label="Últ. acesso" k="last_access" />
               <SortHeader label="Desde" k="created" />
             </TableRow>
           </TableHeader>
