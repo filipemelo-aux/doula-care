@@ -31,6 +31,7 @@ import { ModerationSection } from "@/components/superadmin/ModerationSection";
 import { TopActiveOrgsCard } from "@/components/superadmin/TopActiveOrgsCard";
 import { AppPagesDirectory } from "@/components/superadmin/AppPagesDirectory";
 import { OrgTable } from "@/components/superadmin/OrgTable";
+import { OrgDetailsDialog } from "@/components/superadmin/OrgDetailsDialog";
 import { useOnlineOrgs } from "@/hooks/useOnlineOrgs";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
@@ -345,6 +346,7 @@ export default function SuperAdminDashboard() {
   };
 
   const [approvalPlans, setApprovalPlans] = useState<Record<string, "free" | "pro" | "premium">>({});
+  const [detailsOrgId, setDetailsOrgId] = useState<string | null>(null);
 
   if (isLoading) {
     return (
@@ -693,6 +695,7 @@ export default function SuperAdminDashboard() {
                     onPlanChange={(orgId, plan) => planMutation.mutate({ orgId, plan })}
                     onStatusChange={(orgId, status) => statusMutation.mutate({ orgId, status })}
                     onDelete={(orgId) => deleteMutation.mutate(orgId)}
+                    onViewDetails={(orgId) => setDetailsOrgId(orgId)}
                     isPlanPending={planMutation.isPending}
                     isStatusPending={statusMutation.isPending}
                     isDeletePending={deleteMutation.isPending}
