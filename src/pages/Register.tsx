@@ -151,15 +151,20 @@ export default function Register() {
     }
   };
 
+  const passwordStrong = useMemo(
+    () => password.length >= 6 && /[A-Z]/.test(password) && /[0-9]/.test(password),
+    [password]
+  );
+
   const validPersonal = useMemo(() => {
     return (
       fullName.trim().includes(" ") &&
       unmask(cpf).length === 11 &&
       !!birthDate &&
-      password.length >= 6 &&
+      passwordStrong &&
       password === confirmPassword
     );
-  }, [fullName, cpf, birthDate, password, confirmPassword]);
+  }, [fullName, cpf, birthDate, password, confirmPassword, passwordStrong]);
 
   const validContact =
     unmask(whatsapp).length >= 10 &&
@@ -402,7 +407,7 @@ export default function Register() {
                   <Input
                     id="password"
                     type={showPassword ? "text" : "password"}
-                    placeholder="Mínimo 6 caracteres"
+                    placeholder="Mín. 6 caracteres, 1 maiúscula e 1 número"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     className="input-field pr-10"
@@ -412,6 +417,11 @@ export default function Register() {
                     {showPassword ? <EyeOff className="h-4 w-4 text-muted-foreground" /> : <Eye className="h-4 w-4 text-muted-foreground" />}
                   </Button>
                 </div>
+                {password && !passwordStrong && (
+                  <p className="text-xs text-destructive">
+                    A senha precisa de no mínimo 6 caracteres, com pelo menos 1 letra maiúscula e 1 número.
+                  </p>
+                )}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="confirmPassword">Confirmar senha</Label>
