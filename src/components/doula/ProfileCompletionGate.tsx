@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -198,14 +197,8 @@ export function ProfileCompletionGate() {
   if (loading || !open) return null;
 
   return (
-    <Dialog open={open}>
-      <DialogContent
-        hideClose
-        onPointerDownOutside={(e) => e.preventDefault()}
-        onEscapeKeyDown={(e) => e.preventDefault()}
-        onInteractOutside={(e) => e.preventDefault()}
-        className="max-w-md max-h-[92dvh] overflow-y-auto rounded-[18px]"
-      >
+    <div className="fixed inset-0 z-[9998] flex items-start sm:items-center justify-center bg-background/80 backdrop-blur-sm p-4 py-8 overflow-y-auto">
+      <div className="w-full max-w-md bg-card rounded-[18px] shadow-xl p-5 max-h-[92dvh] overflow-y-auto">
         <div className="space-y-4">
           <div className="space-y-2 text-center">
             <div className="mx-auto w-11 h-11 rounded-2xl bg-primary/10 flex items-center justify-center">
@@ -336,7 +329,7 @@ export function ProfileCompletionGate() {
             </div>
           )}
         </div>
-      </DialogContent>
-    </Dialog>
+      </div>
+    </div>
   );
 }
