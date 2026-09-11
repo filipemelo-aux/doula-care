@@ -1,5 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { validateProfessionalEmail } from "../_shared/email-guard.ts";
+import { getSignupMaintenance, MAINTENANCE_MESSAGE } from "../_shared/signup-maintenance.ts";
 import {
   buildPushPayload,
   type PushSubscription,
@@ -115,6 +116,12 @@ Deno.serve(async (req) => {
     const supabase = createClient(supabaseUrl, serviceRoleKey, {
       auth: { autoRefreshToken: false, persistSession: false },
     });
+
+    const maintenance = await getSignupMaintenance(supabase);
+    if (maintenance.active) {
+      return json({ error: MAINTENANCE_MESSAGE, maintenance: true, until: maintenance.until }, 503);
+    }
+
 
     // 0. O cadastro só é aceito depois da verificação do e-mail por código,
     //    que deixa o usuário autenticado.
