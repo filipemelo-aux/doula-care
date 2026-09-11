@@ -107,10 +107,13 @@ export function OrgDetailsDialog({ orgId, open, onOpenChange }: Props) {
   const ownerPersonal: any =
     data?.personal.find((p: any) => p.user_id === owner?.user_id) || data?.personal?.[0];
 
-  const team = (data?.profiles || []).map((p: any) => ({
-    ...p,
-    role: data?.roles.find((r: any) => r.user_id === p.user_id)?.role || "—",
-  }));
+  const STAFF_ROLES = ["admin", "moderator", "super_admin"];
+  const team = (data?.profiles || [])
+    .map((p: any) => ({
+      ...p,
+      role: data?.roles.find((r: any) => STAFF_ROLES.includes(r.role) && r.user_id === p.user_id)?.role,
+    }))
+    .filter((p: any) => !!p.role);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
