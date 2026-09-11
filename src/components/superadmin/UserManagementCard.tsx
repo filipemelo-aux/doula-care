@@ -28,6 +28,7 @@ export function UserManagementCard() {
   const [resetResult, setResetResult] = useState<{ userId: string; password: string } | null>(null);
   const [copiedPassword, setCopiedPassword] = useState(false);
   const [masterUserId, setMasterUserId] = useState<string | null>(null);
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
 
   const { data: users = [], isLoading } = useQuery({
     queryKey: ["super-admin-all-users"],
@@ -140,6 +141,9 @@ export function UserManagementCard() {
         return <Badge key={role} className="bg-muted text-muted-foreground border-0 text-[10px] px-1.5 py-0"><User className="w-2.5 h-2.5 mr-0.5" />User</Badge>;
     }
   };
+
+  const selected = users.find(u => u.user_id === selectedUserId) || null;
+  const selectedIsMaster = !!selected && selected.user_id === masterUserId;
 
   const deleteTarget = users.find(u => u.user_id === deleteUserId);
   const resetConfirmTarget = users.find(u => u.user_id === resetUserId);
