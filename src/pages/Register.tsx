@@ -353,11 +353,11 @@ export default function Register() {
               </div>
               <Input
                 inputMode="numeric"
-                maxLength={6}
+                maxLength={8}
                 placeholder="000000"
                 value={code}
-                onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
-                className="input-field text-center text-2xl tracking-[0.5em]"
+                onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 8))}
+                className="input-field text-center text-2xl tracking-[0.4em]"
               />
               <Button className="w-full" onClick={verifyCode} disabled={submitting}>
                 {submitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
