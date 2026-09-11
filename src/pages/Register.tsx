@@ -88,13 +88,31 @@ export default function Register() {
       toast.error("Informe seu e-mail profissional");
       return;
     }
+    setEmailTaken(false);
     setSubmitting(true);
     try {
       const { data, error } = await supabase.functions.invoke("send-signup-code", {
         body: { email: email.trim().toLowerCase() },
       });
-      if (error || data?.error) {
-        toast.error(data?.error || "Não foi possível enviar o código");
+      let serverMessage: string | null = data?.error ?? null;
+      // Em respostas 4xx/5xx o invoke devolve apenas `error`; é preciso ler o corpo.
+      if (error && !serverMessage) {
+        try {
+          const ctx = (error as { context?: Response }).context;
+          if (ctx) {
+            const body = await ctx.clone().json().catch(() => null);
+            serverMessage = body?.error ?? null;
+          }
+        } catch {
+          /* sem corpo legível */
+        }
+      }
+      if (error || serverMessage) {
+        const msg = serverMessage || "Não foi possível enviar o código";
+        if (/já está cadastrado|já possui uma conta/i.test(msg)) {
+          setEmailTaken(true);
+        }
+        toast.error(msg);
         return;
       }
       toast.success("Código enviado!", { description: "Confira sua caixa de entrada e o spam." });
