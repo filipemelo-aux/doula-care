@@ -96,25 +96,34 @@ export function ProfileCompletionGate() {
     };
   }, [user, role, organizationId]);
 
-  // 2. CEP → endereço
+  // 2. CEP → endereço (sobrescreve ao trocar o CEP, exceto no carregamento inicial)
+  const initialCepRef = useRef<string | null>(null);
   useEffect(() => {
     const digits = unmask(postalCode);
     if (digits.length !== 8) return;
+    if (initialCepRef.current === null) {
+      // primeiro CEP vindo do cadastro existente: não sobrescreve o que já está salvo
+      initialCepRef.current = digits;
+      return;
+    }
+    if (initialCepRef.current === digits) return;
+    initialCepRef.current = digits;
     let cancelled = false;
     setCepLoading(true);
     fetchAddressByCep(digits)
       .then((addr) => {
         if (cancelled || !addr) return;
-        setStreet((v) => v || addr.street);
-        setNeighborhood((v) => v || addr.neighborhood);
-        setCity((v) => v || addr.city);
-        setUf((v) => v || (addr.state || "").toUpperCase());
+        setStreet(addr.street || "");
+        setNeighborhood(addr.neighborhood || "");
+        setCity(addr.city || "");
+        setUf((addr.state || "").toUpperCase());
       })
       .finally(() => !cancelled && setCepLoading(false));
     return () => {
       cancelled = true;
     };
   }, [postalCode]);
+
 
   const validStep1 = useMemo(
     () =>
