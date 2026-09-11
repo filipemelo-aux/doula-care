@@ -785,6 +785,44 @@ export type Database = {
           },
         ]
       }
+      doula_personal_data: {
+        Row: {
+          birth_date: string | null
+          cpf: string | null
+          created_at: string
+          id: string
+          organization_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          birth_date?: string | null
+          cpf?: string | null
+          created_at?: string
+          id?: string
+          organization_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          birth_date?: string | null
+          cpf?: string | null
+          created_at?: string
+          id?: string
+          organization_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "doula_personal_data_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       forum_categories: {
         Row: {
           created_at: string
@@ -1232,6 +1270,7 @@ export type Database = {
           bio: string | null
           city: string | null
           created_at: string
+          doula_training: string | null
           id: string
           instagram: string | null
           latitude: number | null
@@ -1243,6 +1282,7 @@ export type Database = {
           nome_exibicao: string | null
           plan: Database["public"]["Enums"]["org_plan"]
           postal_code: string | null
+          practice_since: number | null
           primary_color: string | null
           responsible_email: string
           secondary_color: string | null
@@ -1260,6 +1300,7 @@ export type Database = {
           bio?: string | null
           city?: string | null
           created_at?: string
+          doula_training?: string | null
           id?: string
           instagram?: string | null
           latitude?: number | null
@@ -1271,6 +1312,7 @@ export type Database = {
           nome_exibicao?: string | null
           plan?: Database["public"]["Enums"]["org_plan"]
           postal_code?: string | null
+          practice_since?: number | null
           primary_color?: string | null
           responsible_email: string
           secondary_color?: string | null
@@ -1288,6 +1330,7 @@ export type Database = {
           bio?: string | null
           city?: string | null
           created_at?: string
+          doula_training?: string | null
           id?: string
           instagram?: string | null
           latitude?: number | null
@@ -1299,6 +1342,7 @@ export type Database = {
           nome_exibicao?: string | null
           plan?: Database["public"]["Enums"]["org_plan"]
           postal_code?: string | null
+          practice_since?: number | null
           primary_color?: string | null
           responsible_email?: string
           secondary_color?: string | null
@@ -1757,8 +1801,11 @@ export type Database = {
           created_at: string
           full_name: string | null
           id: string
+          lgpd_consent_at: string | null
+          lgpd_consent_version: string | null
           must_change_password: boolean
           organization_id: string | null
+          profile_completed_at: string | null
           updated_at: string
           user_id: string
           welcome_seen: boolean
@@ -1768,8 +1815,11 @@ export type Database = {
           created_at?: string
           full_name?: string | null
           id?: string
+          lgpd_consent_at?: string | null
+          lgpd_consent_version?: string | null
           must_change_password?: boolean
           organization_id?: string | null
+          profile_completed_at?: string | null
           updated_at?: string
           user_id: string
           welcome_seen?: boolean
@@ -1779,8 +1829,11 @@ export type Database = {
           created_at?: string
           full_name?: string | null
           id?: string
+          lgpd_consent_at?: string | null
+          lgpd_consent_version?: string | null
           must_change_password?: boolean
           organization_id?: string | null
+          profile_completed_at?: string | null
           updated_at?: string
           user_id?: string
           welcome_seen?: boolean
