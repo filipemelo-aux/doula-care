@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import logo from "@/assets/logo.png";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { Sidebar } from "./Sidebar";
+import { ProfileCompletionGate } from "@/components/doula/ProfileCompletionGate";
 import { Menu, LogOut, ChevronLeft, LayoutDashboard, Users, CalendarDays, MessageCircle, Baby } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
@@ -76,6 +77,7 @@ export function DashboardLayout() {
 
   return (
     <div className="app-shell h-[100dvh] flex w-full bg-background overflow-hidden">
+      <ProfileCompletionGate />
       <Sidebar 
         isOpen={sidebarOpen} 
         onToggle={() => setSidebarOpen(!sidebarOpen)} 

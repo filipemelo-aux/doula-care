@@ -4,7 +4,6 @@ import * as React from 'npm:react@18.3.1'
 
 import {
   Body,
-  Button,
   Container,
   Head,
   Heading,
@@ -13,33 +12,41 @@ import {
   Text,
 } from 'npm:@react-email/components@0.0.22'
 
-import { main, container, brandName, h1, text, button, footer } from './theme.ts'
+import { main, container, brandName, h1, text, footer } from './theme.ts'
 
 interface MagicLinkEmailProps {
   siteName: string
   confirmationUrl: string
+  token?: string
+}
+
+const codeStyle: React.CSSProperties = {
+  fontSize: '34px',
+  letterSpacing: '10px',
+  fontWeight: 700,
+  textAlign: 'center',
+  margin: '24px 0',
+  color: '#c34a1c',
 }
 
 export const MagicLinkEmail = ({
   siteName,
-  confirmationUrl,
+  token,
 }: MagicLinkEmailProps) => (
   <Html lang="pt-BR" dir="ltr">
     <Head />
-    <Preview>Seu link de acesso - {siteName}</Preview>
+    <Preview>Seu código de verificação - {siteName}</Preview>
     <Body style={main}>
       <Container style={container}>
         <Text style={brandName}>{siteName}</Text>
-        <Heading style={h1}>Seu link de acesso</Heading>
+        <Heading style={h1}>Seu código de verificação</Heading>
         <Text style={text}>
-          Use o botão abaixo para entrar na sua conta sem precisar digitar
-          senha.
+          Digite o código abaixo no aplicativo para confirmar o seu e-mail e
+          continuar o cadastro.
         </Text>
-        <Button style={button} href={confirmationUrl}>
-          Entrar agora
-        </Button>
+        <Text style={codeStyle}>{token}</Text>
         <Text style={footer}>
-          O link é de uso único e expira em pouco tempo. Se não foi você quem
+          O código é de uso único e expira em pouco tempo. Se não foi você quem
           solicitou, ignore este e-mail.
         </Text>
       </Container>
