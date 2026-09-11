@@ -22,6 +22,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { maskCPF, maskPhone } from "@/lib/masks";
 
@@ -63,26 +64,37 @@ const Section = ({ title, children }: { title: string; children: React.ReactNode
   </div>
 );
 
+const clientStatusLabels: Record<string, string> = {
+  tentante: "Tentante",
+  gestante: "Gestante",
+  lactante: "Puérpera",
+  outro: "Outro",
+};
+
 export function OrgDetailsDialog({ orgId, open, onOpenChange }: Props) {
   const { data, isLoading } = useQuery({
     queryKey: ["super-admin-org-details", orgId],
     enabled: !!orgId && open,
     queryFn: async () => {
-      const [{ data: org }, { data: profiles }, { data: personal }, { count: clientCount }] =
+      if (!orgId) throw new Error("Organização não informada");
+
+      const [{ data: org }, { data: profiles }, { data: personal }, { data: clients }] =
         await Promise.all([
-          supabase.from("organizations").select("*").eq("id", orgId!).maybeSingle(),
+          supabase.from("organizations").select("*").eq("id", orgId).maybeSingle(),
           supabase
             .from("profiles")
             .select("user_id, full_name, avatar_url, created_at, lgpd_consent_at, lgpd_consent_version, profile_completed_at")
-            .eq("organization_id", orgId!),
+            .eq("organization_id", orgId),
           supabase
             .from("doula_personal_data")
             .select("user_id, cpf, birth_date")
-            .eq("organization_id", orgId!),
+            .eq("organization_id", orgId),
           supabase
             .from("clients")
-            .select("id", { count: "exact", head: true })
-            .eq("organization_id", orgId!),
+            .select("id, full_name, preferred_name, phone, status, custom_status, dpp, created_at")
+            .eq("organization_id", orgId)
+            .eq("is_visitor", false)
+            .order("full_name", { ascending: true }),
         ]);
 
       const userIds = (profiles || []).map((p: any) => p.user_id);
@@ -95,7 +107,7 @@ export function OrgDetailsDialog({ orgId, open, onOpenChange }: Props) {
         roles = r || [];
       }
 
-      return { org, profiles: profiles || [], personal: personal || [], roles, clientCount: clientCount || 0 };
+      return { org, profiles: profiles || [], personal: personal || [], roles, clients: clients || [] };
     },
   });
 
@@ -131,97 +143,144 @@ export function OrgDetailsDialog({ orgId, open, onOpenChange }: Props) {
             <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
           </div>
         ) : (
-          <div className="space-y-3">
+          <Tabs defaultValue="organization" className="space-y-3">
             <div className="flex flex-wrap items-center gap-2">
               <Badge variant="secondary" className="text-[10px] uppercase">{org.plan}</Badge>
               <Badge variant="outline" className="text-[10px] uppercase">{org.status}</Badge>
-              <Badge variant="outline" className="text-[10px] gap-1">
-                <Users className="h-3 w-3" />
-                {data?.clientCount} cliente{data?.clientCount === 1 ? "" : "s"}
-              </Badge>
               <Badge variant="outline" className="text-[10px]">
                 {org.accepts_new_clients ? "Aceita novas clientes" : "Não aceita novas clientes"}
               </Badge>
             </div>
 
-            <Section title="Identificação">
-              <Row icon={Building2} label="Nome / Razão" value={org.name} />
-              <Row icon={Building2} label="Nome de exibição" value={org.nome_exibicao} />
-              <Row icon={Mail} label="E-mail responsável" value={org.responsible_email} />
-              <Row icon={CalendarDays} label="Cadastrada em" value={fmtDate(org.created_at, true)} />
-            </Section>
+            <TabsList className="grid h-auto w-full grid-cols-2 rounded-xl bg-muted/60 p-1">
+              <TabsTrigger value="organization" className="gap-1.5 py-2 text-xs sm:text-sm">
+                <Building2 className="h-3.5 w-3.5" />
+                Dados da organização
+              </TabsTrigger>
+              <TabsTrigger value="clients" className="gap-1.5 py-2 text-xs sm:text-sm">
+                <Users className="h-3.5 w-3.5" />
+                Clientes ({data?.clients.length || 0})
+              </TabsTrigger>
+            </TabsList>
 
-            <Section title="Dados pessoais da doula">
-              <Row icon={IdCard} label="Nome completo" value={owner?.full_name} />
-              <Row icon={IdCard} label="CPF" value={ownerPersonal?.cpf ? maskCPF(ownerPersonal.cpf) : null} />
-              <Row icon={CalendarDays} label="Data de nascimento" value={fmtDate(ownerPersonal?.birth_date)} />
-              <Row
-                icon={ShieldCheck}
-                label="Consentimento LGPD"
-                value={
-                  owner?.lgpd_consent_at
-                    ? `${fmtDate(owner.lgpd_consent_at, true)} (${owner.lgpd_consent_version || "—"})`
-                    : "Não registrado"
-                }
-              />
-              <Row
-                icon={ShieldCheck}
-                label="Cadastro completo"
-                value={owner?.profile_completed_at ? fmtDate(owner.profile_completed_at, true) : "Pendente"}
-              />
-            </Section>
+            <TabsContent value="organization" className="mt-0 space-y-3">
+              <Section title="Identificação">
+                <Row icon={Building2} label="Nome / Razão" value={org.name} />
+                <Row icon={Building2} label="Nome de exibição" value={org.nome_exibicao} />
+                <Row icon={Mail} label="E-mail responsável" value={org.responsible_email} />
+                <Row icon={CalendarDays} label="Cadastrada em" value={fmtDate(org.created_at, true)} />
+              </Section>
 
-            <Section title="Contato">
-              <Row icon={Phone} label="WhatsApp" value={org.whatsapp ? maskPhone(org.whatsapp) : null} />
-              <Row icon={Instagram} label="Instagram" value={org.instagram ? `@${String(org.instagram).replace(/^@/, "")}` : null} />
-            </Section>
+              <Section title="Dados pessoais da doula">
+                <Row icon={IdCard} label="Nome completo" value={owner?.full_name} />
+                <Row icon={IdCard} label="CPF" value={ownerPersonal?.cpf ? maskCPF(ownerPersonal.cpf) : null} />
+                <Row icon={CalendarDays} label="Data de nascimento" value={fmtDate(ownerPersonal?.birth_date)} />
+                <Row
+                  icon={ShieldCheck}
+                  label="Consentimento LGPD"
+                  value={
+                    owner?.lgpd_consent_at
+                      ? `${fmtDate(owner.lgpd_consent_at, true)} (${owner.lgpd_consent_version || "—"})`
+                      : "Não registrado"
+                  }
+                />
+                <Row
+                  icon={ShieldCheck}
+                  label="Cadastro completo"
+                  value={owner?.profile_completed_at ? fmtDate(owner.profile_completed_at, true) : "Pendente"}
+                />
+              </Section>
 
-            <Section title="Endereço e atuação">
-              <Row icon={MapPin} label="CEP" value={org.postal_code} />
-              <Row icon={MapPin} label="Rua / Número" value={[org.street, org.street_number].filter(Boolean).join(", ")} />
-              <Row icon={MapPin} label="Bairro" value={org.neighborhood} />
-              <Row icon={MapPin} label="Cidade / UF" value={[org.city, org.state].filter(Boolean).join(" / ")} />
-              <Row icon={MapPin} label="Áreas de atendimento" value={(org.service_areas || []).join(", ")} />
-              <Row
-                icon={MapPin}
-                label="Coordenadas"
-                value={org.latitude && org.longitude ? `${org.latitude}, ${org.longitude}` : null}
-              />
-            </Section>
+              <Section title="Contato">
+                <Row icon={Phone} label="WhatsApp" value={org.whatsapp ? maskPhone(org.whatsapp) : null} />
+                <Row icon={Instagram} label="Instagram" value={org.instagram ? `@${String(org.instagram).replace(/^@/, "")}` : null} />
+              </Section>
 
-            <Section title="Perfil profissional">
-              <Row icon={GraduationCap} label="Formação" value={org.doula_training} />
-              <Row icon={CalendarDays} label="Atua desde" value={org.practice_since ? String(org.practice_since) : null} />
-            </Section>
+              <Section title="Endereço e atuação">
+                <Row icon={MapPin} label="CEP" value={org.postal_code} />
+                <Row icon={MapPin} label="Rua / Número" value={[org.street, org.street_number].filter(Boolean).join(", ")} />
+                <Row icon={MapPin} label="Bairro" value={org.neighborhood} />
+                <Row icon={MapPin} label="Cidade / UF" value={[org.city, org.state].filter(Boolean).join(" / ")} />
+                <Row icon={MapPin} label="Áreas de atendimento" value={(org.service_areas || []).join(", ")} />
+                <Row
+                  icon={MapPin}
+                  label="Coordenadas"
+                  value={org.latitude && org.longitude ? `${org.latitude}, ${org.longitude}` : null}
+                />
+              </Section>
 
-            {org.bio ? (
+              <Section title="Perfil profissional">
+                <Row icon={GraduationCap} label="Formação" value={org.doula_training} />
+                <Row icon={CalendarDays} label="Atua desde" value={org.practice_since ? String(org.practice_since) : null} />
+              </Section>
+
+              {org.bio ? (
+                <div className="rounded-2xl bg-muted/40 p-3">
+                  <p className="text-xs font-semibold text-foreground mb-1">Bio</p>
+                  <p className="text-sm text-foreground whitespace-pre-wrap">{org.bio}</p>
+                </div>
+              ) : null}
+
               <div className="rounded-2xl bg-muted/40 p-3">
-                <p className="text-xs font-semibold text-foreground mb-1">Bio</p>
-                <p className="text-sm text-foreground whitespace-pre-wrap">{org.bio}</p>
+                <p className="text-xs font-semibold text-foreground mb-2">Equipe ({team.length})</p>
+                <div className="space-y-1.5">
+                  {team.length === 0 && <p className="text-sm text-muted-foreground">Nenhum membro encontrado.</p>}
+                  {team.map((m: any) => (
+                    <div key={m.user_id} className="flex items-center justify-between gap-2">
+                      <span className="text-sm text-foreground truncate">{m.full_name || "Sem nome"}</span>
+                      <Badge variant="outline" className="text-[10px] uppercase">{m.role}</Badge>
+                    </div>
+                  ))}
+                </div>
               </div>
-            ) : null}
 
-            <div className="rounded-2xl bg-muted/40 p-3">
-              <p className="text-xs font-semibold text-foreground mb-2">Equipe ({team.length})</p>
-              <div className="space-y-1.5">
-                {team.length === 0 && <p className="text-sm text-muted-foreground">Nenhum membro encontrado.</p>}
-                {team.map((m: any) => (
-                  <div key={m.user_id} className="flex items-center justify-between gap-2">
-                    <span className="text-sm text-foreground truncate">{m.full_name || "Sem nome"}</span>
-                    <Badge variant="outline" className="text-[10px] uppercase">{m.role}</Badge>
+              <div className="rounded-2xl bg-muted/40 p-3">
+                <p className="text-xs font-semibold text-foreground mb-1">Assinatura e cobrança</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4">
+                  <Row label="Ciclo de cobrança" value={org.billing_cycle} />
+                  <Row label="Próxima cobrança" value={fmtDate(org.next_billing_date)} />
+                </div>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="clients" className="mt-0">
+              {data?.clients.length ? (
+                <div className="overflow-hidden rounded-2xl bg-muted/40">
+                  <div className="divide-y divide-border/50">
+                    {data.clients.map((client) => (
+                      <div key={client.id} className="grid gap-2 px-3 py-3 sm:grid-cols-[minmax(0,1fr)_150px_110px] sm:items-center">
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-medium text-foreground">{client.full_name}</p>
+                          {client.preferred_name && client.preferred_name !== client.full_name ? (
+                            <p className="truncate text-xs text-muted-foreground">Prefere: {client.preferred_name}</p>
+                          ) : null}
+                        </div>
+                        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                          <Phone className="h-3.5 w-3.5 flex-shrink-0" />
+                          <span>{maskPhone(client.phone)}</span>
+                        </div>
+                        <div className="flex items-center justify-between gap-2 sm:justify-end">
+                          <Badge variant="outline" className="text-[10px]">
+                            {client.custom_status?.trim() || clientStatusLabels[client.status] || client.status}
+                          </Badge>
+                          {client.dpp ? (
+                            <span className="whitespace-nowrap text-[10px] text-muted-foreground sm:hidden">
+                              DPP {fmtDate(client.dpp)}
+                            </span>
+                          ) : null}
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="rounded-2xl bg-muted/40 p-3">
-              <p className="text-xs font-semibold text-foreground mb-1">Assinatura e cobrança</p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4">
-                <Row label="Ciclo de cobrança" value={org.billing_cycle} />
-                <Row label="Próxima cobrança" value={fmtDate(org.next_billing_date)} />
-              </div>
-            </div>
-          </div>
+                </div>
+              ) : (
+                <div className="py-10 text-center">
+                  <Users className="mx-auto mb-2 h-6 w-6 text-muted-foreground" />
+                  <p className="text-sm text-muted-foreground">Nenhuma cliente cadastrada nesta organização.</p>
+                </div>
+              )}
+            </TabsContent>
+          </Tabs>
         )}
       </DialogContent>
     </Dialog>
