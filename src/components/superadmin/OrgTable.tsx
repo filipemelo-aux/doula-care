@@ -114,10 +114,15 @@ export function OrgTable({
           return (a.client_count - b.client_count) * dir;
         case "created":
           return (new Date(a.created_at).getTime() - new Date(b.created_at).getTime()) * dir;
+        case "last_access": {
+          const ta = a.last_access ? new Date(a.last_access).getTime() : 0;
+          const tb = b.last_access ? new Date(b.last_access).getTime() : 0;
+          return (ta - tb) * dir;
+        }
       }
     });
     return arr;
-  }, [orgs, sortKey, sortDir]);
+  }, [orgs, sortKey, sortDir, activity]);
 
   const selected = sorted.find((o) => o.id === selectedId) || null;
   const selectedName = selected ? (selected.nome_exibicao?.trim() || selected.name) : "";
