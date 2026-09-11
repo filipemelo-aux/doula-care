@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Ban, CheckCircle, Mail, Trash2, Loader2, ArrowUp, ArrowDown, ArrowUpDown, MoreVertical } from "lucide-react";
+import { Ban, CheckCircle, Mail, Trash2, Loader2, ArrowUp, ArrowDown, ArrowUpDown, MoreVertical, Eye } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Badge } from "@/components/ui/badge";
