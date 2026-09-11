@@ -170,59 +170,84 @@ export function UserManagementCard() {
               placeholder="Buscar por nome, organização ou papel..."
               value={search}
               onChange={e => setSearch(e.target.value)}
-              className="pl-9 lowercase"
+              className="pl-9 lowercase h-9 text-sm"
             />
           </div>
 
-          {isLoading ? (
-            <div className="flex justify-center py-8"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
-          ) : (
-            <div className="space-y-2 max-h-[60vh] overflow-y-auto">
-              {filteredUsers.map(u => {
-                const isMaster = u.user_id === masterUserId;
-                return (
-                  <div key={u.user_id} className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted/30 transition-colors">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-1.5">
-                        <p className="text-sm font-medium truncate">{u.full_name || "Sem nome"}</p>
-                        {isMaster && <Badge className="bg-red-500/15 text-red-600 border-0 text-[9px] px-1 py-0">Master</Badge>}
-                      </div>
-                      <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
-                        {u.roles.map(r => getRoleBadge(r))}
-                        <span className="text-[10px] text-muted-foreground">• {u.org_name}</span>
-                      </div>
-                    </div>
-                    {!isMaster && (
-                      <div className="flex items-center gap-1 shrink-0">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 text-muted-foreground hover:text-amber-600"
-                          onClick={() => setResetUserId(u.user_id)}
-                          disabled={resetMutation.isPending}
-                          title="Resetar senha"
-                        >
-                          <KeyRound className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                          onClick={() => setDeleteUserId(u.user_id)}
-                          title="Excluir usuário"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-              {filteredUsers.length === 0 && (
-                <p className="text-center text-sm text-muted-foreground py-6">Nenhum usuário encontrado</p>
-              )}
+          <div className="rounded-xl border overflow-hidden">
+            <div className="flex items-center gap-1.5 px-2 py-1.5 border-b bg-muted/30 overflow-x-auto">
+              <span className="text-[11px] text-muted-foreground truncate min-w-0 max-w-[45%] mr-1">
+                {selected ? (selected.full_name || "Sem nome") : "Selecione um usuário"}
+              </span>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 px-2 text-[11px] gap-1 shrink-0 hover:text-amber-600"
+                disabled={!selected || selectedIsMaster || resetMutation.isPending}
+                onClick={() => selected && setResetUserId(selected.user_id)}
+              >
+                <KeyRound className="h-3.5 w-3.5" />
+                Resetar senha
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 px-2 text-[11px] gap-1 shrink-0 text-destructive hover:text-destructive hover:bg-destructive/10 ml-auto"
+                disabled={!selected || selectedIsMaster}
+                onClick={() => selected && setDeleteUserId(selected.user_id)}
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+                Excluir
+              </Button>
             </div>
-          )}
+
+            {isLoading ? (
+              <div className="flex justify-center py-8"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
+            ) : (
+              <div className="max-h-[60vh] overflow-y-auto overflow-x-auto">
+                <table className="w-full min-w-[520px] text-left">
+                  <thead className="sticky top-0 bg-card">
+                    <tr className="border-b">
+                      <th className="h-8 px-2 text-[11px] font-medium text-muted-foreground">Nome</th>
+                      <th className="h-8 px-2 text-[11px] font-medium text-muted-foreground">Papéis</th>
+                      <th className="h-8 px-2 text-[11px] font-medium text-muted-foreground">Organização</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredUsers.map(u => {
+                      const isMaster = u.user_id === masterUserId;
+                      const isSelected = u.user_id === selectedUserId;
+                      return (
+                        <tr
+                          key={u.user_id}
+                          onClick={() => setSelectedUserId(u.user_id)}
+                          className={`border-b last:border-0 cursor-pointer transition-colors ${isSelected ? "bg-primary/10" : "hover:bg-muted/30"}`}
+                        >
+                          <td className="px-2 py-1">
+                            <div className="flex items-center gap-1.5 min-w-0">
+                              <span className="text-xs font-medium truncate max-w-[180px]">{u.full_name || "Sem nome"}</span>
+                              {isMaster && <Badge className="bg-red-500/15 text-red-600 border-0 text-[9px] px-1 py-0">Master</Badge>}
+                            </div>
+                          </td>
+                          <td className="px-2 py-1">
+                            <div className="flex items-center gap-1 flex-wrap">{u.roles.map(r => getRoleBadge(r))}</div>
+                          </td>
+                          <td className="px-2 py-1 text-[11px] text-muted-foreground">
+                            <span className="truncate inline-block max-w-[160px] align-middle">{u.org_name}</span>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                    {filteredUsers.length === 0 && (
+                      <tr>
+                        <td colSpan={3} className="text-center text-sm text-muted-foreground py-6">Nenhum usuário encontrado</td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
         </CardContent>
       </Card>
 
