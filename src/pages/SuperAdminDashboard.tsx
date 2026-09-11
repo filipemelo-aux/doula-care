@@ -235,9 +235,10 @@ export default function SuperAdminDashboard() {
   const { data: organizations = [], isLoading } = useQuery({
     queryKey: ["super-admin-orgs"],
     queryFn: async () => {
-      const [{ data: orgs, error }, { data: counts }] = await Promise.all([
+      const [{ data: orgs, error }, { data: counts }, { data: lastAccess }] = await Promise.all([
         supabase.from("organizations").select("*").order("created_at", { ascending: false }),
         supabase.rpc("get_org_client_counts" as any),
+        supabase.rpc("get_org_last_access" as any),
       ]);
 
       if (error) throw error;
@@ -245,10 +246,14 @@ export default function SuperAdminDashboard() {
       const countMap = new Map(
         ((counts as any[]) || []).map((c: any) => [c.organization_id, Number(c.client_count)])
       );
+      const lastAccessMap = new Map(
+        ((lastAccess as any[]) || []).map((c: any) => [c.organization_id, c.last_access as string])
+      );
 
       return (orgs || []).map((org) => ({
         ...org,
         client_count: countMap.get(org.id) || 0,
+        last_access: lastAccessMap.get(org.id) || null,
       })) as OrgWithCounts[];
     },
   });
