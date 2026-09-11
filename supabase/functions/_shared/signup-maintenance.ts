@@ -23,4 +23,4 @@ export async function getSignupMaintenance(admin: any): Promise<{ active: boolea
 }
 
 export const MAINTENANCE_MESSAGE =
-  "Estamos em manutenção e novos cadastros estão temporariamente indisponíveis. Tente novamente em algumas horas.";
+  "Novos cadastros estão temporariamente indisponíveis. Tente novamente em breve.";
