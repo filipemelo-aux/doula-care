@@ -148,7 +148,18 @@ export function OrgTable({
     <div className="rounded-xl border bg-card overflow-hidden">
       {/* Toolbar */}
       <div className="flex items-center gap-1.5 px-2 py-1.5 border-b bg-muted/30 overflow-x-auto">
-        <span className="text-[11px] text-muted-foreground truncate min-w-0 max-w-[40%] mr-1">
+        <Select value={activity} onValueChange={(v) => setActivity(v as ActivityFilter)}>
+          <SelectTrigger className="h-7 w-[124px] shrink-0 px-2 text-[11px]">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todas</SelectItem>
+            <SelectItem value="7">Ativas 7 dias</SelectItem>
+            <SelectItem value="30">Ativas 30 dias</SelectItem>
+            <SelectItem value="inactive">Inativas +30 dias</SelectItem>
+          </SelectContent>
+        </Select>
+        <span className="text-[11px] text-muted-foreground truncate min-w-0 max-w-[30%] mr-1">
           {selected ? selectedName : "Selecione uma organização"}
         </span>
         <Button
