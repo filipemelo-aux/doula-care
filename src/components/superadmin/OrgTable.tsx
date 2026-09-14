@@ -126,11 +126,30 @@ export function OrgTable({
     return arr;
   }, [orgs, sortKey, sortDir, activity]);
 
-  const selected = sorted.find((o) => o.id === selectedId) || null;
+  const selectedOrgs = sorted.filter((o) => selectedIds.has(o.id));
+  const selected = selectedOrgs.length === 1 ? selectedOrgs[0] : null;
   const selectedName = selected ? (selected.nome_exibicao?.trim() || selected.name) : "";
+  const allSelected = sorted.length > 0 && selectedOrgs.length === sorted.length;
 
   const toggleSelection = (orgId: string) => {
-    setSelectedId((current) => (current === orgId ? null : orgId));
+    setSelectedIds((current) => {
+      const next = new Set(current);
+      if (next.has(orgId)) next.delete(orgId);
+      else next.add(orgId);
+      return next;
+    });
+  };
+
+  const toggleAll = () => {
+    setSelectedIds(allSelected ? new Set() : new Set(sorted.map((o) => o.id)));
+  };
+
+  const applyBulkPlan = (plan: string) => {
+    if (!plan || selectedOrgs.length === 0) return;
+    selectedOrgs.forEach((o) => {
+      if (o.plan !== plan) onPlanChange(o.id, plan as "free" | "pro" | "premium");
+    });
+    setBulkPlan("");
   };
 
   const SortHeader = ({ label, k, className }: { label: string; k: SortKey; className?: string }) => (
