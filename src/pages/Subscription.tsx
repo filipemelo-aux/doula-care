@@ -651,11 +651,6 @@ export default function Subscription() {
                         ) : null}
                         Assinar anual — {yearlyLabel}
                       </Button>
-                      {!isWeb && !monthlyProduct && !yearlyProduct && (
-                        <p className="text-[11px] text-muted-foreground text-center">
-                          Produto não mapeado para esta plataforma.
-                        </p>
-                      )}
                     </>
 
 
