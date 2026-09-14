@@ -2,6 +2,12 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
 import { findPriceId } from "../_shared/stripe-plans.ts";
+import {
+  adminClient,
+  findCoupons,
+  getOrganizationId,
+  matchOffer,
+} from "../_shared/db-coupons.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -57,16 +63,35 @@ serve(async (req) => {
 
     const origin = req.headers.get("origin") || "https://doulacare.app.br";
 
-    // Cupom opcional: aceita um código promocional válido cadastrado no Stripe
+    // Cupom opcional:
+    // 1) cupom cadastrado no Super Admin (valor em reais por plano)
+    // 2) código promocional criado direto no Stripe
     let discounts: Stripe.Checkout.SessionCreateParams.Discount[] | undefined;
     if (couponCode) {
-      const promos = await stripe.promotionCodes.list({
-        code: couponCode,
-        active: true,
-        limit: 1,
-      });
-      if (promos.data.length > 0) {
-        discounts = [{ promotion_code: promos.data[0].id }];
+      const admin = adminClient();
+      const orgId = await getOrganizationId(admin, user.id);
+      const offers = await findCoupons(admin, couponCode, orgId);
+      const offer = matchOffer(offers, plan, billing);
+
+      if (offer?.discount_amount) {
+        const created = await stripe.coupons.create({
+          amount_off: offer.discount_amount,
+          currency: "brl",
+          duration: offer.duration === "forever" ? "forever" : "once",
+          name: `${offer.code} · ${offer.plan_name ?? plan}`,
+          metadata: { coupon_id: offer.id, code: offer.code, plan, billing },
+        });
+        discounts = [{ coupon: created.id }];
+        logStep("Internal coupon applied", { code: offer.code, amount: offer.discount_amount });
+      } else {
+        const promos = await stripe.promotionCodes.list({
+          code: couponCode,
+          active: true,
+          limit: 1,
+        });
+        if (promos.data.length > 0) {
+          discounts = [{ promotion_code: promos.data[0].id }];
+        }
       }
     }
 
