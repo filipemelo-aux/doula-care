@@ -223,6 +223,11 @@ export default function Subscription() {
       return;
     }
 
+    if (!product) {
+      toast.error("Este plano ainda não está disponível na loja.");
+      return;
+    }
+
     setPurchasing(product.productId);
     try {
       toast.loading("Processando assinatura...", { id: "iap" });
