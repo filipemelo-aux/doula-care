@@ -144,17 +144,7 @@ export default function Subscription() {
     enabled: !!organizationId,
   });
 
-  const { data: hideFreePlan } = useQuery({
-    queryKey: ["system-config-hide-free-plan"],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from("system_config")
-        .select("value")
-        .eq("key", "hide_free_plan")
-        .maybeSingle();
-      return (data as any)?.value === "true";
-    },
-  });
+  const hideFreePlan = useHideFreePlan();
 
   const { data: allPlans, isLoading } = useQuery({
     queryKey: ["platform-plans-subscription"],
