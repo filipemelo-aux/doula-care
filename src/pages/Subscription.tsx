@@ -93,6 +93,12 @@ export default function Subscription() {
   const [restoring, setRestoring] = useState(false);
   const [couponInput, setCouponInput] = useState("");
   const [redeeming, setRedeeming] = useState(false);
+  const [managing, setManaging] = useState(false);
+  const [appliedCoupon, setAppliedCoupon] = useState<{
+    code: string;
+    description: string;
+  } | null>(null);
+
   // Pagamento exclusivamente pelas lojas oficiais (regra 3.1.1 da Apple)
 
   const {
@@ -230,7 +236,7 @@ export default function Subscription() {
           body: {
             plan: plan.plan,
             billing: billingType,
-            coupon: myCoupon?.code || couponInput.trim() || undefined,
+            coupon: appliedCoupon?.code || undefined,
           },
         });
         toast.dismiss("checkout");
@@ -295,9 +301,27 @@ export default function Subscription() {
   };
 
   const handleRedeemCoupon = async (rawCode: string, couponId?: string) => {
+    const code = rawCode.trim().toUpperCase();
+    if (code.length < 3) return;
     setRedeeming(true);
     try {
-      const result = await AppStoreSubscriptionService.redeemOfferCode(rawCode);
+      if (isWeb) {
+        // No navegador o desconto é validado no checkout por cartão
+        const { data, error } = await supabase.functions.invoke("validate-coupon", {
+          body: { code },
+        });
+        if (error) throw error;
+        if (data?.valid) {
+          setAppliedCoupon({ code: data.code, description: data.description });
+          toast.success(`Cupom aplicado: ${data.description}`);
+        } else {
+          setAppliedCoupon(null);
+          toast.error(data?.message || "Cupom inválido");
+        }
+        return;
+      }
+
+      const result = await AppStoreSubscriptionService.redeemOfferCode(code);
       if (result.ok) {
         toast.success(result.message);
         if (couponId) {
@@ -311,11 +335,26 @@ export default function Subscription() {
         toast.info(result.message);
       }
     } catch (err: any) {
-      toast.error(err?.message || "Não foi possível resgatar o cupom");
+      toast.error(err?.message || "Não foi possível aplicar o cupom");
     } finally {
       setRedeeming(false);
     }
   };
+
+  const handleManageSubscription = async () => {
+    setManaging(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("customer-portal");
+      if (error) throw error;
+      if (!data?.url) throw new Error("Não foi possível abrir o gerenciamento");
+      window.location.href = data.url;
+    } catch (err: any) {
+      toast.error(err?.message || "Não foi possível abrir o gerenciamento");
+    } finally {
+      setManaging(false);
+    }
+  };
+
 
   const handleActivateFree = () => {
     toast.success("Plano gratuito ativado!");
@@ -407,6 +446,22 @@ export default function Subscription() {
               )}
             </div>
 
+            {isWeb && !isLifetime && activeSubscription ? (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleManageSubscription}
+                disabled={managing}
+              >
+                {managing ? (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                ) : (
+                  <RefreshCcw className="w-4 h-4 mr-2" />
+                )}
+                Gerenciar assinatura
+              </Button>
+            ) : null}
+
             {!isWeb && !isLifetime && (
               <Button
                 variant="outline"
@@ -422,6 +477,7 @@ export default function Subscription() {
                 Restaurar compras
               </Button>
             )}
+
           </div>
         </CardContent>
       </Card>
@@ -433,7 +489,33 @@ export default function Subscription() {
             <p className="font-semibold text-foreground">Cupom de desconto</p>
           </div>
 
-          {myCoupon ? (
+          {appliedCoupon ? (
+            <div className="rounded-xl bg-primary/10 px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="font-mono font-semibold text-foreground">
+                    {appliedCoupon.code}
+                  </span>
+                  <Badge variant="secondary" className="text-xs">
+                    Aplicado
+                  </Badge>
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {appliedCoupon.description}
+                </p>
+              </div>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => {
+                  setAppliedCoupon(null);
+                  setCouponInput("");
+                }}
+              >
+                Remover
+              </Button>
+            </div>
+          ) : myCoupon ? (
             <div className="rounded-xl bg-primary/5 px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <div>
                 <div className="flex items-center gap-2 flex-wrap">
@@ -492,6 +574,7 @@ export default function Subscription() {
           <p className="text-[11px] text-muted-foreground">
             O desconto é aplicado automaticamente no valor cobrado.
           </p>
+
 
         </CardContent>
       </Card>

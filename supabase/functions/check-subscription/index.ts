@@ -1,5 +1,6 @@
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
+import { findPlanByPriceId } from "../_shared/stripe-plans.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -93,11 +94,13 @@ Deno.serve(async (req) => {
     const subscriptionEnd = new Date(stripeSub.current_period_end * 1000).toISOString();
     const subscriptionStart = new Date(stripeSub.current_period_start * 1000).toISOString();
 
-    // Resolve plan from local sub
-    const planId = localSub?.plan_id || null;
-    let planSlug = "unknown";
+    // Resolve plan: Stripe price is the source of truth; local row is a fallback
+    const priceId = stripeSub.items.data[0]?.price?.id;
+    const mapped = findPlanByPriceId(priceId);
+    let planId = mapped?.planId || localSub?.plan_id || null;
+    let planSlug = mapped?.plan || "unknown";
 
-    if (planId) {
+    if (!mapped && planId) {
       const { data: planData } = await supabase
         .from("platform_plan_limits")
         .select("plan")
@@ -106,18 +109,42 @@ Deno.serve(async (req) => {
       if (planData) planSlug = planData.plan;
     }
 
-    // Reconcile local subscription record
+    // Reconcile local subscription record (cria quando o checkout web ainda
+    // não gerou registro local — ex.: webhook atrasado)
+    const record = {
+      status: "active",
+      current_period_start: subscriptionStart,
+      current_period_end: subscriptionEnd,
+      stripe_customer_id: customerId,
+      stripe_subscription_id: stripeSub.id,
+    };
+
     if (localSub) {
       await supabase
         .from("subscriptions")
-        .update({
-          status: "active",
-          current_period_start: subscriptionStart,
-          current_period_end: subscriptionEnd,
-          stripe_customer_id: customerId,
-          stripe_subscription_id: stripeSub.id,
-        })
+        .update({ ...record, plan_id: planId ?? localSub.plan_id })
         .eq("id", localSub.id);
+    } else if (planId) {
+      const { data: existingByStripe } = await supabase
+        .from("subscriptions")
+        .select("id")
+        .eq("stripe_subscription_id", stripeSub.id)
+        .maybeSingle();
+
+      if (existingByStripe?.id) {
+        await supabase
+          .from("subscriptions")
+          .update({ ...record, plan_id: planId })
+          .eq("id", existingByStripe.id);
+      } else {
+        await supabase.from("subscriptions").insert({
+          ...record,
+          user_id: user.id,
+          plan_id: planId,
+          platform: "web",
+          product_id: priceId ?? null,
+        });
+      }
     }
 
     // Reconcile organization plan

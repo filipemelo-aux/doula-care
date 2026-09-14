@@ -1,23 +1,12 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
+import { findPriceId } from "../_shared/stripe-plans.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
-};
-
-// Preços Stripe (checkout web). Os mesmos planos existem nas lojas via IAP.
-const PRICE_IDS: Record<string, Record<string, string>> = {
-  pro: {
-    monthly: "price_1UFYJsKEFTkSbUTT1FkSTpgJ",
-    yearly: "price_1UFYK6KEFTkSbUTTBZZ8zQ1m",
-  },
-  premium: {
-    monthly: "price_1UFYKQKEFTkSbUTT9YH89lNp",
-    yearly: "price_1UFYKlKEFTkSbUTTQruEoYa5",
-  },
 };
 
 const logStep = (step: string, details?: unknown) => {
@@ -53,7 +42,7 @@ serve(async (req) => {
     const billing = String(body?.billing ?? "").toLowerCase();
     const couponCode = typeof body?.coupon === "string" ? body.coupon.trim() : "";
 
-    const priceId = PRICE_IDS[plan]?.[billing];
+    const priceId = findPriceId(plan, billing);
     if (!priceId) {
       return new Response(
         JSON.stringify({ error: "Plano ou periodicidade inválidos" }),
@@ -91,6 +80,7 @@ serve(async (req) => {
       success_url: `${origin}/admin/assinatura?checkout=success`,
       cancel_url: `${origin}/admin/assinatura?checkout=cancel`,
       metadata: { user_id: user.id, plan, billing },
+      subscription_data: { metadata: { user_id: user.id, plan, billing } },
     });
 
     logStep("Checkout session created", { sessionId: session.id });
