@@ -15,7 +15,6 @@ import {
   Crown,
   Loader2,
   RefreshCcw,
-  Smartphone,
   Sparkles,
   Star,
   Ticket,
@@ -248,7 +247,7 @@ export default function Subscription() {
     }
 
     if (!product) {
-      toast.error("Este plano ainda não está disponível na loja.");
+      toast.error("Este plano ainda não está disponível.");
       return;
     }
 
@@ -355,25 +354,6 @@ export default function Subscription() {
         </p>
       </div>
 
-      {isWeb && (
-        <Card className="card-glass border-amber-400/30 bg-amber-50/50 dark:bg-amber-500/5">
-          <CardContent className="pt-6">
-            <div className="flex items-start gap-3">
-              <Smartphone className="w-5 h-5 text-amber-600 mt-0.5 shrink-0" />
-              <div>
-                <p className="text-sm font-medium text-foreground">
-                  Pagamento seguro por cartão
-                </p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  No navegador, a assinatura é feita em uma página de pagamento
-                  segura. Pelo aplicativo instalado, a cobrança acontece na App
-                  Store ou no Google Play.
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
 
       <Card className="card-glass">
         <CardContent className="pt-6">
@@ -461,12 +441,12 @@ export default function Subscription() {
                     {myCoupon.code}
                   </span>
                   <Badge variant="secondary" className="text-xs">
-                    Desconto na loja
+                    Desconto
                   </Badge>
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">
                   {myCoupon.description ||
-                    "Cupom liberado para você. Ao aplicar, a loja mostra o desconto antes de confirmar o pagamento."}
+                    "Cupom liberado para você. Aplique para ver o desconto antes de confirmar o pagamento."}
                   {myCoupon.expires_at
                     ? ` · válido até ${formatDate(myCoupon.expires_at)}`
                     : ""}
@@ -510,9 +490,9 @@ export default function Subscription() {
           )}
 
           <p className="text-[11px] text-muted-foreground">
-            O desconto é aplicado diretamente pela App Store ou Google Play no
-            momento da assinatura, já no valor cobrado.
+            O desconto é aplicado automaticamente no valor cobrado.
           </p>
+
         </CardContent>
       </Card>
 
@@ -651,11 +631,6 @@ export default function Subscription() {
                         ) : null}
                         Assinar anual — {yearlyLabel}
                       </Button>
-                      {!isWeb && !monthlyProduct && !yearlyProduct && (
-                        <p className="text-[11px] text-muted-foreground text-center">
-                          Produto não mapeado para esta plataforma.
-                        </p>
-                      )}
                     </>
 
 
@@ -667,20 +642,16 @@ export default function Subscription() {
         })}
       </div>
 
-      {hasActiveSub && (
+      {hasActiveSub && !isWeb && (
         <Card className="card-glass">
           <CardContent className="pt-6 text-xs text-muted-foreground">
             Para alterar forma de pagamento, cancelar ou ver histórico de cobranças,
-            acesse:
-            <ul className="list-disc list-inside mt-2 space-y-1">
-              <li>iOS: Ajustes &gt; Apple ID &gt; Assinaturas</li>
-              <li>Android: Google Play &gt; Pagamentos e assinaturas</li>
-            </ul>
+            acesse os ajustes de assinaturas da sua conta no dispositivo.
           </CardContent>
         </Card>
       )}
 
-      {/* Informações obrigatórias de assinatura (App Store / Google Play) */}
+      {/* Informações obrigatórias de assinatura */}
       <Card className="card-glass">
         <CardContent className="pt-6 space-y-2 text-xs text-muted-foreground">
           <p className="font-medium text-foreground">Sobre as assinaturas</p>
@@ -690,9 +661,8 @@ export default function Subscription() {
             pelo menos 24 horas de antecedência.
           </p>
           <p>
-            O pagamento é cobrado na conta da loja no momento da confirmação da
-            compra e na renovação. Você pode gerenciar ou cancelar sua
-            assinatura a qualquer momento nos ajustes da sua conta na loja.
+            A cobrança acontece na confirmação da compra e a cada renovação.
+            Você pode gerenciar ou cancelar sua assinatura a qualquer momento.
           </p>
           <div className="flex flex-wrap gap-4 pt-1">
             <a href="/politica-de-privacidade" className="underline">
