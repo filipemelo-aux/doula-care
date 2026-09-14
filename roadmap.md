@@ -1,7 +1,7 @@
 # Roadmap
 
-- [ ] Apontar edge functions para `STRIPE_LIVE_API_KEY` (create-checkout, check-subscription, customer-portal, stripe-webhook, validate-coupon)
-- [ ] Criar os 4 planos (pro/premium × mensal/anual) em modo live e atualizar `_shared/stripe-plans.ts`
-- [ ] Criar webhook endpoint em modo live (checkout.session.completed, customer.subscription.*, invoice.payment_*)
-- [ ] Redeploy das funções e validação de build
+- [x] Apontar edge functions para `STRIPE_LIVE_API_KEY` (fallback `STRIPE_SECRET_KEY`)
+- [x] Criar os 4 planos (pro/premium × mensal/anual) em modo live e atualizar `_shared/stripe-plans.ts`
+- [x] Criar webhook endpoint em modo live (we_1UFjf0D010uWXrBYcQm2dPwp) e remover função temporária
+- [x] Redeploy das funções
 - [ ] Teste real com cartão do usuário + estorno (aguardando usuário)
