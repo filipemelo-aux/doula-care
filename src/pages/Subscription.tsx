@@ -204,9 +204,26 @@ export default function Subscription() {
     }
 
     if (isWeb) {
-      toast.info(
-        "A assinatura é feita dentro do aplicativo, pela App Store ou Google Play."
-      );
+      setPurchasing(product.productId);
+      try {
+        toast.loading("Abrindo pagamento seguro...", { id: "checkout" });
+        const { data, error } = await supabase.functions.invoke("create-checkout", {
+          body: {
+            plan: plan.plan,
+            billing: billingType,
+            coupon: myCoupon?.code || couponInput.trim() || undefined,
+          },
+        });
+        toast.dismiss("checkout");
+        if (error) throw error;
+        if (!data?.url) throw new Error("Não foi possível iniciar o pagamento");
+        window.location.href = data.url;
+      } catch (err: any) {
+        toast.dismiss("checkout");
+        toast.error(err?.message || "Não foi possível iniciar o pagamento");
+      } finally {
+        setPurchasing(null);
+      }
       return;
     }
 
