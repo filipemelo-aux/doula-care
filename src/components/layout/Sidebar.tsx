@@ -292,18 +292,20 @@ export function Sidebar({ isOpen, onToggle, onNavigate }: SidebarProps) {
       </div>
 
       {/* Footer — info card style */}
-      <div className={cn("px-4 pb-4 pt-2", !isOpen && "lg:hidden")}>
-        <div className="rounded-xl bg-muted/40 p-3.5">
-          <div className="flex items-center gap-2 mb-1">
-            <span className={cn("text-xs font-medium", planColors[plan] || "text-muted-foreground")}>
-              {planLabel}
-            </span>
+      {!hidePlanCard && (
+        <div className={cn("px-4 pb-4 pt-2", !isOpen && "lg:hidden")}>
+          <div className="rounded-xl bg-muted/40 p-3.5">
+            <div className="flex items-center gap-2 mb-1">
+              <span className={cn("text-xs font-medium", planColors[plan] || "text-muted-foreground")}>
+                {planLabel}
+              </span>
+            </div>
+            <p className="text-[11px] text-muted-foreground/60 leading-relaxed">
+              {planDescription}
+            </p>
           </div>
-          <p className="text-[11px] text-muted-foreground/60 leading-relaxed">
-            {plan === "free" ? "Limite de 5 gestantes" : plan === "pro" ? "Gestantes ilimitadas" : "Recursos avançados"}
-          </p>
         </div>
-      </div>
+      )}
     </aside>
   );
 }
