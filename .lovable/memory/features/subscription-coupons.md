@@ -1,18 +1,17 @@
 ---
 name: Cupons de desconto na assinatura
-description: Cupons por organização vinculados a códigos de oferta da App Store / Google Play, criados no Super Admin e resgatados na página de Assinatura
+description: Cupons por organização e por plano, com valor em reais (web/Stripe) e código de oferta das lojas (iOS/Android)
 type: feature
 ---
 
-Tabela `subscription_coupons`: organization_id (nullable = cupom geral), code, platform (ios|android|both), description, expires_at, is_active, redeemed_at. `discount_percent` foi descontinuado (coluna nullable, não usada).
+Tabela `subscription_coupons`: organization_id (nullable = cupom geral), plan_id (FK platform_plan_limits), code, platform (ios|android|both), billing_period (monthly|yearly|both), discount_amount (centavos), duration (once|forever), description, expires_at, is_active, redeemed_at. `discount_percent` descontinuado.
 
 Regras:
-- Cupom pode ser **específico de uma doula/organização** ou **geral** (organization_id NULL). Cupom exclusivo tem prioridade na exibição.
-- **Nunca definir percentual/valor de desconto no app** — o desconto é configurado na oferta promocional da loja e exibido pela própria loja na tela de resgate/checkout. O app só vincula e aplica o código.
-- O `code` **precisa existir como oferta promocional na App Store Connect / Google Play**. O app não calcula desconto — quem aplica é a loja.
-- iOS: `presentCodeRedemptionSheet` do RevenueCat, com fallback `https://apps.apple.com/redeem?ctx=offercodes&code=...`.
-- Android: `https://play.google.com/redeem?code=...`.
-- Web: não há resgate; só mensagem orientando a abrir o app.
-- Na página de Assinatura, se a org tem cupom ativo e não expirado, ele aparece pronto para aplicar; senão há campo livre para digitar um código.
+- Códigos **repetidos são permitidos**: a identificação é feita por código + plano (+ periodicidade). Cupom exclusivo da doula tem prioridade sobre o geral.
+- **Web (Stripe):** o valor em reais definido no Super Admin é aplicado de verdade — `create-checkout` cria um coupon ad-hoc (`amount_off` em BRL, duration once/forever) e passa em `discounts`. Fallback: promotion code criado direto no Stripe.
+- **Lojas (iOS/Android):** o `code` precisa existir como oferta promocional na App Store Connect / Google Play; o desconto é definido e exibido pela loja. iOS: `presentCodeRedemptionSheet` + fallback `apps.apple.com/redeem`; Android: `play.google.com/redeem`.
+- `validate-coupon` procura primeiro no banco (retorna `offers[]` por plano/período) e só depois no Stripe.
 
-Implementação: `AppStoreSubscriptionService.redeemOfferCode`, `src/pages/Subscription.tsx`, `src/components/superadmin/SubscriptionCouponsCard.tsx`.
+Implementação: `supabase/functions/_shared/db-coupons.ts`, `validate-coupon`, `create-checkout`, `src/components/superadmin/SubscriptionCouponsCard.tsx`, `src/pages/Subscription.tsx`.
+
+Relacionado: `system_config.hide_free_plan` ('true'/'false') — quando true, a tela de Assinatura não exibe o card do plano Free. Interruptor em `PlanLimitsCard.tsx`.

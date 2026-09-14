@@ -1958,43 +1958,55 @@ export type Database = {
       }
       subscription_coupons: {
         Row: {
+          billing_period: string
           code: string
           created_at: string
           created_by: string | null
           description: string | null
+          discount_amount: number | null
           discount_percent: number | null
+          duration: string
           expires_at: string | null
           id: string
           is_active: boolean
           organization_id: string | null
+          plan_id: string | null
           platform: string
           redeemed_at: string | null
           updated_at: string
         }
         Insert: {
+          billing_period?: string
           code: string
           created_at?: string
           created_by?: string | null
           description?: string | null
+          discount_amount?: number | null
           discount_percent?: number | null
+          duration?: string
           expires_at?: string | null
           id?: string
           is_active?: boolean
           organization_id?: string | null
+          plan_id?: string | null
           platform?: string
           redeemed_at?: string | null
           updated_at?: string
         }
         Update: {
+          billing_period?: string
           code?: string
           created_at?: string
           created_by?: string | null
           description?: string | null
+          discount_amount?: number | null
           discount_percent?: number | null
+          duration?: string
           expires_at?: string | null
           id?: string
           is_active?: boolean
           organization_id?: string | null
+          plan_id?: string | null
           platform?: string
           redeemed_at?: string | null
           updated_at?: string
@@ -2005,6 +2017,13 @@ export type Database = {
             columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscription_coupons_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "platform_plan_limits"
             referencedColumns: ["id"]
           },
         ]

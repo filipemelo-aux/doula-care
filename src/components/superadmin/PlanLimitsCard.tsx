@@ -58,6 +58,38 @@ export function PlanLimitsCard() {
   const queryClient = useQueryClient();
   const [editValues, setEditValues] = useState<Record<string, Partial<LimitsRow>>>({});
 
+  const { data: hideFreePlan } = useQuery({
+    queryKey: ["system-config-hide-free-plan"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("system_config")
+        .select("value")
+        .eq("key", "hide_free_plan")
+        .maybeSingle();
+      return (data as any)?.value === "true";
+    },
+  });
+
+  const hideFreeMutation = useMutation({
+    mutationFn: async (next: boolean) => {
+      const { error } = await supabase
+        .from("system_config")
+        .upsert(
+          { key: "hide_free_plan", value: next ? "true" : "false" } as any,
+          { onConflict: "key" }
+        );
+      if (error) throw error;
+    },
+    onSuccess: (_d, next) => {
+      queryClient.invalidateQueries({ queryKey: ["system-config-hide-free-plan"] });
+      toast.success(
+        next ? "Plano Free oculto para as doulas" : "Plano Free visível para as doulas"
+      );
+    },
+    onError: (e: any) => toast.error(e?.message || "Erro ao atualizar"),
+  });
+
+
   const { data: limits, isLoading } = useQuery({
     queryKey: ["platform-plan-limits-admin"],
     queryFn: async () => {
@@ -144,6 +176,26 @@ export function PlanLimitsCard() {
         <Settings2 className="h-4 w-4 text-primary" />
         Limites dos Planos
       </h2>
+
+      <Card>
+        <CardContent className="p-4 flex items-center justify-between gap-4">
+          <div className="min-w-0">
+            <p className="text-sm font-medium text-foreground">
+              Ocultar plano Free na área de assinatura
+            </p>
+            <p className="text-xs text-muted-foreground">
+              As doulas continuam no Free normalmente, mas não veem os detalhes
+              desse plano ao abrir a tela de assinatura.
+            </p>
+          </div>
+          <Switch
+            checked={!!hideFreePlan}
+            onCheckedChange={(v) => hideFreeMutation.mutate(v)}
+            disabled={hideFreeMutation.isPending}
+          />
+        </CardContent>
+      </Card>
+
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
         {sortedLimits.map((row) => {

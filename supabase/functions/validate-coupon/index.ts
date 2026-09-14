@@ -1,5 +1,11 @@
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
+import {
+  adminClient,
+  describeOffer,
+  findCoupons,
+  getOrganizationId,
+} from "../_shared/db-coupons.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -13,25 +19,20 @@ const json = (data: unknown, status = 200) =>
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
 
-function describe(coupon: Stripe.Coupon): string {
+function describeStripe(coupon: Stripe.Coupon): string {
+  let base = "Desconto aplicado";
   if (coupon.percent_off) {
-    const base = `${Number(coupon.percent_off)
+    base = `${Number(coupon.percent_off)
       .toFixed(2)
       .replace(/\.00$/, "")
       .replace(".", ",")}% de desconto`;
-    return withDuration(base, coupon);
-  }
-  if (coupon.amount_off) {
+  } else if (coupon.amount_off) {
     const value = (coupon.amount_off / 100).toLocaleString("pt-BR", {
       style: "currency",
       currency: (coupon.currency || "brl").toUpperCase(),
     });
-    return withDuration(`${value} de desconto`, coupon);
+    base = `${value} de desconto`;
   }
-  return "Desconto aplicado";
-}
-
-function withDuration(base: string, coupon: Stripe.Coupon): string {
   if (coupon.duration === "forever") return `${base} em todas as cobranças`;
   if (coupon.duration === "once") return `${base} na primeira cobrança`;
   if (coupon.duration === "repeating" && coupon.duration_in_months) {
@@ -46,9 +47,6 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
-    if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not set");
-
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) return json({ error: "Não autenticado" }, 401);
 
@@ -65,25 +63,49 @@ Deno.serve(async (req) => {
     const code = String(body?.code ?? "").trim();
     if (code.length < 3) return json({ valid: false, message: "Código inválido" });
 
+    // 1) Cupons cadastrados no Super Admin (valor em reais por plano)
+    const admin = adminClient();
+    const orgId = await getOrganizationId(admin, userData.user.id);
+    const offers = (await findCoupons(admin, code, orgId)).filter(
+      (o) => o.discount_amount && o.discount_amount > 0
+    );
+
+    if (offers.length > 0) {
+      return json({
+        valid: true,
+        code: offers[0].code,
+        source: "internal",
+        description: offers.map(describeOffer).join(" · "),
+        offers: offers.map((o) => ({
+          plan: o.plan,
+          plan_id: o.plan_id,
+          plan_name: o.plan_name,
+          billing_period: o.billing_period,
+          discount_amount: o.discount_amount,
+          duration: o.duration,
+          description: describeOffer(o),
+        })),
+      });
+    }
+
+    // 2) Fallback: código promocional criado direto no Stripe
+    const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
+    if (!stripeKey) return json({ valid: false, message: "Cupom não encontrado" });
+
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
     const promos = await stripe.promotionCodes.list({ code, active: true, limit: 1 });
 
-    if (promos.data.length === 0) {
+    if (promos.data.length === 0 || !promos.data[0].coupon?.valid) {
       return json({ valid: false, message: "Cupom não encontrado ou expirado" });
     }
 
     const promo = promos.data[0];
-    const coupon = promo.coupon;
-    if (!coupon?.valid) {
-      return json({ valid: false, message: "Cupom não está mais disponível" });
-    }
-
     return json({
       valid: true,
       code: promo.code,
-      description: describe(coupon),
-      percent_off: coupon.percent_off ?? null,
-      amount_off: coupon.amount_off ?? null,
+      source: "stripe",
+      description: describeStripe(promo.coupon),
+      offers: [],
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);

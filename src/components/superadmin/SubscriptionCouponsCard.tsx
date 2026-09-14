@@ -16,12 +16,17 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { Ticket, Plus, Trash2, Power } from "lucide-react";
+import { maskCurrency, parseCurrency } from "@/lib/masks";
 
 interface CouponRow {
   id: string;
   organization_id: string | null;
+  plan_id: string | null;
   code: string;
   platform: string;
+  billing_period: string;
+  discount_amount: number | null;
+  duration: string;
   description: string | null;
   expires_at: string | null;
   is_active: boolean;
@@ -31,14 +36,27 @@ interface CouponRow {
 const platformLabel: Record<string, string> = {
   ios: "App Store",
   android: "Google Play",
-  both: "Ambas as lojas",
+  both: "Todas as plataformas",
 };
+
+const billingLabel: Record<string, string> = {
+  monthly: "Mensal",
+  yearly: "Anual",
+  both: "Mensal e anual",
+};
+
+const formatBRL = (centavos: number) =>
+  (centavos / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
 export function SubscriptionCouponsCard() {
   const queryClient = useQueryClient();
-  const [orgId, setOrgId] = useState("");
+  const [orgId, setOrgId] = useState("all");
+  const [planId, setPlanId] = useState("");
   const [code, setCode] = useState("");
   const [platform, setPlatform] = useState("both");
+  const [billing, setBilling] = useState("both");
+  const [amount, setAmount] = useState("");
+  const [duration, setDuration] = useState("once");
   const [description, setDescription] = useState("");
   const [expires, setExpires] = useState("");
 
@@ -51,6 +69,18 @@ export function SubscriptionCouponsCard() {
         .order("name");
       if (error) throw error;
       return (data as any[]) || [];
+    },
+  });
+
+  const { data: plans } = useQuery({
+    queryKey: ["sa-plans-for-coupons"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("platform_plan_limits" as any)
+        .select("id, plan, name, is_free")
+        .order("price_monthly");
+      if (error) throw error;
+      return ((data as any[]) || []).filter((p) => !p.is_free);
     },
   });
 
@@ -72,12 +102,23 @@ export function SubscriptionCouponsCard() {
     return o?.nome_exibicao || o?.name || "—";
   };
 
+  const planName = (id: string | null) => {
+    if (!id) return "Todos os planos";
+    const p = (plans || []).find((x: any) => x.id === id);
+    return p?.name || "—";
+  };
+
   const createMutation = useMutation({
     mutationFn: async () => {
+      const cents = Math.round(parseCurrency(amount) * 100);
       const { error } = await supabase.from("subscription_coupons" as any).insert({
-        organization_id: orgId === "all" || !orgId ? null : orgId,
-        code: code.trim(),
+        organization_id: orgId === "all" ? null : orgId,
+        plan_id: planId || null,
+        code: code.trim().toUpperCase(),
         platform,
+        billing_period: billing,
+        discount_amount: cents > 0 ? cents : null,
+        duration,
         description: description.trim() || null,
         expires_at: expires ? new Date(`${expires}T23:59:59`).toISOString() : null,
       } as any);
@@ -86,6 +127,7 @@ export function SubscriptionCouponsCard() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["sa-subscription-coupons"] });
       setCode("");
+      setAmount("");
       setDescription("");
       setExpires("");
       toast.success("Cupom criado!");
@@ -121,7 +163,7 @@ export function SubscriptionCouponsCard() {
     },
   });
 
-  const canCreate = code.trim().length >= 3;
+  const canCreate = code.trim().length >= 3 && !!planId;
 
   return (
     <Card className="card-glass">
@@ -131,16 +173,17 @@ export function SubscriptionCouponsCard() {
           <h3 className="font-semibold text-foreground">Cupons de desconto</h3>
         </div>
         <p className="text-xs text-muted-foreground -mt-3">
-          O código precisa existir como oferta promocional na App Store Connect /
-          Google Play — o valor do desconto é definido e exibido pela loja no
-          momento do resgate. Aqui você apenas vincula o código a uma doula
-          específica ou o deixa geral, válido para qualquer doula.
+          Defina o valor do desconto em reais para cada plano. Códigos com o mesmo
+          nome são permitidos — a identificação é feita pelo plano escolhido. No
+          navegador o desconto é aplicado automaticamente no pagamento por cartão;
+          nas lojas (iOS/Android) o código precisa existir como oferta promocional
+          na App Store Connect / Google Play.
         </p>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <div className="space-y-1.5">
             <Label className="text-xs">Doula / organização</Label>
-            <Select value={orgId || "all"} onValueChange={setOrgId}>
+            <Select value={orgId} onValueChange={setOrgId}>
               <SelectTrigger>
                 <SelectValue placeholder="Todas as doulas (cupom geral)" />
               </SelectTrigger>
@@ -155,6 +198,21 @@ export function SubscriptionCouponsCard() {
             </Select>
           </div>
           <div className="space-y-1.5">
+            <Label className="text-xs">Plano</Label>
+            <Select value={planId} onValueChange={setPlanId}>
+              <SelectTrigger>
+                <SelectValue placeholder="Escolha o plano" />
+              </SelectTrigger>
+              <SelectContent>
+                {(plans || []).map((p: any) => (
+                  <SelectItem key={p.id} value={p.id}>
+                    {p.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
             <Label className="text-xs">Código da oferta</Label>
             <Input
               value={code}
@@ -163,13 +221,46 @@ export function SubscriptionCouponsCard() {
             />
           </div>
           <div className="space-y-1.5">
-            <Label className="text-xs">Loja</Label>
+            <Label className="text-xs">Valor do desconto (R$)</Label>
+            <Input
+              value={amount}
+              onChange={(e) => setAmount(maskCurrency(e.target.value))}
+              placeholder="R$ 0,00"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs">Periodicidade</Label>
+            <Select value={billing} onValueChange={setBilling}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="both">Mensal e anual</SelectItem>
+                <SelectItem value="monthly">Somente mensal</SelectItem>
+                <SelectItem value="yearly">Somente anual</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs">Aplicar desconto</Label>
+            <Select value={duration} onValueChange={setDuration}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="once">Só na primeira cobrança</SelectItem>
+                <SelectItem value="forever">Em todas as cobranças</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs">Plataforma</Label>
             <Select value={platform} onValueChange={setPlatform}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="both">Ambas as lojas</SelectItem>
+                <SelectItem value="both">Todas as plataformas</SelectItem>
                 <SelectItem value="ios">App Store (iOS)</SelectItem>
                 <SelectItem value="android">Google Play (Android)</SelectItem>
               </SelectContent>
@@ -183,7 +274,7 @@ export function SubscriptionCouponsCard() {
               onChange={(e) => setExpires(e.target.value)}
             />
           </div>
-          <div className="space-y-1.5">
+          <div className="space-y-1.5 md:col-span-2">
             <Label className="text-xs">Descrição (opcional)</Label>
             <Input
               value={description}
@@ -218,6 +309,18 @@ export function SubscriptionCouponsCard() {
                 <div className="min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="font-mono text-sm font-semibold">{c.code}</span>
+                    <Badge variant="secondary" className="text-[10px]">
+                      {planName(c.plan_id)}
+                    </Badge>
+                    {c.discount_amount ? (
+                      <Badge className="text-[10px]">
+                        −{formatBRL(c.discount_amount)}
+                        {c.duration === "forever" ? " sempre" : ""}
+                      </Badge>
+                    ) : null}
+                    <Badge variant="outline" className="text-[10px]">
+                      {billingLabel[c.billing_period] || c.billing_period}
+                    </Badge>
                     <Badge variant="outline" className="text-[10px]">
                       {platformLabel[c.platform] || c.platform}
                     </Badge>
