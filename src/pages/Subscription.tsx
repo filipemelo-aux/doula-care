@@ -355,25 +355,6 @@ export default function Subscription() {
         </p>
       </div>
 
-      {isWeb && (
-        <Card className="card-glass border-amber-400/30 bg-amber-50/50 dark:bg-amber-500/5">
-          <CardContent className="pt-6">
-            <div className="flex items-start gap-3">
-              <Smartphone className="w-5 h-5 text-amber-600 mt-0.5 shrink-0" />
-              <div>
-                <p className="text-sm font-medium text-foreground">
-                  Pagamento seguro por cartão
-                </p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  No navegador, a assinatura é feita em uma página de pagamento
-                  segura. Pelo aplicativo instalado, a cobrança acontece na App
-                  Store ou no Google Play.
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
 
       <Card className="card-glass">
         <CardContent className="pt-6">
