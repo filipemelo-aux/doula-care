@@ -444,7 +444,12 @@ export default function Subscription() {
               <Button
                 size="sm"
                 disabled={redeeming}
-                onClick={() => handleRedeemCoupon(myCoupon.code, myCoupon.id)}
+                onClick={() =>
+                  handleRedeemCoupon(
+                    myCoupon.code,
+                    myCoupon.organization_id ? myCoupon.id : undefined
+                  )
+                }
               >
                 {redeeming ? (
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
