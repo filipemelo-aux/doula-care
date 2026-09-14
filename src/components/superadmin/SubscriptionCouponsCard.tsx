@@ -22,7 +22,6 @@ interface CouponRow {
   organization_id: string | null;
   code: string;
   platform: string;
-  discount_percent: number;
   description: string | null;
   expires_at: string | null;
   is_active: boolean;
@@ -40,7 +39,6 @@ export function SubscriptionCouponsCard() {
   const [orgId, setOrgId] = useState("");
   const [code, setCode] = useState("");
   const [platform, setPlatform] = useState("both");
-  const [percent, setPercent] = useState("");
   const [description, setDescription] = useState("");
   const [expires, setExpires] = useState("");
 
@@ -80,7 +78,6 @@ export function SubscriptionCouponsCard() {
         organization_id: orgId === "all" || !orgId ? null : orgId,
         code: code.trim(),
         platform,
-        discount_percent: Number(percent) || 0,
         description: description.trim() || null,
         expires_at: expires ? new Date(`${expires}T23:59:59`).toISOString() : null,
       } as any);
@@ -89,7 +86,6 @@ export function SubscriptionCouponsCard() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["sa-subscription-coupons"] });
       setCode("");
-      setPercent("");
       setDescription("");
       setExpires("");
       toast.success("Cupom criado!");
@@ -125,7 +121,7 @@ export function SubscriptionCouponsCard() {
     },
   });
 
-  const canCreate = code.trim().length >= 3 && Number(percent) > 0;
+  const canCreate = code.trim().length >= 3;
 
   return (
     <Card className="card-glass">
@@ -136,8 +132,9 @@ export function SubscriptionCouponsCard() {
         </div>
         <p className="text-xs text-muted-foreground -mt-3">
           O código precisa existir como oferta promocional na App Store Connect /
-          Google Play. Aqui você vincula esse código a uma doula específica ou
-          deixa como cupom geral, válido para qualquer doula.
+          Google Play — o valor do desconto é definido e exibido pela loja no
+          momento do resgate. Aqui você apenas vincula o código a uma doula
+          específica ou o deixa geral, válido para qualquer doula.
         </p>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -177,15 +174,6 @@ export function SubscriptionCouponsCard() {
                 <SelectItem value="android">Google Play (Android)</SelectItem>
               </SelectContent>
             </Select>
-          </div>
-          <div className="space-y-1.5">
-            <Label className="text-xs">Desconto (%)</Label>
-            <Input
-              inputMode="numeric"
-              value={percent}
-              onChange={(e) => setPercent(e.target.value.replace(/\D/g, "").slice(0, 3))}
-              placeholder="30"
-            />
           </div>
           <div className="space-y-1.5">
             <Label className="text-xs">Validade (opcional)</Label>
@@ -230,9 +218,6 @@ export function SubscriptionCouponsCard() {
                 <div className="min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="font-mono text-sm font-semibold">{c.code}</span>
-                    <Badge variant="secondary" className="text-[10px]">
-                      {c.discount_percent}% off
-                    </Badge>
                     <Badge variant="outline" className="text-[10px]">
                       {platformLabel[c.platform] || c.platform}
                     </Badge>
