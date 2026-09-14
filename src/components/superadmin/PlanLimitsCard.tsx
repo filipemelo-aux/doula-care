@@ -179,7 +179,7 @@ export function PlanLimitsCard() {
                             ? maskCurrency(String(getEditValue(row.plan).price_monthly))
                             : maskCurrency(String(row.price_monthly))
                         }
-                        onChange={(e) => setField(row.plan, "price_monthly", parseCurrency(e.target.value) * 100)}
+                        onChange={(e) => setField(row.plan, "price_monthly", Math.round(parseCurrency(e.target.value) * 100))}
                         placeholder="R$ 0,00"
                         className="h-8 text-sm"
                       />
@@ -190,7 +190,7 @@ export function PlanLimitsCard() {
                             ? maskCurrency(String(getEditValue(row.plan).price_yearly))
                             : maskCurrency(String(row.price_yearly))
                         }
-                        onChange={(e) => setField(row.plan, "price_yearly", parseCurrency(e.target.value) * 100)}
+                        onChange={(e) => setField(row.plan, "price_yearly", Math.round(parseCurrency(e.target.value) * 100))}
                         placeholder="R$ 0,00"
                         className="h-8 text-sm"
                       />
