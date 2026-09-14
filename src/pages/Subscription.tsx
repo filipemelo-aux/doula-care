@@ -26,7 +26,6 @@ import {
   type StoreProduct,
   type BillingPeriod,
   getCurrentPlatform,
-  isDevEnvironment,
 } from "@/lib/subscriptions/AppStoreSubscriptionService";
 
 interface PlatformPlan {
