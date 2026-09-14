@@ -55,7 +55,7 @@ const navItems = [
   },
 
   // { to: "/comunidade", icon: Users2, label: "Comunidade" }, // Oculto — acessível apenas via URL direta
-  // { to: "/admin/assinatura", icon: Crown, label: "Assinatura" }, // Oculto temporariamente — em edição
+  { to: "/admin/assinatura", icon: Crown, label: "Assinatura" },
 ];
 
 const settingsNavItem = { to: "/configuracoes", icon: Settings, label: "Configurações" };
