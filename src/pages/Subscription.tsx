@@ -338,11 +338,12 @@ export default function Subscription() {
               <Smartphone className="w-5 h-5 text-amber-600 mt-0.5 shrink-0" />
               <div>
                 <p className="text-sm font-medium text-foreground">
-                  Assinaturas são feitas dentro do aplicativo oficial
+                  Pagamento seguro por cartão
                 </p>
                 <p className="text-xs text-muted-foreground mt-1">
-                  As assinaturas são processadas pela loja oficial quando o app
-                  estiver instalado no iOS (App Store) ou Android (Google Play).
+                  No navegador, a assinatura é feita em uma página de pagamento
+                  segura. Pelo aplicativo instalado, a cobrança acontece na App
+                  Store ou no Google Play.
                 </p>
               </div>
             </div>
