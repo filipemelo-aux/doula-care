@@ -221,36 +221,54 @@ export function Sidebar({ isOpen, onToggle, onNavigate }: SidebarProps) {
           const isDisabled = limitKey ? !limits[limitKey] : false;
           const isActive = !isDisabled && location.pathname === item.to;
           const badgeCount = isDisabled ? 0 : getBadgeCount((item as any).badgeKey);
+          const isMobileTextOnly = (item as any).mobileTextOnly;
 
           return (
-            <button
-              key={item.to}
-              onClick={() => !isDisabled && handleNavClick(item.to!)}
-              disabled={isDisabled}
-              className={cn(
-                "nav-link w-full text-left relative",
-                isActive && "active",
-                !isOpen && "lg:justify-center lg:px-0",
-                isDisabled && "opacity-40 cursor-not-allowed hover:bg-transparent",
-                hideOnMobile && "hidden lg:flex"
-              )}
-              title={!isOpen ? item.label : isDisabled ? "Recurso indisponível no seu plano" : undefined}
-            >
-              <div className="relative">
-                <item.icon className="w-[18px] h-[18px] shrink-0" strokeWidth={1.8} />
-                {badgeCount > 0 && !isOpen && (
-                  <span className="absolute -top-1.5 -right-1.5 h-2 w-2 rounded-full bg-destructive hidden lg:block" />
+            <div key={item.to} className={cn(hideOnMobile && "hidden lg:flex")}>
+              {/* Desktop: normal link */}
+              <button
+                onClick={() => !isDisabled && handleNavClick(item.to!)}
+                disabled={isDisabled}
+                className={cn(
+                  "nav-link w-full text-left relative",
+                  isMobileTextOnly && "hidden lg:flex",
+                  isActive && "active",
+                  !isOpen && "lg:justify-center lg:px-0",
+                  isDisabled && "opacity-40 cursor-not-allowed hover:bg-transparent"
                 )}
-              </div>
-              <span className={cn("transition-opacity flex-1 text-[13px]", !isOpen && "lg:hidden")}>
-                {item.label}
-              </span>
-              {badgeCount > 0 && isOpen && (
-                <Badge variant="destructive" className="text-[10px] h-5 min-w-5 flex items-center justify-center ml-auto">
-                  {badgeCount}
-                </Badge>
+                title={!isOpen ? item.label : isDisabled ? "Recurso indisponível no seu plano" : undefined}
+              >
+                <div className="relative">
+                  <item.icon className="w-[18px] h-[18px] shrink-0" strokeWidth={1.8} />
+                  {badgeCount > 0 && !isOpen && (
+                    <span className="absolute -top-1.5 -right-1.5 h-2 w-2 rounded-full bg-destructive hidden lg:block" />
+                  )}
+                </div>
+                <span className={cn("transition-opacity flex-1 text-[13px]", !isOpen && "lg:hidden")}>
+                  {item.label}
+                </span>
+                {badgeCount > 0 && isOpen && (
+                  <Badge variant="destructive" className="text-[10px] h-5 min-w-5 flex items-center justify-center ml-auto">
+                    {badgeCount}
+                  </Badge>
+                )}
+              </button>
+
+              {/* Mobile: text-only (no link) */}
+              {isMobileTextOnly && (
+                <div
+                  className={cn(
+                    "nav-link w-full text-left relative opacity-60 cursor-default lg:hidden",
+                    !isOpen && "lg:hidden"
+                  )}
+                >
+                  <item.icon className="w-[18px] h-[18px] shrink-0" strokeWidth={1.8} />
+                  <span className={cn("transition-opacity flex-1 text-[13px]", !isOpen && "lg:hidden")}>
+                    {item.label}
+                  </span>
+                </div>
               )}
-            </button>
+            </div>
           );
         })}
       </nav>
