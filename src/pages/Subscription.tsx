@@ -93,6 +93,12 @@ export default function Subscription() {
   const [restoring, setRestoring] = useState(false);
   const [couponInput, setCouponInput] = useState("");
   const [redeeming, setRedeeming] = useState(false);
+  const [managing, setManaging] = useState(false);
+  const [appliedCoupon, setAppliedCoupon] = useState<{
+    code: string;
+    description: string;
+  } | null>(null);
+
   // Pagamento exclusivamente pelas lojas oficiais (regra 3.1.1 da Apple)
 
   const {
@@ -230,7 +236,7 @@ export default function Subscription() {
           body: {
             plan: plan.plan,
             billing: billingType,
-            coupon: myCoupon?.code || couponInput.trim() || undefined,
+            coupon: appliedCoupon?.code || undefined,
           },
         });
         toast.dismiss("checkout");
@@ -295,9 +301,27 @@ export default function Subscription() {
   };
 
   const handleRedeemCoupon = async (rawCode: string, couponId?: string) => {
+    const code = rawCode.trim().toUpperCase();
+    if (code.length < 3) return;
     setRedeeming(true);
     try {
-      const result = await AppStoreSubscriptionService.redeemOfferCode(rawCode);
+      if (isWeb) {
+        // No navegador o desconto é validado no checkout por cartão
+        const { data, error } = await supabase.functions.invoke("validate-coupon", {
+          body: { code },
+        });
+        if (error) throw error;
+        if (data?.valid) {
+          setAppliedCoupon({ code: data.code, description: data.description });
+          toast.success(`Cupom aplicado: ${data.description}`);
+        } else {
+          setAppliedCoupon(null);
+          toast.error(data?.message || "Cupom inválido");
+        }
+        return;
+      }
+
+      const result = await AppStoreSubscriptionService.redeemOfferCode(code);
       if (result.ok) {
         toast.success(result.message);
         if (couponId) {
@@ -311,11 +335,26 @@ export default function Subscription() {
         toast.info(result.message);
       }
     } catch (err: any) {
-      toast.error(err?.message || "Não foi possível resgatar o cupom");
+      toast.error(err?.message || "Não foi possível aplicar o cupom");
     } finally {
       setRedeeming(false);
     }
   };
+
+  const handleManageSubscription = async () => {
+    setManaging(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("customer-portal");
+      if (error) throw error;
+      if (!data?.url) throw new Error("Não foi possível abrir o gerenciamento");
+      window.location.href = data.url;
+    } catch (err: any) {
+      toast.error(err?.message || "Não foi possível abrir o gerenciamento");
+    } finally {
+      setManaging(false);
+    }
+  };
+
 
   const handleActivateFree = () => {
     toast.success("Plano gratuito ativado!");
