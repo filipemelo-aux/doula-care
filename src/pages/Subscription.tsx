@@ -686,9 +686,8 @@ export default function Subscription() {
             pelo menos 24 horas de antecedência.
           </p>
           <p>
-            O pagamento é cobrado na conta da loja no momento da confirmação da
-            compra e na renovação. Você pode gerenciar ou cancelar sua
-            assinatura a qualquer momento nos ajustes da sua conta na loja.
+            A cobrança acontece na confirmação da compra e a cada renovação.
+            Você pode gerenciar ou cancelar sua assinatura a qualquer momento.
           </p>
           <div className="flex flex-wrap gap-4 pt-1">
             <a href="/politica-de-privacidade" className="underline">
