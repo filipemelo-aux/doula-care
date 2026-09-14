@@ -256,7 +256,13 @@ export function OrgTable({
         <Table className="min-w-[860px]">
           <TableHeader>
             <TableRow className="hover:bg-transparent">
-              <TableHead className="h-8 w-10 px-2" />
+              <TableHead className="h-8 w-10 px-2">
+                <Checkbox
+                  checked={allSelected}
+                  onCheckedChange={toggleAll}
+                  aria-label="Selecionar todas"
+                />
+              </TableHead>
               <SortHeader label="Organização" k="name" />
               <SortHeader label="Email" k="email" />
               <SortHeader label="Plano" k="plan" />
