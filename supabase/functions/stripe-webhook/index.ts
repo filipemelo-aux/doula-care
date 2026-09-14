@@ -20,17 +20,33 @@ const admin = () =>
 async function resolveUserId(
   supabase: ReturnType<typeof admin>,
   metadataUserId?: string | null,
-  email?: string | null
+  email?: string | null,
+  customerId?: string | null
 ): Promise<string | null> {
   if (metadataUserId) return metadataUserId;
-  if (!email) return null;
-  const { data } = await supabase
-    .from("profiles")
-    .select("user_id")
-    .eq("email", email)
-    .maybeSingle();
-  return data?.user_id ?? null;
+
+  if (customerId) {
+    const { data } = await supabase
+      .from("subscriptions")
+      .select("user_id")
+      .eq("stripe_customer_id", customerId)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (data?.user_id) return data.user_id;
+  }
+
+  if (email) {
+    const { data } = await supabase.auth.admin.listUsers({ page: 1, perPage: 1000 });
+    const match = data?.users?.find(
+      (u) => (u.email ?? "").toLowerCase() === email.toLowerCase()
+    );
+    if (match) return match.id;
+  }
+
+  return null;
 }
+
 
 async function syncSubscription(
   stripe: Stripe,
