@@ -184,6 +184,23 @@ export function OrgTable({
             <SelectItem value="inactive">Inativas +30 dias</SelectItem>
           </SelectContent>
         </Select>
+        {selectedOrgs.length > 1 && (
+          <>
+            <span className="shrink-0 text-[11px] font-medium text-muted-foreground px-1">
+              {selectedOrgs.length} selecionadas
+            </span>
+            <Select value={bulkPlan} onValueChange={applyBulkPlan}>
+              <SelectTrigger className="h-7 w-[142px] shrink-0 px-2 text-[11px]">
+                <SelectValue placeholder="Aplicar plano..." />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="free">Mudar para Free</SelectItem>
+                <SelectItem value="pro">Mudar para Pro</SelectItem>
+                <SelectItem value="premium">Mudar para Premium</SelectItem>
+              </SelectContent>
+            </Select>
+          </>
+        )}
         <Button
           variant="ghost"
           size="sm"
