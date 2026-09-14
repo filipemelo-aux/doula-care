@@ -19,7 +19,7 @@ import { Ticket, Plus, Trash2, Power } from "lucide-react";
 
 interface CouponRow {
   id: string;
-  organization_id: string;
+  organization_id: string | null;
   code: string;
   platform: string;
   discount_percent: number;
