@@ -314,18 +314,11 @@ export const AppStoreSubscriptionService = {
     const platform = getCurrentPlatform();
 
     if (platform === "web") {
-      if (!isDevEnvironment()) {
-        return {
-          status: "error",
-          message:
-            "Assinaturas reais só estão disponíveis no aplicativo instalado (App Store ou Google Play).",
-        };
-      }
-      // Dev mock — apenas marca evento, não ativa plano de verdade no backend
+      // Nunca simular compra: a assinatura só acontece na loja oficial.
       return {
-        status: "purchased",
-        productId,
-        message: "Mock de compra (ambiente de desenvolvimento).",
+        status: "error",
+        message:
+          "Assinaturas só podem ser feitas no aplicativo instalado (App Store ou Google Play).",
       };
     }
 

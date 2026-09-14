@@ -14,7 +14,6 @@ import {
   Check,
   Crown,
   Loader2,
-  QrCode,
   RefreshCcw,
   Smartphone,
   Sparkles,
@@ -22,13 +21,11 @@ import {
   Ticket,
 } from "lucide-react";
 import { toast } from "sonner";
-import { PixSubscriptionDialog } from "@/components/subscription/PixSubscriptionDialog";
 import {
   AppStoreSubscriptionService,
   type StoreProduct,
   type BillingPeriod,
   getCurrentPlatform,
-  isDevEnvironment,
 } from "@/lib/subscriptions/AppStoreSubscriptionService";
 
 interface PlatformPlan {
@@ -92,20 +89,12 @@ export default function Subscription() {
 
   const platform = getCurrentPlatform();
   const isWeb = platform === "web";
-  const isDev = isDevEnvironment();
 
   const [purchasing, setPurchasing] = useState<string | null>(null);
   const [restoring, setRestoring] = useState(false);
   const [couponInput, setCouponInput] = useState("");
   const [redeeming, setRedeeming] = useState(false);
-  // Pix é permitido no Google Play e na web — nunca no iOS (regra 3.1.1 da Apple)
-  const pixAllowed = platform !== "ios";
-  const [pixTarget, setPixTarget] = useState<{
-    planId: string;
-    planName: string;
-    billingType: BillingPeriod;
-    amountCents: number;
-  } | null>(null);
+  // Pagamento exclusivamente pelas lojas oficiais (regra 3.1.1 da Apple)
 
   const {
     plan: effectivePlan,
@@ -214,9 +203,9 @@ export default function Subscription() {
       return;
     }
 
-    if (isWeb && !isDev) {
+    if (isWeb) {
       toast.info(
-        "Assinaturas são processadas pela loja oficial quando o app estiver instalado no iOS ou Android."
+        "A assinatura é feita dentro do aplicativo, pela App Store ou Google Play."
       );
       return;
     }
@@ -336,7 +325,6 @@ export default function Subscription() {
                 <p className="text-xs text-muted-foreground mt-1">
                   As assinaturas são processadas pela loja oficial quando o app
                   estiver instalado no iOS (App Store) ou Android (Google Play).
-                  {isDev && " Em modo desenvolvimento você pode simular compras."}
                 </p>
               </div>
             </div>
@@ -625,51 +613,8 @@ export default function Subscription() {
                           Produto não mapeado para esta plataforma.
                         </p>
                       )}
-                      {pixAllowed && (
-                        <>
-                          <div className="flex items-center gap-2 pt-1">
-                            <span className="h-px flex-1 bg-border" />
-                            <span className="text-[10px] uppercase text-muted-foreground">
-                              ou
-                            </span>
-                            <span className="h-px flex-1 bg-border" />
-                          </div>
-                          <Button
-                            variant="secondary"
-                            className="w-full"
-                            onClick={() =>
-                              setPixTarget({
-                                planId: plan.id,
-                                planName: plan.name,
-                                billingType: "monthly",
-                                amountCents: plan.price_monthly,
-                              })
-                            }
-                          >
-                            <QrCode className="w-4 h-4 mr-2" />
-                            Pagar com Pix (mensal)
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            className="w-full"
-                            onClick={() =>
-                              setPixTarget({
-                                planId: plan.id,
-                                planName: plan.name,
-                                billingType: "yearly",
-                                amountCents:
-                                  plan.price_yearly > 0
-                                    ? plan.price_yearly
-                                    : plan.price_monthly * 12,
-                              })
-                            }
-                          >
-                            <QrCode className="w-4 h-4 mr-2" />
-                            Pagar com Pix (anual)
-                          </Button>
-                        </>
-                      )}
                     </>
+
 
                   )}
                 </div>
@@ -722,16 +667,6 @@ export default function Subscription() {
         </CardContent>
       </Card>
 
-      {pixTarget && (
-        <PixSubscriptionDialog
-          open={!!pixTarget}
-          onOpenChange={(o) => !o && setPixTarget(null)}
-          planId={pixTarget.planId}
-          planName={pixTarget.planName}
-          billingType={pixTarget.billingType}
-          amountCents={pixTarget.amountCents}
-        />
-      )}
     </div>
   );
 
