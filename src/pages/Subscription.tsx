@@ -196,6 +196,30 @@ export default function Subscription() {
     queryClient.invalidateQueries({ queryKey: ["platform-plan-limits"] });
   };
 
+  // Retorno do checkout web: confirma a assinatura com o provedor de pagamento
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const checkout = params.get("checkout");
+    if (!checkout) return;
+    window.history.replaceState({}, "", window.location.pathname);
+    if (checkout === "cancel") {
+      toast.info("Pagamento cancelado");
+      return;
+    }
+    (async () => {
+      toast.loading("Confirmando pagamento...", { id: "confirm" });
+      try {
+        await supabase.functions.invoke("check-subscription");
+      } catch {
+        /* a confirmação também chega pelo webhook */
+      }
+      toast.dismiss("confirm");
+      toast.success("Assinatura confirmada!");
+      invalidatePlanCaches();
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const handleSubscribe = async (plan: PlatformPlan, billingType: BillingPeriod) => {
     const product = productByPlan.get(`${plan.id}:${billingType}`);
 
