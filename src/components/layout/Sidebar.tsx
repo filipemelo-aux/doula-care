@@ -29,6 +29,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { usePlanLimits } from "@/hooks/usePlanLimits";
+import { useHideFreePlan } from "@/hooks/useHideFreePlan";
 import { useAdminUnreadCounts } from "@/hooks/useAdminUnreadCounts";
 import { useAuth } from "@/contexts/AuthContext";
 
