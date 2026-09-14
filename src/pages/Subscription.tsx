@@ -207,9 +207,9 @@ export default function Subscription() {
       return;
     }
 
-    if (isWeb && !isDev) {
+    if (isWeb) {
       toast.info(
-        "Assinaturas são processadas pela loja oficial quando o app estiver instalado no iOS ou Android."
+        "A assinatura é feita dentro do aplicativo, pela App Store ou Google Play."
       );
       return;
     }
