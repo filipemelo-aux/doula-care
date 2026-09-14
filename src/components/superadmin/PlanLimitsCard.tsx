@@ -177,6 +177,26 @@ export function PlanLimitsCard() {
         Limites dos Planos
       </h2>
 
+      <Card>
+        <CardContent className="p-4 flex items-center justify-between gap-4">
+          <div className="min-w-0">
+            <p className="text-sm font-medium text-foreground">
+              Ocultar plano Free na área de assinatura
+            </p>
+            <p className="text-xs text-muted-foreground">
+              As doulas continuam no Free normalmente, mas não veem os detalhes
+              desse plano ao abrir a tela de assinatura.
+            </p>
+          </div>
+          <Switch
+            checked={!!hideFreePlan}
+            onCheckedChange={(v) => hideFreeMutation.mutate(v)}
+            disabled={hideFreeMutation.isPending}
+          />
+        </CardContent>
+      </Card>
+
+
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
         {sortedLimits.map((row) => {
           const config = planConfig[row.plan];
