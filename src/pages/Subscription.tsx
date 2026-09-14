@@ -135,7 +135,7 @@ export default function Subscription() {
       if (!organizationId) return null;
       const { data } = await supabase
         .from("subscription_coupons" as any)
-        .select("id, code, discount_percent, description, expires_at, platform, organization_id")
+        .select("id, code, description, expires_at, platform, organization_id")
         .or(`organization_id.is.null,organization_id.eq.${organizationId}`)
         .eq("is_active", true)
         .in("platform", platform === "web" ? ["both", "ios", "android"] : ["both", platform])
@@ -430,12 +430,12 @@ export default function Subscription() {
                     {myCoupon.code}
                   </span>
                   <Badge variant="secondary" className="text-xs">
-                    {myCoupon.discount_percent}% de desconto
+                    Desconto na loja
                   </Badge>
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">
                   {myCoupon.description ||
-                    "Cupom liberado para você. O desconto é aplicado na cobrança da loja."}
+                    "Cupom liberado para você. Ao aplicar, a loja mostra o desconto antes de confirmar o pagamento."}
                   {myCoupon.expires_at
                     ? ` · válido até ${formatDate(myCoupon.expires_at)}`
                     : ""}
