@@ -14,7 +14,6 @@ import {
   Check,
   Crown,
   Loader2,
-  QrCode,
   RefreshCcw,
   Smartphone,
   Sparkles,
@@ -22,7 +21,6 @@ import {
   Ticket,
 } from "lucide-react";
 import { toast } from "sonner";
-import { PixSubscriptionDialog } from "@/components/subscription/PixSubscriptionDialog";
 import {
   AppStoreSubscriptionService,
   type StoreProduct,
@@ -92,7 +90,6 @@ export default function Subscription() {
 
   const platform = getCurrentPlatform();
   const isWeb = platform === "web";
-  const isDev = isDevEnvironment();
 
   const [purchasing, setPurchasing] = useState<string | null>(null);
   const [restoring, setRestoring] = useState(false);
