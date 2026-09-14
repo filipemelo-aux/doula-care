@@ -157,7 +157,8 @@ Deno.serve(async (req) => {
 
   const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
   const webhookSecret = Deno.env.get("STRIPE_WEBHOOK_SECRET");
-  if (!stripeKey || !webhookSecret) {
+  const webhookToken = Deno.env.get("STRIPE_WEBHOOK_TOKEN");
+  if (!stripeKey) {
     return new Response("Stripe not configured", { status: 500, headers: corsHeaders });
   }
 
@@ -165,13 +166,30 @@ Deno.serve(async (req) => {
   const signature = req.headers.get("stripe-signature");
   const body = await req.text();
 
-  let event: Stripe.Event;
-  try {
-    event = await stripe.webhooks.constructEventAsync(body, signature!, webhookSecret);
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    log("Invalid signature", { message });
-    return new Response(`Webhook Error: ${message}`, { status: 400, headers: corsHeaders });
+  // 1) assinatura oficial do Stripe quando o segredo confere
+  // 2) token exclusivo na URL do endpoint como alternativa
+  // Em ambos os casos os dados são relidos direto da API do Stripe.
+  let event: Stripe.Event | null = null;
+  if (webhookSecret && signature) {
+    try {
+      event = await stripe.webhooks.constructEventAsync(body, signature, webhookSecret);
+    } catch (err) {
+      log("Signature check failed, trying URL token", {
+        message: err instanceof Error ? err.message : String(err),
+      });
+    }
+  }
+
+  if (!event) {
+    const urlToken = new URL(req.url).searchParams.get("t");
+    if (!webhookToken || urlToken !== webhookToken) {
+      return new Response("Unauthorized", { status: 401, headers: corsHeaders });
+    }
+    try {
+      event = JSON.parse(body) as Stripe.Event;
+    } catch {
+      return new Response("Invalid payload", { status: 400, headers: corsHeaders });
+    }
   }
 
   try {
@@ -193,9 +211,12 @@ Deno.serve(async (req) => {
       case "customer.subscription.created":
       case "customer.subscription.updated":
       case "customer.subscription.deleted": {
-        await syncSubscription(stripe, event.data.object as Stripe.Subscription);
+        const incoming = event.data.object as Stripe.Subscription;
+        const fresh = await stripe.subscriptions.retrieve(incoming.id);
+        await syncSubscription(stripe, fresh);
         break;
       }
+
       case "invoice.payment_succeeded":
       case "invoice.payment_failed": {
         const invoice = event.data.object as Stripe.Invoice;
