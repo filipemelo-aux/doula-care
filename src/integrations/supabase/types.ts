@@ -1966,7 +1966,7 @@ export type Database = {
           expires_at: string | null
           id: string
           is_active: boolean
-          organization_id: string
+          organization_id: string | null
           platform: string
           redeemed_at: string | null
           updated_at: string
@@ -1980,7 +1980,7 @@ export type Database = {
           expires_at?: string | null
           id?: string
           is_active?: boolean
-          organization_id: string
+          organization_id?: string | null
           platform?: string
           redeemed_at?: string | null
           updated_at?: string
@@ -1994,7 +1994,7 @@ export type Database = {
           expires_at?: string | null
           id?: string
           is_active?: boolean
-          organization_id?: string
+          organization_id?: string | null
           platform?: string
           redeemed_at?: string | null
           updated_at?: string
