@@ -510,9 +510,9 @@ export default function Subscription() {
           )}
 
           <p className="text-[11px] text-muted-foreground">
-            O desconto é aplicado diretamente pela App Store ou Google Play no
-            momento da assinatura, já no valor cobrado.
+            O desconto é aplicado automaticamente no valor cobrado.
           </p>
+
         </CardContent>
       </Card>
 
