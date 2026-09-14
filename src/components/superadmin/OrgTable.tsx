@@ -243,7 +243,7 @@ export function OrgTable({
             if (!selected) return;
             if (window.confirm(`Tem certeza que deseja excluir "${selectedName}"? Esta ação é irreversível.`)) {
               onDelete(selected.id);
-              setSelectedId(null);
+              setSelectedIds(new Set());
             }
           }}
         >
@@ -269,11 +269,11 @@ export function OrgTable({
           <TableBody>
             {sorted.map((org) => {
               const displayName = (org.nome_exibicao && org.nome_exibicao.trim()) || org.name;
-              const isSelected = org.id === selectedId;
+              const isSelected = selectedIds.has(org.id);
               return (
                 <TableRow
                   key={org.id}
-                  onClick={() => setSelectedId(org.id)}
+                  onClick={() => setSelectedIds(new Set([org.id]))}
                   onDoubleClick={() => onViewDetails?.(org.id)}
                   className={cn("cursor-pointer", isSelected && "bg-primary/10 hover:bg-primary/10")}
                 >
@@ -290,7 +290,7 @@ export function OrgTable({
                         type="button"
                         onClick={(e) => {
                           e.stopPropagation();
-                          setSelectedId(org.id);
+                          setSelectedIds(new Set([org.id]));
                           onViewDetails?.(org.id);
                         }}
                         className="text-xs font-medium text-foreground truncate leading-tight max-w-[180px] text-left hover:underline"
