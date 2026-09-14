@@ -13,25 +13,25 @@ export interface StripePlan {
 
 export const STRIPE_PLANS: StripePlan[] = [
   {
-    priceId: "price_1UFYJsKEFTkSbUTT1FkSTpgJ",
+    priceId: "price_1UFjexD010uWXrBY9J3J6Y1K",
     plan: "pro",
     billing: "monthly",
     planId: "a4bd9641-83cb-41bc-aae3-5028cf13e29d",
   },
   {
-    priceId: "price_1UFYK6KEFTkSbUTTBZZ8zQ1m",
+    priceId: "price_1UFjeyD010uWXrBYAHRdeLCj",
     plan: "pro",
     billing: "yearly",
     planId: "a4bd9641-83cb-41bc-aae3-5028cf13e29d",
   },
   {
-    priceId: "price_1UFYKQKEFTkSbUTT9YH89lNp",
+    priceId: "price_1UFjezD010uWXrBYkGEMY4cE",
     plan: "premium",
     billing: "monthly",
     planId: "e84bd89e-cc54-42f6-8f9c-e9354c7058bd",
   },
   {
-    priceId: "price_1UFYKlKEFTkSbUTTQruEoYa5",
+    priceId: "price_1UFjf0D010uWXrBYoM7vEZTL",
     plan: "premium",
     billing: "yearly",
     planId: "e84bd89e-cc54-42f6-8f9c-e9354c7058bd",

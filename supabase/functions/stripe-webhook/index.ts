@@ -155,7 +155,7 @@ Deno.serve(async (req) => {
     return new Response("ok", { headers: corsHeaders });
   }
 
-  const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
+  const stripeKey = Deno.env.get("STRIPE_LIVE_API_KEY") ?? Deno.env.get("STRIPE_SECRET_KEY");
   const webhookSecret = Deno.env.get("STRIPE_WEBHOOK_SECRET");
   const webhookToken = Deno.env.get("STRIPE_WEBHOOK_TOKEN");
   if (!stripeKey) {
