@@ -135,17 +135,17 @@ export default function Subscription() {
       if (!organizationId) return null;
       const { data } = await supabase
         .from("subscription_coupons" as any)
-        .select("id, code, discount_percent, description, expires_at, platform")
-        .eq("organization_id", organizationId)
+        .select("id, code, discount_percent, description, expires_at, platform, organization_id")
+        .or(`organization_id.is.null,organization_id.eq.${organizationId}`)
         .eq("is_active", true)
         .in("platform", platform === "web" ? ["both", "ios", "android"] : ["both", platform])
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      const row = data as any;
-      if (!row) return null;
-      if (row.expires_at && new Date(row.expires_at) < new Date()) return null;
-      return row;
+        .order("created_at", { ascending: false });
+      const rows = ((data as any[]) || []).filter(
+        (r) => !r.expires_at || new Date(r.expires_at) >= new Date()
+      );
+      if (rows.length === 0) return null;
+      // cupom exclusivo da doula tem prioridade sobre o cupom geral
+      return rows.find((r) => r.organization_id) || rows[0];
     },
     enabled: !!organizationId,
   });
