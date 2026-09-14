@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Input } from "@/components/ui/input";
 import {
   Apple,
   Check,
@@ -18,6 +19,7 @@ import {
   Smartphone,
   Sparkles,
   Star,
+  Ticket,
 } from "lucide-react";
 import { toast } from "sonner";
 import { PixSubscriptionDialog } from "@/components/subscription/PixSubscriptionDialog";
@@ -94,6 +96,8 @@ export default function Subscription() {
 
   const [purchasing, setPurchasing] = useState<string | null>(null);
   const [restoring, setRestoring] = useState(false);
+  const [couponInput, setCouponInput] = useState("");
+  const [redeeming, setRedeeming] = useState(false);
   // Pix é permitido no Google Play e na web — nunca no iOS (regra 3.1.1 da Apple)
   const pixAllowed = platform !== "ios";
   const [pixTarget, setPixTarget] = useState<{
@@ -121,6 +125,27 @@ export default function Subscription() {
         .eq("status", "lifetime_active")
         .limit(1);
       return (data as any[])?.length > 0;
+    },
+    enabled: !!organizationId,
+  });
+
+  const { data: myCoupon } = useQuery({
+    queryKey: ["my-subscription-coupon", organizationId, platform],
+    queryFn: async () => {
+      if (!organizationId) return null;
+      const { data } = await supabase
+        .from("subscription_coupons" as any)
+        .select("id, code, discount_percent, description, expires_at, platform")
+        .eq("organization_id", organizationId)
+        .eq("is_active", true)
+        .in("platform", platform === "web" ? ["both", "ios", "android"] : ["both", platform])
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      const row = data as any;
+      if (!row) return null;
+      if (row.expires_at && new Date(row.expires_at) < new Date()) return null;
+      return row;
     },
     enabled: !!organizationId,
   });
@@ -236,6 +261,29 @@ export default function Subscription() {
       }
     } finally {
       setRestoring(false);
+    }
+  };
+
+  const handleRedeemCoupon = async (rawCode: string, couponId?: string) => {
+    setRedeeming(true);
+    try {
+      const result = await AppStoreSubscriptionService.redeemOfferCode(rawCode);
+      if (result.ok) {
+        toast.success(result.message);
+        if (couponId) {
+          await supabase
+            .from("subscription_coupons" as any)
+            .update({ redeemed_at: new Date().toISOString() } as any)
+            .eq("id", couponId);
+        }
+        invalidatePlanCaches();
+      } else {
+        toast.info(result.message);
+      }
+    } catch (err: any) {
+      toast.error(err?.message || "Não foi possível resgatar o cupom");
+    } finally {
+      setRedeeming(false);
     }
   };
 
@@ -364,6 +412,71 @@ export default function Subscription() {
               </Button>
             )}
           </div>
+        </CardContent>
+      </Card>
+
+      <Card className="card-glass">
+        <CardContent className="pt-6 space-y-4">
+          <div className="flex items-center gap-2">
+            <Ticket className="w-4 h-4 text-primary" />
+            <p className="font-semibold text-foreground">Cupom de desconto</p>
+          </div>
+
+          {myCoupon ? (
+            <div className="rounded-xl bg-primary/5 px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="font-mono font-semibold text-foreground">
+                    {myCoupon.code}
+                  </span>
+                  <Badge variant="secondary" className="text-xs">
+                    {myCoupon.discount_percent}% de desconto
+                  </Badge>
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {myCoupon.description ||
+                    "Cupom liberado para você. O desconto é aplicado na cobrança da loja."}
+                  {myCoupon.expires_at
+                    ? ` · válido até ${formatDate(myCoupon.expires_at)}`
+                    : ""}
+                </p>
+              </div>
+              <Button
+                size="sm"
+                disabled={redeeming}
+                onClick={() => handleRedeemCoupon(myCoupon.code, myCoupon.id)}
+              >
+                {redeeming ? (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                ) : null}
+                Aplicar desconto
+              </Button>
+            </div>
+          ) : (
+            <div className="flex flex-col sm:flex-row gap-2">
+              <Input
+                value={couponInput}
+                onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
+                placeholder="Digite seu código"
+                className="sm:max-w-xs font-mono"
+              />
+              <Button
+                variant="outline"
+                disabled={redeeming || couponInput.trim().length < 3}
+                onClick={() => handleRedeemCoupon(couponInput)}
+              >
+                {redeeming ? (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                ) : null}
+                Aplicar
+              </Button>
+            </div>
+          )}
+
+          <p className="text-[11px] text-muted-foreground">
+            O desconto é aplicado diretamente pela App Store ou Google Play no
+            momento da assinatura, já no valor cobrado.
+          </p>
         </CardContent>
       </Card>
 
