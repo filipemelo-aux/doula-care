@@ -19,7 +19,7 @@ import { Ticket, Plus, Trash2, Power } from "lucide-react";
 
 interface CouponRow {
   id: string;
-  organization_id: string;
+  organization_id: string | null;
   code: string;
   platform: string;
   discount_percent: number;
@@ -68,7 +68,8 @@ export function SubscriptionCouponsCard() {
     },
   });
 
-  const orgName = (id: string) => {
+  const orgName = (id: string | null) => {
+    if (!id) return "Todas as doulas";
     const o = (orgs || []).find((x: any) => x.id === id);
     return o?.nome_exibicao || o?.name || "—";
   };
@@ -76,7 +77,7 @@ export function SubscriptionCouponsCard() {
   const createMutation = useMutation({
     mutationFn: async () => {
       const { error } = await supabase.from("subscription_coupons" as any).insert({
-        organization_id: orgId,
+        organization_id: orgId === "all" || !orgId ? null : orgId,
         code: code.trim(),
         platform,
         discount_percent: Number(percent) || 0,
@@ -124,7 +125,7 @@ export function SubscriptionCouponsCard() {
     },
   });
 
-  const canCreate = !!orgId && code.trim().length >= 3 && Number(percent) > 0;
+  const canCreate = code.trim().length >= 3 && Number(percent) > 0;
 
   return (
     <Card className="card-glass">
@@ -135,17 +136,19 @@ export function SubscriptionCouponsCard() {
         </div>
         <p className="text-xs text-muted-foreground -mt-3">
           O código precisa existir como oferta promocional na App Store Connect /
-          Google Play. Aqui você só vincula esse código a uma doula específica.
+          Google Play. Aqui você vincula esse código a uma doula específica ou
+          deixa como cupom geral, válido para qualquer doula.
         </p>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <div className="space-y-1.5">
             <Label className="text-xs">Doula / organização</Label>
-            <Select value={orgId} onValueChange={setOrgId}>
+            <Select value={orgId || "all"} onValueChange={setOrgId}>
               <SelectTrigger>
-                <SelectValue placeholder="Selecione" />
+                <SelectValue placeholder="Todas as doulas (cupom geral)" />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="all">Todas as doulas (cupom geral)</SelectItem>
                 {(orgs || []).map((o: any) => (
                   <SelectItem key={o.id} value={o.id}>
                     {o.nome_exibicao || o.name}
