@@ -58,6 +58,38 @@ export function PlanLimitsCard() {
   const queryClient = useQueryClient();
   const [editValues, setEditValues] = useState<Record<string, Partial<LimitsRow>>>({});
 
+  const { data: hideFreePlan } = useQuery({
+    queryKey: ["system-config-hide-free-plan"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("system_config")
+        .select("value")
+        .eq("key", "hide_free_plan")
+        .maybeSingle();
+      return (data as any)?.value === "true";
+    },
+  });
+
+  const hideFreeMutation = useMutation({
+    mutationFn: async (next: boolean) => {
+      const { error } = await supabase
+        .from("system_config")
+        .upsert(
+          { key: "hide_free_plan", value: next ? "true" : "false" } as any,
+          { onConflict: "key" }
+        );
+      if (error) throw error;
+    },
+    onSuccess: (_d, next) => {
+      queryClient.invalidateQueries({ queryKey: ["system-config-hide-free-plan"] });
+      toast.success(
+        next ? "Plano Free oculto para as doulas" : "Plano Free visível para as doulas"
+      );
+    },
+    onError: (e: any) => toast.error(e?.message || "Erro ao atualizar"),
+  });
+
+
   const { data: limits, isLoading } = useQuery({
     queryKey: ["platform-plan-limits-admin"],
     queryFn: async () => {
