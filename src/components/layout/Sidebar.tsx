@@ -67,6 +67,7 @@ export function Sidebar({ isOpen, onToggle, onNavigate }: SidebarProps) {
   const { logoUrl: orgLogo, displayName } = useOrgBranding();
   const { unreadMessages, unreadNotifications } = useAdminUnreadCounts();
   const { organizationId, role } = useAuth();
+  const hideFreePlan = useHideFreePlan();
   const isModerator = role === "moderator";
 
   // Moderadores não têm acesso ao módulo Financeiro (entradas, despesas, cobranças e relatórios)
@@ -119,6 +120,14 @@ export function Sidebar({ isOpen, onToggle, onNavigate }: SidebarProps) {
     pro: "text-primary",
     premium: "text-amber-600",
   };
+
+  // Oculta o card do plano quando o Super Admin escondeu o plano Free
+  const hidePlanCard = hideFreePlan && plan === "free";
+
+  const planDescription = (() => {
+    if (limits.maxClients === null) return "Gestantes ilimitadas";
+    return `Limite de ${limits.maxClients} ${limits.maxClients === 1 ? "gestante" : "gestantes"}`;
+  })();
 
   return (
     <aside
