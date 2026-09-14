@@ -29,6 +29,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { usePlanLimits } from "@/hooks/usePlanLimits";
+import { useHideFreePlan } from "@/hooks/useHideFreePlan";
 import { useAdminUnreadCounts } from "@/hooks/useAdminUnreadCounts";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -67,6 +68,7 @@ export function Sidebar({ isOpen, onToggle, onNavigate }: SidebarProps) {
   const { logoUrl: orgLogo, displayName } = useOrgBranding();
   const { unreadMessages, unreadNotifications } = useAdminUnreadCounts();
   const { organizationId, role } = useAuth();
+  const hideFreePlan = useHideFreePlan();
   const isModerator = role === "moderator";
 
   // Moderadores não têm acesso ao módulo Financeiro (entradas, despesas, cobranças e relatórios)
@@ -119,6 +121,14 @@ export function Sidebar({ isOpen, onToggle, onNavigate }: SidebarProps) {
     pro: "text-primary",
     premium: "text-amber-600",
   };
+
+  // Oculta o card do plano quando o Super Admin escondeu o plano Free
+  const hidePlanCard = hideFreePlan && plan === "free";
+
+  const planDescription = (() => {
+    if (limits.maxClients === null) return "Gestantes ilimitadas";
+    return `Limite de ${limits.maxClients} ${limits.maxClients === 1 ? "gestante" : "gestantes"}`;
+  })();
 
   return (
     <aside
@@ -292,18 +302,20 @@ export function Sidebar({ isOpen, onToggle, onNavigate }: SidebarProps) {
       </div>
 
       {/* Footer — info card style */}
-      <div className={cn("px-4 pb-4 pt-2", !isOpen && "lg:hidden")}>
-        <div className="rounded-xl bg-muted/40 p-3.5">
-          <div className="flex items-center gap-2 mb-1">
-            <span className={cn("text-xs font-medium", planColors[plan] || "text-muted-foreground")}>
-              {planLabel}
-            </span>
+      {!hidePlanCard && (
+        <div className={cn("px-4 pb-4 pt-2", !isOpen && "lg:hidden")}>
+          <div className="rounded-xl bg-muted/40 p-3.5">
+            <div className="flex items-center gap-2 mb-1">
+              <span className={cn("text-xs font-medium", planColors[plan] || "text-muted-foreground")}>
+                {planLabel}
+              </span>
+            </div>
+            <p className="text-[11px] text-muted-foreground/60 leading-relaxed">
+              {planDescription}
+            </p>
           </div>
-          <p className="text-[11px] text-muted-foreground/60 leading-relaxed">
-            {plan === "free" ? "Limite de 5 gestantes" : plan === "pro" ? "Gestantes ilimitadas" : "Recursos avançados"}
-          </p>
         </div>
-      </div>
+      )}
     </aside>
   );
 }

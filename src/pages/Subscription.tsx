@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 import { useAuth } from "@/contexts/AuthContext";
 import { usePlanLimits } from "@/hooks/usePlanLimits";
+import { useHideFreePlan } from "@/hooks/useHideFreePlan";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -144,17 +145,7 @@ export default function Subscription() {
     enabled: !!organizationId,
   });
 
-  const { data: hideFreePlan } = useQuery({
-    queryKey: ["system-config-hide-free-plan"],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from("system_config")
-        .select("value")
-        .eq("key", "hide_free_plan")
-        .maybeSingle();
-      return (data as any)?.value === "true";
-    },
-  });
+  const hideFreePlan = useHideFreePlan();
 
   const { data: allPlans, isLoading } = useQuery({
     queryKey: ["platform-plans-subscription"],
