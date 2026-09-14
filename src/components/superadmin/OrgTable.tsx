@@ -77,7 +77,8 @@ export function OrgTable({
 }: Props) {
   const [sortKey, setSortKey] = useState<SortKey>(defaultSort);
   const [sortDir, setSortDir] = useState<SortDir>(defaultDir);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkPlan, setBulkPlan] = useState<string>("");
   const [activity, setActivity] = useState<ActivityFilter>("all");
 
   const toggleSort = (key: SortKey) => {
@@ -125,11 +126,30 @@ export function OrgTable({
     return arr;
   }, [orgs, sortKey, sortDir, activity]);
 
-  const selected = sorted.find((o) => o.id === selectedId) || null;
+  const selectedOrgs = sorted.filter((o) => selectedIds.has(o.id));
+  const selected = selectedOrgs.length === 1 ? selectedOrgs[0] : null;
   const selectedName = selected ? (selected.nome_exibicao?.trim() || selected.name) : "";
+  const allSelected = sorted.length > 0 && selectedOrgs.length === sorted.length;
 
   const toggleSelection = (orgId: string) => {
-    setSelectedId((current) => (current === orgId ? null : orgId));
+    setSelectedIds((current) => {
+      const next = new Set(current);
+      if (next.has(orgId)) next.delete(orgId);
+      else next.add(orgId);
+      return next;
+    });
+  };
+
+  const toggleAll = () => {
+    setSelectedIds(allSelected ? new Set() : new Set(sorted.map((o) => o.id)));
+  };
+
+  const applyBulkPlan = (plan: string) => {
+    if (!plan || selectedOrgs.length === 0) return;
+    selectedOrgs.forEach((o) => {
+      if (o.plan !== plan) onPlanChange(o.id, plan as "free" | "pro" | "premium");
+    });
+    setBulkPlan("");
   };
 
   const SortHeader = ({ label, k, className }: { label: string; k: SortKey; className?: string }) => (
@@ -164,6 +184,23 @@ export function OrgTable({
             <SelectItem value="inactive">Inativas +30 dias</SelectItem>
           </SelectContent>
         </Select>
+        {selectedOrgs.length > 1 && (
+          <>
+            <span className="shrink-0 text-[11px] font-medium text-muted-foreground px-1">
+              {selectedOrgs.length} selecionadas
+            </span>
+            <Select value={bulkPlan} onValueChange={applyBulkPlan}>
+              <SelectTrigger className="h-7 w-[142px] shrink-0 px-2 text-[11px]">
+                <SelectValue placeholder="Aplicar plano..." />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="free">Mudar para Free</SelectItem>
+                <SelectItem value="pro">Mudar para Pro</SelectItem>
+                <SelectItem value="premium">Mudar para Premium</SelectItem>
+              </SelectContent>
+            </Select>
+          </>
+        )}
         <Button
           variant="ghost"
           size="sm"
@@ -206,7 +243,7 @@ export function OrgTable({
             if (!selected) return;
             if (window.confirm(`Tem certeza que deseja excluir "${selectedName}"? Esta ação é irreversível.`)) {
               onDelete(selected.id);
-              setSelectedId(null);
+              setSelectedIds(new Set());
             }
           }}
         >
@@ -219,7 +256,13 @@ export function OrgTable({
         <Table className="min-w-[860px]">
           <TableHeader>
             <TableRow className="hover:bg-transparent">
-              <TableHead className="h-8 w-10 px-2" />
+              <TableHead className="h-8 w-10 px-2">
+                <Checkbox
+                  checked={allSelected}
+                  onCheckedChange={toggleAll}
+                  aria-label="Selecionar todas"
+                />
+              </TableHead>
               <SortHeader label="Organização" k="name" />
               <SortHeader label="Email" k="email" />
               <SortHeader label="Plano" k="plan" />
@@ -232,11 +275,11 @@ export function OrgTable({
           <TableBody>
             {sorted.map((org) => {
               const displayName = (org.nome_exibicao && org.nome_exibicao.trim()) || org.name;
-              const isSelected = org.id === selectedId;
+              const isSelected = selectedIds.has(org.id);
               return (
                 <TableRow
                   key={org.id}
-                  onClick={() => setSelectedId(org.id)}
+                  onClick={() => setSelectedIds(new Set([org.id]))}
                   onDoubleClick={() => onViewDetails?.(org.id)}
                   className={cn("cursor-pointer", isSelected && "bg-primary/10 hover:bg-primary/10")}
                 >
@@ -253,7 +296,7 @@ export function OrgTable({
                         type="button"
                         onClick={(e) => {
                           e.stopPropagation();
-                          setSelectedId(org.id);
+                          setSelectedIds(new Set([org.id]));
                           onViewDetails?.(org.id);
                         }}
                         className="text-xs font-medium text-foreground truncate leading-tight max-w-[180px] text-left hover:underline"
