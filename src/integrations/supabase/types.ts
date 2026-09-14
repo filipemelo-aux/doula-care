@@ -1962,7 +1962,7 @@ export type Database = {
           created_at: string
           created_by: string | null
           description: string | null
-          discount_percent: number
+          discount_percent: number | null
           expires_at: string | null
           id: string
           is_active: boolean
@@ -1976,7 +1976,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           description?: string | null
-          discount_percent?: number
+          discount_percent?: number | null
           expires_at?: string | null
           id?: string
           is_active?: boolean
@@ -1990,7 +1990,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           description?: string | null
-          discount_percent?: number
+          discount_percent?: number | null
           expires_at?: string | null
           id?: string
           is_active?: boolean
