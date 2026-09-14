@@ -346,7 +346,7 @@ export default function Subscription() {
   const hasActiveSub = !!activeSubscription && !isSubscriptionExpired;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-20">
       <div className="page-header">
         <h1 className="page-title">Assinatura</h1>
         <p className="page-description">
@@ -652,7 +652,7 @@ export default function Subscription() {
       )}
 
       {/* Informações obrigatórias de assinatura */}
-      <Card className="card-glass mb-6">
+      <Card className="card-glass">
         <CardContent className="pt-6 space-y-2 text-xs text-muted-foreground">
           <p className="font-medium text-foreground">Sobre as assinaturas</p>
           <p>
