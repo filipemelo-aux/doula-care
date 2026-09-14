@@ -1,0 +1,110 @@
+import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import Stripe from "https://esm.sh/stripe@18.5.0";
+import { createClient } from "npm:@supabase/supabase-js@2.57.2";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+};
+
+// Preços Stripe (checkout web). Os mesmos planos existem nas lojas via IAP.
+const PRICE_IDS: Record<string, Record<string, string>> = {
+  pro: {
+    monthly: "price_1UFYJsKEFTkSbUTT1FkSTpgJ",
+    yearly: "price_1UFYK6KEFTkSbUTTBZZ8zQ1m",
+  },
+  premium: {
+    monthly: "price_1UFYKQKEFTkSbUTT9YH89lNp",
+    yearly: "price_1UFYKlKEFTkSbUTTQruEoYa5",
+  },
+};
+
+const logStep = (step: string, details?: unknown) => {
+  console.log(`[CREATE-CHECKOUT] ${step}${details ? ` - ${JSON.stringify(details)}` : ""}`);
+};
+
+serve(async (req) => {
+  if (req.method === "OPTIONS") {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
+    if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not set");
+
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) throw new Error("No authorization header provided");
+
+    const supabaseClient = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_ANON_KEY") ?? ""
+    );
+
+    const token = authHeader.replace("Bearer ", "");
+    const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
+    if (userError) throw new Error(`Authentication error: ${userError.message}`);
+    const user = userData.user;
+    if (!user?.email) throw new Error("User not authenticated or email not available");
+    logStep("User authenticated", { userId: user.id });
+
+    const body = await req.json().catch(() => ({}));
+    const plan = String(body?.plan ?? "").toLowerCase();
+    const billing = String(body?.billing ?? "").toLowerCase();
+    const couponCode = typeof body?.coupon === "string" ? body.coupon.trim() : "";
+
+    const priceId = PRICE_IDS[plan]?.[billing];
+    if (!priceId) {
+      return new Response(
+        JSON.stringify({ error: "Plano ou periodicidade inválidos" }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
+      );
+    }
+
+    const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
+
+    const customers = await stripe.customers.list({ email: user.email, limit: 1 });
+    const customerId = customers.data.length > 0 ? customers.data[0].id : undefined;
+
+    const origin = req.headers.get("origin") || "https://doulacare.app.br";
+
+    // Cupom opcional: aceita um código promocional válido cadastrado no Stripe
+    let discounts: Stripe.Checkout.SessionCreateParams.Discount[] | undefined;
+    if (couponCode) {
+      const promos = await stripe.promotionCodes.list({
+        code: couponCode,
+        active: true,
+        limit: 1,
+      });
+      if (promos.data.length > 0) {
+        discounts = [{ promotion_code: promos.data[0].id }];
+      }
+    }
+
+    const session = await stripe.checkout.sessions.create({
+      customer: customerId,
+      customer_email: customerId ? undefined : user.email,
+      line_items: [{ price: priceId, quantity: 1 }],
+      mode: "subscription",
+      allow_promotion_codes: discounts ? undefined : true,
+      discounts,
+      success_url: `${origin}/admin/assinatura?checkout=success`,
+      cancel_url: `${origin}/admin/assinatura?checkout=cancel`,
+      metadata: { user_id: user.id, plan, billing },
+    });
+
+    logStep("Checkout session created", { sessionId: session.id });
+
+    return new Response(JSON.stringify({ url: session.url }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status: 200,
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    logStep("ERROR", { message });
+    return new Response(JSON.stringify({ error: message }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status: 500,
+    });
+  }
+});

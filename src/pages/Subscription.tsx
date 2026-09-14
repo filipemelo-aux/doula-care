@@ -196,17 +196,59 @@ export default function Subscription() {
     queryClient.invalidateQueries({ queryKey: ["platform-plan-limits"] });
   };
 
+  // Retorno do checkout web: confirma a assinatura com o provedor de pagamento
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const checkout = params.get("checkout");
+    if (!checkout) return;
+    window.history.replaceState({}, "", window.location.pathname);
+    if (checkout === "cancel") {
+      toast.info("Pagamento cancelado");
+      return;
+    }
+    (async () => {
+      toast.loading("Confirmando pagamento...", { id: "confirm" });
+      try {
+        await supabase.functions.invoke("check-subscription");
+      } catch {
+        /* a confirmação também chega pelo webhook */
+      }
+      toast.dismiss("confirm");
+      toast.success("Assinatura confirmada!");
+      invalidatePlanCaches();
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const handleSubscribe = async (plan: PlatformPlan, billingType: BillingPeriod) => {
     const product = productByPlan.get(`${plan.id}:${billingType}`);
-    if (!product) {
-      toast.error("Este plano ainda não está disponível na loja.");
+
+    if (isWeb) {
+      setPurchasing(product?.productId || `${plan.id}:${billingType}`);
+      try {
+        toast.loading("Abrindo pagamento seguro...", { id: "checkout" });
+        const { data, error } = await supabase.functions.invoke("create-checkout", {
+          body: {
+            plan: plan.plan,
+            billing: billingType,
+            coupon: myCoupon?.code || couponInput.trim() || undefined,
+          },
+        });
+        toast.dismiss("checkout");
+        if (error) throw error;
+        if (!data?.url) throw new Error("Não foi possível iniciar o pagamento");
+        window.location.href = data.url;
+      } catch (err: any) {
+        toast.dismiss("checkout");
+        toast.error(err?.message || "Não foi possível iniciar o pagamento");
+      } finally {
+        setPurchasing(null);
+      }
       return;
     }
 
-    if (isWeb) {
-      toast.info(
-        "A assinatura é feita dentro do aplicativo, pela App Store ou Google Play."
-      );
+    if (!product) {
+      toast.error("Este plano ainda não está disponível na loja.");
       return;
     }
 
@@ -320,11 +362,12 @@ export default function Subscription() {
               <Smartphone className="w-5 h-5 text-amber-600 mt-0.5 shrink-0" />
               <div>
                 <p className="text-sm font-medium text-foreground">
-                  Assinaturas são feitas dentro do aplicativo oficial
+                  Pagamento seguro por cartão
                 </p>
                 <p className="text-xs text-muted-foreground mt-1">
-                  As assinaturas são processadas pela loja oficial quando o app
-                  estiver instalado no iOS (App Store) ou Android (Google Play).
+                  No navegador, a assinatura é feita em uma página de pagamento
+                  segura. Pelo aplicativo instalado, a cobrança acontece na App
+                  Store ou no Google Play.
                 </p>
               </div>
             </div>
@@ -590,7 +633,7 @@ export default function Subscription() {
                       <Button
                         className="w-full"
                         onClick={() => handleSubscribe(plan, "monthly")}
-                        disabled={purchasingThis || !monthlyProduct}
+                        disabled={purchasingThis || (!isWeb && !monthlyProduct)}
                       >
                         {purchasing === monthlyProduct?.productId ? (
                           <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -601,14 +644,14 @@ export default function Subscription() {
                         variant="outline"
                         className="w-full"
                         onClick={() => handleSubscribe(plan, "yearly")}
-                        disabled={purchasingThis || !yearlyProduct}
+                        disabled={purchasingThis || (!isWeb && !yearlyProduct)}
                       >
                         {purchasing === yearlyProduct?.productId ? (
                           <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                         ) : null}
                         Assinar anual — {yearlyLabel}
                       </Button>
-                      {!monthlyProduct && !yearlyProduct && (
+                      {!isWeb && !monthlyProduct && !yearlyProduct && (
                         <p className="text-[11px] text-muted-foreground text-center">
                           Produto não mapeado para esta plataforma.
                         </p>
