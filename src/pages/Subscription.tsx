@@ -198,13 +198,9 @@ export default function Subscription() {
 
   const handleSubscribe = async (plan: PlatformPlan, billingType: BillingPeriod) => {
     const product = productByPlan.get(`${plan.id}:${billingType}`);
-    if (!product) {
-      toast.error("Este plano ainda não está disponível na loja.");
-      return;
-    }
 
     if (isWeb) {
-      setPurchasing(product.productId);
+      setPurchasing(product?.productId || `${plan.id}:${billingType}`);
       try {
         toast.loading("Abrindo pagamento seguro...", { id: "checkout" });
         const { data, error } = await supabase.functions.invoke("create-checkout", {
