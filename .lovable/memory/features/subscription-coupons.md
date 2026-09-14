@@ -4,10 +4,11 @@ description: Cupons por organização vinculados a códigos de oferta da App Sto
 type: feature
 ---
 
-Tabela `subscription_coupons`: organization_id (obrigatório), code, platform (ios|android|both), discount_percent, description, expires_at, is_active, redeemed_at.
+Tabela `subscription_coupons`: organization_id (nullable = cupom geral), code, platform (ios|android|both), description, expires_at, is_active, redeemed_at. `discount_percent` foi descontinuado (coluna nullable, não usada).
 
 Regras:
-- Cupom é **sempre específico de uma doula/organização** (criado pelo Super Admin em Faturamento → Cupons de desconto).
+- Cupom pode ser **específico de uma doula/organização** ou **geral** (organization_id NULL). Cupom exclusivo tem prioridade na exibição.
+- **Nunca definir percentual/valor de desconto no app** — o desconto é configurado na oferta promocional da loja e exibido pela própria loja na tela de resgate/checkout. O app só vincula e aplica o código.
 - O `code` **precisa existir como oferta promocional na App Store Connect / Google Play**. O app não calcula desconto — quem aplica é a loja.
 - iOS: `presentCodeRedemptionSheet` do RevenueCat, com fallback `https://apps.apple.com/redeem?ctx=offercodes&code=...`.
 - Android: `https://play.google.com/redeem?code=...`.

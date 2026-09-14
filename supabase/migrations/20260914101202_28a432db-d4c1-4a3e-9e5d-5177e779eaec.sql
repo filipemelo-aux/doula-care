@@ -1,0 +1,1 @@
+ALTER TABLE public.subscription_coupons ALTER COLUMN discount_percent DROP NOT NULL;
