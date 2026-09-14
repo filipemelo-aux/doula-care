@@ -55,6 +55,31 @@ function dbRowToLimits(row: any): PlanLimits {
 
 export function usePlanLimits() {
   const { organizationId, user, isSuperAdmin } = useAuth();
+  const queryClient = useQueryClient();
+
+  // Sincronização em tempo real com as alterações feitas pelo Super Admin
+  useEffect(() => {
+    const channel = supabase
+      .channel("plan-limits-sync")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "platform_plan_limits" },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ["platform-plan-limits"] });
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "organizations" },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ["org-plan"] });
+        }
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient]);
 
   // 1. Org data — source of truth for the plan slug
   const { data: orgData, isLoading: orgLoading } = useQuery({
@@ -126,7 +151,7 @@ export function usePlanLimits() {
       if (error) return null;
       return data as any;
     },
-    staleTime: 5 * 60 * 1000,
+    staleTime: 0,
   });
 
   // 4. Client count
@@ -204,7 +229,7 @@ export function usePlanLimits() {
       if (error) return null;
       return data as any;
     },
-    staleTime: 5 * 60 * 1000,
+    staleTime: 0,
     enabled: effectivePlan !== plan, // only fetch if different from already-fetched plan
   });
 
