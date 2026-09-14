@@ -652,7 +652,7 @@ export default function Subscription() {
       )}
 
       {/* Informações obrigatórias de assinatura */}
-      <Card className="card-glass">
+      <Card className="card-glass mb-6">
         <CardContent className="pt-6 space-y-2 text-xs text-muted-foreground">
           <p className="font-medium text-foreground">Sobre as assinaturas</p>
           <p>
