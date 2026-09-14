@@ -71,7 +71,9 @@ async function syncSubscription(
   const userId = await resolveUserId(
     supabase,
     metadataUserId ?? (subscription.metadata?.user_id as string | undefined),
-    email
+    email,
+    customerId
+
   );
   if (!userId) {
     log("User not resolved", { customerId, email });
