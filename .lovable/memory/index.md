@@ -1,3 +1,4 @@
 - [Welcome alignment](mem://features/welcome-messages-alignment) — Boas-vindas doula/gestante separadas, opt-in por papel, persistidas no banco
 - [Cadastro verificado da doula](mem://features/doula-registration-verification) — Wizard com código por e-mail, dados LGPD e formulário obrigatório para doulas antigas
 - [Cupons de assinatura](mem://features/subscription-coupons) — Cupons por doula vinculados a códigos de oferta da App Store/Google Play
+- [Stripe live billing](mem://features/stripe-live-billing) — Chave live, price IDs reais, webhook live; FSM cobra no web, lojas no mobile
