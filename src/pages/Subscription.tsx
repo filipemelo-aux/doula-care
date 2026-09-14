@@ -15,7 +15,6 @@ import {
   Crown,
   Loader2,
   RefreshCcw,
-  Smartphone,
   Sparkles,
   Star,
   Ticket,
@@ -248,7 +247,7 @@ export default function Subscription() {
     }
 
     if (!product) {
-      toast.error("Este plano ainda não está disponível na loja.");
+      toast.error("Este plano ainda não está disponível.");
       return;
     }
 
@@ -442,12 +441,12 @@ export default function Subscription() {
                     {myCoupon.code}
                   </span>
                   <Badge variant="secondary" className="text-xs">
-                    Desconto na loja
+                    Desconto
                   </Badge>
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">
                   {myCoupon.description ||
-                    "Cupom liberado para você. Ao aplicar, a loja mostra o desconto antes de confirmar o pagamento."}
+                    "Cupom liberado para você. Aplique para ver o desconto antes de confirmar o pagamento."}
                   {myCoupon.expires_at
                     ? ` · válido até ${formatDate(myCoupon.expires_at)}`
                     : ""}
