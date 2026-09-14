@@ -365,6 +365,64 @@ export const AppStoreSubscriptionService = {
   },
 
   /**
+   * Resgata um código de oferta (cupom) diretamente na loja.
+   * iOS: abre a folha nativa de resgate (StoreKit). Android: abre o resgate
+   * da Google Play. Web: não há como aplicar desconto de loja.
+   */
+  async redeemOfferCode(
+    code: string
+  ): Promise<{ ok: boolean; message: string }> {
+    const trimmed = code.trim();
+    if (!trimmed) return { ok: false, message: "Informe o código do cupom." };
+    const platform = getCurrentPlatform();
+
+    if (platform === "ios") {
+      try {
+        await setupNativePlugin();
+        const Purchases: any = await loadNativePurchases();
+        if (Purchases?.presentCodeRedemptionSheet) {
+          await Purchases.presentCodeRedemptionSheet();
+          return {
+            ok: true,
+            message:
+              "Tela de resgate da App Store aberta. Confirme o código para aplicar o desconto.",
+          };
+        }
+      } catch (err) {
+        console.warn("[IAP] presentCodeRedemptionSheet falhou:", err);
+      }
+      // Fallback universal da Apple
+      window.open(
+        `https://apps.apple.com/redeem?ctx=offercodes&code=${encodeURIComponent(trimmed)}`,
+        "_blank"
+      );
+      return {
+        ok: true,
+        message: "Abrimos o resgate da App Store para aplicar seu desconto.",
+      };
+    }
+
+    if (platform === "android") {
+      window.open(
+        `https://play.google.com/redeem?code=${encodeURIComponent(trimmed)}`,
+        "_blank"
+      );
+      return {
+        ok: true,
+        message: "Abrimos o resgate da Google Play para aplicar seu desconto.",
+      };
+    }
+
+    return {
+      ok: false,
+      message:
+        "O desconto é aplicado pela loja: abra o app no iPhone ou no Android para resgatar o cupom.",
+    };
+  },
+
+
+
+  /**
    * Restaura compras existentes do usuário e sincroniza com o backend.
    */
   async restorePurchases(): Promise<{ restored: boolean; message: string }> {
