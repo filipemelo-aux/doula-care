@@ -446,6 +446,22 @@ export default function Subscription() {
               )}
             </div>
 
+            {isWeb && !isLifetime && activeSubscription ? (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleManageSubscription}
+                disabled={managing}
+              >
+                {managing ? (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                ) : (
+                  <RefreshCcw className="w-4 h-4 mr-2" />
+                )}
+                Gerenciar assinatura
+              </Button>
+            ) : null}
+
             {!isWeb && !isLifetime && (
               <Button
                 variant="outline"
@@ -461,6 +477,7 @@ export default function Subscription() {
                 Restaurar compras
               </Button>
             )}
+
           </div>
         </CardContent>
       </Card>
@@ -472,7 +489,33 @@ export default function Subscription() {
             <p className="font-semibold text-foreground">Cupom de desconto</p>
           </div>
 
-          {myCoupon ? (
+          {appliedCoupon ? (
+            <div className="rounded-xl bg-primary/10 px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="font-mono font-semibold text-foreground">
+                    {appliedCoupon.code}
+                  </span>
+                  <Badge variant="secondary" className="text-xs">
+                    Aplicado
+                  </Badge>
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {appliedCoupon.description}
+                </p>
+              </div>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => {
+                  setAppliedCoupon(null);
+                  setCouponInput("");
+                }}
+              >
+                Remover
+              </Button>
+            </div>
+          ) : myCoupon ? (
             <div className="rounded-xl bg-primary/5 px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <div>
                 <div className="flex items-center gap-2 flex-wrap">
@@ -531,6 +574,7 @@ export default function Subscription() {
           <p className="text-[11px] text-muted-foreground">
             O desconto é aplicado automaticamente no valor cobrado.
           </p>
+
 
         </CardContent>
       </Card>
