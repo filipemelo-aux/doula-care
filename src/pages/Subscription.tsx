@@ -329,7 +329,6 @@ export default function Subscription() {
                 <p className="text-xs text-muted-foreground mt-1">
                   As assinaturas são processadas pela loja oficial quando o app
                   estiver instalado no iOS (App Store) ou Android (Google Play).
-                  {isDev && " Em modo desenvolvimento você pode simular compras."}
                 </p>
               </div>
             </div>
