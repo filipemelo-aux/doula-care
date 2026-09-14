@@ -608,7 +608,7 @@ export default function Subscription() {
                       <Button
                         className="w-full"
                         onClick={() => handleSubscribe(plan, "monthly")}
-                        disabled={purchasingThis || !monthlyProduct}
+                        disabled={purchasingThis || (!isWeb && !monthlyProduct)}
                       >
                         {purchasing === monthlyProduct?.productId ? (
                           <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -619,14 +619,14 @@ export default function Subscription() {
                         variant="outline"
                         className="w-full"
                         onClick={() => handleSubscribe(plan, "yearly")}
-                        disabled={purchasingThis || !yearlyProduct}
+                        disabled={purchasingThis || (!isWeb && !yearlyProduct)}
                       >
                         {purchasing === yearlyProduct?.productId ? (
                           <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                         ) : null}
                         Assinar anual — {yearlyLabel}
                       </Button>
-                      {!monthlyProduct && !yearlyProduct && (
+                      {!isWeb && !monthlyProduct && !yearlyProduct && (
                         <p className="text-[11px] text-muted-foreground text-center">
                           Produto não mapeado para esta plataforma.
                         </p>
