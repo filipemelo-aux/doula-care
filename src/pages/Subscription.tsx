@@ -667,20 +667,16 @@ export default function Subscription() {
         })}
       </div>
 
-      {hasActiveSub && (
+      {hasActiveSub && !isWeb && (
         <Card className="card-glass">
           <CardContent className="pt-6 text-xs text-muted-foreground">
             Para alterar forma de pagamento, cancelar ou ver histórico de cobranças,
-            acesse:
-            <ul className="list-disc list-inside mt-2 space-y-1">
-              <li>iOS: Ajustes &gt; Apple ID &gt; Assinaturas</li>
-              <li>Android: Google Play &gt; Pagamentos e assinaturas</li>
-            </ul>
+            acesse os ajustes de assinaturas da sua conta no dispositivo.
           </CardContent>
         </Card>
       )}
 
-      {/* Informações obrigatórias de assinatura (App Store / Google Play) */}
+      {/* Informações obrigatórias de assinatura */}
       <Card className="card-glass">
         <CardContent className="pt-6 space-y-2 text-xs text-muted-foreground">
           <p className="font-medium text-foreground">Sobre as assinaturas</p>
