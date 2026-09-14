@@ -77,7 +77,8 @@ export function OrgTable({
 }: Props) {
   const [sortKey, setSortKey] = useState<SortKey>(defaultSort);
   const [sortDir, setSortDir] = useState<SortDir>(defaultDir);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkPlan, setBulkPlan] = useState<string>("");
   const [activity, setActivity] = useState<ActivityFilter>("all");
 
   const toggleSort = (key: SortKey) => {
