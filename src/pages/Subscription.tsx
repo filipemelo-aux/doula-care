@@ -541,21 +541,13 @@ export default function Subscription() {
               </Button>
             ) : null}
 
-            {!isWeb && !isLifetime && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleRestore}
-                disabled={restoring}
-              >
-                {restoring ? (
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                ) : (
-                  <RefreshCcw className="w-4 h-4 mr-2" />
-                )}
-                Restaurar compras
-              </Button>
+            {!isWeb && (
+              <p className="text-xs text-muted-foreground max-w-xs">
+                As assinaturas pelo aplicativo estarão disponíveis em breve.
+                Por enquanto, a contratação é feita pelo site.
+              </p>
             )}
+
 
           </div>
         </CardContent>
