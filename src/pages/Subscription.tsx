@@ -854,11 +854,13 @@ export default function Subscription() {
             A cobrança acontece na confirmação da compra e a cada renovação.
             Você pode gerenciar ou cancelar sua assinatura a qualquer momento.
           </p>
-          {isWeb && (
+          {pixEnabled && (
             <p>
               No pagamento por Pix não há renovação automática: o acesso é
-              liberado assim que o Pix é identificado e vale por 30 dias (mensal)
-              ou 12 meses (anual). Perto do vencimento basta pagar um novo Pix.
+              liberado após a confirmação do pagamento e vale por 30 dias
+              (mensal) ou 12 meses (anual). Ao final do período o acesso é
+              interrompido até um novo Pix ser pago ou a assinatura com
+              renovação automática ser contratada.
             </p>
           )}
           <div className="flex flex-wrap gap-4 pt-1">
