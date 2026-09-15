@@ -1,0 +1,1 @@
+revoke all on function public.restrict_visitor_match_request_fields() from public, anon, authenticated;
