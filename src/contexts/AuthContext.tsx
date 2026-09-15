@@ -210,7 +210,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       };
       resolveOrgId().then((oid) => {
         if (oid) {
-          supabase.from("org_access_log").insert({ user_id: userId, organization_id: oid } as any).then(() => {});
+          supabase
+            .from("org_access_log")
+            .insert({ user_id: userId, organization_id: oid, platform: detectAccessPlatform() } as any)
+            .then(() => {});
         }
       });
     }
