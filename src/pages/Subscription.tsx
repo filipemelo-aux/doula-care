@@ -5,6 +5,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePlanLimits } from "@/hooks/usePlanLimits";
 import { useHideFreePlan } from "@/hooks/useHideFreePlan";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { PixSubscriptionDialog } from "@/components/subscription/PixSubscriptionDialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -46,6 +48,34 @@ interface PlatformPlan {
   financial: boolean;
   expenses: boolean;
   messages: boolean;
+}
+
+interface CouponOffer {
+  plan: string | null;
+  billing_period: "monthly" | "yearly" | "both";
+  discount_type: "amount" | "percent";
+  discount_amount: number | null;
+  discount_percent: number | null;
+}
+
+/** Desconto em centavos que o cupom aplica sobre um valor base. */
+function couponDiscountCents(
+  offers: CouponOffer[] | undefined,
+  planSlug: string,
+  billing: BillingPeriod,
+  baseCents: number
+): number {
+  const offer = (offers || []).find(
+    (o) =>
+      (!o.plan || o.plan === planSlug) &&
+      (o.billing_period === "both" || o.billing_period === billing)
+  );
+  if (!offer) return 0;
+  const cents =
+    offer.discount_type === "percent"
+      ? Math.round((baseCents * (offer.discount_percent ?? 0)) / 100)
+      : offer.discount_amount ?? 0;
+  return Math.min(baseCents, Math.max(0, cents));
 }
 
 const planIcons: Record<string, React.ReactNode> = {
@@ -99,7 +129,19 @@ export default function Subscription() {
   const [appliedCoupon, setAppliedCoupon] = useState<{
     code: string;
     description: string;
+    offers?: CouponOffer[];
   } | null>(null);
+  const [pixCheckout, setPixCheckout] = useState<{
+    planId: string;
+    planName: string;
+    billingType: BillingPeriod;
+    amountCents: number;
+    originalAmountCents: number;
+  } | null>(null);
+
+  const isMobileViewport = useIsMobile();
+  // Pix de assinatura existe apenas no navegador em tela grande
+  const pixEnabled = isWeb && !isMobileViewport;
 
   // Pagamento exclusivamente pelas lojas oficiais (regra 3.1.1 da Apple)
 
@@ -132,16 +174,16 @@ export default function Subscription() {
       const { data } = await supabase
         .from("subscription_coupons" as any)
         .select("id, code, description, expires_at, platform, organization_id")
-        .or(`organization_id.is.null,organization_id.eq.${organizationId}`)
+        // só cupons direcionados a esta doula aparecem sozinhos;
+        // cupons gerais precisam ser digitados por quem recebeu o código
+        .eq("organization_id", organizationId)
         .eq("is_active", true)
         .in("platform", platform === "web" ? ["both", "ios", "android"] : ["both", platform])
         .order("created_at", { ascending: false });
       const rows = ((data as any[]) || []).filter(
         (r) => !r.expires_at || new Date(r.expires_at) >= new Date()
       );
-      if (rows.length === 0) return null;
-      // cupom exclusivo da doula tem prioridade sobre o cupom geral
-      return rows.find((r) => r.organization_id) || rows[0];
+      return rows[0] ?? null;
     },
     enabled: !!organizationId,
   });
@@ -220,36 +262,6 @@ export default function Subscription() {
       toast.info("Pagamento cancelado");
       return;
     }
-    if (checkout === "pix") {
-      (async () => {
-        toast.loading("Confirmando o Pix...", { id: "confirm" });
-        // o Pix pode levar alguns segundos para ser identificado
-        for (let i = 0; i < 6; i++) {
-          await new Promise((r) => setTimeout(r, 2500));
-          await queryClient.invalidateQueries({ queryKey: ["my-subscription"] });
-          const { data } = await supabase
-            .from("subscriptions")
-            .select("id, status, current_period_end")
-            .eq("user_id", user?.id ?? "")
-            .eq("status", "active")
-            .order("created_at", { ascending: false })
-            .limit(1)
-            .maybeSingle();
-          if (data?.current_period_end && new Date(data.current_period_end) > new Date()) {
-            toast.dismiss("confirm");
-            toast.success("Pix identificado! Plano liberado.");
-            invalidatePlanCaches();
-            return;
-          }
-        }
-        toast.dismiss("confirm");
-        toast.info(
-          "Assim que o Pix for identificado o plano é liberado automaticamente."
-        );
-        invalidatePlanCaches();
-      })();
-      return;
-    }
     (async () => {
       toast.loading("Confirmando pagamento...", { id: "confirm" });
       try {
@@ -264,26 +276,42 @@ export default function Subscription() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const openPixCheckout = (plan: PlatformPlan, billingType: BillingPeriod) => {
+    const base =
+      billingType === "yearly"
+        ? plan.price_yearly > 0
+          ? plan.price_yearly
+          : plan.price_monthly * 12
+        : plan.price_monthly;
+    const discount = couponDiscountCents(
+      appliedCoupon?.offers,
+      plan.plan,
+      billingType,
+      base
+    );
+    setPixCheckout({
+      planId: plan.id,
+      planName: plan.name,
+      billingType,
+      amountCents: base - discount,
+      originalAmountCents: base,
+    });
+  };
+
   const handleSubscribe = async (
     plan: PlatformPlan,
-    billingType: BillingPeriod,
-    method: "card" | "pix" = "card"
+    billingType: BillingPeriod
   ) => {
     const product = productByPlan.get(`${plan.id}:${billingType}`);
 
     if (isWeb) {
-      setPurchasing(
-        method === "pix"
-          ? `pix:${plan.id}:${billingType}`
-          : product?.productId || `${plan.id}:${billingType}`
-      );
+      setPurchasing(product?.productId || `${plan.id}:${billingType}`);
       try {
         toast.loading("Abrindo pagamento seguro...", { id: "checkout" });
         const { data, error } = await supabase.functions.invoke("create-checkout", {
           body: {
             plan: plan.plan,
             billing: billingType,
-            method,
             coupon: appliedCoupon?.code || undefined,
           },
         });
@@ -360,7 +388,11 @@ export default function Subscription() {
         });
         if (error) throw error;
         if (data?.valid) {
-          setAppliedCoupon({ code: data.code, description: data.description });
+          setAppliedCoupon({
+            code: data.code,
+            description: data.description,
+            offers: (data.offers || []) as CouponOffer[],
+          });
           toast.success(`Cupom aplicado: ${data.description}`);
         } else {
           setAppliedCoupon(null);
@@ -763,37 +795,28 @@ export default function Subscription() {
                         Assinar anual — {yearlyLabel}
                       </Button>
 
-                      {isWeb && (
+                      {pixEnabled && (
                         <div className="pt-2 space-y-2">
                           <p className="text-[11px] text-muted-foreground text-center">
-                            ou pague por Pix (liberação automática)
+                            ou pague por Pix (acesso por período, sem renovação
+                            automática)
                           </p>
                           <div className="grid grid-cols-2 gap-2">
                             <Button
                               variant="secondary"
                               size="sm"
-                              onClick={() => handleSubscribe(plan, "monthly", "pix")}
-                              disabled={!!purchasing}
+                              onClick={() => openPixCheckout(plan, "monthly")}
                             >
-                              {purchasing === `pix:${plan.id}:monthly` ? (
-                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                              ) : (
-                                <QrCode className="w-4 h-4 mr-2" />
-                              )}
-                              Pix mensal
+                              <QrCode className="w-4 h-4 mr-2" />
+                              Pix 30 dias
                             </Button>
                             <Button
                               variant="secondary"
                               size="sm"
-                              onClick={() => handleSubscribe(plan, "yearly", "pix")}
-                              disabled={!!purchasing}
+                              onClick={() => openPixCheckout(plan, "yearly")}
                             >
-                              {purchasing === `pix:${plan.id}:yearly` ? (
-                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                              ) : (
-                                <QrCode className="w-4 h-4 mr-2" />
-                              )}
-                              Pix anual
+                              <QrCode className="w-4 h-4 mr-2" />
+                              Pix 12 meses
                             </Button>
                           </div>
                         </div>
@@ -831,11 +854,13 @@ export default function Subscription() {
             A cobrança acontece na confirmação da compra e a cada renovação.
             Você pode gerenciar ou cancelar sua assinatura a qualquer momento.
           </p>
-          {isWeb && (
+          {pixEnabled && (
             <p>
               No pagamento por Pix não há renovação automática: o acesso é
-              liberado assim que o Pix é identificado e vale por 30 dias (mensal)
-              ou 12 meses (anual). Perto do vencimento basta pagar um novo Pix.
+              liberado após a confirmação do pagamento e vale por 30 dias
+              (mensal) ou 12 meses (anual). Ao final do período o acesso é
+              interrompido até um novo Pix ser pago ou a assinatura com
+              renovação automática ser contratada.
             </p>
           )}
           <div className="flex flex-wrap gap-4 pt-1">
@@ -854,6 +879,18 @@ export default function Subscription() {
         </CardContent>
       </Card>
 
+      {pixCheckout && (
+        <PixSubscriptionDialog
+          open={!!pixCheckout}
+          onOpenChange={(v) => !v && setPixCheckout(null)}
+          planId={pixCheckout.planId}
+          planName={pixCheckout.planName}
+          billingType={pixCheckout.billingType as "monthly" | "yearly"}
+          amountCents={pixCheckout.amountCents}
+          originalAmountCents={pixCheckout.originalAmountCents}
+          couponCode={appliedCoupon?.code ?? null}
+        />
+      )}
     </div>
   );
 

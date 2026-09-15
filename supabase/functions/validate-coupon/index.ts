@@ -5,6 +5,7 @@ import {
   describeOffer,
   findCoupons,
   getOrganizationId,
+  hasDiscount,
 } from "../_shared/db-coupons.ts";
 
 const corsHeaders = {
@@ -66,9 +67,7 @@ Deno.serve(async (req) => {
     // 1) Cupons cadastrados no Super Admin (valor em reais por plano)
     const admin = adminClient();
     const orgId = await getOrganizationId(admin, userData.user.id);
-    const offers = (await findCoupons(admin, code, orgId)).filter(
-      (o) => o.discount_amount && o.discount_amount > 0
-    );
+    const offers = (await findCoupons(admin, code, orgId)).filter(hasDiscount);
 
     if (offers.length > 0) {
       return json({
@@ -81,7 +80,9 @@ Deno.serve(async (req) => {
           plan_id: o.plan_id,
           plan_name: o.plan_name,
           billing_period: o.billing_period,
+          discount_type: o.discount_type,
           discount_amount: o.discount_amount,
+          discount_percent: o.discount_percent,
           duration: o.duration,
           description: describeOffer(o),
         })),

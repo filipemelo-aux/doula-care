@@ -106,7 +106,7 @@ export function usePlanLimits() {
       if (!user?.id) return null;
       const { data, error } = await supabase
         .from("subscriptions")
-        .select("id, status, current_period_end, plan_id")
+        .select("id, status, current_period_end, plan_id, platform")
         .eq("user_id", user.id)
         .in("status", ["active", "pending"])
         .order("created_at", { ascending: false })
@@ -186,7 +186,17 @@ export function usePlanLimits() {
   // ── Subscription state ──
   // Super admins are NEVER considered expired or blocked
   const isSubscriptionExpired = (() => {
-    return false; // Cobrança desativada no app — nenhum bloqueio por assinatura
+    // Pix é pagamento avulso: ao fim do período o acesso é interrompido
+    // e um novo pagamento (ou assinatura recorrente) é exigido.
+    if (
+      !isSuperAdmin &&
+      (subscription as any)?.platform === "pix" &&
+      subscription?.current_period_end &&
+      new Date(subscription.current_period_end) < new Date()
+    ) {
+      return true;
+    }
+    return false; // Demais cobranças seguem sem bloqueio por assinatura
     if (isSuperAdmin) return false;
     if (plan === "free") return false;
     // Trial expired without active subscription → expired
