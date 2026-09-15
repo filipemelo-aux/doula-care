@@ -65,6 +65,7 @@ interface OrgWithCounts {
   created_at: string;
   client_count: number;
   last_access: string | null;
+  last_access_platform?: string | null;
 }
 
 const planBadgeStyles: Record<string, string> = {
