@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Ban, CheckCircle, Trash2, Loader2, ArrowUp, ArrowDown, ArrowUpDown, Eye, Apple, Smartphone, Chrome, Compass, Monitor } from "lucide-react";
+import { Ban, CheckCircle, Trash2, Loader2, ArrowUp, ArrowDown, ArrowUpDown, Eye, Apple, Smartphone, Chrome, Compass, Monitor, Globe } from "lucide-react";
 import { ACCESS_PLATFORM_LABEL } from "@/lib/accessPlatform";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
