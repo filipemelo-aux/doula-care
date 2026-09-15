@@ -541,21 +541,13 @@ export default function Subscription() {
               </Button>
             ) : null}
 
-            {!isWeb && !isLifetime && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleRestore}
-                disabled={restoring}
-              >
-                {restoring ? (
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                ) : (
-                  <RefreshCcw className="w-4 h-4 mr-2" />
-                )}
-                Restaurar compras
-              </Button>
+            {!isWeb && (
+              <p className="text-xs text-muted-foreground max-w-xs">
+                As assinaturas pelo aplicativo estarão disponíveis em breve.
+                Por enquanto, a contratação é feita pelo site.
+              </p>
             )}
+
 
           </div>
         </CardContent>
@@ -615,7 +607,7 @@ export default function Subscription() {
               </div>
               <Button
                 size="sm"
-                disabled={redeeming}
+                disabled={redeeming || !isWeb}
                 onClick={() =>
                   handleRedeemCoupon(
                     myCoupon.code,
@@ -639,7 +631,7 @@ export default function Subscription() {
               />
               <Button
                 variant="outline"
-                disabled={redeeming || couponInput.trim().length < 3}
+                disabled={redeeming || !isWeb || couponInput.trim().length < 3}
                 onClick={() => handleRedeemCoupon(couponInput)}
               >
                 {redeeming ? (
@@ -761,7 +753,7 @@ export default function Subscription() {
                     <Button
                       variant="outline"
                       className="w-full"
-                      disabled={isCurrentPlan}
+                      disabled={isCurrentPlan || !isWeb}
                       onClick={handleActivateFree}
                     >
                       {isCurrentPlan ? "Plano atual" : "Ativar plano gratuito"}
@@ -775,7 +767,7 @@ export default function Subscription() {
                       <Button
                         className="w-full"
                         onClick={() => handleSubscribe(plan, "monthly")}
-                        disabled={purchasingThis || (!isWeb && !monthlyProduct)}
+                        disabled={purchasingThis || !isWeb}
                       >
                         {purchasing === monthlyProduct?.productId ? (
                           <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -786,7 +778,7 @@ export default function Subscription() {
                         variant="outline"
                         className="w-full"
                         onClick={() => handleSubscribe(plan, "yearly")}
-                        disabled={purchasingThis || (!isWeb && !yearlyProduct)}
+                        disabled={purchasingThis || !isWeb}
                       >
                         {purchasing === yearlyProduct?.productId ? (
                           <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -869,11 +861,6 @@ export default function Subscription() {
             <a href="/suporte" className="underline">
               Termos de Uso e Suporte
             </a>
-            {!isWeb && (
-              <button type="button" onClick={handleRestore} className="underline">
-                Restaurar compras
-              </button>
-            )}
           </div>
         </CardContent>
       </Card>
