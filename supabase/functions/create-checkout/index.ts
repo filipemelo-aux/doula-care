@@ -75,10 +75,12 @@ serve(async (req) => {
       const offers = await findCoupons(admin, couponCode, orgId);
       const offer = matchOffer(offers, plan, billing);
 
-      if (offer?.discount_amount) {
+      if (offer) {
+        const isPercent = offer.discount_type === "percent";
         const created = await stripe.coupons.create({
-          amount_off: offer.discount_amount,
-          currency: "brl",
+          ...(isPercent
+            ? { percent_off: offer.discount_percent ?? 0 }
+            : { amount_off: offer.discount_amount ?? 0, currency: "brl" }),
           duration: offer.duration === "forever" ? "forever" : "once",
           name: `${offer.code} · ${offer.plan_name ?? plan}`,
           metadata: { coupon_id: offer.id, code: offer.code, plan, billing },
