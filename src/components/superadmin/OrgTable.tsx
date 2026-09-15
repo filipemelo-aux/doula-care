@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Ban, CheckCircle, Trash2, Loader2, ArrowUp, ArrowDown, ArrowUpDown, Eye, Apple, Smartphone, Chrome, Compass, Monitor } from "lucide-react";
+import { Ban, CheckCircle, Trash2, Loader2, ArrowUp, ArrowDown, ArrowUpDown, Eye, Apple, Smartphone, Chrome, Compass, Monitor, Globe } from "lucide-react";
 import { ACCESS_PLATFORM_LABEL } from "@/lib/accessPlatform";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -25,7 +25,13 @@ export interface OrgRow {
 }
 
 const AccessPlatformIcon = ({ platform }: { platform?: string | null }) => {
-  if (!platform) return null;
+  if (!platform) {
+    return (
+      <span title="Origem não identificada" aria-label="Origem não identificada" className="inline-flex items-center">
+        <Globe className="h-3 w-3 shrink-0 text-muted-foreground/50" />
+      </span>
+    );
+  }
   const label = ACCESS_PLATFORM_LABEL[platform as keyof typeof ACCESS_PLATFORM_LABEL] || platform;
   const common = "h-3 w-3 shrink-0";
   const icon =
