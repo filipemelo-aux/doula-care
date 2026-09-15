@@ -27,7 +27,7 @@ export interface OrgRow {
 const AccessPlatformIcon = ({ platform }: { platform?: string | null }) => {
   if (!platform) {
     return (
-      <span title="Origem não identificada" aria-label="Origem não identificada" className="inline-flex items-center">
+      <span title="Acesso anterior a este recurso" aria-label="Acesso anterior a este recurso" className="inline-flex items-center">
         <Globe className="h-3 w-3 shrink-0 text-muted-foreground/50" />
       </span>
     );
