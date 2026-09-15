@@ -139,9 +139,9 @@ export default function Subscription() {
     originalAmountCents: number;
   } | null>(null);
 
-  const isMobileViewport = useIsMobile();
-  // Pix de assinatura existe apenas no navegador em tela grande
-  const pixEnabled = isWeb && !isMobileViewport;
+  // Pix de assinatura só no navegador (desktop ou celular).
+  // Dentro do app instalado (Capacitor) nunca aparece — regra das lojas.
+  const pixEnabled = isWeb;
 
   // Pagamento exclusivamente pelas lojas oficiais (regra 3.1.1 da Apple)
 
