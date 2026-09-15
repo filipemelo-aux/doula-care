@@ -388,7 +388,11 @@ export default function Subscription() {
         });
         if (error) throw error;
         if (data?.valid) {
-          setAppliedCoupon({ code: data.code, description: data.description });
+          setAppliedCoupon({
+            code: data.code,
+            description: data.description,
+            offers: (data.offers || []) as CouponOffer[],
+          });
           toast.success(`Cupom aplicado: ${data.description}`);
         } else {
           setAppliedCoupon(null);
