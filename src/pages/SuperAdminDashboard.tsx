@@ -262,6 +262,9 @@ export default function SuperAdminDashboard() {
         last_access_platform: lastPlatformMap.get(org.id) || null,
       })) as OrgWithCounts[];
     },
+    staleTime: 0,
+    refetchInterval: 60_000,
+    refetchOnWindowFocus: true,
   });
 
   const { data: platformCounts = { android: 0, ios: 0 } } = useQuery({
