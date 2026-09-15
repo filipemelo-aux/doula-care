@@ -753,7 +753,7 @@ export default function Subscription() {
                     <Button
                       variant="outline"
                       className="w-full"
-                      disabled={isCurrentPlan}
+                      disabled={isCurrentPlan || !isWeb}
                       onClick={handleActivateFree}
                     >
                       {isCurrentPlan ? "Plano atual" : "Ativar plano gratuito"}
