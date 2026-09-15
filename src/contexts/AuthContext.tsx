@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState, useCallback, useRef, Re
 import { User, Session } from "@supabase/supabase-js";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { detectAccessPlatform } from "@/lib/accessPlatform";
 
 type AppRole = "admin" | "moderator" | "client" | "user" | "super_admin" | "visitor";
 type AppRoles = AppRole[];
