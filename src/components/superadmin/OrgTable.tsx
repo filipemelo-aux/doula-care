@@ -101,7 +101,7 @@ export function OrgTable({
   onViewDetails,
   isStatusPending,
   isDeletePending,
-  defaultSort = "created",
+  defaultSort = "last_access",
   defaultDir = "desc",
 }: Props) {
   const [sortKey, setSortKey] = useState<SortKey>(defaultSort);
