@@ -47,9 +47,10 @@ serve(async (req) => {
     const plan = String(body?.plan ?? "").toLowerCase();
     const billing = String(body?.billing ?? "").toLowerCase();
     const couponCode = typeof body?.coupon === "string" ? body.coupon.trim() : "";
-    const isPix = String(body?.method ?? "card").toLowerCase() === "pix";
+    // Pix de assinatura é tratado fora da Stripe (QR Code da plataforma).
+    const isPix = false;
 
-    const priceId = isPix ? findPixPriceId(plan, billing) : findPriceId(plan, billing);
+    const priceId = findPriceId(plan, billing);
     if (!priceId) {
       return new Response(
         JSON.stringify({ error: "Plano ou periodicidade inválidos" }),
