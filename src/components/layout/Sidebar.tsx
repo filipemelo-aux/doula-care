@@ -223,9 +223,8 @@ export function Sidebar({ isOpen, onToggle, onNavigate }: SidebarProps) {
                     );
                   })}
                 </div>
-
-
-
+              </div>
+            );
           }
 
           // Regular item
