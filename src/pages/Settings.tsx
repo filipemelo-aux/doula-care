@@ -61,12 +61,10 @@ import {
   PowerOff,
   CreditCard,
   QrCode,
-  Palette,
   RefreshCw,
 } from "lucide-react";
 import { PixSettingsCard } from "@/components/settings/PixSettingsCard";
 import { BrandingSettingsCard } from "@/components/settings/BrandingSettingsCard";
-import { LocationSettingsCard } from "@/components/settings/LocationSettingsCard";
 import { PushNotificationStatusCard } from "@/components/settings/PushNotificationStatusCard";
 import { toast } from "sonner";
 // formatBrazilDate removed — no longer needed in list layout
@@ -557,10 +555,9 @@ export default function Settings() {
         </div>
       ) : (
       <Tabs defaultValue="users" className="space-y-4">
-        <TabsList className="w-full grid grid-cols-5 gap-0 p-1">
+        <TabsList className="w-full grid grid-cols-4 gap-0 p-1">
           <TabsTrigger value="users" className="px-1 text-xs sm:text-sm gap-1"><Users className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" /><span className="truncate">Usuários</span></TabsTrigger>
           <TabsTrigger value="plans" className="px-1 text-xs sm:text-sm gap-1"><CreditCard className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" /><span className="truncate">Planos</span></TabsTrigger>
-          <TabsTrigger value="branding" className="px-1 text-xs sm:text-sm gap-1"><Palette className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" /><span className="truncate">Marca</span></TabsTrigger>
           <TabsTrigger value="pix" className="px-1 text-xs sm:text-sm gap-1"><QrCode className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" /><span className="truncate">Pix</span></TabsTrigger>
           <TabsTrigger value="security" className="px-1 text-xs sm:text-sm gap-1"><Shield className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" /><span className="truncate">Segurança</span></TabsTrigger>
         </TabsList>
@@ -711,11 +708,6 @@ export default function Settings() {
           <Plans />
         </TabsContent>
 
-        {/* ─── BRANDING TAB ─── */}
-        <TabsContent value="branding" className="space-y-6">
-          <BrandingSettingsCard />
-          <LocationSettingsCard />
-        </TabsContent>
         {/* ─── PIX TAB ─── */}
         <TabsContent value="pix" className="space-y-6">
           <PixSettingsCard />

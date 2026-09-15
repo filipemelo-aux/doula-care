@@ -23,6 +23,8 @@ import {
   Wallet,
   MapPin,
   AlertCircle,
+  Briefcase,
+  Palette,
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -53,6 +55,15 @@ const navItems = [
       { to: "/despesas", icon: TrendingDown, label: "Despesas" },
       { to: "/cobrancas", icon: AlertCircle, label: "Cobranças" },
       { to: "/relatorios", icon: FileText, label: "Relatórios" },
+    ],
+  },
+
+  {
+    icon: Briefcase,
+    label: "Meu Negócio",
+    subItems: [
+      { to: "/minha-marca", icon: Palette, label: "Minha Marca" },
+      { to: "/localizacao", icon: MapPin, label: "Localização e Atendimento" },
     ],
   },
 
