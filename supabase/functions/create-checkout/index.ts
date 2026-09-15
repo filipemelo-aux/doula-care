@@ -1,7 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
-import { findPriceId } from "../_shared/stripe-plans.ts";
+import { findPixPriceId, findPriceId } from "../_shared/stripe-plans.ts";
 import {
   adminClient,
   findCoupons,
@@ -47,8 +47,9 @@ serve(async (req) => {
     const plan = String(body?.plan ?? "").toLowerCase();
     const billing = String(body?.billing ?? "").toLowerCase();
     const couponCode = typeof body?.coupon === "string" ? body.coupon.trim() : "";
+    const isPix = String(body?.method ?? "card").toLowerCase() === "pix";
 
-    const priceId = findPriceId(plan, billing);
+    const priceId = isPix ? findPixPriceId(plan, billing) : findPriceId(plan, billing);
     if (!priceId) {
       return new Response(
         JSON.stringify({ error: "Plano ou periodicidade inválidos" }),
@@ -95,17 +96,27 @@ serve(async (req) => {
       }
     }
 
+    const metadata = {
+      user_id: user.id,
+      plan,
+      billing,
+      method: isPix ? "pix" : "card",
+    };
+
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       customer_email: customerId ? undefined : user.email,
       line_items: [{ price: priceId, quantity: 1 }],
-      mode: "subscription",
-      allow_promotion_codes: discounts ? undefined : true,
+      mode: isPix ? "payment" : "subscription",
+      ...(isPix ? { payment_method_types: ["pix" as Stripe.Checkout.SessionCreateParams.PaymentMethodType] } : {}),
+      allow_promotion_codes: isPix || discounts ? undefined : true,
       discounts,
-      success_url: `${origin}/admin/assinatura?checkout=success`,
+      success_url: `${origin}/admin/assinatura?checkout=${isPix ? "pix" : "success"}`,
       cancel_url: `${origin}/admin/assinatura?checkout=cancel`,
-      metadata: { user_id: user.id, plan, billing },
-      subscription_data: { metadata: { user_id: user.id, plan, billing } },
+      metadata,
+      ...(isPix
+        ? { payment_intent_data: { metadata } }
+        : { subscription_data: { metadata } }),
     });
 
     logStep("Checkout session created", { sessionId: session.id });
