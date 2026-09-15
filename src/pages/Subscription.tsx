@@ -5,7 +5,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePlanLimits } from "@/hooks/usePlanLimits";
 import { useHideFreePlan } from "@/hooks/useHideFreePlan";
-import { useIsMobile } from "@/hooks/use-mobile";
 import { PixSubscriptionDialog } from "@/components/subscription/PixSubscriptionDialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
