@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState, useCallback, useRef, Re
 import { User, Session } from "@supabase/supabase-js";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { detectAccessPlatform } from "@/lib/accessPlatform";
 
 type AppRole = "admin" | "moderator" | "client" | "user" | "super_admin" | "visitor";
 type AppRoles = AppRole[];
@@ -210,7 +211,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       };
       resolveOrgId().then((oid) => {
         if (oid) {
-          supabase.from("org_access_log").insert({ user_id: userId, organization_id: oid } as any).then(() => {});
+          supabase
+            .from("org_access_log")
+            .insert({ user_id: userId, organization_id: oid, platform: detectAccessPlatform() } as any)
+            .then(() => {});
         }
       });
     }

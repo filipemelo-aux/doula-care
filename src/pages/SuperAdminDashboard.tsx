@@ -65,6 +65,7 @@ interface OrgWithCounts {
   created_at: string;
   client_count: number;
   last_access: string | null;
+  last_access_platform?: string | null;
 }
 
 const planBadgeStyles: Record<string, string> = {
@@ -250,11 +251,15 @@ export default function SuperAdminDashboard() {
       const lastAccessMap = new Map(
         ((lastAccess as any[]) || []).map((c: any) => [c.organization_id, c.last_access as string])
       );
+      const lastPlatformMap = new Map(
+        ((lastAccess as any[]) || []).map((c: any) => [c.organization_id, c.platform as string | null])
+      );
 
       return (orgs || []).map((org) => ({
         ...org,
         client_count: countMap.get(org.id) || 0,
         last_access: lastAccessMap.get(org.id) || null,
+        last_access_platform: lastPlatformMap.get(org.id) || null,
       })) as OrgWithCounts[];
     },
   });

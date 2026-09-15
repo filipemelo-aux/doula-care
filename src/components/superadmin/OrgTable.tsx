@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
-import { Ban, CheckCircle, Trash2, Loader2, ArrowUp, ArrowDown, ArrowUpDown, Eye } from "lucide-react";
+import { Ban, CheckCircle, Trash2, Loader2, ArrowUp, ArrowDown, ArrowUpDown, Eye, Apple, Smartphone, Chrome, Compass, Monitor } from "lucide-react";
+import { ACCESS_PLATFORM_LABEL } from "@/lib/accessPlatform";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Badge } from "@/components/ui/badge";
@@ -20,7 +21,31 @@ export interface OrgRow {
   created_at: string;
   client_count: number;
   last_access?: string | null;
+  last_access_platform?: string | null;
 }
+
+const AccessPlatformIcon = ({ platform }: { platform?: string | null }) => {
+  if (!platform) return null;
+  const label = ACCESS_PLATFORM_LABEL[platform as keyof typeof ACCESS_PLATFORM_LABEL] || platform;
+  const common = "h-3 w-3 shrink-0";
+  const icon =
+    platform === "app_ios" ? (
+      <Apple className={cn(common, "text-foreground/70")} />
+    ) : platform === "app_android" ? (
+      <Smartphone className={cn(common, "text-success")} />
+    ) : platform === "browser_ios" ? (
+      <Compass className={cn(common, "text-blue-500")} />
+    ) : platform === "browser_android" ? (
+      <Chrome className={cn(common, "text-success")} />
+    ) : (
+      <Monitor className={cn(common, "text-muted-foreground")} />
+    );
+  return (
+    <span title={label} aria-label={label} className="inline-flex items-center">
+      {icon}
+    </span>
+  );
+};
 
 type SortKey = "name" | "email" | "plan" | "status" | "clients" | "created" | "last_access";
 type ActivityFilter = "all" | "7" | "30" | "inactive";
@@ -337,7 +362,10 @@ export function OrgTable({
                     )}
                     title={org.last_access ? format(new Date(org.last_access), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR }) : "Sem registro"}
                   >
-                    {relativeAccess(org.last_access)}
+                    <span className="inline-flex items-center gap-1">
+                      <AccessPlatformIcon platform={org.last_access_platform} />
+                      {relativeAccess(org.last_access)}
+                    </span>
                   </TableCell>
                   <TableCell className="px-2 py-1 text-[11px] text-muted-foreground whitespace-nowrap">
                     {format(new Date(org.created_at), "dd/MM/yy", { locale: ptBR })}
