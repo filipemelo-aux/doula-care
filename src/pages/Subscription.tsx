@@ -262,36 +262,6 @@ export default function Subscription() {
       toast.info("Pagamento cancelado");
       return;
     }
-    if (checkout === "pix") {
-      (async () => {
-        toast.loading("Confirmando o Pix...", { id: "confirm" });
-        // o Pix pode levar alguns segundos para ser identificado
-        for (let i = 0; i < 6; i++) {
-          await new Promise((r) => setTimeout(r, 2500));
-          await queryClient.invalidateQueries({ queryKey: ["my-subscription"] });
-          const { data } = await supabase
-            .from("subscriptions")
-            .select("id, status, current_period_end")
-            .eq("user_id", user?.id ?? "")
-            .eq("status", "active")
-            .order("created_at", { ascending: false })
-            .limit(1)
-            .maybeSingle();
-          if (data?.current_period_end && new Date(data.current_period_end) > new Date()) {
-            toast.dismiss("confirm");
-            toast.success("Pix identificado! Plano liberado.");
-            invalidatePlanCaches();
-            return;
-          }
-        }
-        toast.dismiss("confirm");
-        toast.info(
-          "Assim que o Pix for identificado o plano é liberado automaticamente."
-        );
-        invalidatePlanCaches();
-      })();
-      return;
-    }
     (async () => {
       toast.loading("Confirmando pagamento...", { id: "confirm" });
       try {
