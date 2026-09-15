@@ -607,7 +607,7 @@ export default function Subscription() {
               </div>
               <Button
                 size="sm"
-                disabled={redeeming}
+                disabled={redeeming || !isWeb}
                 onClick={() =>
                   handleRedeemCoupon(
                     myCoupon.code,
