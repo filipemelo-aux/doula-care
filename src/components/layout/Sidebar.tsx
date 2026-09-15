@@ -32,6 +32,7 @@ import { usePlanLimits } from "@/hooks/usePlanLimits";
 import { useHideFreePlan } from "@/hooks/useHideFreePlan";
 import { useAdminUnreadCounts } from "@/hooks/useAdminUnreadCounts";
 import { useAuth } from "@/contexts/AuthContext";
+import { Capacitor } from "@capacitor/core";
 
 interface SidebarProps {
   isOpen: boolean;
@@ -231,7 +232,8 @@ export function Sidebar({ isOpen, onToggle, onNavigate }: SidebarProps) {
           const isDisabled = limitKey ? !limits[limitKey] : false;
           const isActive = !isDisabled && location.pathname === item.to;
           const badgeCount = isDisabled ? 0 : getBadgeCount((item as any).badgeKey);
-          const isMobileTextOnly = (item as any).mobileTextOnly;
+          // Browser access stays enabled at every screen size; only native apps retain text-only navigation.
+          const isMobileTextOnly = (item as any).mobileTextOnly && Capacitor.isNativePlatform();
 
           return (
             <div key={item.to} className={cn(hideOnMobile && "hidden lg:flex")}>
