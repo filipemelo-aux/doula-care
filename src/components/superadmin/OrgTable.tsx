@@ -362,7 +362,10 @@ export function OrgTable({
                     )}
                     title={org.last_access ? format(new Date(org.last_access), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR }) : "Sem registro"}
                   >
-                    {relativeAccess(org.last_access)}
+                    <span className="inline-flex items-center gap-1">
+                      <AccessPlatformIcon platform={org.last_access_platform} />
+                      {relativeAccess(org.last_access)}
+                    </span>
                   </TableCell>
                   <TableCell className="px-2 py-1 text-[11px] text-muted-foreground whitespace-nowrap">
                     {format(new Date(org.created_at), "dd/MM/yy", { locale: ptBR })}
