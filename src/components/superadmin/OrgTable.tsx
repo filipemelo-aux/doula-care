@@ -25,7 +25,13 @@ export interface OrgRow {
 }
 
 const AccessPlatformIcon = ({ platform }: { platform?: string | null }) => {
-  if (!platform) return null;
+  if (!platform) {
+    return (
+      <span title="Origem não identificada" aria-label="Origem não identificada" className="inline-flex items-center">
+        <Globe className="h-3 w-3 shrink-0 text-muted-foreground/50" />
+      </span>
+    );
+  }
   const label = ACCESS_PLATFORM_LABEL[platform as keyof typeof ACCESS_PLATFORM_LABEL] || platform;
   const common = "h-3 w-3 shrink-0";
   const icon =
