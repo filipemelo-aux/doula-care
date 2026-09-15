@@ -24,6 +24,12 @@ export interface OrgRow {
   last_access_platform?: string | null;
 }
 
+const AndroidIcon = ({ className }: { className?: string }) => (
+  <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden="true">
+    <path d="M17.6 9.48l1.84-3.18a.38.38 0 0 0-.66-.38l-1.86 3.22a11.4 11.4 0 0 0-9.76 0L5.3 5.92a.38.38 0 1 0-.66.38L6.48 9.48A10.2 10.2 0 0 0 1.5 17.5h21a10.2 10.2 0 0 0-4.9-8.02ZM7 14.6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Zm10 0a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z" />
+  </svg>
+);
+
 const AccessPlatformIcon = ({ platform }: { platform?: string | null }) => {
   const label = platform
     ? (ACCESS_PLATFORM_LABEL[platform as keyof typeof ACCESS_PLATFORM_LABEL] || platform)
@@ -34,7 +40,7 @@ const AccessPlatformIcon = ({ platform }: { platform?: string | null }) => {
     platform === "app_ios" ? (
       <Apple className={cn(common, "text-foreground/70")} />
     ) : platform === "app_android" ? (
-      <Smartphone className={cn(common, "text-success")} />
+      <AndroidIcon className={cn(common, "text-success")} />
     ) : (
       <Globe className={cn(common, platform ? "text-blue-500" : "text-muted-foreground/50")} />
     );
