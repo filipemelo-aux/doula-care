@@ -15,3 +15,10 @@ Regras:
 Implementação: `supabase/functions/_shared/db-coupons.ts`, `validate-coupon`, `create-checkout`, `src/components/superadmin/SubscriptionCouponsCard.tsx`, `src/pages/Subscription.tsx`.
 
 Relacionado: `system_config.hide_free_plan` ('true'/'false') — quando true, a tela de Assinatura não exibe o card do plano Free. Interruptor em `PlanLimitsCard.tsx`.
+
+## Atualização (set/2026)
+- `discount_type` ('amount' | 'percent'): cupom pode ter desconto em reais (`discount_amount`, centavos) ou em porcentagem (`discount_percent`).
+- Cupons **direcionados** (organization_id preenchido) aparecem sozinhos na página de Assinatura da doula; cupons **gerais** (organization_id null) NÃO são exibidos — só funcionam para quem digitar o código.
+- O Super Admin pode selecionar várias doulas de uma vez (cria uma linha por doula).
+- Pix de assinatura NÃO usa Stripe: QR Code da plataforma (`system_config.platform_pix_*`) via `PixSubscriptionDialog`, registro em `plan_pix_payments`, aprovação em `PixSubscriptionRequestsCard`, acesso de 30 dias/12 meses (`subscriptions.platform = 'pix'`). Disponível apenas no navegador desktop (`isWeb && !useIsMobile()`), nunca no app — evita conflito com a regra 3.1.1 da Apple.
+- `usePlanLimits` volta a bloquear o acesso quando uma assinatura com `platform = 'pix'` vence.
