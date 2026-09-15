@@ -50,6 +50,34 @@ interface PlatformPlan {
   messages: boolean;
 }
 
+interface CouponOffer {
+  plan: string | null;
+  billing_period: "monthly" | "yearly" | "both";
+  discount_type: "amount" | "percent";
+  discount_amount: number | null;
+  discount_percent: number | null;
+}
+
+/** Desconto em centavos que o cupom aplica sobre um valor base. */
+function couponDiscountCents(
+  offers: CouponOffer[] | undefined,
+  planSlug: string,
+  billing: BillingPeriod,
+  baseCents: number
+): number {
+  const offer = (offers || []).find(
+    (o) =>
+      (!o.plan || o.plan === planSlug) &&
+      (o.billing_period === "both" || o.billing_period === billing)
+  );
+  if (!offer) return 0;
+  const cents =
+    offer.discount_type === "percent"
+      ? Math.round((baseCents * (offer.discount_percent ?? 0)) / 100)
+      : offer.discount_amount ?? 0;
+  return Math.min(baseCents, Math.max(0, cents));
+}
+
 const planIcons: Record<string, React.ReactNode> = {
   free: <Star className="w-6 h-6" />,
   pro: <Sparkles className="w-6 h-6" />,
