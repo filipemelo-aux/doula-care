@@ -25,26 +25,18 @@ export interface OrgRow {
 }
 
 const AccessPlatformIcon = ({ platform }: { platform?: string | null }) => {
-  if (!platform) {
-    return (
-      <span title="Acesso anterior a este recurso" aria-label="Acesso anterior a este recurso" className="inline-flex items-center">
-        <Globe className="h-3 w-3 shrink-0 text-muted-foreground/50" />
-      </span>
-    );
-  }
-  const label = ACCESS_PLATFORM_LABEL[platform as keyof typeof ACCESS_PLATFORM_LABEL] || platform;
+  const label = platform
+    ? (ACCESS_PLATFORM_LABEL[platform as keyof typeof ACCESS_PLATFORM_LABEL] || platform)
+    : "Acesso anterior a este recurso";
   const common = "h-3 w-3 shrink-0";
+  // Apps nativos têm ícone próprio; todo acesso por navegador usa o ícone universal.
   const icon =
     platform === "app_ios" ? (
       <Apple className={cn(common, "text-foreground/70")} />
     ) : platform === "app_android" ? (
       <Smartphone className={cn(common, "text-success")} />
-    ) : platform === "browser_ios" ? (
-      <Compass className={cn(common, "text-blue-500")} />
-    ) : platform === "browser_android" ? (
-      <Chrome className={cn(common, "text-success")} />
     ) : (
-      <Monitor className={cn(common, "text-muted-foreground")} />
+      <Globe className={cn(common, platform ? "text-blue-500" : "text-muted-foreground/50")} />
     );
   return (
     <span title={label} aria-label={label} className="inline-flex items-center">
