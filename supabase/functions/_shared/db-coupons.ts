@@ -10,7 +10,9 @@ export interface CouponOffer {
   plan: string | null; // slug: pro | premium
   plan_name: string | null;
   billing_period: "monthly" | "yearly" | "both";
+  discount_type: "amount" | "percent";
   discount_amount: number | null; // centavos
+  discount_percent: number | null; // 1-100
   duration: "once" | "forever";
   description: string | null;
   organization_id: string | null;
