@@ -795,37 +795,28 @@ export default function Subscription() {
                         Assinar anual — {yearlyLabel}
                       </Button>
 
-                      {isWeb && (
+                      {pixEnabled && (
                         <div className="pt-2 space-y-2">
                           <p className="text-[11px] text-muted-foreground text-center">
-                            ou pague por Pix (liberação automática)
+                            ou pague por Pix (acesso por período, sem renovação
+                            automática)
                           </p>
                           <div className="grid grid-cols-2 gap-2">
                             <Button
                               variant="secondary"
                               size="sm"
-                              onClick={() => handleSubscribe(plan, "monthly", "pix")}
-                              disabled={!!purchasing}
+                              onClick={() => openPixCheckout(plan, "monthly")}
                             >
-                              {purchasing === `pix:${plan.id}:monthly` ? (
-                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                              ) : (
-                                <QrCode className="w-4 h-4 mr-2" />
-                              )}
-                              Pix mensal
+                              <QrCode className="w-4 h-4 mr-2" />
+                              Pix 30 dias
                             </Button>
                             <Button
                               variant="secondary"
                               size="sm"
-                              onClick={() => handleSubscribe(plan, "yearly", "pix")}
-                              disabled={!!purchasing}
+                              onClick={() => openPixCheckout(plan, "yearly")}
                             >
-                              {purchasing === `pix:${plan.id}:yearly` ? (
-                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                              ) : (
-                                <QrCode className="w-4 h-4 mr-2" />
-                              )}
-                              Pix anual
+                              <QrCode className="w-4 h-4 mr-2" />
+                              Pix 12 meses
                             </Button>
                           </div>
                         </div>
