@@ -48,7 +48,7 @@ export async function findCoupons(
   const { data, error } = await admin
     .from("subscription_coupons")
     .select(
-      "id, code, plan_id, billing_period, discount_amount, duration, description, organization_id, expires_at, is_active, platform_plan_limits:plan_id (plan, name)"
+      "id, code, plan_id, billing_period, discount_type, discount_amount, discount_percent, duration, description, organization_id, expires_at, is_active, platform_plan_limits:plan_id (plan, name)"
     )
     .ilike("code", code)
     .eq("is_active", true);
@@ -68,7 +68,9 @@ export async function findCoupons(
       plan: r.platform_plan_limits?.plan ?? null,
       plan_name: r.platform_plan_limits?.name ?? null,
       billing_period: (r.billing_period ?? "both") as CouponOffer["billing_period"],
+      discount_type: (r.discount_type ?? "amount") as CouponOffer["discount_type"],
       discount_amount: r.discount_amount ?? null,
+      discount_percent: r.discount_percent ?? null,
       duration: (r.duration ?? "once") as CouponOffer["duration"],
       description: r.description ?? null,
       organization_id: r.organization_id ?? null,
@@ -78,6 +80,13 @@ export async function findCoupons(
     .sort((a, b) => (b.organization_id ? 1 : 0) - (a.organization_id ? 1 : 0));
 }
 
+/** Um cupom só vale se tiver algum desconto configurado. */
+export function hasDiscount(o: CouponOffer): boolean {
+  return o.discount_type === "percent"
+    ? !!o.discount_percent && o.discount_percent > 0
+    : !!o.discount_amount && o.discount_amount > 0;
+}
+
 export function matchOffer(
   offers: CouponOffer[],
   plan: string,
@@ -85,11 +94,18 @@ export function matchOffer(
 ): CouponOffer | undefined {
   return offers.find(
     (o) =>
-      o.discount_amount &&
-      o.discount_amount > 0 &&
+      hasDiscount(o) &&
       (!o.plan || o.plan === plan) &&
       (o.billing_period === "both" || o.billing_period === billing)
   );
+}
+
+/** Desconto em centavos aplicado sobre um valor base (centavos). */
+export function discountCentsFor(o: CouponOffer, baseCents: number): number {
+  if (o.discount_type === "percent") {
+    return Math.min(baseCents, Math.round((baseCents * (o.discount_percent ?? 0)) / 100));
+  }
+  return Math.min(baseCents, o.discount_amount ?? 0);
 }
 
 export function formatBRL(centavos: number): string {
@@ -100,8 +116,11 @@ export function formatBRL(centavos: number): string {
 }
 
 export function describeOffer(offer: CouponOffer): string {
-  if (!offer.discount_amount) return offer.description || "Desconto aplicado";
-  const value = formatBRL(offer.discount_amount);
+  if (!hasDiscount(offer)) return offer.description || "Desconto aplicado";
+  const value =
+    offer.discount_type === "percent"
+      ? `${offer.discount_percent}%`
+      : formatBRL(offer.discount_amount ?? 0);
   const plan = offer.plan_name ? ` no plano ${offer.plan_name}` : "";
   const period =
     offer.billing_period === "monthly"
