@@ -631,7 +631,7 @@ export default function Subscription() {
               />
               <Button
                 variant="outline"
-                disabled={redeeming || couponInput.trim().length < 3}
+                disabled={redeeming || !isWeb || couponInput.trim().length < 3}
                 onClick={() => handleRedeemCoupon(couponInput)}
               >
                 {redeeming ? (
