@@ -1,6 +1,6 @@
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
-import { findPlanByPriceId } from "../_shared/stripe-plans.ts";
+import { STRIPE_PLANS, findPlanByPixPriceId, findPlanByPriceId } from "../_shared/stripe-plans.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -150,6 +150,99 @@ async function syncSubscription(
   log("Subscription synced", { userId, plan: planInfo.plan, status });
 }
 
+// Pagamento avulso por Pix: libera o plano por 30 dias (mensal) ou 365 (anual).
+async function activatePixPayment(stripe: Stripe, session: Stripe.Checkout.Session) {
+  const supabase = admin();
+
+  const lineItems = await stripe.checkout.sessions.listLineItems(session.id, { limit: 1 });
+  const priceId = lineItems.data[0]?.price?.id;
+  const planInfo =
+    findPlanByPixPriceId(priceId) ??
+    (session.metadata?.plan && session.metadata?.billing
+      ? STRIPE_PLANS.find(
+          (p) => p.plan === session.metadata!.plan && p.billing === session.metadata!.billing
+        )
+      : undefined);
+
+  if (!planInfo) {
+    log("Pix price not mapped, ignoring", { priceId });
+    return;
+  }
+
+  const customerId =
+    typeof session.customer === "string" ? session.customer : session.customer?.id ?? null;
+  const email = session.customer_details?.email ?? session.customer_email ?? null;
+
+  const userId = await resolveUserId(
+    supabase,
+    session.metadata?.user_id ?? null,
+    email,
+    customerId
+  );
+  if (!userId) {
+    log("Pix user not resolved", { customerId, email });
+    return;
+  }
+
+  const days = planInfo.billing === "yearly" ? 365 : 30;
+
+  // se já houver período vigente, o Pix estende a partir do fim dele
+  const { data: current } = await supabase
+    .from("subscriptions")
+    .select("id, current_period_end")
+    .eq("user_id", userId)
+    .eq("platform", "web")
+    .in("status", ["active", "grace_period", "billing_issue"])
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  const now = new Date();
+  const base =
+    current?.current_period_end && new Date(current.current_period_end) > now
+      ? new Date(current.current_period_end)
+      : now;
+  const periodEnd = new Date(base.getTime() + days * 24 * 60 * 60 * 1000);
+
+  await supabase
+    .from("subscriptions")
+    .update({ status: "canceled" })
+    .eq("user_id", userId)
+    .eq("platform", "web")
+    .in("status", ["active", "pending", "billing_issue", "grace_period"]);
+
+  await supabase.from("subscriptions").insert({
+    user_id: userId,
+    plan_id: planInfo.planId,
+    status: "active",
+    platform: "web",
+    product_id: priceId ?? planInfo.pixPriceId,
+    current_period_start: now.toISOString(),
+    current_period_end: periodEnd.toISOString(),
+    stripe_customer_id: customerId,
+    stripe_subscription_id: null,
+  });
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("organization_id")
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (profile?.organization_id) {
+    await supabase
+      .from("organizations")
+      .update({
+        plan: planInfo.plan,
+        status: "ativo",
+        next_billing_date: periodEnd.toISOString().split("T")[0],
+      })
+      .eq("id", profile.organization_id);
+  }
+
+  log("Pix payment activated", { userId, plan: planInfo.plan, until: periodEnd.toISOString() });
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -196,8 +289,19 @@ Deno.serve(async (req) => {
     log("Event received", { type: event.type });
 
     switch (event.type) {
+      case "checkout.session.async_payment_succeeded":
       case "checkout.session.completed": {
-        const session = event.data.object as Stripe.Checkout.Session;
+        const session = await stripe.checkout.sessions.retrieve(
+          (event.data.object as Stripe.Checkout.Session).id
+        );
+        if (session.mode === "payment") {
+          if (session.payment_status === "paid") {
+            await activatePixPayment(stripe, session);
+          } else {
+            log("Pix pending, waiting confirmation", { sessionId: session.id });
+          }
+          break;
+        }
         if (session.mode === "subscription" && session.subscription) {
           const subId =
             typeof session.subscription === "string"
