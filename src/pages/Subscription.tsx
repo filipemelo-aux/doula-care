@@ -778,7 +778,7 @@ export default function Subscription() {
                         variant="outline"
                         className="w-full"
                         onClick={() => handleSubscribe(plan, "yearly")}
-                        disabled={purchasingThis || (!isWeb && !yearlyProduct)}
+                        disabled={purchasingThis || !isWeb}
                       >
                         {purchasing === yearlyProduct?.productId ? (
                           <Loader2 className="w-4 h-4 mr-2 animate-spin" />
