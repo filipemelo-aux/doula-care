@@ -1965,6 +1965,7 @@ export type Database = {
           description: string | null
           discount_amount: number | null
           discount_percent: number | null
+          discount_type: string
           duration: string
           expires_at: string | null
           id: string
@@ -1983,6 +1984,7 @@ export type Database = {
           description?: string | null
           discount_amount?: number | null
           discount_percent?: number | null
+          discount_type?: string
           duration?: string
           expires_at?: string | null
           id?: string
@@ -2001,6 +2003,7 @@ export type Database = {
           description?: string | null
           discount_amount?: number | null
           discount_percent?: number | null
+          discount_type?: string
           duration?: string
           expires_at?: string | null
           id?: string
