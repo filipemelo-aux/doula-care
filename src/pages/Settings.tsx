@@ -61,12 +61,10 @@ import {
   PowerOff,
   CreditCard,
   QrCode,
-  Palette,
   RefreshCw,
 } from "lucide-react";
 import { PixSettingsCard } from "@/components/settings/PixSettingsCard";
 import { BrandingSettingsCard } from "@/components/settings/BrandingSettingsCard";
-import { LocationSettingsCard } from "@/components/settings/LocationSettingsCard";
 import { PushNotificationStatusCard } from "@/components/settings/PushNotificationStatusCard";
 import { toast } from "sonner";
 // formatBrazilDate removed — no longer needed in list layout
