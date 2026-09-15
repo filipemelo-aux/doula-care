@@ -226,9 +226,6 @@ export function Sidebar({ isOpen, onToggle, onNavigate }: SidebarProps) {
 
 
 
-                <div className="mt-3 border-b border-border/40" />
-              </div>
-            );
           }
 
           // Regular item
