@@ -125,10 +125,10 @@ export function PixSubscriptionDialog({
         onOpenChange(v);
       }}
     >
-      <DialogContent className="max-w-3xl p-0 overflow-hidden">
+      <DialogContent className="max-w-3xl p-0 overflow-hidden max-h-[90dvh] overflow-y-auto">
         <div className="grid grid-cols-1 md:grid-cols-[1.05fr_1fr]">
           {/* Resumo do pedido */}
-          <div className="bg-muted/40 p-6 space-y-5">
+          <div className="bg-muted/40 p-5 sm:p-6 space-y-5">
             <DialogHeader className="space-y-1 text-left">
               <DialogTitle className="text-xl">Finalizar pagamento</DialogTitle>
               <DialogDescription>
