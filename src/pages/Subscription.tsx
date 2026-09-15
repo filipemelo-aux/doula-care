@@ -861,11 +861,6 @@ export default function Subscription() {
             <a href="/suporte" className="underline">
               Termos de Uso e Suporte
             </a>
-            {!isWeb && (
-              <button type="button" onClick={handleRestore} className="underline">
-                Restaurar compras
-              </button>
-            )}
           </div>
         </CardContent>
       </Card>
