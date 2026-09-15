@@ -15,6 +15,7 @@ import {
   Check,
   Crown,
   Loader2,
+  QrCode,
   RefreshCcw,
   Sparkles,
   Star,
@@ -219,6 +220,36 @@ export default function Subscription() {
       toast.info("Pagamento cancelado");
       return;
     }
+    if (checkout === "pix") {
+      (async () => {
+        toast.loading("Confirmando o Pix...", { id: "confirm" });
+        // o Pix pode levar alguns segundos para ser identificado
+        for (let i = 0; i < 6; i++) {
+          await new Promise((r) => setTimeout(r, 2500));
+          await queryClient.invalidateQueries({ queryKey: ["my-subscription"] });
+          const { data } = await supabase
+            .from("subscriptions")
+            .select("id, status, current_period_end")
+            .eq("user_id", user?.id ?? "")
+            .eq("status", "active")
+            .order("created_at", { ascending: false })
+            .limit(1)
+            .maybeSingle();
+          if (data?.current_period_end && new Date(data.current_period_end) > new Date()) {
+            toast.dismiss("confirm");
+            toast.success("Pix identificado! Plano liberado.");
+            invalidatePlanCaches();
+            return;
+          }
+        }
+        toast.dismiss("confirm");
+        toast.info(
+          "Assim que o Pix for identificado o plano é liberado automaticamente."
+        );
+        invalidatePlanCaches();
+      })();
+      return;
+    }
     (async () => {
       toast.loading("Confirmando pagamento...", { id: "confirm" });
       try {
@@ -233,17 +264,26 @@ export default function Subscription() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const handleSubscribe = async (plan: PlatformPlan, billingType: BillingPeriod) => {
+  const handleSubscribe = async (
+    plan: PlatformPlan,
+    billingType: BillingPeriod,
+    method: "card" | "pix" = "card"
+  ) => {
     const product = productByPlan.get(`${plan.id}:${billingType}`);
 
     if (isWeb) {
-      setPurchasing(product?.productId || `${plan.id}:${billingType}`);
+      setPurchasing(
+        method === "pix"
+          ? `pix:${plan.id}:${billingType}`
+          : product?.productId || `${plan.id}:${billingType}`
+      );
       try {
         toast.loading("Abrindo pagamento seguro...", { id: "checkout" });
         const { data, error } = await supabase.functions.invoke("create-checkout", {
           body: {
             plan: plan.plan,
             billing: billingType,
+            method,
             coupon: appliedCoupon?.code || undefined,
           },
         });
@@ -722,6 +762,42 @@ export default function Subscription() {
                         ) : null}
                         Assinar anual — {yearlyLabel}
                       </Button>
+
+                      {isWeb && (
+                        <div className="pt-2 space-y-2">
+                          <p className="text-[11px] text-muted-foreground text-center">
+                            ou pague por Pix (liberação automática)
+                          </p>
+                          <div className="grid grid-cols-2 gap-2">
+                            <Button
+                              variant="secondary"
+                              size="sm"
+                              onClick={() => handleSubscribe(plan, "monthly", "pix")}
+                              disabled={!!purchasing}
+                            >
+                              {purchasing === `pix:${plan.id}:monthly` ? (
+                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                              ) : (
+                                <QrCode className="w-4 h-4 mr-2" />
+                              )}
+                              Pix mensal
+                            </Button>
+                            <Button
+                              variant="secondary"
+                              size="sm"
+                              onClick={() => handleSubscribe(plan, "yearly", "pix")}
+                              disabled={!!purchasing}
+                            >
+                              {purchasing === `pix:${plan.id}:yearly` ? (
+                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                              ) : (
+                                <QrCode className="w-4 h-4 mr-2" />
+                              )}
+                              Pix anual
+                            </Button>
+                          </div>
+                        </div>
+                      )}
                     </>
 
 
@@ -755,6 +831,13 @@ export default function Subscription() {
             A cobrança acontece na confirmação da compra e a cada renovação.
             Você pode gerenciar ou cancelar sua assinatura a qualquer momento.
           </p>
+          {isWeb && (
+            <p>
+              No pagamento por Pix não há renovação automática: o acesso é
+              liberado assim que o Pix é identificado e vale por 30 dias (mensal)
+              ou 12 meses (anual). Perto do vencimento basta pagar um novo Pix.
+            </p>
+          )}
           <div className="flex flex-wrap gap-4 pt-1">
             <a href="/politica-de-privacidade" className="underline">
               Política de Privacidade
