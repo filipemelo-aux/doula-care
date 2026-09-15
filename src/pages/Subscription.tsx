@@ -276,26 +276,42 @@ export default function Subscription() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const openPixCheckout = (plan: PlatformPlan, billingType: BillingPeriod) => {
+    const base =
+      billingType === "yearly"
+        ? plan.price_yearly > 0
+          ? plan.price_yearly
+          : plan.price_monthly * 12
+        : plan.price_monthly;
+    const discount = couponDiscountCents(
+      appliedCoupon?.offers,
+      plan.plan,
+      billingType,
+      base
+    );
+    setPixCheckout({
+      planId: plan.id,
+      planName: plan.name,
+      billingType,
+      amountCents: base - discount,
+      originalAmountCents: base,
+    });
+  };
+
   const handleSubscribe = async (
     plan: PlatformPlan,
-    billingType: BillingPeriod,
-    method: "card" | "pix" = "card"
+    billingType: BillingPeriod
   ) => {
     const product = productByPlan.get(`${plan.id}:${billingType}`);
 
     if (isWeb) {
-      setPurchasing(
-        method === "pix"
-          ? `pix:${plan.id}:${billingType}`
-          : product?.productId || `${plan.id}:${billingType}`
-      );
+      setPurchasing(product?.productId || `${plan.id}:${billingType}`);
       try {
         toast.loading("Abrindo pagamento seguro...", { id: "checkout" });
         const { data, error } = await supabase.functions.invoke("create-checkout", {
           body: {
             plan: plan.plan,
             billing: billingType,
-            method,
             coupon: appliedCoupon?.code || undefined,
           },
         });
