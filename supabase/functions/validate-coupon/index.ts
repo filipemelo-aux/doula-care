@@ -5,6 +5,7 @@ import {
   describeOffer,
   findCoupons,
   getOrganizationId,
+  hasDiscount,
 } from "../_shared/db-coupons.ts";
 
 const corsHeaders = {

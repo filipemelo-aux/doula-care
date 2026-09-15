@@ -1,7 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
-import { findPixPriceId, findPriceId } from "../_shared/stripe-plans.ts";
+import { findPriceId } from "../_shared/stripe-plans.ts";
 import {
   adminClient,
   findCoupons,
