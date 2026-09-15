@@ -879,6 +879,18 @@ export default function Subscription() {
         </CardContent>
       </Card>
 
+      {pixCheckout && (
+        <PixSubscriptionDialog
+          open={!!pixCheckout}
+          onOpenChange={(v) => !v && setPixCheckout(null)}
+          planId={pixCheckout.planId}
+          planName={pixCheckout.planName}
+          billingType={pixCheckout.billingType as "monthly" | "yearly"}
+          amountCents={pixCheckout.amountCents}
+          originalAmountCents={pixCheckout.originalAmountCents}
+          couponCode={appliedCoupon?.code ?? null}
+        />
+      )}
     </div>
   );
 
