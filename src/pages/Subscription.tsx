@@ -5,6 +5,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePlanLimits } from "@/hooks/usePlanLimits";
 import { useHideFreePlan } from "@/hooks/useHideFreePlan";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { PixSubscriptionDialog } from "@/components/subscription/PixSubscriptionDialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -99,7 +101,19 @@ export default function Subscription() {
   const [appliedCoupon, setAppliedCoupon] = useState<{
     code: string;
     description: string;
+    offers?: CouponOffer[];
   } | null>(null);
+  const [pixCheckout, setPixCheckout] = useState<{
+    planId: string;
+    planName: string;
+    billingType: BillingPeriod;
+    amountCents: number;
+    originalAmountCents: number;
+  } | null>(null);
+
+  const isMobileViewport = useIsMobile();
+  // Pix de assinatura existe apenas no navegador em tela grande
+  const pixEnabled = isWeb && !isMobileViewport;
 
   // Pagamento exclusivamente pelas lojas oficiais (regra 3.1.1 da Apple)
 
