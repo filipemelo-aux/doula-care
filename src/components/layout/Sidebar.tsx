@@ -68,9 +68,9 @@ const navItems = [
   },
 
   // { to: "/comunidade", icon: Users2, label: "Comunidade" }, // Oculto — acessível apenas via URL direta
-  { to: "/admin/assinatura", icon: Crown, label: "Assinatura", mobileTextOnly: true },
 ];
 
+const subscriptionNavItem = { to: "/admin/assinatura", icon: Crown, label: "Assinatura" };
 const settingsNavItem = { to: "/configuracoes", icon: Settings, label: "Configurações" };
 
 export function Sidebar({ isOpen, onToggle, onNavigate }: SidebarProps) {
@@ -292,8 +292,25 @@ export function Sidebar({ isOpen, onToggle, onNavigate }: SidebarProps) {
         })}
       </nav>
 
-      {/* Configurações — fixado no rodapé, acima do card de plano */}
-      <div className="px-3 pt-2 pb-1 border-t border-border/40">
+      {/* Assinatura + Configurações — fixados no rodapé, divididos por um separador */}
+      <div className="px-3 pt-2 pb-1">
+        <button
+          onClick={() => handleNavClick(subscriptionNavItem.to)}
+          className={cn(
+            "nav-link w-full text-left",
+            !Capacitor.isNativePlatform() && location.pathname === subscriptionNavItem.to && "active",
+            !isOpen && "lg:justify-center lg:px-0"
+          )}
+          title={!isOpen ? subscriptionNavItem.label : undefined}
+        >
+          <subscriptionNavItem.icon className="w-[18px] h-[18px] shrink-0" strokeWidth={1.8} />
+          <span className={cn("transition-opacity flex-1 text-[13px]", !isOpen && "lg:hidden")}>
+            {subscriptionNavItem.label}
+          </span>
+        </button>
+
+        <div className="my-1.5 border-t border-border/40" />
+
         <button
           onClick={() => handleNavClick(settingsNavItem.to)}
           className={cn(
