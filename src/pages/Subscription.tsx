@@ -174,16 +174,16 @@ export default function Subscription() {
       const { data } = await supabase
         .from("subscription_coupons" as any)
         .select("id, code, description, expires_at, platform, organization_id")
-        .or(`organization_id.is.null,organization_id.eq.${organizationId}`)
+        // só cupons direcionados a esta doula aparecem sozinhos;
+        // cupons gerais precisam ser digitados por quem recebeu o código
+        .eq("organization_id", organizationId)
         .eq("is_active", true)
         .in("platform", platform === "web" ? ["both", "ios", "android"] : ["both", platform])
         .order("created_at", { ascending: false });
       const rows = ((data as any[]) || []).filter(
         (r) => !r.expires_at || new Date(r.expires_at) >= new Date()
       );
-      if (rows.length === 0) return null;
-      // cupom exclusivo da doula tem prioridade sobre o cupom geral
-      return rows.find((r) => r.organization_id) || rows[0];
+      return rows[0] ?? null;
     },
     enabled: !!organizationId,
   });
