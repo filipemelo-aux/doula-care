@@ -1077,6 +1077,7 @@ export type Database = {
           action: string
           id: string
           organization_id: string
+          platform: string | null
           user_id: string
         }
         Insert: {
@@ -1084,6 +1085,7 @@ export type Database = {
           action?: string
           id?: string
           organization_id: string
+          platform?: string | null
           user_id: string
         }
         Update: {
@@ -1091,6 +1093,7 @@ export type Database = {
           action?: string
           id?: string
           organization_id?: string
+          platform?: string | null
           user_id?: string
         }
         Relationships: [
@@ -2385,6 +2388,7 @@ export type Database = {
         Returns: {
           last_access: string
           organization_id: string
+          platform: string
         }[]
       }
       get_org_match_requests: {
