@@ -23,6 +23,16 @@ Deno.serve(async (req) => {
     { auth: { persistSession: false } }
   );
 
+  const url = new URL(req.url);
+  if (url.searchParams.get("action") === "webhooks") {
+    const eps = await stripe.webhookEndpoints.list({ limit: 10 });
+    const events = await stripe.events.list({ limit: 10 });
+    return new Response(JSON.stringify({
+      endpoints: eps.data.map((e) => ({ id: e.id, url: e.url, status: e.status, enabled_events: e.enabled_events })),
+      recent_events: events.data.map((e) => ({ id: e.id, type: e.type, created: e.created, pending_webhooks: e.pending_webhooks })),
+    }, null, 2), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+  }
+
   const out: unknown[] = [];
   const subs = await stripe.subscriptions.list({ limit: 20, status: "all" });
 
