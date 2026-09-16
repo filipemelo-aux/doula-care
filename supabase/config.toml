@@ -1,6 +1,10 @@
 project_id = "gjnvxzsforfrxjanxqnq"
 
 [functions]
+  [functions.stripe-webhook]
+    verify_jwt = false
+  [functions.admin-stripe-sync]
+    verify_jwt = false
   [functions.auth-email-hook]
     verify_jwt = false
   [functions.check-appointment-reminders]
