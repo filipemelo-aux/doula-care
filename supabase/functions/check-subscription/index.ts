@@ -91,8 +91,14 @@ Deno.serve(async (req) => {
 
     // ── Active Stripe subscription found — reconcile local state ──
     const stripeSub = subscriptions.data[0];
-    const subscriptionEnd = new Date(stripeSub.current_period_end * 1000).toISOString();
-    const subscriptionStart = new Date(stripeSub.current_period_start * 1000).toISOString();
+    const item = stripeSub.items.data[0] as unknown as
+      { current_period_start?: number; current_period_end?: number } | undefined;
+    const rawEnd = (stripeSub as unknown as { current_period_end?: number }).current_period_end
+      ?? item?.current_period_end;
+    const rawStart = (stripeSub as unknown as { current_period_start?: number }).current_period_start
+      ?? item?.current_period_start;
+    const subscriptionEnd = rawEnd ? new Date(rawEnd * 1000).toISOString() : null;
+    const subscriptionStart = rawStart ? new Date(rawStart * 1000).toISOString() : null;
 
     // Resolve plan: Stripe price is the source of truth; local row is a fallback
     const priceId = stripeSub.items.data[0]?.price?.id;
@@ -161,7 +167,7 @@ Deno.serve(async (req) => {
           .update({
             plan: planSlug as "free" | "pro" | "premium",
             status: "ativo",
-            next_billing_date: subscriptionEnd.split("T")[0],
+            next_billing_date: subscriptionEnd ? subscriptionEnd.split("T")[0] : null,
           })
           .eq("id", profile.organization_id);
       }

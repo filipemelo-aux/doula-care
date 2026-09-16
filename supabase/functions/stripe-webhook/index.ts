@@ -87,12 +87,14 @@ async function syncSubscription(
     ? "active"
     : "canceled";
 
-  const periodStart = subscription.current_period_start
-    ? new Date(subscription.current_period_start * 1000).toISOString()
-    : null;
-  const periodEnd = subscription.current_period_end
-    ? new Date(subscription.current_period_end * 1000).toISOString()
-    : null;
+  const item = subscription.items.data[0] as unknown as
+    { current_period_start?: number; current_period_end?: number } | undefined;
+  const rawStart = (subscription as unknown as { current_period_start?: number }).current_period_start
+    ?? item?.current_period_start;
+  const rawEnd = (subscription as unknown as { current_period_end?: number }).current_period_end
+    ?? item?.current_period_end;
+  const periodStart = rawStart ? new Date(rawStart * 1000).toISOString() : null;
+  const periodEnd = rawEnd ? new Date(rawEnd * 1000).toISOString() : null;
 
   const { data: existing } = await supabase
     .from("subscriptions")

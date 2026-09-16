@@ -56,14 +56,20 @@ Deno.serve(async (req) => {
     if (planInfo && userId) {
       const active = ["active", "trialing", "past_due"].includes(sub.status);
       const status = sub.status === "past_due" ? "billing_issue" : active ? "active" : "canceled";
+      const item = sub.items.data[0] as unknown as
+        { current_period_start?: number; current_period_end?: number } | undefined;
+      const rawStart = (sub as unknown as { current_period_start?: number }).current_period_start
+        ?? item?.current_period_start;
+      const rawEnd = (sub as unknown as { current_period_end?: number }).current_period_end
+        ?? item?.current_period_end;
       const payload = {
         user_id: userId,
         plan_id: planInfo.planId,
         status,
         platform: "web",
         product_id: priceId,
-        current_period_start: sub.current_period_start ? new Date(sub.current_period_start * 1000).toISOString() : null,
-        current_period_end: sub.current_period_end ? new Date(sub.current_period_end * 1000).toISOString() : null,
+        current_period_start: rawStart ? new Date(rawStart * 1000).toISOString() : null,
+        current_period_end: rawEnd ? new Date(rawEnd * 1000).toISOString() : null,
         stripe_customer_id: customerId,
         stripe_subscription_id: sub.id,
       };
