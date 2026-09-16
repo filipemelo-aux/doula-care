@@ -1,0 +1,2 @@
+ALTER TABLE public.subscriptions DROP CONSTRAINT IF EXISTS subscriptions_platform_check;
+ALTER TABLE public.subscriptions ADD CONSTRAINT subscriptions_platform_check CHECK (platform IS NULL OR platform = ANY (ARRAY['ios','android','manual','free','mock','web','pix']));
