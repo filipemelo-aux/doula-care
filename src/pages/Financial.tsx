@@ -1270,10 +1270,6 @@ export default function Financial() {
                   <p className="text-sm text-muted-foreground/60 mb-6 text-center max-w-xs">Você ainda não registrou receitas. Comece a acompanhar seus ganhos.</p>
                 </>
               )}
-              <Button onClick={() => navigate("/servicos/atendimentos")} className="gap-2">
-                <Plus className="w-4 h-4" />
-                Registrar atendimento
-              </Button>
             </div>
           )}
         </CardContent>
