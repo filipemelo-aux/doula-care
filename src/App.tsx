@@ -241,6 +241,7 @@ const App = () => (
               <Route path="/servicos/atendimentos" element={<ProtectedRoute allowedRoles={["admin"]}><ServiceRecords /></ProtectedRoute>} />
               <Route path="/servicos/previsoes" element={<ProtectedRoute allowedRoles={["admin"]}><ReceivableForecasts /></ProtectedRoute>} />
               <Route path="/despesas" element={<ProtectedRoute allowedRoles={["admin"]}><Expenses /></ProtectedRoute>} />
+              <Route path="/contas-pagas" element={<ProtectedRoute allowedRoles={["admin"]}><Expenses view="paid" /></ProtectedRoute>} />
               <Route path="/cobrancas" element={<ProtectedRoute allowedRoles={["admin"]}><Cobrancas /></ProtectedRoute>} />
               <Route path="/relatorios" element={<ProtectedRoute allowedRoles={["admin"]}><Reports /></ProtectedRoute>} />
 
