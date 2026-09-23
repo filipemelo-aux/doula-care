@@ -939,12 +939,12 @@ export default function Financial() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div className="page-header mb-0 min-w-0">
-          <h1 className="page-title">Financeiro - Receitas</h1>
-          <p className="page-description">Controle suas receitas e recebimentos</p>
+          <h1 className="page-title">Faturas e Contas a Receber</h1>
+          <p className="page-description">Acompanhe suas faturas e registre os recebimentos</p>
         </div>
-        <Button onClick={handleOpenDialog} className="gap-2 flex-shrink-0 w-full md:w-auto">
+        <Button onClick={() => navigate("/servicos/atendimentos")} variant="outline" className="gap-2 flex-shrink-0 w-full md:w-auto">
           <Plus className="w-4 h-4" />
-          Nova Receita
+          Novo atendimento
         </Button>
       </div>
 
@@ -1274,9 +1274,9 @@ export default function Financial() {
                   <p className="text-sm text-muted-foreground/60 mb-6 text-center max-w-xs">Você ainda não registrou receitas. Comece a acompanhar seus ganhos.</p>
                 </>
               )}
-              <Button onClick={handleOpenDialog} className="gap-2">
+              <Button onClick={() => navigate("/servicos/atendimentos")} className="gap-2">
                 <Plus className="w-4 h-4" />
-                Registrar receita
+                Registrar atendimento
               </Button>
             </div>
           )}
@@ -1288,7 +1288,7 @@ export default function Financial() {
         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader className="pb-2">
             <DialogTitle className="font-display text-lg">
-              {selectedTransaction ? "Editar Receita" : "Nova Receita de Serviço"}
+              {selectedTransaction ? "Editar Fatura" : invoiceServiceRecordId ? "Gerar Fatura" : "Nova Fatura"}
             </DialogTitle>
           </DialogHeader>
           <Form {...form}>
