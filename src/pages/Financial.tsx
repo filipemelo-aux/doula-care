@@ -193,6 +193,27 @@ export default function Financial() {
   const location = useLocation();
   const navigate = useNavigate();
   const [pendingModeratorRequestId, setPendingModeratorRequestId] = useState<string | null>(null);
+  const [invoiceServiceRecordId, setInvoiceServiceRecordId] = useState<string | null>(null);
+
+  // Gerar fatura a partir de uma previsão de recebimento (Serviços → Previsões)
+  useEffect(() => {
+    const st = (location.state || {}) as {
+      invoiceFromRecord?: { id: string; client_id: string | null; amount: number; description: string; date: string; notes?: string | null };
+    };
+    const rec = st.invoiceFromRecord;
+    if (!rec) return;
+    handleOpenDialog();
+    setTimeout(() => {
+      form.setValue("description", rec.description);
+      form.setValue("amount", Number(rec.amount) || 0);
+      form.setValue("date", rec.date);
+      if (rec.client_id) form.setValue("client_id", rec.client_id);
+      if (rec.notes) form.setValue("notes", rec.notes);
+    }, 0);
+    setInvoiceServiceRecordId(rec.id);
+    navigate(location.pathname, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.state]);
 
   useEffect(() => {
     const st = (location.state || {}) as {
@@ -503,8 +524,16 @@ export default function Financial() {
           organization_id: organizationId || null,
         });
       }
+      return newTransaction.id as string;
     },
-    onSuccess: () => {
+    onSuccess: async (newId?: string) => {
+      if (invoiceServiceRecordId && newId) {
+        await (supabase.from("service_records" as any) as any)
+          .update({ status: "invoiced", transaction_id: newId })
+          .eq("id", invoiceServiceRecordId);
+        setInvoiceServiceRecordId(null);
+        queryClient.invalidateQueries({ queryKey: ["service-records"] });
+      }
       queryClient.invalidateQueries({ queryKey: ["transactions"] });
       queryClient.invalidateQueries({ queryKey: ["monthly-transactions"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
@@ -512,7 +541,7 @@ export default function Financial() {
       queryClient.invalidateQueries({ queryKey: ["agenda-services"] });
       queryClient.invalidateQueries({ queryKey: ["all-appointments"] });
       queryClient.invalidateQueries({ queryKey: ["client-appointments"] });
-      toast.success("Receita registrada!");
+      toast.success(invoiceServiceRecordId ? "Fatura gerada!" : "Receita registrada!");
       setDialogOpen(false);
       form.reset();
       setSelectedTransaction(null);
