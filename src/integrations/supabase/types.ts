@@ -2544,10 +2544,6 @@ export type Database = {
         Args: { p_payment_id: string }
         Returns: undefined
       }
-      set_expense_payment: {
-        Args: { p_paid: boolean; p_transaction_id: string }
-        Returns: undefined
-      }
     }
     Enums: {
       app_role:
