@@ -942,10 +942,6 @@ export default function Financial() {
           <h1 className="page-title">Faturas e Contas a Receber</h1>
           <p className="page-description">Acompanhe suas faturas e registre os recebimentos</p>
         </div>
-        <Button onClick={() => navigate("/servicos/atendimentos")} variant="outline" className="gap-2 flex-shrink-0 w-full md:w-auto">
-          <Plus className="w-4 h-4" />
-          Novo atendimento
-        </Button>
       </div>
 
       {/* Stats — Recebido como destaque (oculto para moderadores) */}
@@ -1274,10 +1270,6 @@ export default function Financial() {
                   <p className="text-sm text-muted-foreground/60 mb-6 text-center max-w-xs">Você ainda não registrou receitas. Comece a acompanhar seus ganhos.</p>
                 </>
               )}
-              <Button onClick={() => navigate("/servicos/atendimentos")} className="gap-2">
-                <Plus className="w-4 h-4" />
-                Registrar atendimento
-              </Button>
             </div>
           )}
         </CardContent>
