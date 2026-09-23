@@ -35,6 +35,8 @@ import AdminMessages from "./pages/AdminMessages";
 import Subscription from "./pages/Subscription";
 import LocationCoverage from "./pages/LocationCoverage";
 import MyBrand from "./pages/MyBrand";
+import ServiceRecords from "./pages/ServiceRecords";
+import ReceivableForecasts from "./pages/ReceivableForecasts";
 import RegisterVisitor from "./pages/RegisterVisitor";
 import VisitorDashboard from "./pages/visitante/VisitorDashboard";
 import VisitorSearch from "./pages/visitante/VisitorSearch";
@@ -236,6 +238,8 @@ const App = () => (
               <Route path="/agenda" element={<Agenda />} />
               <Route path="/clientes" element={<Clients />} />
               <Route path="/financeiro" element={<ProtectedRoute allowedRoles={["admin"]}><Financial /></ProtectedRoute>} />
+              <Route path="/servicos/atendimentos" element={<ProtectedRoute allowedRoles={["admin"]}><ServiceRecords /></ProtectedRoute>} />
+              <Route path="/servicos/previsoes" element={<ProtectedRoute allowedRoles={["admin"]}><ReceivableForecasts /></ProtectedRoute>} />
               <Route path="/despesas" element={<ProtectedRoute allowedRoles={["admin"]}><Expenses /></ProtectedRoute>} />
               <Route path="/cobrancas" element={<ProtectedRoute allowedRoles={["admin"]}><Cobrancas /></ProtectedRoute>} />
               <Route path="/relatorios" element={<ProtectedRoute allowedRoles={["admin"]}><Reports /></ProtectedRoute>} />
