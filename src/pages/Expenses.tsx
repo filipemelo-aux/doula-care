@@ -103,6 +103,7 @@ const expenseSchema = z.object({
     "outros",
   ]),
   payment_method: z.enum(["pix", "cartao", "dinheiro", "transferencia", "boleto"]),
+  payment_status: z.enum(["pendente", "pago"]),
   notes: z.string().optional(),
 });
 
@@ -135,6 +136,7 @@ export default function Expenses({ view = "payable" }: ExpensesProps) {
       expense_type: "material_trabalho",
       expense_category: "outros",
       payment_method: "pix",
+      payment_status: "pendente",
       notes: "",
     },
   });
@@ -164,6 +166,7 @@ export default function Expenses({ view = "payable" }: ExpensesProps) {
         expense_type: data.expense_type,
         expense_category: data.expense_category,
         payment_method: data.payment_method,
+        amount_received: data.payment_status === "pago" ? data.amount : 0,
         notes: data.notes || null,
         owner_id: user?.id || null,
         organization_id: organizationId || null,
@@ -194,6 +197,7 @@ export default function Expenses({ view = "payable" }: ExpensesProps) {
           expense_type: data.expense_type,
           expense_category: data.expense_category,
           payment_method: data.payment_method,
+          amount_received: data.payment_status === "pago" ? data.amount : 0,
           notes: data.notes || null,
         })
         .eq("id", id);
@@ -265,6 +269,7 @@ export default function Expenses({ view = "payable" }: ExpensesProps) {
       expense_type: (expense.expense_type as "material_trabalho" | "servicos_contratados") || "material_trabalho",
       expense_category: (expense.expense_category as keyof typeof expenseCategories) || "outros",
       payment_method: (expense.payment_method as keyof typeof paymentMethodLabels) || "pix",
+      payment_status: Number(expense.amount_received || 0) >= Number(expense.amount) ? "pago" : "pendente",
       notes: expense.notes || "",
     });
     setDialogOpen(true);
@@ -292,6 +297,7 @@ export default function Expenses({ view = "payable" }: ExpensesProps) {
       expense_type: "material_trabalho",
       expense_category: "outros",
       payment_method: "pix",
+      payment_status: "pendente",
       notes: "",
     });
     setDialogOpen(true);
@@ -561,7 +567,7 @@ export default function Expenses({ view = "payable" }: ExpensesProps) {
                   name="expense_type"
                   render={({ field }) => (
                     <FormItem className="space-y-1">
-                      <FormLabel className="text-xs">Tipo de Despesa *</FormLabel>
+                      <FormLabel className="text-xs">Tipo de Conta *</FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                           <SelectTrigger className="input-field h-8 text-sm">
@@ -660,6 +666,26 @@ export default function Expenses({ view = "payable" }: ExpensesProps) {
                             {label}
                           </SelectItem>
                         ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="payment_status"
+                render={({ field }) => (
+                  <FormItem className="space-y-1">
+                    <FormLabel className="text-xs">Situação *</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger className="input-field h-8 text-sm"><SelectValue /></SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="pendente">Pendente</SelectItem>
+                        <SelectItem value="pago">Já paga</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />

@@ -28,6 +28,7 @@ import {
   HeartHandshake,
   ClipboardList,
   CalendarClock,
+  CheckCircle,
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
