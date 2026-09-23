@@ -62,7 +62,7 @@ const formatClientName = (fullName: string, maxLength = 28) => {
 
 export default function Clients() {
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<"todas" | "gestante" | "lactante">("todas");
+  const [statusFilter, setStatusFilter] = useState<"todas" | "gestante" | "lactante">("gestante");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
@@ -247,8 +247,7 @@ export default function Clients() {
             Lista de Clientes ({filteredClients?.length || 0})
           </CardTitle>
           <Tabs value={statusFilter} onValueChange={(v) => setStatusFilter(v as typeof statusFilter)}>
-            <TabsList className="grid w-full grid-cols-3 sm:w-auto sm:inline-grid">
-              <TabsTrigger value="todas">Todas</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-2 sm:w-auto sm:inline-grid">
               <TabsTrigger value="gestante">Gestantes</TabsTrigger>
               <TabsTrigger value="lactante">Puérperas</TabsTrigger>
             </TabsList>
