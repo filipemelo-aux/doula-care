@@ -36,7 +36,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, TrendingDown, Search, Trash2, Edit2, Loader2 } from "lucide-react";
+import { Plus, TrendingDown, Search, Trash2, Edit2, Loader2, CheckCircle2, Eye, RotateCcw } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -108,7 +108,12 @@ const expenseSchema = z.object({
 
 type ExpenseFormData = z.infer<typeof expenseSchema>;
 
-export default function Expenses() {
+interface ExpensesProps {
+  view?: "payable" | "paid";
+}
+
+export default function Expenses({ view = "payable" }: ExpensesProps) {
+  const isPaidView = view === "paid";
   const { user, organizationId, role } = useAuth();
   const isModerator = role === "moderator";
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -116,6 +121,8 @@ export default function Expenses() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [expenseToDelete, setExpenseToDelete] = useState<string | null>(null);
   const [selectedExpense, setSelectedExpense] = useState<Transaction | null>(null);
+  const [detailExpense, setDetailExpense] = useState<Transaction | null>(null);
+  const [paymentAction, setPaymentAction] = useState<{ expense: Transaction; paid: boolean } | null>(null);
 
   const queryClient = useQueryClient();
 
@@ -133,7 +140,7 @@ export default function Expenses() {
   });
 
   const { data: expenses, isLoading } = useQuery({
-    queryKey: ["transactions", "despesa", isModerator ? user?.id : "all"],
+    queryKey: ["transactions", "despesa", isModerator ? user?.id : "all", view],
     queryFn: async () => {
       let q = supabase
         .from("transactions")
@@ -220,6 +227,27 @@ export default function Expenses() {
     },
   });
 
+  const paymentMutation = useMutation({
+    mutationFn: async ({ expense, paid }: { expense: Transaction; paid: boolean }) => {
+      const { error } = await supabase
+        .from("transactions")
+        .update({ amount_received: paid ? Number(expense.amount) : 0 })
+        .eq("id", expense.id)
+        .eq("type", "despesa");
+      if (error) throw error;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["transactions"] });
+      queryClient.invalidateQueries({ queryKey: ["monthly-transactions"] });
+      toast.success(variables.paid ? "Conta marcada como paga" : "Pagamento estornado");
+      setPaymentAction(null);
+      setDetailExpense(null);
+    },
+    onError: (error: any) => {
+      toast.error(error?.message || "Não foi possível atualizar a conta");
+    },
+  });
+
   const onSubmit = (data: ExpenseFormData) => {
     if (selectedExpense) {
       updateMutation.mutate({ ...data, id: selectedExpense.id });
@@ -269,14 +297,18 @@ export default function Expenses() {
     setDialogOpen(true);
   };
 
-  const filteredExpenses = expenses?.filter((e) =>
+  const viewExpenses = expenses?.filter((expense) => {
+    const paid = Number(expense.amount_received || 0) >= Number(expense.amount);
+    return isPaidView ? paid : !paid;
+  });
+  const filteredExpenses = viewExpenses?.filter((e) =>
     e.description.toLowerCase().includes(search.toLowerCase())
   );
 
-  const totalExpenses = expenses?.reduce((sum, e) => sum + Number(e.amount), 0) || 0;
+  const totalExpenses = viewExpenses?.reduce((sum, e) => sum + Number(e.amount), 0) || 0;
 
   const thisMonthExpenses =
-    expenses
+    viewExpenses
       ?.filter((e) => {
         const expenseDate = new Date(e.date);
         const now = new Date();
@@ -288,7 +320,7 @@ export default function Expenses() {
       .reduce((sum, e) => sum + Number(e.amount), 0) || 0;
 
   // Group by category for summary
-  const categoryTotals = expenses?.reduce((acc, e) => {
+  const categoryTotals = viewExpenses?.reduce((acc, e) => {
     const cat = e.expense_category || "outros";
     acc[cat] = (acc[cat] || 0) + Number(e.amount);
     return acc;
@@ -308,18 +340,22 @@ export default function Expenses() {
       {/* Header */}
       <div className="page-header flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="min-w-0">
-          <h1 className="page-title">Despesas</h1>
-          <p className="page-description">Controle suas despesas e gastos</p>
+          <h1 className="page-title">{isPaidView ? "Contas Pagas" : "Contas a Pagar"}</h1>
+          <p className="page-description">
+            {isPaidView ? "Consulte as contas quitadas e estorne pagamentos quando necessário" : "Organize as contas pendentes do seu negócio"}
+          </p>
         </div>
-        <Button onClick={handleOpenDialog} className="gap-2 flex-shrink-0">
-          <Plus className="w-4 h-4" />
-          Nova Despesa
-        </Button>
+        {!isPaidView && (
+          <Button onClick={handleOpenDialog} className="gap-2 flex-shrink-0">
+            <Plus className="w-4 h-4" />
+            Nova Conta
+          </Button>
+        )}
       </div>
 
       {/* Stats — Total como destaque */}
       <div className="rounded-2xl bg-gradient-to-br from-destructive/10 via-destructive/5 to-transparent p-4 lg:p-6 shadow-card">
-        <p className="text-xs text-muted-foreground/70 mb-0.5">Despesas Total</p>
+        <p className="text-xs text-muted-foreground/70 mb-0.5">{isPaidView ? "Total pago" : "Total a pagar"}</p>
         <p className="text-3xl lg:text-4xl font-bold tracking-tight text-destructive">{formatCurrency(totalExpenses)}</p>
         <div className="grid grid-cols-3 gap-3 mt-4">
           <div className="space-y-0.5">
@@ -328,7 +364,7 @@ export default function Expenses() {
           </div>
           <div className="space-y-0.5">
             <p className="text-[10px] lg:text-xs text-muted-foreground/60 font-normal">Transações</p>
-            <p className="text-sm lg:text-base font-semibold text-foreground/80">{expenses?.length || 0}</p>
+            <p className="text-sm lg:text-base font-semibold text-foreground/80">{viewExpenses?.length || 0}</p>
           </div>
           <div className="space-y-0.5">
             <p className="text-[10px] lg:text-xs text-muted-foreground/60 font-normal">Maior categoria</p>
@@ -358,7 +394,7 @@ export default function Expenses() {
       <Card className="card-glass">
         <CardHeader>
           <CardTitle className="text-lg font-semibold text-foreground">
-            Despesas ({filteredExpenses?.length || 0})
+            {isPaidView ? "Contas Pagas" : "Contas a Pagar"} ({filteredExpenses?.length || 0})
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -394,24 +430,26 @@ export default function Expenses() {
                           {expenseCategories[(expense.expense_category as keyof typeof expenseCategories)] || "—"}
                         </Badge>
                       </div>
-                      <div className="flex items-center gap-1 flex-shrink-0">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleEdit(expense)}
-                          className="h-7 w-7"
-                        >
-                          <Edit2 className="h-3.5 w-3.5" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleDelete(expense.id)}
-                          className="h-7 w-7 text-destructive hover:text-destructive"
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </Button>
-                      </div>
+                        <div className="flex items-center gap-1 flex-shrink-0">
+                          {isPaidView ? (
+                            <>
+                              <Button variant="ghost" size="icon" onClick={() => setDetailExpense(expense)} className="h-7 w-7" aria-label="Visualizar conta">
+                                <Eye className="h-3.5 w-3.5" />
+                              </Button>
+                              <Button variant="ghost" size="icon" onClick={() => setPaymentAction({ expense, paid: false })} className="h-7 w-7 text-amber-700" aria-label="Estornar pagamento">
+                                <RotateCcw className="h-3.5 w-3.5" />
+                              </Button>
+                            </>
+                          ) : (
+                            <>
+                              <Button variant="ghost" size="sm" onClick={() => setPaymentAction({ expense, paid: true })} className="h-7 gap-1 text-emerald-700">
+                                <CheckCircle2 className="h-3.5 w-3.5" /> Pagar
+                              </Button>
+                              <Button variant="ghost" size="icon" onClick={() => handleEdit(expense)} className="h-7 w-7"><Edit2 className="h-3.5 w-3.5" /></Button>
+                              <Button variant="ghost" size="icon" onClick={() => handleDelete(expense.id)} className="h-7 w-7 text-destructive hover:text-destructive"><Trash2 className="h-3.5 w-3.5" /></Button>
+                            </>
+                          )}
+                        </div>
                     </div>
                   </Card>
                 ))}
@@ -457,24 +495,20 @@ export default function Expenses() {
                           </Badge>
                         </TableCell>
                         <TableCell className="text-right">
-                          <div className="flex items-center justify-end gap-1">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleEdit(expense)}
-                              className="h-8 w-8"
-                            >
-                              <Edit2 className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleDelete(expense.id)}
-                              className="h-8 w-8 text-destructive hover:text-destructive"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
+                           <div className="flex items-center justify-end gap-1">
+                             {isPaidView ? (
+                               <>
+                                 <Button variant="ghost" size="icon" onClick={() => setDetailExpense(expense)} className="h-8 w-8" aria-label="Visualizar conta"><Eye className="h-4 w-4" /></Button>
+                                 <Button variant="ghost" size="sm" onClick={() => setPaymentAction({ expense, paid: false })} className="h-8 gap-1 text-amber-700"><RotateCcw className="h-4 w-4" /> Estornar</Button>
+                               </>
+                             ) : (
+                               <>
+                                 <Button variant="ghost" size="sm" onClick={() => setPaymentAction({ expense, paid: true })} className="h-8 gap-1 text-emerald-700"><CheckCircle2 className="h-4 w-4" /> Pagar</Button>
+                                 <Button variant="ghost" size="icon" onClick={() => handleEdit(expense)} className="h-8 w-8"><Edit2 className="h-4 w-4" /></Button>
+                                 <Button variant="ghost" size="icon" onClick={() => handleDelete(expense.id)} className="h-8 w-8 text-destructive hover:text-destructive"><Trash2 className="h-4 w-4" /></Button>
+                               </>
+                             )}
+                           </div>
                         </TableCell>
                       </TableRow>
                     ))}
@@ -487,12 +521,11 @@ export default function Expenses() {
               <div className="w-16 h-16 rounded-2xl bg-muted/50 flex items-center justify-center mb-4">
                 <Wallet className="w-8 h-8 text-muted-foreground/40" />
               </div>
-              <p className="text-base font-medium text-foreground/70 mb-1">Nenhuma despesa ainda</p>
-              <p className="text-sm text-muted-foreground/60 mb-6 text-center max-w-xs">Você ainda não registrou despesas. Comece a controlar seus gastos agora.</p>
-              <Button onClick={handleOpenDialog} className="gap-2">
-                <Plus className="w-4 h-4" />
-                Registrar despesa
-              </Button>
+              <p className="text-base font-medium text-foreground/70 mb-1">{isPaidView ? "Nenhuma conta paga" : "Nenhuma conta pendente"}</p>
+              <p className="text-sm text-muted-foreground/60 mb-6 text-center max-w-xs">
+                {isPaidView ? "As contas quitadas aparecerão aqui." : "Você não possui contas a pagar no momento."}
+              </p>
+              {!isPaidView && <Button onClick={handleOpenDialog} className="gap-2"><Plus className="w-4 h-4" />Registrar conta</Button>}
             </div>
           )}
         </CardContent>
@@ -503,7 +536,7 @@ export default function Expenses() {
         <DialogContent className="max-w-lg">
           <DialogHeader className="pb-2">
             <DialogTitle className="font-display text-lg">
-              {selectedExpense ? "Editar Despesa" : "Nova Despesa"}
+              {selectedExpense ? "Editar Conta" : "Nova Conta a Pagar"}
             </DialogTitle>
           </DialogHeader>
           <Form {...form}>
@@ -669,6 +702,52 @@ export default function Expenses() {
           </Form>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={!!detailExpense} onOpenChange={(open) => !open && setDetailExpense(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader><DialogTitle>Detalhes da Conta Paga</DialogTitle></DialogHeader>
+          {detailExpense && (
+            <div className="space-y-3 text-sm">
+              <div><p className="text-xs text-muted-foreground">Descrição</p><p className="font-medium">{detailExpense.description}</p></div>
+              <div className="grid grid-cols-2 gap-3">
+                <div><p className="text-xs text-muted-foreground">Data</p><p>{formatBrazilDate(detailExpense.date)}</p></div>
+                <div><p className="text-xs text-muted-foreground">Valor pago</p><p className="font-semibold text-emerald-700">{formatCurrency(Number(detailExpense.amount))}</p></div>
+                <div><p className="text-xs text-muted-foreground">Categoria</p><p>{expenseCategories[(detailExpense.expense_category as keyof typeof expenseCategories)] || "—"}</p></div>
+                <div><p className="text-xs text-muted-foreground">Forma de pagamento</p><p>{paymentMethodLabels[(detailExpense.payment_method as keyof typeof paymentMethodLabels)] || "—"}</p></div>
+              </div>
+              {detailExpense.notes && <div><p className="text-xs text-muted-foreground">Observações</p><p>{detailExpense.notes}</p></div>}
+              <Button variant="outline" className="w-full gap-2 text-amber-700" onClick={() => setPaymentAction({ expense: detailExpense, paid: false })}>
+                <RotateCcw className="h-4 w-4" /> Estornar pagamento
+              </Button>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      <AlertDialog open={!!paymentAction} onOpenChange={(open) => !open && setPaymentAction(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{paymentAction?.paid ? "Confirmar pagamento?" : "Estornar pagamento?"}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {paymentAction?.paid
+                ? "A conta será movida para Contas Pagas."
+                : "A conta voltará para Contas a Pagar, sem perder os dados do lançamento."}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(event) => {
+                event.preventDefault();
+                if (paymentAction) paymentMutation.mutate(paymentAction);
+              }}
+              disabled={paymentMutation.isPending}
+            >
+              {paymentMutation.isPending ? "Salvando..." : paymentAction?.paid ? "Confirmar pagamento" : "Confirmar estorno"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Delete Confirmation */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>

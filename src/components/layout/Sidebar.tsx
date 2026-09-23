@@ -63,7 +63,8 @@ const navItems = [
     label: "Financeiro",
     subItems: [
       { to: "/financeiro", icon: TrendingUp, label: "Faturas e Contas a Receber" },
-      { to: "/despesas", icon: TrendingDown, label: "Despesas" },
+      { to: "/despesas", icon: TrendingDown, label: "Contas a Pagar" },
+      { to: "/contas-pagas", icon: CheckCircle, label: "Contas Pagas" },
       { to: "/cobrancas", icon: AlertCircle, label: "Cobranças" },
       { to: "/relatorios", icon: FileText, label: "Relatórios" },
     ],
@@ -101,7 +102,7 @@ export function Sidebar({ isOpen, onToggle, onNavigate }: SidebarProps) {
   });
 
 
-  const isFinancialRoute = ["/financeiro", "/despesas", "/cobrancas", "/relatorios"].includes(location.pathname);
+  const isFinancialRoute = ["/financeiro", "/despesas", "/contas-pagas", "/cobrancas", "/relatorios"].includes(location.pathname);
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() => {
     try { return JSON.parse(localStorage.getItem("sidebar-open-groups") || "{}"); } catch { return {}; }
   });
@@ -193,6 +194,7 @@ export function Sidebar({ isOpen, onToggle, onNavigate }: SidebarProps) {
             const subLimitKeys: Record<string, keyof typeof limits> = {
               "/financeiro": "financial",
               "/despesas": "expenses",
+               "/contas-pagas": "expenses",
               "/cobrancas": "financial",
               "/relatorios": "reports",
               "/servicos/atendimentos": "financial",
