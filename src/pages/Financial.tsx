@@ -193,6 +193,27 @@ export default function Financial() {
   const location = useLocation();
   const navigate = useNavigate();
   const [pendingModeratorRequestId, setPendingModeratorRequestId] = useState<string | null>(null);
+  const [invoiceServiceRecordId, setInvoiceServiceRecordId] = useState<string | null>(null);
+
+  // Gerar fatura a partir de uma previsão de recebimento (Serviços → Previsões)
+  useEffect(() => {
+    const st = (location.state || {}) as {
+      invoiceFromRecord?: { id: string; client_id: string | null; amount: number; description: string; date: string; notes?: string | null };
+    };
+    const rec = st.invoiceFromRecord;
+    if (!rec) return;
+    handleOpenDialog();
+    setTimeout(() => {
+      form.setValue("description", rec.description);
+      form.setValue("amount", Number(rec.amount) || 0);
+      form.setValue("date", rec.date);
+      if (rec.client_id) form.setValue("client_id", rec.client_id);
+      if (rec.notes) form.setValue("notes", rec.notes);
+    }, 0);
+    setInvoiceServiceRecordId(rec.id);
+    navigate(location.pathname, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.state]);
 
   useEffect(() => {
     const st = (location.state || {}) as {
@@ -503,8 +524,16 @@ export default function Financial() {
           organization_id: organizationId || null,
         });
       }
+      return newTransaction.id as string;
     },
-    onSuccess: () => {
+    onSuccess: async (newId?: string) => {
+      if (invoiceServiceRecordId && newId) {
+        await (supabase.from("service_records" as any) as any)
+          .update({ status: "invoiced", transaction_id: newId })
+          .eq("id", invoiceServiceRecordId);
+        setInvoiceServiceRecordId(null);
+        queryClient.invalidateQueries({ queryKey: ["service-records"] });
+      }
       queryClient.invalidateQueries({ queryKey: ["transactions"] });
       queryClient.invalidateQueries({ queryKey: ["monthly-transactions"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
@@ -512,7 +541,7 @@ export default function Financial() {
       queryClient.invalidateQueries({ queryKey: ["agenda-services"] });
       queryClient.invalidateQueries({ queryKey: ["all-appointments"] });
       queryClient.invalidateQueries({ queryKey: ["client-appointments"] });
-      toast.success("Receita registrada!");
+      toast.success(invoiceServiceRecordId ? "Fatura gerada!" : "Receita registrada!");
       setDialogOpen(false);
       form.reset();
       setSelectedTransaction(null);
@@ -910,12 +939,12 @@ export default function Financial() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div className="page-header mb-0 min-w-0">
-          <h1 className="page-title">Financeiro - Receitas</h1>
-          <p className="page-description">Controle suas receitas e recebimentos</p>
+          <h1 className="page-title">Faturas e Contas a Receber</h1>
+          <p className="page-description">Acompanhe suas faturas e registre os recebimentos</p>
         </div>
-        <Button onClick={handleOpenDialog} className="gap-2 flex-shrink-0 w-full md:w-auto">
+        <Button onClick={() => navigate("/servicos/atendimentos")} variant="outline" className="gap-2 flex-shrink-0 w-full md:w-auto">
           <Plus className="w-4 h-4" />
-          Nova Receita
+          Novo atendimento
         </Button>
       </div>
 
@@ -1245,9 +1274,9 @@ export default function Financial() {
                   <p className="text-sm text-muted-foreground/60 mb-6 text-center max-w-xs">Você ainda não registrou receitas. Comece a acompanhar seus ganhos.</p>
                 </>
               )}
-              <Button onClick={handleOpenDialog} className="gap-2">
+              <Button onClick={() => navigate("/servicos/atendimentos")} className="gap-2">
                 <Plus className="w-4 h-4" />
-                Registrar receita
+                Registrar atendimento
               </Button>
             </div>
           )}
@@ -1259,7 +1288,7 @@ export default function Financial() {
         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader className="pb-2">
             <DialogTitle className="font-display text-lg">
-              {selectedTransaction ? "Editar Receita" : "Nova Receita de Serviço"}
+              {selectedTransaction ? "Editar Fatura" : invoiceServiceRecordId ? "Gerar Fatura" : "Nova Fatura"}
             </DialogTitle>
           </DialogHeader>
           <Form {...form}>

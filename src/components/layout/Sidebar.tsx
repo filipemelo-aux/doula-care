@@ -25,6 +25,9 @@ import {
   AlertCircle,
   Briefcase,
   Palette,
+  HeartHandshake,
+  ClipboardList,
+  CalendarClock,
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -48,10 +51,18 @@ const navItems = [
   { to: "/clientes", icon: Users, label: "Clientes", bottomNav: true },
   { to: "/agenda", icon: CalendarDays, label: "Agenda", bottomNav: true },
   {
+    icon: HeartHandshake,
+    label: "Serviços",
+    subItems: [
+      { to: "/servicos/atendimentos", icon: ClipboardList, label: "Atendimentos" },
+      { to: "/servicos/previsoes", icon: CalendarClock, label: "Previsões de Recebimento" },
+    ],
+  },
+  {
     icon: Wallet,
     label: "Financeiro",
     subItems: [
-      { to: "/financeiro", icon: TrendingUp, label: "Entradas" },
+      { to: "/financeiro", icon: TrendingUp, label: "Faturas e Contas a Receber" },
       { to: "/despesas", icon: TrendingDown, label: "Despesas" },
       { to: "/cobrancas", icon: AlertCircle, label: "Cobranças" },
       { to: "/relatorios", icon: FileText, label: "Relatórios" },
@@ -85,13 +96,20 @@ export function Sidebar({ isOpen, onToggle, onNavigate }: SidebarProps) {
 
   // Moderadores não têm acesso ao módulo Financeiro (entradas, despesas, cobranças e relatórios)
   const visibleNavItems = navItems.filter((item) => {
-    if (isModerator && "subItems" in item && item.label === "Financeiro") return false;
+    if (isModerator && "subItems" in item && (item.label === "Financeiro" || item.label === "Serviços")) return false;
     return true;
   });
 
 
   const isFinancialRoute = ["/financeiro", "/despesas", "/cobrancas", "/relatorios"].includes(location.pathname);
-  const financialOpen = true;
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() => {
+    try { return JSON.parse(localStorage.getItem("sidebar-open-groups") || "{}"); } catch { return {}; }
+  });
+  const toggleGroup = (label: string, current: boolean) => {
+    const next = { ...openGroups, [label]: !current };
+    setOpenGroups(next);
+    localStorage.setItem("sidebar-open-groups", JSON.stringify(next));
+  };
 
 
   const { data: promo } = useQuery({
@@ -177,6 +195,8 @@ export function Sidebar({ isOpen, onToggle, onNavigate }: SidebarProps) {
               "/despesas": "expenses",
               "/cobrancas": "financial",
               "/relatorios": "reports",
+              "/servicos/atendimentos": "financial",
+              "/servicos/previsoes": "financial",
             };
 
             const allDisabled = item.subItems.every((s) => {
@@ -184,20 +204,25 @@ export function Sidebar({ isOpen, onToggle, onNavigate }: SidebarProps) {
               return lk ? !limits[lk] : false;
             });
             const isSubActive = item.subItems.some((s) => location.pathname === s.to);
+            const groupOpen = openGroups[item.label] ?? isSubActive;
 
             return (
               <div key={item.label} className="mt-3 pt-3 border-t border-border/40">
-                <div
+                <button
+                  type="button"
+                  onClick={() => toggleGroup(item.label, groupOpen)}
+                  aria-expanded={groupOpen}
                   className={cn(
-                    "flex items-center gap-2 px-3 pb-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground/60",
+                    "w-full flex items-center gap-2 px-3 pb-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground/60 hover:text-foreground transition-colors",
                     !isOpen && "lg:hidden"
                   )}
                 >
                   <item.icon className="w-3.5 h-3.5 shrink-0" strokeWidth={1.8} />
-                  <span>{item.label}</span>
-                </div>
+                  <span className="flex-1 text-left">{item.label}</span>
+                  <ChevronDown className={cn("w-3.5 h-3.5 transition-transform", !groupOpen && "-rotate-90")} />
+                </button>
 
-                <div className="space-y-0.5">
+                <div className={cn("space-y-0.5", !groupOpen && isOpen && "hidden")}>
                   {item.subItems.map((sub) => {
                     const lk = subLimitKeys[sub.to];
                     const subDisabled = lk ? !limits[lk] : false;
