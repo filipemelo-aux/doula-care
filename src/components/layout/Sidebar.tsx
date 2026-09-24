@@ -1,5 +1,5 @@
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import logo from "@/assets/logo.png";
 import { useOrgBranding } from "@/hooks/useOrgBranding";
 import { useQuery } from "@tanstack/react-query";
@@ -126,6 +126,12 @@ export function Sidebar({ isOpen, onToggle, onNavigate }: SidebarProps) {
     localStorage.setItem("sidebar-open-groups", JSON.stringify(next));
   };
 
+  useEffect(() => {
+    if (isOpen) return;
+    setOpenGroups({});
+    localStorage.setItem("sidebar-open-groups", "{}");
+  }, [isOpen]);
+
 
   const { data: promo } = useQuery({
     queryKey: ["my-org-promo", organizationId],
@@ -238,7 +244,7 @@ export function Sidebar({ isOpen, onToggle, onNavigate }: SidebarProps) {
                   <ChevronDown className={cn("w-3.5 h-3.5 transition-transform", !groupOpen && "-rotate-90")} />
                 </button>
 
-                <div className={cn("space-y-0.5", !groupOpen && isOpen && "hidden")}>
+                <div className={cn("space-y-0.5", (!groupOpen || !isOpen) && "hidden")}>
                   {item.subItems.map((sub) => {
                     const lk = subLimitKeys[sub.to];
                     const subDisabled = lk ? !limits[lk] : false;
