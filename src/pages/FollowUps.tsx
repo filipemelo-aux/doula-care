@@ -101,7 +101,7 @@ export default function FollowUps() {
           <h1 className="page-title">Acompanhamentos</h1>
           <p className="page-description">Acompanhamentos de doulagem. Cada um gera uma previsão de recebimento.</p>
         </div>
-        <Button onClick={() => { setPickedId(""); setPickerOpen(true); }} className="gap-2 w-full md:w-auto">
+        <Button onClick={openPicker} className="gap-2 w-full md:w-auto">
           <Plus className="w-4 h-4" /> Novo acompanhamento
         </Button>
       </div>
