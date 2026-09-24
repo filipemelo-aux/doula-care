@@ -137,13 +137,55 @@ export default function FollowUps() {
           <DialogHeader><DialogTitle>Novo acompanhamento</DialogTitle></DialogHeader>
           <div className="space-y-1.5">
             <Label>Cliente</Label>
-            <div className="flex items-center gap-2">
-              <Select value={pickedId} onValueChange={setPickedId}>
-                <SelectTrigger className="flex-1"><SelectValue placeholder="Selecione a cliente" /></SelectTrigger>
-                <SelectContent>
-                  {clients.map((c) => <SelectItem key={c.id} value={c.id}>{c.full_name}</SelectItem>)}
-                </SelectContent>
-              </Select>
+            <div className="flex items-start gap-2">
+              <div ref={boxRef} className="relative flex-1">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+                  <Input
+                    value={picked ? picked.full_name : search}
+                    onChange={(e) => { setSearch(e.target.value); setPickedId(""); setShowSuggestions(true); }}
+                    onFocus={() => setShowSuggestions(true)}
+                    placeholder="Digite o nome da cliente…"
+                    className="pl-9"
+                    autoComplete="off"
+                  />
+                  {searching && (
+                    <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground animate-spin" />
+                  )}
+                </div>
+                {showSuggestions && debounced.length > 0 && (
+                  <div className="absolute z-50 mt-1 w-full rounded-xl border bg-popover shadow-md overflow-hidden">
+                    {suggestions.length === 0 ? (
+                      <p className="px-3 py-4 text-sm text-muted-foreground text-center">
+                        Nenhuma cliente encontrada
+                      </p>
+                    ) : (
+                      <ul className="max-h-56 overflow-y-auto py-1">
+                        {suggestions.map((s) => (
+                          <li key={s.id}>
+                            <button
+                              type="button"
+                              className="w-full flex items-center gap-2.5 px-3 py-2 text-left text-sm hover:bg-accent transition-colors"
+                              onClick={() => {
+                                setPickedId(s.id);
+                                setSearch("");
+                                setDebounced("");
+                                setShowSuggestions(false);
+                              }}
+                            >
+                              <UserRound className="w-4 h-4 shrink-0 text-muted-foreground" />
+                              <span className="flex-1 min-w-0 truncate">{s.full_name}</span>
+                              <span className="text-xs text-muted-foreground shrink-0">
+                                {s.status === "lactante" ? "Puérpera" : s.status === "gestante" ? "Gestante" : "Outro"}
+                              </span>
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                )}
+              </div>
               <Button
                 type="button"
                 size="icon"
@@ -156,6 +198,11 @@ export default function FollowUps() {
                 <Plus className="w-4 h-4" />
               </Button>
             </div>
+            {picked && (
+              <p className="text-xs text-muted-foreground pt-0.5">
+                Selecionada: <span className="font-medium text-foreground">{picked.full_name}</span>
+              </p>
+            )}
           </div>
           <DialogFooter>
             <Button variant="ghost" onClick={() => setPickerOpen(false)}>Cancelar</Button>
