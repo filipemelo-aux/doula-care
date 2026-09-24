@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { Plus, Pencil, Search, Loader2, UserRound } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -18,7 +18,6 @@ const brl = (v: number) =>
 
 export default function FollowUps() {
   const { organizationId } = useAuth();
-  const queryClient = useQueryClient();
   const { getPlanName } = usePlanNames();
   const [pickerOpen, setPickerOpen] = useState(false);
   const [pickedId, setPickedId] = useState("");
