@@ -128,6 +128,8 @@ interface ClientDialogProps {
   initialStep?: number;
   /** full = formulário completo; person = só dados da pessoa; followup = só dados do acompanhamento */
   mode?: "full" | "person" | "followup";
+  /** Quando true, exibe os dados apenas para consulta (campos desabilitados, sem salvar) */
+  readOnly?: boolean;
   onSaved?: (clientId: string) => void;
 }
 
@@ -140,7 +142,7 @@ const STEPS = [
   { id: 6, title: "Observações", shortTitle: "Obs." },
 ];
 
-export function ClientDialog({ open, onOpenChange, client, initialStep, mode = "full", onSaved }: ClientDialogProps) {
+export function ClientDialog({ open, onOpenChange, client, initialStep, mode = "full", readOnly = false, onSaved }: ClientDialogProps) {
   const visibleSteps =
     mode === "person" ? STEPS.filter((s) => [1, 2, 4].includes(s.id))
     : mode === "followup" ? STEPS.filter((s) => [3, 5, 6].includes(s.id))
@@ -1311,7 +1313,8 @@ export function ClientDialog({ open, onOpenChange, client, initialStep, mode = "
       <DialogContent className="max-w-2xl w-[95vw] max-w-[95vw] max-h-[92vh] overflow-hidden flex flex-col overflow-x-hidden min-w-0">
         <DialogHeader className="pb-0 flex-shrink-0 min-w-0 overflow-hidden">
           <DialogTitle className="font-display text-lg">
-            {mode === "person" ? (client ? "Editar cadastro" : "Nova pessoa")
+            {readOnly ? `Visualizar acompanhamento${client ? ` — ${client.full_name}` : ""}`
+              : mode === "person" ? (client ? "Editar cadastro" : "Nova pessoa")
               : mode === "followup" ? `Acompanhamento${client ? ` — ${client.full_name}` : ""}`
               : client ? "Editar Cliente" : "Nova Cliente"}
           </DialogTitle>
@@ -1343,6 +1346,7 @@ export function ClientDialog({ open, onOpenChange, client, initialStep, mode = "
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="client-dialog-form flex flex-col min-h-0 min-w-0 overflow-x-hidden">
             <div ref={scrollContainerRef} className="overflow-y-auto overflow-x-hidden px-4 space-y-0 scrollbar-thin pt-3 pb-4 min-h-0 min-w-0 max-w-full">
+              <fieldset disabled={readOnly} className="border-0 p-0 m-0 min-w-0">
 
 
               {/* Step 1: Dados Pessoais */}
@@ -2652,47 +2656,61 @@ export function ClientDialog({ open, onOpenChange, client, initialStep, mode = "
                 </div>
               )}
 
+              </fieldset>
             </div>
 
             {/* Navigation - Fixed at bottom */}
-            <div className="flex items-center justify-between gap-2 pt-3 mt-auto border-t border-border/40 flex-shrink-0 pb-1 min-w-0 overflow-hidden">
-              <Button
-                type="button"
-                variant="ghost"
-                className="h-10 text-muted-foreground hover:text-foreground"
-                onClick={() => onOpenChange(false)}
-              >
-                Cancelar
-              </Button>
-              <div className="flex gap-2">
+            <div className="flex items-center justify-center gap-2 pt-3 mt-auto border-t border-border/40 flex-shrink-0 pb-1 min-w-0 overflow-hidden">
+              {readOnly ? (
                 <Button
                   type="button"
                   variant="ghost"
-                  className={cn("h-10 gap-1 text-muted-foreground hover:text-foreground", stepIndex === 0 && "invisible")}
-                  onClick={handlePrev}
+                  className="h-10 text-muted-foreground hover:text-foreground"
+                  onClick={() => onOpenChange(false)}
                 >
-                  <ChevronLeft className="w-4 h-4" />
-                  Voltar
+                  Fechar
                 </Button>
+              ) : (
+                <>
                 <Button
                   type="button"
-                  className="h-10 gap-1 px-6"
-                  disabled={isLastStep && mutation.isPending}
-                  onClick={!isLastStep ? handleNext : handleFinalSubmit}
+                  variant="ghost"
+                  className="h-10 text-muted-foreground hover:text-foreground"
+                  onClick={() => onOpenChange(false)}
                 >
-                  {!isLastStep ? (
-                    <>
-                      Próximo
-                      <ChevronRight className="w-4 h-4" />
-                    </>
-                  ) : mutation.isPending ? (
-                    <>
-                      <Loader2 className="h-4 w-4 animate-spin mr-1" />
-                      Salvando...
-                    </>
-                  ) : mode === "followup" ? "Salvar acompanhamento" : client ? "Atualizar" : "Cadastrar"}
+                  Cancelar
                 </Button>
-              </div>
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    className={cn("h-10 gap-1 text-muted-foreground hover:text-foreground", stepIndex === 0 && "invisible")}
+                    onClick={handlePrev}
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                    Voltar
+                  </Button>
+                  <Button
+                    type="button"
+                    className="h-10 gap-1 px-6"
+                    disabled={isLastStep && mutation.isPending}
+                    onClick={!isLastStep ? handleNext : handleFinalSubmit}
+                  >
+                    {!isLastStep ? (
+                      <>
+                        Próximo
+                        <ChevronRight className="w-4 h-4" />
+                      </>
+                    ) : mutation.isPending ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin mr-1" />
+                        Salvando...
+                      </>
+                    ) : mode === "followup" ? "Salvar acompanhamento" : client ? "Atualizar" : "Cadastrar"}
+                  </Button>
+                </div>
+                </>
+              )}
             </div>
           </form>
         </Form>

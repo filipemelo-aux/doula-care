@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Plus, Pencil, Search, Loader2, UserRound } from "lucide-react";
+import { Plus, Pencil, Search, Loader2, UserRound, Eye } from "lucide-react";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePlanNames } from "@/hooks/usePlanNames";
@@ -23,6 +24,7 @@ export default function FollowUps() {
   const [pickedId, setPickedId] = useState("");
   const [personOpen, setPersonOpen] = useState(false);
   const [followClient, setFollowClient] = useState<Tables<"clients"> | null>(null);
+  const [viewClient, setViewClient] = useState<Tables<"clients"> | null>(null);
   const [search, setSearch] = useState("");
   const [debounced, setDebounced] = useState("");
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -75,12 +77,20 @@ export default function FollowUps() {
   });
 
   const active = clients.filter((c) => c.plan_setting_id || Number(c.plan_value || 0) > 0 || c.plan === "avulso");
+  const activeIds = new Set(active.map((c) => c.id));
+  // Sugestões excluem clientes que já possuem acompanhamento registrado
+  const visibleSuggestions = suggestions.filter((s) => !activeIds.has(s.id));
 
   const picked = clients.find((c) => c.id === pickedId);
+  const pickedHasFollowUp = !!picked && activeIds.has(picked.id);
 
   const startFollowUp = () => {
     const c = clients.find((x) => x.id === pickedId);
     if (!c) return;
+    if (activeIds.has(c.id)) {
+      toast.error("Esta cliente já possui um acompanhamento registrado.");
+      return;
+    }
     setPickerOpen(false);
     setFollowClient(c);
   };
@@ -122,6 +132,9 @@ export default function FollowUps() {
                 <Badge variant="secondary" className="hidden sm:inline-flex">
                   {c.status === "lactante" ? "Puérpera" : c.status === "gestante" ? "Gestante" : "Outro"}
                 </Badge>
+                <Button size="icon" variant="ghost" aria-label="Visualizar acompanhamento" onClick={() => setViewClient(c)}>
+                  <Eye className="w-4 h-4" />
+                </Button>
                 <Button size="icon" variant="ghost" aria-label="Editar acompanhamento" onClick={() => setFollowClient(c)}>
                   <Pencil className="w-4 h-4" />
                 </Button>
@@ -154,13 +167,15 @@ export default function FollowUps() {
                 </div>
                 {showSuggestions && debounced.length > 0 && (
                   <div className="absolute z-50 mt-1 w-full rounded-xl border bg-popover shadow-md overflow-hidden">
-                    {suggestions.length === 0 ? (
+                    {visibleSuggestions.length === 0 ? (
                       <p className="px-3 py-4 text-sm text-muted-foreground text-center">
-                        Nenhuma cliente encontrada
+                        {suggestions.length === 0
+                          ? "Nenhuma cliente encontrada"
+                          : "Nenhuma cliente nova encontrada — as clientes listadas já possuem acompanhamento"}
                       </p>
                     ) : (
                       <ul className="max-h-56 overflow-y-auto py-1">
-                        {suggestions.map((s) => (
+                        {visibleSuggestions.map((s) => (
                           <li key={s.id}>
                             <button
                               type="button"
@@ -198,14 +213,22 @@ export default function FollowUps() {
               </Button>
             </div>
             {picked && (
-              <p className="text-xs text-muted-foreground pt-0.5">
-                Selecionada: <span className="font-medium text-foreground">{picked.full_name}</span>
-              </p>
+              <div className="text-xs pt-0.5 space-y-0.5">
+                {pickedHasFollowUp ? (
+                  <p className="text-destructive font-medium">
+                    Esta cliente já possui um acompanhamento registrado.
+                  </p>
+                ) : (
+                  <p className="text-muted-foreground">
+                    Selecionada: <span className="font-medium text-foreground">{picked.full_name}</span>
+                  </p>
+                )}
+              </div>
             )}
           </div>
           <DialogFooter>
             <Button variant="ghost" onClick={() => setPickerOpen(false)}>Cancelar</Button>
-            <Button onClick={startFollowUp} disabled={!pickedId}>Continuar</Button>
+            <Button onClick={startFollowUp} disabled={!pickedId || pickedHasFollowUp}>Continuar</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -223,6 +246,15 @@ export default function FollowUps() {
         onOpenChange={(o) => { if (!o) { setFollowClient(null); refetch(); } }}
         client={followClient}
         mode="followup"
+      />
+
+      <ClientDialog
+        key={`view-${viewClient?.id || "none"}`}
+        open={!!viewClient}
+        onOpenChange={(o) => { if (!o) setViewClient(null); }}
+        client={viewClient}
+        mode="followup"
+        readOnly
       />
     </div>
   );
