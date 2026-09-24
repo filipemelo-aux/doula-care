@@ -128,6 +128,8 @@ interface ClientDialogProps {
   initialStep?: number;
   /** full = formulário completo; person = só dados da pessoa; followup = só dados do acompanhamento */
   mode?: "full" | "person" | "followup";
+  /** Quando true, exibe os dados apenas para consulta (campos desabilitados, sem salvar) */
+  readOnly?: boolean;
   onSaved?: (clientId: string) => void;
 }
 
@@ -140,7 +142,7 @@ const STEPS = [
   { id: 6, title: "Observações", shortTitle: "Obs." },
 ];
 
-export function ClientDialog({ open, onOpenChange, client, initialStep, mode = "full", onSaved }: ClientDialogProps) {
+export function ClientDialog({ open, onOpenChange, client, initialStep, mode = "full", readOnly = false, onSaved }: ClientDialogProps) {
   const visibleSteps =
     mode === "person" ? STEPS.filter((s) => [1, 2, 4].includes(s.id))
     : mode === "followup" ? STEPS.filter((s) => [3, 5, 6].includes(s.id))
@@ -1311,7 +1313,8 @@ export function ClientDialog({ open, onOpenChange, client, initialStep, mode = "
       <DialogContent className="max-w-2xl w-[95vw] max-w-[95vw] max-h-[92vh] overflow-hidden flex flex-col overflow-x-hidden min-w-0">
         <DialogHeader className="pb-0 flex-shrink-0 min-w-0 overflow-hidden">
           <DialogTitle className="font-display text-lg">
-            {mode === "person" ? (client ? "Editar cadastro" : "Nova pessoa")
+            {readOnly ? `Visualizar acompanhamento${client ? ` — ${client.full_name}` : ""}`
+              : mode === "person" ? (client ? "Editar cadastro" : "Nova pessoa")
               : mode === "followup" ? `Acompanhamento${client ? ` — ${client.full_name}` : ""}`
               : client ? "Editar Cliente" : "Nova Cliente"}
           </DialogTitle>
