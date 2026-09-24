@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Plus, Pencil, Search, Loader2, UserRound } from "lucide-react";
+import { Plus, Pencil, Search, Loader2, UserRound, Eye } from "lucide-react";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePlanNames } from "@/hooks/usePlanNames";
@@ -23,6 +24,7 @@ export default function FollowUps() {
   const [pickedId, setPickedId] = useState("");
   const [personOpen, setPersonOpen] = useState(false);
   const [followClient, setFollowClient] = useState<Tables<"clients"> | null>(null);
+  const [viewClient, setViewClient] = useState<Tables<"clients"> | null>(null);
   const [search, setSearch] = useState("");
   const [debounced, setDebounced] = useState("");
   const [showSuggestions, setShowSuggestions] = useState(false);
