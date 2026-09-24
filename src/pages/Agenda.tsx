@@ -1,3 +1,4 @@
+import { buildSteps, sessionsDb, useFollowupSessions, usePlanConsultations } from "@/lib/consultations";
 import { useState, useMemo, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -164,6 +165,18 @@ export default function Agenda() {
   const [aptTime, setAptTime] = useState("10:00");
   const [aptNotes, setAptNotes] = useState("");
   const [aptClientId, setAptClientId] = useState("");
+  const [aptLinkSeq, setAptLinkSeq] = useState<string>("none");
+  const { data: planItemsAll = [] } = usePlanConsultations(organizationId);
+  const { data: linkClientSessions = [] } = useFollowupSessions(organizationId, aptClientId || "__none__");
+  const { data: linkClientPlan } = useQuery({
+    queryKey: ["agenda-link-client-plan", aptClientId],
+    enabled: !!aptClientId,
+    queryFn: async () => {
+      const { data } = await supabase.from("clients").select("plan_setting_id").eq("id", aptClientId).maybeSingle();
+      return data?.plan_setting_id || null;
+    },
+  });
+  const linkSteps = aptClientId ? buildSteps(linkClientPlan, planItemsAll, linkClientSessions).filter((st) => st.state === "pending") : [];
   const [aptStatus, setAptStatus] = useState<"pendente" | "concluida">("pendente");
   const [aptAddress, setAptAddress] = useState("");
   const [aptIsLocal, setAptIsLocal] = useState(false);
@@ -384,7 +397,8 @@ export default function Agenda() {
           .eq("id", editingAppointment.id);
         if (error) throw error;
       } else {
-        const { error } = await supabase.from("appointments").insert({
+        const linkStep = aptLinkSeq !== "none" ? linkSteps.find((st) => String(st.sequence) === aptLinkSeq) : undefined;
+        const { data: createdApt, error } = await supabase.from("appointments").insert({
           client_id: aptClientId || null,
           title: aptTitle,
           scheduled_at: scheduledUtc,
@@ -392,8 +406,12 @@ export default function Agenda() {
           address: finalAddress,
           owner_id: user?.id || null,
           organization_id: organizationId || null,
-        } as any);
+        } as any).select("id").single();
         if (error) throw error;
+        if (linkStep && createdApt) {
+          await sessionsDb().insert({ organization_id: organizationId, client_id: aptClientId, service_name: linkStep.label, sequence: linkStep.sequence, status: "scheduled", appointment_id: createdApt.id, created_by: user?.id });
+          queryClient.invalidateQueries({ queryKey: ["followup-sessions"] });
+        }
         await ensureAvailabilityForAppointment(organizationId, scheduledUtc);
       }
     },
@@ -477,6 +495,7 @@ export default function Agenda() {
     setAptNotes("");
     setAptAddress("");
     setAptClientId("");
+    setAptLinkSeq("none");
     setAptStatus("pendente");
     setAptIsLocal(false);
     setAptCep("");
@@ -514,6 +533,7 @@ export default function Agenda() {
 
   const handleAptClientChange = (id: string) => {
     setAptClientId(id);
+    setAptLinkSeq("none");
     const client = clients?.find(c => c.id === id);
     if (client) {
       const parts = [client.street, client.number, client.neighborhood, client.city, client.state].filter(Boolean);
@@ -1028,6 +1048,18 @@ export default function Agenda() {
                     {clients?.map((c) => (
                       <SelectItem key={c.id} value={c.id}>{c.full_name}</SelectItem>
                     ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+            {!editingAppointment && aptClientId && linkSteps.length > 0 && (
+              <div>
+                <Label className="text-xs">Vincular à consulta do plano (opcional)</Label>
+                <Select value={aptLinkSeq} onValueChange={(v) => { setAptLinkSeq(v); const st = linkSteps.find((x) => String(x.sequence) === v); if (st) setAptTitle(`Consulta ${st.sequence} · ${st.label}`); }}>
+                  <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Não vincular</SelectItem>
+                    {linkSteps.map((st, i) => <SelectItem key={st.sequence} value={String(st.sequence)}>Consulta {st.sequence} · {st.label}{i === 0 ? " (próxima)" : ""}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
