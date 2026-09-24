@@ -126,6 +126,9 @@ interface ClientDialogProps {
   onOpenChange: (open: boolean) => void;
   client?: Client | null;
   initialStep?: number;
+  /** full = formulário completo; person = só dados da pessoa; followup = só dados do acompanhamento */
+  mode?: "full" | "person" | "followup";
+  onSaved?: (clientId: string) => void;
 }
 
 const STEPS = [
@@ -137,7 +140,13 @@ const STEPS = [
   { id: 6, title: "Observações", shortTitle: "Obs." },
 ];
 
-export function ClientDialog({ open, onOpenChange, client, initialStep }: ClientDialogProps) {
+export function ClientDialog({ open, onOpenChange, client, initialStep, mode = "full", onSaved }: ClientDialogProps) {
+  const visibleSteps =
+    mode === "person" ? STEPS.filter((s) => [1, 2, 4].includes(s.id))
+    : mode === "followup" ? STEPS.filter((s) => [3, 5, 6].includes(s.id))
+    : STEPS;
+  const firstStepId = visibleSteps[0].id;
+  const lastStepId = visibleSteps[visibleSteps.length - 1].id;
   const queryClient = useQueryClient();
   const { user, organizationId, role } = useAuth();
   const isModerator = role === "moderator";
@@ -351,7 +360,7 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
     // Never re-hydrate over changes the user already typed: background refetches
     // (client list, transactions, installments) must not wipe the open form.
     if (form.formState.isDirty) return;
-    setCurrentStep(initialStep && initialStep >= 1 && initialStep <= STEPS.length ? initialStep : 1);
+    setCurrentStep(initialStep && visibleSteps.some((s) => s.id === initialStep) ? initialStep : firstStepId);
     if (client) {
       const txInstallments = clientTransaction?.installments ? Number(clientTransaction.installments) : 1;
       const isParcelado = txInstallments > 1;
@@ -719,7 +728,9 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
         // When editing a client that already has recorded payments, freeze plan-
         // related fields UNLESS the doula explicitly unlocked the section.
         const editingHadPayments = hasRecordedPayments;
-        const skipPlanSync = (editingHadPayments && !unlockedPlan) || isModerator;
+        const skipPlanSync = (editingHadPayments && !unlockedPlan) || isModerator || mode === "person";
+        // Novo acompanhamento sem fatura existente: vira previsão de recebimento
+        const followupForecast = mode === "followup" && !clientTransaction && !skipPlanSync;
 
         if (skipPlanSync) {
           // Preserve original plan/payment values so nothing gets overwritten.
@@ -750,7 +761,36 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
 
         if (skipPlanSync) {
           // Do NOT touch transactions or the payment schedule when locked.
-          return;
+          return client.id;
+        }
+
+        if (followupForecast) {
+          if (data.plan_setting_id && finalPlanValue > 0) {
+            const ps = data.plan_setting_id !== "avulso" ? planSettings?.find(p => p.id === data.plan_setting_id) : null;
+            const serviceName = `Acompanhamento - ${ps?.name || "Avulso"}`;
+            const { data: existing } = await (supabase.from("service_records" as any) as any)
+              .select("id")
+              .eq("client_id", client.id)
+              .eq("status", "forecast")
+              .eq("service_name", serviceName)
+              .maybeSingle();
+            const rec = {
+              organization_id: organizationId,
+              client_id: client.id,
+              service_name: serviceName,
+              amount: finalPlanValue,
+              service_date: format(new Date(), "yyyy-MM-dd"),
+              notes: data.notes || null,
+              status: "forecast",
+              created_by: user?.id,
+            };
+            const q = existing
+              ? (supabase.from("service_records" as any) as any).update(rec).eq("id", existing.id)
+              : (supabase.from("service_records" as any) as any).insert(rec);
+            const { error: recErr } = await q;
+            if (recErr) throw recErr;
+          }
+          return client.id;
         }
 
         // Update auto-generated transaction
@@ -1001,7 +1041,7 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
         if (clientError) throw clientError;
 
         // Only create financial records if a plan was selected
-        if (data.plan_setting_id) {
+        if (data.plan_setting_id && mode !== "person") {
         // Get plan settings to find the plan ID
         const resolvedPlanSetting = data.plan_setting_id !== "avulso" ? planSettings?.find(p => p.id === data.plan_setting_id) : null;
 
@@ -1169,9 +1209,12 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
             console.error("Error notifying admin:", notifErr);
           }
         }
+        return newClient.id as string;
       }
+      return client?.id as string;
     },
-    onSuccess: () => {
+    onSuccess: (savedId?: string) => {
+      queryClient.invalidateQueries({ queryKey: ["service-records"] });
       queryClient.invalidateQueries({ queryKey: ["clients"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
       queryClient.invalidateQueries({ queryKey: ["recent-clients"] });
@@ -1180,8 +1223,13 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
       queryClient.invalidateQueries({ queryKey: ["financial-metrics"] });
       queryClient.invalidateQueries({ queryKey: ["monthly-transactions"] });
       queryClient.invalidateQueries({ queryKey: ["birth-alert-clients"] });
-      toast.success(client ? "Cliente atualizada!" : (isModerator ? "Cliente cadastrada! A administradora foi avisada para completar o plano." : "Cliente cadastrada com receita!"));
+      toast.success(
+        mode === "person" ? (client ? "Cadastro atualizado!" : "Pessoa cadastrada!")
+        : mode === "followup" ? "Acompanhamento salvo! Confira em Previsões de Recebimento."
+        : client ? "Cliente atualizada!" : (isModerator ? "Cliente cadastrada! A administradora foi avisada para completar o plano." : "Cliente cadastrada com receita!")
+      );
       onOpenChange(false);
+      if (savedId) onSaved?.(savedId);
     },
     onError: () => {
       toast.error("Erro ao salvar cliente");
@@ -1207,14 +1255,14 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
     return result;
   };
 
+  const stepIndex = Math.max(0, visibleSteps.findIndex((s) => s.id === currentStep));
+  const isLastStep = currentStep === lastStepId;
   const handleNext = () => {
-    if (currentStep < STEPS.length) {
-      setCurrentStep(currentStep + 1);
-    }
+    if (!isLastStep) setCurrentStep(visibleSteps[stepIndex + 1].id);
   };
 
   const handlePrev = () => {
-    if (currentStep > 1) setCurrentStep(currentStep - 1);
+    if (stepIndex > 0) setCurrentStep(visibleSteps[stepIndex - 1].id);
   };
 
   const isEditing = !!client;
@@ -1230,7 +1278,7 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
       setCurrentStep(1);
       return;
     }
-    if (!isModerator) {
+    if (!isModerator && mode !== "person") {
       const planValid = await form.trigger(["plan_setting_id"]);
       if (!planValid) {
         setCurrentStep(5);
@@ -1238,7 +1286,7 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
       }
     }
     // Validate gestante needs DPP
-    if (form.getValues("status") === "gestante" && !form.getValues("dpp")) {
+    if (mode !== "person" && form.getValues("status") === "gestante" && !form.getValues("dpp")) {
       form.setError("dpp", { message: "DPP é obrigatória para gestantes" });
       setCurrentStep(3);
       return;
@@ -1263,11 +1311,13 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
       <DialogContent className="max-w-2xl w-[95vw] max-w-[95vw] max-h-[92vh] overflow-hidden flex flex-col overflow-x-hidden min-w-0">
         <DialogHeader className="pb-0 flex-shrink-0 min-w-0 overflow-hidden">
           <DialogTitle className="font-display text-lg">
-            {client ? "Editar Cliente" : "Nova Cliente"}
+            {mode === "person" ? (client ? "Editar cadastro" : "Nova pessoa")
+              : mode === "followup" ? `Acompanhamento${client ? ` — ${client.full_name}` : ""}`
+              : client ? "Editar Cliente" : "Nova Cliente"}
           </DialogTitle>
           {/* Tab-style step navigation */}
           <div className="flex flex-nowrap items-center justify-between pt-2 border-b border-border/40 overflow-hidden">
-            {STEPS.map((step) => (
+            {visibleSteps.map((step) => (
               <button
                 key={step.id}
                 type="button"
@@ -2618,7 +2668,7 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
                 <Button
                   type="button"
                   variant="ghost"
-                  className={cn("h-10 gap-1 text-muted-foreground hover:text-foreground", currentStep <= 1 && "invisible")}
+                  className={cn("h-10 gap-1 text-muted-foreground hover:text-foreground", stepIndex === 0 && "invisible")}
                   onClick={handlePrev}
                 >
                   <ChevronLeft className="w-4 h-4" />
@@ -2627,10 +2677,10 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
                 <Button
                   type="button"
                   className="h-10 gap-1 px-6"
-                  disabled={currentStep >= STEPS.length && mutation.isPending}
-                  onClick={currentStep < STEPS.length ? handleNext : handleFinalSubmit}
+                  disabled={isLastStep && mutation.isPending}
+                  onClick={!isLastStep ? handleNext : handleFinalSubmit}
                 >
-                  {currentStep < STEPS.length ? (
+                  {!isLastStep ? (
                     <>
                       Próximo
                       <ChevronRight className="w-4 h-4" />
@@ -2640,7 +2690,7 @@ export function ClientDialog({ open, onOpenChange, client, initialStep }: Client
                       <Loader2 className="h-4 w-4 animate-spin mr-1" />
                       Salvando...
                     </>
-                  ) : client ? "Atualizar" : "Cadastrar"}
+                  ) : mode === "followup" ? "Salvar acompanhamento" : client ? "Atualizar" : "Cadastrar"}
                 </Button>
               </div>
             </div>
