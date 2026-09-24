@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { Plus, Pencil, Search, Loader2, UserRound, Eye, MoreVertical, Stethoscope, WalletCards, UsersRound, type LucideIcon } from "lucide-react";
+import { Plus, Pencil, Search, Loader2, UserRound, Eye, Stethoscope, WalletCards, UsersRound, type LucideIcon } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -11,9 +10,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { ClientDialog } from "@/components/clients/ClientDialog";
-import { ServiceFlow, ServiceWorkspaceNav } from "@/components/services/ServiceFlow";
+import { ServiceFlow, type ServiceStage } from "@/components/services/ServiceFlow";
 import { formatBrazilDate } from "@/lib/utils";
 import type { Tables } from "@/integrations/supabase/types";
 
@@ -21,7 +19,6 @@ const brl = (v: number) =>
   new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(Number(v) || 0);
 
 export default function FollowUps() {
-  const navigate = useNavigate();
   const { organizationId } = useAuth();
   const { getPlanName } = usePlanNames();
   const [pickerOpen, setPickerOpen] = useState(false);
@@ -64,6 +61,22 @@ export default function FollowUps() {
     },
   });
 
+  const { data: serviceRecords = [] } = useQuery({
+    queryKey: ["followup-service-progress", organizationId],
+    enabled: !!organizationId,
+    queryFn: async () => {
+      const { data, error } = await (supabase.from("service_records" as any) as any)
+        .select("client_id, status, transactions(amount, amount_received)")
+        .eq("organization_id", organizationId);
+      if (error) throw error;
+      return (data || []) as Array<{
+        client_id: string | null;
+        status: "forecast" | "invoiced";
+        transactions?: { amount: number; amount_received: number | null } | null;
+      }>;
+    },
+  });
+
   // Busca no banco ao digitar (autocomplete de cliente)
   const { data: suggestions = [], isFetching: searching } = useQuery({
     queryKey: ["clients", "followup-search", organizationId, debounced],
@@ -103,6 +116,18 @@ export default function FollowUps() {
   const picked = clients.find((c) => c.id === pickedId);
   const pickedHasFollowUp = !!picked && activeIds.has(picked.id);
 
+  const progressFor = (clientId: string): { stage: ServiceStage; description: string } => {
+    const records = serviceRecords.filter((record) => record.client_id === clientId);
+    if (records.length === 0) return { stage: "contract", description: "Acompanhamento contratado · aguardando o primeiro atendimento" };
+    if (records.some((record) => record.status === "forecast")) return { stage: "forecast", description: "Atendimento registrado · aguardando a geração da fatura" };
+    const hasOpenInvoice = records.some((record) => {
+      const transaction = record.transactions;
+      return !transaction || Number(transaction.amount_received || 0) < Number(transaction.amount || 0);
+    });
+    if (hasOpenInvoice) return { stage: "invoiced", description: "Fatura gerada · aguardando o recebimento" };
+    return { stage: "paid", description: "Todos os atendimentos faturados foram pagos" };
+  };
+
   const startFollowUp = () => {
     const c = clients.find((x) => x.id === pickedId);
     if (!c) return;
@@ -135,8 +160,6 @@ export default function FollowUps() {
         </Button>
       </div>
 
-      <ServiceWorkspaceNav active="followups" onNavigate={navigate} />
-
       <div className="grid grid-cols-2 gap-2 lg:grid-cols-4">
         {metrics.map(({ label, value, icon: Icon }) => (
           <div key={label} className="rounded-2xl bg-card p-3 shadow-card lg:p-4">
@@ -164,16 +187,28 @@ export default function FollowUps() {
           <div className="rounded-2xl bg-card p-8 text-center shadow-card"><p className="font-semibold">Nenhum acompanhamento neste filtro</p><p className="mt-1 text-sm text-muted-foreground">Ajuste a busca ou escolha outra situação.</p></div>
         ) : (
           <div className="space-y-3">
-            {visibleActive.map((c) => (
+            {visibleActive.map((c) => {
+              const progress = progressFor(c.id);
+              return (
               <article key={c.id} className="overflow-hidden rounded-2xl bg-card shadow-card">
                 <div className="flex items-start gap-3 p-4">
                   <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary"><UserRound className="h-5 w-5" /></div>
                   <div className="min-w-0 flex-1"><div className="flex items-start justify-between gap-2"><div className="min-w-0"><p className="truncate font-semibold">{c.full_name}</p><p className="truncate text-xs text-muted-foreground">{getPlanName(c.plan_setting_id, c.plan)}{c.dpp ? ` · DPP ${formatBrazilDate(c.dpp)}` : ""}</p></div><Badge variant="secondary">{c.status === "lactante" ? "Puérpera" : c.status === "gestante" ? "Gestante" : "Outro"}</Badge></div><p className="mt-2 font-bold">{brl(Number(c.plan_value || 0))}</p></div>
-                  <DropdownMenu><DropdownMenuTrigger asChild><Button size="icon" variant="ghost" aria-label="Ações do acompanhamento"><MoreVertical className="h-4 w-4" /></Button></DropdownMenuTrigger><DropdownMenuContent align="end"><DropdownMenuItem onClick={() => setViewClient(c)}><Eye className="mr-2 h-4 w-4" /> Visualizar</DropdownMenuItem><DropdownMenuItem onClick={() => setFollowClient(c)}><Pencil className="mr-2 h-4 w-4" /> Editar</DropdownMenuItem><DropdownMenuItem onClick={() => navigate("/servicos/atendimentos", { state: { clientId: c.id, clientName: c.full_name } })}><Plus className="mr-2 h-4 w-4" /> Registrar atendimento</DropdownMenuItem></DropdownMenuContent></DropdownMenu>
                 </div>
-                <div className="border-t border-border/30 px-4 py-3"><ServiceFlow current="contract" compact /></div>
+                <div className="border-t border-border/30 px-4 py-3">
+                  <div className="mb-3">
+                    <p className="text-xs font-semibold text-foreground">Andamento do acompanhamento</p>
+                    <p className="mt-0.5 text-xs text-muted-foreground">{progress.description}</p>
+                  </div>
+                  <ServiceFlow current={progress.stage} />
+                </div>
+                <div className="grid grid-cols-2 gap-2 border-t border-border/30 p-3">
+                  <Button variant="secondary" size="sm" onClick={() => setViewClient(c)}><Eye className="mr-2 h-4 w-4" /> Visualizar</Button>
+                  <Button variant="secondary" size="sm" onClick={() => setFollowClient(c)}><Pencil className="mr-2 h-4 w-4" /> Editar</Button>
+                </div>
               </article>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>

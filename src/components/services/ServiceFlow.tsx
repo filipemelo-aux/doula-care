@@ -41,28 +41,3 @@ export function ServiceFlow({ current, compact = false }: { current: ServiceStag
     </div>
   );
 }
-
-export function ServiceWorkspaceNav({ active, onNavigate }: { active: "followups" | "records" | "forecasts"; onNavigate: (path: string) => void }) {
-  const items = [
-    { id: "followups", label: "Acompanhamentos", path: "/servicos/acompanhamentos" },
-    { id: "records", label: "Atendimentos", path: "/servicos/atendimentos" },
-    { id: "forecasts", label: "A faturar", path: "/servicos/previsoes" },
-  ] as const;
-  return (
-    <div className="flex w-full gap-1 overflow-x-auto rounded-xl bg-muted/60 p-1" aria-label="Etapas dos serviços">
-      {items.map((item) => (
-        <button
-          key={item.id}
-          type="button"
-          onClick={() => onNavigate(item.path)}
-          className={cn(
-            "min-h-9 flex-1 whitespace-nowrap rounded-lg px-3 text-xs font-semibold transition-colors",
-            active === item.id ? "bg-card text-primary shadow-card" : "text-muted-foreground hover:text-foreground"
-          )}
-        >
-          {item.label}
-        </button>
-      ))}
-    </div>
-  );
-}

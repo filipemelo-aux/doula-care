@@ -14,7 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { ServiceFlow, ServiceWorkspaceNav, type ServiceStage } from "@/components/services/ServiceFlow";
+import { ServiceFlow, type ServiceStage } from "@/components/services/ServiceFlow";
 
 export interface ServiceRecord {
   id: string;
@@ -152,8 +152,6 @@ export default function ServiceRecords() {
         </div>
         <Button onClick={() => setOpen(true)} className="w-full gap-2 md:w-auto"><Plus className="h-4 w-4" /> Novo atendimento</Button>
       </div>
-
-      <ServiceWorkspaceNav active="records" onNavigate={navigate} />
 
       <div className="grid grid-cols-2 gap-2 lg:grid-cols-4">
         {metrics.map(({ label, value, icon: Icon }) => (
