@@ -56,14 +56,6 @@ const navItems = [
   { to: "/clientes", icon: Users, label: "Clientes", bottomNav: true },
   { to: "/agenda", icon: CalendarDays, label: "Agenda", bottomNav: true },
   {
-    icon: FolderOpen,
-    label: "Cadastros",
-    subItems: [
-      { to: "/cadastros/pessoas", icon: UserPlus, label: "Pessoas" },
-      { to: "/cadastros/servicos", icon: Stethoscope, label: "Serviços" },
-    ],
-  },
-  {
     icon: HeartHandshake,
     label: "Serviços",
     subItems: [
@@ -81,6 +73,14 @@ const navItems = [
       { to: "/contas-pagas", icon: CheckCircle, label: "Contas Pagas" },
       { to: "/cobrancas", icon: AlertCircle, label: "Cobranças" },
       { to: "/relatorios", icon: FileText, label: "Relatórios" },
+    ],
+  },
+  {
+    icon: FolderOpen,
+    label: "Cadastros",
+    subItems: [
+      { to: "/cadastros/pessoas", icon: UserPlus, label: "Pessoas" },
+      { to: "/cadastros/servicos", icon: Stethoscope, label: "Serviços" },
     ],
   },
 
