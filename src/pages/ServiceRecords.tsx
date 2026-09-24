@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
-import { CalendarDays, Eye, FileText, MoreVertical, Plus, Receipt, Search, Trash2 } from "lucide-react";
+import { CalendarDays, Eye, FileText, MoreVertical, Plus, Receipt, Search, Trash2, type LucideIcon } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -108,6 +108,12 @@ export default function ServiceRecords() {
   const total = records.reduce((sum, r) => sum + Number(r.amount || 0), 0);
   const toInvoice = records.filter((r) => stageOf(r) === "forecast");
   const paid = records.filter((r) => stageOf(r) === "paid");
+  const metrics: Array<{ label: string; value: string | number; icon: LucideIcon }> = [
+    { label: "Realizados", value: records.length, icon: CalendarDays },
+    { label: "Valor dos serviços", value: brl(total), icon: FileText },
+    { label: "A faturar", value: toInvoice.length, icon: Receipt },
+    { label: "Pagos", value: paid.length, icon: Eye },
+  ];
 
   const create = useMutation({
     mutationFn: async () => {
@@ -150,13 +156,10 @@ export default function ServiceRecords() {
       <ServiceWorkspaceNav active="records" onNavigate={navigate} />
 
       <div className="grid grid-cols-2 gap-2 lg:grid-cols-4">
-        {[
-          ["Realizados", records.length, CalendarDays], ["Valor dos serviços", brl(total), FileText],
-          ["A faturar", toInvoice.length, Receipt], ["Pagos", paid.length, Eye],
-        ].map(([label, value, Icon]) => (
-          <div key={String(label)} className="rounded-2xl bg-card p-3 shadow-card lg:p-4">
+        {metrics.map(({ label, value, icon: Icon }) => (
+          <div key={label} className="rounded-2xl bg-card p-3 shadow-card lg:p-4">
             <div className="mb-2 flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary"><Icon className="h-4 w-4" /></div>
-            <p className="text-lg font-bold text-foreground">{value as any}</p><p className="text-xs text-muted-foreground">{label as string}</p>
+            <p className="text-lg font-bold text-foreground">{value}</p><p className="text-xs text-muted-foreground">{label}</p>
           </div>
         ))}
       </div>

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { Plus, Pencil, Search, Loader2, UserRound, Eye, MoreVertical, Stethoscope, WalletCards, UsersRound } from "lucide-react";
+import { Plus, Pencil, Search, Loader2, UserRound, Eye, MoreVertical, Stethoscope, WalletCards, UsersRound, type LucideIcon } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -90,6 +90,12 @@ export default function FollowUps() {
   const contractedTotal = active.reduce((sum, client) => sum + Number(client.plan_value || 0), 0);
   const gestantes = active.filter((client) => client.status === "gestante").length;
   const puerperas = active.filter((client) => client.status === "lactante").length;
+  const metrics: Array<{ label: string; value: string | number; icon: LucideIcon }> = [
+    { label: "Ativos", value: active.length, icon: UsersRound },
+    { label: "Valor contratado", value: brl(contractedTotal), icon: WalletCards },
+    { label: "Gestantes", value: gestantes, icon: Stethoscope },
+    { label: "Puérperas", value: puerperas, icon: UserRound },
+  ];
   const activeIds = new Set(active.map((c) => c.id));
   // Sugestões excluem clientes que já possuem acompanhamento registrado
   const visibleSuggestions = suggestions.filter((s) => !activeIds.has(s.id));
@@ -132,15 +138,10 @@ export default function FollowUps() {
       <ServiceWorkspaceNav active="followups" onNavigate={navigate} />
 
       <div className="grid grid-cols-2 gap-2 lg:grid-cols-4">
-        {[
-          ["Ativos", active.length, UsersRound],
-          ["Valor contratado", brl(contractedTotal), WalletCards],
-          ["Gestantes", gestantes, Stethoscope],
-          ["Puérperas", puerperas, UserRound],
-        ].map(([label, value, Icon]) => (
-          <div key={String(label)} className="rounded-2xl bg-card p-3 shadow-card lg:p-4">
+        {metrics.map(({ label, value, icon: Icon }) => (
+          <div key={label} className="rounded-2xl bg-card p-3 shadow-card lg:p-4">
             <div className="mb-2 flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary"><Icon className="h-4 w-4" /></div>
-            <p className="text-lg font-bold">{value as any}</p><p className="text-xs text-muted-foreground">{label as string}</p>
+            <p className="text-lg font-bold">{value}</p><p className="text-xs text-muted-foreground">{label}</p>
           </div>
         ))}
       </div>
