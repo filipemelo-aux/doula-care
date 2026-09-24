@@ -193,24 +193,27 @@ export default function Financial() {
   const location = useLocation();
   const navigate = useNavigate();
   const [pendingModeratorRequestId, setPendingModeratorRequestId] = useState<string | null>(null);
-  const [invoiceServiceRecordId, setInvoiceServiceRecordId] = useState<string | null>(null);
+  const [invoiceServiceRecordIds, setInvoiceServiceRecordIds] = useState<string[]>([]);
 
   // Gerar fatura a partir de uma previsão de recebimento (Serviços → Previsões)
   useEffect(() => {
     const st = (location.state || {}) as {
       invoiceFromRecord?: { id: string; client_id: string | null; amount: number; description: string; date: string; notes?: string | null };
+      invoiceFromRecords?: { id: string; client_id: string | null; amount: number; description: string; date: string; notes?: string | null }[];
     };
-    const rec = st.invoiceFromRecord;
-    if (!rec) return;
+    const records = st.invoiceFromRecords?.length ? st.invoiceFromRecords : st.invoiceFromRecord ? [st.invoiceFromRecord] : [];
+    if (!records.length) return;
+    const rec = records[0];
     handleOpenDialog();
     setTimeout(() => {
-      form.setValue("description", rec.description);
-      form.setValue("amount", Number(rec.amount) || 0);
+      form.setValue("description", records.length === 1 ? rec.description : `Serviços: ${records.map((item) => item.description).join(", ")}`);
+      form.setValue("amount", records.reduce((sum, item) => sum + Number(item.amount || 0), 0));
       form.setValue("date", rec.date);
       if (rec.client_id) form.setValue("client_id", rec.client_id);
-      if (rec.notes) form.setValue("notes", rec.notes);
+      const notes = records.map((item) => item.notes).filter(Boolean).join("\n");
+      if (notes) form.setValue("notes", notes);
     }, 0);
-    setInvoiceServiceRecordId(rec.id);
+    setInvoiceServiceRecordIds(records.map((item) => item.id));
     navigate(location.pathname, { replace: true });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.state]);
@@ -527,11 +530,11 @@ export default function Financial() {
       return newTransaction.id as string;
     },
     onSuccess: async (newId?: string) => {
-      if (invoiceServiceRecordId && newId) {
+      if (invoiceServiceRecordIds.length > 0 && newId) {
         await (supabase.from("service_records" as any) as any)
           .update({ status: "invoiced", transaction_id: newId })
-          .eq("id", invoiceServiceRecordId);
-        setInvoiceServiceRecordId(null);
+          .in("id", invoiceServiceRecordIds);
+        setInvoiceServiceRecordIds([]);
         queryClient.invalidateQueries({ queryKey: ["service-records"] });
       }
       queryClient.invalidateQueries({ queryKey: ["transactions"] });
@@ -541,7 +544,7 @@ export default function Financial() {
       queryClient.invalidateQueries({ queryKey: ["agenda-services"] });
       queryClient.invalidateQueries({ queryKey: ["all-appointments"] });
       queryClient.invalidateQueries({ queryKey: ["client-appointments"] });
-      toast.success(invoiceServiceRecordId ? "Fatura gerada!" : "Receita registrada!");
+      toast.success(invoiceServiceRecordIds.length > 0 ? "Fatura gerada!" : "Receita registrada!");
       setDialogOpen(false);
       form.reset();
       setSelectedTransaction(null);
@@ -1280,7 +1283,7 @@ export default function Financial() {
         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader className="pb-2">
             <DialogTitle className="font-display text-lg">
-              {selectedTransaction ? "Editar Fatura" : invoiceServiceRecordId ? "Gerar Fatura" : "Nova Fatura"}
+              {selectedTransaction ? "Editar Fatura" : invoiceServiceRecordIds.length > 0 ? "Gerar Fatura" : "Nova Fatura"}
             </DialogTitle>
           </DialogHeader>
           <Form {...form}>
