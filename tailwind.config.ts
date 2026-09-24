@@ -15,7 +15,7 @@ export default {
     extend: {
       fontFamily: {
         display: ["Nunito", "DM Sans", "Inter", "system-ui", "sans-serif"],
-        sans: ["DM Sans", "Inter", "system-ui", "sans-serif"],
+        sans: ["Figtree", "DM Sans", "Inter", "system-ui", "sans-serif"],
       },
       colors: {
         border: "hsl(var(--border))",

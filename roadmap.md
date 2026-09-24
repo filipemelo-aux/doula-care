@@ -5,3 +5,5 @@
 - [x] Criar webhook endpoint em modo live (we_1UFjf0D010uWXrBYcQm2dPwp) e remover função temporária
 - [x] Redeploy das funções
 - [ ] Teste real com cartão do usuário + estorno (aguardando usuário)
+- [x] Reorganizar Acompanhamentos, Atendimentos e Previsões como uma Central de Serviços por etapas
+- [x] Validar compilação, navegação e adaptação da Central de Serviços para celular e computador
