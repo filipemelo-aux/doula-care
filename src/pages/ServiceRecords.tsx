@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { CalendarDays, Eye, FileText, MoreVertical, Plus, Receipt, Search, Trash2 } from "lucide-react";
@@ -68,12 +68,21 @@ export default function ServiceRecords() {
   const { organizationId, user } = useAuth();
   const qc = useQueryClient();
   const navigate = useNavigate();
+  const location = useLocation();
   const { data: records = [], isLoading } = useServiceRecords();
   const [open, setOpen] = useState(false);
   const [detail, setDetail] = useState<ServiceRecord | null>(null);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<Filter>("all");
   const [form, setForm] = useState({ client_id: "", service_name: "", amount: "", service_date: format(new Date(), "yyyy-MM-dd"), notes: "" });
+
+  useMemo(() => {
+    const state = location.state as { clientId?: string } | null;
+    if (!state?.clientId) return;
+    setForm((current) => ({ ...current, client_id: state.clientId || "" }));
+    setOpen(true);
+    navigate(location.pathname, { replace: true });
+  }, [location.pathname, location.state, navigate]);
 
   const { data: clients = [] } = useQuery({
     queryKey: ["service-records-clients", organizationId], enabled: !!organizationId,
@@ -197,7 +206,7 @@ export default function ServiceRecords() {
         <div className="grid grid-cols-2 gap-3"><div className="space-y-1.5"><Label>Valor (R$)</Label><Input inputMode="decimal" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} placeholder="0,00" /></div><div className="space-y-1.5"><Label>Data</Label><Input type="date" value={form.service_date} onChange={(e) => setForm({ ...form, service_date: e.target.value })} /></div></div>
         <div className="space-y-1.5"><Label>Observações</Label><Textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} /></div>
         <div className="rounded-xl bg-primary/5 p-3 text-xs text-muted-foreground">Ao registrar, este atendimento aparecerá em <strong className="text-foreground">A faturar</strong>.</div>
-      </div><DialogFooter><Button variant="ghost" onClick={() => setOpen(false)}>Cancelar</Button><Button onClick={() => create.mutate()} disabled={create.isPending}>Registrar atendimento</Button></DialogFooter></Dialog>
+      </div><DialogFooter><Button variant="ghost" onClick={() => setOpen(false)}>Cancelar</Button><Button onClick={() => create.mutate()} disabled={create.isPending}>Registrar atendimento</Button></DialogFooter></DialogContent></Dialog>
     </div>
   );
 }
