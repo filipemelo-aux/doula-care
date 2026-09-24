@@ -1,3 +1,6 @@
+import { ListOrdered } from "lucide-react";
+import { PlanConsultationsDialog } from "@/components/plans/PlanConsultationsDialog";
+import { usePlanConsultations } from "@/lib/consultations";
 import { maskCurrency, parseCurrency } from "@/lib/masks";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -59,6 +62,8 @@ export default function Plans() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<PlanSetting | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<PlanSetting | null>(null);
+  const [consultPlan, setConsultPlan] = useState<{ id: string; name: string } | null>(null);
+  const { data: planConsultations = [] } = usePlanConsultations(organizationId);
 
   const form = useForm<PlanFormData>({
     resolver: zodResolver(planSchema),
@@ -437,6 +442,11 @@ export default function Plans() {
                   ))}
                 </div>
 
+                <Button variant="secondary" className="w-full" onClick={() => setConsultPlan({ id: plan.id, name: plan.name })}>
+                  <ListOrdered className="w-4 h-4 mr-2" />
+                  Roteiro de consultas{(() => { const t = planConsultations.filter((i) => i.plan_setting_id === plan.id).reduce((a, i) => a + i.quantity, 0); return t ? ` (${t})` : ""; })()}
+                </Button>
+
                 <div className="flex gap-2 pt-4 border-t">
                   <Button
                     variant="outline"
@@ -491,6 +501,8 @@ export default function Plans() {
           </div>
         )}
       </div>
+
+      <PlanConsultationsDialog plan={consultPlan} organizationId={organizationId} onClose={() => setConsultPlan(null)} />
 
       {/* Create/Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
