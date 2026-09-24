@@ -77,12 +77,20 @@ export default function FollowUps() {
   });
 
   const active = clients.filter((c) => c.plan_setting_id || Number(c.plan_value || 0) > 0 || c.plan === "avulso");
+  const activeIds = new Set(active.map((c) => c.id));
+  // Sugestões excluem clientes que já possuem acompanhamento registrado
+  const visibleSuggestions = suggestions.filter((s) => !activeIds.has(s.id));
 
   const picked = clients.find((c) => c.id === pickedId);
+  const pickedHasFollowUp = !!picked && activeIds.has(picked.id);
 
   const startFollowUp = () => {
     const c = clients.find((x) => x.id === pickedId);
     if (!c) return;
+    if (activeIds.has(c.id)) {
+      toast.error("Esta cliente já possui um acompanhamento registrado.");
+      return;
+    }
     setPickerOpen(false);
     setFollowClient(c);
   };
