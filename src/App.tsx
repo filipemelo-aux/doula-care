@@ -36,6 +36,9 @@ import Subscription from "./pages/Subscription";
 import LocationCoverage from "./pages/LocationCoverage";
 import MyBrand from "./pages/MyBrand";
 import ServiceRecords from "./pages/ServiceRecords";
+import FollowUps from "./pages/FollowUps";
+import People from "./pages/People";
+import ServicesCatalog from "./pages/ServicesCatalog";
 import ReceivableForecasts from "./pages/ReceivableForecasts";
 import RegisterVisitor from "./pages/RegisterVisitor";
 import VisitorDashboard from "./pages/visitante/VisitorDashboard";
@@ -238,6 +241,9 @@ const App = () => (
               <Route path="/agenda" element={<Agenda />} />
               <Route path="/clientes" element={<Clients />} />
               <Route path="/financeiro" element={<ProtectedRoute allowedRoles={["admin"]}><Financial /></ProtectedRoute>} />
+              <Route path="/servicos/acompanhamentos" element={<ProtectedRoute allowedRoles={["admin"]}><FollowUps /></ProtectedRoute>} />
+              <Route path="/cadastros/pessoas" element={<ProtectedRoute allowedRoles={["admin"]}><People /></ProtectedRoute>} />
+              <Route path="/cadastros/servicos" element={<ProtectedRoute allowedRoles={["admin"]}><ServicesCatalog /></ProtectedRoute>} />
               <Route path="/servicos/atendimentos" element={<ProtectedRoute allowedRoles={["admin"]}><ServiceRecords /></ProtectedRoute>} />
               <Route path="/servicos/previsoes" element={<ProtectedRoute allowedRoles={["admin"]}><ReceivableForecasts /></ProtectedRoute>} />
               <Route path="/despesas" element={<ProtectedRoute allowedRoles={["admin"]}><Expenses /></ProtectedRoute>} />

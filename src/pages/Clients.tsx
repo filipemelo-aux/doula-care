@@ -20,6 +20,7 @@ import { Plus, Search, Edit2, Trash2, Eye, Loader2, Phone, Users } from "lucide-
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { ClientDialog } from "@/components/clients/ClientDialog";
+import { NewClientFlow } from "@/components/clients/NewClientFlow";
 import { ClientFileDialog } from "@/components/clients/ClientFileDialog";
 import { toast } from "sonner";
 import {
@@ -62,7 +63,7 @@ const formatClientName = (fullName: string, maxLength = 28) => {
 
 export default function Clients() {
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<"todas" | "gestante" | "lactante">("todas");
+  const [statusFilter, setStatusFilter] = useState<"todas" | "gestante" | "lactante">("gestante");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
@@ -189,6 +190,7 @@ export default function Clients() {
     }
   };
 
+  const [newFlowOpen, setNewFlowOpen] = useState(false);
   const handleDialogClose = () => {
     setDialogOpen(false);
     setSelectedClient(null);
@@ -212,7 +214,7 @@ export default function Clients() {
               });
               return;
             }
-            setDialogOpen(true);
+            setNewFlowOpen(true);
           }}
           className="gap-2 flex-shrink-0 w-full md:w-auto"
           variant={canAddClient ? "default" : "outline"}
@@ -247,8 +249,7 @@ export default function Clients() {
             Lista de Clientes ({filteredClients?.length || 0})
           </CardTitle>
           <Tabs value={statusFilter} onValueChange={(v) => setStatusFilter(v as typeof statusFilter)}>
-            <TabsList className="grid w-full grid-cols-3 sm:w-auto sm:inline-grid">
-              <TabsTrigger value="todas">Todas</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-2 sm:w-auto sm:inline-grid">
               <TabsTrigger value="gestante">Gestantes</TabsTrigger>
               <TabsTrigger value="lactante">Puérperas</TabsTrigger>
             </TabsList>
@@ -485,7 +486,7 @@ export default function Clients() {
               </div>
               <p className="text-base font-medium text-foreground/70 mb-1">Nenhuma cliente ainda</p>
               <p className="text-sm text-muted-foreground/60 mb-6 text-center max-w-xs">Cadastre sua primeira cliente para começar a acompanhar.</p>
-              <Button onClick={() => setDialogOpen(true)} className="gap-2">
+              <Button onClick={() => setNewFlowOpen(true)} className="gap-2">
                 <Plus className="w-4 h-4" />
                 Cadastrar cliente
               </Button>
@@ -500,6 +501,8 @@ export default function Clients() {
         onOpenChange={handleDialogClose}
         client={selectedClient}
       />
+
+      <NewClientFlow open={newFlowOpen} onOpenChange={setNewFlowOpen} />
 
       {/* Client File (Ficha) Dialog */}
       <ClientFileDialog

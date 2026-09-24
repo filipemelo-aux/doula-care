@@ -90,7 +90,7 @@ export default function ServiceRecords() {
     queryFn: async () => {
       const { data } = await supabase
         .from("custom_services")
-        .select("name")
+        .select("id, name, icon")
         .eq("organization_id", organizationId!)
         .eq("is_active", true)
         .order("name");
@@ -215,10 +215,31 @@ export default function ServiceRecords() {
             </div>
             <div className="space-y-1.5">
               <Label>Serviço</Label>
-              <Input list="svc-list" value={form.service_name} onChange={(e) => setForm({ ...form, service_name: e.target.value })} placeholder="Ex.: Consulta pós-parto" />
-              <datalist id="svc-list">
-                {services.map((s: any) => <option key={s.name} value={s.name} />)}
-              </datalist>
+              {services.length > 0 ? (
+                <div className="max-h-[11rem] overflow-y-auto p-0.5">
+                  <div className="grid grid-cols-3 gap-2">
+                    {services.map((s: any) => {
+                      const sel = form.service_name === s.name;
+                      return (
+                        <button
+                          key={s.id}
+                          type="button"
+                          onClick={() => setForm({ ...form, service_name: s.name })}
+                          className={`flex flex-col items-center justify-center gap-1 p-2.5 rounded-lg text-center transition-all h-[4.5rem] ${sel ? "bg-primary/10 ring-2 ring-primary" : "bg-muted/40 hover:bg-muted"}`}
+                        >
+                          <span className="text-base leading-none">{s.icon}</span>
+                          <span className="text-[11px] font-medium truncate w-full leading-tight">{s.name}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              ) : (
+                <p className="text-xs text-muted-foreground">
+                  Nenhum serviço cadastrado.{" "}
+                  <button type="button" className="text-primary underline" onClick={() => navigate("/cadastros/servicos")}>Cadastrar serviços</button>
+                </p>
+              )}
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">

@@ -29,6 +29,10 @@ import {
   ClipboardList,
   CalendarClock,
   CheckCircle,
+  FolderOpen,
+  UserPlus,
+  Stethoscope,
+  Baby,
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -52,9 +56,18 @@ const navItems = [
   { to: "/clientes", icon: Users, label: "Clientes", bottomNav: true },
   { to: "/agenda", icon: CalendarDays, label: "Agenda", bottomNav: true },
   {
+    icon: FolderOpen,
+    label: "Cadastros",
+    subItems: [
+      { to: "/cadastros/pessoas", icon: UserPlus, label: "Pessoas" },
+      { to: "/cadastros/servicos", icon: Stethoscope, label: "Serviços" },
+    ],
+  },
+  {
     icon: HeartHandshake,
     label: "Serviços",
     subItems: [
+      { to: "/servicos/acompanhamentos", icon: Baby, label: "Acompanhamentos" },
       { to: "/servicos/atendimentos", icon: ClipboardList, label: "Atendimentos" },
       { to: "/servicos/previsoes", icon: CalendarClock, label: "Previsões de Recebimento" },
     ],
@@ -98,7 +111,7 @@ export function Sidebar({ isOpen, onToggle, onNavigate }: SidebarProps) {
 
   // Moderadores não têm acesso ao módulo Financeiro (entradas, despesas, cobranças e relatórios)
   const visibleNavItems = navItems.filter((item) => {
-    if (isModerator && "subItems" in item && (item.label === "Financeiro" || item.label === "Serviços")) return false;
+    if (isModerator && "subItems" in item && (item.label === "Financeiro" || item.label === "Serviços" || item.label === "Cadastros")) return false;
     return true;
   });
 

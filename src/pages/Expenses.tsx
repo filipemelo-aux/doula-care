@@ -146,7 +146,7 @@ export default function Expenses({ view = "payable" }: ExpensesProps) {
     queryFn: async () => {
       let q = supabase
         .from("transactions")
-        .select("*")
+        .select("*, payments(due_date)")
         .eq("type", "despesa");
       if (isModerator && user?.id) q = q.eq("owner_id", user.id);
       const { data, error } = await q.order("date", { ascending: false });
@@ -307,9 +307,25 @@ export default function Expenses({ view = "payable" }: ExpensesProps) {
     const paid = Number(expense.amount_received || 0) >= Number(expense.amount);
     return isPaidView ? paid : !paid;
   });
-  const filteredExpenses = viewExpenses?.filter((e) =>
-    e.description.toLowerCase().includes(search.toLowerCase())
-  );
+  // Vencimento: à vista = data do lançamento; parcelado = última parcela
+  const dueOf = (e: any): string => {
+    const dues = ((e.payments || []) as { due_date: string | null }[])
+      .map((p) => p.due_date)
+      .filter(Boolean) as string[];
+    if (dues.length > 0) return dues.sort().at(-1)!;
+    const n = Number(e.installments || 1);
+    if (n > 1 && e.date) {
+      const d = new Date(e.date + "T12:00:00");
+      d.setMonth(d.getMonth() + n - 1);
+      return format(d, "yyyy-MM-dd");
+    }
+    return e.date;
+  };
+  const filteredExpenses = viewExpenses
+    ?.filter((e) => e.description.toLowerCase().includes(search.toLowerCase()))
+    .sort((a, b) =>
+      isPaidView ? dueOf(b).localeCompare(dueOf(a)) : dueOf(a).localeCompare(dueOf(b))
+    );
 
   const totalExpenses = viewExpenses?.reduce((sum, e) => sum + Number(e.amount), 0) || 0;
 
@@ -418,7 +434,7 @@ export default function Expenses({ view = "payable" }: ExpensesProps) {
                       <div className="flex-1 min-w-0">
                         <p className="font-medium text-sm truncate">{expense.description}</p>
                         <p className="text-xs text-muted-foreground">
-                          {formatBrazilDate(expense.date)}
+                          Vence em {formatBrazilDate(dueOf(expense))}
                         </p>
                       </div>
                       <div className="flex items-center gap-1 flex-shrink-0">
@@ -466,7 +482,7 @@ export default function Expenses({ view = "payable" }: ExpensesProps) {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Data</TableHead>
+                      <TableHead>Vence em</TableHead>
                       <TableHead>Descrição</TableHead>
                       <TableHead>Tipo</TableHead>
                       <TableHead>Categoria</TableHead>
@@ -478,7 +494,7 @@ export default function Expenses({ view = "payable" }: ExpensesProps) {
                   <TableBody>
                     {filteredExpenses.map((expense) => (
                       <TableRow key={expense.id} className="table-row-hover">
-                        <TableCell>{formatBrazilDate(expense.date)}</TableCell>
+                        <TableCell>{formatBrazilDate(dueOf(expense))}</TableCell>
                         <TableCell className="font-medium">{expense.description}</TableCell>
                         <TableCell>
                           <Badge variant="secondary">
