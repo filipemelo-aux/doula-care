@@ -823,6 +823,57 @@ export type Database = {
           },
         ]
       }
+      followup_sessions: {
+        Row: {
+          client_id: string
+          created_at: string
+          created_by: string | null
+          id: string
+          notes: string | null
+          organization_id: string
+          performed_at: string
+          service_name: string
+          updated_at: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          notes?: string | null
+          organization_id: string
+          performed_at?: string
+          service_name: string
+          updated_at?: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          notes?: string | null
+          organization_id?: string
+          performed_at?: string
+          service_name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "followup_sessions_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "followup_sessions_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       forum_categories: {
         Row: {
           created_at: string
