@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
@@ -76,7 +76,7 @@ export default function ServiceRecords() {
   const [filter, setFilter] = useState<Filter>("all");
   const [form, setForm] = useState({ client_id: "", service_name: "", amount: "", service_date: format(new Date(), "yyyy-MM-dd"), notes: "" });
 
-  useMemo(() => {
+  useEffect(() => {
     const state = location.state as { clientId?: string } | null;
     if (!state?.clientId) return;
     setForm((current) => ({ ...current, client_id: state.clientId || "" }));
