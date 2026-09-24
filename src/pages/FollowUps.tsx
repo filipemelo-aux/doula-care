@@ -18,11 +18,29 @@ const brl = (v: number) =>
 
 export default function FollowUps() {
   const { organizationId } = useAuth();
+  const queryClient = useQueryClient();
   const { getPlanName } = usePlanNames();
   const [pickerOpen, setPickerOpen] = useState(false);
   const [pickedId, setPickedId] = useState("");
   const [personOpen, setPersonOpen] = useState(false);
   const [followClient, setFollowClient] = useState<Tables<"clients"> | null>(null);
+  const [search, setSearch] = useState("");
+  const [debounced, setDebounced] = useState("");
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const boxRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const t = setTimeout(() => setDebounced(search.trim()), 250);
+    return () => clearTimeout(t);
+  }, [search]);
+
+  useEffect(() => {
+    const onClick = (e: MouseEvent) => {
+      if (boxRef.current && !boxRef.current.contains(e.target as Node)) setShowSuggestions(false);
+    };
+    document.addEventListener("mousedown", onClick);
+    return () => document.removeEventListener("mousedown", onClick);
+  }, []);
 
   const { data: clients = [], refetch } = useQuery({
     queryKey: ["clients", "followups", organizationId],
@@ -39,13 +57,41 @@ export default function FollowUps() {
     },
   });
 
+  // Busca no banco ao digitar (autocomplete de cliente)
+  const { data: suggestions = [], isFetching: searching } = useQuery({
+    queryKey: ["clients", "followup-search", organizationId, debounced],
+    enabled: !!organizationId && pickerOpen && debounced.length > 0,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("clients")
+        .select("id, full_name, status, dpp")
+        .eq("organization_id", organizationId!)
+        .eq("is_visitor", false)
+        .ilike("full_name", `%${debounced}%`)
+        .order("full_name")
+        .limit(8);
+      if (error) throw error;
+      return data as Pick<Tables<"clients">, "id" | "full_name" | "status" | "dpp">[];
+    },
+  });
+
   const active = clients.filter((c) => c.plan_setting_id || Number(c.plan_value || 0) > 0 || c.plan === "avulso");
+
+  const picked = clients.find((c) => c.id === pickedId);
 
   const startFollowUp = () => {
     const c = clients.find((x) => x.id === pickedId);
     if (!c) return;
     setPickerOpen(false);
     setFollowClient(c);
+  };
+
+  const openPicker = () => {
+    setPickedId("");
+    setSearch("");
+    setDebounced("");
+    setShowSuggestions(false);
+    setPickerOpen(true);
   };
 
   return (
