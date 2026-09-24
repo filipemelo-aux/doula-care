@@ -7,3 +7,4 @@
 - [ ] Teste real com cartão do usuário + estorno (aguardando usuário)
 - [x] Reorganizar Acompanhamentos, Atendimentos e Previsões como uma Central de Serviços por etapas
 - [x] Validar compilação, navegação e adaptação da Central de Serviços para celular e computador
+- [ ] Remover as abas internas da Central de Serviços e tornar a linha do tempo dos acompanhamentos dinâmica

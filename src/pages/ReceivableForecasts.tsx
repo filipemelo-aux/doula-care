@@ -4,7 +4,7 @@ import { CalendarClock, FileText, Receipt, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
-import { ServiceFlow, ServiceWorkspaceNav } from "@/components/services/ServiceFlow";
+import { ServiceFlow } from "@/components/services/ServiceFlow";
 import { useServiceRecords, brl, fmtDate, type ServiceRecord } from "./ServiceRecords";
 
 export default function ReceivableForecasts() {
@@ -41,7 +41,6 @@ export default function ReceivableForecasts() {
 
   return <div className="space-y-4 lg:space-y-6 pb-28">
     <div className="page-header mb-0"><p className="mb-1 text-[10px] font-bold uppercase text-primary">Central de Serviços</p><h1 className="page-title">A faturar</h1><p className="page-description">Confira os serviços realizados antes de gerar a fatura.</p></div>
-    <ServiceWorkspaceNav active="forecasts" onNavigate={navigate} />
     <div className="rounded-2xl bg-primary/10 p-4 shadow-card lg:p-6"><div className="flex items-start justify-between gap-4"><div><p className="text-xs text-muted-foreground">Valor aguardando faturamento</p><p className="text-3xl font-bold text-primary">{brl(total)}</p><p className="mt-1 text-xs text-muted-foreground">{forecasts.length} serviço(s) pronto(s) para faturar</p></div><div className="flex h-10 w-10 items-center justify-center rounded-xl bg-card text-primary"><CalendarClock className="h-5 w-5" /></div></div></div>
     <div className="relative"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar cliente ou serviço" className="pl-9" /></div>
     {selectedRecords.length > 0 && <div className="sticky top-0 z-20 flex items-center justify-between gap-3 rounded-xl bg-foreground p-3 text-background shadow-medium"><div><p className="text-xs opacity-70">{selectedRecords.length} selecionado(s)</p><p className="font-bold">{brl(selectedTotal)}</p></div><Button onClick={invoice} size="sm"><Receipt className="mr-1.5 h-4 w-4" /> Gerar fatura</Button></div>}
