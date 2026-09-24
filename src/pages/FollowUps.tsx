@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Plus, Pencil, Search, Loader2, UserRound, Eye, Stethoscope, WalletCards, UsersRound, type LucideIcon } from "lucide-react";
+import { ListChecks, CheckCircle2, Trash2, Plus, Pencil, Search, Loader2, UserRound, Eye, Stethoscope, WalletCards, UsersRound, type LucideIcon } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -26,6 +26,8 @@ export default function FollowUps() {
   const [personOpen, setPersonOpen] = useState(false);
   const [followClient, setFollowClient] = useState<Tables<"clients"> | null>(null);
   const [viewClient, setViewClient] = useState<Tables<"clients"> | null>(null);
+  const [sessionsClient, setSessionsClient] = useState<Tables<"clients"> | null>(null);
+  const [sessionDates, setSessionDates] = useState<Record<string, string>>({});
   const [search, setSearch] = useState("");
   const [debounced, setDebounced] = useState("");
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -77,6 +79,54 @@ export default function FollowUps() {
     },
   });
 
+  const { data: planSettings = [] } = useQuery({
+    queryKey: ["followup-plan-features", organizationId],
+    enabled: !!organizationId,
+    queryFn: async () => {
+      const { data, error } = await supabase.from("plan_settings").select("id, plan_type, features").eq("organization_id", organizationId!);
+      if (error) throw error;
+      return data || [];
+    },
+  });
+
+  const { data: sessions = [], refetch: refetchSessions } = useQuery({
+    queryKey: ["followup-sessions", organizationId],
+    enabled: !!organizationId,
+    queryFn: async () => {
+      const { data, error } = await (supabase.from("followup_sessions" as any) as any)
+        .select("id, client_id, service_name, performed_at, notes")
+        .eq("organization_id", organizationId)
+        .order("performed_at");
+      if (error) throw error;
+      return (data || []) as Array<{ id: string; client_id: string; service_name: string; performed_at: string; notes: string | null }>;
+    },
+  });
+
+  const includedFor = (c: Tables<"clients">): string[] => {
+    const plan = planSettings.find((p) => p.id === c.plan_setting_id) || planSettings.find((p) => !c.plan_setting_id && p.plan_type === c.plan);
+    return (plan?.features || []).map((f) => f.trim()).filter(Boolean);
+  };
+  const sessionsFor = (clientId: string) => sessions.filter((s) => s.client_id === clientId);
+  const sessionCount = (c: Tables<"clients">) => {
+    const items = includedFor(c);
+    const done = sessionsFor(c.id).filter((s) => items.includes(s.service_name)).length;
+    return { done, total: items.length };
+  };
+
+  const registerSession = async (serviceName: string) => {
+    if (!sessionsClient || !organizationId) return;
+    const date = sessionDates[serviceName] || new Date().toISOString().slice(0, 10);
+    const { error } = await (supabase.from("followup_sessions" as any) as any).insert({ organization_id: organizationId, client_id: sessionsClient.id, service_name: serviceName, performed_at: date });
+    if (error) return toast.error("Não foi possível registrar");
+    toast.success("Consulta registrada");
+    refetchSessions();
+  };
+  const undoSession = async (id: string) => {
+    const { error } = await (supabase.from("followup_sessions" as any) as any).delete().eq("id", id);
+    if (error) return toast.error("Não foi possível desfazer");
+    refetchSessions();
+  };
+
   // Busca no banco ao digitar (autocomplete de cliente)
   const { data: suggestions = [], isFetching: searching } = useQuery({
     queryKey: ["clients", "followup-search", organizationId, debounced],
@@ -116,9 +166,14 @@ export default function FollowUps() {
   const picked = clients.find((c) => c.id === pickedId);
   const pickedHasFollowUp = !!picked && activeIds.has(picked.id);
 
-  const progressFor = (clientId: string): { stage: ServiceStage; description: string } => {
+  const progressFor = (c: Tables<"clients">): { stage: ServiceStage; description: string } => {
+    const clientId = c.id;
     const records = serviceRecords.filter((record) => record.client_id === clientId);
-    if (records.length === 0) return { stage: "contract", description: "Acompanhamento contratado · aguardando o primeiro atendimento" };
+    if (records.length === 0) {
+      const { done, total } = sessionCount(c);
+      if (done > 0) return { stage: "performed", description: `${done} de ${total} consulta(s) do plano realizada(s)${done >= total ? " · todas concluídas" : ""}` };
+      return { stage: "contract", description: total ? `Acompanhamento contratado · ${total} consulta(s) inclusa(s) no plano aguardando registro` : "Acompanhamento contratado · aguardando o primeiro atendimento" };
+    }
     if (records.some((record) => record.status === "forecast")) return { stage: "forecast", description: "Atendimento registrado · aguardando a geração da fatura" };
     const hasOpenInvoice = records.some((record) => {
       const transaction = record.transactions;
@@ -188,7 +243,8 @@ export default function FollowUps() {
         ) : (
           <div className="space-y-3">
             {visibleActive.map((c) => {
-              const progress = progressFor(c.id);
+              const progress = progressFor(c);
+              const count = sessionCount(c);
               return (
               <article key={c.id} className="overflow-hidden rounded-2xl bg-card shadow-card">
                 <div className="flex items-start gap-3 p-4">
@@ -202,7 +258,8 @@ export default function FollowUps() {
                   </div>
                   <ServiceFlow current={progress.stage} />
                 </div>
-                <div className="grid grid-cols-2 gap-2 border-t border-border/30 p-3">
+                <div className="grid grid-cols-3 gap-2 border-t border-border/30 p-3">
+                  <Button variant="default" size="sm" onClick={() => setSessionsClient(c)}><ListChecks className="mr-1.5 h-4 w-4" /> Consultas{count.total ? ` ${count.done}/${count.total}` : ""}</Button>
                   <Button variant="secondary" size="sm" onClick={() => setViewClient(c)}><Eye className="mr-2 h-4 w-4" /> Visualizar</Button>
                   <Button variant="secondary" size="sm" onClick={() => setFollowClient(c)}><Pencil className="mr-2 h-4 w-4" /> Editar</Button>
                 </div>
@@ -212,6 +269,47 @@ export default function FollowUps() {
           </div>
         )}
       </div>
+
+      <Dialog open={!!sessionsClient} onOpenChange={(o) => { if (!o) setSessionsClient(null); }}>
+        <DialogContent className="max-h-[85vh] overflow-y-auto">
+          <DialogHeader><DialogTitle>Consultas do plano</DialogTitle></DialogHeader>
+          {sessionsClient && (() => {
+            const items = includedFor(sessionsClient);
+            const done = sessionsFor(sessionsClient.id);
+            return (
+              <div className="space-y-3">
+                <p className="text-sm text-muted-foreground">{sessionsClient.full_name} · {getPlanName(sessionsClient.plan_setting_id, sessionsClient.plan)}</p>
+                {items.length === 0 ? (
+                  <div className="rounded-xl bg-muted/50 p-4 text-sm text-muted-foreground">Este plano não tem serviços inclusos cadastrados. Adicione-os em Configurações → Planos (um serviço por linha).</div>
+                ) : items.map((item) => {
+                  const record = done.find((d) => d.service_name === item);
+                  return (
+                    <div key={item} className="rounded-xl bg-muted/40 p-3">
+                      <div className="flex items-start gap-2">
+                        {record ? <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-success" /> : <ListChecks className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />}
+                        <p className="flex-1 text-sm font-medium">{item}</p>
+                      </div>
+                      {record ? (
+                        <div className="mt-2 flex items-center justify-between gap-2 text-xs text-muted-foreground">
+                          <span>Realizada em {formatBrazilDate(record.performed_at)}</span>
+                          <Button size="sm" variant="ghost" onClick={() => undoSession(record.id)}><Trash2 className="mr-1 h-3.5 w-3.5" /> Desfazer</Button>
+                        </div>
+                      ) : (
+                        <div className="mt-2 flex items-center gap-2">
+                          <Input type="date" className="h-9" value={sessionDates[item] || new Date().toISOString().slice(0, 10)} onChange={(e) => setSessionDates((d) => ({ ...d, [item]: e.target.value }))} />
+                          <Button size="sm" onClick={() => registerSession(item)}>Registrar</Button>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+                <p className="text-xs text-muted-foreground">Cada consulta registrada avança a linha do tempo do acompanhamento.</p>
+              </div>
+            );
+          })()}
+          <DialogFooter><Button variant="secondary" onClick={() => setSessionsClient(null)}>Fechar</Button></DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={pickerOpen} onOpenChange={setPickerOpen}>
         <DialogContent>
