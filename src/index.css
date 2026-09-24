@@ -1,5 +1,3 @@
-@import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&family=Nunito:wght@400;500;600;700;800&display=swap");
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -158,7 +156,7 @@
 
   body {
     @apply bg-background text-foreground antialiased;
-    font-family: "DM Sans", "Inter", system-ui, sans-serif;
+    font-family: "Figtree", "DM Sans", "Inter", system-ui, sans-serif;
   }
 
   #root {
@@ -177,7 +175,7 @@
   h4,
   h5,
   h6 {
-    font-family: "DM Sans", "Inter", system-ui, sans-serif;
+    font-family: "Nunito", "DM Sans", "Inter", system-ui, sans-serif;
     @apply font-semibold tracking-tight;
   }
 }
