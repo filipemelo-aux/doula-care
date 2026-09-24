@@ -167,7 +167,7 @@ export default function Agenda() {
   const [aptClientId, setAptClientId] = useState("");
   const [aptLinkSeq, setAptLinkSeq] = useState<string>("none");
   const { data: planItemsAll = [] } = usePlanConsultations(organizationId);
-  const { data: linkClientSessions = [] } = useFollowupSessions(organizationId, aptClientId || "__none__");
+  const { data: linkClientSessions = [] } = useFollowupSessions(organizationId, aptClientId || "00000000-0000-0000-0000-000000000000");
   const { data: linkClientPlan } = useQuery({
     queryKey: ["agenda-link-client-plan", aptClientId],
     enabled: !!aptClientId,
