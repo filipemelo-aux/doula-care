@@ -825,39 +825,55 @@ export type Database = {
       }
       followup_sessions: {
         Row: {
+          appointment_id: string | null
           client_id: string
           created_at: string
           created_by: string | null
           id: string
           notes: string | null
           organization_id: string
-          performed_at: string
+          performed_at: string | null
+          sequence: number | null
           service_name: string
+          status: string
           updated_at: string
         }
         Insert: {
+          appointment_id?: string | null
           client_id: string
           created_at?: string
           created_by?: string | null
           id?: string
           notes?: string | null
           organization_id: string
-          performed_at?: string
+          performed_at?: string | null
+          sequence?: number | null
           service_name: string
+          status?: string
           updated_at?: string
         }
         Update: {
+          appointment_id?: string | null
           client_id?: string
           created_at?: string
           created_by?: string | null
           id?: string
           notes?: string | null
           organization_id?: string
-          performed_at?: string
+          performed_at?: string | null
+          sequence?: number | null
           service_name?: string
+          status?: string
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "followup_sessions_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "followup_sessions_client_id_fkey"
             columns: ["client_id"]
@@ -1485,6 +1501,57 @@ export type Database = {
             columns: ["transaction_id"]
             isOneToOne: false
             referencedRelation: "transactions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      plan_consultations: {
+        Row: {
+          created_at: string
+          id: string
+          modality: string
+          name: string
+          organization_id: string
+          plan_setting_id: string
+          quantity: number
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          modality?: string
+          name: string
+          organization_id: string
+          plan_setting_id: string
+          quantity?: number
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          modality?: string
+          name?: string
+          organization_id?: string
+          plan_setting_id?: string
+          quantity?: number
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "plan_consultations_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "plan_consultations_plan_setting_id_fkey"
+            columns: ["plan_setting_id"]
+            isOneToOne: false
+            referencedRelation: "plan_settings"
             referencedColumns: ["id"]
           },
         ]
