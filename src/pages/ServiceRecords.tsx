@@ -15,6 +15,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { ServiceFlow, type ServiceStage } from "@/components/services/ServiceFlow";
+import { ClientDialog } from "@/components/clients/ClientDialog";
+import { fromZonedTime } from "date-fns-tz";
 
 export interface ServiceRecord {
   id: string;
@@ -68,13 +70,14 @@ export default function ServiceRecords() {
   const { organizationId, user } = useAuth();
   const qc = useQueryClient();
   const navigate = useNavigate();
+  const [personOpen, setPersonOpen] = useState(false);
   const location = useLocation();
   const { data: records = [], isLoading } = useServiceRecords();
   const [open, setOpen] = useState(false);
   const [detail, setDetail] = useState<ServiceRecord | null>(null);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<Filter>("all");
-  const [form, setForm] = useState({ client_id: "", service_name: "", amount: "", service_date: format(new Date(), "yyyy-MM-dd"), notes: "" });
+  const [form, setForm] = useState({ client_id: "", service_name: "", amount: "", service_date: format(new Date(), "yyyy-MM-dd"), service_time: "09:00", notes: "" });
 
   useEffect(() => {
     const state = location.state as { clientId?: string } | null;
@@ -121,12 +124,17 @@ export default function ServiceRecords() {
       if (!form.service_name.trim()) throw new Error("Informe o serviço");
       const { error } = await (supabase.from("service_records" as any) as any).insert({ organization_id: organizationId, client_id: form.client_id || null, service_name: form.service_name.trim(), amount, service_date: form.service_date, notes: form.notes || null, status: "forecast", created_by: user?.id });
       if (error) throw error;
+      const scheduledAt = fromZonedTime(`${form.service_date}T${form.service_time || "09:00"}`, "America/Sao_Paulo");
+      const { error: aptErr } = await supabase.from("appointments").insert({ client_id: form.client_id || null, title: form.service_name.trim(), scheduled_at: scheduledAt.toISOString(), notes: form.notes || null, owner_id: user?.id || null, organization_id: organizationId } as any);
+      if (aptErr) throw aptErr;
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["service-records"] });
-      toast.success("Atendimento registrado e enviado para A faturar.");
+      qc.invalidateQueries({ queryKey: ["agenda-appointments"] });
+      qc.invalidateQueries({ queryKey: ["all-appointments"] });
+      toast.success("Atendimento registrado, incluído na agenda e enviado para A faturar.");
       setOpen(false);
-      setForm({ client_id: "", service_name: "", amount: "", service_date: format(new Date(), "yyyy-MM-dd"), notes: "" });
+      setForm({ client_id: "", service_name: "", amount: "", service_date: format(new Date(), "yyyy-MM-dd"), service_time: "09:00", notes: "" });
     },
     onError: (e: any) => toast.error(e.message || "Erro ao registrar"),
   });
@@ -202,12 +210,14 @@ export default function ServiceRecords() {
 
       <Dialog open={open} onOpenChange={setOpen}><DialogContent><DialogHeader><DialogTitle>Novo atendimento</DialogTitle></DialogHeader><div className="space-y-4">
         <div className="rounded-xl bg-muted/50 p-3"><p className="text-sm font-semibold">1. Serviço realizado</p><p className="text-xs text-muted-foreground">Informe o que foi feito e para qual cliente.</p></div>
-        <div className="space-y-1.5"><Label>Cliente</Label><Select value={form.client_id} onValueChange={(v) => setForm({ ...form, client_id: v })}><SelectTrigger><SelectValue placeholder="Selecione a cliente" /></SelectTrigger><SelectContent>{clients.map((c: any) => <SelectItem key={c.id} value={c.id}>{c.full_name}</SelectItem>)}</SelectContent></Select></div>
+        <div className="space-y-1.5"><Label>Cliente</Label><div className="flex items-center gap-2"><Select value={form.client_id} onValueChange={(v) => setForm({ ...form, client_id: v })}><SelectTrigger className="flex-1"><SelectValue placeholder="Selecione a cliente" /></SelectTrigger><SelectContent>{clients.map((c: any) => <SelectItem key={c.id} value={c.id}>{c.full_name}</SelectItem>)}</SelectContent></Select><Button type="button" size="icon" variant="secondary" aria-label="Cadastrar nova cliente" onClick={() => setPersonOpen(true)}><Plus className="h-4 w-4" /></Button></div></div>
         <div className="space-y-1.5"><Label>Serviço</Label>{services.length > 0 ? <div className="max-h-44 overflow-y-auto"><div className="grid grid-cols-3 gap-2">{services.map((s: any) => { const selected = form.service_name === s.name; return <Button key={s.id} type="button" variant={selected ? "default" : "secondary"} onClick={() => setForm({ ...form, service_name: s.name })} className="h-[4.75rem] min-w-0 flex-col gap-1 px-2"><span className="text-base">{s.icon}</span><span className="w-full truncate text-[11px]">{s.name}</span></Button>; })}</div></div> : <Button type="button" variant="secondary" onClick={() => navigate("/cadastros/servicos")}>Cadastrar serviços</Button>}</div>
         <div className="grid grid-cols-2 gap-3"><div className="space-y-1.5"><Label>Valor (R$)</Label><Input inputMode="decimal" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} placeholder="0,00" /></div><div className="space-y-1.5"><Label>Data</Label><Input type="date" value={form.service_date} onChange={(e) => setForm({ ...form, service_date: e.target.value })} /></div></div>
+        <div className="space-y-1.5"><Label>Horário</Label><Input type="time" value={form.service_time} onChange={(e) => setForm({ ...form, service_time: e.target.value })} /><p className="text-xs text-muted-foreground">O atendimento entra automaticamente na agenda nesta data e horário.</p></div>
         <div className="space-y-1.5"><Label>Observações</Label><Textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} /></div>
         <div className="rounded-xl bg-primary/5 p-3 text-xs text-muted-foreground">Ao registrar, este atendimento aparecerá em <strong className="text-foreground">A faturar</strong>.</div>
       </div><DialogFooter><Button variant="ghost" onClick={() => setOpen(false)}>Cancelar</Button><Button onClick={() => create.mutate()} disabled={create.isPending}>Registrar atendimento</Button></DialogFooter></DialogContent></Dialog>
+      <ClientDialog open={personOpen} onOpenChange={setPersonOpen} mode="person" onSaved={(id: string) => { qc.invalidateQueries({ queryKey: ["clients"] }); qc.invalidateQueries({ queryKey: ["service-records-clients"] }); setForm((f) => ({ ...f, client_id: id })); }} />
     </div>
   );
 }

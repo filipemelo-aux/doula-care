@@ -1,4 +1,3 @@
-import { buildSteps, sessionsDb, useFollowupSessions, usePlanConsultations } from "@/lib/consultations";
 import { useState, useMemo, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -165,18 +164,7 @@ export default function Agenda() {
   const [aptTime, setAptTime] = useState("10:00");
   const [aptNotes, setAptNotes] = useState("");
   const [aptClientId, setAptClientId] = useState("");
-  const [aptLinkSeq, setAptLinkSeq] = useState<string>("none");
-  const { data: planItemsAll = [] } = usePlanConsultations(organizationId);
-  const { data: linkClientSessions = [] } = useFollowupSessions(organizationId, aptClientId || "00000000-0000-0000-0000-000000000000");
-  const { data: linkClientPlan } = useQuery({
-    queryKey: ["agenda-link-client-plan", aptClientId],
-    enabled: !!aptClientId,
-    queryFn: async () => {
-      const { data } = await supabase.from("clients").select("plan_setting_id").eq("id", aptClientId).maybeSingle();
-      return data?.plan_setting_id || null;
-    },
-  });
-  const linkSteps = aptClientId ? buildSteps(linkClientPlan, planItemsAll, linkClientSessions).filter((st) => st.state === "pending") : [];
+  const [, setAptLinkSeq] = useState<string>("none");
   const [aptStatus, setAptStatus] = useState<"pendente" | "concluida">("pendente");
   const [aptAddress, setAptAddress] = useState("");
   const [aptIsLocal, setAptIsLocal] = useState(false);
@@ -294,7 +282,7 @@ export default function Agenda() {
         }
       }
       else if (state.openDialog === "compromisso") setPersonalAptDialog(true);
-      else if (state.openDialog === "servico") setServiceDialog(true);
+      else if (state.openDialog === "servico") setAppointmentDialog(true);
       // Clear the state so it doesn't re-trigger
       window.history.replaceState({}, document.title);
     }
@@ -397,8 +385,7 @@ export default function Agenda() {
           .eq("id", editingAppointment.id);
         if (error) throw error;
       } else {
-        const linkStep = aptLinkSeq !== "none" ? linkSteps.find((st) => String(st.sequence) === aptLinkSeq) : undefined;
-        const { data: createdApt, error } = await supabase.from("appointments").insert({
+        const { error } = await supabase.from("appointments").insert({
           client_id: aptClientId || null,
           title: aptTitle,
           scheduled_at: scheduledUtc,
@@ -406,12 +393,8 @@ export default function Agenda() {
           address: finalAddress,
           owner_id: user?.id || null,
           organization_id: organizationId || null,
-        } as any).select("id").single();
+        } as any);
         if (error) throw error;
-        if (linkStep && createdApt) {
-          await sessionsDb().insert({ organization_id: organizationId, client_id: aptClientId, service_name: linkStep.label, sequence: linkStep.sequence, status: "scheduled", appointment_id: createdApt.id, created_by: user?.id });
-          queryClient.invalidateQueries({ queryKey: ["followup-sessions"] });
-        }
         await ensureAvailabilityForAppointment(organizationId, scheduledUtc);
       }
     },
@@ -436,7 +419,7 @@ export default function Agenda() {
       }
 
       closeAppointmentDialog();
-      toast.success(editingAppointment ? "Consulta atualizada!" : "Consulta agendada!");
+      toast.success(editingAppointment ? "Compromisso atualizado!" : "Compromisso agendado!");
     },
     onError: () => toast.error("Erro ao salvar consulta"),
   });
@@ -773,24 +756,9 @@ export default function Agenda() {
               </TabsList>
             </Tabs>
 
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button size="icon" className="h-10 w-10 rounded-full shrink-0">
-                  <Plus className="h-5 w-5" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-52">
-                <DropdownMenuItem onClick={() => setAppointmentDialog(true)} className="gap-2.5 py-2.5">
-                  <Calendar className="h-4 w-4" /> Nova consulta
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setPersonalAptDialog(true)} className="gap-2.5 py-2.5">
-                  <CalendarCheck className="h-4 w-4" /> Novo compromisso
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setServiceDialog(true)} className="gap-2.5 py-2.5">
-                  <Briefcase className="h-4 w-4" /> Novo serviço
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <Button size="icon" className="h-10 w-10 rounded-full shrink-0" aria-label="Novo compromisso" onClick={() => setAppointmentDialog(true)}>
+              <Plus className="h-5 w-5" />
+            </Button>
           </div>
 
 
@@ -1029,7 +997,7 @@ export default function Agenda() {
           <DialogHeader>
             <DialogTitle className="font-display flex items-center gap-2">
               <Calendar className="h-5 w-5" />
-              {editingAppointment ? "Editar Consulta" : "Nova Consulta"}
+              {editingAppointment ? "Editar compromisso" : "Novo compromisso"}
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
@@ -1048,18 +1016,6 @@ export default function Agenda() {
                     {clients?.map((c) => (
                       <SelectItem key={c.id} value={c.id}>{c.full_name}</SelectItem>
                     ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
-            {!editingAppointment && aptClientId && linkSteps.length > 0 && (
-              <div>
-                <Label className="text-xs">Vincular à consulta do plano (opcional)</Label>
-                <Select value={aptLinkSeq} onValueChange={(v) => { setAptLinkSeq(v); const st = linkSteps.find((x) => String(x.sequence) === v); if (st) setAptTitle(`Consulta ${st.sequence} · ${st.label}`); }}>
-                  <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">Não vincular</SelectItem>
-                    {linkSteps.map((st, i) => <SelectItem key={st.sequence} value={String(st.sequence)}>Consulta {st.sequence} · {st.label}{i === 0 ? " (próxima)" : ""}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
