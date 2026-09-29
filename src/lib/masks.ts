@@ -44,6 +44,36 @@ export function maskCEP(value: string): string {
   }
 }
 
+/** Máscara de data DD/MM/AAAA — apenas dígitos, teclado numérico. */
+export function maskDateBR(value: string): string {
+  const digits = value.replace(/\D/g, "").slice(0, 8);
+  if (digits.length <= 2) return digits;
+  if (digits.length <= 4) return `${digits.slice(0, 2)}/${digits.slice(2)}`;
+  return `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4)}`;
+}
+
+/** Converte DD/MM/AAAA em ISO (yyyy-mm-dd). Retorna null se incompleta ou inválida. */
+export function parseDateBRToISO(value: string): string | null {
+  const digits = value.replace(/\D/g, "");
+  if (digits.length !== 8) return null;
+  const day = Number(digits.slice(0, 2));
+  const month = Number(digits.slice(2, 4));
+  const year = Number(digits.slice(4));
+  if (month < 1 || month > 12) return null;
+  const daysInMonth = new Date(year, month, 0).getDate();
+  if (day < 1 || day > daysInMonth) return null;
+  if (year < 1900 || year > 2100) return null;
+  return `${digits.slice(4)}-${digits.slice(2, 4)}-${digits.slice(0, 2)}`;
+}
+
+/** Converte ISO (yyyy-mm-dd) em DD/MM/AAAA para exibição. */
+export function isoToBRDate(value: string | null | undefined): string {
+  if (!value) return "";
+  const [y, m, d] = value.split("-");
+  if (!y || !m || !d) return "";
+  return `${d}/${m}/${y}`;
+}
+
 export function unmask(value: string): string {
   return value.replace(/\D/g, "");
 }
