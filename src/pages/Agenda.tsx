@@ -574,6 +574,7 @@ export default function Agenda() {
   const handleAptClientChange = (id: string) => {
     setAptClientId(id);
     setAptLinkSeq("none");
+    setAptConsultIdx("");
     const client = clients?.find(c => c.id === id);
     if (client) {
       const parts = [client.street, client.number, client.neighborhood, client.city, client.state].filter(Boolean);
