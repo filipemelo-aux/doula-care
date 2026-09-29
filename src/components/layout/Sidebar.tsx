@@ -121,7 +121,8 @@ export function Sidebar({ isOpen, onToggle, onNavigate }: SidebarProps) {
     try { return JSON.parse(localStorage.getItem("sidebar-open-groups") || "{}"); } catch { return {}; }
   });
   const toggleGroup = (label: string, current: boolean) => {
-    const next = { ...openGroups, [label]: !current };
+    // Acordeão: ao abrir um menu, os outros são recolhidos
+    const next = current ? { ...openGroups, [label]: false } : { [label]: true };
     setOpenGroups(next);
     localStorage.setItem("sidebar-open-groups", JSON.stringify(next));
   };
