@@ -242,7 +242,7 @@ export default function FollowUps() {
                   {items.length === 0 ? (
                     <div className="flex items-center justify-between gap-2">
                       <p className="text-xs text-muted-foreground">O plano não tem serviços inclusos cadastrados.</p>
-                      <Button size="sm" variant="ghost" onClick={() => navigate("/configuracoes", { state: { tab: "planos" } })}>Cadastrar</Button>
+                      <Button size="sm" variant="ghost" onClick={() => navigate("/meus-planos")}>Cadastrar</Button>
                     </div>
                   ) : (
                     <>
