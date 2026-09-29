@@ -17,6 +17,7 @@ export function maskPhone(value: string): string {
 }
 
 export function maskCPF(value: string): string {
+
   // Remove all non-digits
   const digits = value.replace(/\D/g, "");
   
