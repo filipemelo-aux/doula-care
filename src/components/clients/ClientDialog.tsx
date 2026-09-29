@@ -46,7 +46,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
-import { maskPhone, maskCPF, maskCEP, maskCurrency, parseCurrency } from "@/lib/masks";
+import { maskPhone, maskCPF, maskCEP, maskCurrency, parseCurrency, maskDateBR, parseDateBRToISO, isoToBRDate } from "@/lib/masks";
 import type { Tables } from "@/integrations/supabase/types";
 import {
   SuggestionChips,
@@ -418,7 +418,7 @@ export function ClientDialog({ open, onOpenChange, client, initialStep, mode = "
         instagram_gestante: (client as any).instagram_gestante || "",
         instagram_acompanhante: (client as any).instagram_acompanhante || "",
         notes: client.notes || "",
-        date_of_birth: (client as any).date_of_birth || "",
+        date_of_birth: isoToBRDate((client as any).date_of_birth),
         profissao: (client as any).profissao || "",
         religiao: (client as any).religiao || "",
         personalidade: (client as any).personalidade || "",
@@ -700,7 +700,7 @@ export function ClientDialog({ open, onOpenChange, client, initialStep, mode = "
         instagram_gestante: data.instagram_gestante || null,
         instagram_acompanhante: data.instagram_acompanhante || null,
         notes: data.notes || null,
-        date_of_birth: data.date_of_birth || null,
+        date_of_birth: parseDateBRToISO(data.date_of_birth || "") ?? null,
         profissao: data.profissao || null,
         religiao: data.religiao || null,
         personalidade: data.personalidade || null,
