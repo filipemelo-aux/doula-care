@@ -101,7 +101,7 @@ const clientSchema = z.object({
   restricoes_assistencia_restricoes: z.string().optional(),
   restricoes_assistencia_fobias_gatilhos: z.string().optional(),
   restricoes_assistencia_condicoes_especiais: z.string().optional(),
-  date_of_birth: z.string().optional(),
+  date_of_birth: z.string().optional().refine((v) => !v || parseDateBRToISO(v) !== null, { message: "Data incompleta ou inválida (DD/MM/AAAA)" }),
   profissao: z.string().optional(),
   religiao: z.string().optional(),
   personalidade: z.string().optional(),
