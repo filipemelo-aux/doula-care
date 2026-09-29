@@ -1,6 +1,4 @@
 import { ListOrdered } from "lucide-react";
-import { PlanConsultationsDialog } from "@/components/plans/PlanConsultationsDialog";
-import { usePlanConsultations } from "@/lib/consultations";
 import { maskCurrency, parseCurrency } from "@/lib/masks";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -62,8 +60,6 @@ export default function Plans() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<PlanSetting | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<PlanSetting | null>(null);
-  const [consultPlan, setConsultPlan] = useState<{ id: string; name: string } | null>(null);
-  const { data: planConsultations = [] } = usePlanConsultations(organizationId);
 
   const form = useForm<PlanFormData>({
     resolver: zodResolver(planSchema),
@@ -442,10 +438,6 @@ export default function Plans() {
                   ))}
                 </div>
 
-                <Button variant="secondary" className="w-full" onClick={() => setConsultPlan({ id: plan.id, name: plan.name })}>
-                  <ListOrdered className="w-4 h-4 mr-2" />
-                  Roteiro de consultas{(() => { const t = planConsultations.filter((i) => i.plan_setting_id === plan.id).reduce((a, i) => a + i.quantity, 0); return t ? ` (${t})` : ""; })()}
-                </Button>
 
                 <div className="flex gap-2 pt-4 border-t">
                   <Button
@@ -502,7 +494,6 @@ export default function Plans() {
         )}
       </div>
 
-      <PlanConsultationsDialog plan={consultPlan} organizationId={organizationId} onClose={() => setConsultPlan(null)} />
 
       {/* Create/Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
@@ -576,15 +567,8 @@ export default function Plans() {
                   <FormItem>
                     <FormLabel>Serviços Inclusos</FormLabel>
                     <FormControl>
-                      <Textarea
-                        {...field}
-                        className="min-h-[120px] resize-none"
-                        placeholder="Um serviço por linha:&#10;Consultas mensais&#10;Suporte via WhatsApp&#10;Material educativo"
-                      />
+                      <FeatureListInput value={field.value || ""} onChange={field.onChange} />
                     </FormControl>
-                    <p className="text-xs text-muted-foreground">
-                      Digite um serviço por linha
-                    </p>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -655,6 +639,27 @@ export default function Plans() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+    </div>
+  );
+}
+
+function FeatureListInput({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const items = value.split("\n");
+  const list = items.length ? items : [""];
+  const set = (next: string[]) => onChange(next.join("\n"));
+  return (
+    <div className="space-y-2">
+      {list.map((item, i) => (
+        <div key={i} className="flex items-center gap-2">
+          <Input value={item} placeholder="Ex: Encontro pré-parto" onChange={(e) => set(list.map((x, j) => (j === i ? e.target.value : x)))} />
+          <Button type="button" size="icon" variant="ghost" aria-label="Remover serviço" onClick={() => set(list.filter((_, j) => j !== i))}>
+            <Trash2 className="w-4 h-4" />
+          </Button>
+        </div>
+      ))}
+      <Button type="button" variant="secondary" size="sm" className="w-full" onClick={() => set([...list, ""])}>
+        <Plus className="w-4 h-4 mr-2" /> Adicionar serviço
+      </Button>
     </div>
   );
 }
