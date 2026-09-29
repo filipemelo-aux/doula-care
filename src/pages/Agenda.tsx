@@ -117,6 +117,7 @@ interface ClientOption {
   id: string;
   full_name: string;
   user_id?: string;
+  plan_setting_id?: string | null;
   street?: string;
   number?: string;
   neighborhood?: string;
@@ -242,6 +243,34 @@ export default function Agenda() {
     },
     enabled: appointmentDialog,
   });
+
+  const aptClient = clients?.find((c) => c.id === aptClientId);
+  const { data: consultItems = [] } = useQuery({
+    queryKey: ["agenda-consult-items", aptClientId, aptClient?.plan_setting_id],
+    enabled: appointmentDialog && aptKind === "consulta" && !!aptClientId,
+    queryFn: async () => {
+      let feats: string[] = [];
+      if (aptClient?.plan_setting_id) {
+        const { data } = await supabase.from("plan_settings").select("features").eq("id", aptClient.plan_setting_id).maybeSingle();
+        feats = (data?.features || []).map((f: string) => f.trim()).filter(Boolean);
+      }
+      const { data: sess } = await (supabase.from("followup_sessions" as any) as any).select("id, sequence, service_name, status").eq("client_id", aptClientId);
+      const list = (sess || []) as { id: string; sequence: number | null; service_name: string; status: string }[];
+      return feats.map((name, i) => {
+        const s = list.find((x) => x.sequence === i + 1) || list.find((x) => x.sequence == null && x.service_name === name);
+        return { name, sessionId: s?.id as string | undefined, status: s?.status as string | undefined };
+      });
+    },
+  });
+  const { data: catalogServices = [] } = useQuery({
+    queryKey: ["agenda-catalog-services", organizationId],
+    enabled: appointmentDialog && aptKind === "servico" && !!organizationId,
+    queryFn: async () => {
+      const { data } = await supabase.from("custom_services").select("id, name").eq("organization_id", organizationId!).eq("is_active", true).order("name");
+      return data || [];
+    },
+  });
+
 
   // ─── Mutations ───────────────────────────────────────────
   // Personal appointment dialog
@@ -513,6 +542,7 @@ export default function Agenda() {
     setAptCepData(null);
     setAptNumber("");
     setLockedClientId(null);
+    changeAptKind("compromisso");
     // If we came from the Dashboard client quick view, hop back and reopen it
     // so the just-added appointment shows up in the summary.
     if (returnToClientId) {
