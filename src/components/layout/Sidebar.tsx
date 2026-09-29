@@ -118,10 +118,16 @@ export function Sidebar({ isOpen, onToggle, onNavigate }: SidebarProps) {
 
   const isFinancialRoute = ["/financeiro", "/despesas", "/contas-pagas", "/cobrancas", "/relatorios"].includes(location.pathname);
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() => {
-    try { return JSON.parse(localStorage.getItem("sidebar-open-groups") || "{}"); } catch { return {}; }
+    try {
+      const stored = JSON.parse(localStorage.getItem("sidebar-open-groups") || "{}");
+      const keys = Object.keys(stored).filter((k) => stored[k]);
+      // Mantém apenas um menu aberto (o último gravado)
+      return keys.length ? { [keys[keys.length - 1]]: true } : {};
+    } catch { return {}; }
   });
   const toggleGroup = (label: string, current: boolean) => {
-    const next = { ...openGroups, [label]: !current };
+    // Acordeão: ao abrir um menu, os outros são recolhidos
+    const next = current ? { ...openGroups, [label]: false } : { [label]: true };
     setOpenGroups(next);
     localStorage.setItem("sidebar-open-groups", JSON.stringify(next));
   };
