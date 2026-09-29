@@ -282,7 +282,7 @@ export default function FollowUps() {
               <div className="space-y-3">
                 <p className="text-sm text-muted-foreground">{sessionsClient.full_name} · {getPlanName(sessionsClient.plan_setting_id, sessionsClient.plan)}</p>
                 {items.length === 0 ? (
-                  <div className="rounded-xl bg-muted/50 p-4 text-sm text-muted-foreground">Este plano não tem serviços inclusos. Cadastre em Configurações → Planos.</div>
+                  <div className="rounded-xl bg-muted/50 p-4 text-sm text-muted-foreground">Este plano não tem serviços inclusos. Cadastre em Meu Negócio → Meus planos.</div>
                 ) : items.map((it, idx) => {
                   const isDone = it.session?.status === "done";
                   return (
