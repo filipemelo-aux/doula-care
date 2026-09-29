@@ -76,7 +76,6 @@ import { hardRefreshApp } from "@/lib/appUpdate";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import type { Tables } from "@/integrations/supabase/types";
-import Plans from "@/pages/Plans";
 import { usePlanLimits } from "@/hooks/usePlanLimits";
 import { promptToSaveUpdatedPassword } from "@/lib/passwordManager";
 
@@ -555,9 +554,8 @@ export default function Settings() {
         </div>
       ) : (
       <Tabs defaultValue="users" className="space-y-4">
-        <TabsList className="w-full grid grid-cols-4 gap-0 p-1">
+        <TabsList className="w-full grid grid-cols-3 gap-0 p-1">
           <TabsTrigger value="users" className="px-1 text-xs sm:text-sm gap-1"><Users className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" /><span className="truncate">Usuários</span></TabsTrigger>
-          <TabsTrigger value="plans" className="px-1 text-xs sm:text-sm gap-1"><CreditCard className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" /><span className="truncate">Planos</span></TabsTrigger>
           <TabsTrigger value="pix" className="px-1 text-xs sm:text-sm gap-1"><QrCode className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" /><span className="truncate">Pix</span></TabsTrigger>
           <TabsTrigger value="security" className="px-1 text-xs sm:text-sm gap-1"><Shield className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" /><span className="truncate">Segurança</span></TabsTrigger>
         </TabsList>
@@ -703,10 +701,6 @@ export default function Settings() {
           )}
         </TabsContent>
 
-        {/* ─── PLANS TAB ─── */}
-        <TabsContent value="plans" className="space-y-6">
-          <Plans />
-        </TabsContent>
 
         {/* ─── PIX TAB ─── */}
         <TabsContent value="pix" className="space-y-6">
