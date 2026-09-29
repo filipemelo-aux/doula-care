@@ -1409,7 +1409,16 @@ export function ClientDialog({ open, onOpenChange, client, initialStep, mode = "
                         <FormItem className="space-y-1 md:col-span-2">
                           <FormLabel className="text-xs">Data de nascimento</FormLabel>
                           <FormControl>
-                            <Input {...field} type="date" className="h-9 text-sm" />
+                            <Input
+                              {...field}
+                              type="text"
+                              inputMode="numeric"
+                              autoComplete="bday"
+                              className="h-9 text-sm"
+                              placeholder="DD/MM/AAAA"
+                              maxLength={10}
+                              onChange={(e) => field.onChange(maskDateBR(e.target.value))}
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
