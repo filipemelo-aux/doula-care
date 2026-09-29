@@ -46,7 +46,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
-import { maskPhone, maskCPF, maskCEP, maskCurrency, parseCurrency } from "@/lib/masks";
+import { maskPhone, maskCPF, maskCEP, maskCurrency, parseCurrency, maskDateBR, parseDateBRToISO, isoToBRDate } from "@/lib/masks";
 import type { Tables } from "@/integrations/supabase/types";
 import {
   SuggestionChips,
@@ -101,7 +101,7 @@ const clientSchema = z.object({
   restricoes_assistencia_restricoes: z.string().optional(),
   restricoes_assistencia_fobias_gatilhos: z.string().optional(),
   restricoes_assistencia_condicoes_especiais: z.string().optional(),
-  date_of_birth: z.string().optional(),
+  date_of_birth: z.string().optional().refine((v) => !v || parseDateBRToISO(v) !== null, { message: "Data incompleta ou inválida (DD/MM/AAAA)" }),
   profissao: z.string().optional(),
   religiao: z.string().optional(),
   personalidade: z.string().optional(),
@@ -418,7 +418,7 @@ export function ClientDialog({ open, onOpenChange, client, initialStep, mode = "
         instagram_gestante: (client as any).instagram_gestante || "",
         instagram_acompanhante: (client as any).instagram_acompanhante || "",
         notes: client.notes || "",
-        date_of_birth: (client as any).date_of_birth || "",
+        date_of_birth: isoToBRDate((client as any).date_of_birth),
         profissao: (client as any).profissao || "",
         religiao: (client as any).religiao || "",
         personalidade: (client as any).personalidade || "",
@@ -700,7 +700,7 @@ export function ClientDialog({ open, onOpenChange, client, initialStep, mode = "
         instagram_gestante: data.instagram_gestante || null,
         instagram_acompanhante: data.instagram_acompanhante || null,
         notes: data.notes || null,
-        date_of_birth: data.date_of_birth || null,
+        date_of_birth: parseDateBRToISO(data.date_of_birth || "") ?? null,
         profissao: data.profissao || null,
         religiao: data.religiao || null,
         personalidade: data.personalidade || null,
@@ -1409,7 +1409,16 @@ export function ClientDialog({ open, onOpenChange, client, initialStep, mode = "
                         <FormItem className="space-y-1 md:col-span-2">
                           <FormLabel className="text-xs">Data de nascimento</FormLabel>
                           <FormControl>
-                            <Input {...field} type="date" className="h-9 text-sm" />
+                            <Input
+                              {...field}
+                              type="text"
+                              inputMode="numeric"
+                              autoComplete="bday"
+                              className="h-9 text-sm"
+                              placeholder="DD/MM/AAAA"
+                              maxLength={10}
+                              onChange={(e) => field.onChange(maskDateBR(e.target.value))}
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
