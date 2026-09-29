@@ -217,7 +217,7 @@ export default function ServiceRecords() {
         <div className="space-y-1.5"><Label>Observações</Label><Textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} /></div>
         <div className="rounded-xl bg-primary/5 p-3 text-xs text-muted-foreground">Ao registrar, este atendimento aparecerá em <strong className="text-foreground">A faturar</strong>.</div>
       </div><DialogFooter><Button variant="ghost" onClick={() => setOpen(false)}>Cancelar</Button><Button onClick={() => create.mutate()} disabled={create.isPending}>Registrar atendimento</Button></DialogFooter></DialogContent></Dialog>
-      <ClientDialog open={personOpen} onOpenChange={setPersonOpen} mode="person" onSaved={(id: string) => { qc.invalidateQueries({ queryKey: ["clients"] }); qc.invalidateQueries({ queryKey: ["service-clients"] }); setForm((f) => ({ ...f, client_id: id })); }} />
+      <ClientDialog open={personOpen} onOpenChange={setPersonOpen} mode="person" onSaved={(id: string) => { qc.invalidateQueries({ queryKey: ["clients"] }); qc.invalidateQueries({ queryKey: ["service-records-clients"] }); setForm((f) => ({ ...f, client_id: id })); }} />
     </div>
   );
 }
