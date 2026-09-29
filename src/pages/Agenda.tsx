@@ -117,6 +117,7 @@ interface ClientOption {
   id: string;
   full_name: string;
   user_id?: string;
+  plan_setting_id?: string | null;
   street?: string;
   number?: string;
   neighborhood?: string;
@@ -165,6 +166,13 @@ export default function Agenda() {
   const [aptNotes, setAptNotes] = useState("");
   const [aptClientId, setAptClientId] = useState("");
   const [, setAptLinkSeq] = useState<string>("none");
+  const [aptKind, setAptKind] = useState<"compromisso" | "consulta" | "servico">("compromisso");
+  const [aptConsultIdx, setAptConsultIdx] = useState("");
+  const [aptServiceName, setAptServiceName] = useState("");
+  const [aptServiceAmount, setAptServiceAmount] = useState("");
+  const changeAptKind = (k: "compromisso" | "consulta" | "servico") => {
+    setAptKind(k); setAptConsultIdx(""); setAptServiceName(""); setAptServiceAmount(""); setAptTitle("");
+  };
   const [aptStatus, setAptStatus] = useState<"pendente" | "concluida">("pendente");
   const [aptAddress, setAptAddress] = useState("");
   const [aptIsLocal, setAptIsLocal] = useState(false);
@@ -228,13 +236,41 @@ export default function Agenda() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("clients")
-        .select("id, full_name, user_id, street, number, neighborhood, city, state")
+        .select("id, full_name, user_id, street, number, neighborhood, city, state, plan_setting_id")
         .order("full_name");
       if (error) throw error;
       return data as ClientOption[];
     },
     enabled: appointmentDialog,
   });
+
+  const aptClient = clients?.find((c) => c.id === aptClientId);
+  const { data: consultItems = [] } = useQuery({
+    queryKey: ["agenda-consult-items", aptClientId, aptClient?.plan_setting_id],
+    enabled: appointmentDialog && aptKind === "consulta" && !!aptClientId,
+    queryFn: async () => {
+      let feats: string[] = [];
+      if (aptClient?.plan_setting_id) {
+        const { data } = await supabase.from("plan_settings").select("features").eq("id", aptClient.plan_setting_id).maybeSingle();
+        feats = (data?.features || []).map((f: string) => f.trim()).filter(Boolean);
+      }
+      const { data: sess } = await (supabase.from("followup_sessions" as any) as any).select("id, sequence, service_name, status").eq("client_id", aptClientId);
+      const list = (sess || []) as { id: string; sequence: number | null; service_name: string; status: string }[];
+      return feats.map((name, i) => {
+        const s = list.find((x) => x.sequence === i + 1) || list.find((x) => x.sequence == null && x.service_name === name);
+        return { name, sessionId: s?.id as string | undefined, status: s?.status as string | undefined };
+      });
+    },
+  });
+  const { data: catalogServices = [] } = useQuery({
+    queryKey: ["agenda-catalog-services", organizationId],
+    enabled: appointmentDialog && aptKind === "servico" && !!organizationId,
+    queryFn: async () => {
+      const { data } = await supabase.from("custom_services").select("id, name").eq("organization_id", organizationId!).eq("is_active", true).order("name");
+      return data || [];
+    },
+  });
+
 
   // ─── Mutations ───────────────────────────────────────────
   // Personal appointment dialog
@@ -281,8 +317,8 @@ export default function Agenda() {
           setReturnToClientId((state as any).returnToClientId as string);
         }
       }
-      else if (state.openDialog === "compromisso") setPersonalAptDialog(true);
-      else if (state.openDialog === "servico") setAppointmentDialog(true);
+      else if (state.openDialog === "compromisso") setAppointmentDialog(true);
+      else if (state.openDialog === "servico") { setAptKind("servico"); setAppointmentDialog(true); }
       // Clear the state so it doesn't re-trigger
       window.history.replaceState({}, document.title);
     }
@@ -385,7 +421,7 @@ export default function Agenda() {
           .eq("id", editingAppointment.id);
         if (error) throw error;
       } else {
-        const { error } = await supabase.from("appointments").insert({
+        const { data: apt, error } = await supabase.from("appointments").insert({
           client_id: aptClientId || null,
           title: aptTitle,
           scheduled_at: scheduledUtc,
@@ -393,8 +429,26 @@ export default function Agenda() {
           address: finalAddress,
           owner_id: user?.id || null,
           organization_id: organizationId || null,
-        } as any);
+        } as any).select("id").single();
         if (error) throw error;
+        if (aptKind === "consulta" && aptConsultIdx !== "") {
+          const idx = Number(aptConsultIdx);
+          const item = consultItems[idx];
+          const payload = { status: "scheduled", appointment_id: apt.id, sequence: idx + 1, service_name: item.name, performed_at: null };
+          const db = supabase.from("followup_sessions" as any) as any;
+          const { error: e2 } = item.sessionId
+            ? await db.update(payload).eq("id", item.sessionId)
+            : await db.insert({ ...payload, organization_id: organizationId, client_id: aptClientId, created_by: user?.id });
+          if (e2) throw e2;
+        }
+        if (aptKind === "servico") {
+          const amount = parseFloat(aptServiceAmount.replace(/\./g, "").replace(",", ".")) || 0;
+          const { error: e3 } = await (supabase.from("service_records" as any) as any).insert({
+            organization_id: organizationId, client_id: aptClientId, service_name: aptServiceName.trim(), amount,
+            service_date: aptDate, notes: aptNotes || null, status: "forecast", created_by: user?.id,
+          });
+          if (e3) throw e3;
+        }
         await ensureAvailabilityForAppointment(organizationId, scheduledUtc);
       }
     },
@@ -402,6 +456,8 @@ export default function Agenda() {
       queryClient.invalidateQueries({ queryKey: ["agenda-appointments"] });
       queryClient.invalidateQueries({ queryKey: ["all-appointments"] });
       queryClient.invalidateQueries({ queryKey: ["doula-availability"] });
+      queryClient.invalidateQueries({ queryKey: ["followup-sessions"] });
+      queryClient.invalidateQueries({ queryKey: ["service-records"] });
 
       // Send push to client when new appointment is created (not editing)
       if (!editingAppointment && aptClientId) {
@@ -486,6 +542,7 @@ export default function Agenda() {
     setAptCepData(null);
     setAptNumber("");
     setLockedClientId(null);
+    changeAptKind("compromisso");
     // If we came from the Dashboard client quick view, hop back and reopen it
     // so the just-added appointment shows up in the summary.
     if (returnToClientId) {
@@ -517,6 +574,7 @@ export default function Agenda() {
   const handleAptClientChange = (id: string) => {
     setAptClientId(id);
     setAptLinkSeq("none");
+    setAptConsultIdx("");
     const client = clients?.find(c => c.id === id);
     if (client) {
       const parts = [client.street, client.number, client.neighborhood, client.city, client.state].filter(Boolean);
@@ -1002,15 +1060,32 @@ export default function Agenda() {
           </DialogHeader>
           <div className="space-y-4">
             {!editingAppointment && (
+              <div className="space-y-2">
+                <Label className="text-xs">Este compromisso é também…</Label>
+                <div className="flex flex-wrap gap-4">
+                  <label className="flex items-center gap-2 text-sm cursor-pointer">
+                    <Checkbox checked={aptKind === "consulta"} onCheckedChange={(c) => changeAptKind(c === true ? "consulta" : "compromisso")} />
+                    Nova consulta
+                  </label>
+                  <label className="flex items-center gap-2 text-sm cursor-pointer">
+                    <Checkbox checked={aptKind === "servico"} onCheckedChange={(c) => changeAptKind(c === true ? "servico" : "compromisso")} />
+                    Novo serviço
+                  </label>
+                </div>
+                {aptKind === "consulta" && <p className="text-xs text-muted-foreground">Fica vinculada aos serviços inclusos do acompanhamento da cliente.</p>}
+                {aptKind === "servico" && <p className="text-xs text-muted-foreground">Vira um atendimento e entra nas Previsões de Recebimento para faturar.</p>}
+              </div>
+            )}
+            {!editingAppointment && (
               <div>
-                <Label className="text-xs">Cliente {lockedClientId ? "" : "(opcional)"}</Label>
+                <Label className="text-xs">Cliente {lockedClientId || aptKind !== "compromisso" ? "*" : "(opcional)"}</Label>
                 <Select
                   value={aptClientId}
                   onValueChange={handleAptClientChange}
                   disabled={!!lockedClientId}
                 >
                   <SelectTrigger className="mt-1">
-                    <SelectValue placeholder="Selecione ou deixe em branco..." />
+                    <SelectValue placeholder={aptKind === "compromisso" ? "Selecione ou deixe em branco..." : "Selecione a cliente..."} />
                   </SelectTrigger>
                   <SelectContent>
                     {clients?.map((c) => (
@@ -1020,9 +1095,49 @@ export default function Agenda() {
                 </Select>
               </div>
             )}
+            {!editingAppointment && aptKind === "consulta" && aptClientId && (
+              <div>
+                <Label className="text-xs">Consulta do plano *</Label>
+                {consultItems.length === 0 ? (
+                  <p className="mt-1 text-xs text-muted-foreground">O plano desta cliente não tem serviços inclusos. Cadastre em Meu Negócio → Meus planos.</p>
+                ) : (
+                  <Select value={aptConsultIdx} onValueChange={(v) => { setAptConsultIdx(v); const it = consultItems[Number(v)]; if (it) setAptTitle(it.name); }}>
+                    <SelectTrigger className="mt-1"><SelectValue placeholder="Escolha a consulta..." /></SelectTrigger>
+                    <SelectContent>
+                      {consultItems.map((it, i) => (
+                        <SelectItem key={i} value={String(i)} disabled={it.status === "done" || it.status === "scheduled"}>
+                          {i + 1}. {it.name}{it.status === "done" ? " (realizada)" : it.status === "scheduled" ? " (agendada)" : ""}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              </div>
+            )}
+            {!editingAppointment && aptKind === "servico" && (
+              <div className="grid grid-cols-[1fr_7rem] gap-3">
+                <div>
+                  <Label className="text-xs">Serviço *</Label>
+                  {catalogServices.length > 0 ? (
+                    <Select value={aptServiceName} onValueChange={(v) => { setAptServiceName(v); setAptTitle(v); }}>
+                      <SelectTrigger className="mt-1"><SelectValue placeholder="Escolha..." /></SelectTrigger>
+                      <SelectContent>
+                        {catalogServices.map((s) => <SelectItem key={s.id} value={s.name}>{s.name}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <Input className="mt-1" placeholder="Nome do serviço" value={aptServiceName} onChange={(e) => { setAptServiceName(e.target.value); setAptTitle(e.target.value); }} />
+                  )}
+                </div>
+                <div>
+                  <Label className="text-xs">Valor (R$) *</Label>
+                  <Input className="mt-1" inputMode="decimal" placeholder="0,00" value={aptServiceAmount} onChange={(e) => setAptServiceAmount(e.target.value.replace(/[^\d,.]/g, ""))} />
+                </div>
+              </div>
+            )}
             <div>
               <Label className="text-xs">Título *</Label>
-              <Input placeholder="Ex: Consulta pré-natal" value={aptTitle} onChange={(e) => setAptTitle(e.target.value)} className="mt-1" />
+              <Input placeholder="Ex: Reunião, visita..." value={aptTitle} onChange={(e) => setAptTitle(e.target.value)} className="mt-1" />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
@@ -1115,7 +1230,12 @@ export default function Agenda() {
           </div>
           <DialogFooter>
             <Button
-              disabled={!aptTitle || !aptDate || !aptTime || (!aptIsLocal && !aptAddress.trim()) || saveAppointmentMutation.isPending}
+              disabled={
+                !aptTitle || !aptDate || !aptTime || (!aptIsLocal && !aptAddress.trim()) || saveAppointmentMutation.isPending ||
+                (!editingAppointment && aptKind !== "compromisso" && !aptClientId) ||
+                (!editingAppointment && aptKind === "consulta" && aptConsultIdx === "") ||
+                (!editingAppointment && aptKind === "servico" && (!aptServiceName.trim() || !(parseFloat(aptServiceAmount.replace(",", ".")) > 0)))
+              }
               onClick={() => saveAppointmentMutation.mutate()}
             >
               {saveAppointmentMutation.isPending && <Loader2 className="h-4 w-4 animate-spin mr-1" />}

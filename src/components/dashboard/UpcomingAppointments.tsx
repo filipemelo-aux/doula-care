@@ -127,24 +127,9 @@ export function UpcomingAppointments() {
             {appointments && appointments.length > 0 && (
               <span className="text-2xl font-bold text-foreground">{appointments.length}</span>
             )}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button size="icon" variant="outline" className="h-8 w-8 rounded-full">
-                  <Plus className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-52">
-                <DropdownMenuItem onClick={() => navigate("/agenda", { state: { openDialog: "consulta" } })} className="gap-2.5 py-2.5">
-                  <Calendar className="h-4 w-4" /> Nova consulta
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => navigate("/agenda", { state: { openDialog: "compromisso" } })} className="gap-2.5 py-2.5">
-                  <CalendarCheck className="h-4 w-4" /> Novo compromisso
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => navigate("/agenda", { state: { openDialog: "servico" } })} className="gap-2.5 py-2.5">
-                  <Briefcase className="h-4 w-4" /> Novo serviço
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <Button size="icon" variant="outline" className="h-8 w-8 rounded-full" aria-label="Novo compromisso" onClick={() => navigate("/agenda", { state: { openDialog: "compromisso" } })}>
+              <Plus className="h-4 w-4" />
+            </Button>
           </div>
         </div>
 
