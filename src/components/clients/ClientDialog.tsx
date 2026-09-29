@@ -1312,12 +1312,17 @@ export function ClientDialog({ open, onOpenChange, client, initialStep, mode = "
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl w-[95vw] max-w-[95vw] max-h-[92vh] overflow-hidden flex flex-col overflow-x-hidden min-w-0">
         <DialogHeader className="pb-0 flex-shrink-0 min-w-0 overflow-hidden">
-          <DialogTitle className="font-display text-lg">
-            {readOnly ? `Visualizar acompanhamento${client ? ` — ${client.full_name}` : ""}`
-              : mode === "person" ? (client ? "Editar cadastro" : "Nova pessoa")
-              : mode === "followup" ? `Acompanhamento${client ? ` — ${client.full_name}` : ""}`
-              : client ? "Editar Cliente" : "Nova Cliente"}
-          </DialogTitle>
+          <div className="min-w-0">
+            <DialogTitle className="font-display text-lg leading-tight">
+              {readOnly ? "Visualizar acompanhamento"
+                : mode === "person" ? (client ? "Editar cadastro" : "Nova pessoa")
+                : mode === "followup" ? "Acompanhamento"
+                : client ? "Editar Cliente" : "Nova Cliente"}
+            </DialogTitle>
+            {(mode === "followup" || readOnly) && client?.full_name && (
+              <p className="text-sm text-muted-foreground truncate mt-0.5">{client.full_name}</p>
+            )}
+          </div>
           {/* Tab-style step navigation */}
           <div className="flex flex-nowrap items-center justify-between pt-2 border-b border-border/40 overflow-hidden">
             {visibleSteps.map((step) => (
