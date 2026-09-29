@@ -35,6 +35,7 @@ import AdminMessages from "./pages/AdminMessages";
 import Subscription from "./pages/Subscription";
 import LocationCoverage from "./pages/LocationCoverage";
 import MyBrand from "./pages/MyBrand";
+import Plans from "./pages/Plans";
 import ServiceRecords from "./pages/ServiceRecords";
 import FollowUps from "./pages/FollowUps";
 import People from "./pages/People";
@@ -256,6 +257,7 @@ const App = () => (
               <Route path="/configuracoes" element={<Settings />} />
               <Route path="/localizacao" element={<LocationCoverage />} />
               <Route path="/minha-marca" element={<MyBrand />} />
+              <Route path="/meus-planos" element={<ProtectedRoute allowedRoles={["admin"]}><Plans /></ProtectedRoute>} />
               <Route path="/admin/assinatura" element={<Subscription />} />
             </Route>
 

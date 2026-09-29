@@ -315,7 +315,7 @@ export default function Plans() {
     return (
       <div className="space-y-6">
         <div className="page-header">
-          <h1 className="page-title">Planos</h1>
+          <h1 className="page-title">Meus planos</h1>
           <p className="page-description">Configure os planos oferecidos</p>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -332,7 +332,7 @@ export default function Plans() {
       {/* Header */}
       <div className="page-header flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="page-title">Planos</h1>
+          <h1 className="page-title">Meus planos</h1>
           <p className="page-description">
             Configure os planos e valores oferecidos às suas clientes
           </p>

@@ -25,6 +25,7 @@ import {
   AlertCircle,
   Briefcase,
   Palette,
+  Package,
   HeartHandshake,
   ClipboardList,
   CalendarClock,
@@ -89,6 +90,7 @@ const navItems = [
     label: "Meu Negócio",
     subItems: [
       { to: "/minha-marca", icon: Palette, label: "Minha Marca" },
+      { to: "/meus-planos", icon: Package, label: "Meus planos" },
       { to: "/localizacao", icon: MapPin, label: "Localização e Atendimento" },
     ],
   },
