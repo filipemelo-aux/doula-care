@@ -11,8 +11,8 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { ClientDialog } from "@/components/clients/ClientDialog";
-import { ConsultationTimeline } from "@/components/services/ConsultationTimeline";
-import { buildSteps, sessionsDb, useFollowupSessions, usePlanConsultations, type ConsultationStep } from "@/lib/consultations";
+import { sessionsDb, useFollowupSessions } from "@/lib/consultations";
+import { Textarea } from "@/components/ui/textarea";
 import { ensureAvailabilityForAppointment } from "@/lib/ensureAvailability";
 import { fromZonedTime, formatInTimeZone } from "date-fns-tz";
 import { useNavigate } from "react-router-dom";
@@ -69,76 +69,67 @@ export default function FollowUps() {
     },
   });
 
-  const { data: planItems = [] } = usePlanConsultations(organizationId);
   const { data: sessions = [], refetch: refetchSessions } = useFollowupSessions(organizationId);
-  const [scheduleFor, setScheduleFor] = useState<{ seq: number; label: string } | null>(null);
-  const [schedDate, setSchedDate] = useState("");
-  const [schedTime, setSchedTime] = useState("09:00");
+  const { data: planFeatures = {} } = useQuery({
+    queryKey: ["plan-features", organizationId],
+    enabled: !!organizationId,
+    queryFn: async () => {
+      const { data } = await supabase.from("plan_settings").select("id, features").eq("organization_id", organizationId!);
+      return Object.fromEntries((data || []).map((p) => [p.id, (p.features || []).map((f) => f.trim()).filter(Boolean)])) as Record<string, string[]>;
+    },
+  });
   const [busy, setBusy] = useState(false);
+  const [notesDraft, setNotesDraft] = useState<Record<string, string>>({});
 
-  const stepsFor = (c: Tables<"clients">) => buildSteps(c.plan_setting_id, planItems, sessions.filter((s) => s.client_id === c.id));
+  const itemsFor = (c: Tables<"clients">) => {
+    const feats = c.plan_setting_id ? planFeatures[c.plan_setting_id] || [] : [];
+    const mine = sessions.filter((s) => s.client_id === c.id);
+    return feats.map((name, i) => ({ name, key: `${c.id}:${i}`, session: mine.find((s) => s.sequence === i + 1) || mine.find((s) => s.sequence == null && s.service_name === name) }));
+  };
+  type Item = ReturnType<typeof itemsFor>[number];
 
-  const afterChange = () => { refetchSessions(); qc.invalidateQueries({ queryKey: ["agenda-appointments"] }); qc.invalidateQueries({ queryKey: ["all-appointments"] }); };
+  const afterChange = () => { refetchSessions(); qc.invalidateQueries({ queryKey: ["agenda-appointments"] }); qc.invalidateQueries({ queryKey: ["all-appointments"] }); qc.invalidateQueries({ queryKey: ["client-appointments"] }); };
 
-  const markDone = async (c: Tables<"clients">, step: ConsultationStep) => {
-    const date = sessionDates[step.label] || new Date().toISOString().slice(0, 10);
+  const markDone = async (c: Tables<"clients">, item: Item, idx: number) => {
+    const date = sessionDates[item.key] || new Date().toISOString().slice(0, 10);
+    const notes = notesDraft[item.key] ?? item.session?.notes ?? null;
     setBusy(true);
     try {
-      if (step.session?.appointment_id) {
-        const { error } = await supabase.from("appointments").update({ completed_at: new Date().toISOString() }).eq("id", step.session.appointment_id);
-        if (error) throw error;
-      } else if (step.session) {
-        const { error } = await sessionsDb().update({ status: "done", performed_at: date }).eq("id", step.session.id);
-        if (error) throw error;
-      } else {
-        const { error } = await sessionsDb().insert({ organization_id: organizationId, client_id: c.id, service_name: step.label, sequence: step.sequence, status: "done", performed_at: date, created_by: user?.id });
-        if (error) throw error;
-      }
-      toast.success(`Consulta ${step.sequence} registrada como realizada`);
+      const at = fromZonedTime(`${date}T12:00`, "America/Sao_Paulo").toISOString();
+      const { data: apt, error } = await supabase.from("appointments").insert({ client_id: c.id, title: item.name, scheduled_at: at, completed_at: at, completion_notes: notes || null, owner_id: user?.id || null, organization_id: organizationId } as any).select("id").single();
+      if (error) throw error;
+      const payload = { status: "done", performed_at: date, notes: notes || null, appointment_id: apt.id, sequence: idx + 1, service_name: item.name };
+      const { error: e2 } = item.session
+        ? await sessionsDb().update(payload).eq("id", item.session.id)
+        : await sessionsDb().insert({ ...payload, organization_id: organizationId, client_id: c.id, created_by: user?.id });
+      if (e2) throw e2;
+      toast.success("Registrado como executado e salvo na ficha da cliente");
       afterChange();
     } catch { toast.error("Não foi possível registrar"); } finally { setBusy(false); }
   };
 
-  const schedule = async () => {
-    if (!sessionsClient || !scheduleFor || !schedDate || !organizationId) return;
+  const saveNotes = async (c: Tables<"clients">, item: Item, idx: number) => {
+    const notes = (notesDraft[item.key] ?? "").trim() || null;
     setBusy(true);
-    try {
-      const scheduledUtc = fromZonedTime(`${schedDate}T${schedTime}`, "America/Sao_Paulo").toISOString();
-      const { data: apt, error } = await supabase.from("appointments").insert({ client_id: sessionsClient.id, title: `Consulta ${scheduleFor.seq} · ${scheduleFor.label}`, scheduled_at: scheduledUtc, owner_id: user?.id || null, organization_id: organizationId } as any).select("id").single();
-      if (error) throw error;
-      const { error: e2 } = await sessionsDb().insert({ organization_id: organizationId, client_id: sessionsClient.id, service_name: scheduleFor.label, sequence: scheduleFor.seq, status: "scheduled", appointment_id: apt.id, created_by: user?.id });
-      if (e2) throw e2;
-      await ensureAvailabilityForAppointment(organizationId, scheduledUtc);
-      toast.success("Consulta agendada e adicionada à agenda");
-      setScheduleFor(null);
-      afterChange();
-    } catch { toast.error("Não foi possível agendar"); } finally { setBusy(false); }
-  };
-
-  const cancelSchedule = async (step: ConsultationStep) => {
-    if (!step.session) return;
-    setBusy(true);
-    const { error } = step.session.appointment_id
-      ? await supabase.from("appointments").delete().eq("id", step.session.appointment_id)
-      : await sessionsDb().delete().eq("id", step.session.id);
+    const { error } = item.session
+      ? await sessionsDb().update({ notes }).eq("id", item.session.id)
+      : await sessionsDb().insert({ organization_id: organizationId, client_id: c.id, service_name: item.name, sequence: idx + 1, status: "note", notes, created_by: user?.id });
+    if (!error && item.session?.appointment_id) await supabase.from("appointments").update({ completion_notes: notes }).eq("id", item.session.appointment_id);
     setBusy(false);
-    if (error) return toast.error("Não foi possível cancelar");
-    toast.success("Agendamento cancelado");
+    if (error) return toast.error("Não foi possível salvar");
+    toast.success("Observação salva");
     afterChange();
   };
 
-  const undoDone = async (step: ConsultationStep) => {
-    if (!step.session) return;
+  const undoDone = async (item: Item) => {
+    if (!item.session) return;
     setBusy(true);
-    const { error } = step.session.appointment_id
-      ? await supabase.from("appointments").update({ completed_at: null, completion_notes: null }).eq("id", step.session.appointment_id)
-      : await sessionsDb().delete().eq("id", step.session.id);
+    if (item.session.appointment_id) await supabase.from("appointments").delete().eq("id", item.session.appointment_id);
+    const { error } = await sessionsDb().update({ status: "note", performed_at: null, appointment_id: null }).eq("id", item.session.id);
     setBusy(false);
     if (error) return toast.error("Não foi possível desfazer");
     afterChange();
   };
-
-  const fmtDateTime = (iso: string) => formatInTimeZone(new Date(iso), "America/Sao_Paulo", "dd/MM 'às' HH:mm");
 
   // Busca no banco ao digitar (autocomplete de cliente)
   const { data: suggestions = [], isFetching: searching } = useQuery({
@@ -239,9 +230,8 @@ export default function FollowUps() {
         ) : (
           <div className="space-y-3">
             {visibleActive.map((c) => {
-              const steps = stepsFor(c);
-              const done = steps.filter((st) => st.state === "done").length;
-              const next = steps.find((st) => st.state !== "done");
+              const items = itemsFor(c);
+              const done = items.filter((it) => it.session?.status === "done").length;
               return (
               <article key={c.id} className="overflow-hidden rounded-2xl bg-card shadow-card">
                 <div className="flex items-start gap-3 p-4">
@@ -249,26 +239,30 @@ export default function FollowUps() {
                   <div className="min-w-0 flex-1"><div className="flex items-start justify-between gap-2"><div className="min-w-0"><p className="truncate font-semibold">{c.full_name}</p><p className="truncate text-xs text-muted-foreground">{getPlanName(c.plan_setting_id, c.plan)}{c.dpp ? ` · DPP ${formatBrazilDate(c.dpp)}` : ""}</p></div><Badge variant="secondary">{c.status === "lactante" ? "Puérpera" : c.status === "gestante" ? "Gestante" : "Outro"}</Badge></div><p className="mt-2 font-bold">{brl(Number(c.plan_value || 0))}</p></div>
                 </div>
                 <div className="border-t border-border/30 px-4 py-3">
-                  {steps.length === 0 ? (
+                  {items.length === 0 ? (
                     <div className="flex items-center justify-between gap-2">
-                      <p className="text-xs text-muted-foreground">Este plano ainda não tem roteiro de consultas.</p>
-                      <Button size="sm" variant="ghost" onClick={() => navigate("/configuracoes", { state: { tab: "planos" } })}>Definir consultas</Button>
+                      <p className="text-xs text-muted-foreground">O plano não tem serviços inclusos cadastrados.</p>
+                      <Button size="sm" variant="ghost" onClick={() => navigate("/configuracoes", { state: { tab: "planos" } })}>Cadastrar</Button>
                     </div>
                   ) : (
                     <>
-                      <div className="mb-3 flex items-center justify-between gap-2">
-                        <p className="text-xs font-semibold text-foreground">Consultas</p>
-                        <p className="text-xs text-muted-foreground">{done} de {steps.length} realizadas</p>
+                      <div className="mb-2 flex items-center justify-between gap-2">
+                        <p className="text-xs font-semibold text-foreground">Serviços inclusos</p>
+                        <p className="text-xs text-muted-foreground">{done} de {items.length} executados</p>
                       </div>
-                      <ConsultationTimeline steps={steps} />
-                      <p className="mt-2 truncate text-xs text-muted-foreground">
-                        {next ? <>Próxima: <span className="font-medium text-foreground">{next.label}</span>{next.state === "scheduled" && next.session?.appointments?.scheduled_at ? ` · agendada ${fmtDateTime(next.session.appointments.scheduled_at)}` : " · sem data"}</> : "Todas as consultas do plano foram realizadas"}
-                      </p>
+                      <ul className="space-y-1">
+                        {items.map((it) => (
+                          <li key={it.key} className="flex items-center gap-2 text-xs">
+                            {it.session?.status === "done" ? <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-success" /> : <span className="h-3.5 w-3.5 shrink-0 rounded-full border border-border" />}
+                            <span className={it.session?.status === "done" ? "text-foreground" : "text-muted-foreground"}>{it.name}</span>
+                          </li>
+                        ))}
+                      </ul>
                     </>
                   )}
                 </div>
                 <div className="grid grid-cols-3 gap-2 border-t border-border/30 p-3">
-                  <Button variant="default" size="sm" onClick={() => setSessionsClient(c)}><ListChecks className="mr-1.5 h-4 w-4" /> Consultas{steps.length ? ` ${done}/${steps.length}` : ""}</Button>
+                  <Button variant="default" size="sm" onClick={() => setSessionsClient(c)}><ListChecks className="mr-1.5 h-4 w-4" /> Serviços</Button>
                   <Button variant="secondary" size="sm" onClick={() => setViewClient(c)}><Eye className="mr-2 h-4 w-4" /> Visualizar</Button>
                   <Button variant="secondary" size="sm" onClick={() => setFollowClient(c)}><Pencil className="mr-2 h-4 w-4" /> Editar</Button>
                 </div>
@@ -281,54 +275,41 @@ export default function FollowUps() {
 
       <Dialog open={!!sessionsClient} onOpenChange={(o) => { if (!o) setSessionsClient(null); }}>
         <DialogContent className="max-h-[85vh] overflow-y-auto">
-          <DialogHeader><DialogTitle>Consultas do plano</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>Serviços inclusos</DialogTitle></DialogHeader>
           {sessionsClient && (() => {
-            const steps = stepsFor(sessionsClient);
+            const items = itemsFor(sessionsClient);
             return (
               <div className="space-y-3">
                 <p className="text-sm text-muted-foreground">{sessionsClient.full_name} · {getPlanName(sessionsClient.plan_setting_id, sessionsClient.plan)}</p>
-                {steps.length > 0 && <ConsultationTimeline steps={steps} />}
-                {steps.length === 0 ? (
-                  <div className="rounded-xl bg-muted/50 p-4 text-sm text-muted-foreground">Este plano não tem roteiro de consultas. Defina em Configurações → Planos → Roteiro de consultas.</div>
-                ) : steps.map((step) => (
-                  <div key={step.sequence} className="rounded-xl bg-muted/40 p-3">
+                {items.length === 0 ? (
+                  <div className="rounded-xl bg-muted/50 p-4 text-sm text-muted-foreground">Este plano não tem serviços inclusos. Cadastre em Configurações → Planos.</div>
+                ) : items.map((it, idx) => {
+                  const isDone = it.session?.status === "done";
+                  return (
+                  <div key={it.key} className="rounded-xl bg-muted/40 p-3 space-y-2">
                     <div className="flex items-start gap-2">
-                      <span className="text-xs font-bold text-primary">{step.sequence}.</span>
                       <div className="min-w-0 flex-1">
-                        <p className="text-sm font-medium">{step.label}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {step.modality === "online" ? "Online" : "Presencial"} · {step.state === "done" ? `Realizada${step.session?.performed_at ? ` em ${formatBrazilDate(step.session.performed_at)}` : ""}` : step.state === "scheduled" ? `Agendada${step.session?.appointments?.scheduled_at ? ` ${fmtDateTime(step.session.appointments.scheduled_at)}` : ""}` : "Pendente"}
-                        </p>
+                        <p className="text-sm font-medium">{it.name}</p>
+                        <p className="text-xs text-muted-foreground">{isDone ? `Executado${it.session?.performed_at ? ` em ${formatBrazilDate(it.session.performed_at)}` : ""} · na ficha da cliente` : "Não sinalizado"}</p>
                       </div>
-                      {step.state === "done" && <CheckCircle2 className="h-4 w-4 shrink-0 text-success" />}
+                      {isDone && <CheckCircle2 className="h-4 w-4 shrink-0 text-success" />}
                     </div>
-                    {step.state === "done" && step.session?.notes && <p className="mt-2 rounded-lg bg-card p-2 text-xs">{step.session.notes}</p>}
-                    <div className="mt-2 flex flex-wrap justify-end gap-2">
-                      {step.state === "pending" && (scheduleFor?.seq === step.sequence ? (
-                        <div className="flex w-full flex-wrap items-center gap-2">
-                          <Input type="date" className="h-9 flex-1" value={schedDate} onChange={(e) => setSchedDate(e.target.value)} />
-                          <Input type="time" className="h-9 w-28" value={schedTime} onChange={(e) => setSchedTime(e.target.value)} />
-                          <Button size="sm" variant="ghost" onClick={() => setScheduleFor(null)}>Voltar</Button>
-                          <Button size="sm" onClick={schedule} disabled={busy || !schedDate}>Confirmar</Button>
-                        </div>
+                    <Textarea rows={2} placeholder="Observações (opcional)" value={notesDraft[it.key] ?? it.session?.notes ?? ""} onChange={(e) => setNotesDraft((d) => ({ ...d, [it.key]: e.target.value }))} />
+                    <div className="flex flex-wrap items-center justify-end gap-2">
+                      <Button size="sm" variant="ghost" disabled={busy || notesDraft[it.key] === undefined} onClick={() => saveNotes(sessionsClient, it, idx)}>Salvar observação</Button>
+                      {isDone ? (
+                        <Button size="sm" variant="ghost" disabled={busy} onClick={() => undoDone(it)}><Trash2 className="mr-1 h-3.5 w-3.5" /> Desfazer</Button>
                       ) : (
                         <>
-                          <Button size="sm" variant="secondary" disabled={busy} onClick={() => markDone(sessionsClient, step)}>Registrar como realizada</Button>
-                          <Button size="sm" disabled={busy} onClick={() => { setScheduleFor({ seq: step.sequence, label: step.label }); setSchedDate(new Date().toISOString().slice(0, 10)); }}><CalendarPlus className="mr-1.5 h-4 w-4" /> Agendar</Button>
-                        </>
-                      ))}
-                      {step.state === "scheduled" && (
-                        <>
-                          <Button size="sm" variant="ghost" disabled={busy} onClick={() => cancelSchedule(step)}>Cancelar agendamento</Button>
-                          <Button size="sm" variant="secondary" onClick={() => navigate("/agenda")}>Reagendar</Button>
-                          <Button size="sm" disabled={busy} onClick={() => markDone(sessionsClient, step)}>Concluir</Button>
+                          <Input type="date" className="h-9 w-36" value={sessionDates[it.key] || new Date().toISOString().slice(0, 10)} onChange={(e) => setSessionDates((d) => ({ ...d, [it.key]: e.target.value }))} />
+                          <Button size="sm" disabled={busy} onClick={() => markDone(sessionsClient, it, idx)}>Marcar executado</Button>
                         </>
                       )}
-                      {step.state === "done" && <Button size="sm" variant="ghost" disabled={busy} onClick={() => undoDone(step)}><Trash2 className="mr-1 h-3.5 w-3.5" /> Desfazer</Button>}
                     </div>
                   </div>
-                ))}
-                <p className="text-xs text-muted-foreground">Consultas agendadas aparecem na Agenda. Ao concluir lá, elas são marcadas aqui automaticamente.</p>
+                  );
+                })}
+                <p className="text-xs text-muted-foreground">Sinalizar é opcional. Serviços marcados como executados entram na ficha da cliente.</p>
               </div>
             );
           })()}
