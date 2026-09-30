@@ -12,7 +12,6 @@ import {
   calculateCurrentPregnancyDays,
 } from "@/lib/pregnancy";
 
-type ClientStatusFilter = "todas" | "gestante" | "lactante";
 
 type ClientRow = {
   id: string;
@@ -65,7 +64,6 @@ function babyName(c: ClientRow) {
 
 export function ClientsOverview() {
   const [openId, setOpenId] = useState<string | null>(null);
-  const [filter, setFilter] = useState<ClientStatusFilter>("todas");
   const location = useLocation();
 
   // Reopen the client quick view when returning from the Agenda after
@@ -78,6 +76,7 @@ export function ClientsOverview() {
     }
   }, [location.state]);
 
+  // Somente gestantes na visão geral; puérperas ficam na página de Clientes.
   const { data: clients, isLoading } = useQuery({
     queryKey: ["dashboard-clients-overview"],
     queryFn: async () => {
@@ -86,7 +85,7 @@ export function ClientsOverview() {
         .select(
           "id, full_name, preferred_name, user_id, status, dpp, pregnancy_weeks, pregnancy_weeks_set_at, labor_started_at, birth_occurred, birth_date, companion_name, baby_names",
         )
-        .in("status", ["gestante", "lactante"])
+        .eq("status", "gestante")
         .order("dpp", { ascending: true, nullsFirst: false });
       if (error) throw error;
       return (data || []) as ClientRow[];
@@ -161,21 +160,16 @@ export function ClientsOverview() {
     },
   });
 
+  // Gestantes por DPP asc; sem DPP no fim
   const sorted = useMemo(() => {
-    const list = [...(clients || [])].filter(
-      (c) => filter === "todas" || c.status === filter,
-    );
-    // Puérperas depois; gestantes por DPP asc; sem DPP no fim
+    const list = [...(clients || [])];
     return list.sort((a, b) => {
-      const aPuer = a.status === "lactante" ? 1 : 0;
-      const bPuer = b.status === "lactante" ? 1 : 0;
-      if (aPuer !== bPuer) return aPuer - bPuer;
       if (!a.dpp && !b.dpp) return 0;
       if (!a.dpp) return 1;
       if (!b.dpp) return -1;
       return a.dpp.localeCompare(b.dpp);
     });
-  }, [clients, filter]);
+  }, [clients]);
 
   return (
     <div className="rounded-2xl bg-card p-4 lg:p-6 shadow-card space-y-4">
@@ -190,23 +184,6 @@ export function ClientsOverview() {
         </div>
       </div>
 
-      <div className="flex items-center gap-2">
-        <FilterChip
-          label="Todas"
-          active={filter === "todas"}
-          onClick={() => setFilter("todas")}
-        />
-        <FilterChip
-          label="Gestantes"
-          active={filter === "gestante"}
-          onClick={() => setFilter("gestante")}
-        />
-        <FilterChip
-          label="Puérperas"
-          active={filter === "lactante"}
-          onClick={() => setFilter("lactante")}
-        />
-      </div>
 
       {isLoading ? (
         <div className="space-y-2">
@@ -216,14 +193,13 @@ export function ClientsOverview() {
         </div>
       ) : sorted.length === 0 ? (
         <p className="text-center text-sm text-muted-foreground py-6">
-          Nenhuma gestante ou puérpera cadastrada ainda
+          Nenhuma gestante cadastrada ainda
         </p>
       ) : (
         <ul className="space-y-2">
           {sorted.map((c) => {
             const badge = badgeMap?.get(c.id) || 0;
             const avatarUrl = c.user_id ? avatars?.get(c.user_id) : null;
-            const isPuer = c.status === "lactante";
             return (
               <li key={c.id}>
                 <button
@@ -238,11 +214,7 @@ export function ClientsOverview() {
                         className="object-cover"
                       />
                       <AvatarFallback className="bg-gradient-to-br from-primary/20 to-accent/20">
-                        {isPuer ? (
-                          <Heart className="w-5 h-5 text-primary" />
-                        ) : (
-                          <Baby className="w-5 h-5 text-primary" />
-                        )}
+                        <Baby className="w-5 h-5 text-primary" />
                       </AvatarFallback>
                     </Avatar>
                     {badge > 0 && (
@@ -258,44 +230,21 @@ export function ClientsOverview() {
                     <p className="font-semibold text-foreground truncate">
                       {displayName(c)}
                     </p>
-                    {isPuer ? (
-                      <p className="text-xs text-muted-foreground flex items-center gap-1 flex-wrap">
-                        <span>
-                          {c.birth_date
-                            ? `Parto em ${formatBrazilDate(c.birth_date)}`
-                            : "Puérpera"}
+                    <p className="text-xs text-muted-foreground flex items-center gap-1 flex-wrap">
+                      <span>{gestationLabel(c)}</span>
+                      {c.dpp && <span>· DPP {formatBrazilDate(c.dpp)}</span>}
+                      {babyName(c) && (
+                        <span className="inline-flex items-center gap-1 text-primary font-medium">
+                          <Baby className="w-3 h-3" />
+                          {babyName(c)}
                         </span>
-                        {babyName(c) && (
-                          <span className="inline-flex items-center gap-1 text-primary font-medium">
-                            <Baby className="w-3 h-3" />
-                            {babyName(c)}
-                          </span>
-                        )}
-                      </p>
-                    ) : (
-                      <>
-                        <p className="text-xs text-muted-foreground flex items-center gap-1 flex-wrap">
-                          <span>{gestationLabel(c)}</span>
-                          {c.dpp && <span>· DPP {formatBrazilDate(c.dpp)}</span>}
-                          {babyName(c) && (
-                            <span className="inline-flex items-center gap-1 text-primary font-medium">
-                              <Baby className="w-3 h-3" />
-                              {babyName(c)}
-                            </span>
-                          )}
-                          {c.labor_started_at && !c.birth_occurred && (
-                            <span className="inline-flex items-center gap-1 text-destructive font-semibold">
-                              · Em trabalho de parto
-                            </span>
-                          )}
-                        </p>
-                        {c.companion_name && (
-                          <p className="text-[11px] text-muted-foreground/80 truncate mt-0.5">
-                            Acompanhante: {c.companion_name}
-                          </p>
-                        )}
-                      </>
-                    )}
+                      )}
+                      {c.labor_started_at && !c.birth_occurred && (
+                        <span className="inline-flex items-center gap-1 text-destructive font-semibold">
+                          · Em trabalho de parto
+                        </span>
+                      )}
+                    </p>
                   </div>
                   <ChevronRight className="w-4 h-4 text-muted-foreground/50 flex-shrink-0" />
                 </button>
@@ -314,27 +263,3 @@ export function ClientsOverview() {
   );
 }
 
-function FilterChip({
-  label,
-  active,
-  onClick,
-}: {
-  label: string;
-  active: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={cn(
-        "px-3 py-1.5 rounded-full text-xs font-medium transition-all",
-        active
-          ? "bg-primary text-primary-foreground shadow-sm"
-          : "bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground",
-      )}
-    >
-      {label}
-    </button>
-  );
-}
