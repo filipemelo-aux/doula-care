@@ -1,3 +1,4 @@
+import { expandFeatures } from "@/lib/planFeatures";
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { format, parseISO } from "date-fns";
@@ -149,7 +150,7 @@ export function ClientFileDialog({ open, onOpenChange, client }: ClientFileDialo
         .eq("id", client!.plan_setting_id!)
         .maybeSingle();
       if (error) throw error;
-      return (data?.features || []).map((feature: string) => feature.trim()).filter(Boolean) as string[];
+      return expandFeatures(data?.features);
     },
   });
 
