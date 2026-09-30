@@ -41,7 +41,6 @@ export default function FollowUps() {
   const [debounced, setDebounced] = useState("");
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [searchList, setSearchList] = useState("");
-  const [statusFilter, setStatusFilter] = useState<"all" | "gestante" | "lactante">("all");
   const boxRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -152,19 +151,16 @@ export default function FollowUps() {
     },
   });
 
-  const active = clients.filter((c) => c.plan_setting_id || Number(c.plan_value || 0) > 0 || c.plan === "avulso");
+  // Apenas gestantes na área de acompanhamentos; puérperas ficam na página de Clientes.
+  const active = clients.filter((c) => c.status === "gestante" && (c.plan_setting_id || Number(c.plan_value || 0) > 0 || c.plan === "avulso"));
   const visibleActive = useMemo(() => active.filter((c) => {
     const matchesSearch = !searchList.trim() || c.full_name.toLowerCase().includes(searchList.toLowerCase()) || getPlanName(c.plan_setting_id, c.plan).toLowerCase().includes(searchList.toLowerCase());
-    return matchesSearch && (statusFilter === "all" || c.status === statusFilter);
-  }), [active, searchList, statusFilter, getPlanName]);
+    return matchesSearch;
+  }), [active, searchList, getPlanName]);
   const contractedTotal = active.reduce((sum, client) => sum + Number(client.plan_value || 0), 0);
-  const gestantes = active.filter((client) => client.status === "gestante").length;
-  const puerperas = active.filter((client) => client.status === "lactante").length;
   const metrics: Array<{ label: string; value: string | number; icon: LucideIcon }> = [
-    { label: "Ativos", value: active.length, icon: UsersRound },
+    { label: "Gestantes", value: active.length, icon: UsersRound },
     { label: "Valor contratado", value: brl(contractedTotal), icon: WalletCards },
-    { label: "Gestantes", value: gestantes, icon: Stethoscope },
-    { label: "Puérperas", value: puerperas, icon: UserRound },
   ];
   const activeIds = new Set(active.map((c) => c.id));
   // Sugestões excluem clientes que já possuem acompanhamento registrado
@@ -205,7 +201,7 @@ export default function FollowUps() {
         </Button>
       </div>
 
-      <div className="grid grid-cols-2 gap-2 lg:grid-cols-4">
+      <div className="grid grid-cols-2">
         {metrics.map(({ label, value, icon: Icon }) => (
           <div key={label} className="rounded-2xl bg-card p-3 shadow-card lg:p-4">
             <div className="mb-2 flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary"><Icon className="h-4 w-4" /></div>
@@ -216,13 +212,6 @@ export default function FollowUps() {
 
       <div className="space-y-3">
         <div className="relative"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><Input value={searchList} onChange={(event) => setSearchList(event.target.value)} placeholder="Buscar cliente ou plano" className="pl-9" /></div>
-        <div className="flex gap-1.5 overflow-x-auto pb-1">
-          {[
-            { value: "all", label: "Todos", count: active.length },
-            { value: "gestante", label: "Gestantes", count: gestantes },
-            { value: "lactante", label: "Puérperas", count: puerperas },
-          ].map((item) => <Button key={item.value} size="sm" variant={statusFilter === item.value ? "default" : "secondary"} onClick={() => setStatusFilter(item.value as typeof statusFilter)} className="shrink-0">{item.label} <span className="ml-1 opacity-70">{item.count}</span></Button>)}
-        </div>
       </div>
 
       <div>
