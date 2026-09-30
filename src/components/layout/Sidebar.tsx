@@ -362,7 +362,7 @@ export function Sidebar({ isOpen, onToggle, onNavigate, desktopExpanded }: Sideb
           title={!desktopExpanded ? subscriptionNavItem.label : undefined}
         >
           <subscriptionNavItem.icon className="w-[18px] h-[18px] shrink-0" strokeWidth={1.8} />
-          <span className={cn("transition-opacity flex-1 text-[13px]", !isOpen && "lg:hidden")}>
+          <span className={cn("transition-opacity flex-1 text-[13px]", !desktopExpanded && "lg:hidden")}>
             {subscriptionNavItem.label}
           </span>
         </button>
@@ -379,7 +379,7 @@ export function Sidebar({ isOpen, onToggle, onNavigate, desktopExpanded }: Sideb
           title={!desktopExpanded ? settingsNavItem.label : undefined}
         >
           <settingsNavItem.icon className="w-[18px] h-[18px] shrink-0" strokeWidth={1.8} />
-          <span className={cn("transition-opacity flex-1 text-[13px]", !isOpen && "lg:hidden")}>
+          <span className={cn("transition-opacity flex-1 text-[13px]", !desktopExpanded && "lg:hidden")}>
             {settingsNavItem.label}
           </span>
         </button>
