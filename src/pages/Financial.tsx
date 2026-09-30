@@ -174,7 +174,7 @@ export default function Financial() {
 
   const selectedClientId = form.watch("client_id");
 
-  const { data: transactions, isLoading } = useQuery({
+  const { data: transactions, isLoading, isError } = useQuery({
     queryKey: ["transactions", "receita", isModerator ? user?.id : "all"],
     queryFn: async () => {
       let q = supabase
@@ -200,6 +200,9 @@ export default function Financial() {
       moderatorRequestId?: string;
     };
     if (!st.openPaymentClientId && !st.openPaymentTransactionId) return;
+    // Keep the navigation request until the receivables query has finished.
+    // On the first render transactions is undefined, so clearing state here loses the shortcut.
+    if (!transactions || isLoading || isError) return;
     if (st.openPaymentTransactionId) {
       const pick = transactions.find((t) => t.id === st.openPaymentTransactionId);
       if (pick) {
@@ -226,7 +229,7 @@ export default function Financial() {
     // clear state so refreshes don't re-trigger
     navigate(location.pathname, { replace: true });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [transactions, location.state]);
+  }, [transactions, isLoading, isError, location.state, location.pathname, navigate]);
 
   // Approve moderator request once payment dialog closes after being opened for it
   useEffect(() => {

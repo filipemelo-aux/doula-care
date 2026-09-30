@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
-import { Banknote, CalendarDays, Eye, FileText, Plus, Receipt, Search, type LucideIcon } from "lucide-react";
+import { CalendarDays, Eye, FileText, HandCoins, Plus, Receipt, Search, type LucideIcon } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { createServiceRecordWithReceivable } from "@/lib/serviceBilling";
@@ -183,7 +183,7 @@ export default function ServiceRecords() {
                       if (!r.transaction_id) { toast.error("Este atendimento não possui receita vinculada em Contas a Receber."); return; }
                       navigate("/financeiro", { state: { openPaymentTransactionId: r.transaction_id } });
                     }}
-                  ><Banknote className="h-4 w-4" /></Button>
+                  ><HandCoins className="h-4 w-4" /></Button>
                 </div>
               </div>
             </article>;
