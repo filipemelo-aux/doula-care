@@ -102,43 +102,32 @@ Deno.serve(async (req) => {
       }
     }
 
-    const { clientId, fullName, dpp, organizationId } = await req.json();
+    const body = await req.json();
+    const { clientId, fullName, dpp, organizationId } = body;
+    const customUsername = typeof body.username === "string" ? body.username.toLowerCase().trim() : "";
+    const customPassword = typeof body.password === "string" ? body.password.trim() : "";
 
-    if (!clientId || !fullName || !dpp) {
-      throw new Error("Missing required fields: clientId, fullName, dpp");
-    }
+    if (!clientId || !fullName) throw new Error("Informe a cliente");
 
-    // ORG ISOLATION: Verify client belongs to caller's org
+    const json = (payload: unknown, status = 200) =>
+      new Response(JSON.stringify(payload), { status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+
     const { data: clientCheck } = await supabase
-      .from("clients")
-      .select("organization_id, user_id")
-      .eq("id", clientId)
-      .single();
+      .from("clients").select("organization_id, user_id").eq("id", clientId).single();
 
-    if (callerOrgId && clientCheck?.organization_id !== callerOrgId) {
-      return new Response(
-        JSON.stringify({ error: "Cliente não pertence à sua organização" }),
-        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+    if (!clientCheck || (callerOrgId && clientCheck.organization_id !== callerOrgId)) {
+      return json({ error: "Cliente não pertence à sua organização" }, 403);
     }
+    if (clientCheck.user_id) return json({ error: "Esta cliente já possui acesso" }, 409);
 
-    if (clientCheck?.user_id) {
-      const username = generateUsername(fullName);
-      const email = `${username}@gestante.doula.app`;
-      return new Response(
-        JSON.stringify({ message: "Usuário já existe para esta cliente", exists: true, email }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
-      );
+    const username = customUsername || generateUsername(fullName);
+    if (!/^[a-z0-9][a-z0-9._-]{2,40}$/.test(username)) {
+      return json({ error: "Usuário inválido: use letras sem acento, números, ponto ou traço (mín. 3)" }, 400);
     }
+    const password = customPassword || (dpp ? generatePassword(dpp) : "");
+    if (password.length < 6) return json({ error: "A senha precisa ter pelo menos 6 caracteres" }, 400);
 
-    const username = generateUsername(fullName);
     const email = `${username}@gestante.doula.app`;
-    const password = generatePassword(dpp);
-
-    if (password.length < 4) {
-      throw new Error("DPP inválido para gerar senha");
-    }
-
     const { data: userData, error: createError } = await supabase.auth.admin.createUser({
       email, password, email_confirm: true,
       user_metadata: { full_name: fullName, is_client: true },
@@ -146,46 +135,23 @@ Deno.serve(async (req) => {
 
     if (createError) {
       if (createError.message.includes("already been registered")) {
-        const altEmail = `${username}.${Date.now().toString().slice(-4)}@gestante.doula.app`;
-        const { data: altUserData, error: altError } = await supabase.auth.admin.createUser({
-          email: altEmail, password, email_confirm: true,
-          user_metadata: { full_name: fullName, is_client: true },
-        });
-
-        if (altError) throw altError;
-        
-        if (altUserData.user) {
-          await supabase.from("clients").update({ user_id: altUserData.user.id, first_login: true }).eq("id", clientId);
-          await supabase.from("user_roles").insert({ user_id: altUserData.user.id, role: "client" });
-          // Use caller's org, not client-provided one
-          const effectiveOrgId = callerOrgId || organizationId;
-          if (effectiveOrgId) {
-            await supabase.from("profiles").update({ organization_id: effectiveOrgId }).eq("user_id", altUserData.user.id);
-          }
-
-          return new Response(
-            JSON.stringify({ message: "Usuário criado com sucesso", email: altEmail, user: { id: altUserData.user.id } }),
-            { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
-          );
-        }
+        return json({ error: `O usuário "${username}" já está em uso. Escolha outro.` }, 409);
       }
-      throw createError;
+      if (/weak|pwned|leaked/i.test(createError.message)) {
+        return json({ error: "Senha muito comum. Escolha outra senha." }, 400);
+      }
+      return json({ error: createError.message }, 400);
     }
 
-    if (userData.user) {
-      await supabase.from("clients").update({ user_id: userData.user.id, first_login: true }).eq("id", clientId);
-      await supabase.from("user_roles").insert({ user_id: userData.user.id, role: "client" });
-      // Use caller's org, not client-provided one
-      const effectiveOrgId = callerOrgId || organizationId;
-      if (effectiveOrgId) {
-        await supabase.from("profiles").update({ organization_id: effectiveOrgId }).eq("user_id", userData.user.id);
-      }
+    const newId = userData.user!.id;
+    await supabase.from("clients").update({ user_id: newId, first_login: true }).eq("id", clientId);
+    await supabase.from("user_roles").insert({ user_id: newId, role: "client" });
+    const effectiveOrgId = callerOrgId || organizationId;
+    if (effectiveOrgId) {
+      await supabase.from("profiles").update({ organization_id: effectiveOrgId }).eq("user_id", newId);
     }
 
-    return new Response(
-      JSON.stringify({ message: "Usuário criado com sucesso", email, user: { id: userData.user?.id } }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
-    );
+    return json({ message: "Usuário criado com sucesso", email, username, user: { id: newId } });
   } catch (error) {
     console.error("Error:", error);
     const message = error instanceof Error ? error.message : "Unknown error";
