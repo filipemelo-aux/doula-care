@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
-import { CalendarDays, Eye, FileText, MoreVertical, Plus, Receipt, Search, type LucideIcon } from "lucide-react";
+import { Banknote, CalendarDays, Eye, FileText, Plus, Receipt, Search, type LucideIcon } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { createServiceRecordWithReceivable } from "@/lib/serviceBilling";
@@ -14,7 +14,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { ClientDialog } from "@/components/clients/ClientDialog";
 import { fromZonedTime } from "date-fns-tz";
 
@@ -173,10 +172,19 @@ export default function ServiceRecords() {
                   <div className="flex items-start justify-between gap-2"><div className="min-w-0"><p className="truncate font-semibold">{r.service_name}</p><p className="truncate text-xs text-muted-foreground">{r.clients?.full_name || "Sem cliente"} · {fmtDate(r.service_date)}</p></div><Badge variant={st.variant}>{st.label}</Badge></div>
                   <p className="mt-2 font-bold">{brl(r.amount)}</p>
                 </div>
-                <DropdownMenu><DropdownMenuTrigger asChild><Button size="icon" variant="ghost" aria-label="Ações do atendimento"><MoreVertical className="h-4 w-4" /></Button></DropdownMenuTrigger><DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => setDetail(r)}><Eye className="mr-2 h-4 w-4" /> Visualizar</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => navigate("/financeiro")}><Receipt className="mr-2 h-4 w-4" />Ver em Contas a Receber</DropdownMenuItem>
-                </DropdownMenuContent></DropdownMenu>
+                <div className="flex shrink-0 items-center gap-1">
+                  <Button size="icon" variant="ghost" aria-label="Visualizar atendimento" onClick={() => setDetail(r)}><Eye className="h-4 w-4" /></Button>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    aria-label="Registrar pagamento em Contas a Receber"
+                    disabled={stageOf(r) === "paid"}
+                    onClick={() => {
+                      if (!r.transaction_id) { toast.error("Este atendimento não possui receita vinculada em Contas a Receber."); return; }
+                      navigate("/financeiro", { state: { openPaymentTransactionId: r.transaction_id } });
+                    }}
+                  ><Banknote className="h-4 w-4" /></Button>
+                </div>
               </div>
             </article>;
           })}
