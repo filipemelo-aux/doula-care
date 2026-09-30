@@ -1337,7 +1337,7 @@ export function ClientDialog({ open, onOpenChange, client, initialStep, mode = "
   return (
     <>
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl w-[95vw] max-w-[95vw] h-[min(92dvh,800px)] max-h-[92dvh] overflow-hidden flex flex-col overflow-x-hidden min-w-0 [&>div]:!flex [&>div]:!flex-col [&>div]:!min-h-0 [&>div]:!max-h-full">
+      <DialogContent className="max-w-2xl w-[95vw] max-w-[95vw] h-[min(92dvh,800px)] max-h-[92dvh] overflow-hidden flex flex-col overflow-x-hidden min-w-0 [&>div]:!flex [&>div]:!flex-1 [&>div]:!flex-col [&>div]:!min-h-0 [&>div]:!max-h-full">
         <DialogHeader className="pb-0 flex-shrink-0 min-w-0 overflow-hidden">
           <div className="min-w-0">
             <DialogTitle className="font-display text-lg leading-tight">
