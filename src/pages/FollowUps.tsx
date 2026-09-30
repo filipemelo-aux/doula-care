@@ -249,18 +249,27 @@ export default function FollowUps() {
                     </div>
                   ) : (
                     <>
-                      <div className="mb-2 flex items-center justify-between gap-2">
-                        <p className="text-xs font-semibold text-foreground">Serviços inclusos</p>
-                        <p className="text-xs text-muted-foreground">{done} de {items.length} executados</p>
-                      </div>
-                      <ul className="space-y-1">
-                        {items.map((it) => (
-                          <li key={it.key} className="flex items-center gap-2 text-xs">
-                            {it.session?.status === "done" ? <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-success" /> : <span className="h-3.5 w-3.5 shrink-0 rounded-full border border-border" />}
-                            <span className={it.session?.status === "done" ? "text-foreground" : "text-muted-foreground"}>{it.name}</span>
-                          </li>
-                        ))}
-                      </ul>
+                      <button
+                        type="button"
+                        onClick={() => setExpandedCards((m) => ({ ...m, [c.id]: !m[c.id] }))}
+                        className="flex w-full items-center justify-between gap-2 rounded-lg py-0.5 text-left transition-colors hover:text-foreground"
+                      >
+                        <span className="flex items-center gap-1.5 text-xs font-semibold text-foreground">
+                          Serviços inclusos
+                          <ChevronDown className={"h-3.5 w-3.5 shrink-0 text-muted-foreground transition-transform " + (expandedCards[c.id] ? "rotate-180" : "")} />
+                        </span>
+                        <span className="text-xs text-muted-foreground">{done} de {items.length} executados</span>
+                      </button>
+                      {expandedCards[c.id] && (
+                        <ul className="mt-2 space-y-1">
+                          {items.map((it) => (
+                            <li key={it.key} className="flex items-center gap-2 text-xs">
+                              {it.session?.status === "done" ? <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-success" /> : <span className="h-3.5 w-3.5 shrink-0 rounded-full border border-border" />}
+                              <span className={it.session?.status === "done" ? "text-foreground" : "text-muted-foreground"}>{it.name}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
                     </>
                   )}
                 </div>
