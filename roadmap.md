@@ -9,4 +9,4 @@
 - [x] Validar compilação, navegação e adaptação da Central de Serviços para celular e computador
 - [x] Remover as abas internas da Central de Serviços e tornar a linha do tempo dos acompanhamentos dinâmica
 - [x] Registrar a entrada recebida ao editar cliente ou acompanhamento, mesmo sem alterar o parcelamento
-- [ ] Ajustar visualização do acompanhamento no celular, incluir dados da edição e subir aviso de plano bloqueado
+- [x] Ajustar visualização do acompanhamento no celular, incluir dados da edição e subir aviso de plano bloqueado
