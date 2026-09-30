@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
-import { CalendarDays, Eye, FileText, MoreVertical, Plus, Receipt, Search, Trash2, type LucideIcon } from "lucide-react";
+import { CalendarDays, Eye, FileText, MoreVertical, Plus, Receipt, Search, type LucideIcon } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { createServiceRecordWithReceivable } from "@/lib/serviceBilling";
@@ -14,8 +14,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import type { ServiceStage } from "@/components/services/ServiceFlow";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { ClientDialog } from "@/components/clients/ClientDialog";
 import { fromZonedTime } from "date-fns-tz";
 
@@ -26,7 +25,7 @@ export interface ServiceRecord {
   service_name: string;
   amount: number;
   notes: string | null;
-  status: "forecast" | "invoiced";
+  status: "forecast" | "invoiced"; // Valor legado do banco; não há mais etapa de previsão no aplicativo.
   transaction_id: string | null;
   clients?: { full_name: string } | null;
   transactions?: { amount: number; amount_received: number | null } | null;
@@ -51,16 +50,17 @@ export function useServiceRecords() {
   });
 }
 
-export function stageOf(r: ServiceRecord): ServiceStage {
-  if (r.status === "forecast") return "forecast";
+export function stageOf(r: ServiceRecord): "pending" | "partial" | "paid" {
   const t = r.transactions;
   if (t && Number(t.amount_received || 0) >= Number(t.amount || 0) && Number(t.amount) > 0) return "paid";
-  return "invoiced";
+  if (t && Number(t.amount_received || 0) > 0) return "partial";
+  return "pending";
 }
 
 export function statusOf(r: ServiceRecord) {
   const stage = stageOf(r);
   if (stage === "paid") return { label: "Pago", variant: "default" as const };
+  if (stage === "partial") return { label: "Parcial", variant: "secondary" as const };
   return { label: "A receber", variant: "outline" as const };
 }
 
@@ -132,11 +132,6 @@ export default function ServiceRecords() {
     },
     onError: (e: any) => toast.error(e.message || "Erro ao registrar"),
   });
-  const remove = useMutation({
-    mutationFn: async (id: string) => { const { error } = await (supabase.from("service_records" as any) as any).delete().eq("id", id); if (error) throw error; },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["service-records"] }); toast.success("Atendimento removido"); },
-  });
-
   return (
     <div className="space-y-4 lg:space-y-6 pb-20">
       <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
@@ -180,8 +175,7 @@ export default function ServiceRecords() {
                 </div>
                 <DropdownMenu><DropdownMenuTrigger asChild><Button size="icon" variant="ghost" aria-label="Ações do atendimento"><MoreVertical className="h-4 w-4" /></Button></DropdownMenuTrigger><DropdownMenuContent align="end">
                   <DropdownMenuItem onClick={() => setDetail(r)}><Eye className="mr-2 h-4 w-4" /> Visualizar</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => navigate("/financeiro")}>{r.status === "forecast" ? <Receipt className="mr-2 h-4 w-4" /> : <FileText className="mr-2 h-4 w-4" />}Ver em Contas a Receber</DropdownMenuItem>
-                  {r.status === "forecast" && <><DropdownMenuSeparator /><DropdownMenuItem className="text-destructive" onClick={() => remove.mutate(r.id)}><Trash2 className="mr-2 h-4 w-4" /> Remover</DropdownMenuItem></>}
+                  <DropdownMenuItem onClick={() => navigate("/financeiro")}><Receipt className="mr-2 h-4 w-4" />Ver em Contas a Receber</DropdownMenuItem>
                 </DropdownMenuContent></DropdownMenu>
               </div>
             </article>;

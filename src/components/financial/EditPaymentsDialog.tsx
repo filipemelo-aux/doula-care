@@ -80,6 +80,8 @@ export function EditPaymentsDialog({
       if (txErr) throw txErr;
       if (byTx && byTx.length > 0) return byTx;
       if (clientId) {
+        const { data: contract } = await supabase.from("transactions").select("is_auto_generated").eq("id", transactionId).single();
+        if (!contract?.is_auto_generated) return [];
         const { data: byClient, error: clientErr } = await supabase
           .from("payments")
           .select("*")

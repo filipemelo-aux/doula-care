@@ -10,9 +10,10 @@ export async function createServiceRecordWithReceivable(rec: {
   notes?: string | null;
   created_by?: string | null;
 }) {
-  let transactionId: string | null = null;
-  if (rec.amount > 0) {
-    const { data: tx, error } = await supabase
+  if (!Number.isFinite(rec.amount) || rec.amount <= 0) {
+    throw new Error("Informe um valor maior que zero para registrar o atendimento em Contas a Receber.");
+  }
+  const { data: tx, error: transactionError } = await supabase
       .from("transactions")
       .insert({
         type: "receita",
@@ -29,14 +30,12 @@ export async function createServiceRecordWithReceivable(rec: {
       })
       .select("id")
       .single();
-    if (error) throw error;
-    transactionId = tx.id;
-  }
+  if (transactionError) throw transactionError;
   const { error } = await (supabase.from("service_records" as any) as any).insert({
     ...rec,
     notes: rec.notes || null,
-    status: transactionId ? "invoiced" : "forecast",
-    transaction_id: transactionId,
+    status: "invoiced",
+    transaction_id: tx.id,
   });
   if (error) throw error;
 }

@@ -367,7 +367,7 @@ export function ClientDialog({ open, onOpenChange, client, initialStep, mode = "
       const sortedPayments = (clientInstallmentPayments || [])
         .slice()
         .sort((a, b) => Number(a.installment_number || 0) - Number(b.installment_number || 0));
-      // Acompanhamentos ainda não faturados não têm receita: usa as parcelas previstas.
+      // Contratos legados sem receita vinculada usam as parcelas existentes.
       const txInstallments = clientTransaction?.installments
         ? Number(clientTransaction.installments)
         : Math.max(1, sortedPayments.length, Number(sortedPayments[0]?.total_installments || 0));
@@ -869,8 +869,8 @@ export function ClientDialog({ open, onOpenChange, client, initialStep, mode = "
         // related fields UNLESS the doula explicitly unlocked the section.
         const editingHadPayments = hasRecordedPayments;
         const skipPlanSync = (editingHadPayments && !unlockedPlan) || isModerator || mode === "person";
-        // Novo acompanhamento sem fatura existente: vira previsão de recebimento
-        const followupForecast = mode === "followup" && !clientTransaction && !skipPlanSync;
+        // Novo acompanhamento sem receita existente entra diretamente em Contas a Receber.
+        const newFollowupReceivable = mode === "followup" && !clientTransaction && !skipPlanSync;
 
         if (skipPlanSync) {
           // Preserve original plan/payment values so nothing gets overwritten.
@@ -904,7 +904,7 @@ export function ClientDialog({ open, onOpenChange, client, initialStep, mode = "
           return client.id;
         }
 
-        if (followupForecast) {
+        if (newFollowupReceivable) {
           if (data.plan_setting_id && finalPlanValue > 0) {
             await createContractFinancials(client.id, new Date().toISOString());
           }

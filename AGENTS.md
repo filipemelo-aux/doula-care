@@ -1,0 +1,2 @@
+Atendimentos com valor positivo criam imediatamente uma receita vinculada em Contas a Receber; pagamentos totais ou parciais são registrados nessa receita, sem etapa de previsão ou faturamento — para manter o serviço e seu recebimento no mesmo fluxo.
+Fallback de parcelas sem transaction_id só é permitido para receitas automáticas de contratos — para não misturar parcelas antigas de acompanhamentos com pagamentos de atendimentos da mesma cliente.

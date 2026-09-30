@@ -60,7 +60,7 @@ export function RevenueDetailDialog({ open, onOpenChange, transactionId }: Reven
       if (byTx && byTx.length > 0) return byTx;
 
       // Fallback: for contract transactions, find by client_id with null transaction_id
-      if (transaction?.client_id) {
+      if (transaction?.client_id && transaction.is_auto_generated) {
         const { data: byClient, error: clientErr } = await supabase
           .from("payments")
           .select("*")

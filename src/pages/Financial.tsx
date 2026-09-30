@@ -193,31 +193,6 @@ export default function Financial() {
   const location = useLocation();
   const navigate = useNavigate();
   const [pendingModeratorRequestId, setPendingModeratorRequestId] = useState<string | null>(null);
-  const [invoiceServiceRecordIds, setInvoiceServiceRecordIds] = useState<string[]>([]);
-
-  // Gerar fatura a partir de uma previsão de recebimento (Serviços → Previsões)
-  useEffect(() => {
-    const st = (location.state || {}) as {
-      invoiceFromRecord?: { id: string; client_id: string | null; amount: number; description: string; date: string; notes?: string | null };
-      invoiceFromRecords?: { id: string; client_id: string | null; amount: number; description: string; date: string; notes?: string | null }[];
-    };
-    const records = st.invoiceFromRecords?.length ? st.invoiceFromRecords : st.invoiceFromRecord ? [st.invoiceFromRecord] : [];
-    if (!records.length) return;
-    const rec = records[0];
-    handleOpenDialog();
-    setTimeout(() => {
-      form.setValue("description", records.length === 1 ? rec.description : `Serviços: ${records.map((item) => item.description).join(", ")}`);
-      form.setValue("amount", records.reduce((sum, item) => sum + Number(item.amount || 0), 0));
-      form.setValue("date", rec.date);
-      if (rec.client_id) form.setValue("client_id", rec.client_id);
-      const notes = records.map((item) => item.notes).filter(Boolean).join("\n");
-      if (notes) form.setValue("notes", notes);
-    }, 0);
-    setInvoiceServiceRecordIds(records.map((item) => item.id));
-    navigate(location.pathname, { replace: true });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [location.state]);
-
   useEffect(() => {
     const st = (location.state || {}) as {
       openPaymentClientId?: string;
@@ -296,7 +271,7 @@ export default function Financial() {
         dueDateByTransaction.set(t.id, minOf(direct));
         continue;
       }
-      if (t.client_id) {
+      if (t.client_id && t.is_auto_generated) {
         const key = `${t.client_id}|${Number(t.installments || 1)}`;
         const fallback = byClientKey.get(key);
         if (fallback && fallback.length > 0) {
@@ -529,14 +504,7 @@ export default function Financial() {
       }
       return newTransaction.id as string;
     },
-    onSuccess: async (newId?: string) => {
-      if (invoiceServiceRecordIds.length > 0 && newId) {
-        await (supabase.from("service_records" as any) as any)
-          .update({ status: "invoiced", transaction_id: newId })
-          .in("id", invoiceServiceRecordIds);
-        setInvoiceServiceRecordIds([]);
-        queryClient.invalidateQueries({ queryKey: ["service-records"] });
-      }
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["transactions"] });
       queryClient.invalidateQueries({ queryKey: ["monthly-transactions"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
@@ -544,7 +512,7 @@ export default function Financial() {
       queryClient.invalidateQueries({ queryKey: ["agenda-services"] });
       queryClient.invalidateQueries({ queryKey: ["all-appointments"] });
       queryClient.invalidateQueries({ queryKey: ["client-appointments"] });
-      toast.success(invoiceServiceRecordIds.length > 0 ? "Fatura gerada!" : "Receita registrada!");
+      toast.success("Conta a receber registrada!");
       setDialogOpen(false);
       form.reset();
       setSelectedTransaction(null);
@@ -943,7 +911,7 @@ export default function Financial() {
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div className="page-header mb-0 min-w-0">
           <h1 className="page-title">Contas a Receber</h1>
-          <p className="page-description">Acompanhe suas faturas e registre os recebimentos</p>
+          <p className="page-description">Acompanhe suas contas e registre os recebimentos</p>
         </div>
       </div>
 
@@ -1283,7 +1251,7 @@ export default function Financial() {
         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader className="pb-2">
             <DialogTitle className="font-display text-lg">
-              {selectedTransaction ? "Editar Fatura" : invoiceServiceRecordIds.length > 0 ? "Gerar Fatura" : "Nova Fatura"}
+              {selectedTransaction ? "Editar conta a receber" : "Nova conta a receber"}
             </DialogTitle>
           </DialogHeader>
           <Form {...form}>
@@ -1901,6 +1869,7 @@ export default function Financial() {
         transactionReceived={Number(paymentTransaction?.amount_received) || 0}
         transactionInstallments={Number(paymentTransaction?.installments) || 1}
         clientId={paymentTransaction?.client_id || null}
+        isContract={paymentTransaction?.is_auto_generated === true}
       />
 
       {/* Revenue Detail Dialog */}
