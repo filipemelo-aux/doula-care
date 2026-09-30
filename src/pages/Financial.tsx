@@ -271,7 +271,7 @@ export default function Financial() {
         dueDateByTransaction.set(t.id, minOf(direct));
         continue;
       }
-      if (t.client_id) {
+      if (t.client_id && t.is_auto_generated) {
         const key = `${t.client_id}|${Number(t.installments || 1)}`;
         const fallback = byClientKey.get(key);
         if (fallback && fallback.length > 0) {
