@@ -170,20 +170,6 @@ export default function Settings() {
     enabled: isAdmin,
   });
 
-  const { data: clientsWithAccounts, isLoading: loadingClients } = useQuery({
-    queryKey: ["clients-with-accounts"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("clients")
-        .select("id, full_name, dpp, user_id, first_login, status")
-        .not("user_id", "is", null)
-        .order("created_at", { ascending: false });
-      if (error) throw error;
-      return data;
-    },
-    enabled: isAdmin,
-  });
-
   const { data: plans, isLoading: loadingPlans } = useQuery({
     queryKey: ["plan-settings"],
     queryFn: async () => {

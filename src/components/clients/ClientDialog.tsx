@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -152,6 +153,7 @@ export function ClientDialog({ open, onOpenChange, client, initialStep, mode = "
   const queryClient = useQueryClient();
   const { user, organizationId, role } = useAuth();
   const isModerator = role === "moderator";
+  const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
   const [entryAlreadyPaid, setEntryAlreadyPaid] = useState(false);
   const [entryType, setEntryType] = useState<"equal" | "percentage">("equal");
