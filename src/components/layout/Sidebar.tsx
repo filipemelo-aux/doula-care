@@ -167,7 +167,6 @@ export function Sidebar({ isOpen, onToggle, onNavigate, desktopExpanded }: Sideb
     if (key === "messages") return unreadMessages;
     return 0;
   };
-  const sidebarLogo = orgLogo || logo;
   const sidebarName = displayName || "Doula Care";
 
   const handleNavClick = (to: string) => {
