@@ -69,7 +69,7 @@ export function VisitorLayout({ children, avatarUrl, greetingTop, greetingName }
       </header>
 
       {/* Main */}
-      <main className="flex-1 min-h-0 overflow-y-auto overscroll-y-contain touch-pan-y w-full box-border p-3 pb-24">
+      <main className="flex-1 min-h-0 overflow-y-auto overscroll-y-contain touch-pan-y w-full box-border p-3 pb-[calc(6.5rem+var(--app-safe-bottom,0px))]">
         <div className="max-w-3xl mx-auto animate-fade-in">{children}</div>
       </main>
 
