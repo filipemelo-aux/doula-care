@@ -1,10 +1,11 @@
-import { KeyRound, NavLink, useLocation, useNavigate } from "react-router-dom";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import logo from "@/assets/logo.png";
 import { useOrgBranding } from "@/hooks/useOrgBranding";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import {
+  KeyRound,
   LayoutDashboard,
   Users,
   TrendingUp,
