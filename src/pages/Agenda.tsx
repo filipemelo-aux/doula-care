@@ -458,6 +458,7 @@ export default function Agenda() {
       queryClient.invalidateQueries({ queryKey: ["doula-availability"] });
       queryClient.invalidateQueries({ queryKey: ["followup-sessions"] });
       queryClient.invalidateQueries({ queryKey: ["service-records"] });
+      queryClient.invalidateQueries({ queryKey: ["transactions"] });
 
       // Send push to client when new appointment is created (not editing)
       if (!editingAppointment && aptClientId) {
