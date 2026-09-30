@@ -44,12 +44,15 @@ Deno.serve(async (req) => {
 
     // Match username pattern: nome.sobrenome
     for (const c of clients) {
-      const nameParts = c.full_name
+      const nameParts = (c.full_name || "")
         .normalize("NFD")
         .replace(/[\u0300-\u036f]/g, "")
         .toLowerCase()
+        .replace(/\([^)]*\)/g, " ")
+        .replace(/[^a-z0-9\s]/g, " ")
         .trim()
-        .split(/\s+/);
+        .split(/\s+/)
+        .filter(Boolean);
 
       if (nameParts.length >= 2) {
         const expectedUsername = `${nameParts[0]}.${nameParts[nameParts.length - 1]}`;

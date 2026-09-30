@@ -5,12 +5,14 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-function normalizeString(str: string): string {
-  return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+function nameParts(fullName: string): string[] {
+  return (fullName || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase()
+    .replace(/\([^)]*\)/g, " ").replace(/[^a-z0-9\s]/g, " ").trim().split(/\s+/).filter(Boolean);
 }
 
 function generateUsername(fullName: string): string {
-  const parts = normalizeString(fullName).split(/\s+/);
+  const parts = nameParts(fullName);
+  if (parts.length === 0) return "";
   if (parts.length < 2) return parts[0];
   return `${parts[0]}.${parts[parts.length - 1]}`;
 }
