@@ -12,3 +12,5 @@
 - [x] Ajustar visualização do acompanhamento no celular, incluir dados da edição e subir aviso de plano bloqueado
 - [x] Remover filtros de situação dos Atendimentos e manter o recebimento em Contas a Receber
 - [x] Eliminar a etapa de previsão/faturamento dos serviços e registrar recebimentos totais ou parciais em Contas a Receber
+- [x] Completar a ficha da cliente com consultas e serviços inclusos sem ação de nova consulta
+- [ ] Definir se detalhes do acompanhamento devem repetir a ficha completa (aguarda decisão do usuário)
