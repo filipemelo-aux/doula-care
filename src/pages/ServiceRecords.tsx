@@ -196,7 +196,7 @@ export default function ServiceRecords() {
                 </div>
                 <DropdownMenu><DropdownMenuTrigger asChild><Button size="icon" variant="ghost" aria-label="Ações do atendimento"><MoreVertical className="h-4 w-4" /></Button></DropdownMenuTrigger><DropdownMenuContent align="end">
                   <DropdownMenuItem onClick={() => setDetail(r)}><Eye className="mr-2 h-4 w-4" /> Visualizar</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => navigate("/financeiro")}>{r.status === "forecast" ? <Receipt className="mr-2 h-4 w-4" /> : <FileText className="mr-2 h-4 w-4" />}{r.status === "forecast" ? "Faturar" : "Ver fatura"}</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate("/financeiro")}>{r.status === "forecast" ? <Receipt className="mr-2 h-4 w-4" /> : <FileText className="mr-2 h-4 w-4" />}Ver em Contas a Receber</DropdownMenuItem>
                   {r.status === "forecast" && <><DropdownMenuSeparator /><DropdownMenuItem className="text-destructive" onClick={() => remove.mutate(r.id)}><Trash2 className="mr-2 h-4 w-4" /> Remover</DropdownMenuItem></>}
                 </DropdownMenuContent></DropdownMenu>
               </div>
