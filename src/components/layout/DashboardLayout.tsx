@@ -102,11 +102,10 @@ export function DashboardLayout() {
             >
               <Menu className="h-5 w-5" />
             </Button>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center">
               <div className="w-8 h-8 rounded-[40%] bg-[#FFF5EE] overflow-hidden">
                 <img src={headerLogo} alt={headerName} className="w-full h-full object-cover mix-blend-multiply scale-[1.15]" />
               </div>
-              <h1 className="font-display text-lg text-foreground">{headerName}</h1>
             </div>
           </div>
           <div className="flex items-center gap-1">
@@ -119,7 +118,7 @@ export function DashboardLayout() {
 
         {/* Desktop Header */}
         <header className="hidden lg:flex h-16 shrink-0 items-center justify-between px-8 bg-card/50 backdrop-blur-sm z-40 border-b border-border/30">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center">
             <Button
               variant="ghost"
               size="icon"
@@ -137,7 +136,6 @@ export function DashboardLayout() {
             <div className="w-8 h-8 rounded-[40%] bg-[#FFF5EE] overflow-hidden">
               <img src={headerLogo} alt={headerName} className="w-full h-full object-cover mix-blend-multiply scale-[1.15]" />
             </div>
-            <h1 className="font-display text-lg text-foreground">{headerName}</h1>
           </div>
           <Button variant="ghost" size="sm" onClick={() => signOut()} className="gap-2 text-muted-foreground hover:text-foreground">
             <LogOut className="h-4 w-4" />
