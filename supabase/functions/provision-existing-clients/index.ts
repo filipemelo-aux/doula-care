@@ -86,8 +86,8 @@ Deno.serve(async (req) => {
     // Only this organization's gestantes without access
     const { data: clients, error: clientsError } = await supabase
       .from("clients")
-      .eq("organization_id", callerProfile.organization_id)
       .select("id, full_name, dpp")
+      .eq("organization_id", callerProfile.organization_id)
       .is("user_id", null)
       .not("dpp", "is", null)
       .eq("status", "gestante");
