@@ -32,7 +32,7 @@ export default function People() {
   const list = people.filter((p) => p.full_name.toLowerCase().includes(search.toLowerCase()));
 
   return (
-    <div className="space-y-4 lg:space-y-6 pb-20">
+    <div className="space-y-4 lg:space-y-6">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div className="page-header mb-0 min-w-0">
           <h1 className="page-title">Cadastro de Pessoas</h1>
