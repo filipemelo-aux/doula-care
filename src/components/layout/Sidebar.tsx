@@ -356,7 +356,7 @@ export function Sidebar({ isOpen, onToggle, onNavigate, desktopExpanded }: Sideb
           onClick={() => handleNavClick(subscriptionNavItem.to)}
           className={cn(
             "nav-link w-full text-left",
-            !desktopExpanded && location.pathname === subscriptionNavItem.to && "active",
+            !Capacitor.isNativePlatform() && location.pathname === subscriptionNavItem.to && "active",
             !desktopExpanded && "lg:justify-center lg:px-0"
           )}
           title={!desktopExpanded ? subscriptionNavItem.label : undefined}
@@ -374,9 +374,9 @@ export function Sidebar({ isOpen, onToggle, onNavigate, desktopExpanded }: Sideb
           className={cn(
             "nav-link w-full text-left",
             location.pathname === settingsNavItem.to && "active",
-            !isOpen && "lg:justify-center lg:px-0"
+            !desktopExpanded && "lg:justify-center lg:px-0"
           )}
-          title={!isOpen ? settingsNavItem.label : undefined}
+          title={!desktopExpanded ? settingsNavItem.label : undefined}
         >
           <settingsNavItem.icon className="w-[18px] h-[18px] shrink-0" strokeWidth={1.8} />
           <span className={cn("transition-opacity flex-1 text-[13px]", !isOpen && "lg:hidden")}>
@@ -387,7 +387,7 @@ export function Sidebar({ isOpen, onToggle, onNavigate, desktopExpanded }: Sideb
 
       {/* Footer — info card style */}
       {!hidePlanCard && (
-        <div className={cn("px-4 pb-4 pt-2", !isOpen && "lg:hidden")}>
+        <div className={cn("px-4 pb-4 pt-2", !desktopExpanded && "lg:hidden")}>
           <div className="rounded-xl bg-muted/40 p-3.5">
             <div className="flex items-center gap-2 mb-1">
               <span className={cn("text-xs font-medium", planColors[plan] || "text-muted-foreground")}>

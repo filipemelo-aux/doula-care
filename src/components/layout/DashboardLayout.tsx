@@ -19,6 +19,11 @@ import { cn } from "@/lib/utils";
 
 export function DashboardLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  // Desktop: menu sempre expandido por padrão; recolhimento persistido
+  const [desktopExpanded, setDesktopExpanded] = useState<boolean>(() => {
+    if (typeof window === "undefined") return true;
+    return localStorage.getItem("sidebar-desktop-expanded") !== "0";
+  });
   const [birthAlertOpen, setBirthAlertOpen] = useState(false);
   const [contractionsOpen, setContractionsOpen] = useState(false);
   const [contractionsClient, setContractionsClient] = useState<Tables<"clients"> | null>(null);
@@ -82,9 +87,10 @@ export function DashboardLayout() {
         isOpen={sidebarOpen} 
         onToggle={() => setSidebarOpen(!sidebarOpen)} 
         onNavigate={handleNavigate}
+        desktopExpanded={desktopExpanded}
       />
 
-      <div className={cn("flex-1 min-w-0 min-h-0 flex flex-col overflow-hidden transition-all duration-300", sidebarOpen ? "lg:ml-64" : "lg:ml-20")}>
+      <div className={cn("flex-1 min-w-0 min-h-0 flex flex-col overflow-hidden transition-all duration-300", desktopExpanded ? "lg:ml-64" : "lg:ml-20")}>
         {/* Mobile Header */}
         <header className="lg:hidden h-14 shrink-0 flex items-center justify-between px-4 bg-card/95 backdrop-blur-sm z-40 border-b border-border/30">
           <div className="flex items-center">
@@ -117,10 +123,16 @@ export function DashboardLayout() {
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => setSidebarOpen(!sidebarOpen)}
+              onClick={() => {
+                setDesktopExpanded((v) => {
+                  const next = !v;
+                  try { localStorage.setItem("sidebar-desktop-expanded", next ? "1" : "0"); } catch {}
+                  return next;
+                });
+              }}
               className="h-8 w-8 text-muted-foreground hover:text-foreground"
             >
-              <ChevronLeft className={cn("h-4 w-4 transition-transform", !sidebarOpen && "rotate-180")} />
+              <ChevronLeft className={cn("h-4 w-4 transition-transform", !desktopExpanded && "rotate-180")} />
             </Button>
             <div className="w-8 h-8 rounded-[40%] bg-[#FFF5EE] overflow-hidden">
               <img src={headerLogo} alt={headerName} className="w-full h-full object-cover mix-blend-multiply scale-[1.15]" />
