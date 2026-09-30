@@ -1313,7 +1313,7 @@ export function ClientDialog({ open, onOpenChange, client, initialStep, mode: ra
     }
     form.handleSubmit(onSubmit, (errors) => {
       // No cadastro de pessoa o plano não existe: ignora erros do plano
-      if (mode === "person" || mode === "person-basic") {
+      if (mode === "person") {
         const planFields = ["plan_setting_id", "plan_value", "installments", "first_due_date", "discount_percent", "custom_interval_days", "dpp", "pregnancy_weeks"];
         if (Object.keys(errors).every((k) => planFields.includes(k))) {
           form.clearErrors();
