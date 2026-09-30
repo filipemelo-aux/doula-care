@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { createServiceRecordWithReceivable } from "@/lib/serviceBilling";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLocation, useNavigate } from "react-router-dom";
 import { sendPushNotification } from "@/lib/pushNotifications";
@@ -443,11 +444,10 @@ export default function Agenda() {
         }
         if (aptKind === "servico") {
           const amount = parseFloat(aptServiceAmount.replace(/\./g, "").replace(",", ".")) || 0;
-          const { error: e3 } = await (supabase.from("service_records" as any) as any).insert({
+          await createServiceRecordWithReceivable({
             organization_id: organizationId, client_id: aptClientId, service_name: aptServiceName.trim(), amount,
-            service_date: aptDate, notes: aptNotes || null, status: "forecast", created_by: user?.id,
+            service_date: aptDate, notes: aptNotes || null, created_by: user?.id,
           });
-          if (e3) throw e3;
         }
         await ensureAvailabilityForAppointment(organizationId, scheduledUtc);
       }
@@ -1073,7 +1073,7 @@ export default function Agenda() {
                   </label>
                 </div>
                 {aptKind === "consulta" && <p className="text-xs text-muted-foreground">Fica vinculada aos serviços inclusos do acompanhamento da cliente.</p>}
-                {aptKind === "servico" && <p className="text-xs text-muted-foreground">Vira um atendimento registrado em Serviços.</p>}
+                {aptKind === "servico" && <p className="text-xs text-muted-foreground">Vira um atendimento e entra em Contas a Receber.</p>}
               </div>
             )}
             {!editingAppointment && (
