@@ -849,6 +849,7 @@ export function ClientDialog({ open, onOpenChange, client, initialStep, mode = "
               amount_paid: isPastDue || (entryAlreadyPaid && i === 0) ? thisAmt : 0,
               due_date: dueDateStr,
               status: isPastDue || (entryAlreadyPaid && i === 0) ? "pago" : "pendente",
+              payment_method: isPastDue || (entryAlreadyPaid && i === 0) ? data.payment_method : null,
               paid_at: isPastDue || (entryAlreadyPaid && i === 0) ? new Date().toISOString() : null,
               owner_id: user?.id || null,
               organization_id: organizationId || null,
@@ -1066,6 +1067,13 @@ export function ClientDialog({ open, onOpenChange, client, initialStep, mode = "
                       due_date: d.due_date,
                       total_installments: installmentCount,
                       transaction_id: transactionId ?? ex.transaction_id ?? null,
+                      // Auto-pay if due date is in the past and not already paid
+                      ...( (d.due_date < todayStr && Number(ex.amount_paid || 0) <= 0) ? {
+                        amount_paid: d.amount,
+                        status: "pago",
+                        paid_at: new Date().toISOString(),
+                        payment_method: data.payment_method
+                      } : {})
                     })
                     .eq("id", ex.id);
                   if (upErr) console.error("Error updating payment:", upErr);
@@ -1076,9 +1084,11 @@ export function ClientDialog({ open, onOpenChange, client, initialStep, mode = "
                     installment_number: d.installment_number,
                     total_installments: installmentCount,
                     amount: d.amount,
-                    amount_paid: 0,
+                    amount_paid: (d.installment_number === 1 && entryAlreadyPaid) || d.due_date < todayStr ? d.amount : 0,
                     due_date: d.due_date,
-                    status: "pendente",
+                    status: (d.installment_number === 1 && entryAlreadyPaid) || d.due_date < todayStr ? "pago" : "pendente",
+                    paid_at: (d.installment_number === 1 && entryAlreadyPaid) || d.due_date < todayStr ? new Date().toISOString() : null,
+                    payment_method: (d.installment_number === 1 && entryAlreadyPaid) || d.due_date < todayStr ? data.payment_method : null,
                     owner_id: user?.id || null,
                     organization_id: organizationId || null,
                   });
@@ -1108,6 +1118,37 @@ export function ClientDialog({ open, onOpenChange, client, initialStep, mode = "
                 .update({ transaction_id: transactionId })
                 .eq("client_id", client.id)
                 .is("transaction_id", null);
+            }
+
+            // "Entrada já foi recebida" is an explicit payment action, not a
+            // schedule change. Apply it even when amounts and dates stayed the
+            // same. Never reverse a payment when the box is unchecked.
+            if (entryAlreadyPaid) {
+              let firstPaymentQuery = supabase
+                .from("payments")
+                .select("id, amount, amount_paid")
+                .eq("client_id", client.id)
+                .eq("installment_number", 1);
+              firstPaymentQuery = transactionId
+                ? firstPaymentQuery.eq("transaction_id", transactionId)
+                : firstPaymentQuery.is("transaction_id", null);
+
+              const { data: firstPayment, error: firstPaymentReadError } = await firstPaymentQuery
+                .limit(1)
+                .maybeSingle();
+              if (firstPaymentReadError) throw firstPaymentReadError;
+
+              if (firstPayment && Number(firstPayment.amount_paid || 0) < Number(firstPayment.amount || 0)) {
+                const { error: markEntryPaidError } = await supabase
+                  .from("payments")
+                  .update({
+                    amount_paid: Number(firstPayment.amount || 0),
+                    paid_at: new Date().toISOString(),
+                    payment_method: data.payment_method as any,
+                  })
+                  .eq("id", firstPayment.id);
+                if (markEntryPaidError) throw markEntryPaidError;
+              }
             }
 
             // 5) Recompute amount_received from what is ACTUALLY stored in the database
