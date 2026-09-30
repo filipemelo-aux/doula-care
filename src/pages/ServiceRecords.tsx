@@ -173,10 +173,19 @@ export default function ServiceRecords() {
                   <div className="flex items-start justify-between gap-2"><div className="min-w-0"><p className="truncate font-semibold">{r.service_name}</p><p className="truncate text-xs text-muted-foreground">{r.clients?.full_name || "Sem cliente"} · {fmtDate(r.service_date)}</p></div><Badge variant={st.variant}>{st.label}</Badge></div>
                   <p className="mt-2 font-bold">{brl(r.amount)}</p>
                 </div>
-                <DropdownMenu><DropdownMenuTrigger asChild><Button size="icon" variant="ghost" aria-label="Ações do atendimento"><MoreVertical className="h-4 w-4" /></Button></DropdownMenuTrigger><DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => setDetail(r)}><Eye className="mr-2 h-4 w-4" /> Visualizar</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => navigate("/financeiro")}><Receipt className="mr-2 h-4 w-4" />Ver em Contas a Receber</DropdownMenuItem>
-                </DropdownMenuContent></DropdownMenu>
+                <div className="flex shrink-0 items-center gap-1">
+                  <Button size="icon" variant="ghost" aria-label="Visualizar atendimento" onClick={() => setDetail(r)}><Eye className="h-4 w-4" /></Button>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    aria-label="Registrar pagamento em Contas a Receber"
+                    disabled={stageOf(r) === "paid"}
+                    onClick={() => {
+                      if (!r.transaction_id) { toast.error("Este atendimento não possui receita vinculada em Contas a Receber."); return; }
+                      navigate("/financeiro", { state: { openPaymentTransactionId: r.transaction_id } });
+                    }}
+                  ><Banknote className="h-4 w-4" /></Button>
+                </div>
               </div>
             </article>;
           })}
