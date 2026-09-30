@@ -654,26 +654,26 @@ function FeatureListInput({ value, onChange }: { value: string; onChange: (v: st
   return (
     <div className="space-y-2">
       {list.length > 0 && (
-        <div className="flex items-center gap-2 px-1 text-xs text-muted-foreground">
-          <span className="w-16 text-center">Qtd.</span>
-          <span className="flex-1">Serviço</span>
-          <span className="w-10" />
+        <div className="grid grid-cols-[4rem_minmax(0,1fr)_2.5rem] gap-2 px-1 text-xs text-muted-foreground">
+          <span className="text-center">Qtd.</span>
+          <span>Serviço</span>
+          <span />
         </div>
       )}
       {list.map((item, i) => (
-        <div key={i} className="flex items-center gap-2">
+        <div key={i} className="grid grid-cols-[4rem_minmax(0,1fr)_2.5rem] items-center gap-2">
           <Input
             type="number"
             inputMode="numeric"
             min={1}
             max={99}
             aria-label="Quantidade"
-            className="w-16 text-center px-1"
+            className="w-full text-center px-1"
             value={item.qty}
             onChange={(e) => update(i, { qty: Math.min(99, Math.max(1, parseInt(e.target.value, 10) || 1)) })}
           />
           <Input
-            className="flex-1"
+            className="w-full min-w-0"
             value={item.name}
             placeholder="Ex: Encontro pré-parto"
             onChange={(e) => update(i, { name: e.target.value })}
