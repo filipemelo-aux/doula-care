@@ -12,7 +12,6 @@ import {
   calculateCurrentPregnancyDays,
 } from "@/lib/pregnancy";
 
-type ClientStatusFilter = "todas" | "gestante" | "lactante";
 
 type ClientRow = {
   id: string;
@@ -65,7 +64,6 @@ function babyName(c: ClientRow) {
 
 export function ClientsOverview() {
   const [openId, setOpenId] = useState<string | null>(null);
-  const [filter, setFilter] = useState<ClientStatusFilter>("todas");
   const location = useLocation();
 
   // Reopen the client quick view when returning from the Agenda after
@@ -78,6 +76,7 @@ export function ClientsOverview() {
     }
   }, [location.state]);
 
+  // Somente gestantes na visão geral; puérperas ficam na página de Clientes.
   const { data: clients, isLoading } = useQuery({
     queryKey: ["dashboard-clients-overview"],
     queryFn: async () => {
@@ -86,7 +85,7 @@ export function ClientsOverview() {
         .select(
           "id, full_name, preferred_name, user_id, status, dpp, pregnancy_weeks, pregnancy_weeks_set_at, labor_started_at, birth_occurred, birth_date, companion_name, baby_names",
         )
-        .in("status", ["gestante", "lactante"])
+        .eq("status", "gestante")
         .order("dpp", { ascending: true, nullsFirst: false });
       if (error) throw error;
       return (data || []) as ClientRow[];
