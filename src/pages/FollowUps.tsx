@@ -218,7 +218,7 @@ export default function FollowUps() {
         {active.length === 0 ? (
           <div className="rounded-2xl bg-card p-10 text-center shadow-card"><p className="font-semibold">Nenhum acompanhamento ativo</p><p className="mt-1 text-sm text-muted-foreground">Crie o primeiro contrato de acompanhamento para iniciar o fluxo.</p><Button onClick={openPicker} className="mt-4">Novo acompanhamento</Button></div>
         ) : visibleActive.length === 0 ? (
-          <div className="rounded-2xl bg-card p-8 text-center shadow-card"><p className="font-semibold">Nenhum acompanhamento neste filtro</p><p className="mt-1 text-sm text-muted-foreground">Ajuste a busca ou escolha outra situação.</p></div>
+          <div className="rounded-2xl bg-card p-8 text-center shadow-card"><p className="font-semibold">Nenhum acompanhamento encontrado</p><p className="mt-1 text-sm text-muted-foreground">Ajuste a busca para encontrar a gestante.</p></div>
         ) : (
           <div className="space-y-3">
             {visibleActive.map((c) => {
