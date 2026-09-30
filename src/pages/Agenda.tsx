@@ -402,6 +402,10 @@ export default function Agenda() {
     mutationFn: async () => {
       const scheduledUtc = fromZonedTime(`${aptDate}T${aptTime}`, "America/Sao_Paulo").toISOString();
       const finalAddress = aptIsLocal ? null : aptAddress.trim() || null;
+      if (!editingAppointment && aptKind === "servico") {
+        const value = Number(aptServiceAmount.replace(/\./g, "").replace(",", "."));
+        if (!Number.isFinite(value) || value <= 0) throw new Error("Informe o valor do atendimento.");
+      }
 
       if (editingAppointment) {
         const updateData: Record<string, unknown> = {
@@ -478,7 +482,7 @@ export default function Agenda() {
       closeAppointmentDialog();
       toast.success(editingAppointment ? "Compromisso atualizado!" : "Compromisso agendado!");
     },
-    onError: () => toast.error("Erro ao salvar consulta"),
+    onError: (error: Error) => toast.error(error.message || "Erro ao salvar compromisso"),
   });
 
   const deleteMutation = useMutation({
