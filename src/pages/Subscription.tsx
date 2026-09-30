@@ -464,7 +464,7 @@ export default function Subscription() {
   const hasActiveSub = !!activeSubscription && !isSubscriptionExpired;
 
   return (
-    <div className="space-y-6 pb-20">
+    <div className="space-y-6">
       <div className="page-header">
         <h1 className="page-title">Assinatura</h1>
         <p className="page-description">
