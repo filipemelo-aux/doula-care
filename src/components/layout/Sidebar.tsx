@@ -125,11 +125,16 @@ export function Sidebar({ isOpen, onToggle, onNavigate, desktopExpanded }: Sideb
       const stored = JSON.parse(localStorage.getItem("sidebar-open-groups") || "{}");
       const keys = Object.keys(stored).filter((k) => stored[k]);
       // Mantém apenas um menu aberto (o último gravado)
-      return keys.length ? { [keys[keys.length - 1]]: true } : {};
-    } catch { return {}; }
+      if (keys.length) return { [keys[keys.length - 1]]: true };
+    } catch { /* ignore */ }
+    // Ao carregar, abre apenas o menu que contém a página ativa
+    const activeGroup = navItems.find(
+      (it) => "subItems" in it && it.subItems?.some((s) => s.to === location.pathname)
+    );
+    return activeGroup ? { [activeGroup.label]: true } : {};
   });
   const toggleGroup = (label: string, current: boolean) => {
-    // Acordeão: ao abrir um menu, os outros são recolhidos
+    // Acordeão: ao abrir um menu, os outros são recolhidos — mesmo os da página ativa
     const next = current ? { ...openGroups, [label]: false } : { [label]: true };
     setOpenGroups(next);
     localStorage.setItem("sidebar-open-groups", JSON.stringify(next));
@@ -169,6 +174,14 @@ export function Sidebar({ isOpen, onToggle, onNavigate, desktopExpanded }: Sideb
   const sidebarName = displayName || "Doula Care";
 
   const handleNavClick = (to: string) => {
+    // Acordeão: clicar em um item direto recolhe qualquer menu aberto
+    const belongsToOpenGroup = navItems.some(
+      (it) => "subItems" in it && it.subItems?.some((s) => s.to === to) && openGroups[it.label]
+    );
+    if (!belongsToOpenGroup && Object.keys(openGroups).some((k) => openGroups[k])) {
+      setOpenGroups({});
+      localStorage.setItem("sidebar-open-groups", "{}");
+    }
     navigate(to);
     if (onNavigate) {
       onNavigate();
@@ -230,7 +243,7 @@ export function Sidebar({ isOpen, onToggle, onNavigate, desktopExpanded }: Sideb
               return lk ? !limits[lk] : false;
             });
             const isSubActive = item.subItems.some((s) => location.pathname === s.to);
-            const groupOpen = openGroups[item.label] ?? isSubActive;
+            const groupOpen = !!openGroups[item.label];
 
             return (
               <div key={item.label} className="mt-3 pt-3 border-t border-border/40">
