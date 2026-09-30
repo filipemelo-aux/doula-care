@@ -846,9 +846,10 @@ export function ClientDialog({ open, onOpenChange, client, initialStep, mode = "
               installment_number: i + 1,
               total_installments: installmentCount,
               amount: thisAmt,
-              amount_paid: isPastDue || (entryAlreadyPaid && i === 0) ? thisAmt : 0,
+              amount_paid: isPastDue || (entryAlreadyPaid amount_paid: isPastDue || (entryAlreadyPaid && i === 0) ? thisAmt : 0,amount_paid: isPastDue || (entryAlreadyPaid && i === 0) ? thisAmt : 0, i === 0) ? thisAmt : 0,
               due_date: dueDateStr,
               status: isPastDue || (entryAlreadyPaid && i === 0) ? "pago" : "pendente",
+              payment_method: isPastDue || (entryAlreadyPaid && i === 0) ? data.payment_method : null,
               paid_at: isPastDue || (entryAlreadyPaid && i === 0) ? new Date().toISOString() : null,
               owner_id: user?.id || null,
               organization_id: organizationId || null,
@@ -1060,12 +1061,18 @@ export function ClientDialog({ open, onOpenChange, client, initialStep, mode = "
                 if (ex) {
                   // Update in place — amount_paid / paid_at are untouched
                   const { error: upErr } = await supabase
-                    .from("payments")
                     .update({
                       amount: d.amount,
                       due_date: d.due_date,
                       total_installments: installmentCount,
                       transaction_id: transactionId ?? ex.transaction_id ?? null,
+                      // Auto-pay if due date is in the past and not already paid
+                      ...( (d.due_date < todayStr && Number(ex.amount_paid || 0) <= 0) ? {
+                        amount_paid: d.amount,
+                        status: "pago",
+                        paid_at: new Date().toISOString(),
+                        payment_method: data.payment_method
+                      } : {})
                     })
                     .eq("id", ex.id);
                   if (upErr) console.error("Error updating payment:", upErr);
@@ -1076,9 +1083,11 @@ export function ClientDialog({ open, onOpenChange, client, initialStep, mode = "
                     installment_number: d.installment_number,
                     total_installments: installmentCount,
                     amount: d.amount,
-                    amount_paid: 0,
+                    amount_paid: (d.installment_number === 1 && entryAlreadyPaid) || d.due_date < todayStr ? d.amount : 0,
                     due_date: d.due_date,
-                    status: "pendente",
+                    status: (d.installment_number === 1 && entryAlreadyPaid) || d.due_date < todayStr ? "pago" : "pendente",
+                    paid_at: (d.installment_number === 1 && entryAlreadyPaid) || d.due_date < todayStr ? new Date().toISOString() : null,
+                    payment_method: (d.installment_number === 1 && entryAlreadyPaid) || d.due_date < todayStr ? data.payment_method : null,
                     owner_id: user?.id || null,
                     organization_id: organizationId || null,
                   });
