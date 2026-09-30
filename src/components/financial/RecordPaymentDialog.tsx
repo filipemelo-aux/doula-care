@@ -239,6 +239,7 @@ export function RecordPaymentDialog({
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["transactions"] });
+      queryClient.invalidateQueries({ queryKey: ["service-records"] });
       queryClient.invalidateQueries({ queryKey: ["transaction-payments"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
       queryClient.invalidateQueries({ queryKey: ["clients"] });
