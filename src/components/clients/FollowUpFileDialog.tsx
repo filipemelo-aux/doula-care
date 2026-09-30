@@ -249,7 +249,6 @@ export function FollowUpFileDialog({ open, onOpenChange, client }: FollowUpFileD
             )}
             {/* Serviços inclusos */}
 
-            {/* Serviços inclusos */}
             <Card
               icon={ListChecks}
               title={`Serviços inclusos (${doneItems}/${includedItems.length} executados)`}
