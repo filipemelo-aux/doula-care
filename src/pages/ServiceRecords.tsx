@@ -60,9 +60,8 @@ export function stageOf(r: ServiceRecord): ServiceStage {
 
 export function statusOf(r: ServiceRecord) {
   const stage = stageOf(r);
-  if (stage === "forecast") return { label: "A faturar", variant: "secondary" as const };
   if (stage === "paid") return { label: "Pago", variant: "default" as const };
-  return { label: "Faturado", variant: "outline" as const };
+  return { label: "A receber", variant: "outline" as const };
 }
 
 export default function ServiceRecords() {
@@ -171,7 +170,7 @@ export default function ServiceRecords() {
       ) : (
         <div className="space-y-3">
           {filtered.map((r) => {
-            const st = statusOf(r); const stage = stageOf(r);
+            const st = statusOf(r);
             return <article key={r.id} className="overflow-hidden rounded-2xl bg-card shadow-card">
               <div className="flex items-start gap-3 p-4">
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-lg">{services.find((s: any) => s.name === r.service_name)?.icon || "✦"}</div>
@@ -185,13 +184,12 @@ export default function ServiceRecords() {
                   {r.status === "forecast" && <><DropdownMenuSeparator /><DropdownMenuItem className="text-destructive" onClick={() => remove.mutate(r.id)}><Trash2 className="mr-2 h-4 w-4" /> Remover</DropdownMenuItem></>}
                 </DropdownMenuContent></DropdownMenu>
               </div>
-              <div className="border-t border-border/30 px-4 py-3"><ServiceFlow current={stage} compact /></div>
             </article>;
           })}
         </div>
       )}
 
-      <Dialog open={!!detail} onOpenChange={(value) => !value && setDetail(null)}><DialogContent><DialogHeader><DialogTitle>Detalhes do atendimento</DialogTitle></DialogHeader>{detail && <div className="space-y-5"><div><p className="text-xs text-muted-foreground">Serviço</p><p className="font-semibold">{detail.service_name}</p><p className="text-sm text-muted-foreground">{detail.clients?.full_name || "Sem cliente"} · {fmtDate(detail.service_date)}</p></div><ServiceFlow current={stageOf(detail)} /><div className="grid grid-cols-2 gap-3 rounded-xl bg-muted/50 p-3"><div><p className="text-xs text-muted-foreground">Valor</p><p className="font-semibold">{brl(detail.amount)}</p></div><div><p className="text-xs text-muted-foreground">Situação</p><p className="font-semibold">{statusOf(detail).label}</p></div></div>{detail.notes && <div><p className="text-xs text-muted-foreground">Observações</p><p className="text-sm">{detail.notes}</p></div>}<Button className="w-full" variant="secondary" onClick={() => setDetail(null)}>Fechar</Button></div>}</DialogContent></Dialog>
+      <Dialog open={!!detail} onOpenChange={(value) => !value && setDetail(null)}><DialogContent><DialogHeader><DialogTitle>Detalhes do atendimento</DialogTitle></DialogHeader>{detail && <div className="space-y-5"><div><p className="text-xs text-muted-foreground">Serviço</p><p className="font-semibold">{detail.service_name}</p><p className="text-sm text-muted-foreground">{detail.clients?.full_name || "Sem cliente"} · {fmtDate(detail.service_date)}</p></div><div className="grid grid-cols-2 gap-3 rounded-xl bg-muted/50 p-3"><div><p className="text-xs text-muted-foreground">Valor</p><p className="font-semibold">{brl(detail.amount)}</p></div><div><p className="text-xs text-muted-foreground">Situação</p><p className="font-semibold">{statusOf(detail).label}</p></div></div>{detail.notes && <div><p className="text-xs text-muted-foreground">Observações</p><p className="text-sm">{detail.notes}</p></div>}<Button className="w-full" variant="secondary" onClick={() => setDetail(null)}>Fechar</Button></div>}</DialogContent></Dialog>
 
       <Dialog open={open} onOpenChange={setOpen}><DialogContent><DialogHeader><DialogTitle>Novo atendimento</DialogTitle></DialogHeader><div className="space-y-4">
         <div className="rounded-xl bg-muted/50 p-3"><p className="text-sm font-semibold">1. Serviço realizado</p><p className="text-xs text-muted-foreground">Informe o que foi feito e para qual cliente.</p></div>
