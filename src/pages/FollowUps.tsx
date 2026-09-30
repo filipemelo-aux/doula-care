@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { ClientDialog } from "@/components/clients/ClientDialog";
+import { FollowUpFileDialog } from "@/components/clients/FollowUpFileDialog";
 import { sessionsDb, useFollowupSessions } from "@/lib/consultations";
 import { Textarea } from "@/components/ui/textarea";
 import { ensureAvailabilityForAppointment } from "@/lib/ensureAvailability";
