@@ -25,7 +25,7 @@ export interface ServiceRecord {
   service_name: string;
   amount: number;
   notes: string | null;
-  status: "forecast" | "invoiced";
+  status: "forecast" | "invoiced"; // Valor legado do banco; não há mais etapa de previsão no aplicativo.
   transaction_id: string | null;
   clients?: { full_name: string } | null;
   transactions?: { amount: number; amount_received: number | null } | null;

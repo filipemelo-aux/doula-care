@@ -911,7 +911,7 @@ export default function Financial() {
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div className="page-header mb-0 min-w-0">
           <h1 className="page-title">Contas a Receber</h1>
-          <p className="page-description">Acompanhe suas faturas e registre os recebimentos</p>
+          <p className="page-description">Acompanhe suas contas e registre os recebimentos</p>
         </div>
       </div>
 
