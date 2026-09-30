@@ -9,7 +9,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -185,7 +184,6 @@ export function FollowUpFileDialog({ open, onOpenChange, client }: FollowUpFileD
   const receivedTotal = (installmentPayments || []).reduce((sum, p) => sum + Number(p.amount_paid || 0), 0);
   const doneItems = includedItems.filter((it) => it.session?.status === "done").length;
   const team = Array.isArray(client.prenatal_team) ? client.prenatal_team : [];
-  const paidAmount = (installmentPayments || []).reduce((sum, p) => sum + Number(p.amount_paid || 0), 0);
   const paymentType = (installmentPayments?.length || Number(clientTransaction?.installments || 1)) > 1 ? "Parcelado" : "À vista";
 
   return (
@@ -195,7 +193,7 @@ export function FollowUpFileDialog({ open, onOpenChange, client }: FollowUpFileD
           <DialogTitle>Acompanhamento</DialogTitle>
         </DialogHeader>
 
-        <ScrollArea className="w-full min-w-0 max-h-[90dvh]">
+        <div className="w-full min-w-0 max-h-[90dvh] overflow-y-auto overscroll-contain">
           {/* Hero */}
           <div className="relative px-6 pt-7 pb-6 bg-gradient-to-br from-primary/15 to-accent/5">
             <div className="flex items-start gap-4">
@@ -282,7 +280,7 @@ export function FollowUpFileDialog({ open, onOpenChange, client }: FollowUpFileD
                   ))}
                 </div>
               )}
-              {paidAmount > 0 && paymentType === "À vista" && <p className="mt-3 text-xs text-muted-foreground">Recebido: {formatCurrency(paidAmount)}</p>}
+              {receivedTotal > 0 && paymentType === "À vista" && <p className="mt-3 text-xs text-muted-foreground">Recebido: {formatCurrency(receivedTotal)}</p>}
             </Card>}
 
             {/* Serviços inclusos */}
@@ -339,7 +337,7 @@ export function FollowUpFileDialog({ open, onOpenChange, client }: FollowUpFileD
               </Card>
             )}
           </div>
-        </ScrollArea>
+        </div>
       </DialogContent>
     </Dialog>
   );
