@@ -19,11 +19,13 @@ import {
   CheckCircle2,
   Calendar,
   UserRound,
-
+  Stethoscope,
+  Camera,
 } from "lucide-react";
 import { cn, formatBrazilDate } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { usePlanNames } from "@/hooks/usePlanNames";
+import { useAuth } from "@/contexts/AuthContext";
 import type { Tables } from "@/integrations/supabase/types";
 import type { FollowupSession } from "@/lib/consultations";
 
@@ -60,6 +62,7 @@ const formatCurrency = (value: number) =>
 
 export function FollowUpFileDialog({ open, onOpenChange, client }: FollowUpFileDialogProps) {
   const { getPlanName } = usePlanNames();
+  const { role } = useAuth();
 
   const { data: avatarUrl } = useQuery({
     queryKey: ["followup-file-avatar", client?.user_id],
@@ -181,15 +184,18 @@ export function FollowUpFileDialog({ open, onOpenChange, client }: FollowUpFileD
   const paidInstallments = (installmentPayments || []).filter((p) => Number(p.amount_paid || 0) > 0).length;
   const receivedTotal = (installmentPayments || []).reduce((sum, p) => sum + Number(p.amount_paid || 0), 0);
   const doneItems = includedItems.filter((it) => it.session?.status === "done").length;
+  const team = Array.isArray(client.prenatal_team) ? client.prenatal_team : [];
+  const paidAmount = (installmentPayments || []).reduce((sum, p) => sum + Number(p.amount_paid || 0), 0);
+  const paymentType = (installmentPayments?.length || Number(clientTransaction?.installments || 1)) > 1 ? "Parcelado" : "À vista";
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg max-h-[90vh] p-0 overflow-hidden gap-0 rounded-3xl">
+      <DialogContent className="w-[calc(100vw-24px)] max-w-lg max-h-[90dvh] min-w-0 overflow-hidden gap-0 rounded-3xl [&>div]:!block [&>div]:!p-0 [&>div]:!overflow-hidden">
         <DialogHeader className="sr-only">
           <DialogTitle>Acompanhamento</DialogTitle>
         </DialogHeader>
 
-        <ScrollArea className="max-h-[90vh]">
+        <ScrollArea className="w-full min-w-0 max-h-[90dvh]">
           {/* Hero */}
           <div className="relative px-6 pt-7 pb-6 bg-gradient-to-br from-primary/15 to-accent/5">
             <div className="flex items-start gap-4">
@@ -217,14 +223,42 @@ export function FollowUpFileDialog({ open, onOpenChange, client }: FollowUpFileD
           </div>
 
           {/* Body */}
-          <div className="px-5 py-5 space-y-4">
+          <div className="min-w-0 px-4 sm:px-5 py-5 space-y-4">
+            {(client.dpp || client.baby_names?.length || client.birth_location || client.prenatal_type || client.prenatal_high_risk || team.length > 0 || client.has_fotografa || client.status === "outro") && (
+              <Card icon={Stethoscope} title="Gestação e pré-natal" tint="primary">
+                <ChipGrid>
+                  {client.status === "outro" && client.custom_status && <Chip label="Situação" value={client.custom_status} />}
+                  {client.dpp && <Chip label="DPP" value={formatDate(client.dpp)} />}
+                  {client.baby_names && client.baby_names.length > 0 && <Chip label="Bebê(s)" value={client.baby_names.join(", ")} />}
+                  {client.birth_location && <Chip label="Local do parto" value={client.birth_location} />}
+                  {client.prenatal_type && <Chip label="Tipo de atendimento" value={{ sus: "SUS", plano: "Plano de Saúde", particular: "Particular", equipe_particular: "Equipe Particular" }[client.prenatal_type] || client.prenatal_type} />}
+                  <Chip label="Alto risco" value={client.prenatal_high_risk ? "Sim" : "Não"} />
+                  <Chip label="Equipe particular" value={team.length > 0 ? "Sim" : "Não"} />
+                </ChipGrid>
+                {team.length > 0 && <div className="mt-3 space-y-1">
+                  <p className="text-[10px] text-muted-foreground uppercase">Equipe</p>
+                  {team.map((member, i) => {
+                    if (!member || typeof member !== "object" || Array.isArray(member)) return null;
+                    return <p key={i} className="text-xs break-words rounded-lg bg-muted/50 p-2">{String(member.name || "")} {member.role ? `— ${String(member.role)}` : ""}</p>;
+                  })}
+                </div>}
+                <div className="mt-3 flex items-start gap-2 text-xs">
+                  <Camera className="h-4 w-4 shrink-0 text-muted-foreground" />
+                  <span className="break-words">Fotógrafa: {client.has_fotografa ? [client.fotografa_name, client.fotografa_phone].filter(Boolean).join(" · ") || "Sim" : "Não"}</span>
+                </div>
+              </Card>
+            )}
             {/* Plano e Pagamento */}
-            <Card icon={CreditCard} title="Plano e Pagamento" tint="primary">
+            {role !== "moderator" && <Card icon={CreditCard} title="Plano e Pagamento" tint="primary">
               <ChipGrid>
                 <Chip label="Plano" value={getPlanName(client.plan_setting_id, client.plan)} highlight />
                 <Chip label="Valor" value={formatCurrency(Number(client.plan_value) || 0)} highlight />
                 <Chip label="Pagamento" value={paymentMethodLabels[client.payment_method] || client.payment_method} />
                 <Chip label="Status" value={paymentStatusLabels[client.payment_status] || client.payment_status} />
+                <Chip label="Tipo de pagamento" value={paymentType} />
+                {clientTransaction?.date && paymentType === "À vista" && <Chip label="Data do pagamento" value={formatDate(clientTransaction.date)} />}
+                {installmentPayments?.[0]?.due_date && paymentType === "Parcelado" && <Chip label="Primeiro vencimento" value={formatDate(installmentPayments[0].due_date)} />}
+                {paymentType === "Parcelado" && <Chip label="Entrada recebida" value={Number(installmentPayments?.[0]?.amount_paid || 0) >= Number(installmentPayments?.[0]?.amount || 0) && Number(installmentPayments?.[0]?.amount || 0) > 0 ? "Sim" : "Não"} />}
               </ChipGrid>
 
               {installmentPayments && installmentPayments.length > 1 && (
@@ -234,21 +268,22 @@ export function FollowUpFileDialog({ open, onOpenChange, client }: FollowUpFileD
                     {receivedTotal > 0 ? ` · ${formatCurrency(receivedTotal)} recebidos` : ""})
                   </p>
                   {installmentPayments.map((p) => (
-                    <div key={p.transaction_id ? `${p.transaction_id}-${p.installment_number}` : `${p.installment_number}-${p.due_date}`} className="flex items-center justify-between rounded-lg bg-muted/50 px-3 py-2 text-xs">
-                      <span className="font-medium">
+                    <div key={p.transaction_id ? `${p.transaction_id}-${p.installment_number}` : `${p.installment_number}-${p.due_date}`} className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1 rounded-lg bg-muted/50 px-3 py-2 text-xs min-w-0">
+                       <span className="font-medium min-w-0 break-words">
                         {p.installment_number}/{p.total_installments} · {formatCurrency(Number(p.amount))}
                       </span>
-                      <div className="flex items-center gap-2">
+                       <div className="flex flex-wrap items-center gap-1.5 min-w-0">
                         {p.due_date && <span className="text-muted-foreground text-[11px]">{formatDate(p.due_date)}</span>}
                         <Badge variant={Number(p.amount_paid || 0) > 0 ? "default" : "outline"} className="text-[10px] h-5">
-                          {Number(p.amount_paid || 0) > 0 ? "Paga" : paymentStatusLabels.pendente}
+                           {Number(p.amount_paid || 0) >= Number(p.amount) ? "Paga" : Number(p.amount_paid || 0) > 0 ? "Parcial" : paymentStatusLabels.pendente}
                         </Badge>
                       </div>
                     </div>
                   ))}
                 </div>
               )}
-            </Card>
+              {paidAmount > 0 && paymentType === "À vista" && <p className="mt-3 text-xs text-muted-foreground">Recebido: {formatCurrency(paidAmount)}</p>}
+            </Card>}
 
             {/* Serviços inclusos */}
             <Card
@@ -266,14 +301,14 @@ export function FollowUpFileDialog({ open, onOpenChange, client }: FollowUpFileD
                     const isDone = it.session?.status === "done";
                     return (
                       <div key={it.key} className="rounded-xl bg-muted/50 p-3 space-y-1">
-                        <div className="flex items-center justify-between gap-2">
+                        <div className="flex flex-wrap items-center justify-between gap-2">
                           <div className="flex items-center gap-1.5 min-w-0">
                             {isDone ? (
                               <CheckCircle2 className="w-3.5 h-3.5 text-success shrink-0" />
                             ) : (
                               <span className="h-3.5 w-3.5 shrink-0 rounded-full border border-border" />
                             )}
-                            <p className="font-medium text-xs truncate">{it.name}</p>
+                            <p className="font-medium text-xs break-words">{it.name}</p>
                           </div>
                           <Badge variant={isDone ? "default" : "outline"} className="text-[10px] h-5 shrink-0">
                             {isDone ? "Executado" : "Não sinalizado"}
@@ -328,12 +363,12 @@ function Card({
 }) {
   const t = tintClasses[tint];
   return (
-    <div className="rounded-2xl bg-card border border-border/40 shadow-sm p-4 space-y-3">
+     <div className="min-w-0 rounded-2xl bg-card border border-border/40 shadow-sm p-4 space-y-3 overflow-hidden">
       <div className="flex items-center gap-2">
         <div className={cn("w-8 h-8 rounded-xl flex items-center justify-center", t.bg)}>
           <Icon className={cn("w-4 h-4", t.icon)} />
         </div>
-        <h3 className="font-semibold text-sm text-foreground">{title}</h3>
+         <h3 className="font-semibold text-sm text-foreground min-w-0 break-words">{title}</h3>
       </div>
       <div>{children}</div>
     </div>
@@ -341,7 +376,7 @@ function Card({
 }
 
 function ChipGrid({ children }: { children: React.ReactNode }) {
-  return <div className="grid grid-cols-2 gap-2">{children}</div>;
+   return <div className="grid grid-cols-1 min-[360px]:grid-cols-2 gap-2 min-w-0">{children}</div>;
 }
 
 function Chip({
@@ -366,7 +401,7 @@ function Chip({
         {Icon && <Icon className="w-3 h-3 text-primary shrink-0" />}
         <p className="text-[10px] text-muted-foreground uppercase tracking-wide truncate">{label}</p>
       </div>
-      <p className={cn("text-xs font-medium break-words", highlight && "text-primary")}>{value}</p>
+       <p className={cn("text-xs font-medium break-words [overflow-wrap:anywhere]", highlight && "text-primary")}>{value}</p>
     </div>
   );
 }
