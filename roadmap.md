@@ -10,3 +10,4 @@
 - [x] Remover as abas internas da Central de Serviços e tornar a linha do tempo dos acompanhamentos dinâmica
 - [x] Registrar a entrada recebida ao editar cliente ou acompanhamento, mesmo sem alterar o parcelamento
 - [x] Ajustar visualização do acompanhamento no celular, incluir dados da edição e subir aviso de plano bloqueado
+- [x] Remover filtros de situação dos Atendimentos e manter o recebimento em Contas a Receber
