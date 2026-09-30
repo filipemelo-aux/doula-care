@@ -188,12 +188,12 @@ export function FollowUpFileDialog({ open, onOpenChange, client }: FollowUpFileD
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[94%] max-w-lg max-h-[90dvh] min-w-0 grid-cols-[minmax(0,1fr)] overflow-hidden gap-0 rounded-3xl [&>div]:!block [&>div]:!min-w-0 [&>div]:!p-0 [&>div]:!overflow-hidden">
+      <DialogContent className="w-[94%] max-w-lg max-h-[90dvh] min-w-0 grid-cols-[minmax(0,1fr)] overflow-hidden gap-0 rounded-3xl [&>div]:!block [&>div]:!min-w-0 [&>div]:!p-0 [&>div]:!max-h-[90dvh] [&>div]:!overflow-y-auto">
         <DialogHeader className="sr-only">
           <DialogTitle>Acompanhamento</DialogTitle>
         </DialogHeader>
 
-        <div className="w-full min-w-0 max-h-[90dvh] overflow-y-auto overscroll-contain">
+        <div className="w-full min-w-0">
           {/* Hero */}
           <div className="relative px-6 pt-7 pb-6 bg-gradient-to-br from-primary/15 to-accent/5">
             <div className="flex items-start gap-4">
