@@ -200,7 +200,6 @@ export function ClientsOverview() {
           {sorted.map((c) => {
             const badge = badgeMap?.get(c.id) || 0;
             const avatarUrl = c.user_id ? avatars?.get(c.user_id) : null;
-            const isPuer = c.status === "lactante";
             return (
               <li key={c.id}>
                 <button
@@ -215,11 +214,7 @@ export function ClientsOverview() {
                         className="object-cover"
                       />
                       <AvatarFallback className="bg-gradient-to-br from-primary/20 to-accent/20">
-                        {isPuer ? (
-                          <Heart className="w-5 h-5 text-primary" />
-                        ) : (
-                          <Baby className="w-5 h-5 text-primary" />
-                        )}
+                        <Baby className="w-5 h-5 text-primary" />
                       </AvatarFallback>
                     </Avatar>
                     {badge > 0 && (
@@ -235,44 +230,22 @@ export function ClientsOverview() {
                     <p className="font-semibold text-foreground truncate">
                       {displayName(c)}
                     </p>
-                    {isPuer ? (
-                      <p className="text-xs text-muted-foreground flex items-center gap-1 flex-wrap">
-                        <span>
-                          {c.birth_date
-                            ? `Parto em ${formatBrazilDate(c.birth_date)}`
-                            : "Puérpera"}
+                    <p className="text-xs text-muted-foreground flex items-center gap-1 flex-wrap">
+                      <span>{gestationLabel(c)}</span>
+                      {c.dpp && <span>· DPP {formatBrazilDate(c.dpp)}</span>}
+                      {babyName(c) && (
+                        <span className="inline-flex items-center gap-1 text-primary font-medium">
+                          <Baby className="w-3 h-3" />
+                          {babyName(c)}
                         </span>
-                        {babyName(c) && (
-                          <span className="inline-flex items-center gap-1 text-primary font-medium">
-                            <Baby className="w-3 h-3" />
-                            {babyName(c)}
-                          </span>
-                        )}
-                      </p>
-                    ) : (
-                      <>
-                        <p className="text-xs text-muted-foreground flex items-center gap-1 flex-wrap">
-                          <span>{gestationLabel(c)}</span>
-                          {c.dpp && <span>· DPP {formatBrazilDate(c.dpp)}</span>}
-                          {babyName(c) && (
-                            <span className="inline-flex items-center gap-1 text-primary font-medium">
-                              <Baby className="w-3 h-3" />
-                              {babyName(c)}
-                            </span>
-                          )}
-                          {c.labor_started_at && !c.birth_occurred && (
-                            <span className="inline-flex items-center gap-1 text-destructive font-semibold">
-                              · Em trabalho de parto
-                            </span>
-                          )}
-                        </p>
-                        {c.companion_name && (
-                          <p className="text-[11px] text-muted-foreground/80 truncate mt-0.5">
-                            Acompanhante: {c.companion_name}
-                          </p>
-                        )}
-                      </>
-                    )}
+                      )}
+                      {c.labor_started_at && !c.birth_occurred && (
+                        <span className="inline-flex items-center gap-1 text-destructive font-semibold">
+                          · Em trabalho de parto
+                        </span>
+                      )}
+                    </p>
+                    {c.companion_name && (
                   </div>
                   <ChevronRight className="w-4 h-4 text-muted-foreground/50 flex-shrink-0" />
                 </button>
