@@ -162,7 +162,6 @@ export function FollowUpFileDialog({ open, onOpenChange, client }: FollowUpFileD
 
   if (!client) return null;
 
-  const isLoading = !clientTransaction && !installmentPayments && open;
 
   const formatDate = (dateStr: string) => {
     try {
@@ -180,7 +179,7 @@ export function FollowUpFileDialog({ open, onOpenChange, client }: FollowUpFileD
     .toUpperCase();
 
   const paidInstallments = (installmentPayments || []).filter((p) => Number(p.amount_paid || 0) > 0).length;
-  const receivedTotal = (installmentPayments || []).reduce((sum, p) => sum + Number(p.amount_paid || 0), 0 ju);
+  const receivedTotal = (installmentPayments || []).reduce((sum, p) => sum + Number(p.amount_paid || 0), 0);
   const doneItems = includedItems.filter((it) => it.session?.status === "done").length;
 
   return (
