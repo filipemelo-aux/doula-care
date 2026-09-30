@@ -364,11 +364,15 @@ export function ClientDialog({ open, onOpenChange, client, initialStep, mode = "
     if (form.formState.isDirty) return;
     setCurrentStep(initialStep && visibleSteps.some((s) => s.id === initialStep) ? initialStep : firstStepId);
     if (client) {
-      const txInstallments = clientTransaction?.installments ? Number(clientTransaction.installments) : 1;
-      const isParcelado = txInstallments > 1;
       const sortedPayments = (clientInstallmentPayments || [])
         .slice()
         .sort((a, b) => Number(a.installment_number || 0) - Number(b.installment_number || 0));
+      // Acompanhamentos ainda não faturados não têm receita: usa as parcelas previstas.
+      const txInstallments = clientTransaction?.installments
+        ? Number(clientTransaction.installments)
+        : Math.max(1, sortedPayments.length, Number(sortedPayments[0]?.total_installments || 0));
+      const isParcelado = txInstallments > 1;
+      const avistaDate = clientTransaction?.date || (sortedPayments[0]?.due_date as string) || "";
       const hasCustomInstallments = sortedPayments.length > 1 &&
         sortedPayments.some((p, _, arr) => Math.abs(Number(p.amount || 0) - Number(arr[0]?.amount || 0)) > 0.01);
       const firstInstallment = sortedPayments[0];
