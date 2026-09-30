@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -33,7 +33,8 @@ import {
   AlertTriangle,
   ClipboardList,
   StickyNote,
-  Plus,
+  ListChecks,
+  CheckCircle2,
 } from "lucide-react";
 import { cn, formatBrazilDate } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
@@ -45,7 +46,7 @@ import { toast } from "sonner";
 import type { Tables } from "@/integrations/supabase/types";
 import { calculateCurrentPregnancyWeeks, calculateCurrentPregnancyDays } from "@/lib/pregnancy";
 import { BIRTH_TYPE_LABELS } from "@/components/clients/BirthRegistrationDialog";
-import { PastAppointmentDialog } from "@/components/clients/PastAppointmentDialog";
+import type { FollowupSession } from "@/lib/consultations";
 
 type Client = Tables<"clients">;
 
@@ -124,8 +125,6 @@ export function ClientFileDialog({ open, onOpenChange, client }: ClientFileDialo
     },
   });
 
-  const [pastApptOpen, setPastApptOpen] = useState(false);
-
   const { data: appointments, isLoading: loadingAppts } = useQuery({
     queryKey: ["client-file-appointments", client?.id],
     queryFn: async () => {
@@ -139,6 +138,41 @@ export function ClientFileDialog({ open, onOpenChange, client }: ClientFileDialo
     },
     enabled: open && !!client,
   });
+
+  const { data: planFeatures = [], isLoading: loadingFeatures } = useQuery({
+    queryKey: ["followup-file-plan-features", client?.plan_setting_id],
+    enabled: open && !!client?.plan_setting_id,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("plan_settings")
+        .select("features")
+        .eq("id", client!.plan_setting_id!)
+        .maybeSingle();
+      if (error) throw error;
+      return (data?.features || []).map((feature: string) => feature.trim()).filter(Boolean) as string[];
+    },
+  });
+
+  const { data: sessions = [], isLoading: loadingSessions } = useQuery({
+    queryKey: ["followup-file-sessions", client?.id],
+    enabled: open && !!client?.id,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("followup_sessions")
+        .select("id, client_id, service_name, sequence, status, performed_at, notes, appointment_id, appointments(scheduled_at, completed_at)")
+        .eq("client_id", client!.id);
+      if (error) throw error;
+      return (data || []) as FollowupSession[];
+    },
+  });
+
+  const includedItems = useMemo(() => planFeatures.map((name, index) => ({
+    name,
+    key: `${name}:${index}`,
+    session: sessions.find((session) => session.sequence === index + 1)
+      || sessions.find((session) => session.sequence == null && session.service_name === name),
+  })), [planFeatures, sessions]);
+  const executedCount = includedItems.filter((item) => item.session?.status === "done").length;
 
   const { data: diaryEntries, isLoading: loadingDiary } = useQuery({
     queryKey: ["client-file-diary", client?.id],
@@ -230,7 +264,7 @@ export function ClientFileDialog({ open, onOpenChange, client }: ClientFileDialo
   const notifications: any[] = [];
 
 
-  const isLoading = loadingAppts || loadingDiary || loadingContractions;
+  const isLoading = loadingAppts || loadingDiary || loadingContractions || loadingFeatures || loadingSessions;
 
   if (!client) return null;
 
@@ -327,6 +361,17 @@ export function ClientFileDialog({ open, onOpenChange, client }: ClientFileDialo
           addText(`${formatDateTime(apt.scheduled_at)} — ${apt.title} [${status}]`, 10, true);
           if (apt.notes) addText(`  Observações: ${apt.notes}`);
           if (apt.completion_notes) addText(`  Notas de conclusão: ${apt.completion_notes}`);
+        });
+      }
+
+      if (includedItems.length > 0) {
+        addSection(`Serviços inclusos (${executedCount}/${includedItems.length} executados)`);
+        includedItems.forEach(({ name, session }) => {
+          const status = session?.status === "done" ? "Executado" : session?.status === "scheduled" ? "Agendado" : "Não sinalizado";
+          addText(`${name} — ${status}`, 10, true);
+          if (session?.performed_at) addText(`  Realizado em: ${formatDate(session.performed_at)}`);
+          if (session?.appointments?.scheduled_at) addText(`  Agendado para: ${formatDateTime(session.appointments.scheduled_at)}`);
+          if (session?.notes) addText(`  Observações: ${session.notes}`);
         });
       }
 
@@ -623,45 +668,57 @@ export function ClientFileDialog({ open, onOpenChange, client }: ClientFileDialo
                 </Card>
               )}
 
-              {/* Appointments (Registro de acompanhamentos) */}
-              <Card
-                icon={Calendar}
-                title={`Consultas (${appointments?.length || 0})`}
-                tint="accent"
-                action={
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    className="h-7 px-2 text-xs"
-                    onClick={() => setPastApptOpen(true)}
-                  >
-                    <Plus className="w-3.5 h-3.5 mr-1" />
-                    Registrar
-                  </Button>
-                }
-              >
-                {appointments && appointments.length > 0 ? (
+              {/* Consultas de atendimento registradas na agenda */}
+              {appointments && appointments.length > 0 && (
+              <Card icon={Calendar} title={`Consultas (${appointments.length})`} tint="accent">
                   <div className="space-y-2">
                     {sortAppointmentsWithFutureFirst(appointments).map((apt) => (
-                      <div key={apt.id} className="rounded-xl bg-muted/50 p-3 space-y-1">
-                        <div className="flex items-center justify-between gap-2">
-                          <p className="font-medium text-xs">{apt.title}</p>
+                      <div key={apt.id} className="rounded-xl bg-muted/50 p-3 space-y-1 min-w-0">
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <p className="font-medium text-xs break-words min-w-0">{apt.title}</p>
                           <Badge variant={apt.completed_at ? "default" : "outline"} className="text-[10px] h-5 shrink-0">
-                            {apt.completed_at ? "Concluída" : "Pendente"}
+                            {apt.completed_at ? "Concluída" : "Agendada"}
                           </Badge>
                         </div>
                         <p className="text-[11px] text-muted-foreground">{formatDateTime(apt.scheduled_at)}</p>
-                        {apt.notes && <p className="text-[11px]"><span className="text-muted-foreground">Obs:</span> {apt.notes}</p>}
-                        {apt.completion_notes && <p className="text-[11px]"><span className="text-muted-foreground">Conclusão:</span> {apt.completion_notes}</p>}
+                        {apt.completed_at && <p className="text-[11px] text-muted-foreground">Concluída em {formatDateTime(apt.completed_at)}</p>}
+                        {apt.notes && <p className="text-[11px] break-words whitespace-pre-wrap"><span className="text-muted-foreground">Obs:</span> {apt.notes}</p>}
+                        {apt.completion_notes && <p className="text-[11px] break-words whitespace-pre-wrap"><span className="text-muted-foreground">Conclusão:</span> {apt.completion_notes}</p>}
                       </div>
                     ))}
                   </div>
-                ) : (
-                  <p className="text-center text-muted-foreground text-xs py-2">
-                    Nenhum registro de acompanhamento ainda.
-                  </p>
-                )}
               </Card>
+              )}
+
+              {client.plan_setting_id && (
+                <Card icon={ListChecks} title={`Serviços inclusos (${executedCount}/${includedItems.length} executados)`} tint="accent">
+                  {includedItems.length === 0 ? (
+                    <p className="text-xs text-muted-foreground">O plano não tem serviços inclusos cadastrados.</p>
+                  ) : (
+                    <div className="space-y-2">
+                      {includedItems.map(({ name, key, session }) => {
+                        const done = session?.status === "done";
+                        return (
+                          <div key={key} className="rounded-xl bg-muted/50 p-3 space-y-1 min-w-0">
+                            <div className="flex flex-wrap items-center justify-between gap-2">
+                              <div className="flex items-center gap-1.5 min-w-0">
+                                {done ? <CheckCircle2 className="w-3.5 h-3.5 shrink-0 text-success" /> : <span className="h-3.5 w-3.5 shrink-0 rounded-full border border-border" />}
+                                <p className="font-medium text-xs break-words min-w-0">{name}</p>
+                              </div>
+                              <Badge variant={done ? "default" : "outline"} className="text-[10px] h-5 shrink-0">
+                                {done ? "Executado" : session?.status === "scheduled" ? "Agendado" : "Não sinalizado"}
+                              </Badge>
+                            </div>
+                            {session?.performed_at && <p className="text-[11px] text-muted-foreground">Realizado em {formatBrazilDate(session.performed_at)}</p>}
+                            {session?.appointments?.scheduled_at && <p className="text-[11px] text-muted-foreground">Agendado para {formatDateTime(session.appointments.scheduled_at)}</p>}
+                            {session?.notes && <p className="text-[11px] break-words whitespace-pre-wrap"><span className="text-muted-foreground">Obs:</span> {session.notes}</p>}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </Card>
+              )}
 
 
               {/* Observações da Doula */}
@@ -856,12 +913,6 @@ export function ClientFileDialog({ open, onOpenChange, client }: ClientFileDialo
       </DialogContent>
     </Dialog>
 
-    <PastAppointmentDialog
-      open={pastApptOpen}
-      onOpenChange={setPastApptOpen}
-      clientId={client.id}
-      clientName={client.full_name}
-    />
     </>
   );
 }
