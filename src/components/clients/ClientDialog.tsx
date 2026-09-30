@@ -846,7 +846,7 @@ export function ClientDialog({ open, onOpenChange, client, initialStep, mode = "
               installment_number: i + 1,
               total_installments: installmentCount,
               amount: thisAmt,
-              amount_paid: isPastDue || (entryAlreadyPaid amount_paid: isPastDue || (entryAlreadyPaid && i === 0) ? thisAmt : 0,amount_paid: isPastDue || (entryAlreadyPaid && i === 0) ? thisAmt : 0, i === 0) ? thisAmt : 0,
+              amount_paid: isPastDue || (entryAlreadyPaid && i === 0) ? thisAmt : 0,
               due_date: dueDateStr,
               status: isPastDue || (entryAlreadyPaid && i === 0) ? "pago" : "pendente",
               payment_method: isPastDue || (entryAlreadyPaid && i === 0) ? data.payment_method : null,
