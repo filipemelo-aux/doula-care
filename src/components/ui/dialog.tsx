@@ -71,10 +71,12 @@ const DialogContent = React.forwardRef<
       className={cn(
         "fixed left-[50%] top-[50%] z-[100] grid w-[94%] max-w-lg translate-x-[-50%] translate-y-[-50%] border-0 bg-background shadow-[0_8px_24px_rgba(0,0,0,0.06)] rounded-[18px] duration-200 overflow-visible max-h-[85vh] data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%]",
         className,
+        // Uma única barra de rolagem: somente o conteúdo interno rola.
+        "!overflow-hidden",
       )}
       {...props}
     >
-      <div className="overflow-y-auto overscroll-contain px-4 pt-5 pb-6 gap-3 grid" style={{ WebkitOverflowScrolling: 'touch', maxHeight: '85vh' }}>
+      <div className="overflow-y-auto overscroll-contain px-4 pt-5 pb-6 gap-3 grid" style={{ WebkitOverflowScrolling: 'touch', maxHeight: 'inherit' }}>
         {children}
       </div>
       <DialogPrimitive.Close className="absolute right-3 top-3 z-10 p-1.5 rounded-full bg-background/80 opacity-80 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none">
