@@ -5,6 +5,7 @@ import { useOrgBranding } from "@/hooks/useOrgBranding";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import {
+  KeyRound,
   LayoutDashboard,
   Users,
   TrendingUp,
@@ -81,6 +82,7 @@ const navItems = [
     subItems: [
       { to: "/cadastros/pessoas", icon: UserPlus, label: "Pessoas" },
       { to: "/cadastros/servicos", icon: Stethoscope, label: "Serviços" },
+      { to: "/cadastros/usuarios", icon: KeyRound, label: "Usuários" },
     ],
   },
 

@@ -68,7 +68,6 @@ import { BrandingSettingsCard } from "@/components/settings/BrandingSettingsCard
 import { PushNotificationStatusCard } from "@/components/settings/PushNotificationStatusCard";
 import { toast } from "sonner";
 // formatBrazilDate removed — no longer needed in list layout
-import { ClientAccessCard } from "@/components/settings/ClientAccessCard";
 import { AvatarUpload } from "@/components/gestante/AvatarUpload";
 import { useForm } from "react-hook-form";
 import { APP_VERSION } from "@/lib/appVersion";
@@ -167,20 +166,6 @@ export default function Settings() {
           roles: roles?.filter((r) => r.user_id === profile.user_id).map((r) => r.role) || [],
         }))
         .filter((u) => u.roles.includes("admin") || u.roles.includes("moderator"));
-    },
-    enabled: isAdmin,
-  });
-
-  const { data: clientsWithAccounts, isLoading: loadingClients } = useQuery({
-    queryKey: ["clients-with-accounts"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("clients")
-        .select("id, full_name, dpp, user_id, first_login, status")
-        .not("user_id", "is", null)
-        .order("created_at", { ascending: false });
-      if (error) throw error;
-      return data;
     },
     enabled: isAdmin,
   });
@@ -695,8 +680,6 @@ export default function Settings() {
                 </div>
               </div>
 
-              {/* Client Users */}
-              <ClientAccessCard clientsWithAccounts={clientsWithAccounts} loadingClients={loadingClients} />
             </>
           )}
         </TabsContent>

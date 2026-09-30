@@ -5,12 +5,14 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-function normalizeString(str: string): string {
-  return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+function nameParts(fullName: string): string[] {
+  return (fullName || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase()
+    .replace(/\([^)]*\)/g, " ").replace(/[^a-z0-9\s]/g, " ").trim().split(/\s+/).filter(Boolean);
 }
 
 function generateUsername(fullName: string): string {
-  const parts = normalizeString(fullName).split(/\s+/);
+  const parts = nameParts(fullName);
+  if (parts.length === 0) return "";
   if (parts.length < 2) return parts[0];
   return `${parts[0]}.${parts[parts.length - 1]}`;
 }
@@ -25,6 +27,7 @@ function generatePassword(dpp: string): string {
   }
   return dpp.replace(/\D/g, "").slice(0, 6);
 }
+const withPrefix = (p: string) => `dpp${p}`;
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -73,10 +76,18 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Get all gestante clients without user_id but with DPP
+    const { data: callerProfile } = await supabase
+      .from("profiles").select("organization_id").eq("user_id", callingUser.id).maybeSingle();
+    if (!callerProfile?.organization_id) {
+      return new Response(JSON.stringify({ error: "Organização não encontrada" }),
+        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
+    // Only this organization's gestantes without access
     const { data: clients, error: clientsError } = await supabase
       .from("clients")
       .select("id, full_name, dpp")
+      .eq("organization_id", callerProfile.organization_id)
       .is("user_id", null)
       .not("dpp", "is", null)
       .eq("status", "gestante");
@@ -96,7 +107,8 @@ Deno.serve(async (req) => {
       try {
         const username = generateUsername(client.full_name);
         const email = `${username}@gestante.doula.app`;
-        const password = generatePassword(client.dpp);
+        const password = withPrefix(generatePassword(client.dpp));
+        if (!username) { results.errors.push(`${client.full_name}: nome inválido para usuário`); continue; }
 
         if (password.length < 4) {
           results.errors.push(`${client.full_name}: DPP inválido (senha muito curta)`);

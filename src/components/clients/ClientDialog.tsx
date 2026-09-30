@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -152,6 +153,7 @@ export function ClientDialog({ open, onOpenChange, client, initialStep, mode = "
   const queryClient = useQueryClient();
   const { user, organizationId, role } = useAuth();
   const isModerator = role === "moderator";
+  const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
   const [entryAlreadyPaid, setEntryAlreadyPaid] = useState(false);
   const [entryType, setEntryType] = useState<"equal" | "percentage">("equal");
@@ -1204,28 +1206,6 @@ export function ClientDialog({ open, onOpenChange, client, initialStep, mode = "
         } // end if plan_setting_id
 
 
-        if (data.dpp && (data.status || "gestante") === "gestante") {
-          try {
-            const response = await supabase.functions.invoke("create-client-user", {
-              body: {
-                clientId: newClient.id,
-                fullName: data.full_name,
-                dpp: data.dpp,
-                organizationId: organizationId || null,
-              },
-            });
-
-            if (response.error) {
-              console.error("Error creating client user:", response.error);
-              toast.info("Cliente cadastrada, mas houve um erro ao criar acesso da gestante");
-            } else if (response.data?.email) {
-              toast.info(`Acesso criado: ${response.data.email}`);
-            }
-          } catch (userError) {
-            console.error("Error invoking create-client-user:", userError);
-          }
-        }
-
         if (isModerator && organizationId) {
           try {
             await supabase.from("org_notifications").insert({
@@ -1259,6 +1239,9 @@ export function ClientDialog({ open, onOpenChange, client, initialStep, mode = "
       );
       onOpenChange(false);
       if (savedId) onSaved?.(savedId);
+      if (savedId && !client && !onSaved && !isModerator) {
+        navigate(`/cadastros/usuarios?cliente=${savedId}`);
+      }
     },
     onError: () => {
       toast.error("Erro ao salvar cliente");
