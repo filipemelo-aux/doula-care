@@ -1,4 +1,4 @@
-import { NavLink, useLocation, useNavigate } from "react-router-dom";
+import { KeyRound, NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import logo from "@/assets/logo.png";
 import { useOrgBranding } from "@/hooks/useOrgBranding";
@@ -81,6 +81,7 @@ const navItems = [
     subItems: [
       { to: "/cadastros/pessoas", icon: UserPlus, label: "Pessoas" },
       { to: "/cadastros/servicos", icon: Stethoscope, label: "Serviços" },
+      { to: "/cadastros/usuarios", icon: KeyRound, label: "Usuários" },
     ],
   },
 

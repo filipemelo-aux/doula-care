@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Baby, Copy, Eye, EyeOff, Loader2, UserPlus, RotateCcw, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import { suggestUsername } from "@/lib/clientAccess";
 
 interface Client {
   id: string;
@@ -30,11 +31,7 @@ interface ClientAccessCardProps {
   loadingClients: boolean;
 }
 
-const generateUsername = (fullName: string): string => {
-  const normalized = fullName.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
-  const parts = normalized.split(/\s+/);
-  return parts.length < 2 ? parts[0] : `${parts[0]}.${parts[parts.length - 1]}`;
-};
+const generateUsername = suggestUsername;
 
 const generatePassword = (dpp: string): string => {
   const parts = dpp.split("-");
@@ -54,27 +51,6 @@ export function ClientAccessCard({ clientsWithAccounts, loadingClients }: Client
   const [resetConfirmClient, setResetConfirmClient] = useState<Client | null>(null);
   const [passwordResetClient, setPasswordResetClient] = useState<Client | null>(null);
   const [resettingData, setResettingData] = useState(false);
-
-  const provisionMutation = useMutation({
-    mutationFn: async () => {
-      const { data, error } = await supabase.functions.invoke("provision-existing-clients");
-      if (error) throw error;
-      if (data.error) throw new Error(data.error);
-      return data;
-    },
-    onSuccess: (data) => {
-      if (data.created > 0) {
-        toast.success(`${data.created} usuário(s) criado(s) com sucesso!`);
-        queryClient.invalidateQueries({ queryKey: ["clients-with-accounts"] });
-      } else {
-        toast.info("Nenhuma gestante pendente encontrada");
-      }
-      if (data.errors?.length > 0) {
-        toast.warning(`${data.errors.length} erro(s) durante a criação`, { description: data.errors.slice(0, 3).join(", ") });
-      }
-    },
-    onError: (error) => toast.error("Erro ao criar usuários", { description: error.message }),
-  });
 
   const resetPasswordMutation = useMutation({
     mutationFn: async (clientId: string) => {
@@ -158,10 +134,7 @@ export function ClientAccessCard({ clientsWithAccounts, loadingClients }: Client
               <p className="text-xs text-muted-foreground">{clientsWithAccounts?.length || 0} com acesso</p>
             </div>
           </div>
-          <Button variant="outline" size="sm" onClick={() => provisionMutation.mutate()} disabled={provisionMutation.isPending} className="h-8 text-xs gap-1.5">
-            {provisionMutation.isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : <UserPlus className="h-3.5 w-3.5" />}
-            Criar
-          </Button>
+
         </div>
         <div className="px-4 pb-4">
           {loadingClients ? (

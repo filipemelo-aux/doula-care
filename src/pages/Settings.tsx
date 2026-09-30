@@ -68,7 +68,6 @@ import { BrandingSettingsCard } from "@/components/settings/BrandingSettingsCard
 import { PushNotificationStatusCard } from "@/components/settings/PushNotificationStatusCard";
 import { toast } from "sonner";
 // formatBrazilDate removed — no longer needed in list layout
-import { ClientAccessCard } from "@/components/settings/ClientAccessCard";
 import { AvatarUpload } from "@/components/gestante/AvatarUpload";
 import { useForm } from "react-hook-form";
 import { APP_VERSION } from "@/lib/appVersion";
@@ -695,8 +694,6 @@ export default function Settings() {
                 </div>
               </div>
 
-              {/* Client Users */}
-              <ClientAccessCard clientsWithAccounts={clientsWithAccounts} loadingClients={loadingClients} />
             </>
           )}
         </TabsContent>

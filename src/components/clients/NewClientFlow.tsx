@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { ClientDialog } from "./ClientDialog";
 import type { Tables } from "@/integrations/supabase/types";
@@ -14,6 +15,7 @@ export function NewClientFlow({
   open: boolean;
   onOpenChange: (o: boolean) => void;
 }) {
+  const navigate = useNavigate();
   const [followClient, setFollowClient] = useState<Tables<"clients"> | null>(null);
 
   const handleSaved = async (id: string) => {
@@ -30,6 +32,7 @@ export function NewClientFlow({
         onOpenChange={(o) => !o && setFollowClient(null)}
         client={followClient}
         mode="followup"
+        onSaved={(id) => navigate(`/cadastros/usuarios?cliente=${id}`)}
       />
     </>
   );
