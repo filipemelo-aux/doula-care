@@ -2699,12 +2699,12 @@ export function ClientDialog({ open, onOpenChange, client, initialStep, mode = "
             </div>
 
             {/* Navigation - Fixed at bottom */}
-            <div className="flex items-center justify-center gap-2 pt-3 mt-auto border-t border-border/40 flex-shrink-0 pb-1 min-w-0 overflow-hidden">
+            <div className="grid grid-cols-2 sm:flex sm:items-center sm:justify-center gap-2 pt-3 mt-auto border-t border-border/40 flex-shrink-0 pb-1 min-w-0 w-full">
               {readOnly ? (
                 <Button
                   type="button"
                   variant="ghost"
-                  className="h-10 text-muted-foreground hover:text-foreground"
+                  className="h-10 min-w-0 text-muted-foreground hover:text-foreground"
                   onClick={() => onOpenChange(false)}
                 >
                   Fechar
@@ -2714,16 +2714,16 @@ export function ClientDialog({ open, onOpenChange, client, initialStep, mode = "
                 <Button
                   type="button"
                   variant="ghost"
-                  className="h-10 text-muted-foreground hover:text-foreground"
+                  className="h-10 min-w-0 text-muted-foreground hover:text-foreground"
                   onClick={() => onOpenChange(false)}
                 >
                   Cancelar
                 </Button>
-                <div className="flex gap-2">
+                <div className="contents sm:flex sm:gap-2">
                   <Button
                     type="button"
                     variant="ghost"
-                    className={cn("h-10 gap-1 text-muted-foreground hover:text-foreground", stepIndex === 0 && "invisible")}
+                    className={cn("h-10 min-w-0 gap-1 text-muted-foreground hover:text-foreground", stepIndex === 0 && "invisible")}
                     onClick={handlePrev}
                   >
                     <ChevronLeft className="w-4 h-4" />
@@ -2731,7 +2731,7 @@ export function ClientDialog({ open, onOpenChange, client, initialStep, mode = "
                   </Button>
                   <Button
                     type="button"
-                    className="h-10 gap-1 px-6"
+                    className="col-span-2 sm:col-auto h-10 min-w-0 w-full sm:w-auto gap-1 px-3 sm:px-6 whitespace-normal text-center leading-tight"
                     disabled={isLastStep && mutation.isPending}
                     onClick={!isLastStep ? handleNext : handleFinalSubmit}
                   >
