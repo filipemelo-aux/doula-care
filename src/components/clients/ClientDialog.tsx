@@ -1337,7 +1337,7 @@ export function ClientDialog({ open, onOpenChange, client, initialStep, mode = "
   return (
     <>
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl w-[95vw] max-w-[95vw] max-h-[92vh] overflow-hidden flex flex-col overflow-x-hidden min-w-0">
+      <DialogContent className="max-w-2xl w-[95vw] max-w-[95vw] h-[min(92dvh,800px)] max-h-[92dvh] overflow-hidden flex flex-col overflow-x-hidden min-w-0 [&>div]:!flex [&>div]:!flex-col [&>div]:!min-h-0 [&>div]:!max-h-full">
         <DialogHeader className="pb-0 flex-shrink-0 min-w-0 overflow-hidden">
           <div className="min-w-0">
             <DialogTitle className="font-display text-lg leading-tight">
@@ -1376,8 +1376,8 @@ export function ClientDialog({ open, onOpenChange, client, initialStep, mode = "
 
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="client-dialog-form flex flex-col min-h-0 min-w-0 overflow-x-hidden">
-            <div ref={scrollContainerRef} className="overflow-y-auto overflow-x-hidden px-4 space-y-0 scrollbar-thin pt-3 pb-4 min-h-0 min-w-0 max-w-full">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="client-dialog-form flex flex-1 flex-col min-h-0 min-w-0 overflow-x-hidden">
+            <div ref={scrollContainerRef} className="flex-1 overflow-y-auto overflow-x-hidden px-4 space-y-0 scrollbar-thin pt-3 pb-4 min-h-0 min-w-0 max-w-full">
               <fieldset disabled={readOnly} className="border-0 p-0 m-0 min-w-0">
 
 
