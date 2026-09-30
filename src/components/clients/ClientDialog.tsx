@@ -729,6 +729,139 @@ export function ClientDialog({ open, onOpenChange, client, initialStep, mode = "
         organization_id: organizationId || null,
       };
 
+      const createContractFinancials = async (targetClientId: string, createdAt?: string | null) => {
+        // Get plan settings to find the plan ID
+        const resolvedPlanSetting = data.plan_setting_id !== "avulso" ? planSettings?.find(p => p.id === data.plan_setting_id) : null;
+
+        // Create automatic income transaction for the new client using client's created_at date in local timezone
+        const planDisplayName = data.plan_setting_id === "avulso" ? "Avulso" : (resolvedPlanSetting?.name || "Plano");
+        const getLocalDate = (dateString: string) => {
+          const date = new Date(dateString);
+          const year = date.getFullYear();
+          const month = String(date.getMonth() + 1).padStart(2, '0');
+          const day = String(date.getDate()).padStart(2, '0');
+          return `${year}-${month}-${day}`;
+        };
+        const clientCreatedDate = createdAt 
+          ? getLocalDate(createdAt)
+          : getLocalDate(new Date().toISOString());
+        
+        // Determine auto-received based on date logic — account for ALL paid installments
+        const todayStr = format(new Date(), "yyyy-MM-dd");
+        const installmentCount = data.payment_type === "parcelado" ? (data.installments || 1) : 1;
+        const useCustomAmounts = (data.installment_frequency === "manual" || (entryType === "percentage" && entryPercentage > 0)) && customInstallmentAmounts.length === installmentCount;
+        const installmentVal = useCustomAmounts ? 0 : finalPlanValue / installmentCount;
+        let autoReceived = 0;
+        const aVistaDate = data.payment_date_avista || clientCreatedDate;
+
+        if (data.payment_type === "parcelado" && installmentCount > 1) {
+          const firstDueDate = data.first_due_date ? new Date(data.first_due_date + "T12:00:00") : new Date();
+          const frequency = data.installment_frequency || "mensal";
+          const customDays = data.custom_interval_days || 30;
+          for (let i = 0; i < installmentCount; i++) {
+            let dueDateStr: string;
+            if (customInstallmentDates.length === installmentCount && customInstallmentDates[i]) {
+              dueDateStr = customInstallmentDates[i];
+            } else {
+              const dueDate = new Date(firstDueDate);
+              if (frequency === "semanal") dueDate.setDate(dueDate.getDate() + (7 * i));
+              else if (frequency === "quinzenal") dueDate.setDate(dueDate.getDate() + (15 * i));
+              else if (frequency === "manual") dueDate.setDate(dueDate.getDate() + (customDays * i));
+              else dueDate.setMonth(dueDate.getMonth() + i);
+              dueDateStr = dueDate.toISOString().split("T")[0];
+            }
+            const isPastDue = dueDateStr < todayStr;
+            const thisInstVal = useCustomAmounts ? customInstallmentAmounts[i] : installmentVal;
+            if (isPastDue || (entryAlreadyPaid && i === 0)) {
+              autoReceived += thisInstVal;
+            }
+          }
+        } else {
+          // À vista or single installment
+          if (aVistaDate <= todayStr) {
+            autoReceived = finalPlanValue;
+          }
+        }
+
+        const transactionPayload = {
+          type: "receita" as const,
+          description: `Contrato - ${data.full_name} - ${planDisplayName}`,
+          amount: finalPlanValue,
+          amount_received: autoReceived,
+          date: data.payment_type === "a_vista" ? aVistaDate : clientCreatedDate,
+          client_id: targetClientId,
+          plan_id: resolvedPlanSetting?.id || null,
+          payment_method: data.payment_method as "pix" | "cartao" | "dinheiro" | "transferencia" | "boleto",
+          is_auto_generated: true,
+          installments: data.payment_type === "parcelado" ? (data.installments || 1) : 1,
+          installment_value: useCustomAmounts
+            ? finalPlanValue / installmentCount
+            : (data.payment_type === "parcelado" && data.installments 
+              ? finalPlanValue / data.installments 
+              : finalPlanValue),
+          notes: `Receita gerada automaticamente ao cadastrar cliente`,
+          owner_id: user?.id || null,
+          organization_id: organizationId || null,
+        };
+
+        const { data: createdTransaction, error: transactionError } = await supabase
+          .from("transactions")
+          .insert([transactionPayload])
+          .select("id")
+          .single();
+        if (transactionError) throw transactionError;
+
+        // Create payment records with due dates if parcelado
+        if (data.payment_type === "parcelado" && data.installments && data.installments > 1) {
+          const installmentCount = data.installments;
+          const useCustomAmts = (data.installment_frequency === "manual" || (entryType === "percentage" && entryPercentage > 0)) && customInstallmentAmounts.length === installmentCount;
+          const installmentAmount = finalPlanValue / installmentCount;
+          const firstDueDate = data.first_due_date ? new Date(data.first_due_date + "T12:00:00") : new Date();
+          
+          const frequency = data.installment_frequency || "mensal";
+          const customDays = data.custom_interval_days || 30;
+          
+          const paymentRecords = Array.from({ length: installmentCount }, (_, i) => {
+            let dueDateStr: string;
+            if (customInstallmentDates.length === installmentCount && customInstallmentDates[i]) {
+              dueDateStr = customInstallmentDates[i];
+            } else {
+              const dueDate = new Date(firstDueDate);
+              if (frequency === "semanal") {
+                dueDate.setDate(dueDate.getDate() + (7 * i));
+              } else if (frequency === "quinzenal") {
+                dueDate.setDate(dueDate.getDate() + (15 * i));
+              } else if (frequency === "manual") {
+                dueDate.setDate(dueDate.getDate() + (customDays * i));
+              } else {
+                dueDate.setMonth(dueDate.getMonth() + i);
+              }
+              dueDateStr = dueDate.toISOString().split("T")[0];
+            }
+            const isPastDue = dueDateStr < todayStr;
+            const thisAmt = useCustomAmts ? customInstallmentAmounts[i] : installmentAmount;
+            return {
+              client_id: targetClientId,
+              transaction_id: createdTransaction.id,
+              installment_number: i + 1,
+              total_installments: installmentCount,
+              amount: thisAmt,
+              amount_paid: isPastDue || (entryAlreadyPaid && i === 0) ? thisAmt : 0,
+              due_date: dueDateStr,
+              status: isPastDue || (entryAlreadyPaid && i === 0) ? "pago" : "pendente",
+              paid_at: isPastDue || (entryAlreadyPaid && i === 0) ? new Date().toISOString() : null,
+              owner_id: user?.id || null,
+              organization_id: organizationId || null,
+            };
+          });
+
+          const { error: paymentError } = await supabase
+            .from("payments")
+            .insert(paymentRecords);
+          if (paymentError) console.error("Error creating payments:", paymentError);
+        }
+      };
+
       if (client) {
         // ===== PLAN LOCK ENFORCEMENT =====
         // When editing a client that already has recorded payments, freeze plan-
@@ -772,29 +905,7 @@ export function ClientDialog({ open, onOpenChange, client, initialStep, mode = "
 
         if (followupForecast) {
           if (data.plan_setting_id && finalPlanValue > 0) {
-            const ps = data.plan_setting_id !== "avulso" ? planSettings?.find(p => p.id === data.plan_setting_id) : null;
-            const serviceName = `Acompanhamento - ${ps?.name || "Avulso"}`;
-            const { data: existing } = await (supabase.from("service_records" as any) as any)
-              .select("id")
-              .eq("client_id", client.id)
-              .eq("status", "forecast")
-              .eq("service_name", serviceName)
-              .maybeSingle();
-            const rec = {
-              organization_id: organizationId,
-              client_id: client.id,
-              service_name: serviceName,
-              amount: finalPlanValue,
-              service_date: format(new Date(), "yyyy-MM-dd"),
-              notes: data.notes || null,
-              status: "forecast",
-              created_by: user?.id,
-            };
-            const q = existing
-              ? (supabase.from("service_records" as any) as any).update(rec).eq("id", existing.id)
-              : (supabase.from("service_records" as any) as any).insert(rec);
-            const { error: recErr } = await q;
-            if (recErr) throw recErr;
+            await createContractFinancials(client.id, new Date().toISOString());
           }
           return client.id;
         }
@@ -1048,136 +1159,7 @@ export function ClientDialog({ open, onOpenChange, client, initialStep, mode = "
 
         // Only create financial records if a plan was selected
         if (data.plan_setting_id && mode !== "person") {
-        // Get plan settings to find the plan ID
-        const resolvedPlanSetting = data.plan_setting_id !== "avulso" ? planSettings?.find(p => p.id === data.plan_setting_id) : null;
-
-        // Create automatic income transaction for the new client using client's created_at date in local timezone
-        const planDisplayName = data.plan_setting_id === "avulso" ? "Avulso" : (resolvedPlanSetting?.name || "Plano");
-        const getLocalDate = (dateString: string) => {
-          const date = new Date(dateString);
-          const year = date.getFullYear();
-          const month = String(date.getMonth() + 1).padStart(2, '0');
-          const day = String(date.getDate()).padStart(2, '0');
-          return `${year}-${month}-${day}`;
-        };
-        const clientCreatedDate = newClient.created_at 
-          ? getLocalDate(newClient.created_at)
-          : getLocalDate(new Date().toISOString());
-        
-        // Determine auto-received based on date logic — account for ALL paid installments
-        const todayStr = format(new Date(), "yyyy-MM-dd");
-        const installmentCount = data.payment_type === "parcelado" ? (data.installments || 1) : 1;
-        const useCustomAmounts = (data.installment_frequency === "manual" || (entryType === "percentage" && entryPercentage > 0)) && customInstallmentAmounts.length === installmentCount;
-        const installmentVal = useCustomAmounts ? 0 : finalPlanValue / installmentCount;
-        let autoReceived = 0;
-        const aVistaDate = data.payment_date_avista || clientCreatedDate;
-
-        if (data.payment_type === "parcelado" && installmentCount > 1) {
-          const firstDueDate = data.first_due_date ? new Date(data.first_due_date + "T12:00:00") : new Date();
-          const frequency = data.installment_frequency || "mensal";
-          const customDays = data.custom_interval_days || 30;
-          for (let i = 0; i < installmentCount; i++) {
-            let dueDateStr: string;
-            if (customInstallmentDates.length === installmentCount && customInstallmentDates[i]) {
-              dueDateStr = customInstallmentDates[i];
-            } else {
-              const dueDate = new Date(firstDueDate);
-              if (frequency === "semanal") dueDate.setDate(dueDate.getDate() + (7 * i));
-              else if (frequency === "quinzenal") dueDate.setDate(dueDate.getDate() + (15 * i));
-              else if (frequency === "manual") dueDate.setDate(dueDate.getDate() + (customDays * i));
-              else dueDate.setMonth(dueDate.getMonth() + i);
-              dueDateStr = dueDate.toISOString().split("T")[0];
-            }
-            const isPastDue = dueDateStr < todayStr;
-            const thisInstVal = useCustomAmounts ? customInstallmentAmounts[i] : installmentVal;
-            if (isPastDue || (entryAlreadyPaid && i === 0)) {
-              autoReceived += thisInstVal;
-            }
-          }
-        } else {
-          // À vista or single installment
-          if (aVistaDate <= todayStr) {
-            autoReceived = finalPlanValue;
-          }
-        }
-
-        const transactionPayload = {
-          type: "receita" as const,
-          description: `Contrato - ${data.full_name} - ${planDisplayName}`,
-          amount: finalPlanValue,
-          amount_received: autoReceived,
-          date: data.payment_type === "a_vista" ? aVistaDate : clientCreatedDate,
-          client_id: newClient.id,
-          plan_id: resolvedPlanSetting?.id || null,
-          payment_method: data.payment_method as "pix" | "cartao" | "dinheiro" | "transferencia" | "boleto",
-          is_auto_generated: true,
-          installments: data.payment_type === "parcelado" ? (data.installments || 1) : 1,
-          installment_value: useCustomAmounts
-            ? finalPlanValue / installmentCount
-            : (data.payment_type === "parcelado" && data.installments 
-              ? finalPlanValue / data.installments 
-              : finalPlanValue),
-          notes: `Receita gerada automaticamente ao cadastrar cliente`,
-          owner_id: user?.id || null,
-          organization_id: organizationId || null,
-        };
-
-        const { data: createdTransaction, error: transactionError } = await supabase
-          .from("transactions")
-          .insert([transactionPayload])
-          .select("id")
-          .single();
-        if (transactionError) throw transactionError;
-
-        // Create payment records with due dates if parcelado
-        if (data.payment_type === "parcelado" && data.installments && data.installments > 1) {
-          const installmentCount = data.installments;
-          const useCustomAmts = (data.installment_frequency === "manual" || (entryType === "percentage" && entryPercentage > 0)) && customInstallmentAmounts.length === installmentCount;
-          const installmentAmount = finalPlanValue / installmentCount;
-          const firstDueDate = data.first_due_date ? new Date(data.first_due_date + "T12:00:00") : new Date();
-          
-          const frequency = data.installment_frequency || "mensal";
-          const customDays = data.custom_interval_days || 30;
-          
-          const paymentRecords = Array.from({ length: installmentCount }, (_, i) => {
-            let dueDateStr: string;
-            if (customInstallmentDates.length === installmentCount && customInstallmentDates[i]) {
-              dueDateStr = customInstallmentDates[i];
-            } else {
-              const dueDate = new Date(firstDueDate);
-              if (frequency === "semanal") {
-                dueDate.setDate(dueDate.getDate() + (7 * i));
-              } else if (frequency === "quinzenal") {
-                dueDate.setDate(dueDate.getDate() + (15 * i));
-              } else if (frequency === "manual") {
-                dueDate.setDate(dueDate.getDate() + (customDays * i));
-              } else {
-                dueDate.setMonth(dueDate.getMonth() + i);
-              }
-              dueDateStr = dueDate.toISOString().split("T")[0];
-            }
-            const isPastDue = dueDateStr < todayStr;
-            const thisAmt = useCustomAmts ? customInstallmentAmounts[i] : installmentAmount;
-            return {
-              client_id: newClient.id,
-              transaction_id: createdTransaction.id,
-              installment_number: i + 1,
-              total_installments: installmentCount,
-              amount: thisAmt,
-              amount_paid: isPastDue || (entryAlreadyPaid && i === 0) ? thisAmt : 0,
-              due_date: dueDateStr,
-              status: isPastDue || (entryAlreadyPaid && i === 0) ? "pago" : "pendente",
-              paid_at: isPastDue || (entryAlreadyPaid && i === 0) ? new Date().toISOString() : null,
-              owner_id: user?.id || null,
-              organization_id: organizationId || null,
-            };
-          });
-
-          const { error: paymentError } = await supabase
-            .from("payments")
-            .insert(paymentRecords);
-          if (paymentError) console.error("Error creating payments:", paymentError);
-        }
+        await createContractFinancials(newClient.id, newClient.created_at);
         } // end if plan_setting_id
 
 
