@@ -190,7 +190,7 @@ export function FollowUpFileDialog({ open, onOpenChange, client }: FollowUpFileD
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[calc(100vw-24px)] max-w-lg max-h-[90dvh] min-w-0 overflow-hidden gap-0 rounded-3xl [&>div]:!block [&>div]:!p-0 [&>div]:!overflow-hidden">
+      <DialogContent className="w-[94%] max-w-lg max-h-[90dvh] min-w-0 grid-cols-[minmax(0,1fr)] overflow-hidden gap-0 rounded-3xl [&>div]:!block [&>div]:!min-w-0 [&>div]:!p-0 [&>div]:!overflow-hidden">
         <DialogHeader className="sr-only">
           <DialogTitle>Acompanhamento</DialogTitle>
         </DialogHeader>
