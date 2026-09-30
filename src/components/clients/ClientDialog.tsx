@@ -1110,6 +1110,37 @@ export function ClientDialog({ open, onOpenChange, client, initialStep, mode = "
                 .is("transaction_id", null);
             }
 
+            // "Entrada já foi recebida" is an explicit payment action, not a
+            // schedule change. Apply it even when amounts and dates stayed the
+            // same. Never reverse a payment when the box is unchecked.
+            if (entryAlreadyPaid) {
+              let firstPaymentQuery = supabase
+                .from("payments")
+                .select("id, amount, amount_paid")
+                .eq("client_id", client.id)
+                .eq("installment_number", 1);
+              firstPaymentQuery = transactionId
+                ? firstPaymentQuery.eq("transaction_id", transactionId)
+                : firstPaymentQuery.is("transaction_id", null);
+
+              const { data: firstPayment, error: firstPaymentReadError } = await firstPaymentQuery
+                .limit(1)
+                .maybeSingle();
+              if (firstPaymentReadError) throw firstPaymentReadError;
+
+              if (firstPayment && Number(firstPayment.amount_paid || 0) < Number(firstPayment.amount || 0)) {
+                const { error: markEntryPaidError } = await supabase
+                  .from("payments")
+                  .update({
+                    amount_paid: Number(firstPayment.amount || 0),
+                    paid_at: new Date().toISOString(),
+                    payment_method: data.payment_method as any,
+                  })
+                  .eq("id", firstPayment.id);
+                if (markEntryPaidError) throw markEntryPaidError;
+              }
+            }
+
             // 5) Recompute amount_received from what is ACTUALLY stored in the database
             let sumQuery = supabase.from("payments").select("amount_paid");
             sumQuery = transactionId
