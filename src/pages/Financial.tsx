@@ -196,21 +196,32 @@ export default function Financial() {
   useEffect(() => {
     const st = (location.state || {}) as {
       openPaymentClientId?: string;
+      openPaymentTransactionId?: string;
       moderatorRequestId?: string;
     };
-    if (!st.openPaymentClientId || !transactions) return;
-    const candidates = transactions.filter(
-      (t) => t.client_id === st.openPaymentClientId && Number(t.amount_received || 0) < Number(t.amount || 0)
-    );
-    const pick = candidates.sort((a, b) =>
-      (a.created_at || "").localeCompare(b.created_at || "")
-    )[0];
-    if (pick) {
-      setPaymentTransaction(pick as Transaction);
-      setPaymentDialogOpen(true);
-      if (st.moderatorRequestId) setPendingModeratorRequestId(st.moderatorRequestId);
+    if (!st.openPaymentClientId && !st.openPaymentTransactionId) return;
+    if (st.openPaymentTransactionId) {
+      const pick = transactions.find((t) => t.id === st.openPaymentTransactionId);
+      if (pick) {
+        setPaymentTransaction(pick as Transaction);
+        setPaymentDialogOpen(true);
+      } else {
+        toast.info("Receita não encontrada para este atendimento.");
+      }
     } else {
-      toast.info("Nenhuma receita em aberto encontrada para esta cliente. Crie a receita primeiro.");
+      const candidates = transactions.filter(
+        (t) => t.client_id === st.openPaymentClientId && Number(t.amount_received || 0) < Number(t.amount || 0)
+      );
+      const pick = candidates.sort((a, b) =>
+        (a.created_at || "").localeCompare(b.created_at || "")
+      )[0];
+      if (pick) {
+        setPaymentTransaction(pick as Transaction);
+        setPaymentDialogOpen(true);
+        if (st.moderatorRequestId) setPendingModeratorRequestId(st.moderatorRequestId);
+      } else {
+        toast.info("Nenhuma receita em aberto encontrada para esta cliente. Crie a receita primeiro.");
+      }
     }
     // clear state so refreshes don't re-trigger
     navigate(location.pathname, { replace: true });
