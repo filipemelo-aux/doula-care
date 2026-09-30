@@ -160,21 +160,16 @@ export function ClientsOverview() {
     },
   });
 
+  // Gestantes por DPP asc; sem DPP no fim
   const sorted = useMemo(() => {
-    const list = [...(clients || [])].filter(
-      (c) => filter === "todas" || c.status === filter,
-    );
-    // Puérperas depois; gestantes por DPP asc; sem DPP no fim
+    const list = [...(clients || [])];
     return list.sort((a, b) => {
-      const aPuer = a.status === "lactante" ? 1 : 0;
-      const bPuer = b.status === "lactante" ? 1 : 0;
-      if (aPuer !== bPuer) return aPuer - bPuer;
       if (!a.dpp && !b.dpp) return 0;
       if (!a.dpp) return 1;
       if (!b.dpp) return -1;
       return a.dpp.localeCompare(b.dpp);
     });
-  }, [clients, filter]);
+  }, [clients]);
 
   return (
     <div className="rounded-2xl bg-card p-4 lg:p-6 shadow-card space-y-4">
