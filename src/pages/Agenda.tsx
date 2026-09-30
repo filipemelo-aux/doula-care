@@ -1,3 +1,4 @@
+import { expandFeatures } from "@/lib/planFeatures";
 import { useState, useMemo, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -253,7 +254,7 @@ export default function Agenda() {
       let feats: string[] = [];
       if (aptClient?.plan_setting_id) {
         const { data } = await supabase.from("plan_settings").select("features").eq("id", aptClient.plan_setting_id).maybeSingle();
-        feats = (data?.features || []).map((f: string) => f.trim()).filter(Boolean);
+        feats = expandFeatures(data?.features);
       }
       const { data: sess } = await (supabase.from("followup_sessions" as any) as any).select("id, sequence, service_name, status").eq("client_id", aptClientId);
       const list = (sess || []) as { id: string; sequence: number | null; service_name: string; status: string }[];

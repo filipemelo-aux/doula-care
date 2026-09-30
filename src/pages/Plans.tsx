@@ -1,3 +1,4 @@
+import { parseFeature, formatFeature } from "@/lib/planFeatures";
 import { ListOrdered } from "lucide-react";
 import { maskCurrency, parseCurrency } from "@/lib/masks";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -645,19 +646,44 @@ export default function Plans() {
 
 function FeatureListInput({ value, onChange }: { value: string; onChange: (v: string) => void }) {
   const items = value.split("\n");
-  const list = items.length ? items : [""];
-  const set = (next: string[]) => onChange(next.join("\n"));
+  const list = (items.length ? items : [""]).map(parseFeature);
+  const set = (next: { qty: number; name: string }[]) =>
+    onChange(next.map((x) => (x.name ? formatFeature(x.name, x.qty) : "")).join("\n"));
+  const update = (i: number, patch: Partial<{ qty: number; name: string }>) =>
+    set(list.map((x, j) => (j === i ? { ...x, ...patch } : x)));
   return (
     <div className="space-y-2">
+      {list.length > 0 && (
+        <div className="flex items-center gap-2 px-1 text-xs text-muted-foreground">
+          <span className="w-16 text-center">Qtd.</span>
+          <span className="flex-1">Serviço</span>
+          <span className="w-10" />
+        </div>
+      )}
       {list.map((item, i) => (
         <div key={i} className="flex items-center gap-2">
-          <Input value={item} placeholder="Ex: Encontro pré-parto" onChange={(e) => set(list.map((x, j) => (j === i ? e.target.value : x)))} />
+          <Input
+            type="number"
+            inputMode="numeric"
+            min={1}
+            max={99}
+            aria-label="Quantidade"
+            className="w-16 text-center px-1"
+            value={item.qty}
+            onChange={(e) => update(i, { qty: Math.min(99, Math.max(1, parseInt(e.target.value, 10) || 1)) })}
+          />
+          <Input
+            className="flex-1"
+            value={item.name}
+            placeholder="Ex: Encontro pré-parto"
+            onChange={(e) => update(i, { name: e.target.value })}
+          />
           <Button type="button" size="icon" variant="ghost" aria-label="Remover serviço" onClick={() => set(list.filter((_, j) => j !== i))}>
             <Trash2 className="w-4 h-4" />
           </Button>
         </div>
       ))}
-      <Button type="button" variant="secondary" size="sm" className="w-full" onClick={() => set([...list, ""])}>
+      <Button type="button" variant="secondary" size="sm" className="w-full" onClick={() => onChange([...items, ""].join("\n"))}>
         <Plus className="w-4 h-4 mr-2" /> Adicionar serviço
       </Button>
     </div>

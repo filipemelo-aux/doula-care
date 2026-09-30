@@ -1,3 +1,4 @@
+import { expandFeatures } from "@/lib/planFeatures";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { CalendarPlus, ListChecks, CheckCircle2, Trash2, Plus, Pencil, Search, Loader2, UserRound, Eye, Stethoscope, WalletCards, UsersRound, type LucideIcon } from "lucide-react";
@@ -76,7 +77,7 @@ export default function FollowUps() {
     enabled: !!organizationId,
     queryFn: async () => {
       const { data } = await supabase.from("plan_settings").select("id, features").eq("organization_id", organizationId!);
-      return Object.fromEntries((data || []).map((p) => [p.id, (p.features || []).map((f) => f.trim()).filter(Boolean)])) as Record<string, string[]>;
+      return Object.fromEntries((data || []).map((p) => [p.id, expandFeatures(p.features)])) as Record<string, string[]>;
     },
   });
   const [busy, setBusy] = useState(false);
