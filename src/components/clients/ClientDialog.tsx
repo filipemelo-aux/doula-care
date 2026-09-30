@@ -1337,7 +1337,7 @@ export function ClientDialog({ open, onOpenChange, client, initialStep, mode = "
   return (
     <>
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl w-[95vw] max-w-[95vw] max-h-[92vh] overflow-hidden flex flex-col overflow-x-hidden min-w-0">
+      <DialogContent className="max-w-2xl w-[95vw] max-w-[95vw] h-[min(92dvh,800px)] max-h-[92dvh] overflow-hidden flex flex-col overflow-x-hidden min-w-0 [&>div]:!flex [&>div]:!flex-1 [&>div]:!flex-col [&>div]:!min-h-0 [&>div]:!max-h-full">
         <DialogHeader className="pb-0 flex-shrink-0 min-w-0 overflow-hidden">
           <div className="min-w-0">
             <DialogTitle className="font-display text-lg leading-tight">
@@ -1376,8 +1376,8 @@ export function ClientDialog({ open, onOpenChange, client, initialStep, mode = "
 
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="client-dialog-form flex flex-col min-h-0 min-w-0 overflow-x-hidden">
-            <div ref={scrollContainerRef} className="overflow-y-auto overflow-x-hidden px-4 space-y-0 scrollbar-thin pt-3 pb-4 min-h-0 min-w-0 max-w-full">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="client-dialog-form flex flex-1 flex-col min-h-0 min-w-0 overflow-x-hidden">
+            <div ref={scrollContainerRef} className="flex-1 overflow-y-auto overflow-x-hidden px-4 space-y-0 scrollbar-thin pt-3 pb-4 min-h-0 min-w-0 max-w-full">
               <fieldset disabled={readOnly} className="border-0 p-0 m-0 min-w-0">
 
 
@@ -2699,12 +2699,12 @@ export function ClientDialog({ open, onOpenChange, client, initialStep, mode = "
             </div>
 
             {/* Navigation - Fixed at bottom */}
-            <div className="flex items-center justify-center gap-2 pt-3 mt-auto border-t border-border/40 flex-shrink-0 pb-1 min-w-0 overflow-hidden">
+            <div className="grid grid-cols-2 sm:flex sm:items-center sm:justify-center gap-2 pt-3 mt-auto border-t border-border/40 flex-shrink-0 pb-1 min-w-0 w-full">
               {readOnly ? (
                 <Button
                   type="button"
                   variant="ghost"
-                  className="h-10 text-muted-foreground hover:text-foreground"
+                  className="h-10 min-w-0 text-muted-foreground hover:text-foreground"
                   onClick={() => onOpenChange(false)}
                 >
                   Fechar
@@ -2714,16 +2714,16 @@ export function ClientDialog({ open, onOpenChange, client, initialStep, mode = "
                 <Button
                   type="button"
                   variant="ghost"
-                  className="h-10 text-muted-foreground hover:text-foreground"
+                  className="h-10 min-w-0 text-muted-foreground hover:text-foreground"
                   onClick={() => onOpenChange(false)}
                 >
                   Cancelar
                 </Button>
-                <div className="flex gap-2">
+                <div className="contents sm:flex sm:gap-2">
                   <Button
                     type="button"
                     variant="ghost"
-                    className={cn("h-10 gap-1 text-muted-foreground hover:text-foreground", stepIndex === 0 && "invisible")}
+                    className={cn("h-10 min-w-0 gap-1 text-muted-foreground hover:text-foreground", stepIndex === 0 && "invisible")}
                     onClick={handlePrev}
                   >
                     <ChevronLeft className="w-4 h-4" />
@@ -2731,7 +2731,7 @@ export function ClientDialog({ open, onOpenChange, client, initialStep, mode = "
                   </Button>
                   <Button
                     type="button"
-                    className="h-10 gap-1 px-6"
+                    className="col-span-2 sm:col-auto h-10 min-w-0 w-full sm:w-auto gap-1 px-3 sm:px-6 whitespace-normal text-center leading-tight"
                     disabled={isLastStep && mutation.isPending}
                     onClick={!isLastStep ? handleNext : handleFinalSubmit}
                   >
