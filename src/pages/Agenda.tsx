@@ -1073,7 +1073,7 @@ export default function Agenda() {
                   </label>
                 </div>
                 {aptKind === "consulta" && <p className="text-xs text-muted-foreground">Fica vinculada aos serviços inclusos do acompanhamento da cliente.</p>}
-                {aptKind === "servico" && <p className="text-xs text-muted-foreground">Vira um atendimento e entra nas Previsões de Recebimento para faturar.</p>}
+                {aptKind === "servico" && <p className="text-xs text-muted-foreground">Vira um atendimento registrado em Serviços.</p>}
               </div>
             )}
             {!editingAppointment && (
