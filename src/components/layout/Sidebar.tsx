@@ -68,10 +68,9 @@ const navItems = [
     icon: Wallet,
     label: "Financeiro",
     subItems: [
+      { to: "/financeiro", icon: TrendingUp, label: "Contas a Receber" },
       { to: "/despesas", icon: TrendingDown, label: "Contas a Pagar" },
       { to: "/contas-pagas", icon: CheckCircle, label: "Contas Pagas" },
-      { to: "/financeiro", icon: TrendingUp, label: "Faturas e Contas a Receber" },
-      { to: "/servicos/previsoes", icon: CalendarClock, label: "Previsões de Recebimento" },
       { to: "/cobrancas", icon: AlertCircle, label: "Cobranças" },
       { to: "/relatorios", icon: FileText, label: "Relatórios" },
     ],

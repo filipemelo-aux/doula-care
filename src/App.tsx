@@ -40,7 +40,6 @@ import ServiceRecords from "./pages/ServiceRecords";
 import FollowUps from "./pages/FollowUps";
 import People from "./pages/People";
 import ServicesCatalog from "./pages/ServicesCatalog";
-import ReceivableForecasts from "./pages/ReceivableForecasts";
 import RegisterVisitor from "./pages/RegisterVisitor";
 import VisitorDashboard from "./pages/visitante/VisitorDashboard";
 import VisitorSearch from "./pages/visitante/VisitorSearch";
@@ -246,7 +245,7 @@ const App = () => (
               <Route path="/cadastros/pessoas" element={<ProtectedRoute allowedRoles={["admin"]}><People /></ProtectedRoute>} />
               <Route path="/cadastros/servicos" element={<ProtectedRoute allowedRoles={["admin"]}><ServicesCatalog /></ProtectedRoute>} />
               <Route path="/servicos/atendimentos" element={<ProtectedRoute allowedRoles={["admin"]}><ServiceRecords /></ProtectedRoute>} />
-              <Route path="/servicos/previsoes" element={<ProtectedRoute allowedRoles={["admin"]}><ReceivableForecasts /></ProtectedRoute>} />
+              <Route path="/servicos/previsoes" element={<Navigate to="/financeiro" replace />} />
               <Route path="/despesas" element={<ProtectedRoute allowedRoles={["admin"]}><Expenses /></ProtectedRoute>} />
               <Route path="/contas-pagas" element={<ProtectedRoute allowedRoles={["admin"]}><Expenses view="paid" /></ProtectedRoute>} />
               <Route path="/cobrancas" element={<ProtectedRoute allowedRoles={["admin"]}><Cobrancas /></ProtectedRoute>} />

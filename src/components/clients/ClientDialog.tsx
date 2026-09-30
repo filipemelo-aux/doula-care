@@ -1231,7 +1231,7 @@ export function ClientDialog({ open, onOpenChange, client, initialStep, mode = "
       queryClient.invalidateQueries({ queryKey: ["birth-alert-clients"] });
       toast.success(
         mode === "person" ? (client ? "Cadastro atualizado!" : "Pessoa cadastrada!")
-        : mode === "followup" ? "Acompanhamento salvo! Confira em Previsões de Recebimento."
+        : mode === "followup" ? "Acompanhamento salvo!"
         : client ? "Cliente atualizada!" : (isModerator ? "Cliente cadastrada! A administradora foi avisada para completar o plano." : "Cliente cadastrada com receita!")
       );
       onOpenChange(false);
