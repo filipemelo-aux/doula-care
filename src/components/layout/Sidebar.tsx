@@ -201,17 +201,12 @@ export function Sidebar({ isOpen, onToggle, onNavigate, desktopExpanded }: Sideb
         !isOpen && "invisible lg:visible"
       )}
     >
-      {/* Logo - mobile only */}
+      {/* Nome da organização - apenas quando expandido */}
       {(isOpen || desktopExpanded) && (
-        <div className="h-20 flex items-center justify-between px-6">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-[40%] bg-[#FFF5EE] overflow-hidden">
-              <img src={sidebarLogo} alt={sidebarName} className="w-full h-full object-cover mix-blend-multiply scale-[1.15]" />
-            </div>
-            <div>
-              <h1 className="font-display text-lg text-foreground">{sidebarName}</h1>
-              <p className="text-[10px] text-muted-foreground/50 uppercase tracking-wider font-medium">Dashboard</p>
-            </div>
+        <div className="h-20 flex items-center px-6">
+          <div>
+            <h1 className="font-display text-lg text-foreground truncate">{sidebarName}</h1>
+            <p className="text-[10px] text-muted-foreground/50 uppercase tracking-wider font-medium">Dashboard</p>
           </div>
         </div>
       )}
