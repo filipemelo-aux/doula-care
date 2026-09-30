@@ -117,6 +117,7 @@ export default function ServiceRecords() {
     mutationFn: async () => {
       const amount = Number(String(form.amount).replace(/\./g, "").replace(",", ".")) || 0;
       if (!form.service_name.trim()) throw new Error("Informe o serviço");
+      if (amount <= 0) throw new Error("Informe um valor maior que zero para incluir o atendimento em Contas a Receber");
       await createServiceRecordWithReceivable({ organization_id: organizationId, client_id: form.client_id || null, service_name: form.service_name.trim(), amount, service_date: form.service_date, notes: form.notes || null, created_by: user?.id });
       const scheduledAt = fromZonedTime(`${form.service_date}T${form.service_time || "09:00"}`, "America/Sao_Paulo");
       const { error: aptErr } = await supabase.from("appointments").insert({ client_id: form.client_id || null, title: form.service_name.trim(), scheduled_at: scheduledAt.toISOString(), notes: form.notes || null, owner_id: user?.id || null, organization_id: organizationId } as any);
