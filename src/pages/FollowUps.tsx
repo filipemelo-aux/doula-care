@@ -421,13 +421,10 @@ export default function FollowUps() {
         mode="followup"
       />
 
-      <ClientDialog
-        key={`view-${viewClient?.id || "none"}`}
+      <FollowUpFileDialog
         open={!!viewClient}
         onOpenChange={(o) => { if (!o) setViewClient(null); }}
         client={viewClient}
-        mode="followup"
-        readOnly
       />
     </div>
   );
