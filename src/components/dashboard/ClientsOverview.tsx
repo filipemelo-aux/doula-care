@@ -184,23 +184,6 @@ export function ClientsOverview() {
         </div>
       </div>
 
-      <div className="flex items-center gap-2">
-        <FilterChip
-          label="Todas"
-          active={filter === "todas"}
-          onClick={() => setFilter("todas")}
-        />
-        <FilterChip
-          label="Gestantes"
-          active={filter === "gestante"}
-          onClick={() => setFilter("gestante")}
-        />
-        <FilterChip
-          label="Puérperas"
-          active={filter === "lactante"}
-          onClick={() => setFilter("lactante")}
-        />
-      </div>
 
       {isLoading ? (
         <div className="space-y-2">
@@ -210,7 +193,7 @@ export function ClientsOverview() {
         </div>
       ) : sorted.length === 0 ? (
         <p className="text-center text-sm text-muted-foreground py-6">
-          Nenhuma gestante ou puérpera cadastrada ainda
+          Nenhuma gestante cadastrada ainda
         </p>
       ) : (
         <ul className="space-y-2">
