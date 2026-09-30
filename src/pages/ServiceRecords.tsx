@@ -65,8 +65,6 @@ export function statusOf(r: ServiceRecord) {
   return { label: "Faturado", variant: "outline" as const };
 }
 
-type Filter = "all" | "forecast" | "invoiced" | "paid";
-
 export default function ServiceRecords() {
   const { organizationId, user } = useAuth();
   const qc = useQueryClient();
@@ -77,7 +75,6 @@ export default function ServiceRecords() {
   const [open, setOpen] = useState(false);
   const [detail, setDetail] = useState<ServiceRecord | null>(null);
   const [search, setSearch] = useState("");
-  const [filter, setFilter] = useState<Filter>("all");
   const [form, setForm] = useState({ client_id: "", service_name: "", amount: "", service_date: format(new Date(), "yyyy-MM-dd"), service_time: "09:00", notes: "" });
 
   useEffect(() => {
@@ -105,17 +102,14 @@ export default function ServiceRecords() {
 
   const filtered = useMemo(() => records.filter((r) => {
     const term = search.trim().toLowerCase();
-    const matchesText = !term || r.service_name.toLowerCase().includes(term) || r.clients?.full_name?.toLowerCase().includes(term);
-    const stage = stageOf(r);
-    return matchesText && (filter === "all" || stage === filter);
-  }), [records, search, filter]);
+    return !term || r.service_name.toLowerCase().includes(term) || r.clients?.full_name?.toLowerCase().includes(term);
+  }), [records, search]);
   const total = records.reduce((sum, r) => sum + Number(r.amount || 0), 0);
-  const toInvoice = records.filter((r) => stageOf(r) === "forecast");
   const paid = records.filter((r) => stageOf(r) === "paid");
   const metrics: Array<{ label: string; value: string | number; icon: LucideIcon }> = [
     { label: "Realizados", value: records.length, icon: CalendarDays },
     { label: "Valor dos serviços", value: brl(total), icon: FileText },
-    { label: "A faturar", value: toInvoice.length, icon: Receipt },
+    { label: "A receber", value: records.length - paid.length, icon: Receipt },
     { label: "Pagos", value: paid.length, icon: Eye },
   ];
 
@@ -143,20 +137,13 @@ export default function ServiceRecords() {
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["service-records"] }); toast.success("Atendimento removido"); },
   });
 
-  const filters: { value: Filter; label: string; count: number }[] = [
-    { value: "all", label: "Todos", count: records.length },
-    { value: "forecast", label: "A faturar", count: toInvoice.length },
-    { value: "invoiced", label: "Faturados", count: records.filter((r) => stageOf(r) === "invoiced").length },
-    { value: "paid", label: "Pagos", count: paid.length },
-  ];
-
   return (
     <div className="space-y-4 lg:space-y-6 pb-20">
       <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div className="page-header mb-0 min-w-0">
           <p className="mb-1 text-[10px] font-bold uppercase text-primary">Central de Serviços</p>
           <h1 className="page-title">Atendimentos</h1>
-          <p className="page-description">Serviços realizados e o caminho de cada um até o pagamento.</p>
+          <p className="page-description">Serviços realizados. Os pagamentos são registrados em Contas a Receber.</p>
         </div>
         <Button onClick={() => setOpen(true)} className="w-full gap-2 md:w-auto"><Plus className="h-4 w-4" /> Novo atendimento</Button>
       </div>
@@ -172,15 +159,12 @@ export default function ServiceRecords() {
 
       <div className="space-y-3">
         <div className="relative"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar cliente ou serviço" className="pl-9" /></div>
-        <div className="flex gap-1.5 overflow-x-auto pb-1">
-          {filters.map((item) => <Button key={item.value} size="sm" variant={filter === item.value ? "default" : "secondary"} onClick={() => setFilter(item.value)} className="shrink-0">{item.label} <span className="ml-1 opacity-70">{item.count}</span></Button>)}
-        </div>
       </div>
 
       {isLoading ? <p className="py-8 text-center text-sm text-muted-foreground">Carregando atendimentos...</p> : filtered.length === 0 ? (
         <div className="rounded-2xl bg-card p-10 text-center shadow-card">
-          <p className="font-semibold">{records.length ? "Nenhum atendimento neste filtro" : "Nenhum serviço realizado"}</p>
-          <p className="mt-1 text-sm text-muted-foreground">{records.length ? "Escolha outra situação ou ajuste a busca." : "Registre o primeiro atendimento para iniciar o fluxo."}</p>
+          <p className="font-semibold">{records.length ? "Nenhum atendimento encontrado" : "Nenhum serviço realizado"}</p>
+          <p className="mt-1 text-sm text-muted-foreground">{records.length ? "Ajuste a busca por cliente ou serviço." : "Registre o primeiro atendimento para iniciar o fluxo."}</p>
           {!records.length && <Button onClick={() => setOpen(true)} className="mt-4">Registrar atendimento</Button>}
         </div>
       ) : (
@@ -215,7 +199,7 @@ export default function ServiceRecords() {
         <div className="grid grid-cols-2 gap-3"><div className="space-y-1.5"><Label>Valor (R$)</Label><Input inputMode="decimal" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} placeholder="0,00" /></div><div className="space-y-1.5"><Label>Data</Label><Input type="date" value={form.service_date} onChange={(e) => setForm({ ...form, service_date: e.target.value })} /></div></div>
         <div className="space-y-1.5"><Label>Horário</Label><Input type="time" value={form.service_time} onChange={(e) => setForm({ ...form, service_time: e.target.value })} /><p className="text-xs text-muted-foreground">O atendimento entra automaticamente na agenda nesta data e horário.</p></div>
         <div className="space-y-1.5"><Label>Observações</Label><Textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} /></div>
-        <div className="rounded-xl bg-primary/5 p-3 text-xs text-muted-foreground">Ao registrar, este atendimento aparecerá em <strong className="text-foreground">A faturar</strong>.</div>
+        <div className="rounded-xl bg-primary/5 p-3 text-xs text-muted-foreground">Ao registrar, este atendimento aparecerá em <strong className="text-foreground">Contas a Receber</strong>. O pagamento é registrado por lá.</div>
       </div><DialogFooter><Button variant="ghost" onClick={() => setOpen(false)}>Cancelar</Button><Button onClick={() => create.mutate()} disabled={create.isPending}>Registrar atendimento</Button></DialogFooter></DialogContent></Dialog>
       <ClientDialog open={personOpen} onOpenChange={setPersonOpen} mode="person" onSaved={(id: string) => { qc.invalidateQueries({ queryKey: ["clients"] }); qc.invalidateQueries({ queryKey: ["service-records-clients"] }); setForm((f) => ({ ...f, client_id: id })); }} />
     </div>
