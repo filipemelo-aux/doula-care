@@ -1061,6 +1061,7 @@ export function ClientDialog({ open, onOpenChange, client, initialStep, mode = "
                 if (ex) {
                   // Update in place — amount_paid / paid_at are untouched
                   const { error: upErr } = await supabase
+                    .from("payments")
                     .update({
                       amount: d.amount,
                       due_date: d.due_date,
