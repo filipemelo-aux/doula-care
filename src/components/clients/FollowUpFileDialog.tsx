@@ -16,10 +16,10 @@ import {
   CreditCard,
   ListChecks,
   StickyNote,
-  UserRound,
   CheckCircle2,
   Calendar,
-  Loader2,
+  UserRound,
+
 } from "lucide-react";
 import { cn, formatBrazilDate } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
