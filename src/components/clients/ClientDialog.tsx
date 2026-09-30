@@ -359,11 +359,16 @@ export function ClientDialog({ open, onOpenChange, client, initialStep, mode = "
   }, [selectedPlanId, selectedPlanSetting, planSettings, form, client]);
 
   // Reset form when client changes or dialog opens fresh
+  const hydratedForRef = useRef<string | null>(null);
   useEffect(() => {
-    if (!open) return;
-    // Never re-hydrate over changes the user already typed: background refetches
-    // (client list, transactions, installments) must not wipe the open form.
-    if (form.formState.isDirty) return;
+    if (!open) { hydratedForRef.current = null; return; }
+    // Never re-hydrate over changes the user already typed for the SAME client:
+    // background refetches must not wipe the open form. But if the client changed
+    // (or the dialog was reopened), always reload — otherwise data from a previous
+    // client could be saved over another one.
+    const currentKey = client?.id || "new";
+    if (hydratedForRef.current === currentKey && form.formState.isDirty) return;
+    hydratedForRef.current = currentKey;
     setCurrentStep(initialStep && visibleSteps.some((s) => s.id === initialStep) ? initialStep : firstStepId);
     if (client) {
       const sortedPayments = (clientInstallmentPayments || [])

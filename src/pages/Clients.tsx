@@ -497,6 +497,7 @@ export default function Clients() {
 
       {/* Client Dialog */}
       <ClientDialog
+        key={selectedClient?.id || "new"}
         open={dialogOpen}
         onOpenChange={handleDialogClose}
         client={selectedClient}
