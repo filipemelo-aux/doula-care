@@ -243,7 +243,7 @@ export function Sidebar({ isOpen, onToggle, onNavigate, desktopExpanded }: Sideb
               return lk ? !limits[lk] : false;
             });
             const isSubActive = item.subItems.some((s) => location.pathname === s.to);
-            const groupOpen = openGroups[item.label] ?? isSubActive;
+            const groupOpen = !!openGroups[item.label];
 
             return (
               <div key={item.label} className="mt-3 pt-3 border-t border-border/40">
