@@ -50,6 +50,7 @@ interface SidebarProps {
   isOpen: boolean;
   onToggle: () => void;
   onNavigate?: () => void;
+  desktopExpanded: boolean;
 }
 
 const navItems = [
@@ -102,7 +103,7 @@ const navItems = [
 const subscriptionNavItem = { to: "/admin/assinatura", icon: Crown, label: "Assinatura" };
 const settingsNavItem = { to: "/configuracoes", icon: Settings, label: "Configurações" };
 
-export function Sidebar({ isOpen, onToggle, onNavigate }: SidebarProps) {
+export function Sidebar({ isOpen, onToggle, onNavigate, desktopExpanded }: SidebarProps) {
   const location = useLocation();
   const navigate = useNavigate();
   const { planLabel, plan, limits } = usePlanLimits();
@@ -136,10 +137,10 @@ export function Sidebar({ isOpen, onToggle, onNavigate }: SidebarProps) {
   };
 
   useEffect(() => {
-    if (isOpen) return;
+    if (isOpen || desktopExpanded) return;
     setOpenGroups({});
     localStorage.setItem("sidebar-open-groups", "{}");
-  }, [isOpen]);
+  }, [isOpen, desktopExpanded]);
 
 
   const { data: promo } = useQuery({
@@ -195,13 +196,14 @@ export function Sidebar({ isOpen, onToggle, onNavigate }: SidebarProps) {
       className={cn(
         "fixed top-0 bottom-0 left-0 z-50 flex flex-col transition-all duration-300 ease-in-out pt-[var(--app-safe-top)] pb-[var(--app-safe-bottom)]",
         "bg-[hsl(var(--background))] shadow-[1px_0_12px_-4px_hsl(var(--foreground)/0.08)]",
-        isOpen ? "w-64" : "w-0 lg:w-20",
+        isOpen ? "w-64" : "w-0",
+        desktopExpanded ? "lg:w-64" : "lg:w-20",
         !isOpen && "invisible lg:visible"
       )}
     >
       {/* Logo - mobile only */}
-      {isOpen && (
-        <div className="lg:hidden h-20 flex items-center justify-between px-6">
+      {(isOpen || desktopExpanded) && (
+        <div className="h-20 flex items-center justify-between px-6">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-[40%] bg-[#FFF5EE] overflow-hidden">
               <img src={sidebarLogo} alt={sidebarName} className="w-full h-full object-cover mix-blend-multiply scale-[1.15]" />
@@ -245,7 +247,7 @@ export function Sidebar({ isOpen, onToggle, onNavigate }: SidebarProps) {
                   aria-expanded={groupOpen}
                   className={cn(
                     "w-full flex items-center gap-2 px-3 pb-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground/60 hover:text-foreground transition-colors",
-                    !isOpen && "lg:hidden"
+                    !desktopExpanded && "lg:hidden"
                   )}
                 >
                   <item.icon className="w-3.5 h-3.5 shrink-0" strokeWidth={1.8} />
@@ -253,7 +255,7 @@ export function Sidebar({ isOpen, onToggle, onNavigate }: SidebarProps) {
                   <ChevronDown className={cn("w-3.5 h-3.5 transition-transform", !groupOpen && "-rotate-90")} />
                 </button>
 
-                <div className={cn("space-y-0.5", (!groupOpen || !isOpen) && "hidden")}>
+                <div className={cn("space-y-0.5", (!groupOpen || (!isOpen && !desktopExpanded)) && "hidden")}>
                   {item.subItems.map((sub) => {
                     const lk = subLimitKeys[sub.to];
                     const subDisabled = lk ? !limits[lk] : false;
@@ -266,13 +268,13 @@ export function Sidebar({ isOpen, onToggle, onNavigate }: SidebarProps) {
                         className={cn(
                           "nav-link w-full text-left",
                           subActive && "active",
-                          !isOpen && "lg:justify-center lg:px-0",
+                          !desktopExpanded && "lg:justify-center lg:px-0",
                           subDisabled && "opacity-40 cursor-not-allowed hover:bg-transparent"
                         )}
-                        title={!isOpen ? sub.label : undefined}
+                        title={!desktopExpanded ? sub.label : undefined}
                       >
                         <sub.icon className="w-[18px] h-[18px] shrink-0" strokeWidth={1.8} />
-                        <span className={cn("transition-opacity flex-1 text-[13px]", !isOpen && "lg:hidden")}>
+                        <span className={cn("transition-opacity flex-1 text-[13px]", !desktopExpanded && "lg:hidden")}>
                           {sub.label}
                         </span>
                       </button>
@@ -308,21 +310,21 @@ export function Sidebar({ isOpen, onToggle, onNavigate }: SidebarProps) {
                   "nav-link w-full text-left relative",
                   isMobileTextOnly && "hidden lg:flex",
                   isActive && "active",
-                  !isOpen && "lg:justify-center lg:px-0",
+                  !desktopExpanded && "lg:justify-center lg:px-0",
                   isDisabled && "opacity-40 cursor-not-allowed hover:bg-transparent"
                 )}
-                title={!isOpen ? item.label : isDisabled ? "Recurso indisponível no seu plano" : undefined}
+                title={!desktopExpanded ? item.label : isDisabled ? "Recurso indisponível no seu plano" : undefined}
               >
                 <div className="relative">
                   <item.icon className="w-[18px] h-[18px] shrink-0" strokeWidth={1.8} />
-                  {badgeCount > 0 && !isOpen && (
+                  {badgeCount > 0 && !desktopExpanded && (
                     <span className="absolute -top-1.5 -right-1.5 h-2 w-2 rounded-full bg-destructive hidden lg:block" />
                   )}
                 </div>
-                <span className={cn("transition-opacity flex-1 text-[13px]", !isOpen && "lg:hidden")}>
+                <span className={cn("transition-opacity flex-1 text-[13px]", !desktopExpanded && "lg:hidden")}>
                   {item.label}
                 </span>
-                {badgeCount > 0 && isOpen && (
+                {badgeCount > 0 && (isOpen || desktopExpanded) && (
                   <Badge variant="destructive" className="text-[10px] h-5 min-w-5 flex items-center justify-center ml-auto">
                     {badgeCount}
                   </Badge>
@@ -334,11 +336,11 @@ export function Sidebar({ isOpen, onToggle, onNavigate }: SidebarProps) {
                 <div
                   className={cn(
                     "nav-link w-full text-left relative opacity-60 cursor-default lg:hidden",
-                    !isOpen && "lg:hidden"
+                    !desktopExpanded && "lg:hidden"
                   )}
                 >
                   <item.icon className="w-[18px] h-[18px] shrink-0" strokeWidth={1.8} />
-                  <span className={cn("transition-opacity flex-1 text-[13px]", !isOpen && "lg:hidden")}>
+                  <span className={cn("transition-opacity flex-1 text-[13px]", !desktopExpanded && "lg:hidden")}>
                     {item.label}
                   </span>
                 </div>
@@ -354,10 +356,10 @@ export function Sidebar({ isOpen, onToggle, onNavigate }: SidebarProps) {
           onClick={() => handleNavClick(subscriptionNavItem.to)}
           className={cn(
             "nav-link w-full text-left",
-            !Capacitor.isNativePlatform() && location.pathname === subscriptionNavItem.to && "active",
-            !isOpen && "lg:justify-center lg:px-0"
+            !desktopExpanded && location.pathname === subscriptionNavItem.to && "active",
+            !desktopExpanded && "lg:justify-center lg:px-0"
           )}
-          title={!isOpen ? subscriptionNavItem.label : undefined}
+          title={!desktopExpanded ? subscriptionNavItem.label : undefined}
         >
           <subscriptionNavItem.icon className="w-[18px] h-[18px] shrink-0" strokeWidth={1.8} />
           <span className={cn("transition-opacity flex-1 text-[13px]", !isOpen && "lg:hidden")}>
