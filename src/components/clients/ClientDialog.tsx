@@ -128,7 +128,7 @@ interface ClientDialogProps {
   client?: Client | null;
   initialStep?: number;
   /** full = formulário completo; person = só dados da pessoa; followup = só dados do acompanhamento */
-  mode?: "full" | "person" | "followup";
+  mode?: "full" | "person" | "person-basic" | "followup";
   /** Quando true, exibe os dados apenas para consulta (campos desabilitados, sem salvar) */
   readOnly?: boolean;
   onSaved?: (clientId: string) => void;
@@ -143,9 +143,12 @@ const STEPS = [
   { id: 6, title: "Observações", shortTitle: "Obs." },
 ];
 
-export function ClientDialog({ open, onOpenChange, client, initialStep, mode = "full", readOnly = false, onSaved }: ClientDialogProps) {
+export function ClientDialog({ open, onOpenChange, client, initialStep, mode: rawMode = "full", readOnly = false, onSaved }: ClientDialogProps) {
+  const basicPerson = rawMode === "person-basic";
+  const mode: "full" | "person" | "followup" = basicPerson ? "person" : rawMode;
   const visibleSteps =
-    mode === "person" ? STEPS.filter((s) => [1, 2, 4].includes(s.id))
+    basicPerson ? STEPS.filter((s) => [1, 2].includes(s.id))
+    : mode === "person" ? STEPS.filter((s) => [1, 2, 4].includes(s.id))
     : mode === "followup" ? STEPS.filter((s) => [3, 5, 6].includes(s.id))
     : STEPS;
   const firstStepId = visibleSteps[0].id;
@@ -1309,6 +1312,15 @@ export function ClientDialog({ open, onOpenChange, client, initialStep, mode = "
       return;
     }
     form.handleSubmit(onSubmit, (errors) => {
+      // No cadastro de pessoa o plano não existe: ignora erros do plano
+      if (mode === "person") {
+        const planFields = ["plan_setting_id", "plan_value", "installments", "first_due_date", "discount_percent", "custom_interval_days", "dpp", "pregnancy_weeks"];
+        if (Object.keys(errors).every((k) => planFields.includes(k))) {
+          form.clearErrors();
+          onSubmit(form.getValues());
+          return;
+        }
+      }
       const stepByField: Record<string, number> = {
         full_name: 1, phone: 1, cpf: 1, status: 1, custom_status: 1, date_of_birth: 1,
         street: 2, number: 2, neighborhood: 2, city: 2, state: 2, zip_code: 2,
