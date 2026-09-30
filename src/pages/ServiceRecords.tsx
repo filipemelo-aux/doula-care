@@ -123,17 +123,16 @@ export default function ServiceRecords() {
     mutationFn: async () => {
       const amount = Number(String(form.amount).replace(/\./g, "").replace(",", ".")) || 0;
       if (!form.service_name.trim()) throw new Error("Informe o serviço");
-      await createServiceRecordWithReceivable({ organization_id: organizationId, client_id: form.client_id || null, service_name: form.service_name.trim(), amount, service_date: form.service_date, notes: form.notes || null, created_by: user?.id }); const error = null;
-      if (error) throw error;
+      await createServiceRecordWithReceivable({ organization_id: organizationId, client_id: form.client_id || null, service_name: form.service_name.trim(), amount, service_date: form.service_date, notes: form.notes || null, created_by: user?.id });
       const scheduledAt = fromZonedTime(`${form.service_date}T${form.service_time || "09:00"}`, "America/Sao_Paulo");
       const { error: aptErr } = await supabase.from("appointments").insert({ client_id: form.client_id || null, title: form.service_name.trim(), scheduled_at: scheduledAt.toISOString(), notes: form.notes || null, owner_id: user?.id || null, organization_id: organizationId } as any);
       if (aptErr) throw aptErr;
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["service-records"] });
+      qc.invalidateQueries({ queryKey: ["service-records"] }); qc.invalidateQueries({ queryKey: ["transactions"] });
       qc.invalidateQueries({ queryKey: ["agenda-appointments"] });
       qc.invalidateQueries({ queryKey: ["all-appointments"] });
-      toast.success("Atendimento registrado, incluído na agenda e enviado para A faturar.");
+      toast.success("Atendimento registrado, incluído na agenda e em Contas a Receber.");
       setOpen(false);
       setForm({ client_id: "", service_name: "", amount: "", service_date: format(new Date(), "yyyy-MM-dd"), service_time: "09:00", notes: "" });
     },
