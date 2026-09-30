@@ -15,7 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { ServiceFlow, type ServiceStage } from "@/components/services/ServiceFlow";
+import type { ServiceStage } from "@/components/services/ServiceFlow";
 import { ClientDialog } from "@/components/clients/ClientDialog";
 import { fromZonedTime } from "date-fns-tz";
 
