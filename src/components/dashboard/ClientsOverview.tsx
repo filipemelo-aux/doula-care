@@ -245,7 +245,6 @@ export function ClientsOverview() {
                         </span>
                       )}
                     </p>
-                    {c.companion_name && (
                   </div>
                   <ChevronRight className="w-4 h-4 text-muted-foreground/50 flex-shrink-0" />
                 </button>
@@ -264,27 +263,3 @@ export function ClientsOverview() {
   );
 }
 
-function FilterChip({
-  label,
-  active,
-  onClick,
-}: {
-  label: string;
-  active: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={cn(
-        "px-3 py-1.5 rounded-full text-xs font-medium transition-all",
-        active
-          ? "bg-primary text-primary-foreground shadow-sm"
-          : "bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground",
-      )}
-    >
-      {label}
-    </button>
-  );
-}
