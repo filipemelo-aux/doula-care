@@ -247,42 +247,7 @@ export function FollowUpFileDialog({ open, onOpenChange, client }: FollowUpFileD
                 </div>
               </Card>
             )}
-            {/* Plano e Pagamento */}
-            {role !== "moderator" && <Card icon={CreditCard} title="Plano e Pagamento" tint="primary">
-              <ChipGrid>
-                <Chip label="Plano" value={getPlanName(client.plan_setting_id, client.plan)} highlight />
-                <Chip label="Valor" value={formatCurrency(Number(client.plan_value) || 0)} highlight />
-                <Chip label="Pagamento" value={paymentMethodLabels[client.payment_method] || client.payment_method} />
-                <Chip label="Status" value={paymentStatusLabels[client.payment_status] || client.payment_status} />
-                <Chip label="Tipo de pagamento" value={paymentType} />
-                {clientTransaction?.date && paymentType === "À vista" && <Chip label="Data do pagamento" value={formatDate(clientTransaction.date)} />}
-                {installmentPayments?.[0]?.due_date && paymentType === "Parcelado" && <Chip label="Primeiro vencimento" value={formatDate(installmentPayments[0].due_date)} />}
-                {paymentType === "Parcelado" && <Chip label="Entrada recebida" value={Number(installmentPayments?.[0]?.amount_paid || 0) >= Number(installmentPayments?.[0]?.amount || 0) && Number(installmentPayments?.[0]?.amount || 0) > 0 ? "Sim" : "Não"} />}
-              </ChipGrid>
-
-              {installmentPayments && installmentPayments.length > 1 && (
-                <div className="mt-3 space-y-1.5">
-                  <p className="text-[10px] text-muted-foreground uppercase tracking-wide">
-                    Parcelas ({paidInstallments}/{installmentPayments.length} pagas
-                    {receivedTotal > 0 ? ` · ${formatCurrency(receivedTotal)} recebidos` : ""})
-                  </p>
-                  {installmentPayments.map((p) => (
-                    <div key={p.transaction_id ? `${p.transaction_id}-${p.installment_number}` : `${p.installment_number}-${p.due_date}`} className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1 rounded-lg bg-muted/50 px-3 py-2 text-xs min-w-0">
-                       <span className="font-medium min-w-0 break-words">
-                        {p.installment_number}/{p.total_installments} · {formatCurrency(Number(p.amount))}
-                      </span>
-                       <div className="flex flex-wrap items-center gap-1.5 min-w-0">
-                        {p.due_date && <span className="text-muted-foreground text-[11px]">{formatDate(p.due_date)}</span>}
-                        <Badge variant={Number(p.amount_paid || 0) > 0 ? "default" : "outline"} className="text-[10px] h-5">
-                           {Number(p.amount_paid || 0) >= Number(p.amount) ? "Paga" : Number(p.amount_paid || 0) > 0 ? "Parcial" : paymentStatusLabels.pendente}
-                        </Badge>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-              {receivedTotal > 0 && paymentType === "À vista" && <p className="mt-3 text-xs text-muted-foreground">Recebido: {formatCurrency(receivedTotal)}</p>}
-            </Card>}
+            {/* Serviços inclusos */}
 
             {/* Serviços inclusos */}
             <Card
