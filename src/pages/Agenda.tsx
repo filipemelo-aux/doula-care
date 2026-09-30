@@ -1117,7 +1117,12 @@ export default function Agenda() {
             {!editingAppointment && aptKind === "servico" && (
               <div className="grid grid-cols-[1fr_7rem] gap-3">
                 <div>
-                  <Label className="text-xs">Serviço *</Label>
+                  <div className="flex items-center gap-2">
+                    <Label className="text-xs">Serviço *</Label>
+                    <Button type="button" size="icon" variant="ghost" className="h-6 w-6" aria-label="Cadastrar novo serviço" onClick={() => navigate("/cadastros/servicos")}>
+                      <Plus className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
                   {catalogServices.length > 0 ? (
                     <Select value={aptServiceName} onValueChange={(v) => { setAptServiceName(v); setAptTitle(v); }}>
                       <SelectTrigger className="mt-1"><SelectValue placeholder="Escolha..." /></SelectTrigger>
