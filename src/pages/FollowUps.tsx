@@ -192,7 +192,7 @@ export default function FollowUps() {
   };
 
   return (
-    <div className="space-y-4 lg:space-y-6 pb-20">
+    <div className="space-y-4 lg:space-y-6">
       <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
         <div className="page-header mb-0 min-w-0">
           <p className="mb-1 text-[10px] font-bold uppercase text-primary">Central de Serviços</p>

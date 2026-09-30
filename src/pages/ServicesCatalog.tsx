@@ -69,7 +69,7 @@ export default function ServicesCatalog() {
   });
 
   return (
-    <div className="space-y-4 lg:space-y-6 pb-20">
+    <div className="space-y-4 lg:space-y-6">
       <div className="page-header mb-0">
         <h1 className="page-title">Cadastro de Serviços</h1>
         <p className="page-description">Serviços disponíveis ao registrar um novo atendimento.</p>

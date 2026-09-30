@@ -86,7 +86,7 @@ export default function ClientUsers() {
   const copy = (t: string, l: string) => { navigator.clipboard.writeText(t); toast.success(`${l} copiado!`); };
 
   return (
-    <div className="space-y-4 lg:space-y-6 pb-20">
+    <div className="space-y-4 lg:space-y-6">
       <div className="page-header mb-0">
         <h1 className="page-title">Usuários das clientes</h1>
         <p className="page-description">Crie e gerencie o acesso das suas clientes ao aplicativo.</p>
