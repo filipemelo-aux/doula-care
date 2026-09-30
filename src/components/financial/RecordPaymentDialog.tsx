@@ -35,6 +35,7 @@ interface RecordPaymentDialogProps {
   transactionReceived: number;
   transactionInstallments: number;
   clientId: string | null;
+  isContract: boolean;
 }
 
 export function RecordPaymentDialog({
@@ -45,6 +46,7 @@ export function RecordPaymentDialog({
   transactionReceived,
   transactionInstallments,
   clientId,
+  isContract,
 }: RecordPaymentDialogProps) {
   const queryClient = useQueryClient();
   const [selectedInstallment, setSelectedInstallment] = useState<string>("");
@@ -78,7 +80,7 @@ export function RecordPaymentDialog({
 
       // Fallback: for contract transactions where payments have no transaction_id,
       // find by client_id + matching total_installments
-      if (clientId) {
+      if (clientId && isContract) {
         const { data: byClient, error: clientErr } = await supabase
           .from("payments")
           .select("*")
@@ -190,7 +192,7 @@ export function RecordPaymentDialog({
         
         if (byTx && byTx.length > 0) {
           allPayments = byTx;
-        } else if (clientId) {
+        } else if (clientId && isContract) {
           const { data: byClient } = await supabase
             .from("payments")
             .select("amount_paid")

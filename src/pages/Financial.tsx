@@ -1869,6 +1869,7 @@ export default function Financial() {
         transactionReceived={Number(paymentTransaction?.amount_received) || 0}
         transactionInstallments={Number(paymentTransaction?.installments) || 1}
         clientId={paymentTransaction?.client_id || null}
+        isContract={paymentTransaction?.is_auto_generated === true}
       />
 
       {/* Revenue Detail Dialog */}
