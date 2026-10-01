@@ -92,20 +92,34 @@ export default function FollowUps() {
 
   const afterChange = () => { refetchSessions(); qc.invalidateQueries({ queryKey: ["agenda-appointments"] }); qc.invalidateQueries({ queryKey: ["all-appointments"] }); qc.invalidateQueries({ queryKey: ["client-appointments"] }); };
 
+  const todayBR = formatInTimeZone(new Date(), "America/Sao_Paulo", "yyyy-MM-dd");
+  const [sessionTimes, setSessionTimes] = useState<Record<string, string>>({});
+
   const markDone = async (c: Tables<"clients">, item: Item, idx: number) => {
-    const date = sessionDates[item.key] || new Date().toISOString().slice(0, 10);
+    const date = sessionDates[item.key] || todayBR;
+    const future = date > todayBR;
+    const time = future ? (sessionTimes[item.key] || "09:00") : "12:00";
     const notes = notesDraft[item.key] ?? item.session?.notes ?? null;
     setBusy(true);
     try {
-      const at = fromZonedTime(`${date}T12:00`, "America/Sao_Paulo").toISOString();
-      const { data: apt, error } = await supabase.from("appointments").insert({ client_id: c.id, title: item.name, scheduled_at: at, completed_at: at, completion_notes: notes || null, owner_id: user?.id || null, organization_id: organizationId } as any).select("id").single();
-      if (error) throw error;
-      const payload = { status: "done", performed_at: date, notes: notes || null, appointment_id: apt.id, sequence: idx + 1, service_name: item.name };
+      const at = fromZonedTime(`${date}T${time}`, "America/Sao_Paulo").toISOString();
+      const aptPayload: any = { title: item.name, scheduled_at: at, completed_at: future ? null : at, completion_notes: future ? null : (notes || null) };
+      let aptId = item.session?.appointment_id || null;
+      if (aptId) {
+        const { error } = await supabase.from("appointments").update(aptPayload).eq("id", aptId);
+        if (error) throw error;
+      } else {
+        const { data: apt, error } = await supabase.from("appointments").insert({ ...aptPayload, client_id: c.id, owner_id: user?.id || null, organization_id: organizationId } as any).select("id").single();
+        if (error) throw error;
+        aptId = apt.id;
+      }
+      const payload = { status: future ? "scheduled" : "done", performed_at: future ? null : date, notes: notes || null, appointment_id: aptId, sequence: idx + 1, service_name: item.name };
       const { error: e2 } = item.session
         ? await sessionsDb().update(payload).eq("id", item.session.id)
         : await sessionsDb().insert({ ...payload, organization_id: organizationId, client_id: c.id, created_by: user?.id });
       if (e2) throw e2;
-      toast.success("Registrado como executado e salvo na ficha da cliente");
+      toast.success(future ? "Consulta agendada e incluída na agenda" : "Registrado como executado e salvo na ficha da cliente");
+      setNotesDraft((d) => { const n = { ...d }; delete n[item.key]; return n; });
       afterChange();
     } catch { toast.error("Não foi possível registrar"); } finally { setBusy(false); }
   };
@@ -120,6 +134,7 @@ export default function FollowUps() {
     setBusy(false);
     if (error) return toast.error("Não foi possível salvar");
     toast.success("Observação salva");
+    setNotesDraft((d) => { const n = { ...d }; delete n[item.key]; return n; });
     afterChange();
   };
 
@@ -286,24 +301,32 @@ export default function FollowUps() {
                   <div className="rounded-xl bg-muted/50 p-4 text-sm text-muted-foreground">Este plano não tem serviços inclusos. Cadastre em Meu Negócio → Meus planos.</div>
                 ) : items.map((it, idx) => {
                   const isDone = it.session?.status === "done";
+                  const isScheduled = it.session?.status === "scheduled";
+                  const selDate = sessionDates[it.key] || todayBR;
+                  const isFuture = selDate > todayBR;
+                  const draft = notesDraft[it.key];
+                  const notesChanged = draft !== undefined && draft.trim() !== (it.session?.notes ?? "").trim();
                   return (
                   <div key={it.key} className="rounded-xl bg-muted/40 p-3 space-y-2">
                     <div className="flex items-start gap-2">
                       <div className="min-w-0 flex-1">
                         <p className="text-sm font-medium">{it.name}</p>
-                        <p className="text-xs text-muted-foreground">{isDone ? `Executado${it.session?.performed_at ? ` em ${formatBrazilDate(it.session.performed_at)}` : ""} · na ficha da cliente` : "Não sinalizado"}</p>
+                        <p className="text-xs text-muted-foreground">{isDone ? `Executado${it.session?.performed_at ? ` em ${formatBrazilDate(it.session.performed_at)}` : ""} · na ficha da cliente` : isScheduled && it.session?.appointments?.scheduled_at ? `Agendado para ${formatInTimeZone(new Date(it.session.appointments.scheduled_at), "America/Sao_Paulo", "dd/MM/yyyy 'às' HH:mm")} · na agenda` : "Não sinalizado"}</p>
                       </div>
                       {isDone && <CheckCircle2 className="h-4 w-4 shrink-0 text-success" />}
+                      {isScheduled && <CalendarPlus className="h-4 w-4 shrink-0 text-primary" />}
                     </div>
-                    <Textarea rows={2} placeholder="Observações (opcional)" value={notesDraft[it.key] ?? it.session?.notes ?? ""} onChange={(e) => setNotesDraft((d) => ({ ...d, [it.key]: e.target.value }))} />
+                    <Textarea rows={2} placeholder="Observações (opcional)" value={draft ?? it.session?.notes ?? ""} onChange={(e) => setNotesDraft((d) => ({ ...d, [it.key]: e.target.value }))} />
                     <div className="flex flex-wrap items-center justify-end gap-2">
-                      <Button size="sm" variant="ghost" disabled={busy || notesDraft[it.key] === undefined} onClick={() => saveNotes(sessionsClient, it, idx)}>Salvar observação</Button>
-                      {isDone ? (
-                        <Button size="sm" variant="ghost" disabled={busy} onClick={() => undoDone(it)}><Trash2 className="mr-1 h-3.5 w-3.5" /> Desfazer</Button>
-                      ) : (
+                      <Button size="sm" variant="ghost" disabled={busy || !notesChanged} onClick={() => saveNotes(sessionsClient, it, idx)}>Salvar observação</Button>
+                      {isDone || isScheduled ? (
+                        <Button size="sm" variant="ghost" disabled={busy} onClick={() => undoDone(it)}><Trash2 className="mr-1 h-3.5 w-3.5" /> {isScheduled ? "Cancelar agendamento" : "Desfazer"}</Button>
+                      ) : null}
+                      {!isDone && (
                         <>
-                          <Input type="date" className="h-9 w-36" value={sessionDates[it.key] || new Date().toISOString().slice(0, 10)} onChange={(e) => setSessionDates((d) => ({ ...d, [it.key]: e.target.value }))} />
-                          <Button size="sm" disabled={busy} onClick={() => markDone(sessionsClient, it, idx)}>Marcar executado</Button>
+                          <Input type="date" className="h-9 w-36" value={selDate} onChange={(e) => setSessionDates((d) => ({ ...d, [it.key]: e.target.value }))} />
+                          {isFuture && <Input type="time" className="h-9 w-28" value={sessionTimes[it.key] || "09:00"} onChange={(e) => setSessionTimes((d) => ({ ...d, [it.key]: e.target.value }))} />}
+                          <Button size="sm" disabled={busy} onClick={() => markDone(sessionsClient, it, idx)}>{isFuture ? (isScheduled ? "Reagendar" : "Agendar consulta") : "Marcar executado"}</Button>
                         </>
                       )}
                     </div>
