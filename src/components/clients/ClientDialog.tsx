@@ -544,6 +544,7 @@ export function ClientDialog({ open, onOpenChange, client, initialStep, mode: ra
         has_pets: false,
         pets_names: "",
       });
+      prevPlanIdRef.current = null;
     }
   }, [client, open, form, planSettings, clientTransaction, clientInstallmentPayments]);
 
