@@ -409,7 +409,9 @@ export function ClientDialog({ open, onOpenChange, client, initialStep, mode: ra
         dpp: client.dpp || "",
         baby_names: (client as any).baby_names?.join(", ") || "",
         birth_location: (client as any).birth_location || "",
-        plan_setting_id: (client as any).plan_setting_id || (planSettings?.find(p => p.plan_type === client.plan)?.id) || (client.plan === "avulso" ? "avulso" : ""),
+        // No modo followup o plano começa em branco: o fallback por plan_type escolheria
+        // o primeiro plano cadastrado sem carregar o valor correto.
+        plan_setting_id: (client as any).plan_setting_id || (client.plan === "avulso" ? "avulso" : (mode === "followup" ? "" : (planSettings?.find(p => p.plan_type === client.plan)?.id || ""))),
         payment_method: client.payment_method as "pix" | "cartao" | "dinheiro" | "transferencia",
         payment_type: isParcelado ? "parcelado" : "a_vista",
         discount_percent: 0,
@@ -443,6 +445,7 @@ export function ClientDialog({ open, onOpenChange, client, initialStep, mode: ra
         has_pets: (client as any).has_pets || false,
         pets_names: (client as any).pets_names || "",
       });
+      prevPlanIdRef.current = form.getValues("plan_setting_id") || "";
       const partosData = (client as any).partos_anteriores;
       if (partosData && Array.isArray(partosData?.children) && partosData.children.length > 0) {
         setHasPartosAnteriores(true);
