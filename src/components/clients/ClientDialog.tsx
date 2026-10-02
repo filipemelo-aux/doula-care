@@ -686,7 +686,7 @@ export function ClientDialog({ open, onOpenChange, client, initialStep, mode: ra
         companion_name: data.companion_name || null,
         companion_phone: data.companion_phone || null,
         status: basicPerson && !client ? "outro" : (data.status || "gestante"),
-        custom_status: basicPerson && !client ? "Pontual" : data.status === "outro" ? (data.custom_status || null) : null,
+        custom_status: basicPerson && !client ? "Ocasional" : data.status === "outro" ? (data.custom_status || null) : null,
         pregnancy_weeks: data.dpp 
           ? Math.max(0, Math.min(45, calculateCurrentPregnancyWeeks(null, null, data.dpp) ?? 0))
           : null,
@@ -697,7 +697,7 @@ export function ClientDialog({ open, onOpenChange, client, initialStep, mode: ra
         pregnancy_weeks_set_at: data.dpp
           ? new Date().toISOString() 
           : undefined,
-        plan: (data.plan_setting_id === "avulso" ? "avulso" : data.plan_setting_id ? (planSettings?.find(p => p.id === data.plan_setting_id)?.plan_type || "basico") : "basico") as any,
+        plan: (data.plan_setting_id === "avulso" || (mode === "person" && !data.plan_setting_id) ? "avulso" : data.plan_setting_id ? (planSettings?.find(p => p.id === data.plan_setting_id)?.plan_type || "basico") : "basico") as any,
         plan_setting_id: data.plan_setting_id && data.plan_setting_id !== "avulso" ? data.plan_setting_id : null,
         payment_method: data.payment_method || "pix",
         plan_value: finalPlanValue,

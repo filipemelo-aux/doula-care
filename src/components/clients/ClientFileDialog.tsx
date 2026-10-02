@@ -61,7 +61,7 @@ const statusLabels: Record<string, string> = {
   tentante: "Tentante",
   gestante: "Gestante",
   lactante: "Puérpera",
-  outro: "Outro",
+  outro: "Ocasional",
 };
 
 // Plan labels resolved dynamically via usePlanNames hook
@@ -580,7 +580,7 @@ export function ClientFileDialog({ open, onOpenChange, client }: ClientFileDialo
                   )}
                   <div className="flex flex-wrap items-center gap-1.5 mt-2">
                     <Badge variant="outline" className={cn("badge-status border-0", `badge-${client.status}`)}>
-                      {statusLabels[client.status] || client.status}
+                      {client.status === "outro" && client.custom_status ? client.custom_status : statusLabels[client.status] || client.status}
                     </Badge>
                     {calcWeeks !== null && !isPuer && (
                       <Badge

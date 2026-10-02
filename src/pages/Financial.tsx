@@ -799,7 +799,8 @@ export default function Financial() {
         .insert({
           full_name: name,
           phone: phone,
-          status: "gestante",
+          status: "outro",
+          custom_status: "Ocasional",
           plan: "avulso",
           payment_method: "pix",
           payment_status: "pendente",
@@ -1431,13 +1432,13 @@ export default function Financial() {
                         onClick={() => setShowQuickClient(true)}
                       >
                         <UserPlus className="h-3 w-3" />
-                        Cadastrar cliente pontual
+                        Cadastrar cliente ocasional
                       </Button>
                     ) : (
                       <div className="rounded-lg border-dashed bg-primary/5 p-3 space-y-2">
                         <p className="text-xs font-medium text-primary flex items-center gap-1">
                           <UserPlus className="h-3 w-3" />
-                          Cadastro de Cliente Avulsa
+                          Cadastro de Cliente Ocasional
                         </p>
                         <Input
                           placeholder="Nome completo"

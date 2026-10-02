@@ -221,11 +221,11 @@ export default function ServiceRecords() {
             return <article key={r.id} className="overflow-hidden rounded-2xl bg-card shadow-card">
               <div className="flex items-start gap-3 p-4">
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-lg">{services.find((s: any) => s.name === r.service_name)?.icon || "✦"}</div>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-start justify-between gap-2"><div className="min-w-0"><p className="truncate font-semibold">{r.service_name}</p><p className="truncate text-xs text-muted-foreground">{r.clients?.full_name || "Sem cliente"} · {fmtDate(r.service_date)}</p></div><Badge variant={st.variant}>{st.label}</Badge></div>
-                  <p className="mt-2 font-bold">{brl(r.amount)}</p>
-                </div>
-                <div className="flex shrink-0 items-center gap-1">
+                <div className="min-w-0 flex-1 space-y-1.5">
+                  <p className="break-words font-semibold leading-snug">{r.service_name}</p>
+                  <p className="break-words text-xs text-muted-foreground">{r.clients?.full_name || "Sem cliente"}</p>
+                  <div className="flex flex-wrap items-center gap-2"><p className="text-xs text-muted-foreground">{fmtDate(r.service_date)}</p><Badge variant={st.variant} className="shrink-0">{st.label}</Badge></div>
+                  <div className="flex items-center justify-between gap-2 pt-1"><p className="font-bold">{brl(r.amount)}</p><div className="flex shrink-0 items-center gap-1">
                   <Button size="icon" variant="ghost" aria-label="Visualizar atendimento" onClick={() => setDetail(r)}><Eye className="h-4 w-4" /></Button>
                   <Button size="icon" variant="ghost" aria-label="Editar atendimento" onClick={() => openEdit(r)}><Pencil className="h-4 w-4" /></Button>
                   <Button
@@ -238,6 +238,7 @@ export default function ServiceRecords() {
                       navigate("/financeiro", { state: { openPaymentTransactionId: r.transaction_id } });
                     }}
                   ><HandCoins className="h-4 w-4" /></Button>
+                  </div></div>
                 </div>
               </div>
             </article>;
