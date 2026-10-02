@@ -194,6 +194,7 @@ export function NewServiceDialog({ open, onOpenChange }: NewServiceDialogProps) 
           title: `Serviço: ${selectedServices.join(", ")}`,
           scheduled_at: scheduledUtc,
           notes: notes || null,
+          completed_at: new Date(scheduledUtc).getTime() <= Date.now() ? new Date().toISOString() : null,
           address: address.trim() || null,
           owner_id: user?.id || null,
           organization_id: organizationId || null,
