@@ -64,6 +64,7 @@ import {
   CreditCard,
   QrCode,
   RefreshCw,
+  Lock,
 } from "lucide-react";
 import { PixSettingsCard } from "@/components/settings/PixSettingsCard";
 import { BrandingSettingsCard } from "@/components/settings/BrandingSettingsCard";
