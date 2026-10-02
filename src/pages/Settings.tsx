@@ -49,6 +49,7 @@ import {
 import { 
   Heart, 
   Shield, 
+  Settings2,
   UserPlus, 
   Key, 
   LogOut,
@@ -546,7 +547,7 @@ export default function Settings() {
         <TabsList className="w-full grid grid-cols-3 gap-0 p-1">
           <TabsTrigger value="users" className="px-1 text-xs sm:text-sm gap-1"><Users className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" /><span className="truncate">Usuários</span></TabsTrigger>
           <TabsTrigger value="pix" className="px-1 text-xs sm:text-sm gap-1"><QrCode className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" /><span className="truncate">Pix</span></TabsTrigger>
-          <TabsTrigger value="security" className="px-1 text-xs sm:text-sm gap-1"><Shield className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" /><span className="truncate">Segurança</span></TabsTrigger>
+          <TabsTrigger value="security" className="px-1 text-xs sm:text-sm gap-1"><Settings2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" /><span className="truncate">Sistema</span></TabsTrigger>
         </TabsList>
 
 
@@ -691,7 +692,7 @@ export default function Settings() {
                   <h3 className="text-sm font-semibold">Minha senha</h3>
                   <p className="text-xs text-muted-foreground">Redefina a sua senha de acesso quando precisar.</p>
                 </div>
-                <Button size="sm" variant="outline" className="h-8 text-xs" onClick={() => { setSettingsTab("security"); setChangePasswordOpen(true); }}>Redefinir</Button>
+                <Button size="sm" variant="outline" className="h-8 text-xs" onClick={() => setChangePasswordOpen(true)}>Redefinir</Button>
               </div>
             </>
           )}
