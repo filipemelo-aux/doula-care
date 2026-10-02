@@ -1433,7 +1433,7 @@ export default function Financial() {
                         onClick={() => setShowQuickClient(true)}
                       >
                         <UserPlus className="h-3 w-3" />
-                        Cadastrar cliente avulsa
+                        Cadastrar cliente pontual
                       </Button>
                     ) : (
                       <div className="rounded-lg border-dashed bg-primary/5 p-3 space-y-2">
