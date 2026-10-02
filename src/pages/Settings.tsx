@@ -119,6 +119,7 @@ export default function Settings() {
   // User management state
   const [newUserOpen, setNewUserOpen] = useState(false);
   const [changePasswordOpen, setChangePasswordOpen] = useState(false);
+  const [settingsTab, setSettingsTab] = useState("users");
   const [editUserDialog, setEditUserDialog] = useState<{ userId: string; fullName: string; role: string; email?: string } | null>(null);
   const [deleteUserId, setDeleteUserId] = useState<string | null>(null);
   const [newUserData, setNewUserData] = useState({
@@ -541,7 +542,7 @@ export default function Settings() {
           </Card>
         </div>
       ) : (
-      <Tabs defaultValue="users" className="space-y-4">
+      <Tabs value={settingsTab} onValueChange={setSettingsTab} className="space-y-4">
         <TabsList className="w-full grid grid-cols-3 gap-0 p-1">
           <TabsTrigger value="users" className="px-1 text-xs sm:text-sm gap-1"><Users className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" /><span className="truncate">Usuários</span></TabsTrigger>
           <TabsTrigger value="pix" className="px-1 text-xs sm:text-sm gap-1"><QrCode className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" /><span className="truncate">Pix</span></TabsTrigger>
@@ -702,7 +703,7 @@ export default function Settings() {
                   <h3 className="text-sm font-semibold">Minha senha</h3>
                   <p className="text-xs text-muted-foreground">Redefina a sua senha de acesso quando precisar.</p>
                 </div>
-                <Button size="sm" variant="outline" className="h-8 text-xs" onClick={() => setChangePasswordOpen(true)}>Redefinir</Button>
+                <Button size="sm" variant="outline" className="h-8 text-xs" onClick={() => { setSettingsTab("security"); setChangePasswordOpen(true); }}>Redefinir</Button>
               </div>
             </>
           )}
