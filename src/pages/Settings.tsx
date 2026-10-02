@@ -347,7 +347,7 @@ export default function Settings() {
       return;
     }
     if (!newUserData.sendInvite && !newUserData.password) {
-      toast.error("Informe uma senha ou marque enviar convite por email");
+      toast.error("Informe a senha provisória");
       return;
     }
     if (!newUserData.sendInvite) {
