@@ -704,47 +704,9 @@ export default function Settings() {
           <PixSettingsCard />
         </TabsContent>
 
-        {/* ─── SECURITY TAB ─── */}
+        {/* ─── SISTEMA TAB ─── */}
         <TabsContent value="security" className="space-y-6">
           <PushNotificationStatusCard />
-          <Card className="card-glass">
-            <CardHeader>
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-success/10 flex items-center justify-center">
-                  <Shield className="w-5 h-5 text-success" />
-                </div>
-                <div>
-                  <CardTitle className="text-lg">Segurança</CardTitle>
-                  <CardDescription>Autenticação e controle de acesso</CardDescription>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <Dialog open={changePasswordOpen} onOpenChange={setChangePasswordOpen}>
-                <DialogTrigger asChild>
-                  <Button variant="outline" className="w-full justify-start gap-2">
-                    <Key className="w-4 h-4" /> Alterar Senha
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader><DialogTitle>Alterar Senha</DialogTitle></DialogHeader>
-                  <div className="space-y-4 py-4">
-                    <div className="space-y-2">
-                      <Label>Nova Senha</Label>
-                      <Input type="password" value={passwordData.newPassword} onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })} placeholder="••••••••" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Confirmar Senha</Label>
-                      <Input type="password" value={passwordData.confirmPassword} onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })} placeholder="••••••••" />
-                    </div>
-                    <Button onClick={handleChangePassword} className="w-full" disabled={changePasswordMutation.isPending}>
-                      {changePasswordMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Salvar Nova Senha"}
-                    </Button>
-                  </div>
-                </DialogContent>
-              </Dialog>
-            </CardContent>
-          </Card>
 
           <Card className="card-glass">
             <CardContent className="pt-6 space-y-4">
