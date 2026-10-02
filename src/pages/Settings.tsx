@@ -586,23 +586,11 @@ export default function Settings() {
                             <Label>Email</Label>
                             <Input type="email" value={newUserData.email} onChange={(e) => setNewUserData({ ...newUserData, email: e.target.value })} placeholder="email@exemplo.com" />
                           </div>
-                          <div className="flex items-center justify-between rounded-lg border border-border/50 p-3">
-                            <div className="space-y-0.5">
-                              <Label className="text-sm">Enviar convite por email</Label>
-                              <p className="text-[11px] text-muted-foreground">O membro define a própria senha pelo link recebido</p>
-                            </div>
-                            <Switch
-                              checked={newUserData.sendInvite}
-                              onCheckedChange={(v) => setNewUserData({ ...newUserData, sendInvite: v, password: v ? "" : newUserData.password })}
-                            />
+                          <div className="space-y-2">
+                            <Label>Senha provisória</Label>
+                            <Input type="password" value={newUserData.password} onChange={(e) => setNewUserData({ ...newUserData, password: e.target.value, sendInvite: false })} placeholder="••••••••" />
+                            <p className="text-[11px] text-muted-foreground">Mínimo 6 caracteres, com maiúscula, minúscula e número. Passe esta senha ao membro — ele precisará trocá-la no primeiro acesso.</p>
                           </div>
-                          {!newUserData.sendInvite && (
-                            <div className="space-y-2">
-                              <Label>Senha temporária</Label>
-                              <Input type="password" value={newUserData.password} onChange={(e) => setNewUserData({ ...newUserData, password: e.target.value })} placeholder="••••••••" />
-                              <p className="text-[11px] text-muted-foreground">Mínimo 6 caracteres, com maiúscula, minúscula e número. O membro trocará esta senha no primeiro acesso.</p>
-                            </div>
-                          )}
                           <div className="space-y-2">
                             <Label>Permissão</Label>
                             <Select value={newUserData.role} onValueChange={(v: "admin" | "moderator") => setNewUserData({ ...newUserData, role: v })}>
