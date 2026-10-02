@@ -243,24 +243,24 @@ const App = () => (
               <Route path="/mensagens" element={<AdminMessages />} />
               <Route path="/agenda" element={<Agenda />} />
               <Route path="/clientes" element={<Clients />} />
-              <Route path="/financeiro" element={<ProtectedRoute allowedRoles={["admin"]}><Financial /></ProtectedRoute>} />
-              <Route path="/servicos/acompanhamentos" element={<ProtectedRoute allowedRoles={["admin"]}><FollowUps /></ProtectedRoute>} />
-              <Route path="/cadastros/pessoas" element={<ProtectedRoute allowedRoles={["admin"]}><People /></ProtectedRoute>} />
-              <Route path="/cadastros/usuarios" element={<ProtectedRoute allowedRoles={["admin"]}><ClientUsers /></ProtectedRoute>} />
-              <Route path="/cadastros/servicos" element={<ProtectedRoute allowedRoles={["admin"]}><ServicesCatalog /></ProtectedRoute>} />
-              <Route path="/servicos/atendimentos" element={<ProtectedRoute allowedRoles={["admin"]}><ServiceRecords /></ProtectedRoute>} />
+              <Route path="/financeiro" element={<ProtectedRoute allowedRoles={["admin", "moderator"]}><Financial /></ProtectedRoute>} />
+              <Route path="/servicos/acompanhamentos" element={<ProtectedRoute allowedRoles={["admin", "moderator"]}><FollowUps /></ProtectedRoute>} />
+              <Route path="/cadastros/pessoas" element={<ProtectedRoute allowedRoles={["admin", "moderator"]}><People /></ProtectedRoute>} />
+              <Route path="/cadastros/usuarios" element={<ProtectedRoute allowedRoles={["admin", "moderator"]}><ClientUsers /></ProtectedRoute>} />
+              <Route path="/cadastros/servicos" element={<ProtectedRoute allowedRoles={["admin", "moderator"]}><ServicesCatalog /></ProtectedRoute>} />
+              <Route path="/servicos/atendimentos" element={<ProtectedRoute allowedRoles={["admin", "moderator"]}><ServiceRecords /></ProtectedRoute>} />
               <Route path="/servicos/previsoes" element={<Navigate to="/financeiro" replace />} />
-              <Route path="/despesas" element={<ProtectedRoute allowedRoles={["admin"]}><Expenses /></ProtectedRoute>} />
-              <Route path="/contas-pagas" element={<ProtectedRoute allowedRoles={["admin"]}><Expenses view="paid" /></ProtectedRoute>} />
-              <Route path="/cobrancas" element={<ProtectedRoute allowedRoles={["admin"]}><Cobrancas /></ProtectedRoute>} />
-              <Route path="/relatorios" element={<ProtectedRoute allowedRoles={["admin"]}><Reports /></ProtectedRoute>} />
+              <Route path="/despesas" element={<ProtectedRoute allowedRoles={["admin", "moderator"]}><Expenses /></ProtectedRoute>} />
+              <Route path="/contas-pagas" element={<ProtectedRoute allowedRoles={["admin", "moderator"]}><Expenses view="paid" /></ProtectedRoute>} />
+              <Route path="/cobrancas" element={<ProtectedRoute allowedRoles={["admin", "moderator"]}><Cobrancas /></ProtectedRoute>} />
+              <Route path="/relatorios" element={<ProtectedRoute allowedRoles={["admin", "moderator"]}><Reports /></ProtectedRoute>} />
 
 
               <Route path="/comunidade" element={<Forum />} />
               <Route path="/configuracoes" element={<Settings />} />
               <Route path="/localizacao" element={<LocationCoverage />} />
               <Route path="/minha-marca" element={<MyBrand />} />
-              <Route path="/meus-planos" element={<ProtectedRoute allowedRoles={["admin"]}><Plans /></ProtectedRoute>} />
+              <Route path="/meus-planos" element={<ProtectedRoute allowedRoles={["admin", "moderator"]}><Plans /></ProtectedRoute>} />
               <Route path="/admin/assinatura" element={<Subscription />} />
             </Route>
 

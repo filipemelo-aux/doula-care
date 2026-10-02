@@ -44,6 +44,7 @@ import { useHideFreePlan } from "@/hooks/useHideFreePlan";
 import { useAdminUnreadCounts } from "@/hooks/useAdminUnreadCounts";
 import { useAuth } from "@/contexts/AuthContext";
 import { Capacitor } from "@capacitor/core";
+import { useTeamPermissions } from "@/lib/teamPermissions";
 
 interface SidebarProps {
   isOpen: boolean;
@@ -113,10 +114,12 @@ export function Sidebar({ isOpen, onToggle, onNavigate, desktopExpanded }: Sideb
   const isModerator = role === "moderator";
 
   // Moderadores não têm acesso ao módulo Financeiro (entradas, despesas, cobranças e relatórios)
-  const visibleNavItems = navItems.filter((item) => {
-    if (isModerator && "subItems" in item && (item.label === "Financeiro" || item.label === "Serviços" || item.label === "Cadastros")) return false;
-    return true;
-  });
+  const { can } = useTeamPermissions();
+  void isModerator;
+  // Membros da equipe só veem os menus liberados pela doula
+  const visibleNavItems = navItems
+    .map((item) => ("subItems" in item && item.subItems ? { ...item, subItems: item.subItems.filter((s) => can(s.to)) } : item))
+    .filter((item) => ("subItems" in item && item.subItems ? item.subItems.length > 0 : can((item as any).to)));
 
 
   const isFinancialRoute = ["/financeiro", "/despesas", "/contas-pagas", "/cobrancas", "/relatorios"].includes(location.pathname);
@@ -358,7 +361,7 @@ export function Sidebar({ isOpen, onToggle, onNavigate, desktopExpanded }: Sideb
 
       {/* Assinatura + Configurações — fixados no rodapé, divididos por um separador */}
       <div className="px-3 pt-2 pb-1">
-        <button
+        {can(subscriptionNavItem.to) && <><button
           onClick={() => handleNavClick(subscriptionNavItem.to)}
           className={cn(
             "nav-link w-full text-left",
@@ -373,7 +376,7 @@ export function Sidebar({ isOpen, onToggle, onNavigate, desktopExpanded }: Sideb
           </span>
         </button>
 
-        <div className="my-1.5 border-t border-border/40" />
+        <div className="my-1.5 border-t border-border/40" /></>}
 
         <button
           onClick={() => handleNavClick(settingsNavItem.to)}

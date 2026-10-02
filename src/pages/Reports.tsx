@@ -70,9 +70,7 @@ export default function Reports() {
   const { data: metrics } = useFinancialMetrics(period);
 
   // Bloqueio para moderadores: relatórios expõem dados agregados de ganhos/lucros
-  if (role === "moderator") {
-    return <Navigate to="/admin" replace />;
-  }
+  // Acesso controlado pelas permissões da equipe (layout)
 
   // Monthly chart data — sourced from transactions only, matching top KPI
   const { data: monthlyData } = useQuery({

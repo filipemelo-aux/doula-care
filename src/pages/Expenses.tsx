@@ -148,7 +148,6 @@ export default function Expenses({ view = "payable" }: ExpensesProps) {
         .from("transactions")
         .select("*, payments(due_date)")
         .eq("type", "despesa");
-      if (isModerator && user?.id) q = q.eq("owner_id", user.id);
       const { data, error } = await q.order("date", { ascending: false });
 
       if (error) throw error;
