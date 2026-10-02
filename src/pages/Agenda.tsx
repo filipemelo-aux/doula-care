@@ -159,6 +159,7 @@ export default function Agenda() {
   const [viewMode, setViewMode] = useState<"list" | "calendar">("list");
 
   // Appointment form
+  const [creationPickerOpen, setCreationPickerOpen] = useState(false);
   const [appointmentDialog, setAppointmentDialog] = useState(false);
   const [serviceDialog, setServiceDialog] = useState(false);
   const [editingAppointment, setEditingAppointment] = useState<AppointmentWithClient | null>(null);
@@ -174,6 +175,11 @@ export default function Agenda() {
   const [aptServiceAmount, setAptServiceAmount] = useState("");
   const changeAptKind = (k: "compromisso" | "consulta" | "servico") => {
     setAptKind(k); setAptConsultIdx(""); setAptServiceName(""); setAptServiceAmount(""); setAptTitle("");
+  };
+  const openNewAppointment = (kind: "compromisso" | "consulta" | "servico") => {
+    changeAptKind(kind);
+    setCreationPickerOpen(false);
+    setAppointmentDialog(true);
   };
   const [aptStatus, setAptStatus] = useState<"pendente" | "concluida">("pendente");
   const [aptAddress, setAptAddress] = useState("");
@@ -309,6 +315,7 @@ export default function Agenda() {
     }
     if (state?.openDialog) {
       if (state.openDialog === "consulta") {
+        changeAptKind("consulta");
         setAppointmentDialog(true);
         if ((state as any).clientId) {
           const cid = (state as any).clientId as string;
@@ -319,8 +326,9 @@ export default function Agenda() {
           setReturnToClientId((state as any).returnToClientId as string);
         }
       }
-      else if (state.openDialog === "compromisso") setAppointmentDialog(true);
-      else if (state.openDialog === "servico") { setAptKind("servico"); setAppointmentDialog(true); }
+      else if (state.openDialog === "novo") setCreationPickerOpen(true);
+      else if (state.openDialog === "compromisso") openNewAppointment("compromisso");
+      else if (state.openDialog === "servico") openNewAppointment("servico");
       // Clear the state so it doesn't re-trigger
       window.history.replaceState({}, document.title);
     }
@@ -820,7 +828,7 @@ export default function Agenda() {
               </TabsList>
             </Tabs>
 
-            <Button size="icon" className="h-10 w-10 rounded-full shrink-0" aria-label="Novo compromisso" onClick={() => setAppointmentDialog(true)}>
+            <Button size="icon" className="h-10 w-10 rounded-full shrink-0" aria-label="Adicionar à agenda" onClick={() => setCreationPickerOpen(true)}>
               <Plus className="h-5 w-5" />
             </Button>
           </div>
@@ -1055,33 +1063,35 @@ export default function Agenda() {
       )}
       {/* ─── Dialogs ─── */}
 
+      <Dialog open={creationPickerOpen} onOpenChange={setCreationPickerOpen}>
+        <DialogContent className="max-w-xs">
+          <DialogHeader>
+            <DialogTitle className="font-display">Adicionar à agenda</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-1">
+            <Button variant="ghost" className="h-12 justify-start gap-3" onClick={() => openNewAppointment("compromisso")}>
+              <Calendar className="h-5 w-5 text-primary" /> Novo compromisso
+            </Button>
+            <Button variant="ghost" className="h-12 justify-start gap-3" onClick={() => openNewAppointment("consulta")}>
+              <CalendarCheck className="h-5 w-5 text-primary" /> Nova consulta
+            </Button>
+            <Button variant="ghost" className="h-12 justify-start gap-3" onClick={() => openNewAppointment("servico")}>
+              <Briefcase className="h-5 w-5 text-primary" /> Novo atendimento
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* Appointment Create/Edit */}
       <Dialog open={appointmentDialog} onOpenChange={(o) => !o && closeAppointmentDialog()}>
         <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="font-display flex items-center gap-2">
               <Calendar className="h-5 w-5" />
-              {editingAppointment ? "Editar compromisso" : "Novo compromisso"}
+              {editingAppointment ? "Editar compromisso" : aptKind === "consulta" ? "Nova consulta" : aptKind === "servico" ? "Novo atendimento" : "Novo compromisso"}
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            {!editingAppointment && (
-              <div className="space-y-2">
-                <Label className="text-xs">Este compromisso é também…</Label>
-                <div className="flex flex-wrap gap-4">
-                  <label className="flex items-center gap-2 text-sm cursor-pointer">
-                    <Checkbox checked={aptKind === "consulta"} onCheckedChange={(c) => changeAptKind(c === true ? "consulta" : "compromisso")} />
-                    Nova consulta
-                  </label>
-                  <label className="flex items-center gap-2 text-sm cursor-pointer">
-                    <Checkbox checked={aptKind === "servico"} onCheckedChange={(c) => changeAptKind(c === true ? "servico" : "compromisso")} />
-                    Novo serviço
-                  </label>
-                </div>
-                {aptKind === "consulta" && <p className="text-xs text-muted-foreground">Fica vinculada aos serviços inclusos do acompanhamento da cliente.</p>}
-                {aptKind === "servico" && <p className="text-xs text-muted-foreground">Vira um atendimento e entra em Contas a Receber.</p>}
-              </div>
-            )}
             {!editingAppointment && (
               <div>
                 <Label className="text-xs">Cliente {lockedClientId || aptKind !== "compromisso" ? "*" : "(opcional)"}</Label>

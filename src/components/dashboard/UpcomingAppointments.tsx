@@ -127,7 +127,7 @@ export function UpcomingAppointments() {
             {appointments && appointments.length > 0 && (
               <span className="text-2xl font-bold text-foreground">{appointments.length}</span>
             )}
-            <Button size="icon" variant="outline" className="h-8 w-8 rounded-full" aria-label="Novo compromisso" onClick={() => navigate("/agenda", { state: { openDialog: "compromisso" } })}>
+            <Button size="icon" variant="outline" className="h-8 w-8 rounded-full" aria-label="Adicionar à agenda" onClick={() => navigate("/agenda", { state: { openDialog: "novo" } })}>
               <Plus className="h-4 w-4" />
             </Button>
           </div>
