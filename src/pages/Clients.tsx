@@ -255,7 +255,7 @@ export default function Clients() {
             <TabsList className="grid w-full grid-cols-3 sm:w-auto sm:inline-grid">
               <TabsTrigger value="gestante">Gestantes</TabsTrigger>
               <TabsTrigger value="lactante">Puérperas</TabsTrigger>
-              <TabsTrigger value="outro">Pontuais</TabsTrigger>
+              <TabsTrigger value="outro">Ocasionais</TabsTrigger>
             </TabsList>
           </Tabs>
         </CardHeader>
