@@ -45,7 +45,7 @@ const statusLabels = {
   tentante: "Tentante",
   gestante: "Gestante",
   lactante: "Puérpera",
-  outro: "Outro",
+  outro: "Ocasional",
 };
 
 // Plan labels are now resolved dynamically via usePlanNames hook
