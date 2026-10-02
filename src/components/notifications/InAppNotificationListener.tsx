@@ -30,7 +30,7 @@ export function InAppNotificationListener({ userId, role, clientId, organization
 
   // Listen for new contractions (admin only) to offer labor registration
   useEffect(() => {
-    if (role !== "admin") return;
+    if (role !== "admin" || !organizationId) return;
 
     const channel = supabase
       .channel(`admin-contraction-alerts-${userId}`)
@@ -40,7 +40,7 @@ export function InAppNotificationListener({ userId, role, clientId, organization
           event: "INSERT",
           schema: "public",
           table: "contractions",
-          ...(organizationId ? { filter: `organization_id=eq.${organizationId}` } : {}),
+          filter: `organization_id=eq.${organizationId}`,
         },
         async (payload) => {
           const contraction = payload.new as { client_id: string };
@@ -186,7 +186,7 @@ export function InAppNotificationListener({ userId, role, clientId, organization
 
   // Listen for client_notifications inserts (admin — new messages from clients)
   useEffect(() => {
-    if (role !== "admin") return;
+    if (role !== "admin" || !organizationId) return;
 
     const channel = supabase
       .channel(`admin-client-notifications-${userId}`)
@@ -196,7 +196,7 @@ export function InAppNotificationListener({ userId, role, clientId, organization
           event: "INSERT",
           schema: "public",
           table: "client_notifications",
-          ...(organizationId ? { filter: `organization_id=eq.${organizationId}` } : {}),
+          filter: `organization_id=eq.${organizationId}`,
         },
         async (payload) => {
           const notification = payload.new as {
