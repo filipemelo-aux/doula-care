@@ -113,6 +113,9 @@ export default function Clients() {
       queryClient.invalidateQueries({ queryKey: ["clients"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
       queryClient.invalidateQueries({ queryKey: ["recent-clients"] });
+      queryClient.invalidateQueries({ queryKey: ["service-records"] });
+      queryClient.invalidateQueries({ queryKey: ["transactions"] });
+      queryClient.invalidateQueries({ queryKey: ["followups"] });
       queryClient.invalidateQueries({ queryKey: ["clients-with-accounts"] });
       toast.success("Cliente excluída com sucesso!", {
         description: data.warning || undefined,
