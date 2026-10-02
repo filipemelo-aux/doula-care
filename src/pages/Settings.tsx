@@ -1,3 +1,5 @@
+import { TeamAccessCard } from "@/components/settings/TeamAccessCard";
+import { Link } from "react-router-dom";
 import { useState, useEffect, lazy, Suspense } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -616,11 +618,21 @@ export default function Settings() {
                       </DialogContent>
                     </Dialog>
                   ) : (
-                    <Button size="sm" variant="outline" disabled title="Disponível apenas no plano Premium" className="h-8 text-xs">
-                      <Crown className="h-3.5 w-3.5 mr-1" />Premium
+                    <Button size="sm" variant="outline" disabled title="Disponível apenas no plano Premium" className="h-8 text-xs gap-1.5">
+                      <Lock className="h-3.5 w-3.5" />Novo
                     </Button>
                   )}
                 </div>
+                {!limits.multiCollaborators && (
+                  <div className="mx-4 mb-3 rounded-xl bg-primary/5 p-3 flex items-start gap-3">
+                    <Crown className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-semibold">Equipe disponível no Premium</p>
+                      <p className="text-xs text-muted-foreground">Seu plano atual não permite criar ou editar membros da equipe. Mude para o Premium para ter equipe e definir os acessos de cada membro.</p>
+                      <Button asChild size="sm" className="mt-2 h-8 text-xs"><Link to="/admin/assinatura">Mudar para Premium</Link></Button>
+                    </div>
+                  </div>
+                )}
                 <div className="px-4 pb-4">
                   {loadingUsers ? (
                     <div className="flex justify-center py-8">
@@ -630,7 +642,7 @@ export default function Settings() {
                     <div className="space-y-1">
                       {usersWithRoles.map((userProfile) => {
                         const targetIsAdmin = userProfile.roles.includes("admin");
-                        const canManage = callerIsAdmin || (callerIsModerator && !targetIsAdmin);
+                        const canManage = (callerIsAdmin || (callerIsModerator && !targetIsAdmin)) && (limits.multiCollaborators || isCurrentUser(userProfile.user_id));
                         return (
                           <div key={userProfile.id} className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-muted/40 transition-colors">
                             <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
@@ -680,6 +692,17 @@ export default function Settings() {
                 </div>
               </div>
 
+              {callerIsAdmin && <TeamAccessCard members={(usersWithRoles || []) as any} locked={!limits.multiCollaborators} />}
+
+              {/* Minha senha */}
+              <div className="rounded-2xl bg-card border border-border/50 p-4 flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center shrink-0"><Key className="w-4 h-4 text-primary" /></div>
+                <div className="min-w-0 flex-1">
+                  <h3 className="text-sm font-semibold">Minha senha</h3>
+                  <p className="text-xs text-muted-foreground">Redefina a sua senha de acesso quando precisar.</p>
+                </div>
+                <Button size="sm" variant="outline" className="h-8 text-xs" onClick={() => setChangePasswordOpen(true)}>Redefinir</Button>
+              </div>
             </>
           )}
         </TabsContent>
