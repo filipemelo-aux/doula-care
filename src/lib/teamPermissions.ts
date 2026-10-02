@@ -49,8 +49,12 @@ export const ALWAYS_ALLOWED = ["/admin", "/configuracoes", "/admin/alterar-senha
 
 /** Retorna null quando não há restrição (doula), ou a lista de caminhos liberados. */
 export function useTeamPermissions() {
-  const { user, role } = useAuth();
-  const isModerator = role === "moderator";
+  const { user, role, roles, roleChecked } = useAuth() as any;
+  // Membro da equipe: tem papel moderator sem ser admin/super_admin
+  const roleList: string[] = Array.isArray(roles) ? roles : [];
+  const isModerator = role === "moderator" || (roleList.includes("moderator") && !roleList.includes("admin") && !roleList.includes("super_admin"));
+  // Enquanto o papel ainda não foi carregado, nada além do básico é liberado
+  const roleUnknown = !!user && (!roleChecked || !role);
   const { data, isLoading } = useQuery({
     queryKey: ["team-permissions", user?.id],
     enabled: isModerator && !!user?.id,
@@ -60,6 +64,7 @@ export function useTeamPermissions() {
       return (data?.allowed_paths as string[] | undefined) ?? DEFAULT_TEAM_PATHS;
     },
   });
+  if (roleUnknown) return { allowed: [] as string[] | null, isLoading: true, can: (path: string) => ALWAYS_ALLOWED.includes(path) };
   if (!isModerator) return { allowed: null as string[] | null, isLoading: false, can: (_: string) => true };
   const allowed = data ?? null;
   const can = (path: string) => ALWAYS_ALLOWED.includes(path) || !!allowed?.includes(path);
