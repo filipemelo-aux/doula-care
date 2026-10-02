@@ -94,6 +94,7 @@ export default function FollowUps() {
 
   const todayBR = formatInTimeZone(new Date(), "America/Sao_Paulo", "yyyy-MM-dd");
   const [sessionTimes, setSessionTimes] = useState<Record<string, string>>({});
+  const [unlockedDates, setUnlockedDates] = useState<Record<string, boolean>>({});
 
   const markDone = async (c: Tables<"clients">, item: Item, idx: number) => {
     const date = sessionDates[item.key] || todayBR;
@@ -302,7 +303,12 @@ export default function FollowUps() {
                 ) : items.map((it, idx) => {
                   const isDone = it.session?.status === "done";
                   const isScheduled = it.session?.status === "scheduled";
-                  const selDate = sessionDates[it.key] || todayBR;
+                  const aptAt = isScheduled ? it.session?.appointments?.scheduled_at : null;
+                  const aptDate = aptAt ? formatInTimeZone(new Date(aptAt), "America/Sao_Paulo", "yyyy-MM-dd") : null;
+                  const aptTime = aptAt ? formatInTimeZone(new Date(aptAt), "America/Sao_Paulo", "HH:mm") : null;
+                  const locked = !!aptDate && !unlockedDates[it.key];
+                  const selDate = locked ? aptDate! : (sessionDates[it.key] || aptDate || todayBR);
+                  const selTime = locked ? aptTime! : (sessionTimes[it.key] || aptTime || "09:00");
                   const isFuture = selDate > todayBR;
                   const draft = notesDraft[it.key];
                   const notesChanged = draft !== undefined && draft.trim() !== (it.session?.notes ?? "").trim();
