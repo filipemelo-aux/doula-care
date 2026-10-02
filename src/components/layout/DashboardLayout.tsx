@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import logo from "@/assets/logo.png";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
+import { useTeamPermissions } from "@/lib/teamPermissions";
+import { Lock } from "lucide-react";
 import { Sidebar } from "./Sidebar";
 import { ProfileCompletionGate } from "@/components/doula/ProfileCompletionGate";
 import { Menu, LogOut, ChevronLeft, LayoutDashboard, Users, CalendarDays, MessageCircle, Baby } from "lucide-react";
@@ -35,6 +37,7 @@ export function DashboardLayout() {
   const location = useLocation();
   const navigate = useNavigate();
   usePresenceBroadcast();
+  const { can, isLoading: permsLoading } = useTeamPermissions();
 
   // Localização e Atendimento — pulse hint, persistente por org
   const locationHintKey = organizationId ? `location-hint-seen:${organizationId}` : null;
@@ -147,7 +150,13 @@ export function DashboardLayout() {
           <div className="max-w-7xl mx-auto animate-fade-in space-y-4 lg:space-y-6">
             
             <NotificationTopBanner />
-            <Outlet />
+            {permsLoading ? null : can(location.pathname) ? <Outlet /> : (
+              <div className="rounded-2xl bg-card p-10 text-center shadow-card">
+                <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-muted"><Lock className="h-5 w-5 text-muted-foreground" /></div>
+                <p className="font-semibold">Acesso não liberado</p>
+                <p className="mt-1 text-sm text-muted-foreground">A administradora não liberou esta área para você. Peça a ela para ativar em Configurações → Usuários.</p>
+              </div>
+            )}
           </div>
         </main>
       </div>

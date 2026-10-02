@@ -68,7 +68,6 @@ export default function Cobrancas() {
         .eq("organization_id", organizationId!)
         .neq("status", "pago")
         .not("due_date", "is", null);
-      if (isModerator && user?.id) q = q.eq("owner_id", user.id);
       const { data, error } = await q.order("due_date", { ascending: true });
 
       if (error) throw error;

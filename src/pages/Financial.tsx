@@ -181,7 +181,6 @@ export default function Financial() {
         .from("transactions")
         .select("*, clients(full_name, dpp), plan_settings(name)")
         .eq("type", "receita");
-      if (isModerator && user?.id) q = q.eq("owner_id", user.id);
       const { data, error } = await q.order("created_at", { ascending: false });
 
       if (error) throw error;
@@ -302,7 +301,6 @@ export default function Financial() {
       let q = supabase
         .from("clients")
         .select("id, full_name, plan, plan_value, plan_setting_id");
-      if (isModerator && user?.id) q = q.eq("owner_id", user.id);
       const { data, error } = await q.order("full_name");
       if (error) throw error;
       return data;
