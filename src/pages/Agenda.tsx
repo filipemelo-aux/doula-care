@@ -1092,16 +1092,16 @@ export default function Agenda() {
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            {!editingAppointment && (
+            {!editingAppointment && aptKind !== "compromisso" && (
               <div>
-                <Label className="text-xs">Cliente {lockedClientId || aptKind !== "compromisso" ? "*" : "(opcional)"}</Label>
+                <Label className="text-xs">Cliente {lockedClientId ? "" : "*"}</Label>
                 <Select
                   value={aptClientId}
                   onValueChange={handleAptClientChange}
                   disabled={!!lockedClientId}
                 >
                   <SelectTrigger className="mt-1">
-                    <SelectValue placeholder={aptKind === "compromisso" ? "Selecione ou deixe em branco..." : "Selecione a cliente..."} />
+                    <SelectValue placeholder="Selecione a cliente..." />
                   </SelectTrigger>
                   <SelectContent>
                     {clients?.map((c) => (
