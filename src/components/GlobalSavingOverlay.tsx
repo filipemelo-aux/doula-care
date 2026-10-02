@@ -29,7 +29,11 @@ function isMutating(input: RequestInfo | URL, init?: RequestInit) {
   const method = (init?.method || (input instanceof Request ? input.method : "GET")).toUpperCase();
   if (method === "GET" || method === "HEAD" || method === "OPTIONS") return false;
   const url = typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
-  if (!url.includes("/rest/v1/")) return false;
+  if (!url.includes("/rest/v1/")) {
+    // Chamadas a funções de servidor rastreadas (equipe, senha de cliente)
+    if (TRACKED_FUNCTIONS.some((f) => url.includes(f))) return true;
+    return false;
+  }
   if (url.includes("/rest/v1/rpc/")) return false;
   if (IGNORED_TABLES.some((t) => url.includes(`/rest/v1/${t}`))) return false;
   return true;
