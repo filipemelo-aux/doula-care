@@ -654,14 +654,15 @@ function FeatureListInput({ value, onChange }: { value: string; onChange: (v: st
   return (
     <div className="space-y-2">
       {list.length > 0 && (
-        <div className="grid grid-cols-[4rem_minmax(0,1fr)_2.5rem] gap-2 px-1 text-xs text-muted-foreground">
+        <div className="grid grid-cols-[4rem_minmax(0,1fr)_4.5rem_2.5rem] gap-2 px-1 text-xs text-muted-foreground">
           <span className="text-center">Qtd.</span>
           <span>Serviço</span>
+          <span className="text-center">Ordem</span>
           <span />
         </div>
       )}
       {list.map((item, i) => (
-        <div key={i} className="grid grid-cols-[4rem_minmax(0,1fr)_2.5rem] items-center gap-2">
+        <div key={i} className="grid grid-cols-[4rem_minmax(0,1fr)_4.5rem_2.5rem] items-center gap-2">
           <Input
             type="number"
             inputMode="numeric"
@@ -678,6 +679,10 @@ function FeatureListInput({ value, onChange }: { value: string; onChange: (v: st
             placeholder="Ex: Encontro pré-parto"
             onChange={(e) => update(i, { name: e.target.value })}
           />
+          <div className="flex">
+            <Button type="button" size="icon" variant="ghost" className="h-9 w-9" aria-label="Subir" disabled={i === 0} onClick={() => { const n = [...list]; [n[i - 1], n[i]] = [n[i], n[i - 1]]; set(n); }}><ArrowUp className="w-4 h-4" /></Button>
+            <Button type="button" size="icon" variant="ghost" className="h-9 w-9" aria-label="Descer" disabled={i === list.length - 1} onClick={() => { const n = [...list]; [n[i + 1], n[i]] = [n[i], n[i + 1]]; set(n); }}><ArrowDown className="w-4 h-4" /></Button>
+          </div>
           <Button type="button" size="icon" variant="ghost" aria-label="Remover serviço" onClick={() => set(list.filter((_, j) => j !== i))}>
             <Trash2 className="w-4 h-4" />
           </Button>
