@@ -68,6 +68,12 @@ export default function ServiceRecords() {
   const qc = useQueryClient();
   const navigate = useNavigate();
   const [personOpen, setPersonOpen] = useState(false);
+  const location = useLocation();
+  const { data: records = [], isLoading } = useServiceRecords();
+  const [open, setOpen] = useState(false);
+  const [detail, setDetail] = useState<ServiceRecord | null>(null);
+  const [search, setSearch] = useState("");
+  const [form, setForm] = useState({ client_id: "", service_name: "", amount: "", service_date: format(new Date(), "yyyy-MM-dd"), service_time: "09:00", notes: "" });
   const [confirmOpen, setConfirmOpen] = useState(false);
   const selectedNames = form.service_name ? form.service_name.split(" + ") : [];
   const toggleService = (name: string) => {
@@ -81,12 +87,6 @@ export default function ServiceRecords() {
     if (!form.service_date) return toast.error("Informe a data de execução");
     setConfirmOpen(true);
   };
-  const location = useLocation();
-  const { data: records = [], isLoading } = useServiceRecords();
-  const [open, setOpen] = useState(false);
-  const [detail, setDetail] = useState<ServiceRecord | null>(null);
-  const [search, setSearch] = useState("");
-  const [form, setForm] = useState({ client_id: "", service_name: "", amount: "", service_date: format(new Date(), "yyyy-MM-dd"), service_time: "09:00", notes: "" });
 
   useEffect(() => {
     const state = location.state as { clientId?: string } | null;
