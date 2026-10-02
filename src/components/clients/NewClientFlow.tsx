@@ -39,7 +39,7 @@ export function NewClientFlow({
   };
 
   const options = [
-    { key: "avulsa" as const, icon: UserRound, title: "Cliente avulsa", desc: "Para atendimentos pontuais. Pede apenas dados pessoais e endereço." },
+    { key: "avulsa" as const, icon: UserRound, title: "Cliente pontual", desc: "Para atendimentos pontuais. Pede apenas dados pessoais e endereço." },
     { key: "acompanhamento" as const, icon: HeartHandshake, title: "Cliente de acompanhamento", desc: "Cadastro completo com saúde e, em seguida, o plano do acompanhamento." },
   ];
 
