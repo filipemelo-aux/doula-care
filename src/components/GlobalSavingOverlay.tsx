@@ -13,6 +13,14 @@ const IGNORED_TABLES = [
   "contractions",
 ];
 
+// Funções de servidor que também devem mostrar o overlay de gravação
+// (ex.: criar/editar/excluir membro da equipe em Configurações → Usuários).
+const TRACKED_FUNCTIONS = [
+  "/functions/v1/create-admin-user",
+  "/functions/v1/manage-admin-user",
+  "/functions/v1/reset-client-password",
+];
+
 let pending = 0;
 const listeners = new Set<(n: number) => void>();
 const emit = () => listeners.forEach((l) => l(pending));
