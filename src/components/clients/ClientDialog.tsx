@@ -685,8 +685,8 @@ export function ClientDialog({ open, onOpenChange, client, initialStep, mode: ra
         zip_code: data.zip_code || null,
         companion_name: data.companion_name || null,
         companion_phone: data.companion_phone || null,
-        status: data.status || "gestante",
-        custom_status: data.status === "outro" ? (data.custom_status || null) : null,
+        status: basicPerson && !client ? "outro" : (data.status || "gestante"),
+        custom_status: basicPerson && !client ? "Avulsa" : data.status === "outro" ? (data.custom_status || null) : null,
         pregnancy_weeks: data.dpp 
           ? Math.max(0, Math.min(45, calculateCurrentPregnancyWeeks(null, null, data.dpp) ?? 0))
           : null,

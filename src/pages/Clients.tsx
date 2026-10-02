@@ -63,7 +63,7 @@ const formatClientName = (fullName: string, maxLength = 28) => {
 
 export default function Clients() {
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<"todas" | "gestante" | "lactante">("gestante");
+  const [statusFilter, setStatusFilter] = useState<"todas" | "gestante" | "lactante" | "outro">("gestante");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
@@ -131,7 +131,7 @@ export default function Clients() {
       client.phone.includes(search) ||
       (client.cpf && client.cpf.includes(search));
     const matchesStatus =
-      statusFilter === "todas" ? true : client.status === statusFilter;
+      statusFilter === "todas" ? true : statusFilter === "outro" ? (client.status === "outro" || client.status === "tentante") : client.status === statusFilter;
     return matchesSearch && matchesStatus;
   }).sort((a: any, b: any) => {
     // Referência da "data do parto": birth_date quando existir, senão DPP (fallback)
@@ -249,9 +249,10 @@ export default function Clients() {
             Lista de Clientes ({filteredClients?.length || 0})
           </CardTitle>
           <Tabs value={statusFilter} onValueChange={(v) => setStatusFilter(v as typeof statusFilter)}>
-            <TabsList className="grid w-full grid-cols-2 sm:w-auto sm:inline-grid">
+            <TabsList className="grid w-full grid-cols-3 sm:w-auto sm:inline-grid">
               <TabsTrigger value="gestante">Gestantes</TabsTrigger>
               <TabsTrigger value="lactante">Puérperas</TabsTrigger>
+              <TabsTrigger value="outro">Avulsas</TabsTrigger>
             </TabsList>
           </Tabs>
         </CardHeader>

@@ -4,10 +4,12 @@ import { InAppNotificationListener } from "@/components/notifications/InAppNotif
 import { AutoPushPrompt } from "@/components/notifications/AutoPushPrompt";
 
 export function NotificationListenerProvider() {
-  const { user, role, client, isAdmin, isClient, organizationId } = useAuth();
+  const { user, role, client, isClient, isSuperAdmin, organizationId } = useAuth();
   const navigate = useNavigate();
 
   if (!user || !role) return null;
+  // Super Admin não recebe alertas das organizações; doulas só os da própria org.
+  if (isSuperAdmin || (!isClient && !organizationId)) return null;
 
   const handleNavigate = (path: string) => {
     navigate(path);
