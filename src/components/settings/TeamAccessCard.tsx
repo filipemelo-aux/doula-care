@@ -40,6 +40,7 @@ export function TeamAccessCard({ members, locked }: { members: Member[]; locked:
       toast.success("Acessos atualizados");
       setDirty(false);
       qc.invalidateQueries({ queryKey: ["team-permissions-admin", memberId] });
+      qc.invalidateQueries({ queryKey: ["team-permissions"] });
     },
     onError: (e: Error) => toast.error("Erro ao salvar acessos", { description: e.message }),
   });

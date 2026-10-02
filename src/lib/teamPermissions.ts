@@ -58,6 +58,9 @@ export function useTeamPermissions() {
   const { data, isLoading } = useQuery({
     queryKey: ["team-permissions", user?.id],
     enabled: isModerator && !!user?.id,
+    staleTime: 0,
+    refetchOnWindowFocus: true,
+    refetchInterval: 30000,
     queryFn: async () => {
       const { data } = await (supabase.from("team_member_permissions" as any) as any)
         .select("allowed_paths").eq("user_id", user!.id).maybeSingle();
