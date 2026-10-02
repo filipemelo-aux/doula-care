@@ -307,7 +307,7 @@ export function Sidebar({ isOpen, onToggle, onNavigate, desktopExpanded }: Sideb
           const isMobileTextOnly = (item as any).mobileTextOnly && Capacitor.isNativePlatform();
 
           return (
-            <div key={item.to} className={cn(hideOnMobile && "hidden lg:flex")}>
+            <div key={item.to} className={cn(hideOnMobile && "hidden")}>
               {/* Desktop: normal link */}
               <button
                 onClick={() => !isDisabled && handleNavClick(item.to!)}
