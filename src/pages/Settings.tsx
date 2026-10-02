@@ -49,6 +49,7 @@ import {
 import { 
   Heart, 
   Shield, 
+  Settings2,
   UserPlus, 
   Key, 
   LogOut,
@@ -475,29 +476,9 @@ export default function Settings() {
               </div>
             </CardHeader>
             <CardContent>
-              <Dialog open={changePasswordOpen} onOpenChange={setChangePasswordOpen}>
-                <DialogTrigger asChild>
-                  <Button variant="outline" className="w-full justify-start gap-2">
-                    <Key className="w-4 h-4" /> Alterar Senha
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader><DialogTitle>Alterar Senha</DialogTitle></DialogHeader>
-                  <div className="space-y-4 py-4">
-                    <div className="space-y-2">
-                      <Label>Nova Senha</Label>
-                      <Input type="password" value={passwordData.newPassword} onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })} placeholder="••••••••" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Confirmar Senha</Label>
-                      <Input type="password" value={passwordData.confirmPassword} onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })} placeholder="••••••••" />
-                    </div>
-                    <Button onClick={handleChangePassword} className="w-full" disabled={changePasswordMutation.isPending}>
-                      {changePasswordMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Salvar Nova Senha"}
-                    </Button>
-                  </div>
-                </DialogContent>
-              </Dialog>
+              <Button variant="outline" className="w-full justify-start gap-2" onClick={() => setChangePasswordOpen(true)}>
+                <Key className="w-4 h-4" /> Alterar Senha
+              </Button>
             </CardContent>
           </Card>
 
@@ -546,7 +527,7 @@ export default function Settings() {
         <TabsList className="w-full grid grid-cols-3 gap-0 p-1">
           <TabsTrigger value="users" className="px-1 text-xs sm:text-sm gap-1"><Users className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" /><span className="truncate">Usuários</span></TabsTrigger>
           <TabsTrigger value="pix" className="px-1 text-xs sm:text-sm gap-1"><QrCode className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" /><span className="truncate">Pix</span></TabsTrigger>
-          <TabsTrigger value="security" className="px-1 text-xs sm:text-sm gap-1"><Shield className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" /><span className="truncate">Segurança</span></TabsTrigger>
+          <TabsTrigger value="security" className="px-1 text-xs sm:text-sm gap-1"><Settings2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" /><span className="truncate">Sistema</span></TabsTrigger>
         </TabsList>
 
 
@@ -691,7 +672,7 @@ export default function Settings() {
                   <h3 className="text-sm font-semibold">Minha senha</h3>
                   <p className="text-xs text-muted-foreground">Redefina a sua senha de acesso quando precisar.</p>
                 </div>
-                <Button size="sm" variant="outline" className="h-8 text-xs" onClick={() => { setSettingsTab("security"); setChangePasswordOpen(true); }}>Redefinir</Button>
+                <Button size="sm" variant="outline" className="h-8 text-xs" onClick={() => setChangePasswordOpen(true)}>Redefinir</Button>
               </div>
             </>
           )}
@@ -703,47 +684,9 @@ export default function Settings() {
           <PixSettingsCard />
         </TabsContent>
 
-        {/* ─── SECURITY TAB ─── */}
+        {/* ─── SISTEMA TAB ─── */}
         <TabsContent value="security" className="space-y-6">
           <PushNotificationStatusCard />
-          <Card className="card-glass">
-            <CardHeader>
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-success/10 flex items-center justify-center">
-                  <Shield className="w-5 h-5 text-success" />
-                </div>
-                <div>
-                  <CardTitle className="text-lg">Segurança</CardTitle>
-                  <CardDescription>Autenticação e controle de acesso</CardDescription>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <Dialog open={changePasswordOpen} onOpenChange={setChangePasswordOpen}>
-                <DialogTrigger asChild>
-                  <Button variant="outline" className="w-full justify-start gap-2">
-                    <Key className="w-4 h-4" /> Alterar Senha
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader><DialogTitle>Alterar Senha</DialogTitle></DialogHeader>
-                  <div className="space-y-4 py-4">
-                    <div className="space-y-2">
-                      <Label>Nova Senha</Label>
-                      <Input type="password" value={passwordData.newPassword} onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })} placeholder="••••••••" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Confirmar Senha</Label>
-                      <Input type="password" value={passwordData.confirmPassword} onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })} placeholder="••••••••" />
-                    </div>
-                    <Button onClick={handleChangePassword} className="w-full" disabled={changePasswordMutation.isPending}>
-                      {changePasswordMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Salvar Nova Senha"}
-                    </Button>
-                  </div>
-                </DialogContent>
-              </Dialog>
-            </CardContent>
-          </Card>
 
           <Card className="card-glass">
             <CardContent className="pt-6 space-y-4">
@@ -790,6 +733,26 @@ export default function Settings() {
 
 
       {/* ─── Dialogs ─── */}
+
+      {/* Change Password Dialog (shared) */}
+      <Dialog open={changePasswordOpen} onOpenChange={setChangePasswordOpen}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Alterar Senha</DialogTitle></DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Nova Senha</Label>
+              <Input type="password" value={passwordData.newPassword} onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })} placeholder="••••••••" />
+            </div>
+            <div className="space-y-2">
+              <Label>Confirmar Senha</Label>
+              <Input type="password" value={passwordData.confirmPassword} onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })} placeholder="••••••••" />
+            </div>
+            <Button onClick={handleChangePassword} className="w-full" disabled={changePasswordMutation.isPending}>
+              {changePasswordMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Salvar Nova Senha"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Edit User Dialog */}
       <Dialog open={!!editUserDialog} onOpenChange={(o) => !o && setEditUserDialog(null)}>
