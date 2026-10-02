@@ -244,7 +244,7 @@ export default function Agenda() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("clients")
-        .select("id, full_name, user_id, street, number, neighborhood, city, state, plan_setting_id")
+        .select("id, full_name, user_id, street, number, neighborhood, city, state, plan_setting_id, status")
         .order("full_name");
       if (error) throw error;
       return data as ClientOption[];
@@ -1104,7 +1104,7 @@ export default function Agenda() {
                     <SelectValue placeholder="Selecione a cliente..." />
                   </SelectTrigger>
                   <SelectContent>
-                    {clients?.map((c) => (
+                    {clients?.filter((c: any) => aptKind !== "consulta" || editingAppointment || c.status === "gestante" || c.id === aptClientId).map((c) => (
                       <SelectItem key={c.id} value={c.id}>{c.full_name}</SelectItem>
                     ))}
                   </SelectContent>
