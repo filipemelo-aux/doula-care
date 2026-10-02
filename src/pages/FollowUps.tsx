@@ -96,10 +96,10 @@ export default function FollowUps() {
   const [sessionTimes, setSessionTimes] = useState<Record<string, string>>({});
   const [unlockedDates, setUnlockedDates] = useState<Record<string, boolean>>({});
 
-  const markDone = async (c: Tables<"clients">, item: Item, idx: number) => {
-    const date = sessionDates[item.key] || todayBR;
-    const future = date > todayBR;
-    const time = future ? (sessionTimes[item.key] || "09:00") : "12:00";
+  const markDone = async (c: Tables<"clients">, item: Item, idx: number, opts?: { date: string; time: string; forceDone?: boolean }) => {
+    const date = opts?.date || sessionDates[item.key] || todayBR;
+    const future = !opts?.forceDone && date > todayBR;
+    const time = opts?.forceDone ? opts.time : future ? (opts?.time || sessionTimes[item.key] || "09:00") : "12:00";
     const notes = notesDraft[item.key] ?? item.session?.notes ?? null;
     setBusy(true);
     try {
@@ -330,9 +330,19 @@ export default function FollowUps() {
                       ) : null}
                       {!isDone && (
                         <>
-                          <Input type="date" className="h-9 w-36" value={selDate} onChange={(e) => setSessionDates((d) => ({ ...d, [it.key]: e.target.value }))} />
-                          {isFuture && <Input type="time" className="h-9 w-28" value={sessionTimes[it.key] || "09:00"} onChange={(e) => setSessionTimes((d) => ({ ...d, [it.key]: e.target.value }))} />}
-                          <Button size="sm" disabled={busy} onClick={() => markDone(sessionsClient, it, idx)}>{isFuture ? (isScheduled ? "Reagendar" : "Agendar consulta") : "Marcar executado"}</Button>
+                          <Input type="date" className="h-9 w-36" disabled={locked} value={selDate} onChange={(e) => setSessionDates((d) => ({ ...d, [it.key]: e.target.value }))} />
+                          {(isFuture || locked) && <Input type="time" className="h-9 w-28" disabled={locked} value={selTime} onChange={(e) => setSessionTimes((d) => ({ ...d, [it.key]: e.target.value }))} />}
+                          {locked ? (
+                            <>
+                              <Button size="sm" variant="outline" disabled={busy} onClick={() => setUnlockedDates((u) => ({ ...u, [it.key]: true }))}>Alterar data</Button>
+                              <Button size="sm" disabled={busy} onClick={() => markDone(sessionsClient, it, idx, { date: selDate, time: selTime, forceDone: true })}>Marcar executado</Button>
+                            </>
+                          ) : (
+                            <Button size="sm" disabled={busy} onClick={() => markDone(sessionsClient, it, idx, { date: selDate, time: selTime })}>{isFuture ? (isScheduled ? "Reagendar" : "Agendar consulta") : "Marcar executado"}</Button>
+                          )}
+                          {aptDate && !locked && (
+                            <p className="w-full text-right text-[11px] text-primary">A nova data também será alterada no compromisso da agenda.</p>
+                          )}
                         </>
                       )}
                     </div>
