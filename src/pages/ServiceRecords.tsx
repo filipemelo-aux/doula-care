@@ -116,12 +116,9 @@ export default function ServiceRecords() {
     return !term || r.service_name.toLowerCase().includes(term) || r.clients?.full_name?.toLowerCase().includes(term);
   }), [records, search]);
   const total = records.reduce((sum, r) => sum + Number(r.amount || 0), 0);
-  const paid = records.filter((r) => stageOf(r) === "paid");
   const metrics: Array<{ label: string; value: string | number; icon: LucideIcon }> = [
     { label: "Realizados", value: records.length, icon: CalendarDays },
     { label: "Valor dos serviços", value: brl(total), icon: FileText },
-    { label: "A receber", value: records.length - paid.length, icon: Receipt },
-    { label: "Pagos", value: paid.length, icon: Eye },
   ];
 
   const create = useMutation({
@@ -155,11 +152,11 @@ export default function ServiceRecords() {
         <Button onClick={() => setOpen(true)} className="w-full gap-2 md:w-auto"><Plus className="h-4 w-4" /> Novo atendimento</Button>
       </div>
 
-      <div className="grid grid-cols-2 gap-2 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 lg:gap-4">
         {metrics.map(({ label, value, icon: Icon }) => (
-          <div key={label} className="rounded-2xl bg-card p-3 shadow-card lg:p-4">
+          <div key={label} className="min-w-0 rounded-2xl bg-card p-3 shadow-card lg:p-4">
             <div className="mb-2 flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary"><Icon className="h-4 w-4" /></div>
-            <p className="text-lg font-bold text-foreground">{value}</p><p className="text-xs text-muted-foreground">{label}</p>
+            <p className="truncate text-lg font-bold text-foreground">{value}</p><p className="truncate text-xs text-muted-foreground">{label}</p>
           </div>
         ))}
       </div>

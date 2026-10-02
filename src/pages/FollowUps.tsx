@@ -216,11 +216,11 @@ export default function FollowUps() {
         </Button>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 lg:gap-4">
+      <div className="grid grid-cols-2 gap-4 lg:gap-5">
         {metrics.map(({ label, value, icon: Icon }) => (
-          <div key={label} className="rounded-2xl bg-card p-3 shadow-card lg:p-4">
+          <div key={label} className="min-w-0 rounded-2xl bg-card p-3 shadow-card lg:p-4">
             <div className="mb-2 flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary"><Icon className="h-4 w-4" /></div>
-            <p className="text-lg font-bold">{value}</p><p className="text-xs text-muted-foreground">{label}</p>
+            <p className="truncate text-lg font-bold">{value}</p><p className="truncate text-xs text-muted-foreground">{label}</p>
           </div>
         ))}
       </div>
