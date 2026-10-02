@@ -13,6 +13,14 @@ const IGNORED_TABLES = [
   "contractions",
 ];
 
+// Funções de servidor que também devem mostrar o overlay de gravação
+// (ex.: criar/editar/excluir membro da equipe em Configurações → Usuários).
+const TRACKED_FUNCTIONS = [
+  "/functions/v1/create-admin-user",
+  "/functions/v1/manage-admin-user",
+  "/functions/v1/reset-client-password",
+];
+
 let pending = 0;
 const listeners = new Set<(n: number) => void>();
 const emit = () => listeners.forEach((l) => l(pending));
@@ -21,7 +29,11 @@ function isMutating(input: RequestInfo | URL, init?: RequestInit) {
   const method = (init?.method || (input instanceof Request ? input.method : "GET")).toUpperCase();
   if (method === "GET" || method === "HEAD" || method === "OPTIONS") return false;
   const url = typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
-  if (!url.includes("/rest/v1/")) return false;
+  if (!url.includes("/rest/v1/")) {
+    // Chamadas a funções de servidor rastreadas (equipe, senha de cliente)
+    if (TRACKED_FUNCTIONS.some((f) => url.includes(f))) return true;
+    return false;
+  }
   if (url.includes("/rest/v1/rpc/")) return false;
   if (IGNORED_TABLES.some((t) => url.includes(`/rest/v1/${t}`))) return false;
   return true;
