@@ -142,15 +142,18 @@ export function ClientQuickViewDialog({
   });
 
   const { data: avatar } = useQuery({
-    queryKey: ["client-quickview-avatar", client?.user_id],
-    enabled: !!client?.user_id && open,
+    queryKey: ["client-quickview-avatar", client?.id],
+    enabled: !!client?.id && open,
     queryFn: async () => {
-      const { data } = await supabase
-        .from("profiles")
-        .select("avatar_url")
-        .eq("user_id", client!.user_id!)
-        .maybeSingle();
-      return data?.avatar_url ?? null;
+      if (client!.user_id) {
+        const { data } = await supabase
+          .from("profiles")
+          .select("avatar_url")
+          .eq("user_id", client!.user_id)
+          .maybeSingle();
+        if (data?.avatar_url) return data.avatar_url;
+      }
+      return (client as any)?.avatar_url ?? null;
     },
   });
 
@@ -320,7 +323,7 @@ export function ClientQuickViewDialog({
                     isPuerpera={isPuer}
                     onUploaded={(url) => {
                       queryClient.setQueryData(
-                        ["client-quickview-avatar", client.user_id],
+                        ["client-quickview-avatar", client.id],
                         url,
                       );
                       queryClient.invalidateQueries({ queryKey: ["dashboard-clients-avatars"] });

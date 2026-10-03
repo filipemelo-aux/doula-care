@@ -120,22 +120,6 @@ Deno.serve(async (req) => {
       });
     }
 
-    if (action === "remove") {
-      await admin.storage.from("avatars").remove([
-        `${targetUserId}/avatar.jpg`,
-        `${targetUserId}/avatar.png`,
-        `${targetUserId}/avatar.webp`,
-        `${targetUserId}/avatar.jpeg`,
-      ]);
-      const { error: upErr } = await admin
-        .from("profiles")
-        .update({ avatar_url: null })
-        .eq("user_id", targetUserId);
-      if (upErr) throw upErr;
-      return new Response(JSON.stringify({ avatar_url: null }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
 
     if (!file) {
       return new Response(JSON.stringify({ error: "Arquivo ausente" }), {
@@ -159,11 +143,7 @@ Deno.serve(async (req) => {
     const { data: urlData } = admin.storage.from("avatars").getPublicUrl(path);
     const avatarUrl = `${urlData.publicUrl}?t=${Date.now()}`;
 
-    const { error: upErr } = await admin
-      .from("profiles")
-      .update({ avatar_url: avatarUrl })
-      .eq("user_id", targetUserId);
-    if (upErr) throw upErr;
+    await saveUrl(avatarUrl);
 
     return new Response(JSON.stringify({ avatar_url: avatarUrl }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
