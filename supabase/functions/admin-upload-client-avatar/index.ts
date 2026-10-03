@@ -79,8 +79,8 @@ Deno.serve(async (req) => {
       .select("id, user_id, organization_id")
       .eq("id", clientId)
       .maybeSingle();
-    if (!client || !client.user_id) {
-      return new Response(JSON.stringify({ error: "Cliente não encontrado ou sem usuário" }), {
+    if (!client) {
+      return new Response(JSON.stringify({ error: "Cliente não encontrado" }), {
         status: 404,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -95,8 +95,30 @@ Deno.serve(async (req) => {
       });
     }
 
-    const targetUserId = client.user_id;
-    const path = `${targetUserId}/avatar.jpg`;
+    const targetUserId = client.user_id as string | null;
+    const folder = targetUserId ?? `clients/${client.id}`;
+    const path = `${folder}/avatar.jpg`;
+    const saveUrl = async (url: string | null) => {
+      if (targetUserId) {
+        const { error } = await admin.from("profiles").update({ avatar_url: url }).eq("user_id", targetUserId);
+        if (error) throw error;
+      }
+      const { error } = await admin.from("clients").update({ avatar_url: url }).eq("id", client.id);
+      if (error) throw error;
+    };
+
+    if (action === "remove") {
+      await admin.storage.from("avatars").remove([
+        `${folder}/avatar.jpg`,
+        `${folder}/avatar.png`,
+        `${folder}/avatar.webp`,
+        `${folder}/avatar.jpeg`,
+      ]);
+      await saveUrl(null);
+      return new Response(JSON.stringify({ avatar_url: null }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     if (action === "remove") {
       await admin.storage.from("avatars").remove([
