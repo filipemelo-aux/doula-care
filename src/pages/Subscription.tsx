@@ -302,7 +302,20 @@ export default function Subscription() {
     plan: PlatformPlan,
     billingType: BillingPeriod
   ) => {
-    const product = productByPlan.get(`${plan.id}:${billingType}`);
+    let product: { productId: string } | undefined = productByPlan.get(`${plan.id}:${billingType}`);
+    if (!product && !isWeb) {
+      // A lista da loja ainda pode estar carregando: busca o código do produto direto.
+      const { data } = await supabase
+        .from("plan_store_products" as any)
+        .select("product_id")
+        .eq("plan_id", plan.id)
+        .eq("billing_period", billingType)
+        .eq("platform", platform)
+        .eq("active", true)
+        .maybeSingle();
+      const id = (data as any)?.product_id;
+      if (id) product = { productId: id };
+    }
 
     if (isWeb) {
       setPurchasing(product?.productId || `${plan.id}:${billingType}`);
@@ -364,14 +377,16 @@ export default function Subscription() {
     try {
       toast.loading("Restaurando compras...", { id: "restore" });
       const r = await AppStoreSubscriptionService.restorePurchases();
-      toast.dismiss("restore");
       if (r.restored) {
         toast.success(r.message);
         invalidatePlanCaches();
       } else {
         toast.info(r.message);
       }
+    } catch (err: any) {
+      toast.error(err?.message || "Não foi possível restaurar as compras");
     } finally {
+      toast.dismiss("restore");
       setRestoring(false);
     }
   };
