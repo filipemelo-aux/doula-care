@@ -824,6 +824,19 @@ export default function Subscription() {
         })}
       </div>
 
+      {platform === "ios" && (
+        <div className="flex justify-center">
+          <Button variant="ghost" size="sm" onClick={handleRestore} disabled={restoring}>
+            {restoring ? (
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            ) : (
+              <RefreshCcw className="w-4 h-4 mr-2" />
+            )}
+            Restaurar compras
+          </Button>
+        </div>
+      )}
+
       {hasActiveSub && !isWeb && (
         <Card className="card-glass">
           <CardContent className="pt-6 text-xs text-muted-foreground">
