@@ -119,6 +119,7 @@ export default function Subscription() {
 
   const platform = getCurrentPlatform();
   const isWeb = platform === "web";
+  const canPurchase = isWeb || platform === "ios";
 
   const [purchasing, setPurchasing] = useState<string | null>(null);
   const [restoring, setRestoring] = useState(false);
@@ -541,7 +542,7 @@ export default function Subscription() {
               </Button>
             ) : null}
 
-            {!isWeb && (
+            {platform === "android" && (
               <p className="text-xs text-muted-foreground max-w-xs">
                 As assinaturas pelo aplicativo estarão disponíveis em breve.
                 Por enquanto, a contratação é feita pelo site.
@@ -753,7 +754,7 @@ export default function Subscription() {
                     <Button
                       variant="outline"
                       className="w-full"
-                      disabled={isCurrentPlan || !isWeb}
+                      disabled={isCurrentPlan || !canPurchase}
                       onClick={handleActivateFree}
                     >
                       {isCurrentPlan ? "Plano atual" : "Ativar plano gratuito"}
@@ -767,7 +768,7 @@ export default function Subscription() {
                       <Button
                         className="w-full"
                         onClick={() => handleSubscribe(plan, "monthly")}
-                        disabled={purchasingThis || !isWeb}
+                        disabled={purchasingThis || !canPurchase}
                       >
                         {purchasing === monthlyProduct?.productId ? (
                           <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -778,7 +779,7 @@ export default function Subscription() {
                         variant="outline"
                         className="w-full"
                         onClick={() => handleSubscribe(plan, "yearly")}
-                        disabled={purchasingThis || !isWeb}
+                        disabled={purchasingThis || !canPurchase}
                       >
                         {purchasing === yearlyProduct?.productId ? (
                           <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -822,6 +823,19 @@ export default function Subscription() {
           );
         })}
       </div>
+
+      {platform === "ios" && (
+        <div className="flex justify-center">
+          <Button variant="ghost" size="sm" onClick={handleRestore} disabled={restoring}>
+            {restoring ? (
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            ) : (
+              <RefreshCcw className="w-4 h-4 mr-2" />
+            )}
+            Restaurar compras
+          </Button>
+        </div>
+      )}
 
       {hasActiveSub && !isWeb && (
         <Card className="card-glass">
