@@ -130,6 +130,7 @@ async function enrichWithStorePrices(products: StoreProduct[]): Promise<StorePro
 
     const res: any = await Purchases.getProducts({
       productIdentifiers: products.map((p) => p.productId),
+      type: "SUBS",
 
     });
     const list: any[] = res?.products ?? res?.data ?? [];
@@ -173,8 +174,8 @@ async function enrichWithStorePrices(products: StoreProduct[]): Promise<StorePro
 async function loadNativePurchases() {
   if (!isNativeMobile()) return null;
   try {
-    const mod = await import("@capgo/capacitor-purchases");
-    return (mod as any).CapacitorPurchases ?? mod;
+    const mod = await import("@revenuecat/purchases-capacitor");
+    return (mod as any).Purchases ?? mod;
   } catch (err) {
     console.warn("[IAP] Plugin not available:", err);
     return null;
@@ -244,8 +245,8 @@ async function setupNativePlugin(): Promise<boolean> {
       const { data: userRes } = await supabase.auth.getUser();
       const appUserID = userRes.user?.id;
 
-      // capgo/capacitor-purchases expõe setup({ apiKey, appUserID? })
-      await Purchases.setup({ apiKey, appUserID });
+      // @revenuecat/purchases-capacitor expõe configure({ apiKey, appUserID? })
+      await Purchases.configure({ apiKey, appUserID });
       console.log("[IAP] Plugin inicializado para", getCurrentPlatform());
       return true;
     } catch (err) {
@@ -334,10 +335,16 @@ export const AppStoreSubscriptionService = {
     }
 
     try {
-      // capgo/capacitor-purchases (RevenueCat) API
-      const result: any = await (Purchases as any).purchaseProduct({
-        productIdentifier: productId,
+      // @revenuecat/purchases-capacitor: busca o produto e compra o StoreProduct
+      const { products } = await (Purchases as any).getProducts({
+        productIdentifiers: [productId],
+        type: "SUBS",
       });
+      const product = products?.[0];
+      if (!product) {
+        return { status: "error", message: "Produto não encontrado na loja." };
+      }
+      const result: any = await (Purchases as any).purchaseStoreProduct({ product });
       if (result?.userCancelled) {
         return { status: "cancelled", productId };
       }
