@@ -46,6 +46,16 @@ export interface PurchaseResult {
   message?: string;
 }
 
+function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const t = setTimeout(() => reject(new Error(`${label} demorou demais para responder. Tente novamente.`)), ms);
+    promise.then(
+      (v) => { clearTimeout(t); resolve(v); },
+      (e) => { clearTimeout(t); reject(e); }
+    );
+  });
+}
+
 const isNativeMobile = (): boolean => {
   if (!Capacitor.isNativePlatform()) return false;
   const p = Capacitor.getPlatform();
@@ -124,15 +134,14 @@ async function fetchPlanProductMap(): Promise<StoreProduct[]> {
 async function enrichWithStorePrices(products: StoreProduct[]): Promise<StoreProduct[]> {
   if (!isNativeMobile() || products.length === 0) return products;
   try {
-    const ready = await setupNativePlugin();
+    const ready = await setupNativePlugin().catch(() => false);
     const Purchases: any = await loadNativePurchases();
     if (!ready || !Purchases?.getProducts) return products;
 
-    const res: any = await Purchases.getProducts({
+    const res: any = await withTimeout(Purchases.getProducts({
       productIdentifiers: products.map((p) => p.productId),
       type: "SUBS",
-
-    });
+    }), 10000, "A loja");
     const list: any[] = res?.products ?? res?.data ?? [];
     if (!Array.isArray(list) || list.length === 0) return products;
 
@@ -246,7 +255,7 @@ async function setupNativePlugin(): Promise<boolean> {
       const appUserID = userRes.user?.id;
 
       // @revenuecat/purchases-capacitor expõe configure({ apiKey, appUserID? })
-      await Purchases.configure({ apiKey, appUserID });
+      await withTimeout(Purchases.configure({ apiKey, appUserID }), 15000, "A loja");
       console.log("[IAP] Plugin inicializado para", getCurrentPlatform());
       return true;
     } catch (err) {
@@ -336,13 +345,13 @@ export const AppStoreSubscriptionService = {
 
     try {
       // @revenuecat/purchases-capacitor: busca o produto e compra o StoreProduct
-      const { products } = await (Purchases as any).getProducts({
+      const { products } = await withTimeout<any>((Purchases as any).getProducts({
         productIdentifiers: [productId],
         type: "SUBS",
-      });
+      }), 15000, "A App Store");
       const product = products?.[0];
       if (!product) {
-        return { status: "error", message: "Produto não encontrado na loja." };
+        return { status: "error", message: "Este plano ainda não foi liberado pela App Store. Tente novamente mais tarde." };
       }
       const result: any = await (Purchases as any).purchaseStoreProduct({ product });
       if (result?.userCancelled) {
@@ -439,7 +448,7 @@ export const AppStoreSubscriptionService = {
       return { restored: false, message: "Plugin de compras indisponível." };
     }
     try {
-      const result: any = await (Purchases as any).restorePurchases();
+      const result: any = await withTimeout<any>((Purchases as any).restorePurchases(), 30000, "A restauração");
       const sync = await this.syncSubscriptionStatus(result);
       return {
         restored: sync.isActive,
