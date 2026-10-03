@@ -353,7 +353,7 @@ export const AppStoreSubscriptionService = {
       if (!product) {
         return { status: "error", message: "Este plano ainda não foi liberado pela App Store. Tente novamente mais tarde." };
       }
-      const result: any = await (Purchases as any).purchaseStoreProduct({ product });
+      const result: any = await withTimeout<any>((Purchases as any).purchaseStoreProduct({ product }), 120000, "A App Store");
       if (result?.userCancelled) {
         return { status: "cancelled", productId };
       }
