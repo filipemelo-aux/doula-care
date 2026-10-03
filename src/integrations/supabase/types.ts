@@ -369,6 +369,7 @@ export type Database = {
       clients: {
         Row: {
           alergias: string | null
+          avatar_url: string | null
           baby_names: string[] | null
           birth_date: string | null
           birth_height: number | null
@@ -439,6 +440,7 @@ export type Database = {
         }
         Insert: {
           alergias?: string | null
+          avatar_url?: string | null
           baby_names?: string[] | null
           birth_date?: string | null
           birth_height?: number | null
@@ -509,6 +511,7 @@ export type Database = {
         }
         Update: {
           alergias?: string | null
+          avatar_url?: string | null
           baby_names?: string[] | null
           birth_date?: string | null
           birth_height?: number | null
