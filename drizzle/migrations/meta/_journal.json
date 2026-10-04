@@ -29,6 +29,13 @@
       "when": 1791056768843,
       "tag": "0003_client_avatar_url",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1791100855726,
+      "tag": "0004_client_plan_consultations_access",
+      "breakpoints": true
     }
   ]
 }
