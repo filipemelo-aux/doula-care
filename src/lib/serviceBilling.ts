@@ -9,6 +9,7 @@ export async function createServiceRecordWithReceivable(rec: {
   service_date: string;
   notes?: string | null;
   created_by?: string | null;
+  appointment_id?: string | null;
 }) {
   if (!Number.isFinite(rec.amount) || rec.amount <= 0) {
     throw new Error("Informe um valor maior que zero para registrar o atendimento em Contas a Receber.");

@@ -459,7 +459,7 @@ export default function Agenda() {
           const amount = parseFloat(aptServiceAmount.replace(/\./g, "").replace(",", ".")) || 0;
           await createServiceRecordWithReceivable({
             organization_id: organizationId, client_id: aptClientId, service_name: aptServiceName.trim(), amount,
-            service_date: aptDate, notes: aptNotes || null, created_by: user?.id,
+            service_date: aptDate, notes: aptNotes || null, created_by: user?.id, appointment_id: apt.id,
           });
         }
         await ensureAvailabilityForAppointment(organizationId, scheduledUtc);

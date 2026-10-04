@@ -2017,7 +2017,9 @@ export type Database = {
       service_records: {
         Row: {
           amount: number
+          appointment_id: string | null
           client_id: string | null
+          completed_at: string | null
           created_at: string
           created_by: string | null
           id: string
@@ -2031,7 +2033,9 @@ export type Database = {
         }
         Insert: {
           amount?: number
+          appointment_id?: string | null
           client_id?: string | null
+          completed_at?: string | null
           created_at?: string
           created_by?: string | null
           id?: string
@@ -2045,7 +2049,9 @@ export type Database = {
         }
         Update: {
           amount?: number
+          appointment_id?: string | null
           client_id?: string | null
+          completed_at?: string | null
           created_at?: string
           created_by?: string | null
           id?: string
@@ -2058,6 +2064,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "service_records_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "service_records_client_id_fkey"
             columns: ["client_id"]
