@@ -376,7 +376,7 @@ export const AppStoreSubscriptionService = {
       }
       console.log("[IAP] compra concluída, validando");
       // Validate server-side
-      const validation = await withTimeout(this.validateReceiptOrPurchase({
+      const validation = await withTimeout<PurchaseResult>(this.validateReceiptOrPurchase({
         platform,
         productId,
         nativeResult: result,
