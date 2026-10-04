@@ -234,38 +234,50 @@ async function setupNativePlugin(): Promise<boolean> {
   if (!isNativeMobile()) return false;
   if (_setupPromise) return _setupPromise;
 
-  _setupPromise = (async () => {
-    const Purchases: any = await loadNativePurchases();
-    if (!Purchases) return false;
-
-    const apiKey = await getRevenueCatApiKey();
-    if (!apiKey) {
-      console.warn(
-        "[IAP] RevenueCat API key ausente para",
-        getCurrentPlatform(),
-        "- configure a chave no Super Admin (Assinaturas) ou em window.__REVENUECAT_KEYS__"
-      );
-      _setupPromise = null; // permite nova tentativa após configurar a chave
-      return false;
-    }
-
+  const attempt = (async () => {
     try {
-      // Identifica usuário (se logado) para casar entitlements ao app user.
-      const { data: userRes } = await supabase.auth.getUser();
-      const appUserID = userRes.user?.id;
+      console.log("[IAP] setup: carregando plugin");
+      const Purchases: any = await withTimeout(loadNativePurchases(), 10000, "O plugin de compras");
+      if (!Purchases) {
+        console.warn("[IAP] setup: plugin indisponível");
+        return false;
+      }
 
-      // @revenuecat/purchases-capacitor expõe configure({ apiKey, appUserID? })
+      console.log("[IAP] setup: lendo chave");
+      const apiKey = await withTimeout(getRevenueCatApiKey(), 10000, "A configuração da loja");
+      if (!apiKey) {
+        console.warn(
+          "[IAP] RevenueCat API key ausente para",
+          getCurrentPlatform(),
+          "- configure a chave no Super Admin (Assinaturas) ou em window.__REVENUECAT_KEYS__"
+        );
+        return false;
+      }
+
+      // Identifica usuário (se logado). getSession lê a sessão local e não
+      // trava como getUser pode travar no WebView.
+      let appUserID: string | undefined;
+      try {
+        const { data } = await withTimeout(supabase.auth.getSession(), 5000, "A sessão");
+        appUserID = data.session?.user?.id;
+      } catch (e) {
+        console.warn("[IAP] setup: sessão não lida, seguindo anônimo", e);
+      }
+
+      console.log("[IAP] setup: configurando RevenueCat");
       await withTimeout(Purchases.configure({ apiKey, appUserID }), 15000, "A loja");
       console.log("[IAP] Plugin inicializado para", getCurrentPlatform());
       return true;
     } catch (err) {
       console.error("[IAP] Falha no setup do plugin:", err);
-      _setupPromise = null; // permite retry
       return false;
     }
   })();
 
-  return _setupPromise;
+  _setupPromise = attempt;
+  const ok = await attempt;
+  if (!ok) _setupPromise = null; // permite nova tentativa
+  return ok;
 }
 
 /** Atualiza o appUserID no plugin (chamar após login/logout). */

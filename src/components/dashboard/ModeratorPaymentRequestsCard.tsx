@@ -34,12 +34,24 @@ export function ModeratorPaymentRequestsCard() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("moderator_payment_requests" as any)
-        .select("id, client_id, amount, notes, created_at, moderator_id, clients(full_name, preferred_name)")
+        .select("id, client_id, amount, notes, created_at, moderator_id")
         .eq("organization_id", organizationId!)
         .eq("status", "pending")
         .order("created_at", { ascending: false });
       if (error) throw error;
-      return (data || []) as unknown as RequestRow[];
+      const rows = (data || []) as any[];
+      const clientIds = Array.from(new Set(rows.map((r) => r.client_id).filter(Boolean)));
+      const clientMap: Record<string, { full_name: string; preferred_name: string | null }> = {};
+      if (clientIds.length > 0) {
+        const { data: clients } = await supabase
+          .from("clients")
+          .select("id, full_name, preferred_name")
+          .in("id", clientIds);
+        (clients || []).forEach((c: any) => {
+          clientMap[c.id] = { full_name: c.full_name, preferred_name: c.preferred_name };
+        });
+      }
+      return rows.map((r) => ({ ...r, clients: clientMap[r.client_id] ?? null })) as unknown as RequestRow[];
     },
     refetchInterval: 30000,
   });
