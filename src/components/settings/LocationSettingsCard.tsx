@@ -467,7 +467,7 @@ export function LocationSettingsCard() {
 
         <div className="space-y-2 p-3 rounded-lg bg-muted/30">
           <Label className="text-xs">Localização no mapa</Label>
-          <div>
+          <div className="flex flex-wrap gap-2">
             <Button
               type="button"
               size="sm"
@@ -478,6 +478,24 @@ export function LocationSettingsCard() {
             >
               {geocoding ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Search className="h-3.5 w-3.5" />}
               Localizar pelo endereço
+            </Button>
+            {/*
+              Botão de GPS temporariamente DESATIVADO: o app nativo iOS ainda não tem as
+              frases de permissão (NSLocationWhenInUseUsageDescription) no Info.plist e o
+              sistema fechava o app ao abrir o módulo de GPS. O módulo @capacitor/geolocation
+              permanece instalado. Para reativar após configurar as frases no Xcode, basta
+              remover `disabled` deste botão e implementar o onClick com o plugin.
+            */}
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              disabled
+              title="Temporariamente indisponível no aplicativo"
+              className="gap-1.5"
+            >
+              <MapPin className="h-3.5 w-3.5" />
+              Usar localização atual
             </Button>
           </div>
           <p className="text-[11px] text-muted-foreground">
