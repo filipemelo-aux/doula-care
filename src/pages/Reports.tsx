@@ -138,7 +138,7 @@ export default function Reports() {
         byPlan: Object.entries(planCounts)
           .sort((x, y) => y[1] - x[1])
           .map(([name, value], i) => ({ name, value, color: palette[i % palette.length] }))
-        ].filter((i) => i.value > 0),
+        ,
         total: data?.length || 0,
       };
     },
