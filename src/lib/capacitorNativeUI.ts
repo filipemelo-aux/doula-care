@@ -86,6 +86,8 @@ async function configureStatusBar() {
 }
 
 async function configureNavigationBar() {
+  // iOS não tem barra de navegação do sistema; o plugin só rejeita.
+  if (getNativePlatform() !== "android") return;
   const NavigationBar = getNavigationBarPlugin();
   if (!NavigationBar) {
     console.warn("[NativeUI] NavigationBar plugin not found on bridge");
