@@ -16,6 +16,7 @@ import {
 import { Baby, Copy, Eye, EyeOff, Loader2, UserPlus, RotateCcw, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { suggestUsername } from "@/lib/clientAccess";
+import { Input } from "@/components/ui/input";
 
 interface Client {
   id: string;
@@ -51,12 +52,17 @@ export function ClientAccessCard({ clientsWithAccounts, loadingClients }: Client
   const [resetConfirmClient, setResetConfirmClient] = useState<Client | null>(null);
   const [passwordResetClient, setPasswordResetClient] = useState<Client | null>(null);
   const [resettingData, setResettingData] = useState(false);
+  const [customResetPassword, setCustomResetPassword] = useState("");
 
   const resetPasswordMutation = useMutation({
-    mutationFn: async (clientId: string) => {
+    mutationFn: async ({ clientId, password }: { clientId: string; password?: string }) => {
       setResettingClientId(clientId);
-      const { data, error } = await supabase.functions.invoke("reset-client-password", { body: { clientId } });
-      if (error) throw error;
+      const { data, error } = await supabase.functions.invoke("reset-client-password", { body: { clientId, password } });
+      if (error) {
+        let msg = error.message;
+        try { const b = await (error as any).context?.json?.(); if (b?.error) msg = b.error; } catch { /* noop */ }
+        throw new Error(msg);
+      }
       if (data.error) throw new Error(data.error);
       return data;
     },
@@ -145,7 +151,7 @@ export function ClientAccessCard({ clientsWithAccounts, loadingClients }: Client
             <div className="space-y-1">
               {clientsWithAccounts.map((client) => {
                 const username = generateUsername(client.full_name);
-                const password = client.dpp ? generatePassword(client.dpp) : "N/A";
+                const password = client.dpp ? generatePassword(client.dpp) : "Definida pela doula";
                 const isPasswordVisible = showPasswords[client.id];
 
                 return (
@@ -277,10 +283,13 @@ export function ClientAccessCard({ clientsWithAccounts, loadingClients }: Client
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
             <AlertDialogAction
+              disabled={!!passwordResetClient && !passwordResetClient.dpp && customResetPassword.trim().length < 6}
               onClick={() => {
                 if (passwordResetClient) {
-                  resetPasswordMutation.mutate(passwordResetClient.id);
+                  const pw = passwordResetClient.dpp ? undefined : customResetPassword.trim();
+                  resetPasswordMutation.mutate({ clientId: passwordResetClient.id, password: pw });
                   setPasswordResetClient(null);
+                  setCustomResetPassword("");
                 }
               }}
             >
