@@ -119,25 +119,26 @@ export default function Reports() {
   const { data: clientStats } = useQuery({
     queryKey: ["client-stats-report"],
     queryFn: async () => {
-      const { data } = await supabase.from("clients").select("status, plan");
+      const { data } = await supabase.from("clients").select("status, plan_settings(name)");
       const statusCounts = { gestante: 0, lactante: 0, outro: 0 };
-      const planCounts = { basico: 0, intermediario: 0, completo: 0 };
-      data?.forEach((c) => {
+      const planCounts: Record<string, number> = {};
+      (data as any[] | null)?.forEach((c) => {
         if (c.status && c.status in statusCounts) statusCounts[c.status as keyof typeof statusCounts]++;
         else if (c.status === "tentante") statusCounts.outro++; // legacy mapping
-        if (c.plan) planCounts[c.plan as keyof typeof planCounts]++;
+        const planName = c.plan_settings?.name?.trim() || "Avulso";
+        planCounts[planName] = (planCounts[planName] || 0) + 1;
       });
+      const palette = ["hsl(16 75% 44%)", "hsl(38 92% 50%)", "hsl(199 89% 48%)", "hsl(142 71% 45%)", "hsl(280 50% 55%)", "hsl(340 70% 55%)"];
       return {
         byStatus: [
           { name: "Gestantes", value: statusCounts.gestante, color: "hsl(16 75% 44%)" },
           { name: "Puérperas", value: statusCounts.lactante, color: "hsl(142 71% 45%)" },
           { name: "Outros", value: statusCounts.outro, color: "hsl(199 89% 48%)" },
         ].filter((i) => i.value > 0),
-        byPlan: [
-          { name: "Básico", value: planCounts.basico, color: "hsl(199 89% 48%)" },
-          { name: "Intermediário", value: planCounts.intermediario, color: "hsl(38 92% 50%)" },
-          { name: "Completo", value: planCounts.completo, color: "hsl(16 75% 44%)" },
-        ].filter((i) => i.value > 0),
+        byPlan: Object.entries(planCounts)
+          .sort((x, y) => y[1] - x[1])
+          .map(([name, value], i) => ({ name, value, color: palette[i % palette.length] }))
+        ,
         total: data?.length || 0,
       };
     },

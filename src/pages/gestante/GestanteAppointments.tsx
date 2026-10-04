@@ -1,4 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
+import { MyPlanConsultationsCard } from "@/components/gestante/MyPlanConsultationsCard";
+import { useClientPlan } from "@/lib/clientPlan";
 import { GestanteLayout } from "@/components/gestante/GestanteLayout";
 import { useGestanteAuth } from "@/contexts/GestanteAuthContext";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -62,6 +65,24 @@ export default function GestanteAppointments() {
   const [selectedTime, setSelectedTime] = useState("");
   const [reason, setReason] = useState("");
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [consultation, setConsultation] = useState<{ sequence: number; name: string } | null>(null);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const { data: planData } = useClientPlan(client?.id);
+
+  const openConsultationRequest = (sequence: number, name: string) => {
+    setConsultation({ sequence, name });
+    setRequestDialogOpen(true);
+  };
+
+  // Deep link vindo do card do plano: /gestante/consultas?consulta=2
+  useEffect(() => {
+    const seq = Number(searchParams.get("consulta"));
+    if (!seq || !planData) return;
+    const item = planData.consultations.find((c) => c.sequence === seq && c.state === "available");
+    if (item) openConsultationRequest(item.sequence, item.name);
+    searchParams.delete("consulta");
+    setSearchParams(searchParams, { replace: true });
+  }, [planData, searchParams]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Fetch upcoming appointments
   const { data: appointments, isLoading: loadingApts } = useQuery({
@@ -180,13 +201,17 @@ export default function GestanteAppointments() {
         requested_time: selectedTime,
         reason: reason || null,
         address: clientAddress,
+        consultation_sequence: consultation?.sequence ?? null,
+        consultation_name: consultation?.name ?? null,
       } as any);
       if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["my-appointment-requests"] });
       queryClient.invalidateQueries({ queryKey: ["occupied-slots"] });
+      queryClient.invalidateQueries({ queryKey: ["client-plan-consultations"] });
       setRequestDialogOpen(false);
+      setConsultation(null);
       setSelectedDate(undefined);
       setSelectedTime("");
       setReason("");
@@ -198,7 +223,7 @@ export default function GestanteAppointments() {
       sendPushNotification({
         send_to_admins: true,
         title: "📅 Nova Solicitação de Consulta",
-        message: `${client?.full_name || "Uma cliente"} solicitou uma consulta.`,
+        message: `${client?.full_name || "Uma cliente"} solicitou ${consultation ? `"${consultation.name}"` : "uma consulta"}.`,
         type: "appointment_reminder",
       });
     },
@@ -220,7 +245,7 @@ export default function GestanteAppointments() {
               <h1 className="page-title">Consultas</h1>
               <p className="page-description">Acompanhe e solicite novas consultas</p>
             </div>
-            <Button size="sm" onClick={() => setRequestDialogOpen(true)}>
+            <Button size="sm" onClick={() => { setConsultation(null); setRequestDialogOpen(true); }}>
               <Plus className="h-4 w-4 mr-1" />
               Solicitar
             </Button>
@@ -228,6 +253,8 @@ export default function GestanteAppointments() {
         </div>
 
         <div className="space-y-6">
+          {client?.id && <MyPlanConsultationsCard clientId={client.id} onRequest={openConsultationRequest} />}
+
           {/* Appointments Card — matches services card style */}
           {(hasUpcoming || hasPendingRequests || hasCompleted) && (
             <div className="rounded-2xl bg-card shadow-card p-4">
@@ -289,6 +316,9 @@ export default function GestanteAppointments() {
                               {config.label}
                             </Badge>
                           </div>
+                          {(req as any).consultation_name && (
+                            <p className="text-xs font-medium text-primary">{(req as any).consultation_name}</p>
+                          )}
                           {req.reason && (
                             <p className="text-xs text-muted-foreground">{req.reason}</p>
                           )}
@@ -359,11 +389,18 @@ export default function GestanteAppointments() {
       </div>
 
       {/* Request Dialog */}
-      <Dialog open={requestDialogOpen} onOpenChange={setRequestDialogOpen}>
+      <Dialog open={requestDialogOpen} onOpenChange={(o) => { setRequestDialogOpen(o); if (!o) setConsultation(null); }}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
             <DialogTitle className="font-display">Solicitar Consulta</DialogTitle>
           </DialogHeader>
+          {consultation && (
+            <div className="rounded-xl bg-primary/10 px-3 py-2 text-sm">
+              <p className="text-xs text-muted-foreground">Consulta do seu plano</p>
+              <p className="font-semibold text-foreground">{consultation.name}</p>
+              <p className="text-xs text-muted-foreground mt-0.5">Escolha o dia e horário. Sua doula confirma se está ok.</p>
+            </div>
+          )}
           <div className="space-y-4">
             <div>
               <Label className="text-xs mb-2 block">Selecione um dia disponível</Label>
@@ -419,7 +456,7 @@ export default function GestanteAppointments() {
             )}
 
             <div>
-              <Label className="text-xs">Motivo (opcional)</Label>
+              <Label className="text-xs">{consultation ? "Observação (opcional)" : "Motivo (opcional)"}</Label>
               <Textarea
                 placeholder="Descreva o motivo da consulta..."
                 value={reason}

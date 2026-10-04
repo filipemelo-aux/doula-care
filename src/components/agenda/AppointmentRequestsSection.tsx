@@ -42,6 +42,8 @@ interface AppointmentRequestWithClient {
   admin_notes: string | null;
   address: string | null;
   created_at: string;
+  consultation_sequence: number | null;
+  consultation_name: string | null;
   clients: { full_name: string; user_id: string | null };
 }
 
@@ -103,11 +105,11 @@ export function AppointmentRequestsSection() {
         const scheduledAt = new Date(
           `${request.requested_date}T${request.requested_time}`
         );
-        const { error: aptError } = await supabase
+        const { data: apt, error: aptError } = await supabase
           .from("appointments")
           .insert({
             client_id: request.client_id,
-            title: "Consulta (solicitada)",
+            title: request.consultation_name || "Consulta (solicitada)",
             scheduled_at: scheduledAt.toISOString(),
             notes: request.reason
               ? `Motivo: ${request.reason}${notes ? `\nNota: ${notes}` : ""}`
@@ -115,8 +117,25 @@ export function AppointmentRequestsSection() {
             address: request.address || null,
             owner_id: user?.id || null,
             organization_id: organizationId || null,
-          });
+          })
+          .select("id")
+          .single();
         if (aptError) throw aptError;
+
+        // Consulta do plano: marca a etapa como agendada na linha do tempo do acompanhamento
+        if (request.consultation_sequence && request.consultation_name) {
+          const db = supabase.from("followup_sessions" as any) as any;
+          const { data: existing } = await db
+            .select("id")
+            .eq("client_id", request.client_id)
+            .eq("sequence", request.consultation_sequence)
+            .maybeSingle();
+          const payload = { status: "scheduled", appointment_id: apt.id, sequence: request.consultation_sequence, service_name: request.consultation_name, performed_at: null };
+          const { error: sErr } = existing?.id
+            ? await db.update(payload).eq("id", existing.id)
+            : await db.insert({ ...payload, organization_id: organizationId, client_id: request.client_id, created_by: user?.id });
+          if (sErr) throw sErr;
+        }
       }
 
       // Notify client
@@ -163,6 +182,7 @@ export function AppointmentRequestsSection() {
       queryClient.invalidateQueries({ queryKey: ["agenda-appointments"] });
       queryClient.invalidateQueries({ queryKey: ["all-appointments"] });
       queryClient.invalidateQueries({ queryKey: ["occupied-slots"] });
+      queryClient.invalidateQueries({ queryKey: ["followup-sessions"] });
       setRespondDialog(null);
       setAdminNotes("");
       toast.success(
@@ -246,6 +266,9 @@ export function AppointmentRequestsSection() {
                           <Clock className="h-3 w-3" />
                           {dayStr}, {req.requested_time.slice(0, 5)}
                         </p>
+                        {req.consultation_name && (
+                          <p className="text-sm font-medium text-primary">{req.consultation_name}</p>
+                        )}
                         {req.reason && (
                           <p className="text-xs text-muted-foreground flex items-center gap-1">
                             <MessageSquare className="h-3 w-3" />

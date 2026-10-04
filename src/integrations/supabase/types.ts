@@ -60,6 +60,8 @@ export type Database = {
           address: string | null
           admin_notes: string | null
           client_id: string
+          consultation_name: string | null
+          consultation_sequence: number | null
           created_at: string
           id: string
           organization_id: string | null
@@ -73,6 +75,8 @@ export type Database = {
           address?: string | null
           admin_notes?: string | null
           client_id: string
+          consultation_name?: string | null
+          consultation_sequence?: number | null
           created_at?: string
           id?: string
           organization_id?: string | null
@@ -86,6 +90,8 @@ export type Database = {
           address?: string | null
           admin_notes?: string | null
           client_id?: string
+          consultation_name?: string | null
+          consultation_sequence?: number | null
           created_at?: string
           id?: string
           organization_id?: string | null
