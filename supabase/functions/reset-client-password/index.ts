@@ -90,7 +90,9 @@ Deno.serve(async (req) => {
       }
     }
 
-    const { clientId } = await req.json();
+    const body = await req.json();
+    const { clientId } = body;
+    const customPassword = typeof body.password === "string" ? body.password.trim() : "";
 
     if (!clientId) {
       throw new Error("Missing required field: clientId");
@@ -113,10 +115,20 @@ Deno.serve(async (req) => {
     }
 
     if (!client.user_id) throw new Error("Cliente não possui acesso ao sistema");
-    if (!client.dpp) throw new Error("Cliente não possui DPP cadastrada");
-
-    const { password: newPassword, digits } = generatePassword(client.dpp);
-    if (digits.length < 4) throw new Error("DPP inválida para gerar senha");
+    let newPassword = customPassword;
+    if (!newPassword) {
+      if (!client.dpp) {
+        return new Response(JSON.stringify({ error: "Cliente sem DPP: informe a nova senha" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+      const gen = generatePassword(client.dpp);
+      if (gen.digits.length < 4) throw new Error("DPP inválida para gerar senha");
+      newPassword = gen.password;
+    }
+    if (newPassword.length < 6) {
+      return new Response(JSON.stringify({ error: "A senha precisa ter pelo menos 6 caracteres" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
 
     const { error: updateError } = await supabase.auth.admin.updateUserById(
       client.user_id,
@@ -131,7 +143,7 @@ Deno.serve(async (req) => {
       JSON.stringify({
         message: "Senha resetada com sucesso",
         password: newPassword,
-        hint: `Nova senha: dpp + dia/mês/ano da DPP (${newPassword})`,
+        hint: `Nova senha: ${newPassword}`,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
     );
