@@ -135,7 +135,7 @@ async function enrichWithStorePrices(products: StoreProduct[]): Promise<StorePro
   if (!isNativeMobile() || products.length === 0) return products;
   try {
     const ready = await setupNativePlugin().catch(() => false);
-    const Purchases: any = await loadNativePurchases();
+    const Purchases: any = (await loadNativePurchasesBox())?.plugin;
     if (!ready || !Purchases?.getProducts) return products;
 
     const res: any = await withTimeout(Purchases.getProducts({
@@ -180,11 +180,16 @@ async function enrichWithStorePrices(products: StoreProduct[]): Promise<StorePro
 // Native bridge (lazy import to keep web bundle clean)
 // ──────────────────────────────────────────────────────────────────
 
-async function loadNativePurchases() {
+// IMPORTANTE: o plugin do Capacitor é um Proxy que responde a qualquer método,
+// inclusive "then". Se ele for retornado direto de uma função async, o
+// JavaScript o trata como Promise e chama Purchases.then() — que trava/falha
+// ("Purchases.then() is not implemented on ios"). Por isso sempre embrulhamos
+// o plugin num objeto { plugin } antes de passar por await.
+async function loadNativePurchasesBox(): Promise<{ plugin: any } | null> {
   if (!isNativeMobile()) return null;
   try {
-    const mod = await import("@revenuecat/purchases-capacitor");
-    return (mod as any).Purchases ?? mod;
+    const mod: any = await import("@revenuecat/purchases-capacitor");
+    return { plugin: mod.Purchases };
   } catch (err) {
     console.warn("[IAP] Plugin not available:", err);
     return null;
@@ -237,7 +242,8 @@ async function setupNativePlugin(): Promise<boolean> {
   const attempt = (async () => {
     try {
       console.log("[IAP] setup: carregando plugin");
-      const Purchases: any = await withTimeout(loadNativePurchases(), 10000, "O plugin de compras");
+      const box = await withTimeout(loadNativePurchasesBox(), 10000, "O plugin de compras");
+      const Purchases: any = box?.plugin;
       if (!Purchases) {
         console.warn("[IAP] setup: plugin indisponível");
         return false;
@@ -283,7 +289,7 @@ async function setupNativePlugin(): Promise<boolean> {
 /** Atualiza o appUserID no plugin (chamar após login/logout). */
 async function identifyNativeUser(userId: string | null) {
   if (!isNativeMobile()) return;
-  const Purchases: any = await loadNativePurchases();
+  const Purchases: any = (await loadNativePurchasesBox())?.plugin;
   if (!Purchases) return;
   try {
     if (userId) {
@@ -346,7 +352,7 @@ export const AppStoreSubscriptionService = {
 
     console.log("[IAP] compra iniciada:", productId);
     const ready = await setupNativePlugin();
-    const Purchases = ready ? await loadNativePurchases() : null;
+    const Purchases: any = ready ? (await loadNativePurchasesBox())?.plugin : null;
     if (!Purchases || !ready) {
       return {
         status: "error",
@@ -406,7 +412,7 @@ export const AppStoreSubscriptionService = {
     if (platform === "ios") {
       try {
         await setupNativePlugin();
-        const Purchases: any = await loadNativePurchases();
+        const Purchases: any = (await loadNativePurchasesBox())?.plugin;
         if (Purchases?.presentCodeRedemptionSheet) {
           await Purchases.presentCodeRedemptionSheet();
           return {
@@ -461,7 +467,7 @@ export const AppStoreSubscriptionService = {
       };
     }
     const ready = await setupNativePlugin();
-    const Purchases = await loadNativePurchases();
+    const Purchases: any = (await loadNativePurchasesBox())?.plugin;
     if (!Purchases || !ready) {
       return { restored: false, message: "Plugin de compras indisponível." };
     }
