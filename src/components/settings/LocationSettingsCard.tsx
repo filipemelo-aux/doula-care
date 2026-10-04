@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Geolocation } from "@capacitor/geolocation";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -16,7 +15,6 @@ import { toast } from "sonner";
 
 import { fetchAddressByCep, fetchCoordinatesByCep } from "@/lib/address";
 import { maskCEP, unmask } from "@/lib/masks";
-import { isCapacitorNative } from "@/lib/capacitorPush";
 
 export function LocationSettingsCard() {
   const { organizationId } = useAuth();
@@ -54,7 +52,6 @@ export function LocationSettingsCard() {
   const [streetNumber, setStreetNumber] = useState("");
   const [cepLoading, setCepLoading] = useState(false);
   const [geocoding, setGeocoding] = useState(false);
-  const [locatingDevice, setLocatingDevice] = useState(false);
 
   useEffect(() => {
     if (!org) return;
