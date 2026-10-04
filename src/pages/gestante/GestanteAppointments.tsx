@@ -316,6 +316,9 @@ export default function GestanteAppointments() {
                               {config.label}
                             </Badge>
                           </div>
+                          {(req as any).consultation_name && (
+                            <p className="text-xs font-medium text-primary">{(req as any).consultation_name}</p>
+                          )}
                           {req.reason && (
                             <p className="text-xs text-muted-foreground">{req.reason}</p>
                           )}

@@ -56,12 +56,6 @@ const statusLabels: Record<string, string> = {
   outro: "Outro",
 };
 
-const planLabels: Record<string, string> = {
-  basico: "Básico",
-  intermediario: "Intermediário",
-  completo: "Completo",
-  avulso: "Avulso",
-};
 
 const paymentStatusLabels: Record<string, string> = {
   pendente: "Pendente",
@@ -87,8 +81,8 @@ async function fetchReportData(tab: ReportTab, period: PeriodOption) {
   if (tab === "clientes") {
     const { data } = await supabase
       .from("clients")
-      .select("full_name, status, plan, phone, plan_value, payment_status");
-    return { clients: (data || []) as ClientRow[] };
+      .select("full_name, status, phone, plan_value, payment_status, plan_settings(name)");
+    return { clients: ((data || []) as any[]).map((c) => ({ ...c, plan: c.plan_settings?.name?.trim() || "Avulso" })) as ClientRow[] };
   }
 
   // All financial tabs use transactions (single source of truth, matches Reports KPIs)
@@ -142,7 +136,7 @@ function buildCSV(tab: ReportTab, data: Awaited<ReturnType<typeof fetchReportDat
     lines.push("Nome,Status,Plano,Telefone,Valor do Plano,Status Pagamento");
     data.clients.forEach((c) => {
       lines.push(
-        `"${c.full_name}",${statusLabels[c.status] || c.status},${planLabels[c.plan] || c.plan},"${c.phone}",${c.plan_value || 0},${paymentStatusLabels[c.payment_status] || c.payment_status}`
+        `"${c.full_name}",${statusLabels[c.status] || c.status},${c.plan},"${c.phone}",${c.plan_value || 0},${paymentStatusLabels[c.payment_status] || c.payment_status}`
       );
     });
     return lines.join("\n");
@@ -189,7 +183,7 @@ async function buildAndDownloadXLSX(tab: ReportTab, data: Awaited<ReturnType<typ
     ];
     const rows: Row[] = data.clients.map((c) => [
       { value: c.full_name, type: String }, { value: statusLabels[c.status] || c.status, type: String },
-      { value: planLabels[c.plan] || c.plan, type: String }, { value: c.phone, type: String },
+      { value: c.plan, type: String }, { value: c.phone, type: String },
       { value: c.plan_value || 0, type: Number }, { value: paymentStatusLabels[c.payment_status] || c.payment_status, type: String },
     ]);
     sheets.push({ name: "Clientes", data: [header, ...rows] });
@@ -256,7 +250,7 @@ async function buildAndDownloadPDF(tab: ReportTab, data: Awaited<ReturnType<type
       body: data.clients.map((c) => [
         c.full_name,
         statusLabels[c.status] || c.status,
-        planLabels[c.plan] || c.plan,
+        c.plan,
         c.phone,
         formatCurrency(c.plan_value || 0),
         paymentStatusLabels[c.payment_status] || c.payment_status,

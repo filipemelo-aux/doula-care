@@ -26,6 +26,8 @@ import { AvatarUpload } from "@/components/gestante/AvatarUpload";
 import { PaymentDetailsDialog } from "@/components/gestante/PaymentDetailsDialog";
 import { getLocalDate } from "@/lib/utils";
 import { ChevronRight } from "lucide-react";
+import { useClientPlan } from "@/lib/clientPlan";
+import { MyPlanConsultationsCard } from "@/components/gestante/MyPlanConsultationsCard";
 
 type Client = Tables<"clients">;
 
@@ -38,6 +40,7 @@ export default function GestanteProfile() {
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const { client, user, signOut } = useGestanteAuth();
   const [searchParams, setSearchParams] = useSearchParams();
+  const { data: planData } = useClientPlan(client?.id);
 
   useEffect(() => {
     if (searchParams.get("tab") === "plano") {
@@ -102,14 +105,6 @@ export default function GestanteProfile() {
     return variants[status] || variants.pendente;
   };
 
-  const getPlanLabel = (plan: string) => {
-    const plans: Record<string, string> = {
-      basico: "Básico",
-      intermediario: "Intermediário",
-      completo: "Completo",
-    };
-    return plans[plan] || plan;
-  };
 
   if (loading) {
     return (
@@ -166,7 +161,7 @@ export default function GestanteProfile() {
           <CardContent>
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xl font-semibold">{getPlanLabel(clientData?.plan || "basico")}</p>
+                <p className="text-xl font-semibold">{planData?.planName ?? "…"}</p>
                 <p className="text-sm text-muted-foreground">Toque para ver detalhes</p>
               </div>
               {clientData?.plan_value && (
@@ -179,6 +174,8 @@ export default function GestanteProfile() {
             </div>
           </CardContent>
         </Card>
+
+        {client?.id && <MyPlanConsultationsCard clientId={client.id} />}
 
         {/* DPP Info */}
         {clientData?.dpp && (
