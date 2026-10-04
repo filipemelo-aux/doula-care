@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
-import { CalendarDays, Eye, Pencil, FileText, HandCoins, Plus, Search, type LucideIcon } from "lucide-react";
+import { CalendarDays, Eye, Pencil, FileText, Plus, CheckCircle, Trash2, Search, type LucideIcon } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { createServiceRecordWithReceivable } from "@/lib/serviceBilling";
@@ -26,6 +26,9 @@ export interface ServiceRecord {
   notes: string | null;
   status: "forecast" | "invoiced"; // Valor legado do banco; não há mais etapa de previsão no aplicativo.
   transaction_id: string | null;
+  appointment_id: string | null;
+  completed_at: string | null;
+  appointments?: { scheduled_at: string; completed_at: string | null } | null;
   clients?: { full_name: string } | null;
   transactions?: { amount: number; amount_received: number | null } | null;
 }
@@ -40,7 +43,7 @@ export function useServiceRecords() {
     enabled: !!organizationId,
     queryFn: async () => {
       const { data, error } = await (supabase.from("service_records" as any) as any)
-        .select("*, clients(full_name), transactions(amount, amount_received)")
+        .select("*, clients(full_name), transactions(amount, amount_received), appointments(scheduled_at, completed_at)")
         .eq("organization_id", organizationId)
         .order("service_date", { ascending: false });
       if (error) throw error;
@@ -76,6 +79,7 @@ export default function ServiceRecords() {
   const [form, setForm] = useState({ client_id: "", service_name: "", amount: "", service_date: format(new Date(), "yyyy-MM-dd"), service_time: "09:00", notes: "" });
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [editing, setEditing] = useState<ServiceRecord | null>(null);
+  const [deleting, setDeleting] = useState<ServiceRecord | null>(null);
   const emptyForm = () => ({ client_id: "", service_name: "", amount: "", service_date: format(new Date(), "yyyy-MM-dd"), service_time: "09:00", notes: "" });
   const openEdit = (r: ServiceRecord) => {
     setEditing(r);
@@ -134,11 +138,17 @@ export default function ServiceRecords() {
       const amount = Number(String(form.amount).replace(/\./g, "").replace(",", ".")) || 0;
       if (!form.service_name.trim()) throw new Error("Informe o serviço");
       if (amount <= 0) throw new Error("Informe um valor maior que zero para incluir o atendimento em Contas a Receber");
-      await createServiceRecordWithReceivable({ organization_id: organizationId, client_id: form.client_id || null, service_name: form.service_name.trim(), amount, service_date: form.service_date, notes: form.notes || null, created_by: user?.id });
+      // 1) Compromisso na agenda (sempre pendente: a doula conclui manualmente)
       const scheduledAt = fromZonedTime(`${form.service_date}T${form.service_time || "09:00"}`, "America/Sao_Paulo");
-      const isPast = scheduledAt.getTime() <= Date.now();
-      const { error: aptErr } = await supabase.from("appointments").insert({ client_id: form.client_id || null, title: form.service_name.trim(), scheduled_at: scheduledAt.toISOString(), notes: form.notes || null, completed_at: isPast ? new Date().toISOString() : null, owner_id: user?.id || null, organization_id: organizationId } as any);
+      const { data: apt, error: aptErr } = await supabase.from("appointments").insert({ client_id: form.client_id || null, title: form.service_name.trim(), scheduled_at: scheduledAt.toISOString(), notes: form.notes || null, owner_id: user?.id || null, organization_id: organizationId } as any).select("id").single();
       if (aptErr) throw aptErr;
+      // 2) Atendimento + receita em Contas a Receber, vinculado ao compromisso
+      try {
+        await createServiceRecordWithReceivable({ organization_id: organizationId, client_id: form.client_id || null, service_name: form.service_name.trim(), amount, service_date: form.service_date, notes: form.notes || null, created_by: user?.id, appointment_id: apt.id });
+      } catch (e) {
+        await supabase.from("appointments").delete().eq("id", apt.id);
+        throw e;
+      }
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["service-records"] }); qc.invalidateQueries({ queryKey: ["transactions"] });
@@ -163,17 +173,15 @@ export default function ServiceRecords() {
         const { error: txErr } = await supabase.from("transactions").update({ description: `Atendimento - ${name}`, amount, installment_value: amount, date: form.service_date, client_id: form.client_id || null, notes: form.notes || null }).eq("id", editing.transaction_id);
         if (txErr) throw txErr;
       }
-      // Atualiza o compromisso correspondente na agenda (mesma cliente, título e dia)
-      if (editing.client_id) {
-        const start = fromZonedTime(`${editing.service_date}T00:00`, "America/Sao_Paulo").toISOString();
-        const end = fromZonedTime(`${editing.service_date}T23:59:59`, "America/Sao_Paulo").toISOString();
-        const { data: apts } = await supabase.from("appointments").select("id, scheduled_at").eq("client_id", editing.client_id).eq("title", editing.service_name).gte("scheduled_at", start).lte("scheduled_at", end).limit(1);
-        const apt = apts?.[0];
-        if (apt) {
-          const oldTime = new Intl.DateTimeFormat("en-GB", { timeZone: "America/Sao_Paulo", hour: "2-digit", minute: "2-digit", hour12: false }).format(new Date(apt.scheduled_at));
-          const scheduledAt = fromZonedTime(`${form.service_date}T${oldTime}`, "America/Sao_Paulo");
-          await supabase.from("appointments").update({ client_id: form.client_id || null, title: name, scheduled_at: scheduledAt.toISOString(), notes: form.notes || null, ...(scheduledAt.getTime() <= Date.now() ? { completed_at: new Date().toISOString() } : {}) } as any).eq("id", apt.id);
-        }
+      // Mantém o compromisso vinculado na agenda (cria se estiver faltando)
+      const scheduledAt = fromZonedTime(`${form.service_date}T${form.service_time || "09:00"}`, "America/Sao_Paulo");
+      if (editing.appointment_id) {
+        const { error: aErr } = await supabase.from("appointments").update({ client_id: form.client_id || null, title: name, scheduled_at: scheduledAt.toISOString(), notes: form.notes || null } as any).eq("id", editing.appointment_id);
+        if (aErr) throw aErr;
+      } else {
+        const { data: apt, error: aErr } = await supabase.from("appointments").insert({ client_id: form.client_id || null, title: name, scheduled_at: scheduledAt.toISOString(), notes: form.notes || null, completed_at: editing.completed_at, owner_id: user?.id || null, organization_id: organizationId } as any).select("id").single();
+        if (aErr) throw aErr;
+        await (supabase.from("service_records" as any) as any).update({ appointment_id: apt.id }).eq("id", editing.id);
       }
     },
     onSuccess: () => {
@@ -182,6 +190,36 @@ export default function ServiceRecords() {
       setOpen(false); setEditing(null); setForm(emptyForm());
     },
     onError: (e: any) => toast.error(e.message || "Erro ao atualizar"),
+  });
+
+  const isDone = (r: ServiceRecord) => !!(r.completed_at || r.appointments?.completed_at);
+  const invalidateAll = () => ["service-records", "transactions", "agenda-appointments", "all-appointments", "payments"].forEach((k) => qc.invalidateQueries({ queryKey: [k] }));
+
+  const complete = useMutation({
+    mutationFn: async (r: ServiceRecord) => {
+      const now = new Date().toISOString();
+      const { error } = await (supabase.from("service_records" as any) as any).update({ completed_at: now }).eq("id", r.id);
+      if (error) throw error;
+      if (r.appointment_id) await supabase.from("appointments").update({ completed_at: now }).eq("id", r.appointment_id);
+    },
+    onSuccess: () => { invalidateAll(); setDetail(null); toast.success("Atendimento concluído."); },
+    onError: (e: any) => toast.error(e.message || "Erro ao concluir"),
+  });
+
+  const remove = useMutation({
+    mutationFn: async (r: ServiceRecord) => {
+      if (Number(r.transactions?.amount_received || 0) > 0) throw new Error("Este atendimento já tem pagamento registrado em Contas a Receber e não pode ser excluído.");
+      const { error } = await (supabase.from("service_records" as any) as any).delete().eq("id", r.id);
+      if (error) throw error;
+      if (r.transaction_id) {
+        await supabase.from("payments").delete().eq("transaction_id", r.transaction_id).eq("amount_paid", 0);
+        const { error: tErr } = await supabase.from("transactions").delete().eq("id", r.transaction_id);
+        if (tErr) throw tErr;
+      }
+      if (r.appointment_id) await supabase.from("appointments").delete().eq("id", r.appointment_id);
+    },
+    onSuccess: () => { invalidateAll(); setDeleting(null); setDetail(null); toast.success("Atendimento excluído da lista, da agenda e de Contas a Receber."); },
+    onError: (e: any) => toast.error(e.message || "Erro ao excluir"),
   });
 
   return (
@@ -224,20 +262,12 @@ export default function ServiceRecords() {
                 <div className="min-w-0 flex-1 space-y-1.5">
                   <p className="break-words font-semibold leading-snug">{r.service_name}</p>
                   <p className="break-words text-xs text-muted-foreground">{r.clients?.full_name || "Sem cliente"}</p>
-                  <div className="flex flex-wrap items-center gap-2"><p className="text-xs text-muted-foreground">{fmtDate(r.service_date)}</p><Badge variant={st.variant} className="shrink-0">{st.label}</Badge></div>
+                  <div className="flex flex-wrap items-center gap-2"><p className="text-xs text-muted-foreground">{fmtDate(r.service_date)}</p>{r.appointments?.scheduled_at && <p className="text-xs text-muted-foreground">às {new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo", hour: "2-digit", minute: "2-digit" }).format(new Date(r.appointments.scheduled_at))}</p>}<Badge variant={isDone(r) ? "default" : "outline"} className="shrink-0">{isDone(r) ? "Concluído" : "Agendado"}</Badge><Badge variant={st.variant} className="shrink-0">{st.label}</Badge></div>
                   <div className="flex items-center justify-between gap-2 pt-1"><p className="font-bold">{brl(r.amount)}</p><div className="flex shrink-0 items-center gap-1">
                   <Button size="icon" variant="ghost" aria-label="Visualizar atendimento" onClick={() => setDetail(r)}><Eye className="h-4 w-4" /></Button>
                   <Button size="icon" variant="ghost" aria-label="Editar atendimento" onClick={() => openEdit(r)}><Pencil className="h-4 w-4" /></Button>
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    aria-label="Registrar pagamento em Contas a Receber"
-                    disabled={stageOf(r) === "paid"}
-                    onClick={() => {
-                      if (!r.transaction_id) { toast.error("Este atendimento não possui receita vinculada em Contas a Receber."); return; }
-                      navigate("/financeiro", { state: { openPaymentTransactionId: r.transaction_id } });
-                    }}
-                  ><HandCoins className="h-4 w-4" /></Button>
+                  {!isDone(r) && <Button size="icon" variant="ghost" aria-label="Concluir atendimento" className="text-success" disabled={complete.isPending} onClick={() => complete.mutate(r)}><CheckCircle className="h-4 w-4" /></Button>}
+                  <Button size="icon" variant="ghost" aria-label="Excluir atendimento" className="text-destructive" onClick={() => setDeleting(r)}><Trash2 className="h-4 w-4" /></Button>
                   </div></div>
                 </div>
               </div>
@@ -246,7 +276,8 @@ export default function ServiceRecords() {
         </div>
       )}
 
-      <Dialog open={!!detail} onOpenChange={(value) => !value && setDetail(null)}><DialogContent><DialogHeader><DialogTitle>Detalhes do atendimento</DialogTitle></DialogHeader>{detail && <div className="space-y-5"><div><p className="text-xs text-muted-foreground">Serviço</p><p className="font-semibold">{detail.service_name}</p><p className="text-sm text-muted-foreground">{detail.clients?.full_name || "Sem cliente"} · {fmtDate(detail.service_date)}</p></div><div className="grid grid-cols-2 gap-3 rounded-xl bg-muted/50 p-3"><div><p className="text-xs text-muted-foreground">Valor</p><p className="font-semibold">{brl(detail.amount)}</p></div><div><p className="text-xs text-muted-foreground">Situação</p><p className="font-semibold">{statusOf(detail).label}</p></div></div>{detail.notes && <div><p className="text-xs text-muted-foreground">Observações</p><p className="text-sm">{detail.notes}</p></div>}<Button className="w-full" variant="secondary" onClick={() => setDetail(null)}>Fechar</Button></div>}</DialogContent></Dialog>
+      <Dialog open={!!detail} onOpenChange={(value) => !value && setDetail(null)}><DialogContent><DialogHeader><DialogTitle>Detalhes do atendimento</DialogTitle></DialogHeader>{detail && <div className="space-y-5"><div><p className="text-xs text-muted-foreground">Serviço</p><p className="font-semibold">{detail.service_name}</p><p className="text-sm text-muted-foreground">{detail.clients?.full_name || "Sem cliente"} · {fmtDate(detail.service_date)}</p></div><div className="grid grid-cols-2 gap-3 rounded-xl bg-muted/50 p-3"><div><p className="text-xs text-muted-foreground">Valor</p><p className="font-semibold">{brl(detail.amount)}</p></div><div><p className="text-xs text-muted-foreground">Situação</p><p className="font-semibold">{statusOf(detail).label}</p></div></div>{detail.notes && <div><p className="text-xs text-muted-foreground">Observações</p><p className="text-sm">{detail.notes}</p></div>}<div className="grid gap-2">{!isDone(detail) && <Button className="w-full gap-2" onClick={() => complete.mutate(detail)} disabled={complete.isPending}><CheckCircle className="h-4 w-4" /> Concluir atendimento</Button>}<Button className="w-full gap-2 text-destructive" variant="ghost" onClick={() => setDeleting(detail)}><Trash2 className="h-4 w-4" /> Excluir</Button><Button className="w-full" variant="secondary" onClick={() => setDetail(null)}>Fechar</Button></div></div>}</DialogContent></Dialog>
+      <Dialog open={!!deleting} onOpenChange={(v) => !v && setDeleting(null)}><DialogContent className="max-w-sm"><DialogHeader><DialogTitle>Excluir atendimento?</DialogTitle></DialogHeader><p className="text-sm text-muted-foreground">{deleting?.service_name} será removido da lista de atendimentos, da agenda e de Contas a Receber.</p><DialogFooter><Button variant="ghost" onClick={() => setDeleting(null)}>Cancelar</Button><Button variant="destructive" disabled={remove.isPending} onClick={() => deleting && remove.mutate(deleting)}>Excluir</Button></DialogFooter></DialogContent></Dialog>
 
       <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v && editing) { setEditing(null); setForm(emptyForm()); } }}><DialogContent><DialogHeader><DialogTitle>{editing ? "Editar atendimento" : "Novo atendimento"}</DialogTitle></DialogHeader><div className="space-y-4">
         <div className="rounded-xl bg-muted/50 p-3"><p className="text-sm font-semibold">1. Serviço realizado</p><p className="text-xs text-muted-foreground">Informe o que foi feito e para qual cliente.</p></div>
