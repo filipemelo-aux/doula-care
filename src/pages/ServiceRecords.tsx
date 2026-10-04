@@ -83,7 +83,7 @@ export default function ServiceRecords() {
   const emptyForm = () => ({ client_id: "", service_name: "", amount: "", service_date: format(new Date(), "yyyy-MM-dd"), service_time: "09:00", notes: "" });
   const openEdit = (r: ServiceRecord) => {
     setEditing(r);
-    setForm({ client_id: r.client_id || "", service_name: r.service_name, amount: Number(r.amount).toFixed(2).replace(".", ","), service_date: r.service_date, service_time: "09:00", notes: r.notes || "" });
+    setForm({ client_id: r.client_id || "", service_name: r.service_name, amount: Number(r.amount).toFixed(2).replace(".", ","), service_date: r.service_date, service_time: r.appointments?.scheduled_at ? new Intl.DateTimeFormat("en-GB", { timeZone: "America/Sao_Paulo", hour: "2-digit", minute: "2-digit", hour12: false }).format(new Date(r.appointments.scheduled_at)) : "09:00", notes: r.notes || "" });
     setOpen(true);
   };
   const selectedNames = form.service_name ? form.service_name.split(" + ") : [];
