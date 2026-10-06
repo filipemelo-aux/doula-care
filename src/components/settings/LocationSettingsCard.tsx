@@ -280,6 +280,35 @@ export function LocationSettingsCard() {
     setNewArea("");
   };
 
+  /**
+   * Captura a posição atual do aparelho (GPS do celular ou do navegador).
+   * Requer as frases de permissão no Info.plist nativo
+   * (NSLocationWhenInUseUsageDescription / NSLocationAlwaysAndWhenInUseUsageDescription),
+   * já incluídas a partir do Build 3.
+   */
+  const useCurrentLocation = async () => {
+    setGpsLoading(true);
+    try {
+      const position = await Geolocation.getCurrentPosition({
+        enableHighAccuracy: true,
+        timeout: 20000,
+      });
+      setLatitude(position.coords.latitude);
+      setLongitude(position.coords.longitude);
+      toast.success("Localização atual definida!", {
+        description: "Ajuste o CEP e o endereço se necessário e salve.",
+        position: "top-center",
+      });
+    } catch {
+      toast.error("Não foi possível obter sua localização", {
+        description: "Verifique se a permissão de localização está ativada para o app, ou use \"Localizar pelo endereço\".",
+        position: "top-center",
+      });
+    } finally {
+      setGpsLoading(false);
+    }
+  };
+
   const removeArea = (a: string) => setAreas(areas.filter(x => x !== a));
 
   const save = useMutation({
