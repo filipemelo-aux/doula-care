@@ -511,21 +511,19 @@ export function LocationSettingsCard() {
               Localizar pelo endereço
             </Button>
             {/*
-              Botão de GPS temporariamente DESATIVADO: o app nativo iOS ainda não tem as
-              frases de permissão (NSLocationWhenInUseUsageDescription) no Info.plist e o
-              sistema fechava o app ao abrir o módulo de GPS. O módulo @capacitor/geolocation
-              permanece instalado. Para reativar após configurar as frases no Xcode, basta
-              remover `disabled` deste botão e implementar o onClick com o plugin.
+              Botão de GPS reativado: as frases de permissão de localização
+              (NSLocationWhenInUseUsageDescription e NSLocationAlwaysAndWhenInUseUsageDescription)
+              foram adicionadas ao Info.plist nativo a partir do Build 3.
             */}
             <Button
               type="button"
               size="sm"
               variant="outline"
-              disabled
-              title="Temporariamente indisponível no aplicativo"
+              onClick={useCurrentLocation}
+              disabled={gpsLoading}
               className="gap-1.5"
             >
-              <MapPin className="h-3.5 w-3.5" />
+              {gpsLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <MapPin className="h-3.5 w-3.5" />}
               Usar localização atual
             </Button>
           </div>
