@@ -14,6 +14,7 @@ import { MapPin, Loader2, Plus, X, MessageCircle, Instagram, Search } from "luci
 import { toast } from "sonner";
 
 import { fetchAddressByCep, fetchCoordinatesByCep } from "@/lib/address";
+import { Geolocation } from "@capacitor/geolocation";
 import { maskCEP, unmask } from "@/lib/masks";
 
 export function LocationSettingsCard() {
@@ -52,6 +53,7 @@ export function LocationSettingsCard() {
   const [streetNumber, setStreetNumber] = useState("");
   const [cepLoading, setCepLoading] = useState(false);
   const [geocoding, setGeocoding] = useState(false);
+  const [gpsLoading, setGpsLoading] = useState(false);
 
   useEffect(() => {
     if (!org) return;
