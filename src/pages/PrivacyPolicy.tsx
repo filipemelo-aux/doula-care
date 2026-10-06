@@ -1,4 +1,5 @@
 import SmartBackLink from "@/components/SmartBackLink";
+import { Link } from "react-router-dom";
 
 const PrivacyPolicy = () => {
   return (
