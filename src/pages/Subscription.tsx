@@ -887,8 +887,19 @@ export default function Subscription() {
             <a href="/politica-de-privacidade" className="underline">
               Política de Privacidade
             </a>
+            <a href="/termos-de-uso" className="underline">
+              Termos de Uso (EULA)
+            </a>
+            <a
+              href="https://www.apple.com/legal/internet-services/itunes/dev/stdeula/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline"
+            >
+              EULA padrão da Apple
+            </a>
             <a href="/suporte" className="underline">
-              Termos de Uso e Suporte
+              Suporte
             </a>
           </div>
         </CardContent>
