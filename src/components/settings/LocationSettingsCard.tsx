@@ -14,6 +14,7 @@ import { MapPin, Loader2, Plus, X, MessageCircle, Instagram, Search } from "luci
 import { toast } from "sonner";
 
 import { fetchAddressByCep, fetchCoordinatesByCep } from "@/lib/address";
+import { Geolocation } from "@capacitor/geolocation";
 import { maskCEP, unmask } from "@/lib/masks";
 
 export function LocationSettingsCard() {
@@ -52,6 +53,7 @@ export function LocationSettingsCard() {
   const [streetNumber, setStreetNumber] = useState("");
   const [cepLoading, setCepLoading] = useState(false);
   const [geocoding, setGeocoding] = useState(false);
+  const [gpsLoading, setGpsLoading] = useState(false);
 
   useEffect(() => {
     if (!org) return;
@@ -278,6 +280,35 @@ export function LocationSettingsCard() {
     setNewArea("");
   };
 
+  /**
+   * Captura a posição atual do aparelho (GPS do celular ou do navegador).
+   * Requer as frases de permissão no Info.plist nativo
+   * (NSLocationWhenInUseUsageDescription / NSLocationAlwaysAndWhenInUseUsageDescription),
+   * já incluídas a partir do Build 3.
+   */
+  const useCurrentLocation = async () => {
+    setGpsLoading(true);
+    try {
+      const position = await Geolocation.getCurrentPosition({
+        enableHighAccuracy: true,
+        timeout: 20000,
+      });
+      setLatitude(position.coords.latitude);
+      setLongitude(position.coords.longitude);
+      toast.success("Localização atual definida!", {
+        description: "Ajuste o CEP e o endereço se necessário e salve.",
+        position: "top-center",
+      });
+    } catch {
+      toast.error("Não foi possível obter sua localização", {
+        description: "Verifique se a permissão de localização está ativada para o app, ou use \"Localizar pelo endereço\".",
+        position: "top-center",
+      });
+    } finally {
+      setGpsLoading(false);
+    }
+  };
+
   const removeArea = (a: string) => setAreas(areas.filter(x => x !== a));
 
   const save = useMutation({
@@ -480,21 +511,19 @@ export function LocationSettingsCard() {
               Localizar pelo endereço
             </Button>
             {/*
-              Botão de GPS temporariamente DESATIVADO: o app nativo iOS ainda não tem as
-              frases de permissão (NSLocationWhenInUseUsageDescription) no Info.plist e o
-              sistema fechava o app ao abrir o módulo de GPS. O módulo @capacitor/geolocation
-              permanece instalado. Para reativar após configurar as frases no Xcode, basta
-              remover `disabled` deste botão e implementar o onClick com o plugin.
+              Botão de GPS reativado: as frases de permissão de localização
+              (NSLocationWhenInUseUsageDescription e NSLocationAlwaysAndWhenInUseUsageDescription)
+              foram adicionadas ao Info.plist nativo a partir do Build 3.
             */}
             <Button
               type="button"
               size="sm"
               variant="outline"
-              disabled
-              title="Temporariamente indisponível no aplicativo"
+              onClick={useCurrentLocation}
+              disabled={gpsLoading}
               className="gap-1.5"
             >
-              <MapPin className="h-3.5 w-3.5" />
+              {gpsLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <MapPin className="h-3.5 w-3.5" />}
               Usar localização atual
             </Button>
           </div>
