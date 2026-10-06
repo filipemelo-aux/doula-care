@@ -883,7 +883,7 @@ export default function Subscription() {
               renovação automática ser contratada.
             </p>
           )}
-          <div className="flex flex-wrap gap-4 pt-1">
+          <div className="flex flex-col gap-2 pt-1">
             <a href="/politica-de-privacidade" className="underline">
               Política de Privacidade
             </a>
