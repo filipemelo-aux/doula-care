@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 
 import { useAuth } from "@/contexts/AuthContext";
@@ -884,12 +885,12 @@ export default function Subscription() {
             </p>
           )}
           <div className="flex flex-col gap-2 pt-1">
-            <a href="/politica-de-privacidade" className="underline">
+            <Link to="/politica-de-privacidade?from=%2Fadmin%2Fassinatura" className="underline">
               Política de Privacidade
-            </a>
-            <a href="/termos-de-uso" className="underline">
+            </Link>
+            <Link to="/termos-de-uso?from=%2Fadmin%2Fassinatura" className="underline">
               Termos de Uso (EULA)
-            </a>
+            </Link>
             <a
               href="https://www.apple.com/legal/internet-services/itunes/dev/stdeula/"
               target="_blank"
@@ -898,9 +899,9 @@ export default function Subscription() {
             >
               EULA padrão da Apple
             </a>
-            <a href="/suporte" className="underline">
+            <Link to="/suporte?from=%2Fadmin%2Fassinatura" className="underline">
               Suporte
-            </a>
+            </Link>
           </div>
         </CardContent>
       </Card>

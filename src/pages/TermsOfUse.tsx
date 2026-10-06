@@ -1,4 +1,4 @@
-import { ArrowLeft } from "lucide-react";
+import SmartBackLink from "@/components/SmartBackLink";
 import { Link } from "react-router-dom";
 
 const sections: { title: string; body: string[] }[] = [
@@ -74,13 +74,7 @@ const sections: { title: string; body: string[] }[] = [
 const TermsOfUse = () => (
   <div className="h-[100dvh] overflow-y-auto bg-background text-foreground">
     <div className="max-w-3xl mx-auto px-4 py-10 sm:py-16">
-      <Link
-        to="/login"
-        className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-8"
-      >
-        <ArrowLeft className="w-4 h-4" />
-        Voltar
-      </Link>
+      <SmartBackLink label="Voltar" />
       <h1 className="text-3xl font-bold mb-2">Termos de Uso (EULA)</h1>
       <p className="text-muted-foreground text-sm mb-10">
         Última atualização: outubro de 2026
