@@ -25,6 +25,7 @@ import RecoverCredentials from "./pages/RecoverCredentials";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
+import TermsOfUse from "./pages/TermsOfUse";
 import DeleteAccount from "./pages/DeleteAccount";
 import Documentation from "./pages/Documentation";
 import Support from "./pages/Support";
@@ -98,6 +99,7 @@ const App = () => (
             <Route path="/esqueci-senha" element={<ForgotPassword />} />
             <Route path="/redefinir-senha" element={<ResetPassword />} />
             <Route path="/politica-de-privacidade" element={<PrivacyPolicy />} />
+            <Route path="/termos-de-uso" element={<TermsOfUse />} />
             <Route path="/excluir-conta" element={<DeleteAccount />} />
             <Route path="/documentacao" element={<Documentation />} />
             <Route path="/suporte" element={<Support />} />
