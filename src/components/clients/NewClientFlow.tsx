@@ -85,7 +85,7 @@ export function NewClientFlow({
         onOpenChange={(o) => !o && setFollowClient(null)}
         client={followClient}
         mode="followup"
-        onSaved={(id) => navigate(`/cadastros/usuarios?cliente=${id}`)}
+        onSaved={(id) => navigate(`/cadastros/usuarios?cliente=${id}&auto=1`)}
       />
     </>
   );
