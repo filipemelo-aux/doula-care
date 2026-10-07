@@ -81,7 +81,7 @@ const navItems = [
     icon: FolderOpen,
     label: "Cadastros",
     subItems: [
-      { to: "/cadastros/pessoas", icon: UserPlus, label: "Pessoas" },
+      { to: "/clientes", icon: Users, label: "Clientes" },
       { to: "/cadastros/servicos", icon: Stethoscope, label: "Serviços" },
       { to: "/cadastros/usuarios", icon: KeyRound, label: "Usuários" },
     ],

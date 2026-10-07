@@ -27,7 +27,6 @@ export const PERMISSION_GROUPS: PermissionGroup[] = [
     { to: "/relatorios", label: "Relatórios" },
   ] },
   { label: "Cadastros", items: [
-    { to: "/cadastros/pessoas", label: "Pessoas" },
     { to: "/cadastros/servicos", label: "Serviços" },
     { to: "/cadastros/usuarios", label: "Usuários" },
   ] },

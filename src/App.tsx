@@ -41,7 +41,6 @@ import Plans from "./pages/Plans";
 import ServiceRecords from "./pages/ServiceRecords";
 import FollowUps from "./pages/FollowUps";
 import ClientUsers from "./pages/ClientUsers";
-import People from "./pages/People";
 import ServicesCatalog from "./pages/ServicesCatalog";
 import RegisterVisitor from "./pages/RegisterVisitor";
 import VisitorDashboard from "./pages/visitante/VisitorDashboard";
@@ -247,7 +246,7 @@ const App = () => (
               <Route path="/clientes" element={<Clients />} />
               <Route path="/financeiro" element={<ProtectedRoute allowedRoles={["admin", "moderator"]}><Financial /></ProtectedRoute>} />
               <Route path="/servicos/acompanhamentos" element={<ProtectedRoute allowedRoles={["admin", "moderator"]}><FollowUps /></ProtectedRoute>} />
-              <Route path="/cadastros/pessoas" element={<ProtectedRoute allowedRoles={["admin", "moderator"]}><People /></ProtectedRoute>} />
+              <Route path="/cadastros/pessoas" element={<Navigate to="/clientes" replace />} />
               <Route path="/cadastros/usuarios" element={<ProtectedRoute allowedRoles={["admin", "moderator"]}><ClientUsers /></ProtectedRoute>} />
               <Route path="/cadastros/servicos" element={<ProtectedRoute allowedRoles={["admin", "moderator"]}><ServicesCatalog /></ProtectedRoute>} />
               <Route path="/servicos/atendimentos" element={<ProtectedRoute allowedRoles={["admin", "moderator"]}><ServiceRecords /></ProtectedRoute>} />
