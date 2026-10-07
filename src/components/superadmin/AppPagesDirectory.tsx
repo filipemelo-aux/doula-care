@@ -54,7 +54,6 @@ const groups: PageGroup[] = [
       { path: "/clientes", label: "Clientes" },
       { path: "/servicos/acompanhamentos", label: "Acompanhamentos" },
       { path: "/servicos/atendimentos", label: "Atendimentos" },
-      { path: "/cadastros/pessoas", label: "Cadastro de Pessoas" },
       { path: "/cadastros/servicos", label: "Cadastro de Serviços" },
       { path: "/financeiro", label: "Contas a Receber" },
       { path: "/despesas", label: "Despesas" },
