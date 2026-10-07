@@ -50,21 +50,32 @@ export default function ClientUsers() {
   useEffect(() => {
     const id = params.get("cliente");
     if (!id || isLoading) return;
+    const auto = params.get("auto") === "1";
     const r = rows.find((x) => x.id === id);
-    if (r && !r.user_id) openFor(r);
+    if (r && !r.user_id && auto) {
+      setCreated(null);
+      const pwd = suggestPassword(r.dpp) || `doula${Math.floor(100000 + Math.random() * 900000)}`;
+      create.mutate({ row: r, username: suggestUsername(r.full_name), password: pwd, auto: true });
+    } else if (r && !r.user_id) openFor(r);
     else if (r?.user_id) toast.info(`${r.full_name} já possui acesso`);
     params.delete("cliente");
+    params.delete("auto");
     setParams(params, { replace: true });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params, isLoading, rows]);
 
+  const usernameState = username;
+  const passwordState = password;
   const create = useMutation({
-    mutationFn: async () => {
-      if (!selected) throw new Error("Selecione a cliente");
+    mutationFn: async (vars?: { row: Row; username: string; password: string; auto?: boolean }) => {
+      const sel = vars?.row ?? selected;
+      const username = vars?.username ?? usernameState;
+      const password = vars?.password ?? passwordState;
+      if (!sel) throw new Error("Selecione a cliente");
       if (!isValidUsername(username)) throw new Error("Usuário inválido: letras sem acento, números, ponto ou traço (mín. 3)");
       if (password.length < 6) throw new Error("A senha precisa ter pelo menos 6 caracteres");
       const { data, error } = await supabase.functions.invoke("create-client-user", {
-        body: { clientId: selected.id, fullName: selected.full_name, dpp: selected.dpp, username, password, organizationId },
+        body: { clientId: sel.id, fullName: sel.full_name, dpp: sel.dpp, username, password, organizationId },
       });
       if (data?.error) throw new Error(data.error);
       if (error) {
@@ -72,15 +83,19 @@ export default function ClientUsers() {
         try { const b = await (error as any).context?.json?.(); if (b?.error) msg = b.error; } catch { /* noop */ }
         throw new Error(msg);
       }
-      return data;
+      return { name: sel.full_name, username, password };
     },
-    onSuccess: () => {
+    onSuccess: (res) => {
       toast.success("Acesso criado!");
-      setCreated({ name: selected!.full_name, username, password });
+      setCreated(res);
       setSelected(null);
       qc.invalidateQueries({ queryKey: ["clients-with-accounts"] });
     },
-    onError: (e: Error) => toast.error("Não foi possível criar o acesso", { description: e.message }),
+    onError: (e: Error, vars) => {
+      toast.error("Não foi possível criar o acesso", { description: e.message });
+      // Na criação automática, abre o formulário para a doula ajustar.
+      if (vars?.auto) openFor(vars.row);
+    },
   });
 
   const copy = (t: string, l: string) => { navigator.clipboard.writeText(t); toast.success(`${l} copiado!`); };
@@ -118,10 +133,16 @@ export default function ClientUsers() {
               {selected.dpp ? "Sugerida a partir da DPP (dpp + DDMMAA)." : "Cliente sem DPP: defina uma senha com pelo menos 6 caracteres."} A cliente poderá trocá-la no primeiro acesso.
             </p>
           </div>
-          <Button className="w-full" onClick={() => create.mutate()} disabled={create.isPending}>
+          <Button className="w-full" onClick={() => create.mutate(undefined)} disabled={create.isPending}>
             {create.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <UserPlus className="h-4 w-4 mr-2" />}
             Criar acesso
           </Button>
+        </div>
+      )}
+
+      {create.isPending && !selected && (
+        <div className="rounded-2xl bg-card p-4 flex items-center gap-2 text-sm text-muted-foreground">
+          <Loader2 className="h-4 w-4 animate-spin" /> Criando o acesso da cliente...
         </div>
       )}
 
@@ -132,7 +153,7 @@ export default function ClientUsers() {
             <div key={l} className="flex items-center justify-between gap-2 text-sm">
               <span className="text-muted-foreground">{l}</span>
               <span className="flex items-center gap-2 font-mono break-all">{v}
-                <button onClick={() => copy(v, l)}><Copy className="h-3.5 w-3.5" /></button>
+                <button aria-label={`Copiar ${l}`} onClick={() => copy(v, l)}><Copy className="h-3.5 w-3.5" /></button>
               </span>
             </div>
           ))}
