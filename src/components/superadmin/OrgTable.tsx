@@ -128,7 +128,7 @@ export function OrgTable({
       setSortDir((d) => (d === "asc" ? "desc" : "asc"));
     } else {
       setSortKey(key);
-      setSortDir(key === "created" || key === "clients" || key === "last_access" ? "desc" : "asc");
+      setSortDir(key === "created" || key === "clients" || key === "puerperas" || key === "avulsas" || key === "last_access" ? "desc" : "asc");
     }
   };
 
@@ -160,6 +160,15 @@ export function OrgTable({
           return (statusRank[a.status] - statusRank[b.status]) * dir;
         case "clients":
           return (a.client_count - b.client_count) * dir;
+        case "puerperas":
+          return ((a.puerpera_count ?? 0) - (b.puerpera_count ?? 0)) * dir;
+        case "avulsas":
+          return ((a.avulsa_count ?? 0) - (b.avulsa_count ?? 0)) * dir;
+        case "device": {
+          const platformLabel = (p?: string | null) =>
+            p ? (ACCESS_PLATFORM_LABEL[p as keyof typeof ACCESS_PLATFORM_LABEL] || p) : "";
+          return platformLabel(a.last_access_platform).localeCompare(platformLabel(b.last_access_platform)) * dir;
+        }
         case "created":
           return (new Date(a.created_at).getTime() - new Date(b.created_at).getTime()) * dir;
         case "last_access": {
@@ -330,10 +339,10 @@ export function OrgTable({
               <SortHeader label="Plano" k="plan" />
               <SortHeader label="Status" k="status" />
               <SortHeader label="Gestantes" k="clients" className="text-right" />
-              <TableHead className="h-8 px-2 text-[11px] text-right whitespace-nowrap">Puérperas</TableHead>
-              <TableHead className="h-8 px-2 text-[11px] text-right whitespace-nowrap">Avulsas</TableHead>
+              <SortHeader label="Puérperas" k="puerperas" className="text-right" />
+              <SortHeader label="Avulsas" k="avulsas" className="text-right" />
               <SortHeader label="Últ. acesso" k="last_access" />
-              <TableHead className="h-8 px-2 text-[11px] whitespace-nowrap">Dispositivo</TableHead>
+              <SortHeader label="Dispositivo" k="device" />
               <SortHeader label="Desde" k="created" />
             </TableRow>
           </TableHeader>
