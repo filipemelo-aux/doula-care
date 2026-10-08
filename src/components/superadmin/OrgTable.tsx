@@ -373,14 +373,14 @@ export function OrgTable({
                           setSelectedIds(new Set([org.id]));
                           onViewDetails?.(org.id);
                         }}
-                        className="text-xs font-medium text-foreground truncate leading-tight max-w-[125px] text-left hover:underline"
+                        className="text-xs font-medium text-foreground truncate leading-tight max-w-[145px] text-left hover:underline"
                       >
                         {displayName}
                       </button>
                     </div>
                   </TableCell>
                   <TableCell className="px-1.5 py-1 text-[11px] text-muted-foreground">
-                    <span className="truncate inline-block max-w-[125px] align-middle">{org.responsible_email}</span>
+                    <span className="truncate inline-block max-w-[145px] align-middle">{org.responsible_email}</span>
                   </TableCell>
                   <TableCell className="px-1.5 py-1 text-center" onClick={(e) => e.stopPropagation()}>
                     <Select value={org.plan} onValueChange={(v) => onPlanChange(org.id, v as any)}>
