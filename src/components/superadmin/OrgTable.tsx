@@ -324,7 +324,7 @@ export function OrgTable({
       </div>
 
       <div className="overflow-x-auto">
-        <Table className="min-w-[1120px]">
+        <Table className="min-w-[1150px] w-full table-fixed">
           <TableHeader>
             <TableRow className="hover:bg-transparent">
               <TableHead className="h-8 w-10 px-2">
@@ -334,16 +334,16 @@ export function OrgTable({
                   aria-label="Selecionar todas"
                 />
               </TableHead>
-              <SortHeader label="Organização" k="name" />
-              <SortHeader label="Email" k="email" />
-              <SortHeader label="Plano" k="plan" />
-              <SortHeader label="Status" k="status" />
-              <SortHeader label="Gestantes" k="clients" className="text-right" />
-              <SortHeader label="Puérperas" k="puerperas" className="text-right" />
-              <SortHeader label="Avulsas" k="avulsas" className="text-right" />
-              <SortHeader label="Últ. acesso" k="last_access" />
-              <SortHeader label="Dispositivo" k="device" />
-              <SortHeader label="Desde" k="created" />
+              <SortHeader label="Organização" k="name" className="w-[190px]" />
+              <SortHeader label="Email" k="email" className="w-[190px]" />
+              <SortHeader label="Plano" k="plan" className="w-[84px] text-center" />
+              <SortHeader label="Status" k="status" className="w-[96px] text-center" />
+              <SortHeader label="Gestantes" k="clients" className="w-[86px] text-center" />
+              <SortHeader label="Puérperas" k="puerperas" className="w-[92px] text-center" />
+              <SortHeader label="Avulsas" k="avulsas" className="w-[78px] text-center" />
+              <SortHeader label="Últ. acesso" k="last_access" className="w-[96px] text-center" />
+              <SortHeader label="Dispositivo" k="device" className="w-[156px] text-center" />
+              <SortHeader label="Desde" k="created" className="w-[80px] text-center" />
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -382,9 +382,9 @@ export function OrgTable({
                   <TableCell className="px-2 py-1 text-[11px] text-muted-foreground">
                     <span className="truncate inline-block max-w-[180px] align-middle">{org.responsible_email}</span>
                   </TableCell>
-                  <TableCell className="px-2 py-1" onClick={(e) => e.stopPropagation()}>
+                  <TableCell className="px-2 py-1 text-center" onClick={(e) => e.stopPropagation()}>
                     <Select value={org.plan} onValueChange={(v) => onPlanChange(org.id, v as any)}>
-                      <SelectTrigger className={cn("h-6 w-[66px] min-w-0 px-1.5 text-[10px] border-0", planBadgeStyles[org.plan])}>
+                      <SelectTrigger className={cn("h-6 w-[66px] min-w-0 mx-auto px-1.5 text-[10px] border-0", planBadgeStyles[org.plan])}>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -394,7 +394,7 @@ export function OrgTable({
                       </SelectContent>
                     </Select>
                   </TableCell>
-                  <TableCell className="px-2 py-1">
+                  <TableCell className="px-2 py-1 text-center">
                     {org.status === "suspenso" ? (
                       <Badge className="h-5 px-1.5 text-[10px] font-medium rounded-full bg-destructive/15 text-destructive">Suspenso</Badge>
                     ) : org.status === "pendente" ? (
@@ -403,9 +403,9 @@ export function OrgTable({
                       <Badge className="h-5 px-1.5 text-[10px] font-medium rounded-full bg-success/15 text-success">Ativo</Badge>
                     )}
                   </TableCell>
-                  <TableCell className="px-2 py-1 text-right text-xs font-semibold text-foreground">{org.client_count}</TableCell>
-                  <TableCell className="px-2 py-1 text-right text-xs text-muted-foreground">{org.puerpera_count ?? 0}</TableCell>
-                  <TableCell className="px-2 py-1 text-right text-xs text-muted-foreground">{org.avulsa_count ?? 0}</TableCell>
+                  <TableCell className="px-2 py-1 text-center text-xs font-semibold text-foreground tabular-nums">{org.client_count}</TableCell>
+                  <TableCell className="px-2 py-1 text-center text-xs text-muted-foreground tabular-nums">{org.puerpera_count ?? 0}</TableCell>
+                  <TableCell className="px-2 py-1 text-center text-xs text-muted-foreground tabular-nums">{org.avulsa_count ?? 0}</TableCell>
                   <TableCell
                     className={cn(
                       "px-2 py-1 text-[11px] whitespace-nowrap",
