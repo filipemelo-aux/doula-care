@@ -154,15 +154,19 @@ export function usePlanLimits() {
     staleTime: 0,
   });
 
-  // 4. Client count
+  // 4. Contagem do limite do plano: só gestantes em acompanhamento
+  // (puérperas e clientes ocasionais não entram).
   const { data: clientCount = 0, isLoading: countLoading } = useQuery({
-    queryKey: ["client-count", organizationId],
+    queryKey: ["client-count", "gestantes", organizationId],
     queryFn: async () => {
       if (!organizationId) return 0;
       const { count, error } = await supabase
         .from("clients")
         .select("*", { count: "exact", head: true })
-        .eq("organization_id", organizationId);
+        .eq("organization_id", organizationId)
+        .eq("status", "gestante")
+        .eq("is_visitor", false)
+        .or("birth_occurred.is.null,birth_occurred.eq.false");
       if (error) throw error;
       return count || 0;
     },

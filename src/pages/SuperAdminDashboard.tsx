@@ -64,6 +64,8 @@ interface OrgWithCounts {
   status: "ativo" | "suspenso" | "pendente";
   created_at: string;
   client_count: number;
+  puerpera_count?: number;
+  avulsa_count?: number;
   last_access: string | null;
   last_access_platform?: string | null;
 }
@@ -246,7 +248,7 @@ export default function SuperAdminDashboard() {
       if (error) throw error;
 
       const countMap = new Map(
-        ((counts as any[]) || []).map((c: any) => [c.organization_id, Number(c.client_count)])
+        ((counts as any[]) || []).map((c: any) => [c.organization_id, c])
       );
       const lastAccessMap = new Map(
         ((lastAccess as any[]) || []).map((c: any) => [c.organization_id, c.last_access as string])
@@ -257,7 +259,9 @@ export default function SuperAdminDashboard() {
 
       return (orgs || []).map((org) => ({
         ...org,
-        client_count: countMap.get(org.id) || 0,
+        client_count: Number(countMap.get(org.id)?.gestante_count ?? 0),
+        puerpera_count: Number(countMap.get(org.id)?.puerpera_count ?? 0),
+        avulsa_count: Number(countMap.get(org.id)?.avulsa_count ?? 0),
         last_access: lastAccessMap.get(org.id) || null,
         last_access_platform: lastPlatformMap.get(org.id) || null,
       })) as OrgWithCounts[];
@@ -429,6 +433,13 @@ export default function SuperAdminDashboard() {
               <div className="min-w-0">
                 <p className="text-[10px] text-muted-foreground leading-none">Gestantes</p>
                 <p className="text-xs font-semibold text-foreground leading-tight mt-0.5">{org.client_count}</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 rounded-lg bg-muted/40 px-2.5 py-1.5">
+              <Baby className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
+              <div className="min-w-0">
+                <p className="text-[10px] text-muted-foreground leading-none">Puérperas · Avulsas</p>
+                <p className="text-xs font-semibold text-foreground leading-tight mt-0.5">{org.puerpera_count ?? 0} · {org.avulsa_count ?? 0}</p>
               </div>
             </div>
             <div className="flex items-center gap-2 rounded-lg bg-muted/40 px-2.5 py-1.5">
