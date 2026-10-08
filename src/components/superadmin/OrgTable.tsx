@@ -53,7 +53,17 @@ const AccessPlatformIcon = ({ platform }: { platform?: string | null }) => {
   );
 };
 
-type SortKey = "name" | "email" | "plan" | "status" | "clients" | "created" | "last_access";
+type SortKey =
+  | "name"
+  | "email"
+  | "plan"
+  | "status"
+  | "clients"
+  | "puerperas"
+  | "avulsas"
+  | "device"
+  | "created"
+  | "last_access";
 type ActivityFilter = "all" | "7" | "30" | "inactive";
 
 const relativeAccess = (value?: string | null) => {
