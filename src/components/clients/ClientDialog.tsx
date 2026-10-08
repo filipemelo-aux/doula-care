@@ -1729,7 +1729,8 @@ export function ClientDialog({ open, onOpenChange, client, initialStep, mode: ra
                             </FormControl>
                             <SelectContent>
                               <SelectItem value="gestante">Gestante</SelectItem>
-                              <SelectItem value="lactante">Puérpera</SelectItem>
+                              {/* Puérpera só por transição de uma gestante já cadastrada; nova puérpera = atendimento avulso */}
+                              {client && <SelectItem value="lactante">Puérpera</SelectItem>}
                               <SelectItem value="outro">Outro</SelectItem>
                             </SelectContent>
                           </Select>
