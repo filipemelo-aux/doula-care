@@ -227,7 +227,7 @@ export function OrgTable({
   return (
     <div className="rounded-xl border bg-card overflow-hidden">
       {/* Toolbar */}
-      <div className="flex items-center gap-1.5 px-1.5 py-1.5 border-b bg-muted/30 overflow-x-auto">
+      <div className="flex items-center gap-1.5 px-2 py-1.5 border-b bg-muted/30 overflow-x-auto">
         <Select value={activity} onValueChange={(v) => setActivity(v as ActivityFilter)}>
           <SelectTrigger className="h-7 w-[124px] shrink-0 px-2 text-[11px]">
             <SelectValue />
@@ -327,23 +327,23 @@ export function OrgTable({
         <Table className="min-w-[990px] w-full table-fixed">
           <TableHeader>
             <TableRow className="hover:bg-transparent">
-              <TableHead className="h-8 w-8 px-1">
+              <TableHead className="h-8 w-7 px-1">
                 <Checkbox
                   checked={allSelected}
                   onCheckedChange={toggleAll}
                   aria-label="Selecionar todas"
                 />
               </TableHead>
-              <SortHeader label="Organização" k="name" className="w-[145px]" />
-              <SortHeader label="Email" k="email" className="w-[145px]" />
-              <SortHeader label="Plano" k="plan" className="w-[80px] text-center" />
-              <SortHeader label="Status" k="status" className="w-[82px] text-center" />
-              <SortHeader label="Gestantes" k="clients" className="w-[74px] text-center" />
-              <SortHeader label="Puérperas" k="puerperas" className="w-[78px] text-center" />
-              <SortHeader label="Avulsas" k="avulsas" className="w-[64px] text-center" />
-              <SortHeader label="Últ. acesso" k="last_access" className="w-[78px] text-center" />
-              <SortHeader label="Dispositivo" k="device" className="w-[148px] text-center" />
-              <SortHeader label="Desde" k="created" className="w-[64px] text-center" />
+              <SortHeader label="Organização" k="name" className="w-[160px]" />
+              <SortHeader label="Email" k="email" className="w-[160px]" />
+              <SortHeader label="Plano" k="plan" className="w-[76px] text-center" />
+              <SortHeader label="Status" k="status" className="w-[76px] text-center" />
+              <SortHeader label="Gestantes" k="clients" className="w-[70px] text-center" />
+              <SortHeader label="Puérperas" k="puerperas" className="w-[74px] text-center" />
+              <SortHeader label="Avulsas" k="avulsas" className="w-[60px] text-center" />
+              <SortHeader label="Últ. acesso" k="last_access" className="w-[74px] text-center" />
+              <SortHeader label="Dispositivo" k="device" className="w-[150px] text-center" />
+              <SortHeader label="Desde" k="created" className="w-[60px] text-center" />
             </TableRow>
           </TableHeader>
           <TableBody>
