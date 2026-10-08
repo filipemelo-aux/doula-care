@@ -208,7 +208,7 @@ export function OrgTable({
   };
 
   const SortHeader = ({ label, k, className }: { label: string; k: SortKey; className?: string }) => (
-    <TableHead className={cn("h-8 px-2 text-[11px] whitespace-nowrap", className)}>
+    <TableHead className={cn("h-8 px-1.5 text-[11px] whitespace-nowrap", className)}>
       <button
         type="button"
         onClick={() => toggleSort(k)}
@@ -324,26 +324,26 @@ export function OrgTable({
       </div>
 
       <div className="overflow-x-auto">
-        <Table className="min-w-[1120px]">
+        <Table className="min-w-[990px] w-full table-fixed">
           <TableHeader>
             <TableRow className="hover:bg-transparent">
-              <TableHead className="h-8 w-10 px-2">
+              <TableHead className="h-8 w-7 px-1">
                 <Checkbox
                   checked={allSelected}
                   onCheckedChange={toggleAll}
                   aria-label="Selecionar todas"
                 />
               </TableHead>
-              <SortHeader label="Organização" k="name" />
-              <SortHeader label="Email" k="email" />
-              <SortHeader label="Plano" k="plan" />
-              <SortHeader label="Status" k="status" />
-              <SortHeader label="Gestantes" k="clients" className="text-right" />
-              <SortHeader label="Puérperas" k="puerperas" className="text-right" />
-              <SortHeader label="Avulsas" k="avulsas" className="text-right" />
-              <SortHeader label="Últ. acesso" k="last_access" />
-              <SortHeader label="Dispositivo" k="device" />
-              <SortHeader label="Desde" k="created" />
+              <SortHeader label="Organização" k="name" className="w-[160px]" />
+              <SortHeader label="Email" k="email" className="w-[160px]" />
+              <SortHeader label="Plano" k="plan" className="w-[76px] text-center" />
+              <SortHeader label="Status" k="status" className="w-[76px] text-center" />
+              <SortHeader label="Gestantes" k="clients" className="w-[70px] text-center" />
+              <SortHeader label="Puérperas" k="puerperas" className="w-[74px] text-center" />
+              <SortHeader label="Avulsas" k="avulsas" className="w-[60px] text-center" />
+              <SortHeader label="Últ. acesso" k="last_access" className="w-[74px] text-center" />
+              <SortHeader label="Dispositivo" k="device" className="w-[150px] text-center" />
+              <SortHeader label="Desde" k="created" className="w-[60px] text-center" />
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -357,14 +357,14 @@ export function OrgTable({
                   onDoubleClick={() => onViewDetails?.(org.id)}
                   className={cn("cursor-pointer", isSelected && "bg-primary/10 hover:bg-primary/10")}
                 >
-                  <TableCell className="py-1 px-2" onClick={(e) => e.stopPropagation()}>
+                  <TableCell className="py-1 px-1.5" onClick={(e) => e.stopPropagation()}>
                     <Checkbox
                       checked={isSelected}
                       onCheckedChange={() => toggleSelection(org.id)}
                       aria-label={`Selecionar ${displayName}`}
                     />
                   </TableCell>
-                  <TableCell className="py-1 px-2">
+                  <TableCell className="py-1 px-1.5">
                     <div className="flex items-center gap-2 min-w-0">
                       <button
                         type="button"
@@ -373,18 +373,18 @@ export function OrgTable({
                           setSelectedIds(new Set([org.id]));
                           onViewDetails?.(org.id);
                         }}
-                        className="text-xs font-medium text-foreground truncate leading-tight max-w-[180px] text-left hover:underline"
+                        className="text-xs font-medium text-foreground truncate leading-tight max-w-[145px] text-left hover:underline"
                       >
                         {displayName}
                       </button>
                     </div>
                   </TableCell>
-                  <TableCell className="px-2 py-1 text-[11px] text-muted-foreground">
-                    <span className="truncate inline-block max-w-[180px] align-middle">{org.responsible_email}</span>
+                  <TableCell className="px-1.5 py-1 text-[11px] text-muted-foreground">
+                    <span className="truncate inline-block max-w-[145px] align-middle">{org.responsible_email}</span>
                   </TableCell>
-                  <TableCell className="px-2 py-1" onClick={(e) => e.stopPropagation()}>
+                  <TableCell className="px-1.5 py-1 text-center" onClick={(e) => e.stopPropagation()}>
                     <Select value={org.plan} onValueChange={(v) => onPlanChange(org.id, v as any)}>
-                      <SelectTrigger className={cn("h-6 w-[66px] min-w-0 px-1.5 text-[10px] border-0", planBadgeStyles[org.plan])}>
+                      <SelectTrigger className={cn("h-6 w-[62px] min-w-0 mx-auto px-1.5 text-[10px] border-0", planBadgeStyles[org.plan])}>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -394,7 +394,7 @@ export function OrgTable({
                       </SelectContent>
                     </Select>
                   </TableCell>
-                  <TableCell className="px-2 py-1">
+                  <TableCell className="px-1.5 py-1 text-center">
                     {org.status === "suspenso" ? (
                       <Badge className="h-5 px-1.5 text-[10px] font-medium rounded-full bg-destructive/15 text-destructive">Suspenso</Badge>
                     ) : org.status === "pendente" ? (
@@ -403,19 +403,19 @@ export function OrgTable({
                       <Badge className="h-5 px-1.5 text-[10px] font-medium rounded-full bg-success/15 text-success">Ativo</Badge>
                     )}
                   </TableCell>
-                  <TableCell className="px-2 py-1 text-right text-xs font-semibold text-foreground">{org.client_count}</TableCell>
-                  <TableCell className="px-2 py-1 text-right text-xs text-muted-foreground">{org.puerpera_count ?? 0}</TableCell>
-                  <TableCell className="px-2 py-1 text-right text-xs text-muted-foreground">{org.avulsa_count ?? 0}</TableCell>
+                  <TableCell className="px-1.5 py-1 text-center text-xs font-semibold text-foreground tabular-nums">{org.client_count}</TableCell>
+                  <TableCell className="px-1.5 py-1 text-center text-xs text-muted-foreground tabular-nums">{org.puerpera_count ?? 0}</TableCell>
+                  <TableCell className="px-1.5 py-1 text-center text-xs text-muted-foreground tabular-nums">{org.avulsa_count ?? 0}</TableCell>
                   <TableCell
                     className={cn(
-                      "px-2 py-1 text-[11px] whitespace-nowrap",
+                      "px-1.5 py-1 text-[11px] whitespace-nowrap text-center tabular-nums",
                       !org.last_access ? "text-muted-foreground/70" : "text-muted-foreground"
                     )}
                     title={org.last_access ? format(new Date(org.last_access), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR }) : "Sem registro"}
                   >
                     {relativeAccess(org.last_access)}
                   </TableCell>
-                  <TableCell className="px-2 py-1 text-[11px] text-muted-foreground whitespace-nowrap">
+                  <TableCell className="px-1.5 py-1 text-[11px] text-muted-foreground whitespace-nowrap text-center">
                     <span className="inline-flex items-center gap-1">
                       <AccessPlatformIcon platform={org.last_access_platform} />
                       {org.last_access_platform
@@ -423,7 +423,7 @@ export function OrgTable({
                         : "Sem registro"}
                     </span>
                   </TableCell>
-                  <TableCell className="px-2 py-1 text-[11px] text-muted-foreground whitespace-nowrap">
+                  <TableCell className="px-1.5 py-1 text-[11px] text-muted-foreground whitespace-nowrap text-center tabular-nums">
                     {format(new Date(org.created_at), "dd/MM/yy", { locale: ptBR })}
                   </TableCell>
                 </TableRow>
