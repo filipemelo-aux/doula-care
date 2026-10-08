@@ -20,6 +20,8 @@ export interface OrgRow {
   status: "ativo" | "suspenso" | "pendente";
   created_at: string;
   client_count: number;
+  puerpera_count?: number;
+  avulsa_count?: number;
   last_access?: string | null;
   last_access_platform?: string | null;
 }
@@ -282,7 +284,7 @@ export function OrgTable({
       </div>
 
       <div className="overflow-x-auto">
-        <Table className="min-w-[860px]">
+        <Table className="min-w-[980px]">
           <TableHeader>
             <TableRow className="hover:bg-transparent">
               <TableHead className="h-8 w-10 px-2">
@@ -296,7 +298,9 @@ export function OrgTable({
               <SortHeader label="Email" k="email" />
               <SortHeader label="Plano" k="plan" />
               <SortHeader label="Status" k="status" />
-              <SortHeader label="Gest." k="clients" className="text-right" />
+              <SortHeader label="Gestantes" k="clients" className="text-right" />
+              <TableHead className="h-8 px-2 text-[11px] text-right whitespace-nowrap">Puérperas</TableHead>
+              <TableHead className="h-8 px-2 text-[11px] text-right whitespace-nowrap">Avulsas</TableHead>
               <SortHeader label="Últ. acesso" k="last_access" />
               <SortHeader label="Desde" k="created" />
             </TableRow>
@@ -358,7 +362,9 @@ export function OrgTable({
                       <Badge className="h-5 px-1.5 text-[10px] font-medium rounded-full bg-success/15 text-success">Ativo</Badge>
                     )}
                   </TableCell>
-                  <TableCell className="px-2 py-1 text-right text-xs text-foreground">{org.client_count}</TableCell>
+                  <TableCell className="px-2 py-1 text-right text-xs font-semibold text-foreground">{org.client_count}</TableCell>
+                  <TableCell className="px-2 py-1 text-right text-xs text-muted-foreground">{org.puerpera_count ?? 0}</TableCell>
+                  <TableCell className="px-2 py-1 text-right text-xs text-muted-foreground">{org.avulsa_count ?? 0}</TableCell>
                   <TableCell
                     className={cn(
                       "px-2 py-1 text-[11px] whitespace-nowrap",
