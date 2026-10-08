@@ -111,6 +111,7 @@ export function OrgTable({
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkPlan, setBulkPlan] = useState<string>("");
   const [activity, setActivity] = useState<ActivityFilter>("all");
+  const [device, setDevice] = useState<string>("all");
 
   const toggleSort = (key: SortKey) => {
     if (sortKey === key) {
@@ -122,7 +123,11 @@ export function OrgTable({
   };
 
   const sorted = useMemo(() => {
-    const arr = orgs.filter((o) => {
+    const arr = orgs.map((o) => ({ ...o, last_access: o.last_access || o.created_at })).filter((o) => {
+      if (device !== "all") {
+        const p = o.last_access_platform || "none";
+        if (device === "app" ? !p.startsWith("app_") : device === "browser" ? !p.startsWith("browser_") : p !== device) return false;
+      }
       if (activity === "all") return true;
       const ts = o.last_access ? new Date(o.last_access).getTime() : 0;
       const days = ts ? (Date.now() - ts) / 86400000 : Infinity;
@@ -155,7 +160,7 @@ export function OrgTable({
       }
     });
     return arr;
-  }, [orgs, sortKey, sortDir, activity]);
+  }, [orgs, sortKey, sortDir, activity, device]);
 
   const selectedOrgs = sorted.filter((o) => selectedIds.has(o.id));
   const selected = selectedOrgs.length === 1 ? selectedOrgs[0] : null;
@@ -213,6 +218,22 @@ export function OrgTable({
             <SelectItem value="7">Ativas 7 dias</SelectItem>
             <SelectItem value="30">Ativas 30 dias</SelectItem>
             <SelectItem value="inactive">Inativas +30 dias</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select value={device} onValueChange={setDevice}>
+          <SelectTrigger className="h-7 w-[150px] shrink-0 px-2 text-[11px]">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos dispositivos</SelectItem>
+            <SelectItem value="app">Aplicativo (todos)</SelectItem>
+            <SelectItem value="app_ios">Aplicativo iPhone</SelectItem>
+            <SelectItem value="app_android">Aplicativo Android</SelectItem>
+            <SelectItem value="browser">Navegador (todos)</SelectItem>
+            <SelectItem value="browser_ios">Navegador iPhone</SelectItem>
+            <SelectItem value="browser_android">Navegador Android</SelectItem>
+            <SelectItem value="browser_desktop">Navegador computador</SelectItem>
+            <SelectItem value="none">Sem registro</SelectItem>
           </SelectContent>
         </Select>
         {selectedOrgs.length > 1 && (
@@ -284,7 +305,7 @@ export function OrgTable({
       </div>
 
       <div className="overflow-x-auto">
-        <Table className="min-w-[980px]">
+        <Table className="min-w-[1120px]">
           <TableHeader>
             <TableRow className="hover:bg-transparent">
               <TableHead className="h-8 w-10 px-2">
@@ -302,6 +323,7 @@ export function OrgTable({
               <TableHead className="h-8 px-2 text-[11px] text-right whitespace-nowrap">Puérperas</TableHead>
               <TableHead className="h-8 px-2 text-[11px] text-right whitespace-nowrap">Avulsas</TableHead>
               <SortHeader label="Últ. acesso" k="last_access" />
+              <TableHead className="h-8 px-2 text-[11px] whitespace-nowrap">Dispositivo</TableHead>
               <SortHeader label="Desde" k="created" />
             </TableRow>
           </TableHeader>
@@ -372,9 +394,14 @@ export function OrgTable({
                     )}
                     title={org.last_access ? format(new Date(org.last_access), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR }) : "Sem registro"}
                   >
+                    {relativeAccess(org.last_access)}
+                  </TableCell>
+                  <TableCell className="px-2 py-1 text-[11px] text-muted-foreground whitespace-nowrap">
                     <span className="inline-flex items-center gap-1">
                       <AccessPlatformIcon platform={org.last_access_platform} />
-                      {relativeAccess(org.last_access)}
+                      {org.last_access_platform
+                        ? ACCESS_PLATFORM_LABEL[org.last_access_platform as keyof typeof ACCESS_PLATFORM_LABEL] || org.last_access_platform
+                        : "Sem registro"}
                     </span>
                   </TableCell>
                   <TableCell className="px-2 py-1 text-[11px] text-muted-foreground whitespace-nowrap">
@@ -385,7 +412,7 @@ export function OrgTable({
             })}
             {sorted.length === 0 && (
               <TableRow>
-                <TableCell colSpan={8} className="text-center text-sm text-muted-foreground py-8">
+                <TableCell colSpan={11} className="text-center text-sm text-muted-foreground py-8">
                   Nenhuma organização
                 </TableCell>
               </TableRow>
