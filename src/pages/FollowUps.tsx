@@ -33,7 +33,6 @@ export default function FollowUps() {
   const { getPlanName } = usePlanNames();
   const [pickerOpen, setPickerOpen] = useState(false);
   const [pickedId, setPickedId] = useState("");
-  const [personOpen, setPersonOpen] = useState(false);
   const [followClient, setFollowClient] = useState<Tables<"clients"> | null>(null);
   const [viewClient, setViewClient] = useState<Tables<"clients"> | null>(null);
   const [sessionsClient, setSessionsClient] = useState<Tables<"clients"> | null>(null);
