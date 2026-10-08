@@ -1245,7 +1245,7 @@ export function ClientDialog({ open, onOpenChange, client, initialStep, mode: ra
       queryClient.invalidateQueries({ queryKey: ["monthly-transactions"] });
       queryClient.invalidateQueries({ queryKey: ["birth-alert-clients"] });
       toast.success(
-        mode === "person" ? (client ? "Cadastro atualizado!" : "Pessoa cadastrada!")
+        mode === "person" ? (client ? "Cadastro atualizado!" : "Cliente cadastrada!")
         : mode === "followup" ? "Acompanhamento salvo!"
         : client ? "Cliente atualizada!" : (isModerator ? "Cliente cadastrada! A administradora foi avisada para completar o plano." : "Cliente cadastrada com receita!")
       );
@@ -1346,7 +1346,7 @@ export function ClientDialog({ open, onOpenChange, client, initialStep, mode: ra
           <div className="min-w-0">
             <DialogTitle className="font-display text-lg leading-tight">
               {readOnly ? "Visualizar acompanhamento"
-                : mode === "person" ? (client ? "Editar cadastro" : "Nova pessoa")
+                : mode === "person" ? (client ? "Editar cadastro" : "Nova cliente")
                 : mode === "followup" ? "Acompanhamento"
                 : client ? "Editar Cliente" : "Nova Cliente"}
             </DialogTitle>
