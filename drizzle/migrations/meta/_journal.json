@@ -43,6 +43,13 @@
       "when": 1791101829171,
       "tag": "0005_service_records_appointment_link",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1791475688341,
+      "tag": "0006_migration",
+      "breakpoints": true
     }
   ]
 }

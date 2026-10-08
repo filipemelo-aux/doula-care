@@ -2621,8 +2621,11 @@ export type Database = {
       get_org_client_counts: {
         Args: never
         Returns: {
+          avulsa_count: number
           client_count: number
+          gestante_count: number
           organization_id: string
+          puerpera_count: number
         }[]
       }
       get_org_last_access: {
