@@ -459,6 +459,7 @@ export default function FollowUps() {
         open={newClientOpen}
         onOpenChange={(o) => { setNewClientOpen(o); if (!o) refetch(); }}
         canAddFollowUp={canAddClient}
+        initialCategory="acompanhamento"
       />
 
       <ClientDialog

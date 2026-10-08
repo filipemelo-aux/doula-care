@@ -18,7 +18,10 @@ export function NewClientFlow({
   open,
   onOpenChange,
   canAddFollowUp = true,
+  initialCategory = null,
 }: {
+  /** Pula a pergunta de tipo e abre direto nessa categoria. */
+  initialCategory?: Category;
   open: boolean;
   onOpenChange: (o: boolean) => void;
   /** Falso quando o limite de gestantes do plano foi atingido. */
@@ -29,8 +32,8 @@ export function NewClientFlow({
   const [followClient, setFollowClient] = useState<Tables<"clients"> | null>(null);
 
   useEffect(() => {
-    if (open) setCategory(null);
-  }, [open]);
+    if (open) setCategory(initialCategory);
+  }, [open, initialCategory]);
 
   const handleSaved = async (id: string) => {
     const { data } = await supabase.from("clients").select("*").eq("id", id).maybeSingle();
