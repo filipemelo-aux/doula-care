@@ -179,7 +179,7 @@ export function ClientsOverview() {
         </div>
         <div>
           <h2 className="font-semibold text-lg text-foreground leading-tight">
-            Suas clientes
+            Suas gestantes
           </h2>
         </div>
       </div>
