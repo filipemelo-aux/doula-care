@@ -208,7 +208,7 @@ export function OrgTable({
   };
 
   const SortHeader = ({ label, k, className }: { label: string; k: SortKey; className?: string }) => (
-    <TableHead className={cn("h-8 px-2 text-[11px] whitespace-nowrap", className)}>
+    <TableHead className={cn("h-8 px-1.5 text-[11px] whitespace-nowrap", className)}>
       <button
         type="button"
         onClick={() => toggleSort(k)}
@@ -227,7 +227,7 @@ export function OrgTable({
   return (
     <div className="rounded-xl border bg-card overflow-hidden">
       {/* Toolbar */}
-      <div className="flex items-center gap-1.5 px-2 py-1.5 border-b bg-muted/30 overflow-x-auto">
+      <div className="flex items-center gap-1.5 px-1.5 py-1.5 border-b bg-muted/30 overflow-x-auto">
         <Select value={activity} onValueChange={(v) => setActivity(v as ActivityFilter)}>
           <SelectTrigger className="h-7 w-[124px] shrink-0 px-2 text-[11px]">
             <SelectValue />
@@ -357,14 +357,14 @@ export function OrgTable({
                   onDoubleClick={() => onViewDetails?.(org.id)}
                   className={cn("cursor-pointer", isSelected && "bg-primary/10 hover:bg-primary/10")}
                 >
-                  <TableCell className="py-1 px-2" onClick={(e) => e.stopPropagation()}>
+                  <TableCell className="py-1 px-1.5" onClick={(e) => e.stopPropagation()}>
                     <Checkbox
                       checked={isSelected}
                       onCheckedChange={() => toggleSelection(org.id)}
                       aria-label={`Selecionar ${displayName}`}
                     />
                   </TableCell>
-                  <TableCell className="py-1 px-2">
+                  <TableCell className="py-1 px-1.5">
                     <div className="flex items-center gap-2 min-w-0">
                       <button
                         type="button"
@@ -379,10 +379,10 @@ export function OrgTable({
                       </button>
                     </div>
                   </TableCell>
-                  <TableCell className="px-2 py-1 text-[11px] text-muted-foreground">
+                  <TableCell className="px-1.5 py-1 text-[11px] text-muted-foreground">
                     <span className="truncate inline-block max-w-[125px] align-middle">{org.responsible_email}</span>
                   </TableCell>
-                  <TableCell className="px-2 py-1 text-center" onClick={(e) => e.stopPropagation()}>
+                  <TableCell className="px-1.5 py-1 text-center" onClick={(e) => e.stopPropagation()}>
                     <Select value={org.plan} onValueChange={(v) => onPlanChange(org.id, v as any)}>
                       <SelectTrigger className={cn("h-6 w-[62px] min-w-0 mx-auto px-1.5 text-[10px] border-0", planBadgeStyles[org.plan])}>
                         <SelectValue />
@@ -394,7 +394,7 @@ export function OrgTable({
                       </SelectContent>
                     </Select>
                   </TableCell>
-                  <TableCell className="px-2 py-1 text-center">
+                  <TableCell className="px-1.5 py-1 text-center">
                     {org.status === "suspenso" ? (
                       <Badge className="h-5 px-1.5 text-[10px] font-medium rounded-full bg-destructive/15 text-destructive">Suspenso</Badge>
                     ) : org.status === "pendente" ? (
@@ -403,19 +403,19 @@ export function OrgTable({
                       <Badge className="h-5 px-1.5 text-[10px] font-medium rounded-full bg-success/15 text-success">Ativo</Badge>
                     )}
                   </TableCell>
-                  <TableCell className="px-2 py-1 text-center text-xs font-semibold text-foreground tabular-nums">{org.client_count}</TableCell>
-                  <TableCell className="px-2 py-1 text-center text-xs text-muted-foreground tabular-nums">{org.puerpera_count ?? 0}</TableCell>
-                  <TableCell className="px-2 py-1 text-center text-xs text-muted-foreground tabular-nums">{org.avulsa_count ?? 0}</TableCell>
+                  <TableCell className="px-1.5 py-1 text-center text-xs font-semibold text-foreground tabular-nums">{org.client_count}</TableCell>
+                  <TableCell className="px-1.5 py-1 text-center text-xs text-muted-foreground tabular-nums">{org.puerpera_count ?? 0}</TableCell>
+                  <TableCell className="px-1.5 py-1 text-center text-xs text-muted-foreground tabular-nums">{org.avulsa_count ?? 0}</TableCell>
                   <TableCell
                     className={cn(
-                      "px-2 py-1 text-[11px] whitespace-nowrap text-center tabular-nums",
+                      "px-1.5 py-1 text-[11px] whitespace-nowrap text-center tabular-nums",
                       !org.last_access ? "text-muted-foreground/70" : "text-muted-foreground"
                     )}
                     title={org.last_access ? format(new Date(org.last_access), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR }) : "Sem registro"}
                   >
                     {relativeAccess(org.last_access)}
                   </TableCell>
-                  <TableCell className="px-2 py-1 text-[11px] text-muted-foreground whitespace-nowrap text-center">
+                  <TableCell className="px-1.5 py-1 text-[11px] text-muted-foreground whitespace-nowrap text-center">
                     <span className="inline-flex items-center gap-1">
                       <AccessPlatformIcon platform={org.last_access_platform} />
                       {org.last_access_platform
@@ -423,7 +423,7 @@ export function OrgTable({
                         : "Sem registro"}
                     </span>
                   </TableCell>
-                  <TableCell className="px-2 py-1 text-[11px] text-muted-foreground whitespace-nowrap text-center tabular-nums">
+                  <TableCell className="px-1.5 py-1 text-[11px] text-muted-foreground whitespace-nowrap text-center tabular-nums">
                     {format(new Date(org.created_at), "dd/MM/yy", { locale: ptBR })}
                   </TableCell>
                 </TableRow>
