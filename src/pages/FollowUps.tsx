@@ -12,6 +12,8 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { ClientDialog } from "@/components/clients/ClientDialog";
+import { NewClientFlow } from "@/components/clients/NewClientFlow";
+import { usePlanLimits } from "@/hooks/usePlanLimits";
 import { FollowUpFileDialog } from "@/components/clients/FollowUpFileDialog";
 import { sessionsDb, useFollowupSessions } from "@/lib/consultations";
 import { Textarea } from "@/components/ui/textarea";
@@ -31,7 +33,6 @@ export default function FollowUps() {
   const { getPlanName } = usePlanNames();
   const [pickerOpen, setPickerOpen] = useState(false);
   const [pickedId, setPickedId] = useState("");
-  const [personOpen, setPersonOpen] = useState(false);
   const [followClient, setFollowClient] = useState<Tables<"clients"> | null>(null);
   const [viewClient, setViewClient] = useState<Tables<"clients"> | null>(null);
   const [sessionsClient, setSessionsClient] = useState<Tables<"clients"> | null>(null);
@@ -196,7 +197,15 @@ export default function FollowUps() {
     setFollowClient(c);
   };
 
+  const { canAddClient } = usePlanLimits();
+  const [newClientOpen, setNewClientOpen] = useState(false);
   const openPicker = () => {
+    if (!canAddClient) {
+      toast.error("Limite de gestantes atingido", {
+        description: "Faça upgrade do plano para iniciar novos acompanhamentos. Clientes ocasionais e atendimentos continuam liberados.",
+      });
+      return;
+    }
     setPickedId("");
     setSearch("");
     setDebounced("");
@@ -418,9 +427,9 @@ export default function FollowUps() {
                 size="icon"
                 variant="ghost"
                 className="shrink-0 text-muted-foreground"
-                aria-label="Cadastrar nova pessoa"
-                title="Cadastrar nova pessoa"
-                onClick={() => setPersonOpen(true)}
+                aria-label="Cadastrar nova cliente"
+                title="Cadastrar nova cliente"
+                onClick={() => { setPickerOpen(false); setNewClientOpen(true); }}
               >
                 <Plus className="w-4 h-4" />
               </Button>
@@ -446,11 +455,10 @@ export default function FollowUps() {
         </DialogContent>
       </Dialog>
 
-      <ClientDialog
-        open={personOpen}
-        onOpenChange={setPersonOpen}
-        mode="person"
-        onSaved={async (id) => { await refetch(); setPickedId(id); }}
+      <NewClientFlow
+        open={newClientOpen}
+        onOpenChange={(o) => { setNewClientOpen(o); if (!o) refetch(); }}
+        canAddFollowUp={canAddClient}
       />
 
       <ClientDialog
