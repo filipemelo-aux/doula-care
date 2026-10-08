@@ -408,14 +408,14 @@ export function OrgTable({
                   <TableCell className="px-2 py-1 text-center text-xs text-muted-foreground tabular-nums">{org.avulsa_count ?? 0}</TableCell>
                   <TableCell
                     className={cn(
-                      "px-2 py-1 text-[11px] whitespace-nowrap",
+                      "px-2 py-1 text-[11px] whitespace-nowrap text-center tabular-nums",
                       !org.last_access ? "text-muted-foreground/70" : "text-muted-foreground"
                     )}
                     title={org.last_access ? format(new Date(org.last_access), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR }) : "Sem registro"}
                   >
                     {relativeAccess(org.last_access)}
                   </TableCell>
-                  <TableCell className="px-2 py-1 text-[11px] text-muted-foreground whitespace-nowrap">
+                  <TableCell className="px-2 py-1 text-[11px] text-muted-foreground whitespace-nowrap text-center">
                     <span className="inline-flex items-center gap-1">
                       <AccessPlatformIcon platform={org.last_access_platform} />
                       {org.last_access_platform
@@ -423,7 +423,7 @@ export function OrgTable({
                         : "Sem registro"}
                     </span>
                   </TableCell>
-                  <TableCell className="px-2 py-1 text-[11px] text-muted-foreground whitespace-nowrap">
+                  <TableCell className="px-2 py-1 text-[11px] text-muted-foreground whitespace-nowrap text-center tabular-nums">
                     {format(new Date(org.created_at), "dd/MM/yy", { locale: ptBR })}
                   </TableCell>
                 </TableRow>
