@@ -324,26 +324,26 @@ export function OrgTable({
       </div>
 
       <div className="overflow-x-auto">
-        <Table className="min-w-[1150px] w-full table-fixed">
+        <Table className="min-w-[990px] w-full table-fixed">
           <TableHeader>
             <TableRow className="hover:bg-transparent">
-              <TableHead className="h-8 w-10 px-2">
+              <TableHead className="h-8 w-8 px-1">
                 <Checkbox
                   checked={allSelected}
                   onCheckedChange={toggleAll}
                   aria-label="Selecionar todas"
                 />
               </TableHead>
-              <SortHeader label="Organização" k="name" className="w-[190px]" />
-              <SortHeader label="Email" k="email" className="w-[190px]" />
-              <SortHeader label="Plano" k="plan" className="w-[84px] text-center" />
-              <SortHeader label="Status" k="status" className="w-[96px] text-center" />
-              <SortHeader label="Gestantes" k="clients" className="w-[86px] text-center" />
-              <SortHeader label="Puérperas" k="puerperas" className="w-[92px] text-center" />
-              <SortHeader label="Avulsas" k="avulsas" className="w-[78px] text-center" />
-              <SortHeader label="Últ. acesso" k="last_access" className="w-[96px] text-center" />
-              <SortHeader label="Dispositivo" k="device" className="w-[156px] text-center" />
-              <SortHeader label="Desde" k="created" className="w-[80px] text-center" />
+              <SortHeader label="Organização" k="name" className="w-[145px]" />
+              <SortHeader label="Email" k="email" className="w-[145px]" />
+              <SortHeader label="Plano" k="plan" className="w-[80px] text-center" />
+              <SortHeader label="Status" k="status" className="w-[82px] text-center" />
+              <SortHeader label="Gestantes" k="clients" className="w-[74px] text-center" />
+              <SortHeader label="Puérperas" k="puerperas" className="w-[78px] text-center" />
+              <SortHeader label="Avulsas" k="avulsas" className="w-[64px] text-center" />
+              <SortHeader label="Últ. acesso" k="last_access" className="w-[78px] text-center" />
+              <SortHeader label="Dispositivo" k="device" className="w-[148px] text-center" />
+              <SortHeader label="Desde" k="created" className="w-[64px] text-center" />
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -373,7 +373,7 @@ export function OrgTable({
                           setSelectedIds(new Set([org.id]));
                           onViewDetails?.(org.id);
                         }}
-                        className="text-xs font-medium text-foreground truncate leading-tight max-w-[180px] text-left hover:underline"
+                        className="text-xs font-medium text-foreground truncate leading-tight max-w-[125px] text-left hover:underline"
                       >
                         {displayName}
                       </button>
