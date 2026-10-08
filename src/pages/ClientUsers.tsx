@@ -137,6 +137,10 @@ export default function ClientUsers() {
             {create.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <UserPlus className="h-4 w-4 mr-2" />}
             Criar acesso
           </Button>
+          <Button variant="ghost" className="w-full text-muted-foreground" onClick={() => setSelected(null)}>
+            <X className="h-4 w-4 mr-2" />
+            Não precisa de acesso agora
+          </Button>
         </div>
       )}
 
