@@ -380,11 +380,11 @@ export function OrgTable({
                     </div>
                   </TableCell>
                   <TableCell className="px-2 py-1 text-[11px] text-muted-foreground">
-                    <span className="truncate inline-block max-w-[180px] align-middle">{org.responsible_email}</span>
+                    <span className="truncate inline-block max-w-[125px] align-middle">{org.responsible_email}</span>
                   </TableCell>
                   <TableCell className="px-2 py-1 text-center" onClick={(e) => e.stopPropagation()}>
                     <Select value={org.plan} onValueChange={(v) => onPlanChange(org.id, v as any)}>
-                      <SelectTrigger className={cn("h-6 w-[66px] min-w-0 mx-auto px-1.5 text-[10px] border-0", planBadgeStyles[org.plan])}>
+                      <SelectTrigger className={cn("h-6 w-[62px] min-w-0 mx-auto px-1.5 text-[10px] border-0", planBadgeStyles[org.plan])}>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
