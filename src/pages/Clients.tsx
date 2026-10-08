@@ -210,17 +210,8 @@ export default function Clients() {
           </p>
         </div>
         <Button
-          onClick={() => {
-            if (!canAddClient) {
-              toast.error("Limite de gestantes atingido", {
-                description: "Faça upgrade do seu plano para cadastrar mais gestantes.",
-              });
-              return;
-            }
-            setNewFlowOpen(true);
-          }}
+          onClick={() => setNewFlowOpen(true)}
           className="gap-2 flex-shrink-0 w-full md:w-auto"
-          variant={canAddClient ? "default" : "outline"}
         >
           <Plus className="w-4 h-4" />
           Nova Cliente
@@ -507,7 +498,7 @@ export default function Clients() {
         client={selectedClient}
       />
 
-      <NewClientFlow open={newFlowOpen} onOpenChange={setNewFlowOpen} />
+      <NewClientFlow open={newFlowOpen} onOpenChange={setNewFlowOpen} canAddFollowUp={canAddClient} />
 
       {/* Client File (Ficha) Dialog */}
       <ClientFileDialog

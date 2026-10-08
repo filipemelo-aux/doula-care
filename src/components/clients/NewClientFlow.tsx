@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 import { UserRound, HeartHandshake } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { ClientDialog } from "./ClientDialog";
@@ -16,9 +17,12 @@ type Category = "avulsa" | "acompanhamento" | null;
 export function NewClientFlow({
   open,
   onOpenChange,
+  canAddFollowUp = true,
 }: {
   open: boolean;
   onOpenChange: (o: boolean) => void;
+  /** Falso quando o limite de gestantes do plano foi atingido. */
+  canAddFollowUp?: boolean;
 }) {
   const navigate = useNavigate();
   const [category, setCategory] = useState<Category>(null);
@@ -56,7 +60,15 @@ export function NewClientFlow({
               <button
                 key={o.key}
                 type="button"
-                onClick={() => setCategory(o.key)}
+                onClick={() => {
+                  if (o.key === "acompanhamento" && !canAddFollowUp) {
+                    toast.error("Limite de gestantes atingido", {
+                      description: "Faça upgrade do plano para cadastrar mais gestantes. Clientes ocasionais e atendimentos continuam liberados.",
+                    });
+                    return;
+                  }
+                  setCategory(o.key);
+                }}
                 className="w-full flex items-start gap-3 rounded-2xl bg-muted/40 hover:bg-primary/10 p-4 text-left transition-colors active:scale-[0.99]"
               >
                 <div className="h-10 w-10 shrink-0 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
@@ -65,6 +77,9 @@ export function NewClientFlow({
                 <div className="min-w-0">
                   <p className="font-semibold text-sm text-foreground">{o.title}</p>
                   <p className="text-xs text-muted-foreground mt-0.5">{o.desc}</p>
+                  {o.key === "acompanhamento" && !canAddFollowUp && (
+                    <p className="text-xs font-medium text-destructive mt-1">Limite de gestantes do plano atingido</p>
+                  )}
                 </div>
               </button>
             ))}
