@@ -834,7 +834,7 @@ export default function Subscription() {
         })}
       </div>
 
-      {platform === "ios" && (
+      {!isWeb && (
         <div className="flex justify-center">
           <Button variant="ghost" size="sm" onClick={handleRestore} disabled={restoring}>
             {restoring ? (
