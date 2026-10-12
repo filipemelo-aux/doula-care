@@ -284,9 +284,13 @@ async function setupNativePlugin(): Promise<boolean> {
       console.log("[IAP] Plugin inicializado para", getCurrentPlatform());
       _setupFailReason = null;
       return true;
-    } catch (err) {
+    } catch (err: any) {
       console.error("[IAP] Falha no setup do plugin:", err);
-      _setupFailReason = "config";
+      // Plugin ausente no app nativo instalado: o Capacitor responde "not implemented".
+      const msg = String(err?.message ?? err ?? "");
+      _setupFailReason = /not implemented|UNIMPLEMENTED|not available/i.test(msg)
+        ? "plugin"
+        : "config";
       return false;
     }
   })();
