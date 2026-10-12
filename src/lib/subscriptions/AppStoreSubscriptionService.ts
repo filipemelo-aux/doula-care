@@ -235,6 +235,8 @@ async function getRevenueCatApiKey(): Promise<string | null> {
 }
 
 let _setupPromise: Promise<boolean> | null = null;
+let _setupFailReason: "plugin" | "key" | "config" | null = null;
+const storeName = () => (getCurrentPlatform() === "android" ? "Google Play" : "App Store");
 
 /**
  * Inicializa o plugin nativo (RevenueCat). Idempotente.
@@ -251,6 +253,7 @@ async function setupNativePlugin(): Promise<boolean> {
       const Purchases: any = box?.plugin;
       if (!Purchases) {
         console.warn("[IAP] setup: plugin indisponível");
+        _setupFailReason = "plugin";
         return false;
       }
 
@@ -262,6 +265,7 @@ async function setupNativePlugin(): Promise<boolean> {
           getCurrentPlatform(),
           "- configure a chave no Super Admin (Assinaturas) ou em window.__REVENUECAT_KEYS__"
         );
+        _setupFailReason = "key";
         return false;
       }
 
@@ -278,9 +282,11 @@ async function setupNativePlugin(): Promise<boolean> {
       console.log("[IAP] setup: configurando RevenueCat");
       await withTimeout(Purchases.configure({ apiKey, appUserID }), 15000, "A loja");
       console.log("[IAP] Plugin inicializado para", getCurrentPlatform());
+      _setupFailReason = null;
       return true;
     } catch (err) {
       console.error("[IAP] Falha no setup do plugin:", err);
+      _setupFailReason = "config";
       return false;
     }
   })();
@@ -361,9 +367,12 @@ export const AppStoreSubscriptionService = {
     if (!Purchases || !ready) {
       return {
         status: "error",
-        message: ready
-          ? "Plugin de compras não disponível neste dispositivo."
-          : "Não foi possível conectar à App Store. Verifique sua conexão e tente novamente.",
+        message:
+          _setupFailReason === "plugin"
+            ? "O módulo de compras não está instalado nesta versão do aplicativo. Atualize o app pela loja."
+            : _setupFailReason === "key"
+            ? `As assinaturas pelo ${storeName()} ainda não estão configuradas.`
+            : `Não foi possível conectar ao ${storeName()}. Verifique sua conexão e tente novamente.`,
       };
     }
 
@@ -373,17 +382,17 @@ export const AppStoreSubscriptionService = {
       const res: any = await withTimeout<any>((Purchases as any).getProducts({
         productIdentifiers: [productId],
         type: "SUBS",
-      }), 15000, "A App Store");
+      }), 15000, storeName());
       const products = res?.products ?? [];
       console.log("[IAP] produtos recebidos:", products.length);
       const product =
         products.find((p: any) => String(p?.identifier ?? "").split(":")[0] === productId) ??
         products?.[0];
       if (!product) {
-        return { status: "error", message: "Este plano ainda não foi liberado pela App Store. Tente novamente mais tarde." };
+        return { status: "error", message: `Este plano ainda não foi liberado pelo ${storeName()}. Tente novamente mais tarde.` };
       }
       console.log("[IAP] abrindo janela de compra");
-      const result: any = await withTimeout<any>((Purchases as any).purchaseStoreProduct({ product }), 120000, "A App Store");
+      const result: any = await withTimeout<any>((Purchases as any).purchaseStoreProduct({ product }), 120000, storeName());
       if (result?.userCancelled) {
         return { status: "cancelled", productId };
       }
