@@ -148,7 +148,12 @@ async function enrichWithStorePrices(products: StoreProduct[]): Promise<StorePro
     const byId = new Map<string, any>();
     list.forEach((p) => {
       const id = p?.identifier ?? p?.productIdentifier ?? p?.sku;
-      if (id) byId.set(String(id), p);
+      if (!id) return;
+      // Google Play devolve "produto:plano-basico"; indexa também só o produto.
+      const full = String(id);
+      byId.set(full, p);
+      const base = full.split(":")[0];
+      if (!byId.has(base)) byId.set(base, p);
     });
 
     return products.map((p) => {
@@ -371,7 +376,9 @@ export const AppStoreSubscriptionService = {
       }), 15000, "A App Store");
       const products = res?.products ?? [];
       console.log("[IAP] produtos recebidos:", products.length);
-      const product = products?.[0];
+      const product =
+        products.find((p: any) => String(p?.identifier ?? "").split(":")[0] === productId) ??
+        products?.[0];
       if (!product) {
         return { status: "error", message: "Este plano ainda não foi liberado pela App Store. Tente novamente mais tarde." };
       }
@@ -559,9 +566,12 @@ export const AppStoreSubscriptionService = {
           }
         : {
             product_id: payload.productId,
+            // No RevenueCat Android, transactionIdentifier é o purchase token.
             purchase_token:
-              transaction.purchaseToken ?? transaction.token,
-            order_id: transaction.orderId ?? transaction.transactionId,
+              transaction.purchaseToken ??
+              transaction.token ??
+              transaction.transactionIdentifier,
+            order_id: transaction.orderId ?? transaction.transactionId ?? null,
           };
 
     const { data, error } = await supabase.functions.invoke(fnName, { body });
