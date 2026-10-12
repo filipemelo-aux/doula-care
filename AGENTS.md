@@ -3,3 +3,4 @@ Fallback de parcelas sem transaction_id só é permitido para receitas automáti
 - Never return a Capacitor plugin proxy directly from an async function or promise; wrap it (e.g. `{ plugin }`) — the proxy answers `.then()` and breaks `await` on iOS.
 - Client plan display always resolves clients.plan_setting_id -> plan_settings (name + features expanded as consultations, sequence = index+1) via src/lib/clientPlan.ts; legacy clients.plan enum is never shown — avoids stale Básico/Intermediário/Completo labels.
 - Each service_record links to its agenda appointment via service_records.appointment_id (created together, edited/completed/deleted together); payment actions live only in Contas a Receber — avoids atendimentos missing from the Agenda.
+- Native subscriptions (iOS and Android) go through AppStoreSubscriptionService + RevenueCat with keys read from system_config; the Subscription page enables purchase on web, iOS and Android — one purchase path for both stores.
