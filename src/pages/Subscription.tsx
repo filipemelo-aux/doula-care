@@ -120,7 +120,7 @@ export default function Subscription() {
 
   const platform = getCurrentPlatform();
   const isWeb = platform === "web";
-  const canPurchase = isWeb || platform === "ios";
+  const canPurchase = isWeb || platform === "ios" || platform === "android";
 
   const [purchasing, setPurchasing] = useState<string | null>(null);
   const [restoring, setRestoring] = useState(false);
@@ -558,12 +558,6 @@ export default function Subscription() {
               </Button>
             ) : null}
 
-            {platform === "android" && (
-              <p className="text-xs text-muted-foreground max-w-xs">
-                As assinaturas pelo aplicativo estarão disponíveis em breve.
-                Por enquanto, a contratação é feita pelo site.
-              </p>
-            )}
 
 
           </div>
