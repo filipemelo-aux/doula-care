@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { KeyRound, Save, Apple, Smartphone } from "lucide-react";
@@ -37,7 +38,7 @@ export function StoreKeysCard() {
         .select("key, value")
         .in(
           "key",
-          KEYS.map((k) => k.key)
+          [...KEYS.map((k) => k.key), "android_force_update"]
         );
       if (error) throw error;
       return (data as any[]) || [];
@@ -113,6 +114,22 @@ export function StoreKeysCard() {
               </div>
             );
           })}
+          <div className="flex items-start justify-between gap-3 pt-3 border-t border-border">
+            <div>
+              <p className="text-sm font-medium text-foreground">Forçar atualização no Android</p>
+              <p className="text-xs text-muted-foreground">
+                Quem estiver com a versão antiga do app (sem compras) verá uma tela pedindo
+                para atualizar na Google Play. Ligue só depois que a nova versão for aprovada.
+              </p>
+            </div>
+            <Switch
+              checked={valueOf("android_force_update") === "true"}
+              disabled={mutation.isPending}
+              onCheckedChange={(v) =>
+                mutation.mutate({ key: "android_force_update", value: v ? "true" : "false" })
+              }
+            />
+          </div>
         </CardContent>
       </Card>
     </div>

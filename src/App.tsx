@@ -54,6 +54,7 @@ import VisitorWeekDetail from "./pages/visitante/VisitorWeekDetail";
 import UpdatePrompt from "./components/pwa/UpdatePrompt";
 import { NotificationListenerProvider } from "./components/notifications/NotificationListenerProvider";
 import { ForceUpdateListener } from "./components/ForceUpdateListener";
+import { AndroidUpdateGate } from "./components/AndroidUpdateGate";
 
 // Gestante pages
 import GestanteChangePassword from "./pages/gestante/GestanteChangePassword";
@@ -88,6 +89,7 @@ const App = () => (
           <RecoveryRedirect />
           <UpdatePrompt />
           <ForceUpdateListener />
+          <AndroidUpdateGate />
           <NotificationListenerProvider />
           <Routes>
             {/* Single login page */}
