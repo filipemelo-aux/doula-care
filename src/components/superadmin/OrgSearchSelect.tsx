@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Check, ChevronsUpDown, Globe, Loader2 } from "lucide-react";
+import { Check, ChevronsUpDown, Globe, Loader2, X } from "lucide-react";
 
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
@@ -19,9 +19,9 @@ export interface OrgOption {
 }
 
 interface OrgSearchSelectProps {
-  /** "all" means every organization, or the id of one organization. */
-  value: string;
-  onChange: (id: string) => void;
+  /** Lista de organizações escolhidas; vazia = todas as organizações. */
+  value: string[];
+  onChange: (ids: string[]) => void;
   orgs: OrgOption[];
   /** Called the first time the list is opened, so organizations can be loaded lazily. */
   onOpen?: () => void;
@@ -50,8 +50,14 @@ export function OrgSearchSelect({
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
 
-  const selected = value === "all" ? null : orgs.find((o) => o.id === value);
-  const label = selected ? selected.nome_exibicao || selected.name : placeholder;
+  const selected = orgs.filter((o) => value.includes(o.id));
+  const nameOf = (o: OrgOption) => o.nome_exibicao || o.name;
+  const label =
+    value.length === 0
+      ? placeholder
+      : value.length === 1 && selected[0]
+        ? nameOf(selected[0])
+        : `${value.length} organizações selecionadas`;
 
   const handleOpen = (next: boolean) => {
     setOpen(next);
@@ -61,9 +67,8 @@ export function OrgSearchSelect({
     }
   };
 
-  const choose = (id: string) => {
-    onChange(id);
-    setOpen(false);
+  const toggle = (id: string) => {
+    onChange(value.includes(id) ? value.filter((v) => v !== id) : [...value, id]);
   };
 
   // Real-time filtering: keeps only items whose text contains what was typed.
@@ -74,68 +79,82 @@ export function OrgSearchSelect({
   };
 
   return (
-    <Popover open={open} onOpenChange={handleOpen}>
-      <PopoverTrigger asChild>
-        <button
-          type="button"
-          aria-expanded={open}
-          className={cn(
-            "premium-input flex h-9 w-full items-center justify-between gap-2 px-3 text-sm text-left",
-            className,
-          )}
+    <div className="space-y-2">
+      <Popover open={open} onOpenChange={handleOpen}>
+        <PopoverTrigger asChild>
+          <button
+            type="button"
+            aria-expanded={open}
+            className={cn(
+              "premium-input flex h-9 w-full items-center justify-between gap-2 px-3 text-sm text-left",
+              className,
+            )}
+          >
+            <span className={cn("flex-1 truncate", value.length === 0 && "text-muted-foreground")}>{label}</span>
+            {loading ? (
+              <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin text-muted-foreground" />
+            ) : (
+              <ChevronsUpDown className="h-3.5 w-3.5 shrink-0 opacity-50" />
+            )}
+          </button>
+        </PopoverTrigger>
+        <PopoverContent
+          align="start"
+          className="z-[200] w-[var(--radix-popover-trigger-width)] min-w-[16rem] p-0"
         >
-          <span className={cn("flex-1 truncate", !selected && "text-muted-foreground")}>{label}</span>
-          {loading ? (
-            <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin text-muted-foreground" />
-          ) : (
-            <ChevronsUpDown className="h-3.5 w-3.5 shrink-0 opacity-50" />
-          )}
-        </button>
-      </PopoverTrigger>
-      <PopoverContent
-        align="start"
-        className="z-[200] w-[var(--radix-popover-trigger-width)] min-w-[16rem] p-0"
-      >
-        <Command filter={filter}>
-          <CommandInput
-            placeholder="Buscar organização..."
-            value={query}
-            onValueChange={setQuery}
-          />
-          <CommandList>
-            <CommandEmpty>
-              {loading ? "Carregando organizações..." : "Nenhuma organização encontrada"}
-            </CommandEmpty>
-            <CommandGroup>
-              <CommandItem
-                value="all"
-                keywords={["todas", "todas as organizacoes", "todas as organizações", "todas as organizacoes", "geral", "todas as"]}
-                onSelect={() => choose("all")}
-              >
-                <Globe className="mr-2 h-3.5 w-3.5 text-muted-foreground" />
-                <span className="flex-1 truncate">Todas as organizações</span>
-                <Check className={cn("ml-2 h-4 w-4", value === "all" ? "opacity-100" : "opacity-0")} />
-              </CommandItem>
-              {orgs.map((org) => {
-                const displayName = org.nome_exibicao || org.name;
-                return (
-                  <CommandItem
-                    key={org.id}
-                    value={org.id}
-                    keywords={[displayName, org.name, org.nome_exibicao ?? ""]}
-                    onSelect={() => choose(org.id)}
-                  >
-                    <span className="flex-1 truncate">{displayName}</span>
-                    <Check
-                      className={cn("ml-2 h-4 w-4", value === org.id ? "opacity-100" : "opacity-0")}
-                    />
-                  </CommandItem>
-                );
-              })}
-            </CommandGroup>
-          </CommandList>
-        </Command>
-      </PopoverContent>
-    </Popover>
+          <Command filter={filter}>
+            <CommandInput placeholder="Buscar organização..." value={query} onValueChange={setQuery} />
+            <CommandList>
+              <CommandEmpty>
+                {loading ? "Carregando organizações..." : "Nenhuma organização encontrada"}
+              </CommandEmpty>
+              <CommandGroup>
+                <CommandItem
+                  value="all"
+                  keywords={["todas", "todas as organizacoes", "todas as organizações", "geral"]}
+                  onSelect={() => {
+                    onChange([]);
+                    setOpen(false);
+                  }}
+                >
+                  <Globe className="mr-2 h-3.5 w-3.5 text-muted-foreground" />
+                  <span className="flex-1 truncate">Todas as organizações</span>
+                  <Check className={cn("ml-2 h-4 w-4", value.length === 0 ? "opacity-100" : "opacity-0")} />
+                </CommandItem>
+                {orgs.map((org) => {
+                  const displayName = nameOf(org);
+                  return (
+                    <CommandItem
+                      key={org.id}
+                      value={org.id}
+                      keywords={[displayName, org.name, org.nome_exibicao ?? ""]}
+                      onSelect={() => toggle(org.id)}
+                    >
+                      <span className="flex-1 truncate">{displayName}</span>
+                      <Check className={cn("ml-2 h-4 w-4", value.includes(org.id) ? "opacity-100" : "opacity-0")} />
+                    </CommandItem>
+                  );
+                })}
+              </CommandGroup>
+            </CommandList>
+          </Command>
+        </PopoverContent>
+      </Popover>
+      {selected.length > 1 && (
+        <div className="flex flex-wrap gap-1.5">
+          {selected.map((o) => (
+            <span
+              key={o.id}
+              className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-[11px] text-primary"
+            >
+              {nameOf(o)}
+              <button type="button" aria-label={`Remover ${nameOf(o)}`} onClick={() => toggle(o.id)}>
+                <X className="h-3 w-3" />
+              </button>
+            </span>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
