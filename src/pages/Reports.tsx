@@ -365,19 +365,19 @@ export default function Reports() {
       {/* Tabs */}
       <Tabs defaultValue="financeiro" onValueChange={(v) => setActiveTab(v as ReportTab)} className="space-y-4">
         <TabsList className="w-full">
-          <TabsTrigger value="financeiro" className="flex-1 min-w-0 text-xs gap-1.5 !px-0 lg:!px-3 py-1.5">
+          <TabsTrigger value="financeiro">
             <DollarSign className="w-4 h-4 flex-shrink-0" />
             <span className="hidden lg:inline">Financeiro</span>
           </TabsTrigger>
-          <TabsTrigger value="clientes" className="flex-1 min-w-0 text-xs gap-1.5 !px-0 lg:!px-3 py-1.5">
+          <TabsTrigger value="clientes">
             <Users className="w-4 h-4 flex-shrink-0" />
             <span className="hidden lg:inline">Clientes</span>
           </TabsTrigger>
-          <TabsTrigger value="receitas" className="flex-1 min-w-0 text-xs gap-1.5 !px-0 lg:!px-3 py-1.5">
+          <TabsTrigger value="receitas">
             <CreditCard className="w-4 h-4 flex-shrink-0" />
             <span className="hidden lg:inline">Receitas</span>
           </TabsTrigger>
-          <TabsTrigger value="despesas" className="flex-1 min-w-0 text-xs gap-1.5 !px-0 lg:!px-3 py-1.5">
+          <TabsTrigger value="despesas">
             <FileText className="w-4 h-4 flex-shrink-0" />
             <span className="hidden lg:inline">Despesas</span>
           </TabsTrigger>

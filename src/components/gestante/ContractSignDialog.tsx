@@ -275,11 +275,11 @@ export function ContractSignDialog({ open, onOpenChange, contractId }: ContractS
                 <div className="space-y-4 mb-4">
                   <Tabs value={signMethod} onValueChange={(v) => setSignMethod(v as "draw" | "type")}>
                     <TabsList className="w-full">
-                      <TabsTrigger value="draw" className="flex-1 gap-1.5">
+                      <TabsTrigger value="draw">
                         <PenTool className="h-3.5 w-3.5" />
                         Desenhar
                       </TabsTrigger>
-                      <TabsTrigger value="type" className="flex-1 gap-1.5">
+                      <TabsTrigger value="type">
                         <Type className="h-3.5 w-3.5" />
                         Digitar
                       </TabsTrigger>
