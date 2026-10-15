@@ -1086,6 +1086,7 @@ export type Database = {
           message: string
           organization_id: string | null
           read_at: string | null
+          target_device: string
           title: string
           user_id: string
         }
@@ -1096,6 +1097,7 @@ export type Database = {
           message: string
           organization_id?: string | null
           read_at?: string | null
+          target_device?: string
           title: string
           user_id: string
         }
@@ -1106,6 +1108,7 @@ export type Database = {
           message?: string
           organization_id?: string | null
           read_at?: string | null
+          target_device?: string
           title?: string
           user_id?: string
         }
@@ -2755,15 +2758,26 @@ export type Database = {
         Args: { p_payment_id: string }
         Returns: undefined
       }
-      send_in_app_announcement: {
-        Args: {
-          p_audience?: string
-          p_message: string
-          p_organization_id?: string
-          p_title: string
-        }
-        Returns: number
-      }
+      send_in_app_announcement:
+        | {
+            Args: {
+              p_audience?: string
+              p_message: string
+              p_organization_id?: string
+              p_title: string
+            }
+            Returns: number
+          }
+        | {
+            Args: {
+              p_audience: string
+              p_message: string
+              p_organization_id: string
+              p_target_device: string
+              p_title: string
+            }
+            Returns: number
+          }
     }
     Enums: {
       app_role:

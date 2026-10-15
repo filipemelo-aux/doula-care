@@ -7,6 +7,15 @@ export type AccessPlatform =
   | "browser_android"
   | "browser_desktop";
 
+export type NotificationDevice = "all" | "browser" | "android" | "ios";
+
+export const detectNotificationDevice = (): Exclude<NotificationDevice, "all"> => {
+  const platform = detectAccessPlatform();
+  if (platform === "app_android") return "android";
+  if (platform === "app_ios") return "ios";
+  return "browser";
+};
+
 /** Detecta de onde o acesso está sendo feito (app instalado x navegador). */
 export const detectAccessPlatform = (): AccessPlatform => {
   try {
