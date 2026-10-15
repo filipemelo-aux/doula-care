@@ -173,12 +173,11 @@ export function usePlanLimits() {
     enabled: !!organizationId,
   });
 
-  // ── Trial expiry check ──
+  // ── Trial expiry check (somente trials de 15 dias lançados pelo Super Admin) ──
   const isTrialExpired = (() => {
-    return false; // Trials desativados — todas as contas com acesso completo
     if (isSuperAdmin) return false;
     if (!promoData) return false;
-    if (promoData.status === "lifetime_active") return false;
+    if (promoData.promotion_type !== "trial_15d") return false;
     if (promoData.status === "trial_active" && promoData.trial_ends_at) {
       return new Date(promoData.trial_ends_at) < new Date();
     }
@@ -190,6 +189,8 @@ export function usePlanLimits() {
   // ── Subscription state ──
   // Super admins are NEVER considered expired or blocked
   const isSubscriptionExpired = (() => {
+    // Trial encerrado sem assinatura: limites do Free até assinar
+    if (isTrialExpired && !hasActiveSubscription) return true;
     // Pix é pagamento avulso: ao fim do período o acesso é interrompido
     // e um novo pagamento (ou assinatura recorrente) é exigido.
     if (
