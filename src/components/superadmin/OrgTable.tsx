@@ -1,5 +1,8 @@
 import { useMemo, useState } from "react";
-import { Ban, CheckCircle, Trash2, Loader2, ArrowUp, ArrowDown, ArrowUpDown, Eye, Apple, Smartphone, Globe } from "lucide-react";
+import { Ban, CheckCircle, Trash2, Loader2, ArrowUp, ArrowDown, ArrowUpDown, Eye, Apple, Smartphone, Globe, Gift, Crown } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { startOrgTrial, makeOrgLifetime } from "@/lib/orgPromotions";
 import { ACCESS_PLATFORM_LABEL } from "@/lib/accessPlatform";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -119,6 +122,7 @@ export function OrgTable({
   const [sortKey, setSortKey] = useState<SortKey>(defaultSort);
   const [sortDir, setSortDir] = useState<SortDir>(defaultDir);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const queryClient = useQueryClient();
   const [bulkPlan, setBulkPlan] = useState<string>("");
   const [activity, setActivity] = useState<ActivityFilter>("all");
   const [device, setDevice] = useState<string>("all");
@@ -207,6 +211,31 @@ export function OrgTable({
     setBulkPlan("");
   };
 
+  const [promoPending, setPromoPending] = useState(false);
+  const runBulkPromo = async (kind: "trial" | "lifetime") => {
+    if (selectedOrgs.length === 0) return;
+    const label = kind === "trial" ? "lançar trial Premium de 15 dias para" : "tornar vitalícias";
+    if (!window.confirm(`Deseja ${label} ${selectedOrgs.length} organização(ões)?`)) return;
+    setPromoPending(true);
+    let ok = 0;
+    let fail = 0;
+    for (const o of selectedOrgs) {
+      try {
+        if (kind === "trial") await startOrgTrial(o.id);
+        else await makeOrgLifetime(o.id);
+        ok++;
+      } catch {
+        fail++;
+      }
+    }
+    setPromoPending(false);
+    queryClient.invalidateQueries({ queryKey: ["super-admin-orgs"] });
+    queryClient.invalidateQueries({ queryKey: ["org-promo"] });
+    if (ok) toast.success(kind === "trial" ? `Trial iniciado em ${ok} organização(ões)` : `${ok} organização(ões) agora vitalícias`);
+    if (fail) toast.error(`${fail} falharam`);
+    setSelectedIds(new Set());
+  };
+
   const SortHeader = ({ label, k, className }: { label: string; k: SortKey; className?: string }) => (
     <TableHead className={cn("h-8 px-1.5 text-[11px] whitespace-nowrap", className)}>
       <button
@@ -272,6 +301,26 @@ export function OrgTable({
             </Select>
           </>
         )}
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-7 px-2 text-[11px] gap-1 shrink-0 text-primary"
+          disabled={selectedOrgs.length === 0 || promoPending}
+          onClick={() => runBulkPromo("trial")}
+        >
+          {promoPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Gift className="h-3.5 w-3.5" />}
+          Trial 15 dias
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-7 px-2 text-[11px] gap-1 shrink-0 text-amber-600"
+          disabled={selectedOrgs.length === 0 || promoPending}
+          onClick={() => runBulkPromo("lifetime")}
+        >
+          <Crown className="h-3.5 w-3.5" />
+          Vitalício
+        </Button>
         <Button
           variant="ghost"
           size="sm"
