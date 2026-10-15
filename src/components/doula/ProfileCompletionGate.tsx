@@ -13,6 +13,7 @@ import { fetchAddressByCep } from "@/lib/address";
 import { unmask } from "@/lib/masks";
 import { AvatarUpload } from "@/components/gestante/AvatarUpload";
 import { CONSENT_VERSION } from "@/pages/Register";
+import { StepTabs } from "@/components/ui/step-tabs";
 
 /**
  * Formulário obrigatório de atualização cadastral para doulas antigas.
@@ -224,11 +225,15 @@ export function ProfileCompletionGate() {
             </p>
           </div>
 
-          <div className="flex gap-1.5 justify-center">
-            {[1, 2, 3].map((i) => (
-              <span key={i} className={`h-1.5 rounded-full transition-all ${i <= step ? "w-6 bg-primary" : "w-3 bg-muted"}`} />
-            ))}
-          </div>
+          <StepTabs
+            current={step}
+            onSelect={setStep}
+            steps={[
+              { id: 1, label: "Pessoal", done: validStep1 },
+              { id: 2, label: "Endereço", done: validStep2 },
+              { id: 3, label: "Profissional", done: validStep3 },
+            ]}
+          />
 
           {step === 1 && (
             <div className="space-y-3">

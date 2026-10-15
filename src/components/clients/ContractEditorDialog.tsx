@@ -432,11 +432,11 @@ ${client?.city || "[Cidade]"}, ${todayFormatted}.`;
                     onValueChange={(v) => setMode(v as "auto" | "attach")}
                   >
                     <TabsList className="w-full">
-                      <TabsTrigger value="auto" className="flex-1 gap-1.5">
+                      <TabsTrigger value="auto">
                         <Wand2 className="h-3.5 w-3.5" />
                         Gerar automático
                       </TabsTrigger>
-                      <TabsTrigger value="attach" className="flex-1 gap-1.5">
+                      <TabsTrigger value="attach">
                         <Upload className="h-3.5 w-3.5" />
                         Anexar contrato
                       </TabsTrigger>

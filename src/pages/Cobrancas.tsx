@@ -268,9 +268,9 @@ export default function Cobrancas() {
         </div>
         <Tabs value={tab} onValueChange={(v) => setTab(v as any)}>
           <TabsList className="w-full">
-            <TabsTrigger value="todos" className="flex-1">Todos</TabsTrigger>
-            <TabsTrigger value="vencidas" className="flex-1">Vencidas</TabsTrigger>
-            <TabsTrigger value="vencendo" className="flex-1">A vencer</TabsTrigger>
+            <TabsTrigger value="todos">Todos</TabsTrigger>
+            <TabsTrigger value="vencidas">Vencidas</TabsTrigger>
+            <TabsTrigger value="vencendo">A vencer</TabsTrigger>
           </TabsList>
         </Tabs>
       </div>

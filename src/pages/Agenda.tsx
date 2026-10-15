@@ -793,12 +793,12 @@ export default function Agenda() {
           />
         </div>
         <Tabs value={viewMode} onValueChange={(v) => v && setViewMode(v as "list" | "calendar")}>
-          <TabsList className="w-full sm:w-auto grid grid-cols-2 gap-0 p-1">
-            <TabsTrigger value="list" className="gap-1.5 text-xs sm:text-sm px-3">
+          <TabsList className="w-full">
+            <TabsTrigger value="list">
               <List className="h-4 w-4" />
               <span>Compromissos</span>
             </TabsTrigger>
-            <TabsTrigger value="calendar" className="gap-1.5 text-xs sm:text-sm px-3">
+            <TabsTrigger value="calendar">
               <CalendarDays className="h-4 w-4" />
               <span>Disponibilidade</span>
             </TabsTrigger>
@@ -816,12 +816,12 @@ export default function Agenda() {
         <div className="space-y-4">
           <div className="flex items-center gap-2">
             <Tabs value={agendaFilter} onValueChange={(v) => v && setAgendaFilter(v as AgendaFilter)}>
-              <TabsList className="flex-1 grid grid-cols-2 gap-0 p-1">
-                <TabsTrigger value="calendar" className="gap-1.5 text-xs sm:text-sm px-1">
+              <TabsList className="w-full">
+                <TabsTrigger value="calendar">
                   <CalendarDays className="h-3.5 w-3.5" />
                   <span className="truncate">Data no calendário</span>
                 </TabsTrigger>
-                <TabsTrigger value="all" className="gap-1.5 text-xs sm:text-sm px-1">
+                <TabsTrigger value="all">
                   <List className="h-3.5 w-3.5" />
                   <span className="truncate">Todos os compromissos</span>
                 </TabsTrigger>
