@@ -151,7 +151,7 @@ const STEPS = [
   { id: 3, title: "Gestação e Pré-natal", shortTitle: "Gestação" },
   { id: 4, title: "Saúde e Restrições", shortTitle: "Saúde" },
   { id: 5, title: "Plano e Pagamento", shortTitle: "Plano" },
-  { id: 6, title: "Observações", shortTitle: "Obs." },
+  { id: 6, title: "Observações", shortTitle: "Observações" },
 ];
 
 export function ClientDialog({ open, onOpenChange, client, initialStep, mode: rawMode = "full", readOnly = false, onSaved, submitLabel }: ClientDialogProps) {
