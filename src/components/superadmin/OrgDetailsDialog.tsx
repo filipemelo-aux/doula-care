@@ -151,7 +151,7 @@ export function OrgDetailsDialog({ orgId, open, onOpenChange }: Props) {
               </Badge>
             </div>
 
-            <TabsList className="grid h-auto w-full grid-cols-2 rounded-xl bg-muted/60 p-1">
+            <TabsList className="w-full">
               <TabsTrigger value="organization" className="gap-1.5 py-2 text-xs sm:text-sm">
                 <Building2 className="h-3.5 w-3.5" />
                 Dados da organização

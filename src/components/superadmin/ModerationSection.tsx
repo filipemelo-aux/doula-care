@@ -141,7 +141,7 @@ export function ModerationSection() {
         <Card>
           <CardContent className="p-0">
             <Tabs defaultValue="messages" className="w-full">
-              <TabsList className="w-full rounded-none border-b bg-transparent h-auto p-0 grid grid-cols-5">
+              <TabsList className="w-full">
                 <TabsTrigger value="messages" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent gap-1 py-2.5 text-[11px] px-1">
                   <MessageCircle className="h-3.5 w-3.5 shrink-0" />
                   <span className="truncate">Msgs</span>

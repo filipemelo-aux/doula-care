@@ -364,7 +364,7 @@ export default function Reports() {
 
       {/* Tabs */}
       <Tabs defaultValue="financeiro" onValueChange={(v) => setActiveTab(v as ReportTab)} className="space-y-4">
-        <TabsList className="flex w-full h-10 p-1 gap-0">
+        <TabsList className="w-full">
           <TabsTrigger value="financeiro" className="flex-1 min-w-0 text-xs gap-1.5 !px-0 lg:!px-3 py-1.5">
             <DollarSign className="w-4 h-4 flex-shrink-0" />
             <span className="hidden lg:inline">Financeiro</span>

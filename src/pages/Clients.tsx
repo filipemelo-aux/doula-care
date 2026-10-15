@@ -256,7 +256,7 @@ export default function Clients() {
             Lista de Clientes ({filteredClients?.length || 0})
           </CardTitle>
           <Tabs value={statusFilter} onValueChange={(v) => setStatusFilter(v as typeof statusFilter)}>
-            <TabsList className="grid w-full grid-cols-3 sm:w-auto sm:inline-grid">
+            <TabsList className="w-full">
               <TabsTrigger value="gestante">Gestantes</TabsTrigger>
               <TabsTrigger value="lactante">Puérperas</TabsTrigger>
               <TabsTrigger value="outro">Ocasionais</TabsTrigger>
