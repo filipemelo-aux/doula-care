@@ -141,6 +141,8 @@ interface ClientDialogProps {
   /** Quando true, exibe os dados apenas para consulta (campos desabilitados, sem salvar) */
   readOnly?: boolean;
   onSaved?: (clientId: string) => void;
+  /** Texto do botão final em novos cadastros (padrão "Cadastrar"). */
+  submitLabel?: string;
 }
 
 const STEPS = [
@@ -152,7 +154,7 @@ const STEPS = [
   { id: 6, title: "Observações", shortTitle: "Obs." },
 ];
 
-export function ClientDialog({ open, onOpenChange, client, initialStep, mode: rawMode = "full", readOnly = false, onSaved }: ClientDialogProps) {
+export function ClientDialog({ open, onOpenChange, client, initialStep, mode: rawMode = "full", readOnly = false, onSaved, submitLabel }: ClientDialogProps) {
   const basicPerson = rawMode === "person-basic";
   const mode: "full" | "person" | "followup" = basicPerson ? "person" : rawMode;
   const visibleSteps =
@@ -2748,7 +2750,7 @@ export function ClientDialog({ open, onOpenChange, client, initialStep, mode: ra
                         <Loader2 className="h-4 w-4 animate-spin mr-1" />
                         Salvando...
                       </>
-                    ) : mode === "followup" ? "Salvar acompanhamento" : client ? "Atualizar" : "Cadastrar"}
+                    ) : mode === "followup" ? "Salvar acompanhamento" : client ? "Atualizar" : submitLabel ?? "Cadastrar"}
                   </Button>
                 </div>
                 </>

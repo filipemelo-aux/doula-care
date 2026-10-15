@@ -96,6 +96,7 @@ export function NewClientFlow({
         onOpenChange={(o) => !o && closeAll()}
         mode={category === "avulsa" ? "person-basic" : "person"}
         onSaved={category === "acompanhamento" ? handleSaved : undefined}
+        submitLabel={category === "acompanhamento" ? "Próxima etapa" : undefined}
       />
       <ClientDialog
         key={followClient?.id || "follow-none"}
