@@ -68,7 +68,7 @@ export function BroadcastNotificationCard() {
   const [communityTheme, setCommunityTheme] = useState("livre");
   const [instagramLink, setInstagramLink] = useState("");
   const [audience, setAudience] = useState("all");
-  const [targetOrgId, setTargetOrgId] = useState("all");
+  const [targetOrgIds, setTargetOrgIds] = useState<string[]>([]);
   const [targetDevices, setTargetDevices] = useState<NotificationDevice[]>(["all"]);
   const [orgs, setOrgs] = useState<Organization[]>([]);
   const [orgsLoaded, setOrgsLoaded] = useState(false);
@@ -141,14 +141,19 @@ export function BroadcastNotificationCard() {
     try {
       // If community type, create a forum post as "Doula Care"
       if (notifType === "announcement") {
-        const { data: recipientCount, error } = await supabase.rpc("send_in_app_announcement", {
-          p_title: title.trim(),
-          p_message: message.trim(),
-          p_audience: audience,
-          p_organization_id: targetOrgId === "all" ? null : targetOrgId,
-          p_target_device: deviceParam,
-        });
-        if (error) throw error;
+        const targets: (string | null)[] = targetOrgIds.length ? targetOrgIds : [null];
+        let recipientCount = 0;
+        for (const orgId of targets) {
+          const { data: count, error } = await supabase.rpc("send_in_app_announcement", {
+            p_title: title.trim(),
+            p_message: message.trim(),
+            p_audience: audience,
+            p_organization_id: orgId,
+            p_target_device: deviceParam,
+          } as any);
+          if (error) throw error;
+          recipientCount += Number(count) || 0;
+        }
         if (!recipientCount) {
           toast.error("Nenhum usuário encontrado para o público selecionado");
           return;
@@ -241,12 +246,12 @@ export function BroadcastNotificationCard() {
         // General type — send push notification directing to home
         let userIds: string[] = [];
 
-        if (targetOrgId !== "all") {
+        if (targetOrgIds.length > 0) {
           if (audience === "all" || audience === "admins") {
             const { data: orgProfiles } = await supabase
               .from("profiles")
               .select("user_id")
-              .eq("organization_id", targetOrgId);
+              .in("organization_id", targetOrgIds);
 
             if (orgProfiles) {
               const orgUserIds = orgProfiles.map(p => p.user_id);
@@ -266,7 +271,7 @@ export function BroadcastNotificationCard() {
             const { data: clients } = await supabase
               .from("clients")
               .select("user_id")
-              .eq("organization_id", targetOrgId)
+              .in("organization_id", targetOrgIds)
               .not("user_id", "is", null);
 
             if (clients) {
@@ -529,15 +534,15 @@ export function BroadcastNotificationCard() {
             <div className="space-y-2">
               <Label className="text-xs">Organização</Label>
               <OrgSearchSelect
-                value={targetOrgId}
-                onChange={setTargetOrgId}
+                value={targetOrgIds}
+                onChange={setTargetOrgIds}
                 orgs={orgs}
                 loading={orgsLoading}
                 onOpen={loadOrgs}
                 placeholder="Todas as organizações"
               />
               <p className="text-[10px] text-muted-foreground">
-                Digite o nome para filtrar as organizações ativas
+                Digite o nome para filtrar; selecione uma ou mais organizações
               </p>
             </div>
           )}
