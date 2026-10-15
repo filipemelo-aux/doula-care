@@ -8,7 +8,8 @@ export function isNotificationDevice(value: unknown): value is NotificationDevic
 export function isNotificationDeviceList(value: unknown): value is string | string[] {
   const parts = Array.isArray(value) ? value : typeof value === "string" ? [value] : null;
   if (!parts || parts.length === 0) return false;
-  return parts.every((p) => isNotificationDevice(typeof p === "string" ? p.trim() : p));
+  const expanded = parts.flatMap((p) => (typeof p === "string" ? p.split(",") : [p]));
+  return expanded.every((p) => isNotificationDevice(typeof p === "string" ? p.trim() : p));
 }
 
 /** Normaliza a entrada em uma lista de dispositivos; "all" vence qualquer combinação. */
