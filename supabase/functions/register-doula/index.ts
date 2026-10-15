@@ -242,7 +242,7 @@ Deno.serve(async (req) => {
         name: fullName,
         nome_exibicao: fullName,
         responsible_email: email,
-        plan: "pro",
+        plan: "premium",
         status: "ativo",
         whatsapp,
         instagram,
@@ -260,6 +260,20 @@ Deno.serve(async (req) => {
       .select("id")
       .single();
     if (orgError) throw orgError;
+
+    // 2b. Trial Premium de 15 dias (ao fim, sem assinatura, volta para Free)
+    {
+      const now = new Date();
+      const { error: trialError } = await supabase.from("org_promotions").insert({
+        organization_id: org.id,
+        promotion_type: "trial_15d",
+        status: "trial_active",
+        trial_started_at: now.toISOString(),
+        trial_ends_at: new Date(now.getTime() + 15 * 86400000).toISOString(),
+      });
+      if (trialError) console.error("trial insert error", trialError);
+    }
+
 
     // 3. Papel de administradora
     const { error: roleError } = await supabase

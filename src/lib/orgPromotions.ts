@@ -1,7 +1,52 @@
 import { supabase } from "@/integrations/supabase/client";
 
+export class TrialNotAllowedError extends Error {}
+
+/** True se a org tem assinatura Pro/Premium ativa ou acesso vitalício. */
+export async function hasPaidOrLifetimePlan(orgId: string): Promise<boolean> {
+  const { data: life } = await supabase
+    .from("org_promotions" as any)
+    .select("id")
+    .eq("organization_id", orgId)
+    .eq("status", "lifetime_active")
+    .limit(1);
+  if (life && life.length) return true;
+  const { data: profiles } = await supabase.from("profiles").select("user_id").eq("organization_id", orgId);
+  const ids = (profiles || []).map((p) => p.user_id);
+  if (!ids.length) return false;
+  const { data: subs } = await supabase
+    .from("subscriptions")
+    .select("id")
+    .in("user_id", ids)
+    .eq("status", "active")
+    .limit(1);
+  return !!(subs && subs.length);
+}
+
+/** Encerra o trial agora: plano volta para Free e a mensagem de assinatura aparece. */
+export async function endOrgTrial(orgId: string): Promise<boolean> {
+  const { data: trials } = await supabase
+    .from("org_promotions" as any)
+    .select("id")
+    .eq("organization_id", orgId)
+    .eq("status", "trial_active");
+  if (!trials || !trials.length) return false;
+  const now = new Date().toISOString();
+  const { error } = await supabase
+    .from("org_promotions" as any)
+    .update({ status: "expired", trial_ends_at: now } as any)
+    .eq("organization_id", orgId)
+    .eq("status", "trial_active");
+  if (error) throw error;
+  if (!(await hasPaidOrLifetimePlan(orgId))) {
+    await supabase.from("organizations").update({ plan: "free" as any }).eq("id", orgId);
+  }
+  return true;
+}
+
 /** Lança trial Premium de 15 dias; ao fim, sem assinatura, o cron volta a org para Free. */
 export async function startOrgTrial(orgId: string) {
+  if (await hasPaidOrLifetimePlan(orgId)) throw new TrialNotAllowedError("plano ativo");
   const now = new Date();
   const ends = new Date(now.getTime() + 15 * 24 * 60 * 60 * 1000);
   const { error } = await supabase.from("org_promotions" as any).upsert(
