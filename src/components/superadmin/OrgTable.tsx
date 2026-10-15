@@ -205,6 +205,11 @@ export function OrgTable({
 
   const applyBulkPlan = (plan: string) => {
     if (!plan || selectedOrgs.length === 0) return;
+    const label = plan === "free" ? "Free" : plan === "pro" ? "Pro" : "Premium";
+    if (!window.confirm(`Mudar ${selectedOrgs.length} organização(ões) para o plano ${label}?`)) {
+      setBulkPlan("");
+      return;
+    }
     selectedOrgs.forEach((o) => {
       if (o.plan !== plan) onPlanChange(o.id, plan as "free" | "pro" | "premium");
     });
@@ -212,26 +217,47 @@ export function OrgTable({
   };
 
   const [promoPending, setPromoPending] = useState(false);
-  const runBulkPromo = async (kind: "trial" | "lifetime") => {
+  const runBulkPromo = async (kind: "trial" | "lifetime" | "end") => {
     if (selectedOrgs.length === 0) return;
-    const label = kind === "trial" ? "lançar trial Premium de 15 dias para" : "tornar vitalícias";
+    const label =
+      kind === "trial"
+        ? "lançar trial Premium de 15 dias para"
+        : kind === "lifetime"
+          ? "tornar vitalícias"
+          : "encerrar agora o trial de";
     if (!window.confirm(`Deseja ${label} ${selectedOrgs.length} organização(ões)?`)) return;
     setPromoPending(true);
     let ok = 0;
     let fail = 0;
+    let skipped = 0;
     for (const o of selectedOrgs) {
       try {
         if (kind === "trial") await startOrgTrial(o.id);
-        else await makeOrgLifetime(o.id);
+        else if (kind === "lifetime") await makeOrgLifetime(o.id);
+        else if (!(await endOrgTrial(o.id))) { skipped++; continue; }
         ok++;
-      } catch {
-        fail++;
+      } catch (e) {
+        if (e instanceof TrialNotAllowedError) skipped++;
+        else fail++;
       }
     }
     setPromoPending(false);
     queryClient.invalidateQueries({ queryKey: ["super-admin-orgs"] });
     queryClient.invalidateQueries({ queryKey: ["org-promo"] });
-    if (ok) toast.success(kind === "trial" ? `Trial iniciado em ${ok} organização(ões)` : `${ok} organização(ões) agora vitalícias`);
+    if (ok)
+      toast.success(
+        kind === "trial"
+          ? `Trial iniciado em ${ok} organização(ões)`
+          : kind === "lifetime"
+            ? `${ok} organização(ões) agora vitalícias`
+            : `Trial encerrado em ${ok} organização(ões)`
+      );
+    if (skipped)
+      toast.info(
+        kind === "trial"
+          ? `${skipped} ignorada(s): já têm assinatura ativa ou são vitalícias`
+          : `${skipped} ignorada(s): sem trial ativo`
+      );
     if (fail) toast.error(`${fail} falharam`);
     setSelectedIds(new Set());
   };
