@@ -17,6 +17,7 @@ import { BirthAlertDialog } from "@/components/dashboard/BirthAlertDialog";
 import { ClientContractionsDialog } from "@/components/dashboard/ClientContractionsDialog";
 import type { Tables } from "@/integrations/supabase/types";
 import { NotificationTopBanner } from "@/components/dashboard/NotificationTopBanner";
+import { TrialEndedDialog } from "@/components/dashboard/TrialEndedDialog";
 import { cn } from "@/lib/utils";
 
 export function DashboardLayout() {
@@ -150,6 +151,7 @@ export function DashboardLayout() {
           <div className="max-w-7xl mx-auto animate-fade-in space-y-4 lg:space-y-6">
             
             <NotificationTopBanner />
+            <TrialEndedDialog />
             {permsLoading ? null : can(location.pathname) ? <Outlet /> : (
               <div className="rounded-2xl bg-card p-10 text-center shadow-card">
                 <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-muted"><Lock className="h-5 w-5 text-muted-foreground" /></div>
