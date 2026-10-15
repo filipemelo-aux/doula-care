@@ -7,17 +7,16 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, Eye, EyeOff, ArrowLeft, MailCheck, ShieldCheck, Wrench } from "lucide-react";
+import { Loader2, Eye, EyeOff, ArrowLeft, MailCheck, ShieldCheck, Wrench, Check, X } from "lucide-react";
 import { useSignupMaintenance } from "@/hooks/useSignupMaintenance";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchAddressByCep } from "@/lib/address";
 import { unmask } from "@/lib/masks";
 import { AvatarUpload } from "@/components/gestante/AvatarUpload";
+import { StepTabs } from "@/components/ui/step-tabs";
 
 export const CONSENT_VERSION = "2026-09-lgpd-v1";
-
-const TOTAL_STEPS = 6;
 
 export default function Register() {
   const navigate = useNavigate();
@@ -25,6 +24,7 @@ export default function Register() {
   const [step, setStep] = useState(1);
   const [submitting, setSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [showErrors, setShowErrors] = useState(false);
 
   // Etapa 1/2 — e-mail verificado
   const [email, setEmail] = useState("");
@@ -151,10 +151,17 @@ export default function Register() {
     }
   };
 
-  const passwordStrong = useMemo(
-    () => password.length >= 6 && /[A-Z]/.test(password) && /[0-9]/.test(password),
+  const passwordRules = useMemo(
+    () => [
+      { label: "8 ou mais caracteres", ok: password.length >= 8 },
+      { label: "Letra maiúscula", ok: /[A-Z]/.test(password) },
+      { label: "Letra minúscula", ok: /[a-z]/.test(password) },
+      { label: "Número", ok: /[0-9]/.test(password) },
+      { label: "Caractere especial", ok: /[^A-Za-z0-9]/.test(password) },
+    ],
     [password]
   );
+  const passwordStrong = passwordRules.every((r) => r.ok);
 
   const validPersonal = useMemo(() => {
     return (
@@ -181,9 +188,27 @@ export default function Register() {
     Number(practiceSince) >= 1970 &&
     Number(practiceSince) <= new Date().getFullYear();
 
+  const personalProblem = (): string | null => {
+    if (!fullName.trim().includes(" ")) return "Informe seu nome completo (nome e sobrenome).";
+    if (unmask(cpf).length !== 11) return "CPF incompleto.";
+    if (!birthDate) return "Informe sua data de nascimento.";
+    if (!passwordStrong) return "A senha não atende a todos os requisitos.";
+    if (password !== confirmPassword) return "As senhas não coincidem.";
+    return null;
+  };
+
   const finish = async () => {
-    if (!acceptPrivacy || !acceptTruth) {
-      toast.error("É preciso aceitar os termos para concluir");
+    setShowErrors(true);
+    const checks: [number, string | null][] = [
+      [3, personalProblem()],
+      [4, validContact ? null : "Preencha WhatsApp, Instagram, CEP e endereço completo."],
+      [5, validProfessional ? null : "Informe sua formação e o ano em que começou a atuar."],
+      [6, acceptPrivacy && acceptTruth ? null : "É preciso aceitar os termos para concluir."],
+    ];
+    const firstError = checks.find(([, msg]) => msg);
+    if (firstError) {
+      setStep(firstError[0]);
+      toast.error("Confira os dados do cadastro", { description: firstError[1]! });
       return;
     }
     setSubmitting(true);
@@ -301,16 +326,19 @@ export default function Register() {
             <CardTitle className="text-2xl font-display font-bold tracking-wide">Doula Care</CardTitle>
           </div>
           <CardDescription>Crie sua conta profissional</CardDescription>
-          <div className="flex gap-1.5 justify-center pt-1">
-            {Array.from({ length: TOTAL_STEPS }).map((_, i) => (
-              <span
-                key={i}
-                className={`h-1.5 rounded-full transition-all ${
-                  i + 1 <= step ? "w-6 bg-primary" : "w-3 bg-muted"
-                }`}
-              />
-            ))}
-          </div>
+          <StepTabs
+            className="pt-2"
+            current={step}
+            onSelect={setStep}
+            steps={[
+              { id: 1, label: "E-mail", done: !!verifiedUserId, disabled: !!verifiedUserId },
+              { id: 2, label: "Código", done: !!verifiedUserId, disabled: !!verifiedUserId || step < 2 },
+              { id: 3, label: "Pessoal", done: validPersonal, error: showErrors && !validPersonal, disabled: !verifiedUserId },
+              { id: 4, label: "Contato", done: validContact, error: showErrors && !validContact, disabled: !verifiedUserId },
+              { id: 5, label: "Profissional", done: validProfessional, error: showErrors && !validProfessional, disabled: !verifiedUserId },
+              { id: 6, label: "Termos", done: acceptPrivacy && acceptTruth, error: showErrors && !(acceptPrivacy && acceptTruth), disabled: !verifiedUserId },
+            ]}
+          />
         </CardHeader>
 
         <CardContent className="space-y-4">
@@ -415,7 +443,7 @@ export default function Register() {
                   <Input
                     id="password"
                     type={showPassword ? "text" : "password"}
-                    placeholder="Mín. 6 caracteres, 1 maiúscula e 1 número"
+                    placeholder="Crie uma senha forte"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     className="input-field pr-10"
@@ -425,17 +453,26 @@ export default function Register() {
                     {showPassword ? <EyeOff className="h-4 w-4 text-muted-foreground" /> : <Eye className="h-4 w-4 text-muted-foreground" />}
                   </Button>
                 </div>
-                {password && !passwordStrong && (
-                  <p className="text-xs text-destructive">
-                    A senha precisa de no mínimo 6 caracteres, com pelo menos 1 letra maiúscula e 1 número.
-                  </p>
-                )}
+                <ul className="grid grid-cols-2 gap-x-3 gap-y-1 pt-1">
+                  {passwordRules.map((r) => (
+                    <li key={r.label} className={`flex items-center gap-1.5 text-xs ${r.ok ? "text-primary" : "text-muted-foreground"}`}>
+                      {r.ok ? <Check className="h-3.5 w-3.5" /> : <X className="h-3.5 w-3.5" />}
+                      {r.label}
+                    </li>
+                  ))}
+                </ul>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="confirmPassword">Confirmar senha</Label>
                 <Input id="confirmPassword" type={showPassword ? "text" : "password"} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="input-field" autoComplete="new-password" />
+                {confirmPassword && (
+                  <p className={`flex items-center gap-1.5 text-xs ${password === confirmPassword ? "text-primary" : "text-destructive"}`}>
+                    {password === confirmPassword ? <Check className="h-3.5 w-3.5" /> : <X className="h-3.5 w-3.5" />}
+                    {password === confirmPassword ? "As senhas coincidem" : "As senhas não coincidem"}
+                  </p>
+                )}
               </div>
-              <Button className="w-full" onClick={() => setStep(4)} disabled={!validPersonal}>
+              <Button className="w-full" onClick={() => setStep(4)}>
                 Continuar
               </Button>
             </>
@@ -486,7 +523,7 @@ export default function Register() {
               </div>
               <div className="flex gap-2">
                 <Button variant="outline" className="flex-1" onClick={() => setStep(3)}>Voltar</Button>
-                <Button className="flex-1" onClick={() => setStep(5)} disabled={!validContact}>Continuar</Button>
+                <Button className="flex-1" onClick={() => setStep(5)}>Continuar</Button>
               </div>
             </>
           )}
@@ -515,7 +552,7 @@ export default function Register() {
               </div>
               <div className="flex gap-2">
                 <Button variant="outline" className="flex-1" onClick={() => setStep(4)}>Voltar</Button>
-                <Button className="flex-1" onClick={() => setStep(6)} disabled={!validProfessional}>Continuar</Button>
+                <Button className="flex-1" onClick={() => setStep(6)}>Continuar</Button>
               </div>
             </>
           )}

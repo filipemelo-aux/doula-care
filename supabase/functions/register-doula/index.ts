@@ -184,7 +184,15 @@ Deno.serve(async (req) => {
     const fail = (msg: string) => json({ error: msg }, 400);
 
     if (fullName.length < 5 || !fullName.includes(" ")) return fail("Informe o nome completo");
-    if (password.length < 6) return fail("A senha deve ter pelo menos 6 caracteres");
+    if (
+      password.length < 8 ||
+      !/[A-Z]/.test(password) ||
+      !/[a-z]/.test(password) ||
+      !/[0-9]/.test(password) ||
+      !/[^A-Za-z0-9]/.test(password)
+    ) {
+      return fail("A senha deve ter pelo menos 8 caracteres, com letra maiúscula, minúscula, número e caractere especial");
+    }
     if (!isValidCPF(cpf)) return fail("CPF inválido");
     if (!/^\d{4}-\d{2}-\d{2}$/.test(birthDate)) return fail("Data de nascimento inválida");
     const age = (Date.now() - new Date(birthDate).getTime()) / (365.25 * 24 * 3600 * 1000);
