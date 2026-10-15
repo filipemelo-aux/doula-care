@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { InAppAnnouncementDialog } from "./InAppAnnouncementDialog";
-import { detectNotificationDevice } from "@/lib/accessPlatform";
+import { detectNotificationDevice, parseNotificationDevices } from "@/lib/accessPlatform";
 
 export function InAppAnnouncementListener({ userId }: { userId: string }) {
   const queryClient = useQueryClient();
@@ -12,12 +12,11 @@ export function InAppAnnouncementListener({ userId }: { userId: string }) {
     queryKey,
     queryFn: async () => {
       const { data, error } = await supabase.from("in_app_announcements")
-        .select("id, title, message")
+        .select("id, title, message, target_device")
         .eq("user_id", userId).is("read_at", null)
-        .or(`target_device.eq.all,target_device.eq.${device}`)
-        .order("created_at", { ascending: true }).order("id", { ascending: true }).limit(1).maybeSingle();
+        .order("created_at", { ascending: true }).order("id", { ascending: true });
       if (error) throw error;
-      return data;
+      return (data ?? []).find(a => parseNotificationDevices(a.target_device ?? "all").includes(device)) ?? null;
     },
     refetchInterval: 15000,
     refetchOnWindowFocus: "always",

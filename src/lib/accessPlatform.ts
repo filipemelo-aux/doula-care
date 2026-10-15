@@ -9,6 +9,15 @@ export type AccessPlatform =
 
 export type NotificationDevice = "all" | "browser" | "android" | "ios";
 
+/** Normaliza "all", um dispositivo único ou lista separada por vírgulas ("browser,android"). */
+export const parseNotificationDevices = (value: string | string[]): NotificationDevice[] => {
+  const raw = (Array.isArray(value) ? value : value.split(",")).map((p) => p.trim());
+  const devices = raw.filter((p): p is NotificationDevice =>
+    p === "all" || p === "browser" || p === "android" || p === "ios");
+  if (devices.includes("all")) return ["all"];
+  return [...new Set(devices)];
+};
+
 export const detectNotificationDevice = (): Exclude<NotificationDevice, "all"> => {
   const platform = detectAccessPlatform();
   if (platform === "app_android") return "android";

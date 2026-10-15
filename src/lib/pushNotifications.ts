@@ -52,7 +52,7 @@ interface SendPushParams {
   priority?: PushPriority;
   require_interaction?: boolean;
   image?: string;
-  target_device?: NotificationDevice;
+  target_device?: NotificationDevice | NotificationDevice[];
 }
 
 export function getRouteForNotificationType(type: PushNotificationType): string {
