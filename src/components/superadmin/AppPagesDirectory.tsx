@@ -22,7 +22,6 @@ const groups: PageGroup[] = [
       { path: "/login", label: "Login" },
       { path: "/cadastro", label: "Cadastro de Doula" },
       { path: "/cadastro-visitante", label: "Cadastro de Visitante" },
-      { path: "/recuperar-acesso", label: "Recuperar Acesso" },
       { path: "/politica-de-privacidade", label: "Política de Privacidade" },
       { path: "/excluir-conta", label: "Excluir Conta" },
       { path: "/documentacao", label: "Documentação" },

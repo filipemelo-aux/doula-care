@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 const faqs = [
   {
     q: "Como faço para acessar minha conta?",
-    a: "Use o e-mail e senha fornecidos pela sua doula. Caso tenha esquecido, use a opção 'Recuperar acesso' na tela de login.",
+    a: "Use o e-mail e senha fornecidos pela sua doula. Caso tenha esquecido, entre em contato com ela para redefinir seu acesso.",
   },
   {
     q: "Como altero minha senha?",
