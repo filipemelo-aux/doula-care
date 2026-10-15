@@ -25,8 +25,8 @@ const TONE_OPTIONS = [
 
 const TYPE_OPTIONS: { value: BroadcastType; label: string }[] = [
   { value: "announcement", label: "Aviso (somente no aplicativo)" },
+  { value: "general", label: "📢 Notificação Push" },
   { value: "community", label: "🌐 Comunidade" },
-  { value: "general", label: "📢 Geral" },
 ];
 
 const COMMUNITY_THEME_OPTIONS = [
