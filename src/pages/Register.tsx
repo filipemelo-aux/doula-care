@@ -14,7 +14,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { fetchAddressByCep } from "@/lib/address";
 import { unmask } from "@/lib/masks";
 import { AvatarUpload } from "@/components/gestante/AvatarUpload";
-import { StepTabs } from "@/components/ui/step-tabs";
 
 export const CONSENT_VERSION = "2026-09-lgpd-v1";
 
@@ -24,7 +23,6 @@ export default function Register() {
   const [step, setStep] = useState(1);
   const [submitting, setSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [showErrors, setShowErrors] = useState(false);
 
   // Etapa 1/2 — e-mail verificado
   const [email, setEmail] = useState("");
@@ -197,8 +195,24 @@ export default function Register() {
     return null;
   };
 
+  const stepProblem = (s: number): string | null => {
+    if (s === 3) return personalProblem();
+    if (s === 4) return validContact ? null : "Preencha WhatsApp, Instagram, CEP e endereço completo.";
+    if (s === 5) return validProfessional ? null : "Informe sua formação e o ano em que começou a atuar.";
+    return null;
+  };
+
+  /** Só avança quando a etapa atual está completa — no cadastro da doula tudo é obrigatório. */
+  const goNext = (s: number) => {
+    const msg = stepProblem(s);
+    if (msg) {
+      toast.error("Confira os dados desta etapa", { description: msg });
+      return;
+    }
+    setStep(s + 1);
+  };
+
   const finish = async () => {
-    setShowErrors(true);
     const checks: [number, string | null][] = [
       [3, personalProblem()],
       [4, validContact ? null : "Preencha WhatsApp, Instagram, CEP e endereço completo."],
@@ -326,19 +340,14 @@ export default function Register() {
             <CardTitle className="text-2xl font-display font-bold tracking-wide">Doula Care</CardTitle>
           </div>
           <CardDescription>Crie sua conta profissional</CardDescription>
-          <StepTabs
-            className="pt-2"
-            current={step}
-            onSelect={setStep}
-            steps={[
-              { id: 1, label: "E-mail", done: !!verifiedUserId, disabled: !!verifiedUserId },
-              { id: 2, label: "Código", done: !!verifiedUserId, disabled: !!verifiedUserId || step < 2 },
-              { id: 3, label: "Pessoal", done: validPersonal, error: showErrors && !validPersonal, disabled: !verifiedUserId },
-              { id: 4, label: "Contato", done: validContact, error: showErrors && !validContact, disabled: !verifiedUserId },
-              { id: 5, label: "Profissional", done: validProfessional, error: showErrors && !validProfessional, disabled: !verifiedUserId },
-              { id: 6, label: "Termos", done: acceptPrivacy && acceptTruth, error: showErrors && !(acceptPrivacy && acceptTruth), disabled: !verifiedUserId },
-            ]}
-          />
+          <div className="flex gap-1.5 justify-center pt-1">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <span
+                key={i}
+                className={`h-1.5 rounded-full transition-all ${i <= step ? "w-6 bg-primary" : "w-3 bg-muted"}`}
+              />
+            ))}
+          </div>
         </CardHeader>
 
         <CardContent className="space-y-4">
@@ -472,7 +481,7 @@ export default function Register() {
                   </p>
                 )}
               </div>
-              <Button className="w-full" onClick={() => setStep(4)}>
+              <Button className="w-full" onClick={() => goNext(3)}>
                 Continuar
               </Button>
             </>
@@ -523,7 +532,7 @@ export default function Register() {
               </div>
               <div className="flex gap-2">
                 <Button variant="outline" className="flex-1" onClick={() => setStep(3)}>Voltar</Button>
-                <Button className="flex-1" onClick={() => setStep(5)}>Continuar</Button>
+                <Button className="flex-1" onClick={() => goNext(4)}>Continuar</Button>
               </div>
             </>
           )}
@@ -552,7 +561,7 @@ export default function Register() {
               </div>
               <div className="flex gap-2">
                 <Button variant="outline" className="flex-1" onClick={() => setStep(4)}>Voltar</Button>
-                <Button className="flex-1" onClick={() => setStep(6)}>Continuar</Button>
+                <Button className="flex-1" onClick={() => goNext(5)}>Continuar</Button>
               </div>
             </>
           )}
