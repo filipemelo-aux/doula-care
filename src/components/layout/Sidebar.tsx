@@ -97,7 +97,7 @@ const navItems = [
     ],
   },
 
-  // { to: "/comunidade", icon: Users2, label: "Comunidade" }, // Oculto — acessível apenas via URL direta
+  { to: "/comunidade", icon: Users2, label: "Comunidade" },
 ];
 
 const subscriptionNavItem = { to: "/admin/assinatura", icon: Crown, label: "Assinatura" };
