@@ -48,6 +48,15 @@ import {
 } from "@/components/ui/alert-dialog";
 
 import { maskPhone, maskCPF, maskCEP, maskCurrency, parseCurrency, maskDateBR, parseDateBRToISO, isoToBRDate } from "@/lib/masks";
+import { StepTabs } from "@/components/ui/step-tabs";
+
+const STEP_BY_FIELD: Record<string, number> = {
+  full_name: 1, phone: 1, cpf: 1, status: 1, custom_status: 1, date_of_birth: 1,
+  street: 2, number: 2, neighborhood: 2, city: 2, state: 2, zip_code: 2,
+  dpp: 3, pregnancy_weeks: 3, prenatal_type: 3, baby_names: 3, birth_location: 3,
+  plan_setting_id: 5, plan_value: 5, installments: 5, first_due_date: 5,
+};
+const stepOfField = (k: string) => STEP_BY_FIELD[k];
 import type { Tables } from "@/integrations/supabase/types";
 import {
   SuggestionChips,
@@ -1354,29 +1363,18 @@ export function ClientDialog({ open, onOpenChange, client, initialStep, mode: ra
               <p className="text-sm text-muted-foreground truncate mt-0.5">{client.full_name}</p>
             )}
           </div>
-          {/* Tab-style step navigation */}
-          <div className="flex flex-nowrap items-center justify-between pt-2 border-b border-border/40 overflow-hidden">
-            {visibleSteps.map((step) => (
-              <button
-                key={step.id}
-                type="button"
-                onClick={() => handleStepClick(step.id)}
-                className={cn(
-                  "relative flex-shrink-0 px-0.5 sm:px-1 py-1.5 text-[10px] sm:text-[11px] font-medium transition-all text-center leading-tight whitespace-nowrap",
-                  currentStep === step.id
-                    ? "text-primary"
-                    : step.id < currentStep
-                    ? "text-primary/60 hover:text-primary/80"
-                    : "text-muted-foreground/60 hover:text-muted-foreground"
-                )}
-              >
-                {step.shortTitle}
-                {currentStep === step.id && (
-                  <span className="absolute bottom-0 left-1 right-1 h-[2px] bg-primary rounded-full" />
-                )}
-              </button>
-            ))}
-          </div>
+          {/* Abas de etapas clicáveis */}
+          <StepTabs
+            className="pt-2"
+            current={currentStep}
+            onSelect={handleStepClick}
+            steps={visibleSteps.map((s) => ({
+              id: s.id,
+              label: s.shortTitle,
+              done: s.id < currentStep,
+              error: Object.keys(form.formState.errors).some((k) => stepOfField(k) === s.id),
+            }))}
+          />
 
         </DialogHeader>
         <Form {...form}>
