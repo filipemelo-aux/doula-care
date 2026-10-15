@@ -2,16 +2,19 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { InAppAnnouncementDialog } from "./InAppAnnouncementDialog";
+import { detectNotificationDevice } from "@/lib/accessPlatform";
 
 export function InAppAnnouncementListener({ userId }: { userId: string }) {
   const queryClient = useQueryClient();
-  const queryKey = ["in-app-announcement", userId];
+  const device = detectNotificationDevice();
+  const queryKey = ["in-app-announcement", userId, device];
   const { data: announcement } = useQuery({
     queryKey,
     queryFn: async () => {
       const { data, error } = await supabase.from("in_app_announcements")
         .select("id, title, message")
         .eq("user_id", userId).is("read_at", null)
+        .or(`target_device.eq.all,target_device.eq.${device}`)
         .order("created_at", { ascending: true }).order("id", { ascending: true }).limit(1).maybeSingle();
       if (error) throw error;
       return data;

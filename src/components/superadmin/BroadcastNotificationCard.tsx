@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { sendPushNotification, type PushNotificationType } from "@/lib/pushNotifications";
 import { InAppAnnouncementDialog } from "@/components/notifications/InAppAnnouncementDialog";
 import { OrgSearchSelect } from "@/components/superadmin/OrgSearchSelect";
+import type { NotificationDevice } from "@/lib/accessPlatform";
 
 type BroadcastType = PushNotificationType | "announcement";
 
@@ -61,6 +62,7 @@ export function BroadcastNotificationCard() {
   const [instagramLink, setInstagramLink] = useState("");
   const [audience, setAudience] = useState("all");
   const [targetOrgId, setTargetOrgId] = useState("all");
+  const [targetDevice, setTargetDevice] = useState<NotificationDevice>("all");
   const [orgs, setOrgs] = useState<Organization[]>([]);
   const [orgsLoaded, setOrgsLoaded] = useState(false);
   const [orgsLoading, setOrgsLoading] = useState(false);
@@ -126,6 +128,7 @@ export function BroadcastNotificationCard() {
           p_message: message.trim(),
           p_audience: audience,
           p_organization_id: targetOrgId === "all" ? null : targetOrgId,
+          p_target_device: targetDevice,
         });
         if (error) throw error;
         if (!recipientCount) {
@@ -211,6 +214,7 @@ export function BroadcastNotificationCard() {
             authorName: "Doula Care",
             postTitle: title.trim(),
             isAnonymous: false,
+            target_device: targetDevice,
           },
         });
 
@@ -289,6 +293,7 @@ export function BroadcastNotificationCard() {
           message,
           type: "general",
           url: "/",
+          target_device: targetDevice,
         });
 
         toast.success(`Notificação enviada para ${userIds.length} usuário(s)!`);
@@ -468,6 +473,20 @@ export function BroadcastNotificationCard() {
           </div>
 
           {/* Organization targeting — aviso and general types */}
+          <div className="space-y-2">
+            <Label className="text-xs" htmlFor="notification-device">Dispositivo</Label>
+            <Select value={targetDevice} onValueChange={(value) => setTargetDevice(value as NotificationDevice)}>
+              <SelectTrigger id="notification-device" className="h-9 text-sm">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos os dispositivos</SelectItem>
+                <SelectItem value="browser">Navegador</SelectItem>
+                <SelectItem value="android">Android</SelectItem>
+                <SelectItem value="ios">iOS</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
           {notifType !== "community" && (
             <div className="space-y-2">
               <Label className="text-xs">Organização</Label>

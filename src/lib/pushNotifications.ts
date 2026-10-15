@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import type { NotificationDevice } from "@/lib/accessPlatform";
 
 export type PushNotificationType =
   | "labor_started"
@@ -51,6 +52,7 @@ interface SendPushParams {
   priority?: PushPriority;
   require_interaction?: boolean;
   image?: string;
+  target_device?: NotificationDevice;
 }
 
 export function getRouteForNotificationType(type: PushNotificationType): string {

@@ -57,6 +57,13 @@
       "when": 1792093722365,
       "tag": "0007_create_in_app_announcements",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1792095689713,
+      "tag": "0008_announcement_device_target",
+      "breakpoints": true
     }
   ]
 }

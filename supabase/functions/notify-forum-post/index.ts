@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { isNotificationDevice, matchesNotificationDevice } from "../_shared/notificationDevice.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -19,7 +20,30 @@ Deno.serve(async (req) => {
       auth: { autoRefreshToken: false, persistSession: false },
     });
 
-    const { postId, authorId, authorName, postTitle, isAnonymous, audience } = await req.json();
+    const authorization = req.headers.get("Authorization");
+    if (!authorization) {
+      return new Response(JSON.stringify({ error: "Autenticação obrigatória" }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const { data: { user }, error: authError } = await supabase.auth.getUser(authorization.replace("Bearer ", ""));
+    if (authError || !user) {
+      return new Response(JSON.stringify({ error: "Autenticação inválida" }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const { postId, authorId, authorName, postTitle, isAnonymous, audience, target_device = "all" } = await req.json();
+    if (!isNotificationDevice(target_device)) {
+      return new Response(JSON.stringify({ error: "Dispositivo inválido" }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const { data: post } = await supabase.from("forum_posts").select("author_id").eq("id", postId).maybeSingle();
+    if (!post || post.author_id !== user.id || authorId !== user.id) {
+      return new Response(JSON.stringify({ error: "Publicação não autorizada" }), {
+        status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     if (!postId || !authorId || !postTitle) {
       return new Response(
@@ -94,6 +118,27 @@ Deno.serve(async (req) => {
       }
     }
 
+    // Device-specific broadcasts only notify users with subscriptions on that platform.
+    if (target_device !== "all") {
+      const ids = [...new Set([...adminUserIds, ...clientUserIds])];
+      const { data: subscriptions, error } = await supabase.from("push_subscriptions")
+        .select("user_id, token_type, device_type").in("user_id", ids);
+      if (error) throw error;
+      const eligible = new Set((subscriptions ?? []).filter(sub => matchesNotificationDevice(sub, target_device)).map(sub => sub.user_id));
+      for (let i = adminUserIds.length - 1; i >= 0; i--) {
+        if (!eligible.has(adminUserIds[i])) {
+          adminOrgMap.delete(adminUserIds[i]);
+          adminUserIds.splice(i, 1);
+        }
+      }
+      for (let i = clientUserIds.length - 1; i >= 0; i--) {
+        if (!eligible.has(clientUserIds[i])) {
+          clientOrgMap.delete(clientUserIds[i]);
+          clientUserIds.splice(i, 1);
+        }
+      }
+    }
+
     // 3. Insert org_notifications for admins (batched)
     const orgNotifications = Array.from(adminOrgMap.entries()).map(([_, orgId]) => ({
       organization_id: orgId,
@@ -126,6 +171,7 @@ Deno.serve(async (req) => {
     // 5. Send push notification to admins (url: /comunidade)
     if (adminUserIds.length > 0) {
       await supabase.functions.invoke("send-push-notification", {
+        headers: { Authorization: authorization },
         body: {
           user_ids: adminUserIds,
           title: notifTitle,
@@ -134,6 +180,7 @@ Deno.serve(async (req) => {
           tag: `forum-post-${postId}`,
           type: "community",
           priority: "normal",
+          target_device,
         },
       });
     }
@@ -143,6 +190,7 @@ Deno.serve(async (req) => {
       const clientPushIds = clientUserIds.filter((id: string) => clientOrgMap.has(id));
       if (clientPushIds.length > 0) {
         await supabase.functions.invoke("send-push-notification", {
+          headers: { Authorization: authorization },
           body: {
             user_ids: clientPushIds,
             title: notifTitle,
@@ -151,6 +199,7 @@ Deno.serve(async (req) => {
             tag: `forum-post-${postId}`,
             type: "community",
             priority: "normal",
+            target_device,
           },
         });
       }
