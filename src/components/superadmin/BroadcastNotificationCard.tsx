@@ -62,6 +62,7 @@ export function BroadcastNotificationCard() {
   const [targetOrgId, setTargetOrgId] = useState("all");
   const [orgs, setOrgs] = useState<Organization[]>([]);
   const [orgsLoaded, setOrgsLoaded] = useState(false);
+  const [orgsLoading, setOrgsLoading] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [sending, setSending] = useState(false);
 
