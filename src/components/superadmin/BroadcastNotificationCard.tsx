@@ -9,6 +9,9 @@ import { Label } from "@/components/ui/label";
 import { Loader2, Megaphone, Sparkles, Send, Eye } from "lucide-react";
 import { toast } from "sonner";
 import { sendPushNotification, type PushNotificationType } from "@/lib/pushNotifications";
+import { InAppAnnouncementDialog } from "@/components/notifications/InAppAnnouncementDialog";
+
+type BroadcastType = PushNotificationType | "announcement";
 
 const TONE_OPTIONS = [
   { value: "exciting", label: "🎉 Empolgante" },
@@ -18,7 +21,8 @@ const TONE_OPTIONS = [
   { value: "informative", label: "📚 Informativo" },
 ];
 
-const TYPE_OPTIONS: { value: PushNotificationType; label: string }[] = [
+const TYPE_OPTIONS: { value: BroadcastType; label: string }[] = [
+  { value: "announcement", label: "Aviso (somente no aplicativo)" },
   { value: "community", label: "🌐 Comunidade" },
   { value: "general", label: "📢 Geral" },
 ];
@@ -50,7 +54,8 @@ export function BroadcastNotificationCard() {
   const [tone, setTone] = useState("exciting");
   const [title, setTitle] = useState("");
   const [message, setMessage] = useState("");
-  const [notifType, setNotifType] = useState<PushNotificationType>("community");
+  const [notifType, setNotifType] = useState<BroadcastType>("community");
+  const [previewOpen, setPreviewOpen] = useState(false);
   const [communityTheme, setCommunityTheme] = useState("livre");
   const [instagramLink, setInstagramLink] = useState("");
   const [audience, setAudience] = useState("all");
@@ -108,7 +113,20 @@ export function BroadcastNotificationCard() {
     setSending(true);
     try {
       // If community type, create a forum post as "Doula Care"
-      if (notifType === "community") {
+      if (notifType === "announcement") {
+        const { data: recipientCount, error } = await supabase.rpc("send_in_app_announcement", {
+          p_title: title.trim(),
+          p_message: message.trim(),
+          p_audience: audience,
+          p_organization_id: targetOrgId === "all" ? null : targetOrgId,
+        });
+        if (error) throw error;
+        if (!recipientCount) {
+          toast.error("Nenhum usuário encontrado para o público selecionado");
+          return;
+        }
+        toast.success(`Aviso enviado para ${recipientCount} usuário(s), somente no aplicativo!`);
+      } else if (notifType === "community") {
         // Find the matching category for the theme
         const themeLabel = COMMUNITY_THEME_OPTIONS.find(t => t.value === communityTheme)?.label || "💬 Livre";
         
@@ -366,7 +384,7 @@ export function BroadcastNotificationCard() {
           <div className="space-y-2">
             <Label className="text-xs">Título {notifType === "community" ? "do post" : "da notificação"}</Label>
             <Input
-              placeholder={notifType === "community" ? "Título do post na comunidade" : "Título da push notification"}
+              placeholder={notifType === "community" ? "Título do post na comunidade" : notifType === "announcement" ? "Título do aviso" : "Título da push notification"}
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               maxLength={100}
@@ -381,19 +399,19 @@ export function BroadcastNotificationCard() {
               placeholder={notifType === "community" ? "Conteúdo do post na comunidade" : "Corpo da notificação"}
               value={message}
               onChange={(e) => setMessage(e.target.value)}
-              maxLength={notifType === "community" ? 2000 : 120}
-              rows={notifType === "community" ? 4 : 2}
+              maxLength={notifType === "general" ? 120 : 2000}
+              rows={notifType === "general" ? 2 : 4}
               className="text-sm resize-none"
             />
             <p className="text-[10px] text-muted-foreground text-right">
-              {message.length}/{notifType === "community" ? 2000 : 120}
+              {message.length}/{notifType === "general" ? 120 : 2000}
             </p>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
               <Label className="text-xs">Tipo</Label>
-              <Select value={notifType} onValueChange={(v) => setNotifType(v as PushNotificationType)}>
+              <Select value={notifType} onValueChange={(v) => setNotifType(v as BroadcastType)}>
                 <SelectTrigger className="h-9 text-sm">
                   <SelectValue />
                 </SelectTrigger>
@@ -443,7 +461,7 @@ export function BroadcastNotificationCard() {
           </div>
 
           {/* Organization targeting — only for general type */}
-          {notifType === "general" && (
+          {notifType !== "community" && (
             <div className="space-y-2">
               <Label className="text-xs">Organização</Label>
               <Select value={targetOrgId} onValueChange={setTargetOrgId} onOpenChange={(open) => { if (open) loadOrgs(); }}>
@@ -464,7 +482,15 @@ export function BroadcastNotificationCard() {
         </div>
 
         {/* Preview */}
-        {(title || message) && (
+        {notifType === "announcement" && (
+          <>
+            <Button variant="outline" className="w-full" onClick={() => setPreviewOpen(true)} disabled={!title.trim() || !message.trim()}>
+              <Eye className="mr-2 h-4 w-4" /> Visualizar aviso
+            </Button>
+            <InAppAnnouncementDialog open={previewOpen} title={title} message={message} onClose={() => setPreviewOpen(false)} />
+          </>
+        )}
+        {notifType !== "announcement" && (title || message) && (
           <div className="p-3 rounded-lg bg-muted/30 space-y-1">
             <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
               <Eye className="h-3 w-3" />
@@ -514,7 +540,7 @@ export function BroadcastNotificationCard() {
           ) : (
             <Send className="h-4 w-4 mr-2" />
           )}
-          {notifType === "community" ? "Publicar na Comunidade" : "Enviar Notificação"}
+          {notifType === "community" ? "Publicar na Comunidade" : notifType === "announcement" ? "Enviar Aviso" : "Enviar Notificação"}
         </Button>
       </CardContent>
     </Card>

@@ -2,6 +2,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { InAppNotificationListener } from "@/components/notifications/InAppNotificationListener";
 import { AutoPushPrompt } from "@/components/notifications/AutoPushPrompt";
+import { InAppAnnouncementListener } from "@/components/notifications/InAppAnnouncementListener";
 
 export function NotificationListenerProvider() {
   const { user, role, client, isClient, isSuperAdmin, organizationId } = useAuth();
@@ -9,7 +10,8 @@ export function NotificationListenerProvider() {
 
   if (!user || !role) return null;
   // Super Admin não recebe alertas das organizações; doulas só os da própria org.
-  if (isSuperAdmin || (!isClient && !organizationId)) return null;
+  if (isSuperAdmin) return null;
+  if (!isClient && !organizationId) return <InAppAnnouncementListener key={user.id} userId={user.id} />;
 
   const handleNavigate = (path: string) => {
     navigate(path);
@@ -17,6 +19,7 @@ export function NotificationListenerProvider() {
 
   return (
     <>
+      <InAppAnnouncementListener key={user.id} userId={user.id} />
       <InAppNotificationListener
         userId={user.id}
         role={isClient ? "client" : "admin"}

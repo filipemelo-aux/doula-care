@@ -1078,6 +1078,39 @@ export type Database = {
           },
         ]
       }
+      in_app_announcements: {
+        Row: {
+          broadcast_id: string
+          created_at: string
+          id: string
+          message: string
+          organization_id: string | null
+          read_at: string | null
+          title: string
+          user_id: string
+        }
+        Insert: {
+          broadcast_id: string
+          created_at?: string
+          id?: string
+          message: string
+          organization_id?: string | null
+          read_at?: string | null
+          title: string
+          user_id: string
+        }
+        Update: {
+          broadcast_id?: string
+          created_at?: string
+          id?: string
+          message?: string
+          organization_id?: string | null
+          read_at?: string | null
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       moderator_payment_requests: {
         Row: {
           amount: number
@@ -2721,6 +2754,15 @@ export type Database = {
       revert_installment_payment: {
         Args: { p_payment_id: string }
         Returns: undefined
+      }
+      send_in_app_announcement: {
+        Args: {
+          p_audience?: string
+          p_message: string
+          p_organization_id?: string
+          p_title: string
+        }
+        Returns: number
       }
     }
     Enums: {
