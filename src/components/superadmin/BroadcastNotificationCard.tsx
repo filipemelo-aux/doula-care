@@ -438,24 +438,32 @@ export function BroadcastNotificationCard() {
             </p>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-2">
-              <Label className="text-xs">Tipo</Label>
-              <Select value={notifType} onValueChange={(v) => setNotifType(v as BroadcastType)}>
-                <SelectTrigger className="h-9 text-sm">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {TYPE_OPTIONS.map((t) => (
-                    <SelectItem key={t.value} value={t.value}>
-                      {t.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+          <div className="space-y-2">
+            <Label className="text-xs">Tipo</Label>
+            <div className="flex flex-wrap gap-1.5">
+              {TYPE_OPTIONS.map((opt) => {
+                const active = notifType === opt.value;
+                return (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    aria-pressed={active}
+                    onClick={() => setNotifType(opt.value)}
+                    className={
+                      "rounded-full border px-3 py-1.5 text-xs font-medium transition-colors " +
+                      (active
+                        ? "border-primary bg-primary text-primary-foreground"
+                        : "border-border bg-transparent text-muted-foreground hover:bg-muted hover:text-foreground")
+                    }
+                  >
+                    {opt.label}
+                  </button>
+                );
+              })}
             </div>
+          </div>
 
-            {notifType === "community" ? (
+          {notifType === "community" ? (
               <div className="space-y-2">
                 <Label className="text-xs">Tema</Label>
                 <Select value={communityTheme} onValueChange={setCommunityTheme}>
@@ -488,7 +496,6 @@ export function BroadcastNotificationCard() {
                 </Select>
               </div>
             )}
-          </div>
 
           {/* Device targeting — multiple selection, available for all types */}
           <div className="space-y-2">
