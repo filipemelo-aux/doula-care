@@ -871,7 +871,7 @@ export default function Documentation() {
                   "create-admin-user", "create-client-user", "delete-client-user",
                   "delete-organization", "register-doula", "manage-admin-user",
                   "provision-existing-clients", "resolve-client-login",
-                  ""reset-admin-password", "reset-client-password",
+                  "reset-admin-password", "reset-client-password",
                   "send-push-notification", "get-vapid-public-key", "generate-vapid-keys",
                   "get-client-email", "check-appointment-reminders",
                   "check-payment-due-dates", "check-billing-overdue",
