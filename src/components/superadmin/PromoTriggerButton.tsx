@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
-import { Loader2, Crown, CreditCard } from "lucide-react";
+import { Loader2, Crown, CreditCard, Gift } from "lucide-react";
 import { toast } from "sonner";
 import { format, differenceInDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -122,6 +122,43 @@ export function PromoTriggerButton({ orgId, orgName, mode = "badge" }: PromoTrig
     onError: (err: Error) => toast.error(`Erro: ${err.message}`),
   });
 
+  const startTrialMutation = useMutation({
+    mutationFn: async () => {
+      const now = new Date();
+      const ends = new Date(now.getTime() + 15 * 24 * 60 * 60 * 1000);
+      const { error } = await supabase
+        .from("org_promotions" as any)
+        .upsert(
+          {
+            organization_id: orgId,
+            promotion_type: "trial_15d",
+            status: "trial_active",
+            trial_started_at: now.toISOString(),
+            trial_ends_at: ends.toISOString(),
+            chosen_plan: null,
+          } as any,
+          { onConflict: "organization_id,promotion_type" }
+        );
+      if (error) throw error;
+      const { error: orgErr } = await supabase
+        .from("organizations")
+        .update({ plan: "premium" as any })
+        .eq("id", orgId);
+      if (orgErr) throw orgErr;
+      await supabase.from("org_notifications").insert({
+        organization_id: orgId,
+        title: "🎁 15 dias de Premium liberados!",
+        message: "Aproveite todos os recursos do Doula Care, incluindo equipe, por 15 dias.",
+        type: "promotion",
+      });
+    },
+    onSuccess: () => {
+      invalidateAll();
+      toast.success(`Trial de 15 dias iniciado para ${orgName}!`);
+    },
+    onError: (err: Error) => toast.error(`Erro: ${err.message}`),
+  });
+
   const hasActiveSub = subscription?.status === "active";
   const isLifetime = promo?.status === "lifetime_active";
   const renewalDate = subscription?.current_period_end
@@ -156,9 +193,33 @@ export function PromoTriggerButton({ orgId, orgName, mode = "badge" }: PromoTrig
     </Tooltip>
   ) : null;
 
+  const trialButton = !isLifetime && !hasActiveSub ? (
+    <Button
+      variant="outline"
+      size="sm"
+      className="h-7 text-xs gap-1"
+      onClick={() => {
+        if (confirm(`Lançar trial Premium de 15 dias para ${orgName}? Ao final, se não assinar, o plano volta para Free.`)) {
+          startTrialMutation.mutate();
+        }
+      }}
+      disabled={startTrialMutation.isPending}
+    >
+      {startTrialMutation.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Gift className="h-3.5 w-3.5" />}
+      Trial 15 dias
+    </Button>
+  ) : null;
+
   // ===== MODE: actions =====
   if (mode === "actions") {
-    return <TooltipProvider>{lifetimeIconButton}</TooltipProvider>;
+    return (
+      <TooltipProvider>
+        <div className="flex items-center gap-1.5">
+          {trialButton}
+          {lifetimeIconButton}
+        </div>
+      </TooltipProvider>
+    );
   }
 
   // ===== MODE: badge (default) =====

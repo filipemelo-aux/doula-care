@@ -114,9 +114,9 @@ Deno.serve(async (req) => {
       // Notify the doula
       await supabase.from("org_notifications").insert({
         organization_id: trial.organization_id,
-        title: "⏰ Período de teste expirado",
+        title: "💛 Seus 15 dias de teste terminaram",
         message:
-          "Seu período de teste Premium terminou. Seu plano foi alterado para Free. Assine um plano para continuar com todos os recursos.",
+          "Foi uma alegria ter você com a gente! Escolha seu plano para continuar com todos os recursos — se trabalha com equipe, o Premium é o ideal. Até lá, sua conta segue no plano Free.",
         type: "billing",
       });
 
