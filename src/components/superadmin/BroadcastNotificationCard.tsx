@@ -489,20 +489,33 @@ export function BroadcastNotificationCard() {
             )}
           </div>
 
-          {/* Organization targeting — aviso and general types */}
+          {/* Device targeting — multiple selection, available for all types */}
           <div className="space-y-2">
-            <Label className="text-xs" htmlFor="notification-device">Dispositivo</Label>
-            <Select value={targetDevice} onValueChange={(value) => setTargetDevice(value as NotificationDevice)}>
-              <SelectTrigger id="notification-device" className="h-9 text-sm">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos os dispositivos</SelectItem>
-                <SelectItem value="browser">Navegador</SelectItem>
-                <SelectItem value="android">Android</SelectItem>
-                <SelectItem value="ios">iOS</SelectItem>
-              </SelectContent>
-            </Select>
+            <Label className="text-xs">Dispositivo</Label>
+            <div className="flex flex-wrap gap-1.5">
+              {DEVICE_OPTIONS.map((opt) => {
+                const active = targetDevices.includes(opt.value);
+                return (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    aria-pressed={active}
+                    onClick={() => toggleDevice(opt.value)}
+                    className={
+                      "rounded-full border px-3 py-1.5 text-xs font-medium transition-colors " +
+                      (active
+                        ? "border-primary bg-primary text-primary-foreground"
+                        : "border-border bg-transparent text-muted-foreground hover:bg-muted hover:text-foreground")
+                    }
+                  >
+                    {opt.label}
+                  </button>
+                );
+              })}
+            </div>
+            <p className="text-[10px] text-muted-foreground">
+              Selecione um ou mais dispositivos que receberão o envio
+            </p>
           </div>
           {notifType !== "community" && (
             <div className="space-y-2">
