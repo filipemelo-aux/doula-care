@@ -1,8 +1,8 @@
 import { useMemo, useState } from "react";
-import { Ban, CheckCircle, Trash2, Loader2, ArrowUp, ArrowDown, ArrowUpDown, Eye, Apple, Smartphone, Globe, Gift, Crown } from "lucide-react";
+import { Ban, CheckCircle, Trash2, Loader2, ArrowUp, ArrowDown, ArrowUpDown, Eye, Apple, Smartphone, Globe, Gift, Crown, TimerOff } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { startOrgTrial, makeOrgLifetime } from "@/lib/orgPromotions";
+import { startOrgTrial, makeOrgLifetime, endOrgTrial, TrialNotAllowedError } from "@/lib/orgPromotions";
 import { ACCESS_PLATFORM_LABEL } from "@/lib/accessPlatform";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
