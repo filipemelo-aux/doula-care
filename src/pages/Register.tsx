@@ -23,7 +23,6 @@ export default function Register() {
   const [step, setStep] = useState(1);
   const [submitting, setSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [showErrors, setShowErrors] = useState(false);
 
   // Etapa 1/2 — e-mail verificado
   const [email, setEmail] = useState("");
@@ -196,8 +195,24 @@ export default function Register() {
     return null;
   };
 
+  const stepProblem = (s: number): string | null => {
+    if (s === 3) return personalProblem();
+    if (s === 4) return validContact ? null : "Preencha WhatsApp, Instagram, CEP e endereço completo.";
+    if (s === 5) return validProfessional ? null : "Informe sua formação e o ano em que começou a atuar.";
+    return null;
+  };
+
+  /** Só avança quando a etapa atual está completa — no cadastro da doula tudo é obrigatório. */
+  const goNext = (s: number) => {
+    const msg = stepProblem(s);
+    if (msg) {
+      toast.error("Confira os dados desta etapa", { description: msg });
+      return;
+    }
+    setStep(s + 1);
+  };
+
   const finish = async () => {
-    setShowErrors(true);
     const checks: [number, string | null][] = [
       [3, personalProblem()],
       [4, validContact ? null : "Preencha WhatsApp, Instagram, CEP e endereço completo."],
