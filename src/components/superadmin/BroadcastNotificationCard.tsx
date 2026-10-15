@@ -131,6 +131,7 @@ export function BroadcastNotificationCard() {
 
   const handleSend = async () => {
     const deviceParam = targetDevices.includes("all") ? "all" : targetDevices.join(",");
+    const pushDeviceParam: NotificationDevice[] = targetDevices.includes("all") ? ["all"] : targetDevices;
     if (!title.trim() || !message.trim()) {
       toast.error("Preencha título e mensagem");
       return;
@@ -310,7 +311,7 @@ export function BroadcastNotificationCard() {
           message,
           type: "general",
           url: "/",
-          target_device: deviceParam,
+          target_device: pushDeviceParam,
         });
 
         toast.success(`Notificação enviada para ${userIds.length} usuário(s)!`);
