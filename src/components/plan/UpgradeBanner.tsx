@@ -60,7 +60,7 @@ export function ClientLimitBanner({ remaining, max, current }: ClientLimitBanner
               : `Restam apenas ${remaining} vagas de gestantes`}
           </p>
           <p className="text-xs text-muted-foreground mt-0.5">
-            {current}/{max} gestantes cadastradas. Faça upgrade para o plano Pro para cadastros ilimitados.
+            {current}/{max} gestantes em acompanhamento. Faça upgrade do seu plano para acompanhar mais gestantes. Clientes ocasionais e atendimentos continuam liberados.
           </p>
         </div>
       </CardContent>

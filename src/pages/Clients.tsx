@@ -105,8 +105,21 @@ export default function Clients() {
       const { data, error } = await supabase.functions.invoke("delete-client-user", {
         body: { clientId: id },
       });
-      if (error) throw error;
-      if (data.error) throw new Error(data.error);
+      if (error) {
+        // Lê a mensagem real devolvida pela função
+        let msg = error.message;
+        let status: number | undefined;
+        try {
+          const ctx = (error as any).context as Response | undefined;
+          status = ctx?.status;
+          const body = await ctx?.json();
+          if (body?.error) msg = body.details ? `${body.error}: ${body.details}` : body.error;
+        } catch { /* ignore */ }
+        // Já excluída (ex.: toque duplo) — trata como sucesso
+        if (status === 404) return { success: true };
+        throw new Error(msg);
+      }
+      if (data?.error) throw new Error(data.error);
       return data;
     },
     onSuccess: (data) => {
@@ -535,6 +548,22 @@ export default function Clients() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {deleteMutation.isPending && (
+        <div
+          className="fixed inset-0 z-[10001] flex items-center justify-center bg-background/60 backdrop-blur-sm animate-fade-in"
+          role="alert"
+          aria-busy="true"
+        >
+          <div className="flex flex-col items-center gap-3 rounded-2xl bg-card px-8 py-6 shadow-xl text-center max-w-xs">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <span className="text-sm font-medium text-foreground">Excluindo cliente…</span>
+            <span className="text-xs text-muted-foreground">
+              Removendo agenda, atendimentos, financeiro e acesso. Aguarde.
+            </span>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
