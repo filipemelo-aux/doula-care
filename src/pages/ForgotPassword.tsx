@@ -35,9 +35,9 @@ export default function ForgotPassword() {
     }
 
     if (!value.includes("@")) {
-      toast.error("Digite um e-mail válido", {
-        description: "Se você é cliente de uma doula, use a opção \"Já tem a sua doula?\" na tela de login.",
-      });
+        toast.error("Digite um e-mail válido", {
+          description: "Use o e-mail cadastrado da sua conta de doula ou de membro da equipe.",
+        });
       return;
     }
 
@@ -135,12 +135,6 @@ export default function ForgotPassword() {
                   <ArrowLeft className="h-3 w-3" />
                   Voltar ao login
                 </Link>
-                <div className="text-xs text-muted-foreground">
-                  É cliente de uma doula?{" "}
-                  <Link to="/recuperar-acesso" className="text-primary hover:underline font-medium">
-                    Recupere seu acesso aqui
-                  </Link>
-                </div>
               </div>
             </form>
           )}

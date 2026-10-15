@@ -311,7 +311,7 @@ export default function Documentation() {
     addSubtitle("Backend");
     addBullets(["PostgreSQL como banco de dados", "Autenticação integrada", "Realtime para dados em tempo real e presence", "Storage para arquivos e imagens", "Edge Functions (Deno) para lógica server-side", "Row Level Security (RLS) para isolamento de dados"]);
     addSubtitle("Edge Functions Disponíveis");
-    addBullets(["create-admin-user, create-client-user, delete-client-user", "delete-organization, register-doula, manage-admin-user", "provision-existing-clients, resolve-client-login", "recover-client-credentials, reset-admin-password, reset-client-password", "send-push-notification, get-vapid-public-key, generate-vapid-keys", "check-appointment-reminders, check-payment-due-dates, check-billing-overdue", "cleanup-orphan-users, generate-notification-text, generate-service-icon", "notify-forum-post, respond-budget, request-account-deletion"]);
+    addBullets(["create-admin-user, create-client-user, delete-client-user", "delete-organization, register-doula, manage-admin-user", "provision-existing-clients, resolve-client-login", "reset-admin-password, reset-client-password", "send-push-notification, get-vapid-public-key, generate-vapid-keys", "check-appointment-reminders, check-payment-due-dates, check-billing-overdue", "cleanup-orphan-users, generate-notification-text, generate-service-icon", "notify-forum-post, respond-budget, request-account-deletion"]);
     addSubtitle("Infraestrutura");
     addBullets(["Hospedagem: Lovable Cloud", "PWA com Service Worker (Workbox)", "Capacitor para builds nativos iOS/Android", "Versionamento semântico: X.Y.Z.DDMM.N"]);
 
@@ -871,7 +871,7 @@ export default function Documentation() {
                   "create-admin-user", "create-client-user", "delete-client-user",
                   "delete-organization", "register-doula", "manage-admin-user",
                   "provision-existing-clients", "resolve-client-login",
-                  "recover-client-credentials", "reset-admin-password", "reset-client-password",
+                  "reset-admin-password", "reset-client-password",
                   "send-push-notification", "get-vapid-public-key", "generate-vapid-keys",
                   "get-client-email", "check-appointment-reminders",
                   "check-payment-due-dates", "check-billing-overdue",
