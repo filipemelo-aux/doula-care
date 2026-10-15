@@ -21,7 +21,6 @@ import AdminChangePassword from "./pages/AdminChangePassword";
 import Agenda from "./pages/Agenda";
 import NotFound from "./pages/NotFound";
 import Register from "./pages/Register";
-import RecoverCredentials from "./pages/RecoverCredentials";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import PrivacyPolicy from "./pages/PrivacyPolicy";

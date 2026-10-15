@@ -213,12 +213,6 @@ export default function Login() {
                 Crie sua conta
               </Link>
             </div>
-            <div>
-              Já tem a sua doula?{" "}
-              <Link to="/recuperar-acesso" className="text-primary hover:underline font-medium">
-                Clique aqui
-              </Link>
-            </div>
             <div className="mt-2">
               <Link to="/politica-de-privacidade" className="text-xs text-muted-foreground/70 hover:text-primary hover:underline">
                 Política de Privacidade
