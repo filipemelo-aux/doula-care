@@ -10,6 +10,7 @@ import { Loader2, Megaphone, Sparkles, Send, Eye } from "lucide-react";
 import { toast } from "sonner";
 import { sendPushNotification, type PushNotificationType } from "@/lib/pushNotifications";
 import { InAppAnnouncementDialog } from "@/components/notifications/InAppAnnouncementDialog";
+import { OrgSearchSelect } from "@/components/superadmin/OrgSearchSelect";
 
 type BroadcastType = PushNotificationType | "announcement";
 
