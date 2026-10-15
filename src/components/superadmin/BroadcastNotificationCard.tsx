@@ -10,6 +10,7 @@ import { Loader2, Megaphone, Sparkles, Send, Eye } from "lucide-react";
 import { toast } from "sonner";
 import { sendPushNotification, type PushNotificationType } from "@/lib/pushNotifications";
 import { InAppAnnouncementDialog } from "@/components/notifications/InAppAnnouncementDialog";
+import { OrgSearchSelect } from "@/components/superadmin/OrgSearchSelect";
 
 type BroadcastType = PushNotificationType | "announcement";
 
@@ -62,19 +63,25 @@ export function BroadcastNotificationCard() {
   const [targetOrgId, setTargetOrgId] = useState("all");
   const [orgs, setOrgs] = useState<Organization[]>([]);
   const [orgsLoaded, setOrgsLoaded] = useState(false);
+  const [orgsLoading, setOrgsLoading] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [sending, setSending] = useState(false);
 
   const loadOrgs = async () => {
-    if (orgsLoaded) return;
-    const { data } = await supabase
-      .from("organizations")
-      .select("id, name, nome_exibicao")
-      .eq("status", "ativo")
-      .order("name");
-    if (data) {
-      setOrgs(data);
-      setOrgsLoaded(true);
+    if (orgsLoaded || orgsLoading) return;
+    setOrgsLoading(true);
+    try {
+      const { data } = await supabase
+        .from("organizations")
+        .select("id, name, nome_exibicao")
+        .eq("status", "ativo")
+        .order("name");
+      if (data) {
+        setOrgs(data);
+        setOrgsLoaded(true);
+      }
+    } finally {
+      setOrgsLoading(false);
     }
   };
 
@@ -460,23 +467,21 @@ export function BroadcastNotificationCard() {
             )}
           </div>
 
-          {/* Organization targeting — only for general type */}
+          {/* Organization targeting — aviso and general types */}
           {notifType !== "community" && (
             <div className="space-y-2">
               <Label className="text-xs">Organização</Label>
-              <Select value={targetOrgId} onValueChange={setTargetOrgId} onOpenChange={(open) => { if (open) loadOrgs(); }}>
-                <SelectTrigger className="h-9 text-sm">
-                  <SelectValue placeholder="Todas as organizações" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">🌍 Todas as organizações</SelectItem>
-                  {orgs.map((org) => (
-                    <SelectItem key={org.id} value={org.id}>
-                      {org.nome_exibicao || org.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <OrgSearchSelect
+                value={targetOrgId}
+                onChange={setTargetOrgId}
+                orgs={orgs}
+                loading={orgsLoading}
+                onOpen={loadOrgs}
+                placeholder="Todas as organizações"
+              />
+              <p className="text-[10px] text-muted-foreground">
+                Digite o nome para filtrar as organizações ativas
+              </p>
             </div>
           )}
         </div>
