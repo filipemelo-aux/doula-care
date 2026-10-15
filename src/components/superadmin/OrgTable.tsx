@@ -350,6 +350,16 @@ export function OrgTable({
         <Button
           variant="ghost"
           size="sm"
+          className="h-7 px-2 text-[11px] gap-1 shrink-0 text-muted-foreground"
+          disabled={selectedOrgs.length === 0 || promoPending}
+          onClick={() => runBulkPromo("end")}
+        >
+          <TimerOff className="h-3.5 w-3.5" />
+          Encerrar trial
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
           className="h-7 px-2 text-[11px] gap-1 shrink-0"
           disabled={!selected}
           onClick={() => selected && onViewDetails?.(selected.id)}
