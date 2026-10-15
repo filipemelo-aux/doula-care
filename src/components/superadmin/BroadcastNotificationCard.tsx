@@ -63,7 +63,7 @@ export function BroadcastNotificationCard() {
   const [tone, setTone] = useState("exciting");
   const [title, setTitle] = useState("");
   const [message, setMessage] = useState("");
-  const [notifType, setNotifType] = useState<BroadcastType>("community");
+  const [notifType, setNotifType] = useState<BroadcastType>("announcement");
   const [previewOpen, setPreviewOpen] = useState(false);
   const [communityTheme, setCommunityTheme] = useState("livre");
   const [instagramLink, setInstagramLink] = useState("");
