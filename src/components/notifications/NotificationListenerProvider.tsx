@@ -10,7 +10,8 @@ export function NotificationListenerProvider() {
 
   if (!user || !role) return null;
   // Super Admin não recebe alertas das organizações; doulas só os da própria org.
-  if (isSuperAdmin || (!isClient && !organizationId)) return null;
+  if (isSuperAdmin) return null;
+  if (!isClient && !organizationId) return <InAppAnnouncementListener key={user.id} userId={user.id} />;
 
   const handleNavigate = (path: string) => {
     navigate(path);
