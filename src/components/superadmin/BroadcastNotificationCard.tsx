@@ -66,15 +66,20 @@ export function BroadcastNotificationCard() {
   const [sending, setSending] = useState(false);
 
   const loadOrgs = async () => {
-    if (orgsLoaded) return;
-    const { data } = await supabase
-      .from("organizations")
-      .select("id, name, nome_exibicao")
-      .eq("status", "ativo")
-      .order("name");
-    if (data) {
-      setOrgs(data);
-      setOrgsLoaded(true);
+    if (orgsLoaded || orgsLoading) return;
+    setOrgsLoading(true);
+    try {
+      const { data } = await supabase
+        .from("organizations")
+        .select("id, name, nome_exibicao")
+        .eq("status", "ativo")
+        .order("name");
+      if (data) {
+        setOrgs(data);
+        setOrgsLoaded(true);
+      }
+    } finally {
+      setOrgsLoading(false);
     }
   };
 
