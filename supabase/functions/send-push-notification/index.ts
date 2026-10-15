@@ -1,5 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { isNotificationDevice, matchesNotificationDevice, type NotificationDevice } from "../_shared/notificationDevice.ts";
+import { isNotificationDeviceList, matchesNotificationDevice, parseNotificationDevices } from "../_shared/notificationDevice.ts";
 import {
   buildPushPayload,
   type PushSubscription,
@@ -330,7 +330,6 @@ Deno.serve(async (req) => {
       priority,
       require_interaction,
       image,
-      target_device = "all",
     }: {
       user_ids?: string[];
       client_ids?: string[];
@@ -342,14 +341,16 @@ Deno.serve(async (req) => {
       priority?: string;
       require_interaction?: boolean;
       image?: string;
-      target_device?: NotificationDevice;
     } = body;
 
-    if (!isNotificationDevice(target_device)) {
+    // target_device aceita um dispositivo único ou uma lista ("browser,android")
+    const rawTargetDevice: unknown = body.target_device ?? "all";
+    if (!isNotificationDeviceList(rawTargetDevice)) {
       return new Response(JSON.stringify({ error: "Dispositivo inválido" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+    const targetDevices = parseNotificationDevices(rawTargetDevice);
 
     if (!title || !message) {
       return new Response(
@@ -466,7 +467,7 @@ Deno.serve(async (req) => {
     }
 
     const { deliverable: subscriptionsToSend, staleEndpoints } =
-      reduceSubscriptionsForDelivery((subscriptions as SubscriptionRow[]).filter(sub => matchesNotificationDevice(sub, target_device)));
+      reduceSubscriptionsForDelivery((subscriptions as SubscriptionRow[]).filter(sub => matchesNotificationDevice(sub, targetDevices)));
 
     console.log("[push] Deliverable:", subscriptionsToSend.length, "Stale:", staleEndpoints.length);
     for (const sub of subscriptionsToSend) {
