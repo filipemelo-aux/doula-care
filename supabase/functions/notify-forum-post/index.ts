@@ -1,5 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { isNotificationDevice, matchesNotificationDevice } from "../_shared/notificationDevice.ts";
+import { isNotificationDeviceList, matchesNotificationDevice, parseNotificationDevices } from "../_shared/notificationDevice.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -33,11 +33,12 @@ Deno.serve(async (req) => {
       });
     }
     const { postId, authorId, authorName, postTitle, isAnonymous, audience, target_device = "all" } = await req.json();
-    if (!isNotificationDevice(target_device)) {
+    if (!isNotificationDeviceList(target_device)) {
       return new Response(JSON.stringify({ error: "Dispositivo inválido" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+    const targetDevices = parseNotificationDevices(target_device);
     const { data: post } = await supabase.from("forum_posts").select("author_id").eq("id", postId).maybeSingle();
     if (!post || post.author_id !== user.id || authorId !== user.id) {
       return new Response(JSON.stringify({ error: "Publicação não autorizada" }), {
@@ -119,12 +120,12 @@ Deno.serve(async (req) => {
     }
 
     // Device-specific broadcasts only notify users with subscriptions on that platform.
-    if (target_device !== "all") {
+    if (!targetDevices.includes("all")) {
       const ids = [...new Set([...adminUserIds, ...clientUserIds])];
       const { data: subscriptions, error } = await supabase.from("push_subscriptions")
         .select("user_id, token_type, device_type").in("user_id", ids);
       if (error) throw error;
-      const eligible = new Set((subscriptions ?? []).filter(sub => matchesNotificationDevice(sub, target_device)).map(sub => sub.user_id));
+      const eligible = new Set((subscriptions ?? []).filter(sub => matchesNotificationDevice(sub, targetDevices)).map(sub => sub.user_id));
       for (let i = adminUserIds.length - 1; i >= 0; i--) {
         if (!eligible.has(adminUserIds[i])) {
           adminOrgMap.delete(adminUserIds[i]);
@@ -180,7 +181,7 @@ Deno.serve(async (req) => {
           tag: `forum-post-${postId}`,
           type: "community",
           priority: "normal",
-          target_device,
+          target_device: targetDevices.join(","),
         },
       });
     }
@@ -199,7 +200,7 @@ Deno.serve(async (req) => {
             tag: `forum-post-${postId}`,
             type: "community",
             priority: "normal",
-            target_device,
+            target_device: targetDevices.join(","),
           },
         });
       }

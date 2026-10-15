@@ -45,6 +45,13 @@ const AUDIENCE_OPTIONS = [
   { value: "clients", label: "Apenas gestantes (clientes)" },
 ];
 
+const DEVICE_OPTIONS: { value: NotificationDevice; label: string }[] = [
+  { value: "all", label: "Todos os dispositivos" },
+  { value: "browser", label: "Navegador" },
+  { value: "android", label: "Android" },
+  { value: "ios", label: "iOS" },
+];
+
 interface Organization {
   id: string;
   name: string;
@@ -62,7 +69,7 @@ export function BroadcastNotificationCard() {
   const [instagramLink, setInstagramLink] = useState("");
   const [audience, setAudience] = useState("all");
   const [targetOrgId, setTargetOrgId] = useState("all");
-  const [targetDevice, setTargetDevice] = useState<NotificationDevice>("all");
+  const [targetDevices, setTargetDevices] = useState<NotificationDevice[]>(["all"]);
   const [orgs, setOrgs] = useState<Organization[]>([]);
   const [orgsLoaded, setOrgsLoaded] = useState(false);
   const [orgsLoading, setOrgsLoading] = useState(false);
@@ -113,7 +120,18 @@ export function BroadcastNotificationCard() {
     }
   };
 
+  const toggleDevice = (device: NotificationDevice) => {
+    setTargetDevices((prev) => {
+      if (device === "all") return ["all"];
+      const next = prev.filter((d) => d !== "all");
+      const result = next.includes(device) ? next.filter((d) => d !== device) : [...next, device];
+      return result.length > 0 ? result : ["all"];
+    });
+  };
+
   const handleSend = async () => {
+    const deviceParam = targetDevices.includes("all") ? "all" : targetDevices.join(",");
+    const pushDeviceParam: NotificationDevice[] = targetDevices.includes("all") ? ["all"] : targetDevices;
     if (!title.trim() || !message.trim()) {
       toast.error("Preencha título e mensagem");
       return;
@@ -128,7 +146,7 @@ export function BroadcastNotificationCard() {
           p_message: message.trim(),
           p_audience: audience,
           p_organization_id: targetOrgId === "all" ? null : targetOrgId,
-          p_target_device: targetDevice,
+          p_target_device: deviceParam,
         });
         if (error) throw error;
         if (!recipientCount) {
@@ -214,7 +232,7 @@ export function BroadcastNotificationCard() {
             authorName: "Doula Care",
             postTitle: title.trim(),
             isAnonymous: false,
-            target_device: targetDevice,
+            target_device: deviceParam,
           },
         });
 
@@ -293,7 +311,7 @@ export function BroadcastNotificationCard() {
           message,
           type: "general",
           url: "/",
-          target_device: targetDevice,
+          target_device: pushDeviceParam,
         });
 
         toast.success(`Notificação enviada para ${userIds.length} usuário(s)!`);
@@ -472,20 +490,33 @@ export function BroadcastNotificationCard() {
             )}
           </div>
 
-          {/* Organization targeting — aviso and general types */}
+          {/* Device targeting — multiple selection, available for all types */}
           <div className="space-y-2">
-            <Label className="text-xs" htmlFor="notification-device">Dispositivo</Label>
-            <Select value={targetDevice} onValueChange={(value) => setTargetDevice(value as NotificationDevice)}>
-              <SelectTrigger id="notification-device" className="h-9 text-sm">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos os dispositivos</SelectItem>
-                <SelectItem value="browser">Navegador</SelectItem>
-                <SelectItem value="android">Android</SelectItem>
-                <SelectItem value="ios">iOS</SelectItem>
-              </SelectContent>
-            </Select>
+            <Label className="text-xs">Dispositivo</Label>
+            <div className="flex flex-wrap gap-1.5">
+              {DEVICE_OPTIONS.map((opt) => {
+                const active = targetDevices.includes(opt.value);
+                return (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    aria-pressed={active}
+                    onClick={() => toggleDevice(opt.value)}
+                    className={
+                      "rounded-full border px-3 py-1.5 text-xs font-medium transition-colors " +
+                      (active
+                        ? "border-primary bg-primary text-primary-foreground"
+                        : "border-border bg-transparent text-muted-foreground hover:bg-muted hover:text-foreground")
+                    }
+                  >
+                    {opt.label}
+                  </button>
+                );
+              })}
+            </div>
+            <p className="text-[10px] text-muted-foreground">
+              Selecione um ou mais dispositivos que receberão o envio
+            </p>
           </div>
           {notifType !== "community" && (
             <div className="space-y-2">

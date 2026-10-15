@@ -4,7 +4,24 @@ export function isNotificationDevice(value: unknown): value is NotificationDevic
   return value === "all" || value === "browser" || value === "android" || value === "ios";
 }
 
-export function matchesNotificationDevice(
+/** Aceita "all", um único dispositivo ou uma lista separada por vírgulas ("browser,android"). */
+export function isNotificationDeviceList(value: unknown): value is string | string[] {
+  const parts = Array.isArray(value) ? value : typeof value === "string" ? [value] : null;
+  if (!parts || parts.length === 0) return false;
+  const expanded = parts.flatMap((p) => (typeof p === "string" ? p.split(",") : [p]));
+  return expanded.every((p) => isNotificationDevice(typeof p === "string" ? p.trim() : p));
+}
+
+/** Normaliza a entrada em uma lista de dispositivos; "all" vence qualquer combinação. */
+export function parseNotificationDevices(value: string | string[]): NotificationDevice[] {
+  const raw = (Array.isArray(value) ? value : value.split(","))
+    .map((p) => (typeof p === "string" ? p.trim() : ""))
+    .filter((p): p is NotificationDevice => isNotificationDevice(p));
+  if (raw.includes("all")) return ["all"];
+  return [...new Set(raw)];
+}
+
+function matchesSingleDevice(
   subscription: { token_type: string; device_type: string | null },
   target: NotificationDevice,
 ): boolean {
@@ -16,4 +33,13 @@ export function matchesNotificationDevice(
   if (target === "android") return android;
   if (target === "ios") return ios;
   return !native && !android;
+}
+
+export function matchesNotificationDevice(
+  subscription: { token_type: string; device_type: string | null },
+  target: NotificationDevice | NotificationDevice[],
+): boolean {
+  const targets = Array.isArray(target) ? target : [target];
+  if (targets.includes("all")) return true;
+  return targets.some((t) => matchesSingleDevice(subscription, t));
 }

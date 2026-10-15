@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { isNotificationDevice, matchesNotificationDevice } from "../../supabase/functions/_shared/notificationDevice";
+import {
+  isNotificationDevice,
+  isNotificationDeviceList,
+  matchesNotificationDevice,
+  parseNotificationDevices,
+} from "../../supabase/functions/_shared/notificationDevice";
 
 describe("notification device targeting", () => {
   const subscriptions = [
@@ -22,8 +27,26 @@ describe("notification device targeting", () => {
   it("keeps all subscriptions for all devices", () => {
     expect(subscriptions.every(s => matchesNotificationDevice(s, "all"))).toBe(true);
   });
-  it("rejects unknown devices", () => {
+  it("matches multiple devices at once", () => {
+    expect(subscriptions.filter(s => matchesNotificationDevice(s, ["android", "ios"])))
+      .toEqual([subscriptions[0], subscriptions[1], subscriptions[5]]);
+    expect(subscriptions.filter(s => matchesNotificationDevice(s, ["browser", "ios"])))
+      .toEqual([subscriptions[1], subscriptions[2], subscriptions[3], subscriptions[4]]);
+    expect(subscriptions.every(s => matchesNotificationDevice(s, ["all", "browser"]))).toBe(true);
+  });
+  it("normalizes device lists", () => {
+    expect(parseNotificationDevices("browser,android")).toEqual(["browser", "android"]);
+    expect(parseNotificationDevices("android,browser,android")).toEqual(["android", "browser"]);
+    expect(parseNotificationDevices("all,android")).toEqual(["all"]);
+    expect(parseNotificationDevices(["ios"])).toEqual(["ios"]);
+  });
+  it("validates single devices and lists", () => {
     expect(isNotificationDevice("desktop")).toBe(false);
     expect(isNotificationDevice(null)).toBe(false);
+    expect(isNotificationDeviceList("browser,android")).toBe(true);
+    expect(isNotificationDeviceList(["browser", "ios"])).toBe(true);
+    expect(isNotificationDeviceList("desktop")).toBe(false);
+    expect(isNotificationDeviceList(["browser", "x"])).toBe(false);
+    expect(isNotificationDeviceList("")).toBe(false);
   });
 });
