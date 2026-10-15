@@ -45,6 +45,13 @@ const AUDIENCE_OPTIONS = [
   { value: "clients", label: "Apenas gestantes (clientes)" },
 ];
 
+const DEVICE_OPTIONS: { value: NotificationDevice; label: string }[] = [
+  { value: "all", label: "Todos os dispositivos" },
+  { value: "browser", label: "Navegador" },
+  { value: "android", label: "Android" },
+  { value: "ios", label: "iOS" },
+];
+
 interface Organization {
   id: string;
   name: string;
@@ -62,7 +69,7 @@ export function BroadcastNotificationCard() {
   const [instagramLink, setInstagramLink] = useState("");
   const [audience, setAudience] = useState("all");
   const [targetOrgId, setTargetOrgId] = useState("all");
-  const [targetDevice, setTargetDevice] = useState<NotificationDevice>("all");
+  const [targetDevices, setTargetDevices] = useState<NotificationDevice[]>(["all"]);
   const [orgs, setOrgs] = useState<Organization[]>([]);
   const [orgsLoaded, setOrgsLoaded] = useState(false);
   const [orgsLoading, setOrgsLoading] = useState(false);
@@ -113,7 +120,17 @@ export function BroadcastNotificationCard() {
     }
   };
 
+  const toggleDevice = (device: NotificationDevice) => {
+    setTargetDevices((prev) => {
+      if (device === "all") return ["all"];
+      const next = prev.filter((d) => d !== "all");
+      const result = next.includes(device) ? next.filter((d) => d !== device) : [...next, device];
+      return result.length > 0 ? result : ["all"];
+    });
+  };
+
   const handleSend = async () => {
+    const deviceParam = targetDevices.includes("all") ? "all" : targetDevices.join(",");
     if (!title.trim() || !message.trim()) {
       toast.error("Preencha título e mensagem");
       return;
@@ -128,7 +145,7 @@ export function BroadcastNotificationCard() {
           p_message: message.trim(),
           p_audience: audience,
           p_organization_id: targetOrgId === "all" ? null : targetOrgId,
-          p_target_device: targetDevice,
+          p_target_device: deviceParam,
         });
         if (error) throw error;
         if (!recipientCount) {
@@ -214,7 +231,7 @@ export function BroadcastNotificationCard() {
             authorName: "Doula Care",
             postTitle: title.trim(),
             isAnonymous: false,
-            target_device: targetDevice,
+            target_device: deviceParam,
           },
         });
 
@@ -293,7 +310,7 @@ export function BroadcastNotificationCard() {
           message,
           type: "general",
           url: "/",
-          target_device: targetDevice,
+          target_device: deviceParam,
         });
 
         toast.success(`Notificação enviada para ${userIds.length} usuário(s)!`);
