@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Bell, BellOff, ShieldCheck, Loader2, Smartphone } from "lucide-react";
 import { toast } from "sonner";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface PushPermissionModalProps {
   open: boolean;
@@ -18,6 +19,7 @@ interface PushPermissionModalProps {
 
 export function PushPermissionModal({ open, onOpenChange }: PushPermissionModalProps) {
   const { subscribe, isLoading } = usePushNotifications();
+  const { user } = useAuth();
   const [step, setStep] = useState<"explain" | "success" | "denied">("explain");
 
   const handleActivate = useCallback(async () => {
@@ -36,7 +38,7 @@ export function PushPermissionModal({ open, onOpenChange }: PushPermissionModalP
 
   const handleDismiss = () => {
     // Mark as dismissed so we don't auto-show again
-    localStorage.setItem("push_prompt_dismissed", "true");
+    localStorage.setItem(user?.id ? `push_prompt_dismissed_${user.id}` : "push_prompt_dismissed", "true");
     handleClose();
   };
 
