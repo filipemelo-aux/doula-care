@@ -313,8 +313,8 @@ Deno.serve(async (req) => {
 
     await supabase.from("org_notifications").insert({
       organization_id: org.id,
-      title: "🎉 Bem-vinda ao Doula Care!",
-      message: "Sua conta está ativa com todos os recursos liberados. Aproveite!",
+      title: "🎁 Você ganhou 15 dias de Premium!",
+      message: "Aproveite todos os recursos, inclusive equipe.",
       type: "info",
     });
 
