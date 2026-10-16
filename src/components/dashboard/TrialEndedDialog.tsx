@@ -22,10 +22,11 @@ export function TrialEndedDialog() {
     enabled: !!organizationId && !!user?.id && !isSuperAdmin,
     staleTime: 5 * 60 * 1000,
     queryFn: async () => {
+      if (!organizationId || !user) return null;
       const { data: promo } = await supabase
         .from("org_promotions" as any)
         .select("id, status, trial_ends_at")
-        .eq("organization_id", organizationId!)
+        .eq("organization_id", organizationId)
         .eq("promotion_type", "trial_15d")
         .maybeSingle();
       const p = promo as any;
@@ -37,7 +38,7 @@ export function TrialEndedDialog() {
       const { data: sub } = await supabase
         .from("subscriptions")
         .select("id")
-        .eq("user_id", user!.id)
+        .eq("user_id", user.id)
         .eq("status", "active")
         .limit(1)
         .maybeSingle();
@@ -66,7 +67,7 @@ export function TrialEndedDialog() {
             Que alegria ter você com a gente! 💛
           </DialogTitle>
           <DialogDescription className="text-sm text-center leading-relaxed">
-            Seus 15 dias de teste chegaram ao fim, e esperamos que o Doula Care já tenha deixado sua
+            Seu teste chegou ao fim, e esperamos que o Doula Care já tenha deixado sua
             rotina mais leve e organizada. 🌸 Para continuar cuidando das suas clientes com todos os
             recursos, escolha agora o plano que combina com você!
           </DialogDescription>

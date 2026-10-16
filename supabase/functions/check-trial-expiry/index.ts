@@ -114,7 +114,7 @@ Deno.serve(async (req) => {
       // Notify the doula
       await supabase.from("org_notifications").insert({
         organization_id: trial.organization_id,
-        title: "💛 Seus 15 dias de teste terminaram",
+        title: "💛 Seu teste chegou ao fim",
         message:
           "Foi uma alegria ter você com a gente! Escolha seu plano para continuar com todos os recursos — se trabalha com equipe, o Premium é o ideal. Até lá, sua conta segue no plano Free.",
         type: "billing",
