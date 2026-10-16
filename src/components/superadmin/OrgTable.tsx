@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { Ban, CheckCircle, Trash2, Loader2, ArrowUp, ArrowDown, ArrowUpDown, Eye, Apple, Smartphone, Globe, Crown, Timer, TimerOff } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -309,7 +309,7 @@ export function OrgTable({
     onClick: () => void;
     disabled?: boolean;
     className?: string;
-    children: React.ReactNode;
+    children: ReactNode;
   }) => (
     <Tooltip>
       <TooltipTrigger asChild>
