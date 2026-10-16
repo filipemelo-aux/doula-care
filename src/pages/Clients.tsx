@@ -38,6 +38,7 @@ import { usePlanLimits } from "@/hooks/usePlanLimits";
 import { usePlanNames } from "@/hooks/usePlanNames";
 import { ClientLimitBanner } from "@/components/plan/UpgradeBanner";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { countsTowardsClientLimit, getAccessiblePregnancyIds } from "@/lib/clientPlanAccess";
 
 type Client = Tables<"clients">;
 
@@ -176,12 +177,10 @@ export default function Clients() {
     return 0;
   });
 
-  // On free plan, mark clients beyond the limit as inactive
-  const maxClients = limits.maxClients;
-  const isClientInactive = (index: number) => {
-    if (maxClients === null) return false;
-    return index >= maxClients;
-  };
+  // Resolve access across all pregnancies, never from the filtered display index.
+  const accessiblePregnancyIds = getAccessiblePregnancyIds(clients ?? [], limits.maxClients);
+  const isClientInactive = (client: Client) =>
+    countsTowardsClientLimit(client) && !accessiblePregnancyIds.has(client.id);
 
   const handleEdit = (client: Client) => {
     setSelectedClient(client);
@@ -272,8 +271,8 @@ export default function Clients() {
             <>
               {/* Mobile Cards */}
               <div className="block lg:hidden space-y-2.5 p-3">
-                {filteredClients.map((client, index) => {
-                  const inactive = isClientInactive(index);
+                {filteredClients.map((client) => {
+                  const inactive = isClientInactive(client);
                   const initials = client.full_name.split(" ").map(n => n[0]).slice(0, 2).join("").toUpperCase();
                   const paymentDot: Record<string, string> = {
                     pendente: "bg-destructive",
@@ -401,8 +400,8 @@ export default function Clients() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredClients.map((client, index) => {
-                      const inactive = isClientInactive(index);
+                    {filteredClients.map((client) => {
+                      const inactive = isClientInactive(client);
                       return (
                       <TableRow key={client.id} className={cn("table-row-hover", inactive && "opacity-50 pointer-events-none")}>
                         <TableCell className="font-medium">
