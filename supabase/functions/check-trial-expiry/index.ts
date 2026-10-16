@@ -130,9 +130,10 @@ Deno.serve(async (req) => {
               Authorization: `Bearer ${serviceRoleKey}`,
             },
             body: JSON.stringify({
-              user_id: profile.user_id,
-              title: "Período de teste expirado",
-              message: "Seu trial Premium terminou. Assine um plano para continuar usando todos os recursos.",
+              user_ids: [profile.user_id],
+              url: "/admin/assinatura",
+              title: "💛 Seu teste chegou ao fim",
+              message: "Seu teste Premium terminou. Assine um plano para continuar usando todos os recursos.",
             }),
           });
         } catch (_) {

@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { sendPushNotification } from "@/lib/pushNotifications";
 
 export class TrialNotAllowedError extends Error {}
 
@@ -40,6 +41,7 @@ export async function endOrgTrial(orgId: string): Promise<boolean> {
   if (error) throw error;
   if (!(await hasPaidOrLifetimePlan(orgId))) {
     await supabase.from("organizations").update({ plan: "free" as any }).eq("id", orgId);
+    await notifyTrialEnded(orgId);
   }
   return true;
 }
@@ -65,7 +67,7 @@ export async function startOrgTrial(orgId: string) {
   if (orgErr) throw orgErr;
   await supabase.from("org_notifications").insert({
     organization_id: orgId,
-    title: "🎁 15 dias de Premium liberados!",
+    title: "🎁 15 dias de teste Premium liberados!",
     message: "Aproveite todos os recursos do Doula Care, incluindo equipe, por 15 dias.",
     type: "promotion",
   });
@@ -105,4 +107,25 @@ export async function makeOrgLifetime(orgId: string) {
     message: "Acesso Premium vitalício concedido para esta organização.",
     type: "promotion",
   });
+}
+
+/** Avisa a doula que o teste acabou: notificação no painel + push. */
+export async function notifyTrialEnded(orgId: string) {
+  await supabase.from("org_notifications").insert({
+    organization_id: orgId,
+    title: "💛 Seu teste chegou ao fim",
+    message:
+      "Foi uma alegria ter você com a gente! Escolha seu plano para continuar com todos os recursos — se trabalha com equipe, o Premium é o ideal. Até lá, sua conta segue no plano Free.",
+    type: "billing",
+  });
+  const { data: profiles } = await supabase.from("profiles").select("user_id").eq("organization_id", orgId);
+  const ids = (profiles || []).map((p) => p.user_id);
+  if (ids.length) {
+    await sendPushNotification({
+      user_ids: ids,
+      title: "💛 Seu teste chegou ao fim",
+      message: "Escolha seu plano para continuar com todos os recursos do Doula Care.",
+      url: "/admin/assinatura",
+    });
+  }
 }

@@ -20,7 +20,9 @@ export function TrialEndedDialog() {
   const { data } = useQuery({
     queryKey: ["trial-15d-ended", organizationId, user?.id],
     enabled: !!organizationId && !!user?.id && !isSuperAdmin,
-    staleTime: 5 * 60 * 1000,
+    staleTime: 0,
+    refetchInterval: 30 * 1000,
+    refetchOnWindowFocus: true,
     queryFn: async () => {
       if (!organizationId || !user) return null;
       const { data: promo } = await supabase
@@ -43,7 +45,7 @@ export function TrialEndedDialog() {
         .limit(1)
         .maybeSingle();
       if (sub) return null;
-      return p.id as string;
+      return `${p.id}-${p.trial_ends_at}`;
     },
   });
 
