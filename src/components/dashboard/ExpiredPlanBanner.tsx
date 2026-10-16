@@ -45,7 +45,7 @@ export function ExpiredPlanBanner() {
         </AlertTitle>
         <AlertDescription className="text-xs flex items-center justify-between gap-4">
           <span>
-            Seu trial Premium terminou. Assine um plano para continuar utilizando todos os recursos.
+            Seu teste Premium terminou. Assine um plano para continuar utilizando todos os recursos.
             Enquanto isso, os limites do plano Free estão sendo aplicados.
           </span>
           <Button

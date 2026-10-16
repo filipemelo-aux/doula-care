@@ -206,7 +206,7 @@ export function PromoTriggerButton({ orgId, orgName, mode = "badge" }: PromoTrig
       disabled={startTrialMutation.isPending}
     >
       {startTrialMutation.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Gift className="h-3.5 w-3.5" />}
-      Trial 15 dias
+      Teste 15 dias
     </Button>
   ) : null;
 
