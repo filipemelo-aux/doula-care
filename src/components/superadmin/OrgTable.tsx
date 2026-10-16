@@ -1,6 +1,8 @@
-import { useMemo, useState } from "react";
-import { Ban, CheckCircle, Trash2, Loader2, ArrowUp, ArrowDown, ArrowUpDown, Eye, Apple, Smartphone, Globe, Gift, Crown, TimerOff } from "lucide-react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useMemo, useState, type ReactNode } from "react";
+import { Ban, CheckCircle, Trash2, Loader2, ArrowUp, ArrowDown, ArrowUpDown, Eye, Apple, Smartphone, Globe, Crown, Timer, TimerOff } from "lucide-react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { toast } from "sonner";
 import { startOrgTrial, makeOrgLifetime, endOrgTrial, TrialNotAllowedError } from "@/lib/orgPromotions";
 import { ACCESS_PLATFORM_LABEL } from "@/lib/accessPlatform";
@@ -216,6 +218,23 @@ export function OrgTable({
     setBulkPlan("");
   };
 
+  const { data: promoStatus = new Map<string, { trial: boolean; lifetime: boolean }>() } = useQuery({
+    queryKey: ["org-promo", "toolbar-status"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("org_promotions" as any)
+        .select("organization_id,status")
+        .in("status", ["trial_active", "lifetime_active"]);
+      const map = new Map<string, { trial: boolean; lifetime: boolean }>();
+      for (const r of (data || []) as any[]) {
+        const cur = map.get(r.organization_id) || { trial: false, lifetime: false };
+        if (r.status === "trial_active") cur.trial = true;
+        if (r.status === "lifetime_active") cur.lifetime = true;
+        map.set(r.organization_id, cur);
+      }
+      return map;
+    },
+  });
   const [promoPending, setPromoPending] = useState(false);
   const runBulkPromo = async (kind: "trial" | "lifetime" | "end") => {
     if (selectedOrgs.length === 0) return;
@@ -279,12 +298,53 @@ export function OrgTable({
     </TableHead>
   );
 
+  const IconAction = ({
+    label,
+    onClick,
+    disabled,
+    className,
+    children,
+  }: {
+    label: string;
+    onClick: () => void;
+    disabled?: boolean;
+    className?: string;
+    children: ReactNode;
+  }) => (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <span className="inline-flex shrink-0" tabIndex={disabled ? 0 : -1}>
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label={label}
+            className={cn("h-8 w-8 shrink-0 [&_svg]:h-[18px] [&_svg]:w-[18px]", disabled && "pointer-events-none", className)}
+            disabled={disabled}
+            onClick={onClick}
+          >
+            {children}
+          </Button>
+        </span>
+      </TooltipTrigger>
+      <TooltipContent side="bottom" className="text-xs">{label}</TooltipContent>
+    </Tooltip>
+  );
+
+  const anySelected = selectedOrgs.length > 0;
+  const canActivate = !!selected && selected.status !== "ativo" && !isStatusPending;
+  const canSuspend = !!selected && selected.status === "ativo" && !isStatusPending;
+  const canTrial = anySelected && !promoPending && selectedOrgs.some((o) => !promoStatus.get(o.id)?.trial && !promoStatus.get(o.id)?.lifetime);
+  const canEndTrial = anySelected && !promoPending && selectedOrgs.some((o) => promoStatus.get(o.id)?.trial);
+  const canLifetime = anySelected && !promoPending && selectedOrgs.some((o) => !promoStatus.get(o.id)?.lifetime);
+
   return (
     <div className="rounded-xl border bg-card overflow-hidden">
       {/* Toolbar */}
-      <div className="flex items-center gap-1.5 px-2 py-1.5 border-b bg-muted/30 overflow-x-auto">
+      <TooltipProvider delayDuration={150}>
+      <div className="flex flex-col md:flex-row md:items-center gap-1.5 px-2 py-1.5 border-b bg-muted/30">
+        <div className="flex items-center gap-1.5 overflow-x-auto md:order-2 md:ml-auto">
         <Select value={activity} onValueChange={(v) => setActivity(v as ActivityFilter)}>
-          <SelectTrigger className="h-7 w-[124px] shrink-0 px-2 text-[11px]">
+          <SelectTrigger className="h-8 w-[124px] shrink-0 px-2 text-[11px]">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -295,7 +355,7 @@ export function OrgTable({
           </SelectContent>
         </Select>
         <Select value={device} onValueChange={setDevice}>
-          <SelectTrigger className="h-7 w-[150px] shrink-0 px-2 text-[11px]">
+          <SelectTrigger className="h-8 w-[150px] shrink-0 px-2 text-[11px]">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -316,7 +376,7 @@ export function OrgTable({
               {selectedOrgs.length} selecionadas
             </span>
             <Select value={bulkPlan} onValueChange={applyBulkPlan}>
-              <SelectTrigger className="h-7 w-[142px] shrink-0 px-2 text-[11px]">
+              <SelectTrigger className="h-8 w-[142px] shrink-0 px-2 text-[11px]">
                 <SelectValue placeholder="Aplicar plano..." />
               </SelectTrigger>
               <SelectContent>
@@ -327,86 +387,60 @@ export function OrgTable({
             </Select>
           </>
         )}
-        <Button
-          variant="ghost"
-          size="sm"
-          className="h-7 px-2 text-[11px] gap-1 shrink-0 text-primary"
-          disabled={selectedOrgs.length === 0 || promoPending}
-          onClick={() => runBulkPromo("trial")}
-        >
-          {promoPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Gift className="h-3.5 w-3.5" />}
-          Trial 15 dias
-        </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          className="h-7 px-2 text-[11px] gap-1 shrink-0 text-amber-600"
-          disabled={selectedOrgs.length === 0 || promoPending}
-          onClick={() => runBulkPromo("lifetime")}
-        >
-          <Crown className="h-3.5 w-3.5" />
-          Vitalício
-        </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          className="h-7 px-2 text-[11px] gap-1 shrink-0 text-muted-foreground"
-          disabled={selectedOrgs.length === 0 || promoPending}
-          onClick={() => runBulkPromo("end")}
-        >
-          <TimerOff className="h-3.5 w-3.5" />
-          Encerrar trial
-        </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          className="h-7 px-2 text-[11px] gap-1 shrink-0"
-          disabled={!selected}
-          onClick={() => selected && onViewDetails?.(selected.id)}
-        >
-          <Eye className="h-3.5 w-3.5" />
-          Ficha
-        </Button>
-        {selected?.status === "ativo" ? (
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-7 px-2 text-[11px] gap-1 shrink-0"
-            disabled={!selected || isStatusPending}
-            onClick={() => selected && onStatusChange(selected.id, "suspenso")}
+        </div>
+        <div className="flex items-center gap-0.5 overflow-x-auto md:order-1">
+          <IconAction label="Visualizar ficha" disabled={!selected} onClick={() => selected && onViewDetails?.(selected.id)}>
+            <Eye />
+          </IconAction>
+          <IconAction
+            label="Ativar"
+            className="text-success hover:text-success"
+            disabled={!canActivate}
+            onClick={() => {
+              if (!selected) return;
+              if (window.confirm(`Ativar "${selectedName}"?`)) onStatusChange(selected.id, "ativo");
+            }}
           >
-            <Ban className="h-3.5 w-3.5" />
-            Suspender
-          </Button>
-        ) : (
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-7 px-2 text-[11px] gap-1 shrink-0 text-success"
-            disabled={!selected || isStatusPending}
-            onClick={() => selected && onStatusChange(selected.id, "ativo")}
+            <CheckCircle />
+          </IconAction>
+          <IconAction
+            label="Suspender"
+            className="text-warning hover:text-warning"
+            disabled={!canSuspend}
+            onClick={() => {
+              if (!selected) return;
+              if (window.confirm(`Suspender "${selectedName}"?`)) onStatusChange(selected.id, "suspenso");
+            }}
           >
-            <CheckCircle className="h-3.5 w-3.5" />
-            Ativar
-          </Button>
-        )}
-        <Button
-          variant="ghost"
-          size="sm"
-          className="h-7 px-2 text-[11px] gap-1 shrink-0 text-destructive hover:text-destructive hover:bg-destructive/10 ml-auto"
-          disabled={!selected || isDeletePending}
-          onClick={() => {
-            if (!selected) return;
-            if (window.confirm(`Tem certeza que deseja excluir "${selectedName}"? Esta ação é irreversível.`)) {
-              onDelete(selected.id);
-              setSelectedIds(new Set());
-            }
-          }}
-        >
-          {isDeletePending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
-          Excluir
-        </Button>
+            <Ban />
+          </IconAction>
+          <IconAction
+            label="Excluir"
+            className="text-destructive hover:text-destructive hover:bg-destructive/10"
+            disabled={!selected || isDeletePending}
+            onClick={() => {
+              if (!selected) return;
+              if (window.confirm(`Tem certeza que deseja excluir "${selectedName}"? Esta ação é irreversível.`)) {
+                onDelete(selected.id);
+                setSelectedIds(new Set());
+              }
+            }}
+          >
+            {isDeletePending ? <Loader2 className="animate-spin" /> : <Trash2 />}
+          </IconAction>
+          <span className="mx-1 h-5 w-px shrink-0 bg-border" />
+          <IconAction label="Trial 15 dias" className="text-primary hover:text-primary" disabled={!canTrial} onClick={() => runBulkPromo("trial")}>
+            {promoPending ? <Loader2 className="animate-spin" /> : <Timer />}
+          </IconAction>
+          <IconAction label="Encerrar trial" className="text-muted-foreground" disabled={!canEndTrial} onClick={() => runBulkPromo("end")}>
+            <TimerOff />
+          </IconAction>
+          <IconAction label="Vitalício" className="text-amber-600 hover:text-amber-600" disabled={!canLifetime} onClick={() => runBulkPromo("lifetime")}>
+            <Crown />
+          </IconAction>
+        </div>
       </div>
+      </TooltipProvider>
 
       <div className="overflow-x-auto">
         <Table className="min-w-[990px] w-full table-fixed">
