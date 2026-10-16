@@ -1,5 +1,5 @@
 import { useMemo, useState, type ReactNode } from "react";
-import { Ban, CheckCircle, Trash2, Loader2, ArrowUp, ArrowDown, ArrowUpDown, Eye, Apple, Smartphone, Globe, Crown, Timer, TimerOff } from "lucide-react";
+import { Ban, CheckCircle, Trash2, Loader2, ArrowUp, ArrowDown, ArrowUpDown, Eye, Apple, Smartphone, Globe, Crown, Timer, TimerOff, Printer } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -128,6 +128,7 @@ export function OrgTable({
   const [bulkPlan, setBulkPlan] = useState<string>("");
   const [activity, setActivity] = useState<ActivityFilter>("all");
   const [device, setDevice] = useState<string>("all");
+  const [printPending, setPrintPending] = useState(false);
 
   const toggleSort = (key: SortKey) => {
     if (sortKey === key) {
@@ -331,6 +332,21 @@ export function OrgTable({
   );
 
   const anySelected = selectedOrgs.length > 0;
+  const printSheets = async () => {
+    if (!anySelected || printPending) return;
+    if (!window.confirm(`Gerar PDF de ${selectedOrgs.length} organização(ões), uma ficha por página?`)) return;
+    setPrintPending(true);
+    try {
+      const { generateOrgSheetsPdf } = await import("@/services/orgSheetPdf");
+      const pdf = await generateOrgSheetsPdf(selectedOrgs.map((org) => org.id));
+      pdf.save("fichas-organizacoes.pdf");
+      toast.success("PDF gerado: uma ficha por página");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Não foi possível gerar o PDF das fichas");
+    } finally {
+      setPrintPending(false);
+    }
+  };
   const canActivate = !!selected && selected.status !== "ativo" && !isStatusPending;
   const canSuspend = !!selected && selected.status === "ativo" && !isStatusPending;
   const canTrial = anySelected && !promoPending && selectedOrgs.some((o) => !promoStatus.get(o.id)?.trial && !promoStatus.get(o.id)?.lifetime);
@@ -391,6 +407,9 @@ export function OrgTable({
         <div className="flex items-center gap-0.5 overflow-x-auto md:order-1">
           <IconAction label="Visualizar ficha" disabled={!selected} onClick={() => selected && onViewDetails?.(selected.id)}>
             <Eye />
+          </IconAction>
+          <IconAction label="Imprimir ficha (PDF)" disabled={!anySelected || printPending} onClick={printSheets}>
+            {printPending ? <Loader2 className="animate-spin" /> : <Printer />}
           </IconAction>
           <IconAction
             label="Ativar"
