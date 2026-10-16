@@ -19,7 +19,7 @@ export function AutoPushPrompt({ userId }: AutoPushPromptProps) {
     if (permission === "granted") return; // Already granted but not subscribed - will be handled by hook
     
     // Check if user already dismissed
-    const dismissed = localStorage.getItem("push_prompt_dismissed");
+    const dismissed = localStorage.getItem(`push_prompt_dismissed_${userId}`);
     if (dismissed) return;
 
     // Check if running as standalone PWA
@@ -28,12 +28,19 @@ export function AutoPushPrompt({ userId }: AutoPushPromptProps) {
       (navigator as any).standalone === true;
 
     // Show modal after a short delay
-    const timer = setTimeout(() => {
+    // Espera outras janelas (ex.: boas-vindas) fecharem antes de abrir.
+    let timer: ReturnType<typeof setTimeout>;
+    const tryOpen = () => {
+      if (document.querySelector('[role="dialog"][data-state="open"]')) {
+        timer = setTimeout(tryOpen, 1000);
+        return;
+      }
       setShowModal(true);
-    }, isStandalone ? 1500 : 3000);
+    };
+    timer = setTimeout(tryOpen, isStandalone ? 1500 : 3000);
 
     return () => clearTimeout(timer);
-  }, [isSupported, isSubscribed, isLoading, permission]);
+  }, [isSupported, isSubscribed, isLoading, permission, userId]);
 
   return (
     <PushPermissionModal

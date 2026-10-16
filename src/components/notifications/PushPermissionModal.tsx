@@ -36,7 +36,8 @@ export function PushPermissionModal({ open, onOpenChange }: PushPermissionModalP
 
   const handleDismiss = () => {
     // Mark as dismissed so we don't auto-show again
-    localStorage.setItem("push_prompt_dismissed", "true");
+    const uid = Object.keys(localStorage).length >= 0 ? (window as any).__dcUserId : undefined;
+    localStorage.setItem(uid ? `push_prompt_dismissed_${uid}` : "push_prompt_dismissed", "true");
     handleClose();
   };
 
