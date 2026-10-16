@@ -240,10 +240,10 @@ export function OrgTable({
     if (selectedOrgs.length === 0) return;
     const label =
       kind === "trial"
-        ? "lançar trial Premium de 15 dias para"
+        ? "lançar teste Premium de 15 dias para"
         : kind === "lifetime"
           ? "tornar vitalícias"
-          : "encerrar agora o trial de";
+          : "encerrar agora o teste de";
     if (!window.confirm(`Deseja ${label} ${selectedOrgs.length} organização(ões)?`)) return;
     setPromoPending(true);
     let ok = 0;
@@ -266,16 +266,16 @@ export function OrgTable({
     if (ok)
       toast.success(
         kind === "trial"
-          ? `Trial iniciado em ${ok} organização(ões)`
+          ? `Teste iniciado em ${ok} organização(ões)`
           : kind === "lifetime"
             ? `${ok} organização(ões) agora vitalícias`
-            : `Trial encerrado em ${ok} organização(ões)`
+            : `Teste encerrado em ${ok} organização(ões)`
       );
     if (skipped)
       toast.info(
         kind === "trial"
           ? `${skipped} ignorada(s): já têm assinatura ativa ou são vitalícias`
-          : `${skipped} ignorada(s): sem trial ativo`
+          : `${skipped} ignorada(s): sem teste ativo`
       );
     if (fail) toast.error(`${fail} falharam`);
     setSelectedIds(new Set());
@@ -429,10 +429,10 @@ export function OrgTable({
             {isDeletePending ? <Loader2 className="animate-spin" /> : <Trash2 />}
           </IconAction>
           <span className="mx-1 h-5 w-px shrink-0 bg-border" />
-          <IconAction label="Trial 15 dias" className="text-primary hover:text-primary" disabled={!canTrial} onClick={() => runBulkPromo("trial")}>
+          <IconAction label="Teste 15 dias" className="text-primary hover:text-primary" disabled={!canTrial} onClick={() => runBulkPromo("trial")}>
             {promoPending ? <Loader2 className="animate-spin" /> : <Timer />}
           </IconAction>
-          <IconAction label="Encerrar trial" className="text-muted-foreground" disabled={!canEndTrial} onClick={() => runBulkPromo("end")}>
+          <IconAction label="Encerrar teste" className="text-muted-foreground" disabled={!canEndTrial} onClick={() => runBulkPromo("end")}>
             <TimerOff />
           </IconAction>
           <IconAction label="Vitalício" className="text-amber-600 hover:text-amber-600" disabled={!canLifetime} onClick={() => runBulkPromo("lifetime")}>

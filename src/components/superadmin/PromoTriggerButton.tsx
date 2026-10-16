@@ -154,7 +154,7 @@ export function PromoTriggerButton({ orgId, orgName, mode = "badge" }: PromoTrig
     },
     onSuccess: () => {
       invalidateAll();
-      toast.success(`Trial de 15 dias iniciado para ${orgName}!`);
+      toast.success(`Teste de 15 dias iniciado para ${orgName}!`);
     },
     onError: (err: Error) => toast.error(`Erro: ${err.message}`),
   });
@@ -199,7 +199,7 @@ export function PromoTriggerButton({ orgId, orgName, mode = "badge" }: PromoTrig
       size="sm"
       className="h-7 text-xs gap-1"
       onClick={() => {
-        if (confirm(`Lançar trial Premium de 15 dias para ${orgName}? Ao final, se não assinar, o plano volta para Free.`)) {
+        if (confirm(`Lançar teste Premium de 15 dias para ${orgName}? Ao final, se não assinar, o plano volta para Free.`)) {
           startTrialMutation.mutate();
         }
       }}
