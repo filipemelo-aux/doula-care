@@ -772,12 +772,21 @@ export function ClientQuickViewDialog({
 
                 {/* Actions */}
                 <div className="grid grid-cols-3 gap-2 pt-1">
-                  <ActionButton
-                    icon={MessageCircle}
-                    label="Mensagem"
-                    onClick={() => go(`/mensagens?clientId=${client.id}`)}
-                    badge={activity?.unreadMessages}
-                  />
+                  {isGest && (
+                    <ActionButton
+                      icon={Activity}
+                      label="Contrações"
+                      onClick={() => setContractionsOpen(true)}
+                      highlight={inLabor}
+                    />
+                  )}
+                  {canRegisterBirth(client) && (
+                    <ActionButton
+                      icon={Baby}
+                      label="Registrar Nascimento"
+                      onClick={() => setBirthOpen(true)}
+                    />
+                  )}
                   <ActionButton
                     icon={CalendarPlus}
                     label="Agendar"
@@ -790,38 +799,29 @@ export function ClientQuickViewDialog({
                     }
                   />
                   <ActionButton
-                    icon={BookHeart}
-                    label="Diário"
-                    onClick={() => setDiaryOpen(true)}
-                    badge={activity?.unreadDiary}
+                    icon={MessageCircle}
+                    label="Mensagem"
+                    onClick={() => go(`/mensagens?clientId=${client.id}`)}
+                    badge={activity?.unreadMessages}
                   />
-                  {isGest && (
-                    <ActionButton
-                      icon={Activity}
-                      label="Contrações"
-                      onClick={() => setContractionsOpen(true)}
-                      highlight={inLabor}
-                    />
-                  )}
-                  {isModerator ? (
-                    <ActionButton
-                      icon={DollarSign}
-                      label="Cobrar"
-                      onClick={() => setChargeOpen(true)}
-                    />
-                  ) : (
-                    <ActionButton
-                      icon={Bell}
-                      label="Notificar"
-                      onClick={() => setNotifOpen(true)}
-                    />
-                  )}
-
                   <ActionButton
                     icon={FileText}
                     label="Ficha"
                     onClick={() => setFichaOpen(true)}
                   />
+                  <ActionButton
+                    icon={BookHeart}
+                    label="Diário"
+                    onClick={() => setDiaryOpen(true)}
+                    badge={activity?.unreadDiary}
+                  />
+                  {isModerator && (
+                    <ActionButton
+                      icon={DollarSign}
+                      label="Cobrar"
+                      onClick={() => setChargeOpen(true)}
+                    />
+                  )}
                 </div>
               </div>
             </>
