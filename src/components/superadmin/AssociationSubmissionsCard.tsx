@@ -47,7 +47,7 @@ export function AssociationSubmissionsCard() {
           <div key={s.id} className="rounded-xl bg-muted/50 p-3 space-y-1">
             <p className="font-semibold text-sm">{s.association_name}</p>
             <p className="text-xs text-muted-foreground">
-              Presidente: {s.president_name}
+              Enviado por: {s.president_name}
               {s.president_phone ? ` · ${s.president_phone}` : ""} ·{" "}
               {new Date(s.created_at).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" })}
             </p>
