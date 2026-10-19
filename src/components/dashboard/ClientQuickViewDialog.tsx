@@ -63,7 +63,8 @@ import { ClientDiaryDialog } from "./ClientDiaryDialog";
 import { ClientContractionsDialog } from "./ClientContractionsDialog";
 import { SendNotificationDialog } from "@/components/clients/SendNotificationDialog";
 import { ClientFileDialog } from "@/components/clients/ClientFileDialog";
-import { BIRTH_TYPE_LABELS } from "@/components/clients/BirthRegistrationDialog";
+import { BIRTH_TYPE_LABELS, BirthRegistrationDialog } from "@/components/clients/BirthRegistrationDialog";
+import { canRegisterBirth } from "@/lib/birthRegistration";
 import { AppointmentDetailDialog } from "@/components/clients/AppointmentDetailDialog";
 import { AppointmentCompleteDialog } from "@/components/clients/AppointmentCompleteDialog";
 import { AppointmentEditDialog } from "@/components/clients/AppointmentEditDialog";
@@ -110,6 +111,7 @@ export function ClientQuickViewDialog({
   const [notifOpen, setNotifOpen] = useState(false);
   const [chargeOpen, setChargeOpen] = useState(false);
   const [fichaOpen, setFichaOpen] = useState(false);
+  const [birthOpen, setBirthOpen] = useState(false);
 
 
   type DetailAppointment = {
@@ -820,6 +822,14 @@ export function ClientQuickViewDialog({
                     label="Ficha"
                     onClick={() => setFichaOpen(true)}
                   />
+
+                  {canRegisterBirth(client) && (
+                    <ActionButton
+                      icon={Baby}
+                      label="Registrar Nascimento"
+                      onClick={() => setBirthOpen(true)}
+                    />
+                  )}
                 </div>
               </div>
             </>
@@ -852,6 +862,12 @@ export function ClientQuickViewDialog({
       <ClientFileDialog
         open={fichaOpen}
         onOpenChange={setFichaOpen}
+        client={client ?? null}
+      />
+
+      <BirthRegistrationDialog
+        open={birthOpen}
+        onOpenChange={setBirthOpen}
         client={client ?? null}
       />
 
