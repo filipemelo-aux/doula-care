@@ -9,6 +9,7 @@ import { BirthRegistrationDialog } from "@/components/clients/BirthRegistrationD
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { StartLaborButton } from "@/components/dashboard/StartLaborButton";
+import { canRegisterBirth } from "@/lib/birthRegistration";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Client = Tables<"clients">;
@@ -260,7 +261,7 @@ function AlertCard({
       </div>
 
       {/* Action buttons row - bottom */}
-      <div className="flex items-center justify-center gap-2 mt-2.5">
+      <div className="flex flex-wrap items-center justify-center gap-2 mt-2.5">
         <Button
           type="button"
           aria-label="Ver histórico de contrações"
@@ -273,18 +274,19 @@ function AlertCard({
           <Activity className={cn("h-3.5 w-3.5", isLabor && "animate-pulse")} />
           Contrações
         </Button>
-        {laborConfirmed ? <Button
+        {!laborConfirmed && <StartLaborButton clientId={client.id} />}
+        {canRegisterBirth(client) && <Button
           type="button"
           aria-label="Registrar nascimento"
           onClick={(event) => {
             event.stopPropagation();
             onRegisterBirth(client as Client);
           }}
-          className="flex-1 h-9 rounded-xl bg-success/10 hover:bg-success/20 text-success flex items-center justify-center gap-1.5 text-[11px] font-semibold transition-all active:scale-95"
+           className="w-full h-9 rounded-xl bg-success/10 hover:bg-success/20 text-success flex items-center justify-center gap-1.5 text-[11px] font-semibold transition-all active:scale-95"
         >
           <Baby className="h-3.5 w-3.5" />
           Registrar Nascimento
-        </Button> : <StartLaborButton clientId={client.id} />}
+        </Button>}
       </div>
     </div>
   );

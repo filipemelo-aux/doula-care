@@ -11,6 +11,7 @@ import { BirthRegistrationDialog } from "@/components/clients/BirthRegistrationD
 import { ClientContractionsDialog } from "@/components/dashboard/ClientContractionsDialog";
 import { fetchBirthAlertClients } from "@/lib/birthAlerts";
 import { StartLaborButton } from "@/components/dashboard/StartLaborButton";
+import { canRegisterBirth } from "@/lib/birthRegistration";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Client = Tables<"clients">;
@@ -191,7 +192,8 @@ export function BirthAlert() {
                         ) : (
                           <span />
                         )}
-                        {client.labor_started_at ? <Button
+                        {!client.labor_started_at && <StartLaborButton clientId={client.id} />}
+                        {canRegisterBirth(client) && <Button
                           size="sm"
                           variant="outline"
                           className="h-5 px-2 text-[10px] border-dashed text-primary hover:bg-primary hover:text-primary-foreground hover:border-solid flex-shrink-0 transition-all"
@@ -199,7 +201,7 @@ export function BirthAlert() {
                         >
                           <CheckCircle className="h-2.5 w-2.5 mr-0.5" />
                           Registrar Nascimento
-                        </Button> : <StartLaborButton clientId={client.id} />}
+                        </Button>}
                       </div>
                     )}
 
@@ -214,8 +216,9 @@ export function BirthAlert() {
 
                     {/* Row 4: Button - mobile only (below everything) */}
                     {isMobile && (
-                      <div className="mt-2 pl-8">
-                        {client.labor_started_at ? <Button
+                      <div className="mt-2 pl-8 flex flex-col gap-2">
+                        {!client.labor_started_at && <StartLaborButton clientId={client.id} />}
+                        {canRegisterBirth(client) && <Button
                           size="sm"
                           variant="outline"
                           className="h-5 px-2 text-[10px] border-dashed text-primary hover:bg-primary hover:text-primary-foreground hover:border-solid transition-all w-full"
@@ -226,7 +229,7 @@ export function BirthAlert() {
                         >
                           <CheckCircle className="h-2.5 w-2.5 mr-0.5" />
                           Registrar Nascimento
-                        </Button> : <StartLaborButton clientId={client.id} />}
+                        </Button>}
                       </div>
                     )}
                   </div>
