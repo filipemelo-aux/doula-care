@@ -20,6 +20,7 @@ import { hardRefreshApp } from "@/lib/appUpdate";
 import { PlanPricingCard } from "@/components/superadmin/PlanPricingCard";
 import { PlanLimitsCard } from "@/components/superadmin/PlanLimitsCard";
 import { SubscriptionCouponsCard } from "@/components/superadmin/SubscriptionCouponsCard";
+import { AssociationSubmissionsCard } from "@/components/superadmin/AssociationSubmissionsCard";
 import { StoreProductsCard } from "@/components/superadmin/StoreProductsCard";
 import { StoreKeysCard } from "@/components/superadmin/StoreKeysCard";
 import { PixSubscriptionRequestsCard } from "@/components/superadmin/PixSubscriptionRequestsCard";
@@ -743,6 +744,7 @@ export default function SuperAdminDashboard() {
             <PlanLimitsCard />
             <StoreProductsCard />
             <StoreKeysCard />
+            <AssociationSubmissionsCard />
             <SubscriptionCouponsCard />
             <PlanPricingCard />
 

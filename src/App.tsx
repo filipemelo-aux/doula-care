@@ -68,6 +68,7 @@ import GestanteDocuments from "./pages/gestante/GestanteDocuments";
 import GestanteAppointments from "./pages/gestante/GestanteAppointments";
 import GestanteForum from "./pages/gestante/GestanteForum";
 import Forum from "./pages/Forum";
+import AssociationForm from "./pages/AssociationForm";
 
 const queryClient = new QueryClient();
 
@@ -104,6 +105,7 @@ const App = () => (
             <Route path="/suporte" element={<Support />} />
             <Route path="/marketing" element={<Marketing />} />
             <Route path="/portal" element={<Portal />} />
+            <Route path="/associacao" element={<AssociationForm />} />
             {/* Legacy/public entry routes */}
             <Route path="/index" element={<Navigate to="/visitante" replace />} />
             {/* Legacy routes redirect to unified login */}
