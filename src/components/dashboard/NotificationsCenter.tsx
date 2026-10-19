@@ -14,6 +14,8 @@ import { SendBudgetDialog } from "@/components/dashboard/SendBudgetDialog";
 import { formatBrazilDate, formatBrazilDateTime, abbreviateName, cn } from "@/lib/utils";
 import type { Tables } from "@/integrations/supabase/types";
 import { toast } from "sonner";
+import { StartLaborButton } from "@/components/dashboard/StartLaborButton";
+import { acknowledgeContractions } from "@/lib/laborActions";
 
 type Client = Tables<"clients">;
 
@@ -48,6 +50,7 @@ export function NotificationsCenter({ fullPage = false }: NotificationsCenterPro
     id: string; client_id: string; service_type: string; client_name: string; preferred_date?: string | null;
   } | null>(null);
   const queryClient = useQueryClient();
+  const [waitingId, setWaitingId] = useState<string | null>(null);
 
   // Last seen timestamp for birth alerts (set when user opens notifications page)
   const { data: birthAlertLastSeen } = useQuery({
@@ -309,19 +312,25 @@ export function NotificationsCenter({ fullPage = false }: NotificationsCenterPro
   // Handlers
   const handleRegisterBirth = (client: Client) => { setSelectedClient(client); setBirthDialogOpen(true); };
 
-  const handleStartLabor = async (clientId: string) => {
-    const client = clientsMap.get(clientId);
-    if (!client) return;
-    const { error } = await supabase.from("clients").update({ labor_started_at: new Date().toISOString(), labor_started_by: "doula" } as any).eq("id", clientId);
-    if (error) { toast.error("Erro ao registrar trabalho de parto"); return; }
-    toast.success(`Trabalho de parto registrado para ${client.full_name}`);
-    queryClient.invalidateQueries({ queryKey: ["birth-alert-clients"] });
-    queryClient.invalidateQueries({ queryKey: ["all-clients-lookup"] });
+  const handleMarkContractionRead = async (clientId: string, feedback = true) => {
+    setWaitingId(clientId);
+    try {
+      await acknowledgeContractions(clientId);
+      await queryClient.invalidateQueries({ queryKey: ["recent-contractions"] });
+      if (feedback) toast.success("Alerta marcado como lido. Continue acompanhando as contrações.");
+    } catch { toast.error("Não foi possível marcar o alerta como lido. Tente novamente."); }
+    finally { setWaitingId(null); }
   };
 
-  const handleMarkContractionRead = async (clientId: string) => {
-    await supabase.from("contractions").update({ read_by_admin: true } as any).eq("client_id", clientId).eq("read_by_admin", false);
-    queryClient.invalidateQueries({ queryKey: ["recent-contractions"] });
+  const openContractions = async (clientId: string, fallback?: Client) => {
+    let client = clientsMap.get(clientId) ?? fallback;
+    if (!client) {
+      const { data, error } = await supabase.from("clients").select("*").eq("id", clientId).maybeSingle();
+      if (error || !data) { toast.error("Não foi possível abrir esta cliente. Tente novamente."); return; }
+      client = data;
+    }
+    setContractionsClient(client);
+    setContractionsDialogOpen(true);
   };
 
   const handleOpenBudgetDialog = (requestId: string) => {
@@ -449,48 +458,42 @@ export function NotificationsCenter({ fullPage = false }: NotificationsCenterPro
                                 <Button size="sm" variant="outline"
                                   className="h-7 px-2.5 text-[11px] border-dashed border-orange-300 hover:bg-orange-500/10"
                                   onClick={() => {
-                                    const c = clientsMap.get(n.clientId!) ?? n.client!;
-                                    setContractionsClient(c);
-                                    setContractionsDialogOpen(true);
+                                    if (n.clientId) void openContractions(n.clientId, n.client);
                                   }}>
                                   <History className="h-3 w-3 mr-1 text-orange-500" />
                                   <span className="text-orange-600">Ver Contrações</span>
                                 </Button>
                                 <Button size="sm" variant="outline"
                                   className="h-7 px-2.5 text-[11px] border-dashed hover:bg-destructive/10"
-                                  onClick={() => handleRegisterBirth(n.client!)}>
+                                  onClick={() => { if (n.client) handleRegisterBirth(n.client); }}>
                                   <Baby className="h-3 w-3 mr-1 text-destructive" />
                                   <span className="text-destructive">Registrar Nascimento</span>
                                 </Button>
                               </>
                             )}
 
+                            {(n.type === "post_term" || n.type === "birth_approaching") && n.clientId && <>
+                              <Button size="sm" variant="outline" className="h-9 text-[11px]" onClick={() => { if (n.clientId) void openContractions(n.clientId, n.client); }}><History className="h-3 w-3 mr-1" />Contrações</Button>
+                              <StartLaborButton clientId={n.clientId} />
+                            </>}
                             {/* Contractions */}
                             {n.type === "contraction" && n.clientId && (
                               <>
                                 <Button size="sm" variant="outline"
                                   className="h-7 px-2.5 text-[11px] border-dashed border-orange-300 hover:bg-orange-500/10"
                                   onClick={() => {
-                                    const c = clientsMap.get(n.clientId!);
-                                    if (c) { handleMarkContractionRead(n.clientId!); setContractionsClient(c); setContractionsDialogOpen(true); }
+                                    if (n.clientId) { void handleMarkContractionRead(n.clientId, false); void openContractions(n.clientId); }
                                   }}>
                                   <History className="h-3 w-3 mr-1 text-orange-500" />
                                   <span className="text-orange-600">Ver Histórico</span>
                                 </Button>
-                                {!clientsMap.get(n.clientId!)?.labor_started_at && (
-                                  <Button size="sm" variant="outline"
-                                    className="h-7 px-2.5 text-[11px] border-dashed border-success/40 hover:bg-success/10"
-                                    onClick={() => handleStartLabor(n.clientId!)}>
-                                    <Baby className="h-3 w-3 mr-1 text-success" />
-                                    <span className="text-success">Registrar Parto</span>
-                                  </Button>
-                                )}
-                                {!n.isRead && (
-                                  <Button size="sm" variant="outline"
-                                    className="h-7 px-2.5 text-[11px] border-dashed border-muted-foreground/40 hover:bg-muted/30"
-                                    onClick={() => handleMarkContractionRead(n.clientId!)}>
-                                    <Pause className="h-3 w-3 mr-1 text-muted-foreground" />
-                                    <span className="text-muted-foreground">Aguardar</span>
+                                {!clientsMap.get(n.clientId)?.labor_started_at && <StartLaborButton clientId={n.clientId} />}
+                                {!contractionsByClient.get(n.clientId)?.allRead && (
+                                  <Button size="sm" variant="outline" disabled={waitingId === n.clientId}
+                                    className="h-9 px-2.5 text-[11px]"
+                                    onClick={() => { if (n.clientId) void handleMarkContractionRead(n.clientId); }}>
+                                    <Pause className="h-3 w-3 mr-1" />
+                                    {waitingId === n.clientId ? "Salvando..." : "Aguardar"}
                                   </Button>
                                 )}
                               </>
