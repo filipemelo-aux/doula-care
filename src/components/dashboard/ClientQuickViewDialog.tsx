@@ -29,7 +29,6 @@ import {
   BookHeart,
   Activity,
   FileText,
-  Bell,
   Baby,
   DollarSign,
 
@@ -61,7 +60,6 @@ import { Tables } from "@/integrations/supabase/types";
 import { useState } from "react";
 import { ClientDiaryDialog } from "./ClientDiaryDialog";
 import { ClientContractionsDialog } from "./ClientContractionsDialog";
-import { SendNotificationDialog } from "@/components/clients/SendNotificationDialog";
 import { ClientFileDialog } from "@/components/clients/ClientFileDialog";
 import { BIRTH_TYPE_LABELS, BirthRegistrationDialog } from "@/components/clients/BirthRegistrationDialog";
 import { canRegisterBirth } from "@/lib/birthRegistration";
@@ -108,7 +106,6 @@ export function ClientQuickViewDialog({
   const isModerator = role === "moderator";
   const [diaryOpen, setDiaryOpen] = useState(false);
   const [contractionsOpen, setContractionsOpen] = useState(false);
-  const [notifOpen, setNotifOpen] = useState(false);
   const [chargeOpen, setChargeOpen] = useState(false);
   const [fichaOpen, setFichaOpen] = useState(false);
   const [birthOpen, setBirthOpen] = useState(false);
@@ -837,11 +834,6 @@ export function ClientQuickViewDialog({
       <ClientContractionsDialog
         open={contractionsOpen}
         onOpenChange={setContractionsOpen}
-        client={client ?? null}
-      />
-      <SendNotificationDialog
-        open={notifOpen}
-        onOpenChange={setNotifOpen}
         client={client ?? null}
       />
       <ModeratorPaymentRequestDialog
