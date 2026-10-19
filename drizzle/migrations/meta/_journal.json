@@ -78,6 +78,13 @@
       "when": 1792096741911,
       "tag": "0010_allow_multi_device_target",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1792450873548,
+      "tag": "0011_android_update_and_association_form",
+      "breakpoints": true
     }
   ]
 }

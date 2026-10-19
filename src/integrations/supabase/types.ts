@@ -184,6 +184,33 @@ export type Database = {
           },
         ]
       }
+      association_submissions: {
+        Row: {
+          association_name: string
+          created_at: string
+          doulas: Json
+          id: string
+          president_name: string
+          president_phone: string | null
+        }
+        Insert: {
+          association_name: string
+          created_at?: string
+          doulas?: Json
+          id?: string
+          president_name: string
+          president_phone?: string | null
+        }
+        Update: {
+          association_name?: string
+          created_at?: string
+          doulas?: Json
+          id?: string
+          president_name?: string
+          president_phone?: string | null
+        }
+        Relationships: []
+      }
       calendar_day_labels: {
         Row: {
           created_at: string
