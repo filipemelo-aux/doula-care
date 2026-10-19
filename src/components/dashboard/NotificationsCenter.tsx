@@ -16,6 +16,7 @@ import type { Tables } from "@/integrations/supabase/types";
 import { toast } from "sonner";
 import { StartLaborButton } from "@/components/dashboard/StartLaborButton";
 import { acknowledgeContractions } from "@/lib/laborActions";
+import { canRegisterBirth } from "@/lib/birthRegistration";
 
 type Client = Tables<"clients">;
 
@@ -452,7 +453,17 @@ export function NotificationsCenter({ fullPage = false }: NotificationsCenterPro
 
                           {/* Actions */}
                           <div className="flex flex-wrap gap-1.5 mt-2">
-                            {/* Birth alerts: only labor shows actions (Ver Contrações + Registrar Nascimento) */}
+                            {/* Birth registration remains independent of labor and contractions. */}
+                            {n.clientId && ["labor", "post_term", "birth_approaching", "contraction"].includes(n.type) && canRegisterBirth(n.client ?? clientsMap.get(n.clientId)) && (
+                              <Button size="sm" variant="outline"
+                                className="h-9 px-2.5 text-[11px] text-success hover:bg-success/10"
+                                onClick={() => {
+                                  const client = n.client ?? (n.clientId ? clientsMap.get(n.clientId) : undefined);
+                                  if (client) handleRegisterBirth(client);
+                                }}>
+                                <Baby className="h-3 w-3 mr-1" />Registrar Nascimento
+                              </Button>
+                            )}
                             {n.type === "labor" && n.client && n.clientId && (
                               <>
                                 <Button size="sm" variant="outline"
@@ -463,12 +474,7 @@ export function NotificationsCenter({ fullPage = false }: NotificationsCenterPro
                                   <History className="h-3 w-3 mr-1 text-orange-500" />
                                   <span className="text-orange-600">Ver Contrações</span>
                                 </Button>
-                                {n.client.labor_started_at ? <Button size="sm" variant="outline"
-                                  className="h-7 px-2.5 text-[11px] border-dashed hover:bg-destructive/10"
-                                  onClick={() => { if (n.client) handleRegisterBirth(n.client); }}>
-                                  <Baby className="h-3 w-3 mr-1 text-destructive" />
-                                  <span className="text-destructive">Registrar Nascimento</span>
-                                </Button> : <StartLaborButton clientId={n.clientId} />}
+                                {!n.client.labor_started_at && <StartLaborButton clientId={n.clientId} />}
                               </>
                             )}
 
