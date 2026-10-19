@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { sendPushNotification } from "@/lib/pushNotifications";
 
 // Read back the changed row: RLS may otherwise return a successful no-op.
 export async function startClientLabor(clientId: string) {
@@ -6,9 +7,22 @@ export async function startClientLabor(clientId: string) {
     .update({ labor_started_at: new Date().toISOString(), labor_started_by: "doula" })
     .eq("id", clientId).is("labor_started_at", null)
     .or("birth_occurred.is.null,birth_occurred.eq.false")
-    .select("id, full_name, labor_started_at").maybeSingle();
+    .select("id, full_name, labor_started_at, organization_id, user_id").maybeSingle();
   if (error) throw error;
   if (!data) throw new Error("Não foi possível iniciar: confira se o trabalho de parto já foi registrado ou o nascimento ocorreu.");
+  const { error: notificationError } = await supabase.from("client_notifications").insert({
+    client_id: data.id,
+    organization_id: data.organization_id,
+    title: "💕 Seu bebê está a caminho!",
+    message: "Sua Doula registrou que o trabalho de parto começou. Respire fundo, confie no seu corpo. Estarei com você!",
+  });
+  if (notificationError) console.error("Erro ao avisar a cliente sobre início do trabalho de parto", notificationError);
+  if (data.user_id) void sendPushNotification({
+    user_ids: [data.user_id], title: "💕 Seu bebê está a caminho!",
+    message: "Sua Doula registrou que o trabalho de parto começou. Respire fundo!",
+    url: "/gestante", tag: "labor-started-client", type: "labor_started",
+    priority: "critica", require_interaction: true,
+  });
   return data;
 }
 

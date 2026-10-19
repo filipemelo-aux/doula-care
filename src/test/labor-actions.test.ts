@@ -1,10 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 const { chain, supabase } = vi.hoisted(() => {
   const chain: Record<string, ReturnType<typeof vi.fn>> = {};
-  for (const method of ["update", "delete", "eq", "is", "or", "select", "maybeSingle"]) chain[method] = vi.fn();
+  for (const method of ["insert", "update", "delete", "eq", "is", "or", "select", "maybeSingle"]) chain[method] = vi.fn();
   return { chain, supabase: { from: vi.fn() } };
 });
 vi.mock("@/integrations/supabase/client", () => ({ supabase }));
+vi.mock("@/lib/pushNotifications", () => ({ sendPushNotification: vi.fn() }));
 import { removeContraction, startClientLabor, acknowledgeContractions } from "@/lib/laborActions";
 
 beforeEach(() => {
