@@ -22,6 +22,7 @@ import { toast } from "sonner";
 import { differenceInSeconds, differenceInMinutes, subMinutes } from "date-fns";
 import { cn, formatBrazilTime } from "@/lib/utils";
 import { sendPushNotification } from "@/lib/pushNotifications";
+import { DeleteContractionButton } from "@/components/dashboard/DeleteContractionButton";
 
 interface Contraction {
   id: string;
@@ -55,11 +56,8 @@ export default function GestanteContractions() {
       
       // Check for active contraction
       const active = data?.find(c => !c.ended_at);
-      if (active) {
-        setActiveContraction(active);
-        const elapsed = differenceInSeconds(new Date(), new Date(active.started_at));
-        setElapsedSeconds(elapsed);
-      }
+      setActiveContraction(active ?? null);
+      setElapsedSeconds(active ? differenceInSeconds(new Date(), new Date(active.started_at)) : 0);
     } catch (error) {
       console.error("Error fetching contractions:", error);
     } finally {
@@ -69,6 +67,8 @@ export default function GestanteContractions() {
 
   useEffect(() => {
     fetchContractions();
+    const refresh = setInterval(fetchContractions, 5000);
+    return () => clearInterval(refresh);
   }, [fetchContractions]);
 
   // Timer effect
@@ -169,20 +169,11 @@ export default function GestanteContractions() {
     }
   };
 
-  const deleteContraction = async (id: string) => {
-    try {
-      const { error } = await supabase
-        .from("contractions")
-        .delete()
-        .eq("id", id);
-
-      if (error) throw error;
-      
-      setContractions(prev => prev.filter(c => c.id !== id));
-      toast.success("Contração removida");
-    } catch (error) {
-      console.error("Error deleting contraction:", error);
-      toast.error("Erro ao remover contração");
+  const onContractionDeleted = (id: string) => {
+    setContractions(prev => prev.filter(c => c.id !== id));
+    if (activeContraction?.id === id) {
+      setActiveContraction(null);
+      setElapsedSeconds(0);
     }
   };
 
@@ -401,6 +392,7 @@ export default function GestanteContractions() {
                 : "Toque para iniciar quando sentir a contração"
               }
             </p>
+            {activeContraction && client && <div className="flex justify-center mt-2"><DeleteContractionButton contraction={activeContraction} clientId={client.id} discard onDeleted={onContractionDeleted} /></div>}
           </CardContent>
         </Card>
 
@@ -501,14 +493,7 @@ export default function GestanteContractions() {
                         </p>
                       </div>
                     </div>
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                      onClick={() => deleteContraction(contraction.id)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                    {client && <DeleteContractionButton contraction={contraction} clientId={client.id} onDeleted={onContractionDeleted} />}
                   </CardContent>
                 </Card>
               ))}
