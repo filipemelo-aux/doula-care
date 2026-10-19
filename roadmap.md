@@ -1,6 +1,8 @@
 # Roadmap
 
 ## Em andamento
+- [ ] Corrigir ações de início do trabalho de parto e Aguardar nos alertas, separando nascimento
+- [ ] Permitir excluir contrações individuais com confirmação e descartar registros em andamento
 - [x] Priorizar acesso das gestantes por DPP, independente dos filtros, ao aplicar limite do plano
 - [x] Retirar “15 dias” do início das mensagens de encerramento do teste
 - [x] Centralizar avisos e filtrar destinatários por navegador, Android, iOS ou todos os dispositivos
