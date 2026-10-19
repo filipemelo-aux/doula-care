@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Heart, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
-import { maskPhone, toTitleCase } from "@/lib/masks";
+import { maskPhone, toUpperCase } from "@/lib/masks";
 
 const schema = z.object({
   association_name: z.string().trim().min(2, "Informe o nome da associação").max(200),
@@ -80,7 +80,7 @@ export default function AssociationForm() {
               <CardContent className="p-6 space-y-4">
                 <div className="space-y-1.5">
                   <Label>Seu nome completo *</Label>
-                  <Input value={name} onChange={(e) => setName(toTitleCase(e.target.value))} maxLength={200} />
+                  <Input value={name} onChange={(e) => setName(toUpperCase(e.target.value))} maxLength={200} />
                 </div>
                 <div className="space-y-1.5">
                   <Label>E-mail cadastrado no Doula Care *</Label>
@@ -92,7 +92,7 @@ export default function AssociationForm() {
                 </div>
                 <div className="space-y-1.5">
                   <Label>Nome da associação *</Label>
-                  <Input value={association} onChange={(e) => setAssociation(toTitleCase(e.target.value))} maxLength={200} />
+                  <Input value={association} onChange={(e) => setAssociation(toUpperCase(e.target.value))} maxLength={200} />
                 </div>
               </CardContent>
             </Card>
