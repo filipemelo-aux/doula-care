@@ -7,7 +7,6 @@ import {
   Timer, 
   Play, 
   Square, 
-  Trash2, 
   Clock, 
   AlertTriangle,
   Loader2,

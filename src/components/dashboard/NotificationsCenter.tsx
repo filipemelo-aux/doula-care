@@ -463,12 +463,12 @@ export function NotificationsCenter({ fullPage = false }: NotificationsCenterPro
                                   <History className="h-3 w-3 mr-1 text-orange-500" />
                                   <span className="text-orange-600">Ver Contrações</span>
                                 </Button>
-                                <Button size="sm" variant="outline"
+                                {n.client.labor_started_at ? <Button size="sm" variant="outline"
                                   className="h-7 px-2.5 text-[11px] border-dashed hover:bg-destructive/10"
                                   onClick={() => { if (n.client) handleRegisterBirth(n.client); }}>
                                   <Baby className="h-3 w-3 mr-1 text-destructive" />
                                   <span className="text-destructive">Registrar Nascimento</span>
-                                </Button>
+                                </Button> : <StartLaborButton clientId={n.clientId} />}
                               </>
                             )}
 

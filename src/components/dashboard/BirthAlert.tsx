@@ -1,14 +1,12 @@
 import { useState } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Bell, Baby, CheckCircle, AlertTriangle, Calendar, Timer } from "lucide-react";
 import { abbreviateName, formatBrazilDate } from "@/lib/utils";
-import { calculateCurrentPregnancyWeeks, calculateCurrentPregnancyDays, isPostTerm } from "@/lib/pregnancy";
 import { BirthRegistrationDialog } from "@/components/clients/BirthRegistrationDialog";
 import { ClientContractionsDialog } from "@/components/dashboard/ClientContractionsDialog";
 import { fetchBirthAlertClients } from "@/lib/birthAlerts";
@@ -26,6 +24,7 @@ export function BirthAlert() {
   const { data: clients, isLoading } = useQuery({
     queryKey: ["birth-alert-clients"],
     queryFn: fetchBirthAlertClients,
+    refetchInterval: 15000,
   });
 
   const handleRegisterBirth = (client: Client) => {
