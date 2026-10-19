@@ -18,6 +18,17 @@ export function DoulaContractionTimer({ clientId, organizationId, compact }: Dou
   const [elapsed, setElapsed] = useState(0);
   const [loading, setLoading] = useState(false);
   const intervalRef = useRef<number | null>(null);
+  const [refreshVersion, setRefreshVersion] = useState(0);
+
+  useEffect(() => {
+    const unsubscribe = queryClient.getQueryCache().subscribe(event => {
+      if (event.type === "updated" && event.action.type === "invalidate" && event.query.queryKey[0] === "client-contractions") {
+        setRefreshVersion(version => version + 1);
+      }
+    });
+    const refresh = window.setInterval(() => setRefreshVersion(version => version + 1), 5000);
+    return () => { unsubscribe(); window.clearInterval(refresh); };
+  }, [queryClient]);
 
   // Restore an ongoing contraction if one exists (e.g. opened by Doula previously)
   useEffect(() => {
@@ -31,14 +42,14 @@ export function DoulaContractionTimer({ clientId, organizationId, compact }: Dou
         .order("started_at", { ascending: false })
         .limit(1)
         .maybeSingle();
-      if (cancelled || !data) return;
-      setActiveId(data.id);
-      setStartedAt(new Date(data.started_at).getTime());
+      if (cancelled) return;
+      setActiveId(data?.id ?? null);
+      setStartedAt(data ? new Date(data.started_at).getTime() : null);
     })();
     return () => {
       cancelled = true;
     };
-  }, [clientId]);
+  }, [clientId, refreshVersion]);
 
   useEffect(() => {
     if (startedAt === null) {

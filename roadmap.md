@@ -1,6 +1,8 @@
 # Roadmap
 
 ## Em andamento
+- [x] Corrigir ações de início do trabalho de parto e Aguardar nos alertas, separando nascimento (testes aprovados; sessão atual de Super Admin não permite validar o fluxo da doula)
+- [x] Permitir excluir contrações individuais com confirmação e descartar registros em andamento (testes aprovados; validação visual das duas áreas depende de sessão correspondente)
 - [x] Priorizar acesso das gestantes por DPP, independente dos filtros, ao aplicar limite do plano
 - [x] Retirar “15 dias” do início das mensagens de encerramento do teste
 - [x] Centralizar avisos e filtrar destinatários por navegador, Android, iOS ou todos os dispositivos

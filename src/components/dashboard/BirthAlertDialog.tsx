@@ -7,6 +7,8 @@ import { formatBrazilDate } from "@/lib/utils";
 import { fetchBirthAlertClients, type BirthAlertClient } from "@/lib/birthAlerts";
 import { BirthRegistrationDialog } from "@/components/clients/BirthRegistrationDialog";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { StartLaborButton } from "@/components/dashboard/StartLaborButton";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Client = Tables<"clients">;
@@ -137,6 +139,7 @@ function AlertCard({
   onOpenContractions: (c: BirthAlertClient) => void;
 }) {
   const isLabor = client.is_in_labor;
+  const laborConfirmed = Boolean(client.labor_started_at);
   const isHighPriority = isLabor || client.is_post_term || (client.current_weeks !== null && client.current_weeks >= 39);
 
   const weeksLabel =
@@ -258,7 +261,7 @@ function AlertCard({
 
       {/* Action buttons row - bottom */}
       <div className="flex items-center justify-center gap-2 mt-2.5">
-        <button
+        <Button
           type="button"
           aria-label="Ver histórico de contrações"
           onClick={(event) => {
@@ -269,8 +272,8 @@ function AlertCard({
         >
           <Activity className={cn("h-3.5 w-3.5", isLabor && "animate-pulse")} />
           Contrações
-        </button>
-        <button
+        </Button>
+        {laborConfirmed ? <Button
           type="button"
           aria-label="Registrar nascimento"
           onClick={(event) => {
@@ -280,8 +283,8 @@ function AlertCard({
           className="flex-1 h-9 rounded-xl bg-success/10 hover:bg-success/20 text-success flex items-center justify-center gap-1.5 text-[11px] font-semibold transition-all active:scale-95"
         >
           <Baby className="h-3.5 w-3.5" />
-          Nascimento
-        </button>
+          Registrar Nascimento
+        </Button> : <StartLaborButton clientId={client.id} />}
       </div>
     </div>
   );

@@ -9,6 +9,7 @@ import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useNavigate } from "react-router-dom";
 import { markNotificationSeen, getNotificationSeenAt } from "@/lib/notificationSeen";
+import { fetchBirthAlertClients, getBirthAlertTimestamp } from "@/lib/birthAlerts";
 
 interface TopNotification {
   id: string;
@@ -47,14 +48,7 @@ export function NotificationTopBanner() {
   const { data: topNotification } = useQuery({
     queryKey: ["top-notification-banner", organizationId],
     queryFn: async (): Promise<TopNotification | null> => {
-      const { data: laborClients } = await supabase
-        .from("clients")
-        .select("id, full_name, labor_started_at")
-        .eq("status", "gestante")
-        .eq("birth_occurred", false)
-        .not("labor_started_at", "is", null)
-        .order("labor_started_at", { ascending: false })
-        .limit(1);
+      const laborClients = (await fetchBirthAlertClients()).filter(client => client.is_in_labor);
 
       if (laborClients && laborClients.length > 0) {
         const c = laborClients[0];
@@ -63,9 +57,9 @@ export function NotificationTopBanner() {
           dbId: c.id,
           dbTable: "clients",
           type: "labor",
-          title: "🚨 Trabalho de Parto",
-          message: `${c.full_name} iniciou o trabalho de parto`,
-          timestamp: c.labor_started_at!,
+          title: c.labor_started_at ? "🚨 Trabalho de Parto" : "⏱️ Contrações",
+          message: c.labor_started_at ? `${c.full_name} iniciou o trabalho de parto` : `${c.full_name} está registrando contrações. Acompanhe o histórico.`,
+          timestamp: getBirthAlertTimestamp(c),
           priority: "high",
         };
       }
@@ -168,6 +162,9 @@ export function NotificationTopBanner() {
   useEffect(() => {
     const channel = supabase
       .channel("top-banner-refresh")
+      .on("postgres_changes", { event: "*", schema: "public", table: "contractions" }, () => {
+        queryClient.invalidateQueries({ queryKey: ["top-notification-banner"] });
+      })
       .on("postgres_changes", { event: "*", schema: "public", table: "clients" }, () => {
         queryClient.invalidateQueries({ queryKey: ["top-notification-banner"] });
       })

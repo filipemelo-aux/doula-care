@@ -28,6 +28,7 @@ import { formatBrazilDate, formatBrazilTime } from "@/lib/utils";
 import { Tables } from "@/integrations/supabase/types";
 import { DoulaContractionTimer } from "@/components/dashboard/DoulaContractionTimer";
 import { toast } from "sonner";
+import { DeleteContractionButton } from "@/components/dashboard/DeleteContractionButton";
 
 type Client = Tables<"clients">;
 type Contraction = Tables<"contractions">;
@@ -70,6 +71,7 @@ export function ClientContractionsDialog({
       return data as Contraction[];
     },
     enabled: open && !!client?.id,
+    refetchInterval: open ? 5000 : false,
   });
 
   const handleCancelLabor = async () => {
@@ -303,6 +305,7 @@ export function ClientContractionsDialog({
                                   <span>{interval}</span>
                                 </div>
                               )}
+                              {client && <DeleteContractionButton contraction={contraction} clientId={client.id} />}
                             </div>
                           </CardContent>
                         </Card>

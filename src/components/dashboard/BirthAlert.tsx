@@ -1,16 +1,16 @@
 import { useState } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Bell, Baby, CheckCircle, AlertTriangle, Calendar, Timer } from "lucide-react";
 import { abbreviateName, formatBrazilDate } from "@/lib/utils";
-import { calculateCurrentPregnancyWeeks, calculateCurrentPregnancyDays, isPostTerm } from "@/lib/pregnancy";
 import { BirthRegistrationDialog } from "@/components/clients/BirthRegistrationDialog";
 import { ClientContractionsDialog } from "@/components/dashboard/ClientContractionsDialog";
+import { fetchBirthAlertClients } from "@/lib/birthAlerts";
+import { StartLaborButton } from "@/components/dashboard/StartLaborButton";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Client = Tables<"clients">;
@@ -23,42 +23,8 @@ export function BirthAlert() {
   const isMobile = useIsMobile();
   const { data: clients, isLoading } = useQuery({
     queryKey: ["birth-alert-clients"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("clients")
-        .select("*")
-        .eq("status", "gestante")
-        .eq("birth_occurred", false)
-        .order("pregnancy_weeks", { ascending: false });
-
-      if (error) throw error;
-      
-      return data
-        .map(client => ({
-          ...client,
-          current_weeks: calculateCurrentPregnancyWeeks(
-            client.pregnancy_weeks,
-            client.pregnancy_weeks_set_at,
-            client.dpp
-          ),
-          current_days: calculateCurrentPregnancyDays(client.dpp),
-          is_post_term: isPostTerm(client.dpp),
-          is_in_labor: !!client.labor_started_at
-        }))
-        .filter(client => 
-          client.is_in_labor || (client.current_weeks !== null && client.current_weeks >= 37)
-        )
-        .sort((a, b) => {
-          // Labor started takes highest priority
-          if (a.is_in_labor && !b.is_in_labor) return -1;
-          if (!a.is_in_labor && b.is_in_labor) return 1;
-          // Then post-term
-          if (a.is_post_term && !b.is_post_term) return -1;
-          if (!a.is_post_term && b.is_post_term) return 1;
-          // Then by weeks
-          return (b.current_weeks || 0) - (a.current_weeks || 0);
-        });
-    },
+    queryFn: fetchBirthAlertClients,
+    refetchInterval: 15000,
   });
 
   const handleRegisterBirth = (client: Client) => {
@@ -225,7 +191,7 @@ export function BirthAlert() {
                         ) : (
                           <span />
                         )}
-                        <Button
+                        {client.labor_started_at ? <Button
                           size="sm"
                           variant="outline"
                           className="h-5 px-2 text-[10px] border-dashed text-primary hover:bg-primary hover:text-primary-foreground hover:border-solid flex-shrink-0 transition-all"
@@ -233,7 +199,7 @@ export function BirthAlert() {
                         >
                           <CheckCircle className="h-2.5 w-2.5 mr-0.5" />
                           Registrar Nascimento
-                        </Button>
+                        </Button> : <StartLaborButton clientId={client.id} />}
                       </div>
                     )}
 
@@ -249,7 +215,7 @@ export function BirthAlert() {
                     {/* Row 4: Button - mobile only (below everything) */}
                     {isMobile && (
                       <div className="mt-2 pl-8">
-                        <Button
+                        {client.labor_started_at ? <Button
                           size="sm"
                           variant="outline"
                           className="h-5 px-2 text-[10px] border-dashed text-primary hover:bg-primary hover:text-primary-foreground hover:border-solid transition-all w-full"
@@ -260,7 +226,7 @@ export function BirthAlert() {
                         >
                           <CheckCircle className="h-2.5 w-2.5 mr-0.5" />
                           Registrar Nascimento
-                        </Button>
+                        </Button> : <StartLaborButton clientId={client.id} />}
                       </div>
                     )}
                   </div>

@@ -5,6 +5,8 @@ import { Bell, AlertTriangle, Baby } from "lucide-react";
 
 import { ClientContractionsDialog } from "@/components/dashboard/ClientContractionsDialog";
 import { Tables } from "@/integrations/supabase/types";
+import { useQueryClient } from "@tanstack/react-query";
+import { startClientLabor, acknowledgeContractions, laborQueryKeys } from "@/lib/laborActions";
 import { sendPushNotification } from "@/lib/pushNotifications";
 
 type Client = Tables<"clients">;
@@ -18,6 +20,7 @@ interface InAppNotificationListenerProps {
 }
 
 export function InAppNotificationListener({ userId, role, clientId, organizationId, onNavigate }: InAppNotificationListenerProps) {
+  const queryClient = useQueryClient();
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
   const contractionChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
   const [contractionsClient, setContractionsClient] = useState<Client | null>(null);
@@ -48,7 +51,7 @@ export function InAppNotificationListener({ userId, role, clientId, organization
           // Check if this client already has labor started
           const { data: clientData } = await supabase
             .from("clients")
-            .select("id, full_name, labor_started_at, user_id")
+            .select("*")
             .eq("id", contraction.client_id)
             .maybeSingle();
 
@@ -67,38 +70,18 @@ export function InAppNotificationListener({ userId, role, clientId, organization
               icon: <Baby className="h-5 w-5 text-primary" />,
               className: "border-2 shadow-lg [&_[data-content]]:!max-w-full",
               action: {
-                label: "Registrar Parto",
+                label: "Iniciar Trabalho de Parto",
                 onClick: async () => {
-                  const { error } = await supabase
-                    .from("clients")
-                    .update({ labor_started_at: new Date().toISOString(), labor_started_by: "doula" } as any)
-                    .eq("id", clientData.id);
-
-                  if (error) {
-                    toast.error("Erro ao registrar trabalho de parto");
+                  toast.dismiss(toastId);
+                  const savingId = toast.loading("Registrando início do trabalho de parto...");
+                  try {
+                    await startClientLabor(clientData.id);
+                    await acknowledgeContractions(clientData.id);
+                    await Promise.all(laborQueryKeys.map(key => queryClient.invalidateQueries({ queryKey: [key] })));
+                  } catch (error) {
+                    toast.error(error instanceof Error ? error.message : "Erro ao registrar trabalho de parto");
                     return;
-                  }
-
-                  await supabase.from("client_notifications").insert({
-                    client_id: clientData.id,
-                    title: "💕 Seu bebê está a caminho!",
-                    message: "Sua Doula registrou que o trabalho de parto começou. Respire fundo, confie no seu corpo. Estarei com você!",
-                    organization_id: organizationId || null,
-                  });
-
-                  // Send push to client
-                  if (clientData.user_id) {
-                    sendPushNotification({
-                      user_ids: [clientData.user_id],
-                      title: "💕 Seu bebê está a caminho!",
-                      message: "Sua Doula registrou que o trabalho de parto começou. Respire fundo!",
-                      url: "/gestante",
-                      tag: "labor-started-client",
-                      type: "labor_started",
-                      priority: "critica",
-                      require_interaction: true,
-                    });
-                  }
+                  } finally { toast.dismiss(savingId); }
 
                   toast.success(`Trabalho de parto registrado para ${clientData.full_name}`, {
                     icon: <Baby className="h-5 w-5 text-primary" />,
@@ -107,9 +90,13 @@ export function InAppNotificationListener({ userId, role, clientId, organization
               },
               cancel: {
                 label: "Aguardar",
-                onClick: () => {
-                  // Open contractions history on dismiss
-                  openContractionsHistory(clientData as Client);
+                onClick: async () => {
+                  toast.dismiss(toastId);
+                  try {
+                    await acknowledgeContractions(clientData.id);
+                    await queryClient.invalidateQueries({ queryKey: ["recent-contractions"] });
+                    toast.success("Alerta marcado como lido. Continue acompanhando as contrações.");
+                  } catch { toast.error("Não foi possível marcar o alerta como lido."); }
                 },
               },
             }
@@ -125,7 +112,7 @@ export function InAppNotificationListener({ userId, role, clientId, organization
         supabase.removeChannel(contractionChannelRef.current);
       }
     };
-  }, [userId, role, organizationId, openContractionsHistory]);
+  }, [userId, role, organizationId, queryClient]);
 
   // Listen for new appointment requests (admin only)
   useEffect(() => {
