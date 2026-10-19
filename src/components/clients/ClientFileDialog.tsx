@@ -1,5 +1,5 @@
 import { expandFeatures } from "@/lib/planFeatures";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -46,7 +46,8 @@ import { usePlanNames } from "@/hooks/usePlanNames";
 import { toast } from "sonner";
 import type { Tables } from "@/integrations/supabase/types";
 import { calculateCurrentPregnancyWeeks, calculateCurrentPregnancyDays } from "@/lib/pregnancy";
-import { BIRTH_TYPE_LABELS } from "@/components/clients/BirthRegistrationDialog";
+import { BIRTH_TYPE_LABELS, BirthRegistrationDialog } from "@/components/clients/BirthRegistrationDialog";
+import { canRegisterBirth } from "@/lib/birthRegistration";
 import type { FollowupSession } from "@/lib/consultations";
 
 type Client = Tables<"clients">;
@@ -108,6 +109,7 @@ const serviceRequestStatusLabels: Record<string, string> = {
 };
 
 export function ClientFileDialog({ open, onOpenChange, client }: ClientFileDialogProps) {
+  const [birthDialogOpen, setBirthDialogOpen] = useState(false);
   const { getPlanName } = usePlanNames();
   const { role } = useAuth();
   const isModerator = role === "moderator";
@@ -609,6 +611,13 @@ export function ClientFileDialog({ open, onOpenChange, client }: ClientFileDialo
                 </div>
               </div>
 
+              {client.status === "gestante" && canRegisterBirth(client) && (
+                <Button variant="outline" size="sm"
+                  className="gap-2 mt-4 w-full text-success hover:bg-success/10"
+                  onClick={() => setBirthDialogOpen(true)}>
+                  <Baby className="w-4 h-4" />Registrar Nascimento
+                </Button>
+              )}
               <Button
                 variant="outline"
                 size="sm"
@@ -913,7 +922,11 @@ export function ClientFileDialog({ open, onOpenChange, client }: ClientFileDialo
         )}
       </DialogContent>
     </Dialog>
-
+    <BirthRegistrationDialog open={birthDialogOpen}
+      onOpenChange={(value) => {
+        setBirthDialogOpen(value);
+        if (!value) onOpenChange(false);
+      }} client={client} />
     </>
   );
 }
