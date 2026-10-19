@@ -822,14 +822,6 @@ export function ClientQuickViewDialog({
                     label="Ficha"
                     onClick={() => setFichaOpen(true)}
                   />
-
-                  {canRegisterBirth(client) && (
-                    <ActionButton
-                      icon={Baby}
-                      label="Registrar Nascimento"
-                      onClick={() => setBirthOpen(true)}
-                    />
-                  )}
                 </div>
               </div>
             </>
