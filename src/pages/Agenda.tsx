@@ -78,6 +78,7 @@ import { DayLabelsDialog } from "@/components/agenda/DayLabelsDialog";
 import { useCalendarLabels } from "@/hooks/useCalendarLabels";
 import { Calendar as CalendarPicker } from "@/components/ui/calendar";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Checkbox } from "@/components/ui/checkbox";
 import { fetchAddressByCep, formatAddressWithNumber } from "@/lib/address";
 import { maskCEP } from "@/lib/masks";
@@ -760,7 +761,7 @@ export default function Agenda() {
   }, [allApts]);
 
   return (
-    <div className="space-y-6 lg:space-y-8 min-w-0">
+    <div className="space-y-5 lg:space-y-6 min-w-0 pb-24">
       {/* Header */}
       <div className="flex items-center justify-between gap-3">
         <div className="page-header mb-0 min-w-0">
@@ -782,29 +783,16 @@ export default function Agenda() {
 
 
 
-      {/* Shared actions remain visible in both views and while scrolling. */}
-      <div className="sticky top-0 z-20 bg-background py-3 space-y-3">
-        <div className="grid grid-cols-2 gap-2 sm:flex">
-          <Button className="min-h-11 h-auto px-3 py-2 whitespace-normal gap-2" onClick={() => setCreationPickerOpen(true)}>
-            <Plus className="h-5 w-5" />
-            <span>Novo compromisso</span>
-          </Button>
-          <Button className="min-h-11 h-auto px-3 py-2 whitespace-normal gap-2" onClick={() => {
-            setViewMode("calendar");
-            setAvailabilityDialogOpen(true);
-          }}>
-            <Plus className="h-5 w-5" />
-            <span>Nova disponibilidade</span>
-          </Button>
-        </div>
+      {/* Each tab owns its creation action; navigation stays visible. */}
+      <div className="sticky top-0 z-20 bg-background/95 backdrop-blur-md py-2">
         <Tabs value={viewMode} onValueChange={(v) => v && setViewMode(v as "list" | "calendar")}>
-          <TabsList className="w-full sm:w-auto">
-            <TabsTrigger value="list" className="flex-1">
-              <List className="h-4 w-4" />
+          <TabsList className="grid w-full grid-cols-2 h-14 rounded-2xl bg-muted/60 p-1.5 gap-1 sm:max-w-lg">
+            <TabsTrigger value="list" className="h-full min-w-0 rounded-xl gap-2 text-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm">
+              <CalendarCheck className="h-5 w-5 shrink-0" />
               <span>Compromissos</span>
             </TabsTrigger>
-            <TabsTrigger value="calendar" className="flex-1">
-              <CalendarDays className="h-4 w-4" />
+            <TabsTrigger value="calendar" className="h-full min-w-0 rounded-xl gap-2 text-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm">
+              <Clock className="h-5 w-5 shrink-0" />
               <span>Disponibilidade</span>
             </TabsTrigger>
           </TabsList>
@@ -1077,6 +1065,20 @@ export default function Agenda() {
           )}
         </div>
       )}
+
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            size="icon"
+            aria-label={viewMode === "list" ? "Novo compromisso" : "Nova disponibilidade"}
+            className="fixed right-5 bottom-[calc(6rem+var(--app-safe-bottom,0px))] md:right-8 z-30 h-14 w-14 rounded-full shadow-lg hover:shadow-xl transition-all active:scale-95 [&_svg]:h-7 [&_svg]:w-7"
+            onClick={() => viewMode === "list" ? setCreationPickerOpen(true) : setAvailabilityDialogOpen(true)}
+          >
+            <Plus strokeWidth={2.5} />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent side="left">{viewMode === "list" ? "Novo compromisso" : "Nova disponibilidade"}</TooltipContent>
+      </Tooltip>
       {/* ─── Dialogs ─── */}
 
       <Dialog open={creationPickerOpen} onOpenChange={setCreationPickerOpen}>
