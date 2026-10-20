@@ -2,7 +2,8 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { useOccupiedSlots } from "@/hooks/useOccupiedSlots";
+import { fetchOccupiedSlots } from "@/lib/bookingAvailability";
+import { fromZonedTime } from "date-fns-tz";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -50,7 +51,6 @@ interface AppointmentRequestWithClient {
 export function AppointmentRequestsSection() {
   const { user, organizationId } = useAuth();
   const queryClient = useQueryClient();
-  const { data: occupiedSlots } = useOccupiedSlots(organizationId);
   const [respondDialog, setRespondDialog] = useState<{
     request: AppointmentRequestWithClient;
     action: "approve" | "reject";
@@ -60,13 +60,16 @@ export function AppointmentRequestsSection() {
   const { data: requests, isLoading } = useQuery({
     queryKey: ["admin-appointment-requests", organizationId],
     queryFn: async () => {
+      if (!organizationId) return [];
       const { data, error } = await supabase
         .from("appointment_requests")
         .select("*, clients(full_name, user_id)")
+        .eq("organization_id", organizationId)
         .order("created_at", { ascending: false });
       if (error) throw error;
       return (data as any) as AppointmentRequestWithClient[];
     },
+    enabled: !!organizationId,
   });
 
   const respondMutation = useMutation({
@@ -79,10 +82,12 @@ export function AppointmentRequestsSection() {
       action: "approve" | "reject";
       notes: string;
     }) => {
+      if (!organizationId) throw new Error("Organização não encontrada");
       const newStatus = action === "approve" ? "approved" : "rejected";
 
       if (action === "approve") {
-        // Check for conflicts before approving
+        // Refresh conflicts and exclude only this request, not other reservations.
+        const occupiedSlots = await fetchOccupiedSlots(organizationId, request.id);
         const timeStr = request.requested_time.slice(0, 5);
         const slotKey = `${request.requested_date}_${timeStr}`;
         if (occupiedSlots?.has(slotKey)) {
@@ -102,8 +107,8 @@ export function AppointmentRequestsSection() {
 
       if (action === "approve") {
         // Create actual appointment with client's address
-        const scheduledAt = new Date(
-          `${request.requested_date}T${request.requested_time}`
+        const scheduledAt = fromZonedTime(
+          `${request.requested_date}T${request.requested_time}`, "America/Sao_Paulo"
         );
         const { data: apt, error: aptError } = await supabase
           .from("appointments")
@@ -183,6 +188,8 @@ export function AppointmentRequestsSection() {
       queryClient.invalidateQueries({ queryKey: ["all-appointments"] });
       queryClient.invalidateQueries({ queryKey: ["occupied-slots"] });
       queryClient.invalidateQueries({ queryKey: ["followup-sessions"] });
+      queryClient.invalidateQueries({ queryKey: ["top-notification-banner"] });
+      queryClient.invalidateQueries({ queryKey: ["pending-appointment-requests"] });
       setRespondDialog(null);
       setAdminNotes("");
       toast.success(
