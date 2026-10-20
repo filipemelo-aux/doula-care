@@ -69,6 +69,7 @@ interface OrgWithCounts {
   avulsa_count?: number;
   last_access: string | null;
   last_access_platform?: string | null;
+  last_access_version?: string | null;
 }
 
 const planBadgeStyles: Record<string, string> = {
