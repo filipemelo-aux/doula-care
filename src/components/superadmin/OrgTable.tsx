@@ -29,6 +29,7 @@ export interface OrgRow {
   avulsa_count?: number;
   last_access?: string | null;
   last_access_platform?: string | null;
+  last_access_version?: string | null;
 }
 
 const AndroidIcon = ({ className }: { className?: string }) => (
@@ -559,6 +560,19 @@ export function OrgTable({
                       {org.last_access_platform
                         ? ACCESS_PLATFORM_LABEL[org.last_access_platform as keyof typeof ACCESS_PLATFORM_LABEL] || org.last_access_platform
                         : "Sem registro"}
+                      {org.last_access_version && (
+                        <Badge
+                          className={cn(
+                            "h-4 px-1 text-[9px] font-semibold rounded-full",
+                            org.last_access_version === "v14"
+                              ? "bg-destructive/15 text-destructive"
+                              : "bg-success/15 text-success"
+                          )}
+                          title={org.last_access_version === "v14" ? "Versão antiga — precisa atualizar na loja" : "Versão atual do aplicativo"}
+                        >
+                          {org.last_access_version}
+                        </Badge>
+                      )}
                     </span>
                   </TableCell>
                   <TableCell className="px-1.5 py-1 text-[11px] text-muted-foreground whitespace-nowrap text-center tabular-nums">
