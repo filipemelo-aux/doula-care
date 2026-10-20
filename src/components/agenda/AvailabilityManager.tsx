@@ -3,13 +3,12 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Calendar } from "@/components/ui/calendar";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
-import { CalendarCheck, Plus, Trash2, Loader2, Clock, Copy, ChevronDown, ChevronUp, Info } from "lucide-react";
+import { CalendarCheck, Trash2, Loader2, Clock, Copy, ChevronDown, ChevronUp } from "lucide-react";
 import { format, addDays, isBefore, startOfDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
@@ -244,20 +243,6 @@ export function AvailabilityManager({ selectedDate, onDateChange, addSlotOpen, o
   const periods = hoursToPeriods(selectedStartHours);
   const batchPeriods = hoursToPeriods(batchStartHours);
 
-  // Open add dialog and pre-fill with existing slots
-  function openAddSlotDialog() {
-    // Pre-select hours from existing slots
-    const existingHours: number[] = [];
-    selectedDaySlots.forEach((slot) => {
-      const start = parseInt(slot.start_time.split(":")[0]);
-      const end = parseInt(slot.end_time.split(":")[0]);
-      for (let h = start; h < end; h++) existingHours.push(h);
-    });
-    setSelectedStartHours([]);
-    setSelectionStart(null);
-    onAddSlotOpenChange(true);
-  }
-
   function openBatchDialog() {
     setBatchDates([]);
     setBatchStartHours([]);
@@ -281,41 +266,27 @@ export function AvailabilityManager({ selectedDate, onDateChange, addSlotOpen, o
   }
 
   return (
-    <Card>
-      <CardHeader className="pb-3">
+    <section className="space-y-4">
+      <div>
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle className="text-base font-display flex items-center gap-2">
+            <h2 className="text-base font-display font-semibold flex items-center gap-2">
               <CalendarCheck className="h-5 w-5 text-primary" />
-              Disponibilidade
-            </CardTitle>
+              Horários disponíveis
+            </h2>
           </div>
           <div className="flex items-center gap-1.5">
             <Button size="sm" variant="outline" onClick={openBatchDialog} className="h-8 gap-1 px-2 text-xs">
               <Copy className="h-3 w-3" />
-              <span className="hidden sm:inline">Aplicar em Lote</span>
-              <span className="sm:hidden">Lote</span>
+              <span>Vários dias</span>
             </Button>
           </div>
 
         </div>
-      </CardHeader>
-      <CardContent>
-        <div className="mb-4 rounded-xl bg-primary/5 border border-primary/20 p-3 flex items-start gap-3">
-          <div className="mt-0.5 rounded-full bg-primary/10 p-1.5">
-            <Info className="h-4 w-4 text-primary" />
-          </div>
-          <div>
-            <p className="text-sm font-medium text-foreground">
-              Sua disponibilidade é vista pelas clientes
-            </p>
-            <p className="text-xs text-muted-foreground leading-relaxed mt-0.5">
-              Esses horários aparecem nas áreas das clientes para agendamento de consultas e serviços. Mantenha-os sempre atualizados para não perder atendimentos.
-            </p>
-          </div>
-        </div>
+      </div>
+      <div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
+          <div className="rounded-2xl bg-card p-3 shadow-sm">
             <Calendar
               mode="single"
               selected={selectedDate}
@@ -355,6 +326,10 @@ export function AvailabilityManager({ selectedDate, onDateChange, addSlotOpen, o
                 },
               }}
             />
+            <div className="flex items-center justify-center gap-2 py-3 text-xs text-muted-foreground">
+              <span className="h-2 w-2 rounded-full bg-primary" />
+              Dias com disponibilidade
+            </div>
             <style>{`
               .available-day:not([aria-selected="true"]) {
                 position: relative;
@@ -378,9 +353,12 @@ export function AvailabilityManager({ selectedDate, onDateChange, addSlotOpen, o
 
           <div>
             <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
-              <h4 className="font-semibold text-sm">
-                {format(selectedDate, "dd/MM/yyyy", { locale: ptBR })}
-              </h4>
+              <div>
+                <h3 className="font-semibold text-sm capitalize">
+                  {format(selectedDate, "EEEE, dd 'de' MMMM", { locale: ptBR })}
+                </h3>
+                <p className="text-xs text-muted-foreground mt-1">{selectedDaySlots.length} {selectedDaySlots.length === 1 ? "período disponível" : "períodos disponíveis"}</p>
+              </div>
               <div className="flex gap-1.5">
                 {selectedDaySlots.length > 0 && (
                   <Button
@@ -394,10 +372,6 @@ export function AvailabilityManager({ selectedDate, onDateChange, addSlotOpen, o
                     Limpar
                   </Button>
                 )}
-                <Button size="sm" variant="outline" onClick={openAddSlotDialog} className="gap-1.5">
-                  <Plus className="h-4 w-4" />
-                  Horários
-                </Button>
                 {selectedDaySlots.length > 0 && (
                   <Button size="sm" variant="outline" onClick={copyCurrentDayToBatch} className="h-7 px-2 text-xs">
                     <Copy className="h-3 w-3 mr-1" />
@@ -415,7 +389,7 @@ export function AvailabilityManager({ selectedDate, onDateChange, addSlotOpen, o
               <ScrollArea className="max-h-[250px]">
                 <div className="space-y-2">
                   {selectedDaySlots.map((slot) => (
-                    <div key={slot.id} className="flex items-center justify-between rounded-lg p-3 bg-background">
+                    <div key={slot.id} className="flex items-center justify-between rounded-2xl p-4 bg-card shadow-sm">
                       <div className="flex items-center gap-2">
                         <Clock className="h-4 w-4 text-primary" />
                         <span className="text-sm font-medium">
@@ -428,6 +402,7 @@ export function AvailabilityManager({ selectedDate, onDateChange, addSlotOpen, o
                         className="h-7 w-7 text-destructive hover:text-destructive"
                         onClick={() => deleteSlotMutation.mutate(slot.id)}
                         disabled={deleteSlotMutation.isPending}
+                        aria-label={`Remover horário ${slot.start_time.slice(0, 5)}`}
                       >
                         <Trash2 className="h-3.5 w-3.5" />
                       </Button>
@@ -436,13 +411,14 @@ export function AvailabilityManager({ selectedDate, onDateChange, addSlotOpen, o
                 </div>
               </ScrollArea>
             ) : (
-              <p className="text-sm text-muted-foreground text-center py-6">
-                Nenhum horário disponível neste dia
-              </p>
+              <div className="flex flex-col items-center gap-3 py-8 text-center">
+                <Clock className="h-8 w-8 text-muted-foreground/40" />
+                <p className="text-sm text-muted-foreground">Nenhum horário disponível neste dia</p>
+              </div>
             )}
           </div>
         </div>
-      </CardContent>
+      </div>
 
       {/* Add Slot Dialog - Hour Grid */}
       <Dialog open={addSlotOpen} onOpenChange={(open) => {
@@ -612,7 +588,7 @@ export function AvailabilityManager({ selectedDate, onDateChange, addSlotOpen, o
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </Card>
+    </section>
 
   );
 }
