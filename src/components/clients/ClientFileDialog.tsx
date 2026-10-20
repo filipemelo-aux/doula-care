@@ -857,6 +857,11 @@ export function ClientFileDialog({ open, onOpenChange, client }: ClientFileDialo
               )}
 
               {/* Diary */}
+              {(client as any)?.share_diary_with_doula === false && (
+                <Card icon={BookHeart} title="Diário" tint="pink">
+                  <p className="text-xs text-muted-foreground">A cliente optou por manter o diário privado no momento.</p>
+                </Card>
+              )}
               {diaryEntries && diaryEntries.length > 0 && (
                 <Card icon={BookHeart} title={`Diário (${diaryEntries.length})`} tint="pink">
                   <div className="space-y-2">

@@ -27,7 +27,8 @@ export function NotificationListenerProvider() {
         organizationId={organizationId}
         onNavigate={handleNavigate}
       />
-      <AutoPushPrompt userId={user.id} />
+      {/* Convite de notificações é exclusivo da doula/equipe — nunca para gestantes. */}
+      {!isClient && <AutoPushPrompt userId={user.id} />}
     </>
   );
 }

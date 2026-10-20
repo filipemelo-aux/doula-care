@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -57,6 +58,26 @@ export default function GestanteDiary() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteEntryId, setDeleteEntryId] = useState<string | null>(null);
   const { client } = useGestanteAuth();
+  const [shareDiary, setShareDiary] = useState<boolean>(true);
+
+  useEffect(() => {
+    if (!client?.id) return;
+    supabase.from("clients").select("share_diary_with_doula").eq("id", client.id).maybeSingle()
+      .then(({ data }) => { if (data) setShareDiary(data.share_diary_with_doula !== false); });
+  }, [client?.id]);
+
+  const toggleShare = async (value: boolean) => {
+    const prev = shareDiary;
+    setShareDiary(value);
+    const { error } = await supabase.rpc("set_diary_sharing", { _share: value });
+    if (error) {
+      setShareDiary(prev);
+      toast.error("Não foi possível salvar sua escolha");
+      return;
+    }
+    toast.success(value ? "Sua doula pode acompanhar seu diário 💛" : "Seu diário agora é só seu");
+  };
+
   
   const isPuerpera = client?.status === "lactante" && client?.birth_occurred;
 
@@ -144,6 +165,19 @@ export default function GestanteDiary() {
             Novo
           </Button>
         </div>
+
+        <Card className="bg-gradient-to-br from-primary/5 to-accent/5">
+          <CardContent className="p-4 flex items-start gap-3">
+            <div className="flex-1 space-y-1">
+              <p className="text-sm font-semibold">Compartilhar diário com minha doula</p>
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                O intuito é sua doula ficar conectada e saber tudo o que acontece no acompanhamento da sua gestação. Você pode desligar quando quiser.
+              </p>
+            </div>
+            <Switch checked={shareDiary} onCheckedChange={toggleShare} aria-label="Compartilhar diário com minha doula" />
+          </CardContent>
+        </Card>
+
 
       
         {loading ? (
