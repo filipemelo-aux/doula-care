@@ -1,7 +1,7 @@
 # Roadmap
 
 ## Em andamento
-- [ ] Padronizar e manter visíveis os botões de novo compromisso e nova disponibilidade na Agenda
+- [x] Padronizar e manter visíveis os botões de novo compromisso e nova disponibilidade na Agenda (compilação aprovada; conferência visual bloqueada pela sessão atual de Super Admin)
 - [x] Corrigir destino das solicitações para Agenda e excluir a própria solicitação na verificação de conflito ao confirmar (8 testes aprovados; solicitação real preservada, confirmação pela doula não verificada com a sessão Super Admin)
 - [x] Corrigir ações de início do trabalho de parto e Aguardar nos alertas, separando nascimento (testes aprovados; sessão atual de Super Admin não permite validar o fluxo da doula)
 - [x] Permitir excluir contrações individuais com confirmação e descartar registros em andamento (testes aprovados; validação visual das duas áreas depende de sessão correspondente)
