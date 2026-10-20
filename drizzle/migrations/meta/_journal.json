@@ -85,6 +85,13 @@
       "when": 1792450873548,
       "tag": "0011_android_update_and_association_form",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1792532991097,
+      "tag": "0012_org_access_log_app_version",
+      "breakpoints": true
     }
   ]
 }
