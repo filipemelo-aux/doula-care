@@ -461,6 +461,7 @@ export type Database = {
           restricao_aromaterapia: string | null
           restricoes_alimentares: string | null
           restricoes_assistencia: Json | null
+          share_diary_with_doula: boolean
           state: string | null
           status: Database["public"]["Enums"]["client_status"]
           street: string | null
@@ -532,6 +533,7 @@ export type Database = {
           restricao_aromaterapia?: string | null
           restricoes_alimentares?: string | null
           restricoes_assistencia?: Json | null
+          share_diary_with_doula?: boolean
           state?: string | null
           status?: Database["public"]["Enums"]["client_status"]
           street?: string | null
@@ -603,6 +605,7 @@ export type Database = {
           restricao_aromaterapia?: string | null
           restricoes_alimentares?: string | null
           restricoes_assistencia?: Json | null
+          share_diary_with_doula?: boolean
           state?: string | null
           status?: Database["public"]["Enums"]["client_status"]
           street?: string | null
@@ -2596,6 +2599,7 @@ export type Database = {
         Args: { p_notes?: string; p_request_id: string }
         Returns: undefined
       }
+      client_shares_diary: { Args: { _client_id: string }; Returns: boolean }
       create_doula_match_request: {
         Args: {
           p_message?: string
@@ -2809,6 +2813,7 @@ export type Database = {
             }
             Returns: number
           }
+      set_diary_sharing: { Args: { _share: boolean }; Returns: undefined }
     }
     Enums: {
       app_role:
