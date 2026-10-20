@@ -224,6 +224,7 @@ export default function GestanteAppointments() {
         send_to_admins: true,
         title: "📅 Nova Solicitação de Consulta",
         message: `${client?.full_name || "Uma cliente"} solicitou ${consultation ? `"${consultation.name}"` : "uma consulta"}.`,
+        url: "/agenda",
         type: "appointment_reminder",
       });
     },

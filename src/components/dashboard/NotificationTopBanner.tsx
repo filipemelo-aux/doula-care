@@ -10,6 +10,7 @@ import { ptBR } from "date-fns/locale";
 import { useNavigate } from "react-router-dom";
 import { markNotificationSeen, getNotificationSeenAt } from "@/lib/notificationSeen";
 import { fetchBirthAlertClients, getBirthAlertTimestamp } from "@/lib/birthAlerts";
+import { getAdminBannerDestination } from "@/lib/notificationDestination";
 
 interface TopNotification {
   id: string;
@@ -211,7 +212,7 @@ export function NotificationTopBanner() {
       queryClient.invalidateQueries({ queryKey: ["admin-banner-dismissed"] });
     }
     queryClient.invalidateQueries({ queryKey: ["top-notification-banner"] });
-    const destination = topNotification.type === "community" ? "/comunidade" : "/notificacoes";
+    const destination = getAdminBannerDestination(topNotification.type);
     navigate(destination);
   };
 
