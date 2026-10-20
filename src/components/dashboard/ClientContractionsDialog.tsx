@@ -228,8 +228,8 @@ export function ClientContractionsDialog({
           </div>
         )}
 
-        {/* Doula Live Timer - available when there is active labor context or existing contraction history */}
-        {client?.id && ((client.labor_started_at && !laborCancelled) || (contractions?.length ?? 0) > 0) && (
+        {/* Doula Live Timer - always available so contractions can be started from the quick view */}
+        {client?.id && (
           <div className="mb-3">
             <DoulaContractionTimer
               clientId={client.id}
