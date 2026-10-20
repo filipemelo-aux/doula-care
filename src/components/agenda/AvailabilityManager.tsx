@@ -30,11 +30,16 @@ function formatHour(h: number) {
   return `${String(h).padStart(2, "0")}:00`;
 }
 
-export function AvailabilityManager() {
+interface AvailabilityManagerProps {
+  selectedDate: Date;
+  onDateChange: (date: Date) => void;
+  addSlotOpen: boolean;
+  onAddSlotOpenChange: (open: boolean) => void;
+}
+
+export function AvailabilityManager({ selectedDate, onDateChange, addSlotOpen, onAddSlotOpenChange }: AvailabilityManagerProps) {
   const { organizationId } = useAuth();
   const queryClient = useQueryClient();
-  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  const [addSlotOpen, setAddSlotOpen] = useState(false);
   const [batchDialogOpen, setBatchDialogOpen] = useState(false);
   const { dayMap: labelsDayMap } = useCalendarLabels(organizationId);
 
@@ -159,7 +164,7 @@ export function AvailabilityManager() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["doula-availability"] });
-      setAddSlotOpen(false);
+      onAddSlotOpenChange(false);
       setSelectedStartHours([]);
       setSelectionStart(null);
       toast.success("Horários adicionados!");
@@ -250,7 +255,7 @@ export function AvailabilityManager() {
     });
     setSelectedStartHours([]);
     setSelectionStart(null);
-    setAddSlotOpen(true);
+    onAddSlotOpenChange(true);
   }
 
   function openBatchDialog() {
@@ -284,7 +289,6 @@ export function AvailabilityManager() {
               <CalendarCheck className="h-5 w-5 text-primary" />
               Disponibilidade
             </CardTitle>
-            <p className="text-xs text-muted-foreground mt-1">Selecione um dia e defina seus horários</p>
           </div>
           <div className="flex items-center gap-1.5">
             <Button size="sm" variant="outline" onClick={openBatchDialog} className="h-8 gap-1 px-2 text-xs">
@@ -315,7 +319,7 @@ export function AvailabilityManager() {
             <Calendar
               mode="single"
               selected={selectedDate}
-              onSelect={(d) => d && setSelectedDate(d)}
+              onSelect={(d) => d && onDateChange(d)}
               locale={ptBR}
               className="pointer-events-auto w-full mx-auto"
               disabled={(date) => isBefore(date, today)}
@@ -373,7 +377,7 @@ export function AvailabilityManager() {
           </div>
 
           <div>
-            <div className="flex items-center justify-between mb-3">
+            <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
               <h4 className="font-semibold text-sm">
                 {format(selectedDate, "dd/MM/yyyy", { locale: ptBR })}
               </h4>
@@ -390,8 +394,9 @@ export function AvailabilityManager() {
                     Limpar
                   </Button>
                 )}
-                <Button size="sm" variant="outline" onClick={openAddSlotDialog} className="h-7 w-7 p-0">
-                  <Plus className="h-3.5 w-3.5" />
+                <Button size="sm" variant="outline" onClick={openAddSlotDialog} className="gap-1.5">
+                  <Plus className="h-4 w-4" />
+                  Horários
                 </Button>
                 {selectedDaySlots.length > 0 && (
                   <Button size="sm" variant="outline" onClick={copyCurrentDayToBatch} className="h-7 px-2 text-xs">
@@ -440,11 +445,14 @@ export function AvailabilityManager() {
       </CardContent>
 
       {/* Add Slot Dialog - Hour Grid */}
-      <Dialog open={addSlotOpen} onOpenChange={setAddSlotOpen}>
+      <Dialog open={addSlotOpen} onOpenChange={(open) => {
+        onAddSlotOpenChange(open);
+        if (!open) { setSelectedStartHours([]); setSelectionStart(null); }
+      }}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
             <DialogTitle className="font-display text-base">
-              Adicionar Horários
+              Nova disponibilidade
             </DialogTitle>
           </DialogHeader>
           <p className="text-xs text-muted-foreground">
