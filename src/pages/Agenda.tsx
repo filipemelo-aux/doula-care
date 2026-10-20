@@ -1071,7 +1071,7 @@ export default function Agenda() {
           <Button
             size="icon"
             aria-label={viewMode === "list" ? "Novo compromisso" : "Nova disponibilidade"}
-            className="fixed right-5 bottom-[calc(6rem+env(safe-area-inset-bottom))] md:right-8 md:bottom-8 z-30 h-14 w-14 rounded-full shadow-lg hover:shadow-xl transition-all active:scale-95 [&_svg]:h-7 [&_svg]:w-7"
+            className="fixed right-5 bottom-[calc(6rem+var(--app-safe-bottom,0px))] md:right-8 z-30 h-14 w-14 rounded-full shadow-lg hover:shadow-xl transition-all active:scale-95 [&_svg]:h-7 [&_svg]:w-7"
             onClick={() => viewMode === "list" ? setCreationPickerOpen(true) : setAvailabilityDialogOpen(true)}
           >
             <Plus strokeWidth={2.5} />
