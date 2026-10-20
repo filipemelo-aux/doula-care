@@ -142,6 +142,8 @@ export function BirthRegistrationDialog({
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["clients"] });
+      queryClient.invalidateQueries({ queryKey: ["client-quickview"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard-clients-overview"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
       queryClient.invalidateQueries({ queryKey: ["recent-clients"] });
       queryClient.invalidateQueries({ queryKey: ["birth-alert-clients"] });
