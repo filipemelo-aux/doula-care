@@ -213,7 +213,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (oid) {
           supabase
             .from("org_access_log")
-            .insert({ user_id: userId, organization_id: oid, platform: detectAccessPlatform() } as any)
+            .insert({
+              user_id: userId,
+              organization_id: oid,
+              platform: detectAccessPlatform(),
+              app_version: detectAppVersionTag(),
+            } as any)
             .then(() => {});
         }
       });
