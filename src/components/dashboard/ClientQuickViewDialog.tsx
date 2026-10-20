@@ -305,7 +305,7 @@ export function ClientQuickViewDialog({
               <Skeleton className="h-24 w-full rounded-2xl" />
             </div>
           ) : (
-            <>
+            <div className="flex flex-col min-h-0 max-h-[calc(85vh-2.75rem)] overflow-hidden">
               {/* Header */}
               <div
                 className={cn(
@@ -824,7 +824,7 @@ export function ClientQuickViewDialog({
                   )}
                 </div>
               </div>
-            </>
+            </div>
           )}
         </DialogContent>
       </Dialog>
