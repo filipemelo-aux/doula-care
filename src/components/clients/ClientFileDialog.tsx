@@ -631,6 +631,21 @@ export function ClientFileDialog({ open, onOpenChange, client }: ClientFileDialo
 
             {/* Body */}
             <div className="px-5 py-5 space-y-4">
+              {/* Birth data (baby name shown in header) */}
+              {client.birth_occurred && (
+                <Card icon={Baby} title="Dados do Nascimento" tint="accent">
+                  <ChipGrid>
+                    {client.birth_date && <Chip icon={Calendar} label="Data" value={formatDate(client.birth_date)} />}
+                    {client.birth_time && <Chip label="Hora" value={client.birth_time} />}
+                    {(client as any).birth_type && (
+                      <Chip label="Tipo de parto" value={BIRTH_TYPE_LABELS[(client as any).birth_type] || (client as any).birth_type} highlight />
+                    )}
+                    {client.birth_weight && <Chip label="Peso" value={`${client.birth_weight}g`} />}
+                    {client.birth_height && <Chip label="Comprimento" value={`${client.birth_height}cm`} />}
+                  </ChipGrid>
+                </Card>
+              )}
+
               {/* Contractions */}
               {contractions && contractions.length > 0 && (
                 <Card icon={Activity} title={`Contrações (${contractions.length})`} tint="destructive">
@@ -737,22 +752,6 @@ export function ClientFileDialog({ open, onOpenChange, client }: ClientFileDialo
                   <p className="text-xs whitespace-pre-wrap leading-relaxed text-foreground/90">
                     {client.notes}
                   </p>
-                </Card>
-              )}
-
-
-              {/* Birth data (baby name shown in header) */}
-              {client.birth_occurred && (
-                <Card icon={Baby} title="Dados do Nascimento" tint="accent">
-                  <ChipGrid>
-                    {client.birth_date && <Chip icon={Calendar} label="Data" value={formatDate(client.birth_date)} />}
-                    {client.birth_time && <Chip label="Hora" value={client.birth_time} />}
-                    {(client as any).birth_type && (
-                      <Chip label="Tipo de parto" value={BIRTH_TYPE_LABELS[(client as any).birth_type] || (client as any).birth_type} highlight />
-                    )}
-                    {client.birth_weight && <Chip label="Peso" value={`${client.birth_weight}g`} />}
-                    {client.birth_height && <Chip label="Comprimento" value={`${client.birth_height}cm`} />}
-                  </ChipGrid>
                 </Card>
               )}
 

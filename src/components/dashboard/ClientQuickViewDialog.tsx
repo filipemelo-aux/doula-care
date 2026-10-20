@@ -292,7 +292,7 @@ export function ClientQuickViewDialog({
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-md p-0 overflow-hidden gap-0 rounded-3xl">
+        <DialogContent className="max-w-md p-0 overflow-hidden gap-0 rounded-3xl flex flex-col max-h-[90vh]">
           <DialogHeader className="sr-only">
             <DialogTitle>{name || "Cliente"}</DialogTitle>
             <DialogDescription>Ações rápidas</DialogDescription>
@@ -426,7 +426,7 @@ export function ClientQuickViewDialog({
               </div>
 
               {/* Body */}
-              <div className="px-4 py-4 sm:px-5 space-y-4 max-h-[70vh] overflow-y-auto">
+              <div className="flex-1 min-h-0 overflow-y-auto px-4 py-4 sm:px-5 space-y-4">
                 {/* Info chips - useful pregnancy/postpartum info */}
                 <div className="grid grid-cols-2 gap-2 text-xs">
                   {isGest && client.prenatal_type && (
@@ -767,8 +767,11 @@ export function ClientQuickViewDialog({
                   </button>
                 )}
 
-                {/* Actions */}
-                <div className="grid grid-cols-3 gap-2 pt-1">
+              </div>
+
+              {/* Actions (fixed footer) */}
+              <div className="shrink-0 border-t border-border/50 bg-card px-4 py-3 sm:px-5">
+                <div className="grid grid-cols-3 gap-2">
                   {isGest && (
                     <ActionButton
                       icon={Activity}
