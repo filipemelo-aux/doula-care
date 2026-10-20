@@ -157,6 +157,7 @@ export default function Agenda() {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [searchTerm, setSearchTerm] = useState("");
   const [viewMode, setViewMode] = useState<"list" | "calendar">("list");
+  const [availabilityDialogOpen, setAvailabilityDialogOpen] = useState(false);
 
   // Appointment form
   const [creationPickerOpen, setCreationPickerOpen] = useState(false);
@@ -759,12 +760,12 @@ export default function Agenda() {
   }, [allApts]);
 
   return (
-    <div className="space-y-6 lg:space-y-8 overflow-x-hidden">
+    <div className="space-y-6 lg:space-y-8 min-w-0">
       {/* Header */}
       <div className="flex items-center justify-between gap-3">
         <div className="page-header mb-0 min-w-0">
           <h1 className="page-title">Agenda</h1>
-          <p className="page-description">Consultas e serviços em um só lugar</p>
+          <p className="page-description">Compromissos e horários disponíveis</p>
         </div>
         <Button
           size="sm"
@@ -781,7 +782,36 @@ export default function Agenda() {
 
 
 
-      {/* Search + View Toggle */}
+      {/* Shared actions remain visible in both views and while scrolling. */}
+      <div className="sticky top-0 z-20 bg-background py-3 space-y-3">
+        <div className="grid grid-cols-2 gap-2 sm:flex">
+          <Button className="min-h-11 h-auto px-3 py-2 whitespace-normal gap-2" onClick={() => setCreationPickerOpen(true)}>
+            <Plus className="h-5 w-5" />
+            <span>Novo compromisso</span>
+          </Button>
+          <Button className="min-h-11 h-auto px-3 py-2 whitespace-normal gap-2" onClick={() => {
+            setViewMode("calendar");
+            setAvailabilityDialogOpen(true);
+          }}>
+            <Plus className="h-5 w-5" />
+            <span>Nova disponibilidade</span>
+          </Button>
+        </div>
+        <Tabs value={viewMode} onValueChange={(v) => v && setViewMode(v as "list" | "calendar")}>
+          <TabsList className="w-full sm:w-auto">
+            <TabsTrigger value="list" className="flex-1">
+              <List className="h-4 w-4" />
+              <span>Compromissos</span>
+            </TabsTrigger>
+            <TabsTrigger value="calendar" className="flex-1">
+              <CalendarDays className="h-4 w-4" />
+              <span>Disponibilidade</span>
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
+      </div>
+
+      {viewMode === "list" && (
       <div className="flex flex-col sm:flex-row sm:items-center gap-3">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/60" />
@@ -792,45 +822,31 @@ export default function Agenda() {
             className="pl-10"
           />
         </div>
-        <Tabs value={viewMode} onValueChange={(v) => v && setViewMode(v as "list" | "calendar")}>
-          <TabsList className="w-full">
-            <TabsTrigger value="list">
-              <List className="h-4 w-4" />
-              <span>Compromissos</span>
-            </TabsTrigger>
-            <TabsTrigger value="calendar">
-              <CalendarDays className="h-4 w-4" />
-              <span>Disponibilidade</span>
-            </TabsTrigger>
-          </TabsList>
-        </Tabs>
       </div>
+      )}
 
       {/* Calendar View - availability only */}
       {viewMode === "calendar" && (
-        <AvailabilityManager />
+        <AvailabilityManager selectedDate={selectedDate} onDateChange={setSelectedDate} addSlotOpen={availabilityDialogOpen} onAddSlotOpenChange={setAvailabilityDialogOpen} />
       )}
 
       {/* Filter Toggle: Calendar Date vs All */}
       {viewMode === "list" && (
         <div className="space-y-4">
-          <div className="flex items-center gap-2">
-            <Tabs value={agendaFilter} onValueChange={(v) => v && setAgendaFilter(v as AgendaFilter)}>
+          <div className="flex items-center gap-2 min-w-0">
+            <Tabs className="min-w-0 w-full sm:w-auto" value={agendaFilter} onValueChange={(v) => v && setAgendaFilter(v as AgendaFilter)}>
               <TabsList className="w-full">
-                <TabsTrigger value="calendar">
+                <TabsTrigger value="calendar" className="min-w-0 flex-1">
                   <CalendarDays className="h-3.5 w-3.5" />
-                  <span className="truncate">Data no calendário</span>
+                  <span className="truncate">Por dia</span>
                 </TabsTrigger>
-                <TabsTrigger value="all">
+                <TabsTrigger value="all" className="min-w-0 flex-1">
                   <List className="h-3.5 w-3.5" />
-                  <span className="truncate">Todos os compromissos</span>
+                  <span className="truncate">Todos</span>
                 </TabsTrigger>
               </TabsList>
             </Tabs>
 
-            <Button size="icon" className="h-10 w-10 rounded-full shrink-0" aria-label="Adicionar à agenda" onClick={() => setCreationPickerOpen(true)}>
-              <Plus className="h-5 w-5" />
-            </Button>
           </div>
 
 
@@ -1069,14 +1085,14 @@ export default function Agenda() {
             <DialogTitle className="font-display">Adicionar à agenda</DialogTitle>
           </DialogHeader>
           <div className="grid gap-1">
+            <Button variant="ghost" className="h-12 justify-start gap-3" onClick={() => openNewAppointment("servico")}>
+              <Briefcase className="h-5 w-5 text-primary" /> Novo atendimento
+            </Button>
             <Button variant="ghost" className="h-12 justify-start gap-3" onClick={() => openNewAppointment("compromisso")}>
               <Calendar className="h-5 w-5 text-primary" /> Novo compromisso
             </Button>
             <Button variant="ghost" className="h-12 justify-start gap-3" onClick={() => openNewAppointment("consulta")}>
               <CalendarCheck className="h-5 w-5 text-primary" /> Nova consulta
-            </Button>
-            <Button variant="ghost" className="h-12 justify-start gap-3" onClick={() => openNewAppointment("servico")}>
-              <Briefcase className="h-5 w-5 text-primary" /> Novo atendimento
             </Button>
           </div>
         </DialogContent>

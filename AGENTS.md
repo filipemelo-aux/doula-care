@@ -12,3 +12,4 @@ Fallback de parcelas sem transaction_id só é permitido para receitas automáti
 - Birth action availability uses src/lib/birthRegistration.ts independently of labor tracking — keeps all alert surfaces consistent for births without labor or contractions.
 - Booking conflicts use src/lib/bookingAvailability.ts in São Paulo time; approval refreshes reservations excluding only the request being approved, so it cannot conflict with itself or bypass another booking.
 - Admin banner destinations use src/lib/notificationDestination.ts; appointment requests open Agenda rather than the general notification center.
+- Agenda owns the selected day and availability-dialog state; its shared sticky action bar exposes both creation flows in either view without coupling creation access to filters.
