@@ -54,3 +54,17 @@ export const ACCESS_PLATFORM_LABEL: Record<AccessPlatform, string> = {
   browser_android: "Navegador Android",
   browser_desktop: "Navegador computador",
 };
+
+/**
+ * Identifica a geração do pacote nativo instalado. As versões a partir da 16
+ * incluem o plugin nativo de compras (Purchases); as anteriores não. Em
+ * navegador não há versão de pacote — retorna null.
+ */
+export const detectAppVersionTag = (): string | null => {
+  try {
+    if (!Capacitor.isNativePlatform()) return null;
+    return Capacitor.isPluginAvailable("Purchases") ? "v16+" : "v14";
+  } catch {
+    return null;
+  }
+};
