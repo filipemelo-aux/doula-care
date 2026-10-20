@@ -309,7 +309,7 @@ export function ClientQuickViewDialog({
               {/* Header */}
               <div
                 className={cn(
-                  "relative px-5 pt-6 pb-5 sm:px-6 sm:pt-7 sm:pb-6 bg-gradient-to-br",
+                  "relative shrink-0 px-5 pt-6 pb-5 sm:px-6 sm:pt-7 sm:pb-6 bg-gradient-to-br",
                   inLabor
                     ? "from-destructive/15 to-destructive/5"
                     : "from-primary/15 to-accent/5",
