@@ -257,6 +257,9 @@ export default function SuperAdminDashboard() {
       const lastPlatformMap = new Map(
         ((lastAccess as any[]) || []).map((c: any) => [c.organization_id, c.platform as string | null])
       );
+      const lastVersionMap = new Map(
+        ((lastAccess as any[]) || []).map((c: any) => [c.organization_id, c.app_version as string | null])
+      );
 
       return (orgs || []).map((org) => ({
         ...org,
@@ -265,6 +268,7 @@ export default function SuperAdminDashboard() {
         avulsa_count: Number(countMap.get(org.id)?.avulsa_count ?? 0),
         last_access: lastAccessMap.get(org.id) || null,
         last_access_platform: lastPlatformMap.get(org.id) || null,
+        last_access_version: lastVersionMap.get(org.id) || null,
       })) as OrgWithCounts[];
     },
     staleTime: 0,
