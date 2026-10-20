@@ -767,8 +767,11 @@ export function ClientQuickViewDialog({
                   </button>
                 )}
 
-                {/* Actions */}
-                <div className="grid grid-cols-3 gap-2 pt-1">
+              </div>
+
+              {/* Actions (fixed footer) */}
+              <div className="shrink-0 border-t border-border/50 bg-card px-4 py-3 sm:px-5">
+                <div className="grid grid-cols-3 gap-2">
                   {isGest && (
                     <ActionButton
                       icon={Activity}
