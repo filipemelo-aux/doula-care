@@ -1214,6 +1214,7 @@ export type Database = {
         Row: {
           accessed_at: string
           action: string
+          app_version: string | null
           id: string
           organization_id: string
           platform: string | null
@@ -1222,6 +1223,7 @@ export type Database = {
         Insert: {
           accessed_at?: string
           action?: string
+          app_version?: string | null
           id?: string
           organization_id: string
           platform?: string | null
@@ -1230,6 +1232,7 @@ export type Database = {
         Update: {
           accessed_at?: string
           action?: string
+          app_version?: string | null
           id?: string
           organization_id?: string
           platform?: string | null
@@ -2694,6 +2697,7 @@ export type Database = {
       get_org_last_access: {
         Args: never
         Returns: {
+          app_version: string
           last_access: string
           organization_id: string
           platform: string
