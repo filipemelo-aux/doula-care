@@ -305,11 +305,11 @@ export function ClientQuickViewDialog({
               <Skeleton className="h-24 w-full rounded-2xl" />
             </div>
           ) : (
-            <>
+            <div className="flex flex-col min-h-0 max-h-[calc(85vh-2.75rem)] overflow-hidden">
               {/* Header */}
               <div
                 className={cn(
-                  "relative px-5 pt-6 pb-5 sm:px-6 sm:pt-7 sm:pb-6 bg-gradient-to-br",
+                  "relative shrink-0 px-5 pt-6 pb-5 sm:px-6 sm:pt-7 sm:pb-6 bg-gradient-to-br",
                   inLabor
                     ? "from-destructive/15 to-destructive/5"
                     : "from-primary/15 to-accent/5",
@@ -824,7 +824,7 @@ export function ClientQuickViewDialog({
                   )}
                 </div>
               </div>
-            </>
+            </div>
           )}
         </DialogContent>
       </Dialog>
