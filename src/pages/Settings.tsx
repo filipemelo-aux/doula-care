@@ -100,7 +100,7 @@ const planSchema = z.object({
 type PlanFormData = z.infer<typeof planSchema>;
 
 export default function Settings() {
-  const { user, isAdmin, role, signOut, profileName, organizationId } = useAuth();
+  const { user, isAdmin, role, profileName, organizationId } = useAuth();
   const callerIsAdmin = role === "admin";
   const callerIsModerator = role === "moderator";
   const queryClient = useQueryClient();
