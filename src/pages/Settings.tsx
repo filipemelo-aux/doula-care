@@ -52,7 +52,6 @@ import {
   Settings2,
   UserPlus, 
   Key, 
-  LogOut,
   Loader2,
   Users,
   Crown,
@@ -69,7 +68,6 @@ import {
   CalendarDays,
 } from "lucide-react";
 import { PixSettingsCard } from "@/components/settings/PixSettingsCard";
-import { BrandingSettingsCard } from "@/components/settings/BrandingSettingsCard";
 import { PushNotificationStatusCard } from "@/components/settings/PushNotificationStatusCard";
 import { AgendaRemindersCard } from "@/components/settings/AgendaRemindersCard";
 import { toast } from "sonner";
