@@ -52,7 +52,6 @@ import {
   Settings2,
   UserPlus, 
   Key, 
-  LogOut,
   Loader2,
   Users,
   Crown,
@@ -69,7 +68,6 @@ import {
   CalendarDays,
 } from "lucide-react";
 import { PixSettingsCard } from "@/components/settings/PixSettingsCard";
-import { BrandingSettingsCard } from "@/components/settings/BrandingSettingsCard";
 import { PushNotificationStatusCard } from "@/components/settings/PushNotificationStatusCard";
 import { AgendaRemindersCard } from "@/components/settings/AgendaRemindersCard";
 import { toast } from "sonner";
@@ -100,7 +98,7 @@ const planSchema = z.object({
 type PlanFormData = z.infer<typeof planSchema>;
 
 export default function Settings() {
-  const { user, isAdmin, role, signOut, profileName, organizationId } = useAuth();
+  const { user, isAdmin, role, profileName, organizationId } = useAuth();
   const callerIsAdmin = role === "admin";
   const callerIsModerator = role === "moderator";
   const queryClient = useQueryClient();
@@ -440,30 +438,15 @@ export default function Settings() {
         <h1 className="page-title">Configurações</h1>
       </div>
 
-      {/* Current User Profile — prominent, minimal */}
-      <div className="rounded-2xl bg-card border border-border/50 p-5">
-        <div className="flex items-center gap-4">
-          <AvatarUpload
-            currentUrl={avatarUrl}
-            onUploaded={setAvatarUrl}
-            userId={user?.id}
-            name={profileName || ""}
-            size="lg"
-          />
-          <div className="flex-1 min-w-0">
-            <h2 className="text-lg font-bold text-foreground truncate">{profileName || user?.email}</h2>
-            <p className="text-sm text-muted-foreground">
-              {callerIsAdmin ? "Administrador" : callerIsModerator ? "Moderador" : "Usuário"}
-            </p>
-          </div>
-          <Button variant="ghost" size="icon" onClick={signOut} className="h-9 w-9 text-muted-foreground hover:text-destructive shrink-0" title="Sair">
-            <LogOut className="w-4 h-4" />
-          </Button>
-        </div>
-      </div>
-
       {callerIsModerator ? (
         <div className="space-y-6">
+          <div className="flex items-center gap-3 rounded-2xl bg-card border border-border/50 p-4">
+            <AvatarUpload currentUrl={avatarUrl} onUploaded={setAvatarUrl} userId={user?.id} name={profileName || ""} size="sm" />
+            <div className="min-w-0">
+              <h3 className="text-sm font-semibold text-foreground">Sua foto</h3>
+              <p className="text-xs text-muted-foreground">Toque na foto para enviar ou trocar a sua imagem.</p>
+            </div>
+          </div>
           <PushNotificationStatusCard />
           <Card className="card-glass">
             <CardHeader>
@@ -538,6 +521,13 @@ export default function Settings() {
 
         {/* ─── USERS TAB ─── */}
         <TabsContent value="users" className="space-y-6">
+          <div className="flex items-center gap-3 rounded-2xl bg-card border border-border/50 p-4">
+            <AvatarUpload currentUrl={avatarUrl} onUploaded={setAvatarUrl} userId={user?.id} name={profileName || ""} size="sm" />
+            <div className="min-w-0">
+              <h3 className="text-sm font-semibold text-foreground">Sua foto</h3>
+              <p className="text-xs text-muted-foreground">Toque na foto para enviar ou trocar a sua imagem.</p>
+            </div>
+          </div>
           {isAdmin && (
             <>
               {/* Admin Users — list layout */}
