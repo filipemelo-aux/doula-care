@@ -6,6 +6,7 @@ import { createServiceRecordWithReceivable } from "@/lib/serviceBilling";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLocation, useNavigate } from "react-router-dom";
 import { sendPushNotification } from "@/lib/pushNotifications";
+import { useAgendaReminderSettings } from "@/components/settings/AgendaRemindersCard";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -147,6 +148,7 @@ const getServiceStatus = (svc: ServiceRequestFull) => {
 
 export default function Agenda() {
   const { user, organizationId } = useAuth();
+  const { data: reminderSettings } = useAgendaReminderSettings();
   const location = useLocation();
   const navigate = useNavigate();
   // When "Agendar" is clicked from the Dashboard client quick view, we remember
@@ -476,7 +478,7 @@ export default function Agenda() {
       queryClient.invalidateQueries({ queryKey: ["transactions"] });
 
       // Send push to client when new appointment is created (not editing)
-      if (!editingAppointment && aptClientId) {
+      if (!editingAppointment && aptClientId && reminderSettings?.notify_client_on_new_appointment !== false) {
         const selectedClient = clients?.find(c => c.id === aptClientId);
         if (selectedClient?.user_id) {
           sendPushNotification({

@@ -152,8 +152,10 @@ export function InAppNotificationListener({ userId, role, clientId, organization
               },
             });
 
-            // Send push to admins
-            sendPushNotification({
+            // Send push to admins (respeita a preferência da doula)
+            const { data: prefs } = await supabase.from("agenda_reminder_settings")
+              .select("notify_on_appointment_request").eq("organization_id", organizationId).maybeSingle();
+            if (prefs?.notify_on_appointment_request !== false) sendPushNotification({
               send_to_admins: true,
               title: `📅 Solicitação de Consulta`,
               message: `${clientData.full_name} solicitou consulta para ${request.requested_date} às ${request.requested_time?.slice(0, 5)}`,
