@@ -1,6 +1,6 @@
 import { TeamAccessCard } from "@/components/settings/TeamAccessCard";
 import { Link } from "react-router-dom";
-import { useState, useEffect, lazy, Suspense } from "react";
+import { useState, lazy, Suspense } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -97,7 +97,7 @@ const planSchema = z.object({
 type PlanFormData = z.infer<typeof planSchema>;
 
 export default function Settings() {
-  const { user, isAdmin, role, profileName, organizationId } = useAuth();
+  const { user, isAdmin, role, organizationId } = useAuth();
   const callerIsAdmin = role === "admin";
   const callerIsModerator = role === "moderator";
   const queryClient = useQueryClient();
