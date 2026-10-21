@@ -113,7 +113,7 @@ export function AppointmentCompleteDialog({
             ) : (
               <CheckCircle className="h-4 w-4 mr-1" />
             )}
-            {editMode ? "Salvar Anotações" : "Concluir Compromisso"}
+            {editMode ? "Salvar Anotações" : "Concluir"}
           </Button>
         </div>
       </DialogContent>
