@@ -72,7 +72,6 @@ import { PushNotificationStatusCard } from "@/components/settings/PushNotificati
 import { AgendaRemindersCard } from "@/components/settings/AgendaRemindersCard";
 import { toast } from "sonner";
 // formatBrazilDate removed — no longer needed in list layout
-import { AvatarUpload } from "@/components/gestante/AvatarUpload";
 import { useForm } from "react-hook-form";
 import { APP_VERSION } from "@/lib/appVersion";
 import { hardRefreshApp } from "@/lib/appUpdate";
@@ -103,19 +102,6 @@ export default function Settings() {
   const callerIsModerator = role === "moderator";
   const queryClient = useQueryClient();
   const { limits, plan: orgPlan } = usePlanLimits();
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
-
-  // Fetch avatar
-  useEffect(() => {
-    if (user) {
-      supabase
-        .from("profiles")
-        .select("avatar_url")
-        .eq("user_id", user.id)
-        .maybeSingle()
-        .then(({ data }) => setAvatarUrl(data?.avatar_url || null));
-    }
-  }, [user]);
 
   // User management state
   const [newUserOpen, setNewUserOpen] = useState(false);
@@ -440,13 +426,6 @@ export default function Settings() {
 
       {callerIsModerator ? (
         <div className="space-y-6">
-          <div className="flex items-center gap-3 rounded-2xl bg-card border border-border/50 p-4">
-            <AvatarUpload currentUrl={avatarUrl} onUploaded={setAvatarUrl} userId={user?.id} name={profileName || ""} size="sm" />
-            <div className="min-w-0">
-              <h3 className="text-sm font-semibold text-foreground">Sua foto</h3>
-              <p className="text-xs text-muted-foreground">Toque na foto para enviar ou trocar a sua imagem.</p>
-            </div>
-          </div>
           <PushNotificationStatusCard />
           <Card className="card-glass">
             <CardHeader>
@@ -521,13 +500,6 @@ export default function Settings() {
 
         {/* ─── USERS TAB ─── */}
         <TabsContent value="users" className="space-y-6">
-          <div className="flex items-center gap-3 rounded-2xl bg-card border border-border/50 p-4">
-            <AvatarUpload currentUrl={avatarUrl} onUploaded={setAvatarUrl} userId={user?.id} name={profileName || ""} size="sm" />
-            <div className="min-w-0">
-              <h3 className="text-sm font-semibold text-foreground">Sua foto</h3>
-              <p className="text-xs text-muted-foreground">Toque na foto para enviar ou trocar a sua imagem.</p>
-            </div>
-          </div>
           {isAdmin && (
             <>
               {/* Admin Users — list layout */}
