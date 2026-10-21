@@ -440,28 +440,6 @@ export default function Settings() {
         <h1 className="page-title">Configurações</h1>
       </div>
 
-      {/* Current User Profile — prominent, minimal */}
-      <div className="rounded-2xl bg-card border border-border/50 p-5">
-        <div className="flex items-center gap-4">
-          <AvatarUpload
-            currentUrl={avatarUrl}
-            onUploaded={setAvatarUrl}
-            userId={user?.id}
-            name={profileName || ""}
-            size="lg"
-          />
-          <div className="flex-1 min-w-0">
-            <h2 className="text-lg font-bold text-foreground truncate">{profileName || user?.email}</h2>
-            <p className="text-sm text-muted-foreground">
-              {callerIsAdmin ? "Administrador" : callerIsModerator ? "Moderador" : "Usuário"}
-            </p>
-          </div>
-          <Button variant="ghost" size="icon" onClick={signOut} className="h-9 w-9 text-muted-foreground hover:text-destructive shrink-0" title="Sair">
-            <LogOut className="w-4 h-4" />
-          </Button>
-        </div>
-      </div>
-
       {callerIsModerator ? (
         <div className="space-y-6">
           <div className="flex items-center gap-3 rounded-2xl bg-card border border-border/50 p-4">
