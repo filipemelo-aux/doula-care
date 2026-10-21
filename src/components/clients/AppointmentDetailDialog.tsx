@@ -110,7 +110,7 @@ export function AppointmentDetailDialog({
                 className="gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white w-full"
               >
                 <CheckCircle className="h-3.5 w-3.5" />
-                Concluir consulta
+                Concluir
               </Button>
             )}
             {onEditNotes && appointment.completed_at && (
