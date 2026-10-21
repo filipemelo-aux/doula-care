@@ -55,6 +55,91 @@ export type Database = {
           },
         ]
       }
+      agenda_reminder_settings: {
+        Row: {
+          birthday_advance_days: number[]
+          birthday_enabled: boolean
+          client_offsets_minutes: number[]
+          client_reminders_enabled: boolean
+          created_at: string
+          doula_offsets_minutes: number[]
+          doula_reminders_enabled: boolean
+          notify_client_on_new_appointment: boolean
+          notify_on_appointment_request: boolean
+          organization_id: string
+          personal_reminders_enabled: boolean
+          updated_at: string
+        }
+        Insert: {
+          birthday_advance_days?: number[]
+          birthday_enabled?: boolean
+          client_offsets_minutes?: number[]
+          client_reminders_enabled?: boolean
+          created_at?: string
+          doula_offsets_minutes?: number[]
+          doula_reminders_enabled?: boolean
+          notify_client_on_new_appointment?: boolean
+          notify_on_appointment_request?: boolean
+          organization_id: string
+          personal_reminders_enabled?: boolean
+          updated_at?: string
+        }
+        Update: {
+          birthday_advance_days?: number[]
+          birthday_enabled?: boolean
+          client_offsets_minutes?: number[]
+          client_reminders_enabled?: boolean
+          created_at?: string
+          doula_offsets_minutes?: number[]
+          doula_reminders_enabled?: boolean
+          notify_client_on_new_appointment?: boolean
+          notify_on_appointment_request?: boolean
+          organization_id?: string
+          personal_reminders_enabled?: boolean
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agenda_reminder_settings_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: true
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      appointment_reminder_log: {
+        Row: {
+          appointment_id: string
+          audience: string
+          id: string
+          offset_minutes: number
+          sent_at: string
+        }
+        Insert: {
+          appointment_id: string
+          audience: string
+          id?: string
+          offset_minutes: number
+          sent_at?: string
+        }
+        Update: {
+          appointment_id?: string
+          audience?: string
+          id?: string
+          offset_minutes?: number
+          sent_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appointment_reminder_log_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       appointment_requests: {
         Row: {
           address: string | null
@@ -126,6 +211,7 @@ export type Database = {
           completion_notes: string | null
           created_at: string
           id: string
+          kind: string
           notes: string | null
           organization_id: string | null
           owner_id: string | null
@@ -142,6 +228,7 @@ export type Database = {
           completion_notes?: string | null
           created_at?: string
           id?: string
+          kind?: string
           notes?: string | null
           organization_id?: string | null
           owner_id?: string | null
@@ -158,6 +245,7 @@ export type Database = {
           completion_notes?: string | null
           created_at?: string
           id?: string
+          kind?: string
           notes?: string | null
           organization_id?: string | null
           owner_id?: string | null

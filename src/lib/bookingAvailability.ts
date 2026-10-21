@@ -30,7 +30,7 @@ export function collectOccupiedSlots(sources: BookingSources, excludedRequestId?
 export async function fetchOccupiedSlots(organizationId: string, excludedRequestId?: string) {
   const now = new Date();
   const [appointments, services, requests] = await Promise.all([
-    supabase.from("appointments").select("scheduled_at")
+    supabase.from("appointments").select("scheduled_at").neq("kind", "birthday")
       .eq("organization_id", organizationId).gte("scheduled_at", now.toISOString()).is("completed_at", null),
     supabase.from("service_requests").select("scheduled_date")
       .eq("organization_id", organizationId).in("status", ["accepted", "date_proposed"]).not("scheduled_date", "is", null),
