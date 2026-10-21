@@ -526,7 +526,7 @@ export default function Settings() {
         </div>
       ) : (
       <Tabs value={settingsTab} onValueChange={setSettingsTab} className="space-y-4">
-        <TabsList className="w-full">
+        <TabsList className="w-full grid grid-cols-4 gap-1 overflow-visible sm:flex sm:gap-1.5 [&>button]:min-w-0 [&>button]:px-2 sm:[&>button]:px-3.5">
           <TabsTrigger value="users"><Users className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" /><span>Usuários</span></TabsTrigger>
           <TabsTrigger value="pix"><QrCode className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" /><span>Pix</span></TabsTrigger>
           <TabsTrigger value="security"><Settings2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" /><span>Sistema</span></TabsTrigger>

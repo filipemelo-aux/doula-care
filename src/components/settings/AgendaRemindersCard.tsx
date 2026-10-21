@@ -60,8 +60,8 @@ function Chips({ options, value, onChange, disabled }: { options: { v: number; l
 function Row({ title, desc, checked, onChange }: { title: string; desc: string; checked: boolean; onChange: (v: boolean) => void }) {
   return (
     <div className="flex items-start justify-between gap-4">
-      <div><p className="text-sm font-medium">{title}</p><p className="text-xs text-muted-foreground">{desc}</p></div>
-      <Switch checked={checked} onCheckedChange={onChange} />
+      <div className="min-w-0"><p className="text-sm font-medium">{title}</p><p className="text-xs text-muted-foreground">{desc}</p></div>
+      <Switch className="shrink-0" checked={checked} onCheckedChange={onChange} />
     </div>
   );
 }
