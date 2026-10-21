@@ -66,6 +66,7 @@ import {
   QrCode,
   RefreshCw,
   Lock,
+  CalendarDays,
 } from "lucide-react";
 import { PixSettingsCard } from "@/components/settings/PixSettingsCard";
 import { BrandingSettingsCard } from "@/components/settings/BrandingSettingsCard";
