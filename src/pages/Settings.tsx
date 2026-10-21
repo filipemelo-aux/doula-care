@@ -66,6 +66,7 @@ import {
   QrCode,
   RefreshCw,
   Lock,
+  CalendarDays,
 } from "lucide-react";
 import { PixSettingsCard } from "@/components/settings/PixSettingsCard";
 import { BrandingSettingsCard } from "@/components/settings/BrandingSettingsCard";
@@ -121,7 +122,7 @@ export default function Settings() {
   // User management state
   const [newUserOpen, setNewUserOpen] = useState(false);
   const [changePasswordOpen, setChangePasswordOpen] = useState(false);
-  const [settingsTab, setSettingsTab] = useState("users");
+  const [settingsTab, setSettingsTab] = useState(() => new URLSearchParams(window.location.search).get("tab") || "users");
   const [editUserDialog, setEditUserDialog] = useState<{ userId: string; fullName: string; role: string; email?: string } | null>(null);
   const [deleteUserId, setDeleteUserId] = useState<string | null>(null);
   const [newUserData, setNewUserData] = useState({
@@ -529,6 +530,7 @@ export default function Settings() {
           <TabsTrigger value="users"><Users className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" /><span>Usuários</span></TabsTrigger>
           <TabsTrigger value="pix"><QrCode className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" /><span>Pix</span></TabsTrigger>
           <TabsTrigger value="security"><Settings2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" /><span>Sistema</span></TabsTrigger>
+          <TabsTrigger value="agenda"><CalendarDays className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" /><span>Agenda</span></TabsTrigger>
         </TabsList>
 
 
@@ -685,10 +687,13 @@ export default function Settings() {
           <PixSettingsCard />
         </TabsContent>
 
+        <TabsContent value="agenda" className="space-y-6">
+          <AgendaRemindersCard />
+        </TabsContent>
+
         {/* ─── SISTEMA TAB ─── */}
         <TabsContent value="security" className="space-y-6">
           <PushNotificationStatusCard />
-          <AgendaRemindersCard />
 
           <Card className="card-glass">
             <CardContent className="pt-6 space-y-4">

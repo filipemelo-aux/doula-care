@@ -56,6 +56,7 @@ import {
   MapPin,
   Navigation,
   Tag,
+  Settings as SettingsIcon,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -770,6 +771,17 @@ export default function Agenda() {
           <h1 className="page-title">Agenda</h1>
           <p className="page-description">Compromissos e horários disponíveis</p>
         </div>
+        <div className="flex items-center gap-2 shrink-0">
+        <Button
+          size="icon"
+          variant="outline"
+          className="h-9 w-9"
+          aria-label="Configurações da agenda"
+          title="Configurações da agenda"
+          onClick={() => navigate("/configuracoes?tab=agenda")}
+        >
+          <SettingsIcon className="h-4 w-4" />
+        </Button>
         <Button
           size="sm"
           variant="outline"
@@ -779,6 +791,7 @@ export default function Agenda() {
           <Tag className="h-4 w-4" />
           <span>Etiquetas</span>
         </Button>
+        </div>
 
 
       </div>
