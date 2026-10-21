@@ -773,23 +773,25 @@ export default function Agenda() {
         </div>
         <div className="flex items-center gap-2 shrink-0">
         <Button
-          size="icon"
+          size="sm"
           variant="outline"
-          className="h-9 w-9"
+          className="h-9 gap-1.5"
           aria-label="Configurações da agenda"
           title="Configurações da agenda"
           onClick={() => navigate("/configuracoes?tab=agenda")}
         >
-          <SettingsIcon className="h-4 w-4" />
+          <SettingsIcon className="h-4 w-4 shrink-0" />
+          <span className="hidden xs:inline sm:inline">Configurações</span>
         </Button>
         <Button
-          size="sm"
+          size="icon"
           variant="outline"
-          className="gap-1.5"
+          className="h-9 w-9"
+          aria-label="Etiquetas"
+          title="Etiquetas"
           onClick={() => setLabelsManagerOpen(true)}
         >
           <Tag className="h-4 w-4" />
-          <span>Etiquetas</span>
         </Button>
         </div>
 

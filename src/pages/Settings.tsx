@@ -464,6 +464,13 @@ export default function Settings() {
 
       {callerIsModerator ? (
         <div className="space-y-6">
+          <div className="flex items-center gap-3 rounded-2xl bg-card border border-border/50 p-4">
+            <AvatarUpload currentUrl={avatarUrl} onUploaded={setAvatarUrl} userId={user?.id} name={profileName || ""} size="sm" />
+            <div className="min-w-0">
+              <h3 className="text-sm font-semibold text-foreground">Sua foto</h3>
+              <p className="text-xs text-muted-foreground">Toque na foto para enviar ou trocar a sua imagem.</p>
+            </div>
+          </div>
           <PushNotificationStatusCard />
           <Card className="card-glass">
             <CardHeader>
@@ -538,6 +545,13 @@ export default function Settings() {
 
         {/* ─── USERS TAB ─── */}
         <TabsContent value="users" className="space-y-6">
+          <div className="flex items-center gap-3 rounded-2xl bg-card border border-border/50 p-4">
+            <AvatarUpload currentUrl={avatarUrl} onUploaded={setAvatarUrl} userId={user?.id} name={profileName || ""} size="sm" />
+            <div className="min-w-0">
+              <h3 className="text-sm font-semibold text-foreground">Sua foto</h3>
+              <p className="text-xs text-muted-foreground">Toque na foto para enviar ou trocar a sua imagem.</p>
+            </div>
+          </div>
           {isAdmin && (
             <>
               {/* Admin Users — list layout */}
