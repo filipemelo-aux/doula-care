@@ -70,6 +70,7 @@ import {
 import { PixSettingsCard } from "@/components/settings/PixSettingsCard";
 import { BrandingSettingsCard } from "@/components/settings/BrandingSettingsCard";
 import { PushNotificationStatusCard } from "@/components/settings/PushNotificationStatusCard";
+import { AgendaRemindersCard } from "@/components/settings/AgendaRemindersCard";
 import { toast } from "sonner";
 // formatBrazilDate removed — no longer needed in list layout
 import { AvatarUpload } from "@/components/gestante/AvatarUpload";
@@ -687,6 +688,7 @@ export default function Settings() {
         {/* ─── SISTEMA TAB ─── */}
         <TabsContent value="security" className="space-y-6">
           <PushNotificationStatusCard />
+          <AgendaRemindersCard />
 
           <Card className="card-glass">
             <CardContent className="pt-6 space-y-4">
