@@ -781,7 +781,7 @@ export default function Agenda() {
           onClick={() => navigate("/configuracoes?tab=agenda")}
         >
           <SettingsIcon className="h-4 w-4 shrink-0" />
-          <span className="hidden xs:inline sm:inline">Configurações</span>
+          <span>Configurações</span>
         </Button>
         <Button
           size="icon"
