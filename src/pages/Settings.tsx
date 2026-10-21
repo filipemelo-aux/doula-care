@@ -1,6 +1,6 @@
 import { TeamAccessCard } from "@/components/settings/TeamAccessCard";
 import { Link } from "react-router-dom";
-import { useState, useEffect, lazy, Suspense } from "react";
+import { useState, lazy, Suspense } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -72,7 +72,6 @@ import { PushNotificationStatusCard } from "@/components/settings/PushNotificati
 import { AgendaRemindersCard } from "@/components/settings/AgendaRemindersCard";
 import { toast } from "sonner";
 // formatBrazilDate removed — no longer needed in list layout
-import { AvatarUpload } from "@/components/gestante/AvatarUpload";
 import { useForm } from "react-hook-form";
 import { APP_VERSION } from "@/lib/appVersion";
 import { hardRefreshApp } from "@/lib/appUpdate";
@@ -98,24 +97,11 @@ const planSchema = z.object({
 type PlanFormData = z.infer<typeof planSchema>;
 
 export default function Settings() {
-  const { user, isAdmin, role, profileName, organizationId } = useAuth();
+  const { user, isAdmin, role, organizationId } = useAuth();
   const callerIsAdmin = role === "admin";
   const callerIsModerator = role === "moderator";
   const queryClient = useQueryClient();
   const { limits, plan: orgPlan } = usePlanLimits();
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
-
-  // Fetch avatar
-  useEffect(() => {
-    if (user) {
-      supabase
-        .from("profiles")
-        .select("avatar_url")
-        .eq("user_id", user.id)
-        .maybeSingle()
-        .then(({ data }) => setAvatarUrl(data?.avatar_url || null));
-    }
-  }, [user]);
 
   // User management state
   const [newUserOpen, setNewUserOpen] = useState(false);
@@ -440,13 +426,6 @@ export default function Settings() {
 
       {callerIsModerator ? (
         <div className="space-y-6">
-          <div className="flex items-center gap-3 rounded-2xl bg-card border border-border/50 p-4">
-            <AvatarUpload currentUrl={avatarUrl} onUploaded={setAvatarUrl} userId={user?.id} name={profileName || ""} size="sm" />
-            <div className="min-w-0">
-              <h3 className="text-sm font-semibold text-foreground">Sua foto</h3>
-              <p className="text-xs text-muted-foreground">Toque na foto para enviar ou trocar a sua imagem.</p>
-            </div>
-          </div>
           <PushNotificationStatusCard />
           <Card className="card-glass">
             <CardHeader>
@@ -521,13 +500,6 @@ export default function Settings() {
 
         {/* ─── USERS TAB ─── */}
         <TabsContent value="users" className="space-y-6">
-          <div className="flex items-center gap-3 rounded-2xl bg-card border border-border/50 p-4">
-            <AvatarUpload currentUrl={avatarUrl} onUploaded={setAvatarUrl} userId={user?.id} name={profileName || ""} size="sm" />
-            <div className="min-w-0">
-              <h3 className="text-sm font-semibold text-foreground">Sua foto</h3>
-              <p className="text-xs text-muted-foreground">Toque na foto para enviar ou trocar a sua imagem.</p>
-            </div>
-          </div>
           {isAdmin && (
             <>
               {/* Admin Users — list layout */}
