@@ -78,7 +78,7 @@ export function OrgDetailsDialog({ orgId, open, onOpenChange }: Props) {
     queryFn: async () => {
       if (!orgId) throw new Error("Organização não informada");
 
-      const [{ data: org }, { data: profiles }, { data: personal }, { data: clients }] =
+      const [{ data: org }, { data: profiles }, { data: personal }, { data: clients }, { data: promos }] =
         await Promise.all([
           supabase.from("organizations").select("*").eq("id", orgId).maybeSingle(),
           supabase
@@ -94,7 +94,12 @@ export function OrgDetailsDialog({ orgId, open, onOpenChange }: Props) {
             .select("id, full_name, preferred_name, phone, status, custom_status, dpp, created_at")
             .eq("organization_id", orgId)
             .order("full_name", { ascending: true }),
+          supabase
+            .from("org_promotions" as any)
+            .select("promotion_type, status, trial_started_at, trial_ends_at")
+            .eq("organization_id", orgId),
         ]);
+
 
       const userIds = (profiles || []).map((p: any) => p.user_id);
       let roles: any[] = [];
@@ -106,7 +111,8 @@ export function OrgDetailsDialog({ orgId, open, onOpenChange }: Props) {
         roles = r || [];
       }
 
-      return { org, profiles: profiles || [], personal: personal || [], roles, clients: clients || [] };
+      return { org, profiles: profiles || [], personal: personal || [], roles, clients: clients || [], promos: promos || [] };
+
     },
   });
 
@@ -117,6 +123,27 @@ export function OrgDetailsDialog({ orgId, open, onOpenChange }: Props) {
     ) || data?.profiles?.[0];
   const ownerPersonal: any =
     data?.personal.find((p: any) => p.user_id === owner?.user_id) || data?.personal?.[0];
+
+  const planLabels: Record<string, string> = { free: "Free", pro: "Pro", premium: "Premium" };
+  const activePromo: any =
+    (data?.promos || []).find((p: any) => p.status === "trial_active") ||
+    (data?.promos || []).find((p: any) => p.status === "lifetime_active") ||
+    null;
+  const isTrial = activePromo?.status === "trial_active";
+  const isLifetime = activePromo?.status === "lifetime_active";
+  const trialEnds = isTrial && activePromo?.trial_ends_at ? new Date(activePromo.trial_ends_at) : null;
+  const trialRemaining = (() => {
+    if (!trialEnds) return null;
+    const ms = trialEnds.getTime() - Date.now();
+    if (ms <= 0) return "encerrado";
+    const days = Math.floor(ms / 86400000);
+    const hours = Math.floor((ms % 86400000) / 3600000);
+    if (days > 0) return `${days} ${days === 1 ? "dia" : "dias"}${hours > 0 ? ` e ${hours}h` : ""}`;
+    if (hours > 0) return `${hours}h`;
+    const minutes = Math.max(1, Math.floor((ms % 3600000) / 60000));
+    return `${minutes}min`;
+  })();
+
 
   const STAFF_ROLES = ["admin", "moderator", "super_admin"];
   const team = (data?.profiles || [])
@@ -144,12 +171,22 @@ export function OrgDetailsDialog({ orgId, open, onOpenChange }: Props) {
         ) : (
           <Tabs defaultValue="organization" className="space-y-3">
             <div className="flex flex-wrap items-center gap-2">
-              <Badge variant="secondary" className="text-[10px] uppercase">{org.plan}</Badge>
+              <Badge variant="secondary" className="text-[10px] uppercase">
+                {planLabels[org.plan] || org.plan}
+                {isTrial ? " (teste grátis)" : ""}
+                {isLifetime ? " (vitalício)" : ""}
+              </Badge>
+              {isTrial ? (
+                <Badge variant="outline" className="text-[10px]">
+                  Teste grátis · termina em {trialRemaining} ({fmtDate(activePromo.trial_ends_at, true)})
+                </Badge>
+              ) : null}
               <Badge variant="outline" className="text-[10px] uppercase">{org.status}</Badge>
               <Badge variant="outline" className="text-[10px]">
                 {org.accepts_new_clients ? "Aceita novas clientes" : "Não aceita novas clientes"}
               </Badge>
             </div>
+
 
 
             <TabsList className="w-full">
@@ -237,10 +274,16 @@ export function OrgDetailsDialog({ orgId, open, onOpenChange }: Props) {
               <div className="rounded-2xl bg-muted/40 p-3">
                 <p className="text-xs font-semibold text-foreground mb-1">Assinatura e cobrança</p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4">
+                  <Row label="Plano ativo" value={`${planLabels[org.plan] || org.plan}${isTrial ? " (teste grátis)" : ""}${isLifetime ? " (vitalício)" : ""}`} />
+                  <Row
+                    label={isTrial ? "Teste grátis termina em" : "Próxima cobrança"}
+                    value={isTrial ? `${trialRemaining} — ${fmtDate(activePromo.trial_ends_at, true)}` : fmtDate(org.next_billing_date)}
+                  />
                   <Row label="Ciclo de cobrança" value={org.billing_cycle} />
-                  <Row label="Próxima cobrança" value={fmtDate(org.next_billing_date)} />
+                  {isTrial ? <Row label="Teste iniciado em" value={fmtDate(activePromo.trial_started_at, true)} /> : null}
                 </div>
               </div>
+
             </TabsContent>
 
             <TabsContent value="clients" className="mt-0">
