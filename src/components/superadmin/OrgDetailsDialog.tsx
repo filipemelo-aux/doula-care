@@ -78,7 +78,7 @@ export function OrgDetailsDialog({ orgId, open, onOpenChange }: Props) {
     queryFn: async () => {
       if (!orgId) throw new Error("Organização não informada");
 
-      const [{ data: org }, { data: profiles }, { data: personal }, { data: clients }] =
+      const [{ data: org }, { data: profiles }, { data: personal }, { data: clients }, { data: promos }] =
         await Promise.all([
           supabase.from("organizations").select("*").eq("id", orgId).maybeSingle(),
           supabase
@@ -94,7 +94,12 @@ export function OrgDetailsDialog({ orgId, open, onOpenChange }: Props) {
             .select("id, full_name, preferred_name, phone, status, custom_status, dpp, created_at")
             .eq("organization_id", orgId)
             .order("full_name", { ascending: true }),
+          supabase
+            .from("org_promotions" as any)
+            .select("promotion_type, status, trial_started_at, trial_ends_at")
+            .eq("organization_id", orgId),
         ]);
+
 
       const userIds = (profiles || []).map((p: any) => p.user_id);
       let roles: any[] = [];
@@ -106,7 +111,8 @@ export function OrgDetailsDialog({ orgId, open, onOpenChange }: Props) {
         roles = r || [];
       }
 
-      return { org, profiles: profiles || [], personal: personal || [], roles, clients: clients || [] };
+      return { org, profiles: profiles || [], personal: personal || [], roles, clients: clients || [], promos: promos || [] };
+
     },
   });
 
