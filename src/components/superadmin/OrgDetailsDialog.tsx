@@ -274,10 +274,16 @@ export function OrgDetailsDialog({ orgId, open, onOpenChange }: Props) {
               <div className="rounded-2xl bg-muted/40 p-3">
                 <p className="text-xs font-semibold text-foreground mb-1">Assinatura e cobrança</p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4">
+                  <Row label="Plano ativo" value={`${planLabels[org.plan] || org.plan}${isTrial ? " (teste grátis)" : ""}${isLifetime ? " (vitalício)" : ""}`} />
+                  <Row
+                    label={isTrial ? "Teste grátis termina em" : "Próxima cobrança"}
+                    value={isTrial ? `${trialRemaining} — ${fmtDate(activePromo.trial_ends_at, true)}` : fmtDate(org.next_billing_date)}
+                  />
                   <Row label="Ciclo de cobrança" value={org.billing_cycle} />
-                  <Row label="Próxima cobrança" value={fmtDate(org.next_billing_date)} />
+                  {isTrial ? <Row label="Teste iniciado em" value={fmtDate(activePromo.trial_started_at, true)} /> : null}
                 </div>
               </div>
+
             </TabsContent>
 
             <TabsContent value="clients" className="mt-0">
