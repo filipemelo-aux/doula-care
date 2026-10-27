@@ -124,6 +124,27 @@ export function OrgDetailsDialog({ orgId, open, onOpenChange }: Props) {
   const ownerPersonal: any =
     data?.personal.find((p: any) => p.user_id === owner?.user_id) || data?.personal?.[0];
 
+  const planLabels: Record<string, string> = { free: "Free", pro: "Pro", premium: "Premium" };
+  const activePromo: any =
+    (data?.promos || []).find((p: any) => p.status === "trial_active") ||
+    (data?.promos || []).find((p: any) => p.status === "lifetime_active") ||
+    null;
+  const isTrial = activePromo?.status === "trial_active";
+  const isLifetime = activePromo?.status === "lifetime_active";
+  const trialEnds = isTrial && activePromo?.trial_ends_at ? new Date(activePromo.trial_ends_at) : null;
+  const trialRemaining = (() => {
+    if (!trialEnds) return null;
+    const ms = trialEnds.getTime() - Date.now();
+    if (ms <= 0) return "encerrado";
+    const days = Math.floor(ms / 86400000);
+    const hours = Math.floor((ms % 86400000) / 3600000);
+    if (days > 0) return `${days} ${days === 1 ? "dia" : "dias"}${hours > 0 ? ` e ${hours}h` : ""}`;
+    if (hours > 0) return `${hours}h`;
+    const minutes = Math.max(1, Math.floor((ms % 3600000) / 60000));
+    return `${minutes}min`;
+  })();
+
+
   const STAFF_ROLES = ["admin", "moderator", "super_admin"];
   const team = (data?.profiles || [])
     .map((p: any) => ({
