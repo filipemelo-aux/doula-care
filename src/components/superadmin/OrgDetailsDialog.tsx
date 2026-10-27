@@ -25,7 +25,6 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { maskCPF, maskPhone } from "@/lib/masks";
-import { PromoTriggerButton } from "@/components/superadmin/PromoTriggerButton";
 
 interface Props {
   orgId: string | null;
@@ -150,9 +149,8 @@ export function OrgDetailsDialog({ orgId, open, onOpenChange }: Props) {
               <Badge variant="outline" className="text-[10px]">
                 {org.accepts_new_clients ? "Aceita novas clientes" : "Não aceita novas clientes"}
               </Badge>
-              <PromoTriggerButton orgId={org.id} orgName={org.nome_exibicao?.trim() || org.name} />
             </div>
-            <PromoTriggerButton orgId={org.id} orgName={org.nome_exibicao?.trim() || org.name} mode="actions" />
+
 
             <TabsList className="w-full">
               <TabsTrigger value="organization">
