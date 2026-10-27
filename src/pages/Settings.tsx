@@ -80,6 +80,7 @@ import { z } from "zod";
 import type { Tables } from "@/integrations/supabase/types";
 import { usePlanLimits } from "@/hooks/usePlanLimits";
 import { promptToSaveUpdatedPassword } from "@/lib/passwordManager";
+import { getFunctionError } from "@/lib/functionError";
 
 // ─── Plan Types ──────────────────────────────────────────
 type PlanSetting = Tables<"plan_settings">;
@@ -194,16 +195,7 @@ export default function Settings() {
         body: { ...userData, organizationId },
       });
       if (error) {
-        // Try to parse structured error from edge function response
-        try {
-          const raw = (error as any).context?.body || (error as any).message;
-          const parsed = typeof raw === "string" ? JSON.parse(raw) : raw;
-          if (parsed?.code === "duplicate_email") throw new Error("Este email já está cadastrado no sistema");
-          if (parsed?.error) throw new Error(parsed.error);
-        } catch (parseErr) {
-          if (parseErr instanceof Error && parseErr.message !== error.message) throw parseErr;
-        }
-        throw error;
+        throw await getFunctionError(error);
       }
       if (data?.error) {
         if (data?.code === "duplicate_email") throw new Error("Este email já está cadastrado no sistema");
@@ -225,7 +217,7 @@ export default function Settings() {
       const { data, error } = await supabase.functions.invoke("manage-admin-user", {
         body: { action: "reset-password", userId },
       });
-      if (error) throw error;
+      if (error) throw await getFunctionError(error);
       if (data?.error) throw new Error(data.error);
       return data as { newPassword: string };
     },
@@ -242,7 +234,7 @@ export default function Settings() {
       const { data, error } = await supabase.functions.invoke("manage-admin-user", {
         body: { action: "update", userId, fullName, role, email },
       });
-      if (error) throw error;
+      if (error) throw await getFunctionError(error);
       if (data.error) throw new Error(data.error);
       return data;
     },
@@ -259,7 +251,7 @@ export default function Settings() {
       const { data, error } = await supabase.functions.invoke("manage-admin-user", {
         body: { action: "delete", userId },
       });
-      if (error) throw error;
+      if (error) throw await getFunctionError(error);
       if (data.error) throw new Error(data.error);
       return data;
     },

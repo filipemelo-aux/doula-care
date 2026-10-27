@@ -15,3 +15,4 @@ Fallback de parcelas sem transaction_id só é permitido para receitas automáti
 - Agenda owns the selected day and availability-dialog state; one persistent floating creation button follows the active tab, without coupling access to date filters or duplicating creation controls.
 - Agenda reminders: per-org settings in agenda_reminder_settings; due-reminder rules live in supabase/functions/_shared/agendaReminders.ts with a sent log per offset — one tested source for edge function and UI.
 - Baby 1st-birthday appointments (appointments.kind='birthday') are created/updated by a DB trigger on clients birth data — never created client-side.
+- Settings user-management failures decode the function Response through src/lib/functionError.ts — preserves server rejection reasons instead of generic HTTP errors.
