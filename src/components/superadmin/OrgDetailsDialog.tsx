@@ -171,12 +171,22 @@ export function OrgDetailsDialog({ orgId, open, onOpenChange }: Props) {
         ) : (
           <Tabs defaultValue="organization" className="space-y-3">
             <div className="flex flex-wrap items-center gap-2">
-              <Badge variant="secondary" className="text-[10px] uppercase">{org.plan}</Badge>
+              <Badge variant="secondary" className="text-[10px] uppercase">
+                {planLabels[org.plan] || org.plan}
+                {isTrial ? " (teste grátis)" : ""}
+                {isLifetime ? " (vitalício)" : ""}
+              </Badge>
+              {isTrial ? (
+                <Badge variant="outline" className="text-[10px]">
+                  Teste grátis · termina em {trialRemaining} ({fmtDate(activePromo.trial_ends_at, true)})
+                </Badge>
+              ) : null}
               <Badge variant="outline" className="text-[10px] uppercase">{org.status}</Badge>
               <Badge variant="outline" className="text-[10px]">
                 {org.accepts_new_clients ? "Aceita novas clientes" : "Não aceita novas clientes"}
               </Badge>
             </div>
+
 
 
             <TabsList className="w-full">
