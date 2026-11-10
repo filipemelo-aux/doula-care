@@ -126,7 +126,7 @@ export function usePlanLimits() {
     queryFn: async () => {
       if (!organizationId) return null;
       const { data, error } = await supabase
-        .from("org_promotions" as any)
+        .from("org_promotions")
         .select("id, status, trial_ends_at, promotion_type")
         .eq("organization_id", organizationId)
         .order("updated_at", { ascending: false })

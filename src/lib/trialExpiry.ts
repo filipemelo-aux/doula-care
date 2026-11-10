@@ -6,7 +6,7 @@ export interface TrialPromotion {
 }
 
 export function hasEndedTrial(promo: TrialPromotion | null | undefined, now = Date.now()): boolean {
-  if (!promo || promo.promotion_type !== "trial_15d") return false;
+  if (!promo || !["trial_15d", "trial", "beta_tester"].includes(promo.promotion_type)) return false;
   if (promo.status === "expired") return true;
   if (promo.status !== "trial_active" || !promo.trial_ends_at) return false;
   return new Date(promo.trial_ends_at).getTime() <= now;
