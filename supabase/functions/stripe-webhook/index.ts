@@ -1,3 +1,5 @@
+import { persistStripeSubscription } from '../_shared/stripeSync.ts';
+import { reconcilePlan } from '../_shared/subscriptionServer.ts';
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
 import { STRIPE_PLANS, findPlanByPixPriceId, findPlanByPriceId } from "../_shared/stripe-plans.ts";
@@ -12,8 +14,8 @@ const log = (step: string, details?: unknown) =>
 
 const admin = () =>
   createClient(
-    Deno.env.get("SUPABASE_URL")!,
-    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+    Deno.env.get("SUPABASE_URL") ?? "",
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
     { auth: { persistSession: false } }
   );
 
@@ -80,76 +82,9 @@ async function syncSubscription(
     return;
   }
 
-  const active = ["active", "trialing", "past_due"].includes(subscription.status);
-  const status = subscription.status === "past_due"
-    ? "billing_issue"
-    : active
-    ? "active"
-    : "canceled";
-
-  const item = subscription.items.data[0] as unknown as
-    { current_period_start?: number; current_period_end?: number } | undefined;
-  const rawStart = (subscription as unknown as { current_period_start?: number }).current_period_start
-    ?? item?.current_period_start;
-  const rawEnd = (subscription as unknown as { current_period_end?: number }).current_period_end
-    ?? item?.current_period_end;
-  const periodStart = rawStart ? new Date(rawStart * 1000).toISOString() : null;
-  const periodEnd = rawEnd ? new Date(rawEnd * 1000).toISOString() : null;
-
-  const { data: existing } = await supabase
-    .from("subscriptions")
-    .select("id")
-    .eq("user_id", userId)
-    .eq("stripe_subscription_id", subscription.id)
-    .maybeSingle();
-
-  const payload = {
-    user_id: userId,
-    plan_id: planInfo.planId,
-    status,
-    platform: "web",
-    product_id: priceId,
-    current_period_start: periodStart,
-    current_period_end: periodEnd,
-    stripe_customer_id: customerId,
-    stripe_subscription_id: subscription.id,
-  };
-
-  if (existing?.id) {
-    await supabase.from("subscriptions").update(payload).eq("id", existing.id);
-  } else {
-    // encerra assinaturas web anteriores do mesmo usuário
-    await supabase
-      .from("subscriptions")
-      .update({ status: "canceled" })
-      .eq("user_id", userId)
-      .eq("platform", "web")
-      .in("status", ["active", "pending", "billing_issue"]);
-    await supabase.from("subscriptions").insert(payload);
-  }
-
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("organization_id")
-    .eq("user_id", userId)
-    .maybeSingle();
-
-  if (profile?.organization_id) {
-    await supabase
-      .from("organizations")
-      .update(
-        status === "canceled"
-          ? { plan: "free" as const }
-          : {
-              plan: planInfo.plan,
-              status: "ativo",
-              next_billing_date: periodEnd ? periodEnd.split("T")[0] : null,
-            }
-      )
-      .eq("id", profile.organization_id);
-  }
-
-  log("Subscription synced", { userId, plan: planInfo.plan, status });
+  const record = await persistStripeSubscription(subscription, userId);
+  await reconcilePlan(userId);
+  log("Subscription synced", { userId, status: record.status });
 }
 
 // Pagamento avulso por Pix: libera o plano por 30 dias (mensal) ou 365 (anual).
@@ -162,7 +97,7 @@ async function activatePixPayment(stripe: Stripe, session: Stripe.Checkout.Sessi
     findPlanByPixPriceId(priceId) ??
     (session.metadata?.plan && session.metadata?.billing
       ? STRIPE_PLANS.find(
-          (p) => p.plan === session.metadata!.plan && p.billing === session.metadata!.billing
+          (p) => p.plan === session.metadata?.plan && p.billing === session.metadata?.billing
         )
       : undefined);
 
@@ -218,6 +153,7 @@ async function activatePixPayment(stripe: Stripe, session: Stripe.Checkout.Sessi
     plan_id: planInfo.planId,
     status: "active",
     platform: "web",
+    environment: session.livemode ? "production" : "sandbox",
     product_id: priceId ?? planInfo.pixPriceId,
     current_period_start: now.toISOString(),
     current_period_end: periodEnd.toISOString(),
@@ -327,7 +263,7 @@ Deno.serve(async (req) => {
       case "invoice.payment_failed": {
         const invoice = event.data.object as Stripe.Invoice;
         const subId =
-          typeof invoice.subscription === "string" ? invoice.subscription : null;
+          typeof (invoice as any).subscription === "string" ? (invoice as any).subscription : (invoice as any).parent?.subscription_details?.subscription ?? null;
         if (subId) {
           const subscription = await stripe.subscriptions.retrieve(subId);
           await syncSubscription(stripe, subscription);

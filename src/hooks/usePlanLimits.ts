@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { needsTrialNotice, type TrialPromotion } from "@/lib/trialExpiry";
+import { hasSubscriptionAccess, selectSubscription } from "@/lib/subscriptions/subscriptionRules";
 
 export type OrgPlan = "free" | "pro" | "premium";
 
@@ -23,13 +24,13 @@ export interface PlanLimits {
 
 // Fallback mínimo caso a tabela platform_plan_limits esteja inacessível
 const FREE_FALLBACK: PlanLimits = {
-  maxClients: 5,
+  maxClients: 1,
   reports: false,
   exportReports: false,
   pushNotifications: true,
   multiCollaborators: false,
-  maxCollaborators: 1,
-  agenda: true,
+  maxCollaborators: 0,
+  agenda: false,
   clients: true,
   financial: true,
   expenses: true,
@@ -55,7 +56,7 @@ function dbRowToLimits(row: any): PlanLimits {
 }
 
 export function usePlanLimits() {
-  const { organizationId, user, isSuperAdmin } = useAuth();
+  const { organizationId, user, isSuperAdmin, isAdmin } = useAuth();
   const queryClient = useQueryClient();
 
   // Sincronização em tempo real com as alterações feitas pelo Super Admin
@@ -82,6 +83,22 @@ export function usePlanLimits() {
     };
   }, [queryClient]);
 
+
+  useQuery({
+    queryKey: ["subscription-provider-sync", user?.id],
+    queryFn: async () => {
+      const { error } = await supabase.functions.invoke("check-subscription");
+      if (error) throw error;
+      await queryClient.invalidateQueries({ queryKey: ["current-subscription"] });
+      await queryClient.invalidateQueries({ queryKey: ["org-plan"] });
+      return true;
+    },
+    enabled: !!user?.id && isAdmin && !isSuperAdmin,
+    staleTime: 5 * 60 * 1000,
+    refetchInterval: 5 * 60 * 1000,
+    retry: false,
+  });
+
   // 1. Org data — source of truth for the plan slug
   const { data: orgData, isLoading: orgLoading } = useQuery({
     queryKey: ["org-plan", organizationId],
@@ -107,17 +124,15 @@ export function usePlanLimits() {
       if (!user?.id) return null;
       const { data, error } = await supabase
         .from("subscriptions")
-        .select("id, status, current_period_end, plan_id, platform")
+        .select("id, status, current_period_end, plan_id, platform, environment, created_at")
         .eq("user_id", user.id)
-        .in("status", ["active", "pending"])
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
+        .order("created_at", { ascending: false });
       if (error) throw error;
-      return data;
+      return selectSubscription(data ?? []);
     },
     enabled: !!user?.id,
-    staleTime: 2 * 60 * 1000,
+    staleTime: 30 * 1000,
+    refetchInterval: 30 * 1000,
   });
 
   // 2b. Promotion/trial record
@@ -175,39 +190,19 @@ export function usePlanLimits() {
     enabled: !!organizationId,
   });
 
-  const hasActiveSubscription = !!subscription && subscription.status === "active";
+  const hasActiveSubscription = !!subscription && hasSubscriptionAccess(subscription);
   const isTrialExpired = !isSuperAdmin && needsTrialNotice(promoData, plan, hasActiveSubscription);
 
   // ── Subscription state ──
   // Super admins are NEVER considered expired or blocked
   const isSubscriptionExpired = (() => {
-    // Trial encerrado sem assinatura: limites do Free até assinar
-    if (isTrialExpired && !hasActiveSubscription) return true;
-    // Pix é pagamento avulso: ao fim do período o acesso é interrompido
-    // e um novo pagamento (ou assinatura recorrente) é exigido.
-    if (
-      !isSuperAdmin &&
-      (subscription as any)?.platform === "pix" &&
-      subscription?.current_period_end &&
-      new Date(subscription.current_period_end) < new Date()
-    ) {
-      return true;
-    }
-    return false; // Demais cobranças seguem sem bloqueio por assinatura
-    if (isSuperAdmin) return false;
-    if (plan === "free") return false;
-    // Trial expired without active subscription → expired
-    if (isTrialExpired && !hasActiveSubscription) return true;
-    // No subscription record and no trial → plan set by Super Admin, trust it
-    if (!subscription && !isTrialExpired) return false;
-    if (subscription?.status === "pending") return true;
-    if (subscription?.current_period_end) {
-      return new Date(subscription.current_period_end) < new Date();
-    }
-    return false;
+    if (isSuperAdmin || promoData?.status === "lifetime_active") return false;
+    if (isTrialExpired) return true;
+    if (hasActiveSubscription) return false;
+    return !!subscription;
   })();
 
-  const isSubscriptionPending = isSuperAdmin ? false : subscription?.status === "pending";
+  const isSubscriptionPending = !isSuperAdmin && !!subscription && ["pending", "billing_issue", "grace_period"].includes(subscription.status);
 
   const daysOverdue = (() => {
     if (isSuperAdmin) return 0;
@@ -218,7 +213,7 @@ export function usePlanLimits() {
     return Math.max(0, Math.floor(diffMs / (1000 * 60 * 60 * 24)));
   })();
 
-  const isGracePeriod = isSubscriptionPending && daysOverdue <= 3;
+  const isGracePeriod = isSubscriptionPending && hasActiveSubscription;
   const isBlocked = isSuperAdmin ? false : orgData?.status === "suspenso";
 
   // Effective plan: if expired (and not super admin), fall back to free

@@ -1,3 +1,5 @@
+import { purchaseEligibility } from '../_shared/subscriptionServer.ts';
+import { syncStripeUser } from '../_shared/stripeSync.ts';
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
@@ -58,6 +60,9 @@ serve(async (req) => {
       );
     }
 
+    await syncStripeUser(user.id, user.email);
+    const eligibility = await purchaseEligibility(user.id);
+    if (!eligibility.allowed) return new Response(JSON.stringify({ error: eligibility.message }), { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
 
     const customers = await stripe.customers.list({ email: user.email, limit: 1 });

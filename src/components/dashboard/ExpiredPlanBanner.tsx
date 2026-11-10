@@ -45,7 +45,7 @@ export function ExpiredPlanBanner() {
     );
   }
 
-  if (!isSubscriptionExpired && !isBlocked) return null;
+  if (!isSubscriptionExpired && !isBlocked && !isGracePeriod) return null;
 
   const planLabel =
     originalPlan === "pro" ? "Pro" : originalPlan === "premium" ? "Premium" : "Plano";
@@ -67,7 +67,7 @@ export function ExpiredPlanBanner() {
             size="sm"
             variant="destructive"
             className="shrink-0 text-xs h-7"
-            onClick={() => navigate("/admin/planos")}
+            onClick={() => navigate("/admin/assinatura")}
           >
             Regularizar
           </Button>
@@ -88,12 +88,12 @@ export function ExpiredPlanBanner() {
         <AlertDescription className="text-xs flex items-center justify-between gap-4">
           <span>
             Sua assinatura venceu. Realize o pagamento para continuar utilizando os recursos premium.
-            Após 3 dias o acesso será bloqueado.
+            Após a tolerância, aplicam-se os limites do Free; seus dados continuam preservados.
           </span>
           <Button
             size="sm"
-            className="shrink-0 text-xs h-7 bg-amber-600 hover:bg-amber-700 text-white"
-            onClick={() => navigate("/admin/planos")}
+            className="shrink-0 text-xs h-7"
+            onClick={() => navigate("/admin/assinatura")}
           >
             Pagar agora
           </Button>
@@ -118,7 +118,7 @@ export function ExpiredPlanBanner() {
           size="sm"
           variant="destructive"
           className="shrink-0 text-xs h-7"
-          onClick={() => navigate("/admin/planos")}
+          onClick={() => navigate("/admin/assinatura")}
         >
           Renovar plano
         </Button>

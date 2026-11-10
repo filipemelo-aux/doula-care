@@ -1,3 +1,4 @@
+import { syncStoreUser } from '../_shared/storeSync.ts';
 // Apple App Store Server Notifications V2 receiver.
 // Currently parses signedPayload (without JWS signature verification) and
 // updates the subscription state. TODO(prod): verify Apple JWS signature
@@ -39,8 +40,8 @@ Deno.serve(async (req) => {
     const productId = transactionInfo?.productId ?? renewalInfo?.productId;
 
     const svc = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
       { auth: { persistSession: false } }
     );
 
@@ -52,48 +53,7 @@ Deno.serve(async (req) => {
         .maybeSingle();
 
       if (sub) {
-        let newStatus: string | null = null;
-        let newPeriodEnd: string | null = transactionInfo?.expiresDate
-          ? new Date(transactionInfo.expiresDate).toISOString()
-          : null;
-
-        switch (notificationType) {
-          case "DID_RENEW":
-          case "SUBSCRIBED":
-            newStatus = "active";
-            break;
-          case "EXPIRED":
-            newStatus = "expired";
-            break;
-          case "DID_FAIL_TO_RENEW":
-            newStatus = subtype === "GRACE_PERIOD" ? "grace_period" : "billing_issue";
-            break;
-          case "REFUND":
-          case "REVOKE":
-          case "DID_CHANGE_RENEWAL_STATUS":
-            if (subtype === "AUTO_RENEW_DISABLED") newStatus = "canceled";
-            break;
-        }
-
-        if (newStatus) {
-          const updates: any = { status: newStatus, updated_at: new Date().toISOString() };
-          if (newPeriodEnd) updates.current_period_end = newPeriodEnd;
-          await svc.from("subscriptions").update(updates).eq("id", sub.id);
-
-          if (newStatus === "expired" || newStatus === "canceled") {
-            const { data: profile } = await svc
-              .from("profiles")
-              .select("organization_id")
-              .eq("user_id", sub.user_id)
-              .maybeSingle();
-            if (profile?.organization_id) {
-              await svc
-                .from("organizations")
-                .update({ plan: "free", updated_at: new Date().toISOString() })
-                .eq("id", profile.organization_id);
-            }
-          }
-        }
+      await syncStoreUser(sub.user_id, 'ios');
 
         await svc.from("subscription_events").insert({
           user_id: sub.user_id,

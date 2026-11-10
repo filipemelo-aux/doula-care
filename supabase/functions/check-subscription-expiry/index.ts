@@ -1,180 +1,52 @@
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
+import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
+import { authenticateCronRequest } from '../_shared/cron-auth.ts';
+import { serviceClient, reconcilePlan } from '../_shared/subscriptionServer.ts';
+import { syncStripeUser } from '../_shared/stripeSync.ts';
+import { syncStoreUser } from '../_shared/storeSync.ts';
+import { hasSubscriptionAccess, GRACE_MS } from '../_shared/subscriptionRules.ts';
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
-};
-
-/**
- * Cron job — reacts to subscription state managed by Stripe webhooks.
- *
- * Phase 1: Active subscriptions whose period ended → mark "pending" + notify.
- *          Stripe controls recurrence & billing; we only flag locally.
- *
- * Phase 2: Pending subscriptions past 3-day grace → cancel + block org.
- */
-Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
-  }
-
+Deno.serve(async req => {
+  if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
+  const authError = authenticateCronRequest(req);
+  if (authError) return authError;
+  const svc = serviceClient();
   try {
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const supabase = createClient(supabaseUrl, serviceRoleKey);
-
-    const now = new Date();
-    const nowISO = now.toISOString();
-
-    let processedPending = 0;
-    let processedBlocked = 0;
-
-    // ── PHASE 1 — Expired active → pending (notify only, no payment generation) ──
-    const { data: expired, error: expError } = await supabase
-      .from("subscriptions")
-      .select("id, user_id, plan_id, current_period_end")
-      .eq("status", "active")
-      .lt("current_period_end", nowISO);
-
-    if (expError) {
-      console.error("Error fetching expired active subscriptions:", expError);
-    }
-
-    if (expired && expired.length > 0) {
-      console.log(`Phase 1: ${expired.length} active subscriptions expired`);
-
-      for (const sub of expired) {
-        // Mark as pending — Stripe will send invoice.payment_succeeded when renewed
-        const { error: pendingError } = await supabase
-          .from("subscriptions")
-          .update({ status: "pending" })
-          .eq("id", sub.id);
-
-        if (pendingError) {
-          console.error(`Error setting subscription ${sub.id} to pending:`, pendingError);
-          continue;
+    const { data: all, error } = await svc.from('subscriptions').select('user_id,platform,stripe_subscription_id,environment');
+    if (error) throw error;
+    let checked = 0; let failed = 0;
+    for (const userId of new Set((all ?? []).map(s => s.user_id))) {
+      try {
+        const rows = (all ?? []).filter(s => s.user_id === userId);
+        if (rows.some(s => s.stripe_subscription_id)) await syncStripeUser(userId);
+        if (rows.some(s => ['ios', 'android'].includes(s.platform))) await syncStoreUser(userId);
+        const { data: fresh, error: readError } = await svc.from('subscriptions').select('*').eq('user_id', userId).eq('environment', 'production');
+        if (readError) throw readError;
+        for (const sub of fresh ?? []) {
+          if (!['active', 'pending', 'billing_issue', 'grace_period'].includes(sub.status) || !sub.current_period_end) continue;
+          const end = Date.parse(sub.current_period_end);
+          const status = end + GRACE_MS <= Date.now() ? 'expired' : end <= Date.now() && sub.status === 'active' ? 'grace_period' : sub.status;
+          if (status !== sub.status) {
+            const { error: updateError } = await svc.from('subscriptions').update({ status }).eq('id', sub.id).eq('current_period_end', sub.current_period_end);
+            if (updateError) throw updateError;
+          }
         }
-
-        // Notify user
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("organization_id")
-          .eq("user_id", sub.user_id)
-          .single();
-
-        if (profile?.organization_id) {
-          await supabase.from("org_notifications").insert({
-            organization_id: profile.organization_id,
-            title: "Assinatura vencida",
-            message:
-              "Sua assinatura venceu. O Stripe tentará renovar automaticamente. Você tem 3 dias de carência.",
-            type: "billing",
-          });
+        const plan = await reconcilePlan(userId);
+        if (plan === 'free' && (fresh ?? []).some(s => !hasSubscriptionAccess(s))) {
+          const { data: profile } = await svc.from('profiles').select('organization_id').eq('user_id', userId).maybeSingle();
+          if (profile?.organization_id) {
+            const { data: notice, error: noticeError } = await svc.from('org_notifications').select('id').eq('organization_id', profile.organization_id).eq('title', 'Vamos continuar cuidando juntas?').gte('created_at', new Date(Date.now() - 7 * 86400000).toISOString()).limit(1).maybeSingle();
+            if (noticeError) throw noticeError;
+            if (!notice) await svc.from('org_notifications').insert({ organization_id: profile.organization_id, title: 'Vamos continuar cuidando juntas?', message: 'Não identificamos a renovação da sua assinatura. Seus dados estão preservados e você pode continuar no Free. Acesse Assinatura para regularizar e retomar seus recursos. 💛', type: 'billing' });
+          }
         }
-
-        // Push notification (best-effort)
-        try {
-          await fetch(`${supabaseUrl}/functions/v1/send-push-notification`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${serviceRoleKey}`,
-            },
-            body: JSON.stringify({
-              user_id: sub.user_id,
-              title: "Assinatura vencida",
-              message:
-                "Sua assinatura venceu. A renovação será tentada automaticamente.",
-            }),
-          });
-        } catch (_) {
-          // Best-effort
-        }
-
-        processedPending++;
+        checked++;
+      } catch (error) {
+        failed++; console.error('Subscription sync failed', userId, error instanceof Error ? error.message : 'error');
+        // Provider unavailable: never downgrade from stale data.
       }
     }
-
-    // ── PHASE 2 — Pending past 3-day grace → cancel + block ──
-    const threeDaysAgo = new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000).toISOString();
-
-    const { data: pendingSubs, error: pendError } = await supabase
-      .from("subscriptions")
-      .select("id, user_id, plan_id, current_period_end")
-      .eq("status", "pending")
-      .lt("current_period_end", threeDaysAgo);
-
-    if (pendError) {
-      console.error("Error fetching overdue pending subscriptions:", pendError);
-    }
-
-    if (pendingSubs && pendingSubs.length > 0) {
-      console.log(`Phase 2: ${pendingSubs.length} pending subscriptions past 3-day grace`);
-
-      for (const sub of pendingSubs) {
-        const { error: cancelError } = await supabase
-          .from("subscriptions")
-          .update({ status: "canceled" })
-          .eq("id", sub.id);
-
-        if (cancelError) {
-          console.error(`Error canceling subscription ${sub.id}:`, cancelError);
-          continue;
-        }
-
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("organization_id")
-          .eq("user_id", sub.user_id)
-          .single();
-
-        if (profile?.organization_id) {
-          await supabase
-            .from("organizations")
-            .update({
-              plan: "free",
-              next_billing_date: null,
-              status: "suspenso",
-            })
-            .eq("id", profile.organization_id);
-
-          await supabase.from("org_notifications").insert({
-            organization_id: profile.organization_id,
-            title: "Acesso bloqueado",
-            message:
-              "Seu plano expirou há mais de 3 dias e o acesso premium foi bloqueado. Regularize o pagamento para reativar.",
-            type: "billing",
-          });
-
-          console.log(`Org ${profile.organization_id} blocked (user: ${sub.user_id})`);
-        }
-
-        processedBlocked++;
-      }
-    }
-
-    console.log(`Done: ${processedPending} set to pending, ${processedBlocked} blocked`);
-
-    return new Response(
-      JSON.stringify({
-        ok: true,
-        set_to_pending: processedPending,
-        blocked: processedBlocked,
-      }),
-      {
-        status: 200,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
-    );
-  } catch (err) {
-    console.error("check-subscription-expiry error:", err);
-    return new Response(
-      JSON.stringify({ error: "Internal server error" }),
-      {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
-    );
+    return new Response(JSON.stringify({ checked, failed }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+  } catch {
+    return new Response(JSON.stringify({ error: 'Falha na sincronização' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   }
 });

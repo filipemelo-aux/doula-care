@@ -1,3 +1,5 @@
+import { selectSubscription, hasSubscriptionAccess } from "./subscriptionRules";
+import { getFunctionError } from "@/lib/functionError";
 /**
  * AppStoreSubscriptionService
  *
@@ -365,6 +367,10 @@ export const AppStoreSubscriptionService = {
       };
     }
 
+    const eligibility = await supabase.functions.invoke("subscription-eligibility", { body: {} });
+    if (eligibility.error) return { status: "error", message: (await getFunctionError(eligibility.error)).message };
+    if (!eligibility.data?.allowed) return { status: "error", message: eligibility.data?.message || "Já existe uma assinatura vigente." };
+
     console.log("[IAP] compra iniciada:", productId);
     const ready = await setupNativePlugin();
     const Purchases: any = ready ? (await loadNativePurchasesBox())?.plugin : null;
@@ -513,16 +519,15 @@ export const AppStoreSubscriptionService = {
     const userId = userRes.user?.id;
     if (!userId) return null;
 
-    const { data, error } = await supabase
+    const { data: rows, error } = await supabase
       .from("subscriptions")
-      .select("product_id, plan_id, status, current_period_end, platform")
+      .select("product_id, plan_id, status, current_period_end, platform, environment, created_at")
       .eq("user_id", userId)
-      .in("status", ["active", "grace_period"])
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
+      .order("created_at", { ascending: false });
 
-    if (error || !data) return null;
+    const data = selectSubscription(rows ?? []);
+
+    if (error || !data || !hasSubscriptionAccess(data)) return null;
 
     let planSlug: string | null = null;
     if (data.plan_id) {
@@ -540,7 +545,7 @@ export const AppStoreSubscriptionService = {
       planSlug,
       expiresAt: data.current_period_end ?? null,
       willRenew: data.status === "active",
-      isActive: data.status === "active" || data.status === "grace_period",
+      isActive: hasSubscriptionAccess(data),
       platform: ((data as any).platform as any) ?? "manual",
     };
   },
@@ -591,7 +596,7 @@ export const AppStoreSubscriptionService = {
     if (error) {
       return {
         status: "error",
-        message: error.message || "Falha ao validar compra",
+        message: (await getFunctionError(error)).message,
       };
     }
     if ((data as any)?.error) {

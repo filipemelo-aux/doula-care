@@ -1,3 +1,4 @@
+import { syncStoreUser } from '../_shared/storeSync.ts';
 // Google Play Real-time Developer Notifications (RTDN) receiver.
 // Pub/Sub posts a message with base64-encoded JSON. This handler decodes it
 // and updates the subscription state. TODO(prod): verify Pub/Sub OIDC token
@@ -32,8 +33,8 @@ Deno.serve(async (req) => {
     const notifType: number = subNotif.notificationType;
 
     const svc = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
       { auth: { persistSession: false } }
     );
 
@@ -44,48 +45,7 @@ Deno.serve(async (req) => {
       .maybeSingle();
 
     if (sub) {
-      // https://developer.android.com/google/play/billing/rtdn-reference#sub
-      let newStatus: string | null = null;
-      switch (notifType) {
-        case 1: // RECOVERED
-        case 2: // RENEWED
-        case 4: // PURCHASED
-        case 7: // RESTARTED
-          newStatus = "active";
-          break;
-        case 3: // CANCELED
-          newStatus = "canceled";
-          break;
-        case 5: // ON_HOLD
-        case 6: // IN_GRACE_PERIOD
-          newStatus = "grace_period";
-          break;
-        case 12: // REVOKED
-        case 13: // EXPIRED
-          newStatus = "expired";
-          break;
-      }
-
-      if (newStatus) {
-        await svc
-          .from("subscriptions")
-          .update({ status: newStatus, updated_at: new Date().toISOString() })
-          .eq("id", sub.id);
-
-        if (newStatus === "expired" || newStatus === "canceled") {
-          const { data: profile } = await svc
-            .from("profiles")
-            .select("organization_id")
-            .eq("user_id", sub.user_id)
-            .maybeSingle();
-          if (profile?.organization_id) {
-            await svc
-              .from("organizations")
-              .update({ plan: "free", updated_at: new Date().toISOString() })
-              .eq("id", profile.organization_id);
-          }
-        }
-      }
+      await syncStoreUser(sub.user_id, 'android');
 
       await svc.from("subscription_events").insert({
         user_id: sub.user_id,

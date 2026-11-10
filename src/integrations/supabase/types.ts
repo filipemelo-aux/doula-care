@@ -2441,9 +2441,11 @@ export type Database = {
       }
       subscriptions: {
         Row: {
+          auto_renew: boolean | null
           created_at: string
           current_period_end: string | null
           current_period_start: string | null
+          environment: string
           id: string
           original_transaction_id: string | null
           plan_id: string
@@ -2458,9 +2460,11 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          auto_renew?: boolean | null
           created_at?: string
           current_period_end?: string | null
           current_period_start?: string | null
+          environment?: string
           id?: string
           original_transaction_id?: string | null
           plan_id: string
@@ -2475,9 +2479,11 @@ export type Database = {
           user_id: string
         }
         Update: {
+          auto_renew?: boolean | null
           created_at?: string
           current_period_end?: string | null
           current_period_start?: string | null
+          environment?: string
           id?: string
           original_transaction_id?: string | null
           plan_id?: string
@@ -2872,6 +2878,10 @@ export type Database = {
       recompute_client_payment_status: {
         Args: { p_client_id: string }
         Returns: undefined
+      }
+      reconcile_subscription_plan: {
+        Args: { p_user_id: string }
+        Returns: string
       }
       reject_doula_match_request: {
         Args: { p_notes?: string; p_request_id: string }

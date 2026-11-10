@@ -1,3 +1,5 @@
+import { selectSubscription, hasSubscriptionAccess } from "@/lib/subscriptions/subscriptionRules";
+import { getFunctionError } from "@/lib/functionError";
 import { useState, useEffect, useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
@@ -220,15 +222,13 @@ export default function Subscription() {
       const { data, error } = await supabase
         .from("subscriptions")
         .select(
-          "id, status, current_period_start, current_period_end, plan_id, platform, product_id"
+          "id, status, current_period_start, current_period_end, plan_id, platform, product_id, environment, created_at"
         )
         .eq("user_id", user.id)
-        .in("status", ["active", "grace_period", "billing_issue"])
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
+        .order("created_at", { ascending: false });
       if (error) throw error;
-      return data;
+      const selected = selectSubscription(data ?? []);
+      return selected && hasSubscriptionAccess(selected) ? selected : null;
     },
     enabled: !!user?.id,
   });
@@ -266,12 +266,14 @@ export default function Subscription() {
     (async () => {
       toast.loading("Confirmando pagamento...", { id: "confirm" });
       try {
-        await supabase.functions.invoke("check-subscription");
+        const { data, error } = await supabase.functions.invoke("check-subscription");
+        if (error) throw error;
+        if (data?.subscribed) toast.success("Assinatura confirmada!");
+        else toast.info("Pagamento ainda não confirmado. Aguarde e confira sua assinatura.");
       } catch {
-        /* a confirmação também chega pelo webhook */
+        toast.info("Não foi possível confirmar o pagamento agora. Confira sua assinatura em instantes.");
       }
       toast.dismiss("confirm");
-      toast.success("Assinatura confirmada!");
       invalidatePlanCaches();
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -303,6 +305,10 @@ export default function Subscription() {
     plan: PlatformPlan,
     billingType: BillingPeriod
   ) => {
+    if (activeSubscription || isLifetime) {
+      toast.info("Você já possui uma assinatura vigente. Gerencie a assinatura atual antes de contratar outra.");
+      return;
+    }
     let product: { productId: string } | undefined = productByPlan.get(`${plan.id}:${billingType}`);
     if (!product && !isWeb) {
       // A lista da loja ainda pode estar carregando: busca o código do produto direto.
@@ -330,7 +336,7 @@ export default function Subscription() {
           },
         });
         toast.dismiss("checkout");
-        if (error) throw error;
+        if (error) throw await getFunctionError(error);
         if (!data?.url) throw new Error("Não foi possível iniciar o pagamento");
         window.location.href = data.url;
       } catch (err: any) {
@@ -564,6 +570,7 @@ export default function Subscription() {
         </CardContent>
       </Card>
 
+      {hasActiveSub && <p className="text-sm text-muted-foreground">Sua assinatura vigente já garante o acesso, inclusive em outros dispositivos. Gerencie a contratação atual antes de assinar por outra plataforma para evitar cobranças duplicadas.</p>}
       <Card className="card-glass">
         <CardContent className="pt-6 space-y-4">
           <div className="flex items-center gap-2">
@@ -778,7 +785,7 @@ export default function Subscription() {
                       <Button
                         className="w-full"
                         onClick={() => handleSubscribe(plan, "monthly")}
-                        disabled={purchasingThis || !canPurchase}
+                        disabled={!!purchasing || !canPurchase || hasActiveSub}
                       >
                         {purchasing === monthlyProduct?.productId ? (
                           <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -789,7 +796,7 @@ export default function Subscription() {
                         variant="outline"
                         className="w-full"
                         onClick={() => handleSubscribe(plan, "yearly")}
-                        disabled={purchasingThis || !canPurchase}
+                        disabled={!!purchasing || !canPurchase || hasActiveSub}
                       >
                         {purchasing === yearlyProduct?.productId ? (
                           <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -807,6 +814,7 @@ export default function Subscription() {
                             <Button
                               variant="secondary"
                               size="sm"
+                              disabled={hasActiveSub}
                               onClick={() => openPixCheckout(plan, "monthly")}
                             >
                               <QrCode className="w-4 h-4 mr-2" />
@@ -815,6 +823,7 @@ export default function Subscription() {
                             <Button
                               variant="secondary"
                               size="sm"
+                              disabled={hasActiveSub}
                               onClick={() => openPixCheckout(plan, "yearly")}
                             >
                               <QrCode className="w-4 h-4 mr-2" />
