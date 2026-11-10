@@ -1,11 +1,13 @@
-import { renderHook, waitFor } from "@testing-library/react";
+import { fireEvent, render, renderHook, screen, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { describe, expect, it, vi } from "vitest";
 import { usePlanLimits } from "@/hooks/usePlanLimits";
 import { hasEndedTrial, needsTrialNotice } from "@/lib/trialExpiry";
+import { TrialEndedDialog } from "@/components/dashboard/TrialEndedDialog";
+import { MemoryRouter, Route, Routes } from "react-router-dom";
 
 vi.mock("@/contexts/AuthContext", () => ({
-  useAuth: () => ({ organizationId: "org-free", user: { id: "doula" }, isSuperAdmin: false }),
+  useAuth: () => ({ organizationId: "org-free", user: { id: "doula" }, isAdmin: true, isSuperAdmin: false }),
 }));
 
 vi.mock("@/integrations/supabase/client", () => ({
@@ -59,6 +61,30 @@ describe("Término do teste no início do mês", () => {
     expect(result.current.plan).toBe("free");
     expect(result.current.limits.agenda).toBe(false);
     unmount();
+    client.clear();
+  });
+  it("recupera avisos antigos e só confirma leitura ao encaminhar para assinatura", async () => {
+    localStorage.clear();
+    localStorage.setItem("trial-ended-seen-november-test-2026-11-04T12:54:00Z", new Date().toDateString());
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const view = render(
+      <QueryClientProvider client={client}>
+        <MemoryRouter initialEntries={["/admin"]}>
+          <TrialEndedDialog />
+          <Routes>
+            <Route path="/admin" element={<div />} />
+            <Route path="/admin/assinatura" element={<div data-testid="subscription-destination" />} />
+          </Routes>
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+    const action = await screen.findByRole("button", { name: "Escolher meu plano ✨" });
+    const key = "trial-ended-notice-v2-doula-november-test-2026-11-04T12:54:00Z";
+    expect(localStorage.getItem(key)).toBeNull();
+    fireEvent.click(action);
+    expect(await screen.findByTestId("subscription-destination")).toBeTruthy();
+    expect(localStorage.getItem(key)).toBe(new Date().toDateString());
+    view.unmount();
     client.clear();
   });
 });
