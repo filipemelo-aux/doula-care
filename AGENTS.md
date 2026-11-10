@@ -19,4 +19,5 @@ Fallback de parcelas sem transaction_id só é permitido para receitas automáti
 - Trial expiry detection is shared through src/lib/trialExpiry.ts and usePlanLimits, including persisted expired promotions; DashboardLayout renders the notice and subscription link, with acknowledgement saved only after interaction — prevents missed notices and redirect loops while preserving paid/manual and lifetime plans.
 
 - Subscription access resolves all production provider records through shared subscriptionRules and server reconciliation; sandbox/unknown never grant production access, and providers only update their own records — prevents test purchases hiding paid subscriptions.
+- Super Admin active subscription listings apply shared production-access rules, not status alone — prevents unverified legacy records inflating active counts.
 - Store payments are verified server-side via RevenueCat; pre-purchase eligibility checks the organization across providers, and expiry sync reads providers before Free downgrade without changing organization suspension — prevents duplicate charges and stale-state revocation.

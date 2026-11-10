@@ -8,6 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { format, differenceInDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { hasSubscriptionAccess } from "@/lib/subscriptions/subscriptionRules";
 import {
   CreditCard, CheckCircle, Clock, Users, DollarSign, Loader2, CalendarClock, Send, AlertCircle,
 } from "lucide-react";
@@ -20,6 +21,7 @@ interface SubscriptionRow {
   current_period_end: string | null;
   current_period_start: string | null;
   stripe_subscription_id: string | null;
+  environment: string;
 }
 
 interface ProfileInfo {
@@ -53,7 +55,7 @@ export function SubscriptionBillingCard() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("subscriptions")
-        .select("id, user_id, plan_id, status, current_period_end, current_period_start, stripe_subscription_id")
+        .select("id, user_id, plan_id, status, environment, current_period_end, current_period_start, stripe_subscription_id")
         .order("created_at", { ascending: false });
       if (error) throw error;
       return data as SubscriptionRow[];
@@ -122,7 +124,7 @@ export function SubscriptionBillingCard() {
     profiles.filter((p) => !!p.organization_id).map((p) => p.user_id)
   );
   const activeSubscriptions = subscriptions.filter(
-    (s) => s.status === "active" && validUserIds.has(s.user_id)
+    (s) => s.status === "active" && hasSubscriptionAccess(s) && validUserIds.has(s.user_id)
   );
   const activeSubscriptionCount = activeSubscriptions.length;
 

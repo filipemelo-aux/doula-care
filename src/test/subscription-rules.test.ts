@@ -4,6 +4,13 @@ import { hasSubscriptionAccess, selectSubscription, storeStatus } from '../../su
 const now = Date.parse('2026-11-10T14:00:00Z');
 const stripe = { id: 'stripe', platform: 'web', environment: 'production', status: 'active', current_period_end: '2026-11-16T01:00:01Z' };
 describe('Subscription provider isolation', () => {
+  it('counts only Luma’s confirmed purchase, not the legacy unknown duplicate', () => {
+    const rows = [
+      { id: 'legacy-luma', platform: 'ios', environment: 'unknown', status: 'active', current_period_end: '2026-11-15T00:30:54Z' },
+      { id: 'confirmed-luma', platform: 'ios', environment: 'production', status: 'active', current_period_end: '2026-11-15T01:30:40Z' },
+    ];
+    expect(rows.filter(s => s.status === 'active' && hasSubscriptionAccess(s, now)).map(s => s.id)).toEqual(['confirmed-luma']);
+  });
   it('keeps real Stripe active despite newer sandbox purchases', () => {
     expect(selectSubscription([stripe, { id: 'ios', environment: 'sandbox', status: 'active', current_period_end: '2027-11-16T00:00:00Z' }], now)?.id).toBe('stripe');
   });
