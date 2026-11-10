@@ -14,6 +14,7 @@ Deno.serve(async req => {
     const { data: all, error } = await svc.from('subscriptions').select('user_id,platform,stripe_subscription_id,environment');
     if (error) throw error;
     let checked = 0; let failed = 0;
+    const failures: { user_id: string; message: string }[] = [];
     for (const userId of new Set((all ?? []).map(s => s.user_id))) {
       try {
         const rows = (all ?? []).filter(s => s.user_id === userId);
@@ -41,11 +42,13 @@ Deno.serve(async req => {
         }
         checked++;
       } catch (error) {
-        failed++; console.error('Subscription sync failed', userId, error instanceof Error ? error.message : 'error');
+        const message = error instanceof Error ? error.message : String((error as any)?.message ?? 'error');
+        failures.push({ user_id: userId, message });
+        failed++; console.error('Subscription sync failed', userId, message);
         // Provider unavailable: never downgrade from stale data.
       }
     }
-    return new Response(JSON.stringify({ checked, failed }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    return new Response(JSON.stringify({ checked, failed, failures }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   } catch {
     return new Response(JSON.stringify({ error: 'Falha na sincronização' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   }

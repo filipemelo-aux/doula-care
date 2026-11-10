@@ -120,6 +120,13 @@
       "when": 1794321888932,
       "tag": "0016_finalize_subscription_reconciliation",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1794322324831,
+      "tag": "0017_preserve_multi_provider_subscription_history",
+      "breakpoints": true
     }
   ]
 }

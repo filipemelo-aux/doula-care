@@ -1,0 +1,2 @@
+DROP INDEX IF EXISTS public.idx_subscriptions_one_active_per_user;
+CREATE INDEX IF NOT EXISTS subscriptions_active_provider_idx ON public.subscriptions (user_id,platform,environment) WHERE status='active';

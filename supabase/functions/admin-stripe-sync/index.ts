@@ -1,3 +1,5 @@
+import { persistStripeSubscription } from '../_shared/stripeSync.ts';
+import { reconcilePlan } from '../_shared/subscriptionServer.ts';
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
 import { findPlanByPriceId } from "../_shared/stripe-plans.ts";
@@ -54,42 +56,8 @@ Deno.serve(async (req) => {
     };
 
     if (planInfo && userId) {
-      const active = ["active", "trialing", "past_due"].includes(sub.status);
-      const status = sub.status === "past_due" ? "billing_issue" : active ? "active" : "canceled";
-      const item = sub.items.data[0] as unknown as
-        { current_period_start?: number; current_period_end?: number } | undefined;
-      const rawStart = (sub as unknown as { current_period_start?: number }).current_period_start
-        ?? item?.current_period_start;
-      const rawEnd = (sub as unknown as { current_period_end?: number }).current_period_end
-        ?? item?.current_period_end;
-      const payload = {
-        user_id: userId,
-        plan_id: planInfo.planId,
-        status,
-        platform: "web",
-        product_id: priceId,
-        current_period_start: rawStart ? new Date(rawStart * 1000).toISOString() : null,
-        current_period_end: rawEnd ? new Date(rawEnd * 1000).toISOString() : null,
-        stripe_customer_id: customerId,
-        stripe_subscription_id: sub.id,
-      };
-      const { data: existing } = await supabase
-        .from("subscriptions").select("id").eq("stripe_subscription_id", sub.id).maybeSingle();
-      if (existing?.id) {
-        await supabase.from("subscriptions").update(payload).eq("id", existing.id);
-      } else {
-        await supabase.from("subscriptions").update({ status: "canceled" })
-          .eq("user_id", userId).eq("platform", "web").in("status", ["active", "pending", "billing_issue"]);
-        await supabase.from("subscriptions").insert(payload);
-      }
-      const { data: profile } = await supabase
-        .from("profiles").select("organization_id").eq("user_id", userId).maybeSingle();
-      if (profile?.organization_id && status !== "canceled") {
-        await supabase.from("organizations").update({
-          plan: planInfo.plan, status: "ativo",
-          next_billing_date: payload.current_period_end ? String(payload.current_period_end).split("T")[0] : null,
-        }).eq("id", profile.organization_id);
-      }
+      await persistStripeSubscription(sub, userId);
+      await reconcilePlan(userId);
       entry.synced = true;
     }
     out.push(entry);

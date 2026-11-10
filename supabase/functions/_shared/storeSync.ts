@@ -18,7 +18,7 @@ export async function syncStoreUser(userId: string, platform?: 'ios' | 'android'
     if (!mapping || !purchase.expires_date) continue;
     const environment = purchase.is_sandbox === true ? 'sandbox' : purchase.is_sandbox === false ? 'production' : 'unknown';
     if (environment === 'unknown') throw new Error('Ambiente da compra não confirmado pela loja.');
-    const { data: existing, error: readError } = await svc.from('subscriptions').select('id').eq('user_id', userId).eq('platform', store).eq('environment', environment).eq('product_id', product.split(':')[0]).order('created_at', { ascending: false }).limit(1).maybeSingle();
+    const { data: existing, error: readError } = await svc.from('subscriptions').select('id,status,current_period_end,environment,auto_renew').eq('user_id', userId).eq('platform', store).in('environment', [environment, 'unknown']).eq('product_id', product.split(':')[0]).order('created_at', { ascending: false }).limit(1).maybeSingle();
     if (readError) throw readError;
     const record = {
       user_id: userId, plan_id: mapping.plan_id, platform: store, environment,
@@ -28,8 +28,12 @@ export async function syncStoreUser(userId: string, platform?: 'ios' | 'android'
       current_period_start: purchase.purchase_date, current_period_end: purchase.grace_period_expires_date ?? purchase.expires_date,
       auto_renew: !purchase.unsubscribe_detected_at, updated_at: new Date().toISOString(),
     };
-    const { error } = existing ? await svc.from('subscriptions').update(record).eq('id', existing.id) : await svc.from('subscriptions').insert(record);
-    if (error) throw error;
+    const result = existing ? await svc.from('subscriptions').update(record).eq('id', existing.id).select('id').single() : await svc.from('subscriptions').insert(record).select('id').single();
+    const { error } = result;
+    if (error) throw new Error(`Falha ao salvar assinatura da loja: ${error.message}`);
+    if (!existing || existing.status !== record.status || existing.environment !== environment || Date.parse(existing.current_period_end ?? '') !== Date.parse(record.current_period_end) || existing.auto_renew !== record.auto_renew) {
+      await svc.from('subscription_events').insert({ user_id: userId, subscription_id: result.data?.id, platform: store, product_id: record.product_id, event_type: 'provider_verified', raw_payload: { environment, status: record.status, expires_at: record.current_period_end } });
+    }
     matched = true;
   }
   const plan = await reconcilePlan(userId);
