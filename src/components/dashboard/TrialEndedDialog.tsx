@@ -1,9 +1,8 @@
 import { useEffect, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Heart, Users, Sparkles } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { usePlanLimits } from "@/hooks/usePlanLimits";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 
@@ -12,54 +11,29 @@ import { Button } from "@/components/ui/button";
  * e a doula ainda não assinou. Os limites do Free já ficam aplicados.
  */
 export function TrialEndedDialog() {
-  const { organizationId, user, isSuperAdmin } = useAuth();
+  const { user, isAdmin, isSuperAdmin } = useAuth();
+  const { trialNoticeId, isLoading } = usePlanLimits();
   const navigate = useNavigate();
-  const location = useLocation();
   const [open, setOpen] = useState(false);
-
-  const { data } = useQuery({
-    queryKey: ["trial-15d-ended", organizationId, user?.id],
-    enabled: !!organizationId && !!user?.id && !isSuperAdmin,
-    staleTime: 0,
-    refetchInterval: 30 * 1000,
-    refetchOnWindowFocus: true,
-    queryFn: async () => {
-      if (!organizationId || !user) return null;
-      const { data: promo } = await supabase
-        .from("org_promotions" as any)
-        .select("id, status, trial_ends_at")
-        .eq("organization_id", organizationId)
-        .eq("promotion_type", "trial_15d")
-        .maybeSingle();
-      const p = promo as any;
-      if (!p?.trial_ends_at) return null;
-      const ended =
-        p.status === "expired" ||
-        (p.status === "trial_active" && new Date(p.trial_ends_at) < new Date());
-      if (!ended) return null;
-      const { data: sub } = await supabase
-        .from("subscriptions")
-        .select("id")
-        .eq("user_id", user.id)
-        .eq("status", "active")
-        .limit(1)
-        .maybeSingle();
-      if (sub) return null;
-      return `${p.id}-${p.trial_ends_at}`;
-    },
-  });
+  const noticeKey = trialNoticeId && user ? `trial-ended-notice-v2-${user.id}-${trialNoticeId}` : null;
 
   useEffect(() => {
-    if (!data || location.pathname.includes("/admin/assinatura")) return;
-    const key = `trial-ended-seen-${data}`;
+    if (isLoading) return;
+    if (!noticeKey || !isAdmin || isSuperAdmin) { setOpen(false); return; }
     const today = new Date().toDateString();
-    if (localStorage.getItem(key) === today) return;
-    localStorage.setItem(key, today);
+    try { if (localStorage.getItem(noticeKey) === today) return; } catch {}
     setOpen(true);
-  }, [data, location.pathname]);
+  }, [noticeKey, isLoading, isAdmin, isSuperAdmin]);
+
+  const acknowledge = () => {
+    if (noticeKey) {
+      try { localStorage.setItem(noticeKey, new Date().toDateString()); } catch {}
+    }
+    setOpen(false);
+  };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={(next) => { if (!next) acknowledge(); }}>
       <DialogContent className="max-w-md text-center">
         <DialogHeader className="items-center text-center space-y-3">
           <div className="mx-auto w-14 h-14 rounded-full bg-primary/15 flex items-center justify-center">
@@ -92,19 +66,20 @@ export function TrialEndedDialog() {
         </div>
 
         <p className="text-xs text-muted-foreground">
-          Enquanto você não assina, sua conta segue no plano Free, com os limites dele.
+          Seus dados continuam guardados com carinho. Enquanto você não assina, sua conta
+          segue no Free, com os recursos e limites disponíveis nesse plano.
         </p>
 
         <div className="flex flex-col gap-2">
           <Button
             onClick={() => {
-              setOpen(false);
+              acknowledge();
               navigate("/admin/assinatura");
             }}
           >
             Escolher meu plano ✨
           </Button>
-          <Button variant="ghost" onClick={() => setOpen(false)}>
+          <Button variant="ghost" onClick={acknowledge}>
             Agora não
           </Button>
         </div>

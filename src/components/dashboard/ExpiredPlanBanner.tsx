@@ -1,8 +1,7 @@
-import { useEffect } from "react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { AlertTriangle, Ban, Clock } from "lucide-react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { usePlanLimits } from "@/hooks/usePlanLimits";
 
 export function ExpiredPlanBanner() {
@@ -17,43 +16,29 @@ export function ExpiredPlanBanner() {
     originalPlan,
   } = usePlanLimits();
   const navigate = useNavigate();
-  const location = useLocation();
-
-  // Auto-redirect to subscription page when trial expired without subscription
-  // (only if not already on subscription or plans page)
-  const shouldForceRedirect =
-    isTrialExpired &&
-    !hasActiveSubscription &&
-    !location.pathname.includes("/admin/assinatura") &&
-    !location.pathname.includes("/admin/planos");
-
-  useEffect(() => {
-    if (shouldForceRedirect) {
-      navigate("/admin/assinatura", { replace: true });
-    }
-  }, [shouldForceRedirect, navigate]);
 
   // Super admins never see this banner (already handled by usePlanLimits, but double-safe)
 
   // Trial expired banner (takes priority)
   if (isTrialExpired && !hasActiveSubscription) {
     return (
-      <Alert className="bg-amber-500/10 border-amber-500/30 text-amber-900 dark:text-amber-200">
-        <Clock className="h-4 w-4 text-amber-500" />
+      <Alert className="bg-primary/10 border-primary/20 text-foreground">
+        <Clock className="h-4 w-4 text-primary" />
         <AlertTitle className="text-sm font-semibold">
-          Seu período de teste expirou!
+          Seu teste chegou ao fim 💛
         </AlertTitle>
-        <AlertDescription className="text-xs flex items-center justify-between gap-4">
+        <AlertDescription className="text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <span>
-            Seu teste Premium terminou. Assine um plano para continuar utilizando todos os recursos.
-            Enquanto isso, os limites do plano Free estão sendo aplicados.
+            Vamos continuar cuidando juntas? Escolha seu plano para retomar todos os recursos.
+            Se você trabalha com equipe, o Premium é para você. Seus dados estão preservados;
+            enquanto isso, valem os limites do Free.
           </span>
           <Button
             size="sm"
-            className="shrink-0 text-xs h-7 bg-amber-600 hover:bg-amber-700 text-white"
+            className="shrink-0 text-xs h-8 self-start sm:self-center"
             onClick={() => navigate("/admin/assinatura")}
           >
-            Assinar agora
+            Escolher meu plano
           </Button>
         </AlertDescription>
       </Alert>

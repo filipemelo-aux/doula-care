@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { needsTrialNotice, type TrialPromotion } from "@/lib/trialExpiry";
 
 export type OrgPlan = "free" | "pro" | "premium";
 
@@ -128,15 +129,16 @@ export function usePlanLimits() {
         .from("org_promotions" as any)
         .select("id, status, trial_ends_at, promotion_type")
         .eq("organization_id", organizationId)
-        .in("status", ["trial_active", "lifetime_active"])
         .order("updated_at", { ascending: false })
         .limit(1)
         .maybeSingle();
-      if (error) return null;
-      return data as any;
+      if (error) throw error;
+      return data as TrialPromotion | null;
     },
     enabled: !!organizationId,
-    staleTime: 2 * 60 * 1000,
+    staleTime: 0,
+    refetchInterval: 30 * 1000,
+    refetchOnWindowFocus: true,
   });
 
   // 3. Plan limits from DB — single source of truth (Super Admin config)
@@ -173,18 +175,8 @@ export function usePlanLimits() {
     enabled: !!organizationId,
   });
 
-  // ── Trial expiry check (somente trials de 15 dias lançados pelo Super Admin) ──
-  const isTrialExpired = (() => {
-    if (isSuperAdmin) return false;
-    if (!promoData) return false;
-    if (promoData.promotion_type !== "trial_15d") return false;
-    if (promoData.status === "trial_active" && promoData.trial_ends_at) {
-      return new Date(promoData.trial_ends_at) < new Date();
-    }
-    return false;
-  })();
-
   const hasActiveSubscription = !!subscription && subscription.status === "active";
+  const isTrialExpired = !isSuperAdmin && needsTrialNotice(promoData, plan, hasActiveSubscription);
 
   // ── Subscription state ──
   // Super admins are NEVER considered expired or blocked
@@ -268,6 +260,7 @@ export function usePlanLimits() {
     isGracePeriod,
     isBlocked,
     isTrialExpired,
+    trialNoticeId: isTrialExpired && promoData ? `${promoData.id}-${promoData.trial_ends_at}` : null,
     hasActiveSubscription,
     daysOverdue,
     subscriptionEndDate: subscription?.current_period_end ?? null,
