@@ -1,6 +1,8 @@
 # Roadmap
 
 ## Em andamento
+- [ ] Corrigir isolamento de plataformas e sandbox, renovação e inadimplência; reconciliar Antonela pelo Stripe.
+- [ ] Bloquear nova contratação quando existe assinatura vigente e validar os fluxos.
 - [x] Modernizar as abas da Agenda e manter somente um botão + contextual por aba (abertura das duas criações conferida na conta da doula, no celular e computador, sem salvar registros).
 - [x] Padronizar e manter visíveis os botões de novo compromisso e nova disponibilidade na Agenda (compilação aprovada; conferência visual bloqueada pela sessão atual de Super Admin)
 - [x] Corrigir destino das solicitações para Agenda e excluir a própria solicitação na verificação de conflito ao confirmar (8 testes aprovados; solicitação real preservada, confirmação pela doula não verificada com a sessão Super Admin)
